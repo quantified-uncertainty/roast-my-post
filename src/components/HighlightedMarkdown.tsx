@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm";
 interface HighlightedMarkdownProps {
   content: string;
   onHighlightHover?: (tag: string) => void;
+  onHighlightClick?: (tag: string) => void;
   highlightColors?: Record<string, string>;
   activeTag?: string | null;
 }
@@ -48,6 +49,7 @@ const colorClasses: Record<
 export function HighlightedMarkdown({
   content,
   onHighlightHover,
+  onHighlightClick,
   highlightColors = {},
   activeTag,
 }: HighlightedMarkdownProps) {
@@ -76,13 +78,17 @@ export function HighlightedMarkdown({
           <span
             className={`${colorClass.base} ${
               colorClass.hover
-            } px-1 rounded transition-colors duration-200 cursor-help ${
+            } px-1 rounded transition-colors duration-200 cursor-pointer ${
               activeTag === tag ? colorClass.active : ""
             }`}
             data-tag={tag}
             onMouseEnter={() => {
               console.log("Mouse enter with tag:", tag); // Debug log
               onHighlightHover?.(tag);
+            }}
+            onClick={() => {
+              console.log("Click with tag:", tag); // Debug log
+              onHighlightClick?.(tag);
             }}
           >
             {children}
