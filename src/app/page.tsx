@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
-
 import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
 
 // Highlighted text with comments
@@ -36,6 +34,17 @@ const comments = {
   "8": "Save to cloud storage every 5 minutes",
 };
 
+const highlightColors = {
+  "1": "red-800", // Draft status
+  "2": "blue-800", // Objectives
+  "3": "green-800", // Features
+  "4": "green-800", // Features
+  "5": "green-800", // Features
+  "6": "purple-800", // Technical
+  "7": "purple-800", // Technical
+  "8": "purple-800", // Technical
+};
+
 export default function Home() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
@@ -51,6 +60,7 @@ export default function Home() {
                 console.log("Received tag:", tag);
                 setActiveTag(tag);
               }}
+              highlightColors={highlightColors}
             />
           </article>
         </div>
@@ -59,48 +69,6 @@ export default function Home() {
       {/* Sidebar */}
       <div className="w-64 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
         <div className="space-y-4">
-          {/* File Actions */}
-          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-            <Image
-              src="/file.svg"
-              alt="File icon"
-              width={16}
-              height={16}
-              className="dark:invert"
-            />
-            <span className="text-sm">File</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-            <Image
-              src="/edit.svg"
-              alt="Edit icon"
-              width={16}
-              height={16}
-              className="dark:invert"
-            />
-            <span className="text-sm">Edit</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-            <Image
-              src="/view.svg"
-              alt="View icon"
-              width={16}
-              height={16}
-              className="dark:invert"
-            />
-            <span className="text-sm">View</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-            <Image
-              src="/share.svg"
-              alt="Share icon"
-              width={16}
-              height={16}
-              className="dark:invert"
-            />
-            <span className="text-sm">Share</span>
-          </div>
-
           {/* Comments Section */}
           <div className="mt-8">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
