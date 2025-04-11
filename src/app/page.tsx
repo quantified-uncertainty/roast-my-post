@@ -35,25 +35,25 @@ const comments = {
 };
 
 const highlightColors = {
-  "1": "red-800", // Draft status
-  "2": "blue-800", // Objectives
-  "3": "green-800", // Features
-  "4": "green-800", // Features
-  "5": "green-800", // Features
-  "6": "purple-800", // Technical
-  "7": "purple-800", // Technical
-  "8": "purple-800", // Technical
+  "1": "red-100", // Draft status
+  "2": "blue-100", // Objectives
+  "3": "green-100", // Features
+  "4": "green-100", // Features
+  "5": "green-100", // Features
+  "6": "purple-100", // Technical
+  "7": "purple-100", // Technical
+  "8": "purple-100", // Technical
 };
 
 export default function Home() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-900">
+    <div className="flex h-screen bg-white">
       {/* Document Area */}
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
-          <article className="prose prose-slate dark:prose-invert prose-lg max-w-none">
+          <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
               content={markdownContent}
               onHighlightHover={(tag) => {
@@ -61,32 +61,31 @@ export default function Home() {
                 setActiveTag(tag);
               }}
               highlightColors={highlightColors}
+              activeTag={activeTag}
             />
           </article>
         </div>
       </div>
 
       {/* Sidebar */}
-      <div className="w-64 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4">
+      <div className="w-64 border-l border-gray-200 bg-gray-50 p-4">
         <div className="space-y-4">
           {/* Comments Section */}
           <div className="mt-8">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">
               Comments
             </h3>
             <div className="space-y-2">
               {Object.entries(comments).map(([tag, comment]) => (
                 <div
                   key={tag}
-                  className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer ${
-                    activeTag === tag ? "bg-gray-100 dark:bg-gray-700" : ""
+                  className={`p-2 rounded-lg hover:bg-gray-100 cursor-pointer ${
+                    activeTag === tag ? "bg-gray-100" : ""
                   }`}
                   onMouseEnter={() => setActiveTag(tag)}
                   onMouseLeave={() => setActiveTag(null)}
                 >
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {comment}
-                  </div>
+                  <div className="text-sm text-gray-600">{comment}</div>
                 </div>
               ))}
             </div>

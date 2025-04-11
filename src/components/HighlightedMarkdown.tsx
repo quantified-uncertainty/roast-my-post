@@ -11,20 +11,45 @@ interface HighlightedMarkdownProps {
   content: string;
   onHighlightHover?: (tag: string) => void;
   highlightColors?: Record<string, string>;
+  activeTag?: string | null;
 }
 
-const colorClasses: Record<string, { base: string; hover: string }> = {
-  "red-800": { base: "bg-red-800", hover: "hover:bg-red-700" },
-  "blue-800": { base: "bg-blue-800", hover: "hover:bg-blue-700" },
-  "green-800": { base: "bg-green-800", hover: "hover:bg-green-700" },
-  "purple-800": { base: "bg-purple-800", hover: "hover:bg-purple-700" },
-  "yellow-800": { base: "bg-yellow-800", hover: "hover:bg-yellow-700" },
+const colorClasses: Record<
+  string,
+  { base: string; hover: string; active: string }
+> = {
+  "red-100": {
+    base: "bg-red-100",
+    hover: "hover:bg-red-200",
+    active: "bg-red-200",
+  },
+  "blue-100": {
+    base: "bg-blue-100",
+    hover: "hover:bg-blue-200",
+    active: "bg-blue-200",
+  },
+  "green-100": {
+    base: "bg-green-100",
+    hover: "hover:bg-green-200",
+    active: "bg-green-200",
+  },
+  "purple-100": {
+    base: "bg-purple-100",
+    hover: "hover:bg-purple-200",
+    active: "bg-purple-200",
+  },
+  "yellow-100": {
+    base: "bg-yellow-100",
+    hover: "hover:bg-yellow-200",
+    active: "bg-yellow-200",
+  },
 };
 
 export function HighlightedMarkdown({
   content,
   onHighlightHover,
   highlightColors = {},
+  activeTag,
 }: HighlightedMarkdownProps) {
   const [processedContent, setProcessedContent] = useState("");
 
@@ -44,12 +69,16 @@ export function HighlightedMarkdown({
     span: ({ className, children, ...props }) => {
       if (className === "highlight") {
         const tag = (props as any)["data-tag"];
-        const colorKey = highlightColors[tag] || "yellow-800";
-        const colorClass = colorClasses[colorKey] || colorClasses["yellow-800"];
+        const colorKey = highlightColors[tag] || "yellow-100";
+        const colorClass = colorClasses[colorKey] || colorClasses["yellow-100"];
 
         return (
           <span
-            className={`${colorClass.base} ${colorClass.hover} px-1 rounded transition-colors duration-200 cursor-help`}
+            className={`${colorClass.base} ${
+              colorClass.hover
+            } px-1 rounded transition-colors duration-200 cursor-help ${
+              activeTag === tag ? colorClass.active : ""
+            }`}
             data-tag={tag}
             onMouseEnter={() => {
               console.log("Mouse enter with tag:", tag); // Debug log
