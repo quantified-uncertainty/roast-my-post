@@ -1,117 +1,82 @@
 "use client";
 
-import { useState } from "react";
-
-import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
-import type { Comment } from "@/types/documentReview";
-import { documentReview } from "@/types/documentReview";
-
-interface CommentsProps {
-  comments: Record<string, Comment>;
-  activeTag: string | null;
-  expandedTag: string | null;
-  onTagHover: (tag: string | null) => void;
-  onTagClick: (tag: string) => void;
-}
-
-function Comments({
-  comments,
-  activeTag,
-  expandedTag,
-  onTagHover,
-  onTagClick,
-}: CommentsProps) {
-  return (
-    <div className="mt-8">
-      <h3 className="text-sm font-semibold text-gray-700 mb-2">Comments</h3>
-      <div className="space-y-2">
-        {Object.entries(comments).map(([tag, comment]) => {
-          const Icon = comment.icon;
-
-          return (
-            <div
-              key={tag}
-              className={`py-2 px-2 rounded-lg hover:bg-gray-100 cursor-pointer ${
-                activeTag === tag ? "bg-gray-100" : ""
-              }`}
-              onMouseEnter={() => onTagHover(tag)}
-              onMouseLeave={() => onTagHover(null)}
-              onClick={() => onTagClick(tag)}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="h-4 w-4 text-gray-400" />
-                <div
-                  className={`font-medium ${comment.color.base} px-1 rounded`}
-                >
-                  {comment.title}
-                </div>
-              </div>
-              <div
-                className={`text-sm text-gray-600 transition-all duration-200 ${
-                  expandedTag === tag ? "" : "line-clamp-1"
-                }`}
-              >
-                {comment.description}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import Link from "next/link";
+import { DocumentReviewSet } from "@/components/DocumentReviewSet";
+import { documentReviewSet } from "@/types/documentReviewSet";
+import { evaluationAgents } from "@/types/evaluationAgents";
+import { getIcon } from "@/utils/iconMap";
 
 export default function Home() {
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [expandedTag, setExpandedTag] = useState<string | null>(null);
-
-  const handleCommentClick = (tag: string) => {
-    setExpandedTag(expandedTag === tag ? null : tag);
-  };
-
-  const handleHighlightClick = (tag: string) => {
-    setExpandedTag(expandedTag === tag ? null : tag);
-  };
-
+  // Get a few featured agents
+  const featuredAgents = evaluationAgents.slice(0, 3);
+  
   return (
-    <div className="flex h-screen bg-white">
-      {/* Document Area */}
-      <div className="flex-2 p-8 overflow-y-auto">
-        <div className="max-w-3xl mx-auto">
-          <article className="prose prose-slate prose-lg max-w-none">
-            <HighlightedMarkdown
-              content={documentReview.markdown}
-              onHighlightHover={(tag) => {
-                console.log("Received tag:", tag);
-                setActiveTag(tag);
-              }}
-              onHighlightClick={handleHighlightClick}
-              highlightColors={Object.fromEntries(
-                Object.entries(documentReview.comments).map(
-                  ([tag, comment]) => [
-                    tag,
-                    comment.color.base.split(" ")[0].replace("bg-", ""),
-                  ]
-                )
-              )}
-              activeTag={activeTag}
-            />
-          </article>
+    <div className="min-h-screen bg-white">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold text-gray-900">Evaluation Oracle</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            AI-powered document review and evaluation tools
+          </p>
         </div>
-      </div>
-
-      {/* Sidebar */}
-      <div className="w-64 border-l border-gray-200 bg-gray-50 p-4 flex-1">
-        <div className="space-y-4">
-          <Comments
-            comments={documentReview.comments}
-            activeTag={activeTag}
-            expandedTag={expandedTag}
-            onTagHover={setActiveTag}
-            onTagClick={handleCommentClick}
-          />
+      </header>
+      
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Featured Evaluation Agents
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                {featuredAgents.map((agent) => {
+                  const IconComponent = getIcon(agent.iconName);
+                  return (
+                    <Link 
+                      key={agent.id} 
+                      href={`/agents/${agent.id}-${agent.version.replace(".", "-")}`}
+                      className="block group"
+                    >
+                      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 h-full transition-all duration-200 hover:shadow-md">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`p-2 rounded-lg ${agent.color}`}>
+                            <IconComponent className="h-5 w-5" />
+                          </div>
+                          <h3 className="text-lg font-semibold group-hover:text-blue-600 transition-colors">
+                            {agent.name}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {agent.description}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              
+              <div className="text-center">
+                <Link 
+                  href="/agents" 
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  View All Agents
+                </Link>
+              </div>
+            </div>
+            
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Document Review Demo
+              </h2>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <DocumentReviewSet reviewSet={documentReviewSet} />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

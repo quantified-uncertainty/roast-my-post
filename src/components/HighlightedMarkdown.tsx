@@ -2,6 +2,10 @@
 
 import React from "react";
 
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+
 interface HighlightedMarkdownProps {
   content: string;
   onHighlightHover: (tag: string | null) => void;
@@ -33,20 +37,23 @@ export function HighlightedMarkdown({
   return (
     <div
       className="prose prose-slate prose-lg max-w-none"
-      dangerouslySetInnerHTML={{ __html: processedContent }}
-      onClick={(e) => {
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset.tag) {
           onHighlightClick(target.dataset.tag);
         }
       }}
-      onMouseOver={(e) => {
+      onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset.tag) {
           onHighlightHover(target.dataset.tag);
         }
       }}
       onMouseOut={() => onHighlightHover(null)}
-    />
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+        {processedContent}
+      </ReactMarkdown>
+    </div>
   );
 }
