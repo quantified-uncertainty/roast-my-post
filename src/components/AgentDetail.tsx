@@ -1,7 +1,7 @@
 "use client";
 
-import type { EvaluationAgent } from "@/types/evaluationAgents";
-import { getIcon } from "@/utils/iconMap";
+import type { EvaluationAgent } from '@/types/evaluationAgents';
+import { getIcon } from '@/utils/iconMap';
 
 interface AgentDetailProps {
   agent: EvaluationAgent;
@@ -9,11 +9,11 @@ interface AgentDetailProps {
 
 export default function AgentDetail({ agent }: AgentDetailProps) {
   const IconComponent = getIcon(agent.iconName);
-  
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="flex items-center gap-4 mb-8">
-        <div className={`p-3 rounded-lg ${agent.color}`}>
+        <div className={`p-3 rounded-lg bg-blue-100`}>
           <IconComponent className="h-8 w-8" />
         </div>
         <div>
@@ -21,11 +21,11 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
           <p className="text-gray-500">Version {agent.version}</p>
         </div>
       </div>
-      
+
       <div className="mb-8">
         <p className="text-lg text-gray-700">{agent.description}</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold mb-4">Capabilities</h2>
@@ -38,7 +38,7 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
             ))}
           </ul>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold mb-4">Use Cases</h2>
           <ul className="space-y-2">
@@ -50,7 +50,7 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
             ))}
           </ul>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold mb-4">Limitations</h2>
           <ul className="space-y-2">
@@ -63,7 +63,7 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
           </ul>
         </div>
       </div>
-      
+
       <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
         <h2 className="text-xl font-semibold mb-4">How to Use</h2>
         <p className="mb-4">
@@ -72,7 +72,9 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         <ol className="list-decimal pl-5 space-y-2">
           <li>Upload or select the document you want to evaluate</li>
           <li>Select "{agent.name}" from the evaluation agents list</li>
-          <li>Configure any specific parameters for the evaluation (if applicable)</li>
+          <li>
+            Configure any specific parameters for the evaluation (if applicable)
+          </li>
           <li>Review the agent's feedback and annotations on your document</li>
           <li>Apply suggested changes or export the evaluation report</li>
         </ol>

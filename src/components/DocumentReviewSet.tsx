@@ -1,13 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import {
+  useRef,
+  useState,
+} from 'react';
 
-import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
-import { evaluationAgents } from "@/data/agents";
-import type { Comment } from "@/types/documentReview";
-import type { Document } from "@/types/documents";
-import { getIcon } from "@/utils/iconMap";
-import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
+import { HighlightedMarkdown } from '@/components/HighlightedMarkdown';
+import { evaluationAgents } from '@/data/agents';
+import type { Comment } from '@/types/documentReview';
+import type { Document } from '@/types/documents';
+import { getIcon } from '@/utils/iconMap';
+import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 
 interface CommentsSidebarProps {
   comments: Record<string, Comment>;
@@ -111,27 +114,6 @@ function ReviewSelector({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-interface AgentBadgeProps {
-  agentId: string;
-}
-
-function AgentBadge({ agentId }: AgentBadgeProps) {
-  const agent = evaluationAgents.find((a) => a.id === agentId);
-
-  if (!agent) return null;
-
-  const IconComponent = getIcon(agent.iconName);
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-white">
-      <div className={`p-1 rounded-full bg-blue-100`}>
-        <IconComponent className="h-3 w-3" />
-      </div>
-      <span className="text-xs font-medium text-gray-700">{agent.name}</span>
     </div>
   );
 }

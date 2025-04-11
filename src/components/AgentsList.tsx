@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from 'next/link';
 
-import type { EvaluationAgent } from "@/types/evaluationAgents";
-import { getIcon } from "@/utils/iconMap";
+import type { EvaluationAgent } from '@/types/evaluationAgents';
+import { getIcon } from '@/utils/iconMap';
 
 interface AgentsListProps {
   agents: EvaluationAgent[];
@@ -28,7 +28,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
             >
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 h-full transition-all duration-200 hover:shadow-md">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg ${agent.color}`}>
+                  <div className={`p-2 rounded-lg bg-blue-100`}>
                     <IconComponent className="h-6 w-6" />
                   </div>
                   <div>
