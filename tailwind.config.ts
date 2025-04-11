@@ -13,6 +13,22 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            h1: {
+              fontWeight: '700',
+            },
+            h2: {
+              fontWeight: '600',
+            },
+            'ul > li': {
+              position: 'relative',
+            },
+          },
+        },
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],
