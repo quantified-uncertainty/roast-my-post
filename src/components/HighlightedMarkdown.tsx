@@ -9,17 +9,22 @@ import remarkGfm from "remark-gfm";
 
 interface HighlightedMarkdownProps {
   content: string;
+  onHighlightHover?: (tag: string) => void;
 }
 
-export function HighlightedMarkdown({ content }: HighlightedMarkdownProps) {
+export function HighlightedMarkdown({
+  content,
+  onHighlightHover,
+}: HighlightedMarkdownProps) {
   const [processedContent, setProcessedContent] = useState("");
 
   useEffect(() => {
-    // Process the content to replace highlight syntax with a special marker
+    // Replace {{text:tag}} syntax with <span class="highlight" data-tag="n">
     const processed = content.replace(
       /\{\{(.*?):(.*?)\}\}/g,
-      (match, text, comment) => {
-        return `<span class="highlight" data-comment="${comment}">${text}</span>`;
+      (_, text, tag) => {
+        const trimmedTag = tag.trim();
+        return `<span class="highlight" data-tag="${trimmedTag}">${text}</span>`;
       }
     );
     setProcessedContent(processed);
@@ -28,16 +33,21 @@ export function HighlightedMarkdown({ content }: HighlightedMarkdownProps) {
   const components: Components = {
     span: ({ className, children, ...props }) => {
       if (className === "highlight") {
-        const comment = (props as any)["data-comment"];
+        const tag = (props as any)["data-tag"];
         return (
           <span
-            className="bg-yellow-100 hover:bg-yellow-200 px-1 rounded transition-colors duration-200 cursor-help"
-            title={comment}
+            className="bg-yellow-800 hover:bg-yellow-700 px-1 rounded transition-colors duration-200 cursor-help"
+            data-tag={tag}
+            onMouseEnter={() => {
+              console.log("Mouse enter with tag:", tag); // Debug log
+              onHighlightHover?.(tag);
+            }}
           >
             {children}
           </span>
         );
       }
+
       return (
         <span className={className} {...props}>
           {children}
