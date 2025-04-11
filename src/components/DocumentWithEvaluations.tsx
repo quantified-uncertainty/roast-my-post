@@ -67,7 +67,7 @@ function CommentsSidebar({
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <h2 className="text-base font-medium text-gray-700 p-4 border-b border-gray-100">
-        Comments
+        Highlights
       </h2>
       <div>
         {sortCommentsByOffset(comments).map(([tag, comment], index) => {
@@ -79,7 +79,7 @@ function CommentsSidebar({
               key={tag}
               className={`
                 transition-colors duration-150 cursor-pointer 
-                ${isExpanded ? "bg-gray-200" : "hover:bg-gray-50"}
+                ${isExpanded ? "bg-white" : "hover:bg-gray-50 bg-gray-100"}
               `}
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
@@ -147,37 +147,70 @@ function ReviewSelector({
   onReviewSelect,
 }: ReviewSelectorProps) {
   return (
-    <div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+    <div className="mb-6">
+      <h3 className="text-sm font-medium text-gray-700 mb-3">
+        Document Reviews
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {document.reviews.map((review, index) => {
           const agent = evaluationAgents.find((a) => a.id === review.agentId);
           const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
+          const isActive = activeReviewIndex === index;
+          const commentCount = Object.keys(review.comments).length;
 
           return (
             <div
               key={index}
-              className={`p-2 rounded-lg cursor-pointer ${
-                activeReviewIndex === index
-                  ? "bg-blue-100"
-                  : "hover:bg-gray-100"
-              }`}
+              className={`
+                transition-all duration-150 rounded-lg cursor-pointer border 
+                ${
+                  isActive
+                    ? "bg-blue-50 border-blue-300 shadow-sm"
+                    : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
+                }
+              `}
               onClick={() => onReviewSelect(index)}
             >
-              <div className="flex h-full">
-                <div className="flex items-center justify-center pr-2">
-                  <Icon className="h-5 w-5 text-gray-500" />
+              <div className="p-1.5 flex h-full items-center">
+                <div
+                  className={`
+                  flex items-center justify-center p-1 rounded-full mr-2
+                  ${isActive ? "bg-blue-100" : "bg-gray-100"}
+                `}
+                >
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}
+                  />
                 </div>
-                <div className="flex flex-col justify-between">
+
+                <div className="flex flex-col justify-between flex-1 min-w-0">
                   {agent && (
-                    <span className="text-sm font-medium truncate">
+                    <span
+                      className={`
+                      text-sm font-medium truncate mb-1
+                      ${isActive ? "text-blue-700" : "text-gray-700"}
+                    `}
+                    >
                       {agent.name}
                     </span>
                   )}
+
                   {agent && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="flex items-center">
+                      <span
+                        className={`
+                        text-xs px-1 rounded-full flex items-center gap-1
+                        ${
+                          isActive
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                        }
+                      `}
+                      >
                         <ChatBubbleLeftIcon className="h-3 w-3" />
-                        {Object.keys(review.comments).length}
+                        {commentCount}
                       </span>
                     </div>
                   )}
