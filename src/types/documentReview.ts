@@ -27,9 +27,11 @@ export interface Comment {
 export interface DocumentReview {
   markdown: string;
   comments: Record<string, Comment>;
+  agentId: string; // Reference to the evaluationAgent that created this review
 }
 
 export const documentReview: DocumentReview = {
+  agentId: "logic-evaluator", // Default agent
   markdown: `
 # AI for Epistemic Impact Estimation
 

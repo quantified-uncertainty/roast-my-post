@@ -32,6 +32,7 @@ export const documentReviewSet: DocumentReviewSetData = {
       title: "Research Proposal",
       icon: DocumentTextIcon,
       review: {
+        agentId: "logic-evaluator",
         markdown: `
 # AI for Epistemic Impact Estimation
 
@@ -86,6 +87,7 @@ Clarifying these distinctions helps emphasize both the utilitarian and inherent 
       title: "Technical Specification",
       icon: CodeBracketIcon,
       review: {
+        agentId: "technical-accuracy-checker",
         markdown: `
 # Technical Specification for Epistemic Impact Analysis System
 
@@ -163,6 +165,7 @@ Development will proceed in phases:
       title: "Evaluation Methods",
       icon: ClipboardDocumentCheckIcon,
       review: {
+        agentId: "statistical-reviewer",
         markdown: `
 # Evaluation Methods for Epistemic Impact Analysis
 

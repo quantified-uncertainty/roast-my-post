@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import type { DocumentReviewSetData, DocumentReviewSetItem } from "@/types/documentReviewSet";
 import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
 import type { Comment } from "@/types/documentReview";
+import { evaluationAgents } from "@/types/evaluationAgents";
+import { getIcon } from "@/utils/iconMap";
 
 interface CommentsSidebarProps {
   comments: Record<string, Comment>;
@@ -66,6 +68,27 @@ interface DocumentSelectorProps {
   onDocumentSelect: (documentId: string) => void;
 }
 
+interface AgentBadgeProps {
+  agentId: string;
+}
+
+function AgentBadge({ agentId }: AgentBadgeProps) {
+  const agent = evaluationAgents.find(a => a.id === agentId);
+  
+  if (!agent) return null;
+  
+  const IconComponent = getIcon(agent.iconName);
+  
+  return (
+    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-white">
+      <div className={`p-1 rounded-full ${agent.color}`}>
+        <IconComponent className="h-3 w-3" />
+      </div>
+      <span className="text-xs font-medium text-gray-700">{agent.name}</span>
+    </div>
+  );
+}
+
 function DocumentSelector({
   reviewSet,
   activeDocumentId,
@@ -79,18 +102,29 @@ function DocumentSelector({
       <div className="space-y-1">
         {reviewSet.items.map((item) => {
           const Icon = item.icon;
+          const agent = evaluationAgents.find(a => a.id === item.review.agentId);
+          
           return (
             <div
               key={item.id}
-              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer ${
+              className={`p-2 rounded-lg cursor-pointer ${
                 activeDocumentId === item.id
                   ? "bg-blue-50 dark:bg-blue-900"
                   : "hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
               onClick={() => onDocumentSelect(item.id)}
             >
-              <Icon className="h-5 w-5 text-gray-500" />
-              <span className="text-sm truncate">{item.title}</span>
+              <div className="flex items-center gap-2 mb-1">
+                <Icon className="h-5 w-5 text-gray-500" />
+                <span className="text-sm font-medium truncate">{item.title}</span>
+              </div>
+              
+              {agent && (
+                <div className="flex items-center gap-1 ml-7">
+                  <div className={`w-2 h-2 rounded-full ${agent.color.split(' ')[0]}`}></div>
+                  <span className="text-xs text-gray-500">{agent.name}</span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -159,7 +193,12 @@ export function DocumentReviewSet({ reviewSet }: DocumentReviewSetProps) {
       {/* Document Area */}
       <div ref={documentRef} className="flex-2 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">{activeDocument.title}</h1>
+          <div className="flex items-center gap-4 mb-6">
+            <h1 className="text-2xl font-bold">{activeDocument.title}</h1>
+            {activeDocument.review.agentId && (
+              <AgentBadge agentId={activeDocument.review.agentId} />
+            )}
+          </div>
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
               content={activeDocument.review.markdown}
