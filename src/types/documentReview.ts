@@ -1,4 +1,7 @@
-import type { ForwardRefExoticComponent, SVGProps } from "react";
+import type {
+  ForwardRefExoticComponent,
+  SVGProps,
+} from 'react';
 
 type IconType = ForwardRefExoticComponent<
   Omit<SVGProps<SVGSVGElement>, "ref"> & {
@@ -7,6 +10,12 @@ type IconType = ForwardRefExoticComponent<
   }
 >;
 
+export interface Highlight {
+  startOffset: number;
+  endOffset: number;
+  prefix?: string; // E.g., 30 characters before
+}
+
 export interface Comment {
   title: string;
   description: string;
@@ -14,10 +23,10 @@ export interface Comment {
   color: {
     base: string;
   };
+  highlight: Highlight;
 }
 
 export interface DocumentReview {
-  markdown: string;
   comments: Record<string, Comment>;
   agentId: string; // Reference to the evaluationAgent that created this review
 }

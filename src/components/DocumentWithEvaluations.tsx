@@ -20,6 +20,14 @@ interface CommentsSidebarProps {
   onTagClick: (tag: string) => void;
 }
 
+function sortCommentsByOffset(comments: Record<string, Comment>) {
+  return Object.entries(comments).sort(([_, a], [__, b]) => {
+    const aOffset = a.highlight?.startOffset || 0;
+    const bOffset = b.highlight?.startOffset || 0;
+    return aOffset - bOffset;
+  });
+}
+
 function CommentsSidebar({
   comments,
   activeTag,
@@ -31,7 +39,7 @@ function CommentsSidebar({
     <div className="mt-8">
       <h3 className="text-sm font-semibold text-gray-700 mb-2">Comments</h3>
       <div className="space-y-2">
-        {Object.entries(comments).map(([tag, comment]) => {
+        {sortCommentsByOffset(comments).map(([tag, comment]) => {
           const Icon = comment.icon;
 
           return (
@@ -197,7 +205,7 @@ export function DocumentWithEvaluations({
           </div>
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
-              content={activeReview.markdown}
+              content={document.content}
               onHighlightHover={(tag) => {
                 setActiveTag(tag);
               }}
@@ -209,6 +217,14 @@ export function DocumentWithEvaluations({
                 ])
               )}
               activeTag={activeTag}
+              highlights={Object.fromEntries(
+                Object.entries(activeReview.comments)
+                  .filter(
+                    ([_, comment]) =>
+                      "highlight" in comment && comment.highlight
+                  )
+                  .map(([tag, comment]) => [tag, comment.highlight])
+              )}
             />
           </article>
         </div>

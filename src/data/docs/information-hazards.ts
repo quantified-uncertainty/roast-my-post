@@ -12,114 +12,143 @@ export const document: Document = {
   title: "Information Hazards Framework",
   author: "Bill Strong",
   publishedDate: "2011-03-01",
+  content: `
+# Information Hazards: A Risk Framework
+
+This document presents a framework for identifying, evaluating, and mitigating information hazards—cases where sharing or publishing information could cause harm. These hazards are increasingly relevant in an era of rapid technological and informational acceleration.
+
+## What is an Information Hazard?
+
+An *information hazard* is a risk that arises from the dissemination or accessibility of knowledge. While information is traditionally viewed as a public good, certain types of information may pose dangers if made widely available. This includes—but is not limited to—details that enable misuse of biotechnology, instructions for engineering pathogens, cryptographic vulnerabilities, or social coordination failures.
+
+## Categories of Information Hazards
+
+We identify several categories:
+
+### 1. Technological Capability Hazards
+
+Information that accelerates the development or implementation of potentially dangerous technologies. For instance, publishing a novel gene-editing technique might enable beneficial applications but also empower malicious actors to design harmful bioagents.
+
+### 2. Psychological or Behavioral Hazards
+
+Information that modifies public behavior in harmful ways. For example, widespread publication of detailed suicide methods or attention-seeking strategies associated with mass shooters could trigger copycat behavior.
+
+### 3. Strategic or Coordination Hazards
+
+Information that alters the strategic landscape in harmful ways—for instance, the publication of critical vulnerabilities in widely-used infrastructure before patches are available. Similarly, exposure of disinformation campaigns may help adversaries refine their tactics.
+
+## Dual-Use Information and Risk Tradeoffs
+
+The concept of *dual-use research of concern* (DURC) is foundational here. Much scientific and technical progress has both beneficial and harmful potential. Assessing such tradeoffs requires a structured, epistemic-risk-aware framework that incorporates both near-term and long-term impact assessments.
+
+### Case Example: AI Capability Releases
+
+In the domain of artificial intelligence, novel techniques such as few-shot learning or alignment-pretraining methods may significantly accelerate general capabilities. The release of code and model weights for such techniques can enable reproducibility and collaboration—but may also equip non-aligned actors with unprecedented tools.
+
+### Case Example: Behavioral Science Insights
+
+Recent findings in attention engineering, social manipulation, and persuasive architecture have increased platform efficiency but also raised concerns around user autonomy, addiction, and political polarization.
+
+## Governance Recommendations
+
+1. **Risk Forecasting**: Use foresight tools, including scenario modeling and red-teaming, to evaluate the downstream implications of knowledge release.
+
+2. **Tiered Disclosure**: Establish graded pathways for information release (e.g., preprints, private consortia, embargoes) based on risk category.
+
+3. **Cross-Domain Review Panels**: Encourage multidisciplinary review, including ethicists, security professionals, and technologists.
+
+4. **Transparency Indexing**: Rather than full suppression, information hazards may be partially documented but indexed in secure, regulated archives.
+
+## Open Challenges
+
+- How do we ensure scientific openness while protecting against strategic misuse?
+- What institutions are best positioned to evaluate and arbitrate these tradeoffs?
+- How can we foster global coordination, given geopolitical tensions and cultural divergence in risk assessment?
+
+We conclude that information hazards are a growing field of concern, meriting deeper formalization and proactive governance design.
+`,
+
   reviews: [
     {
       agentId: "factual-validator",
-      markdown: `
-# Information Hazards: A Risk Framework
-
-This document presents a framework for identifying, evaluating, and mitigating information hazards - cases where sharing or publishing information could create risks or harms.
-
-## Information Hazard Categories
-
-### Capability Acceleration Hazards
-
-Information that could accelerate the development of potentially harmful technologies:
-
-- Algorithm details that reduce development barriers
-- Engineering solutions to known technical bottlenecks
-- Novel approaches that open unexplored capability paths {{capability details:1}}
-
-### Security Vulnerabilities
-
-Information about vulnerabilities in existing systems:
-
-- Zero-day exploits in widely used software
-- Design flaws in critical infrastructure
-- Weaknesses in security protocols before patches are available
-
-### Dual-Use Information
-
-Knowledge that has legitimate beneficial uses but could be repurposed for harm:
-
-- Biological research with both medical and weaponization applications
-- Privacy tools that enable both legitimate privacy and illegal activities
-- Automation techniques applicable to both beneficial and harmful systems {{dual-use considerations:2}}
-
-## Evaluation Methodology
-
-When evaluating potential information hazards, consider:
-
-1. **Counterfactual acceleration**: Would this information meaningfully accelerate harmful capabilities beyond baseline development?
-2. **Diffusion characteristics**: How widely would this information spread, and to which actors?
-3. **Defensive value**: Does revealing this information enable important defensive measures?
-4. **Knowledge distribution**: Is this information likely to be discovered independently by multiple groups?
-
-## Mitigation Strategies
-
-When information presents potential hazards, consider these mitigation approaches:
-
-1. **Staged disclosure**: Release to progressively wider audiences with monitoring at each stage
-2. **Abstraction level adjustment**: Share higher-level insights without implementation details
-3. **Access controls**: Limit distribution to verified, responsible actors
-4. **Paired defenses**: Release alongside defensive measures or countermeasures
-`,
       comments: {
         "1": {
           title: "Capability Details",
           description:
-            "This section would benefit from distinguishing between different types of capability acceleration - some might advance general capabilities broadly while others might unlock specific concerning applications.",
+            "Consider disaggregating the category of 'AI capability releases' into distinct subtypes: e.g., algorithmic insights, training data optimizations, model weight releases, etc. This would clarify which forms pose which kinds of risk.",
           icon: DocumentTextIcon,
           color: { base: "bg-yellow-100 text-yellow-800" },
+          highlight: {
+            startOffset: 1440,
+            endOffset: 1540,
+            prefix: "novel techniques such as few-shot learning",
+          },
         },
         "2": {
-          title: "Dual-Use Considerations",
+          title: "Risk Forecasting Methodology",
           description:
-            "Consider addressing how to weigh the positive applications against potential misuse, perhaps through a structured risk-benefit analysis framework specific to dual-use technologies.",
+            "The document proposes 'foresight tools' but lacks a concrete description of these. Could benefit from mentioning specific methods like Delphi panels, Monte Carlo simulations, or structured expert judgment.",
           icon: ClipboardDocumentCheckIcon,
           color: { base: "bg-blue-100 text-blue-800" },
+          highlight: {
+            startOffset: 2035,
+            endOffset: 2062,
+            prefix: "Risk Forecasting: Use foresight tools",
+          },
+        },
+        "3": {
+          title: "Biotech Risk Illustration",
+          description:
+            "The section on gene-editing hazards would benefit from a concrete example, like CRISPR-based gene drives or gain-of-function influenza work, to ground the analysis.",
+          icon: ClipboardDocumentCheckIcon,
+          color: { base: "bg-orange-100 text-orange-800" },
+          highlight: {
+            startOffset: 505,
+            endOffset: 540,
+            prefix: "publishing a novel gene-editing technique",
+          },
         },
       },
     },
+
     {
       agentId: "bias-detector",
-      markdown: `
-# Information Hazards: A Risk Framework
-
-This document presents a framework for analyzing information hazards. From a bias perspective, the framework is generally balanced but has several areas where additional perspectives would strengthen the analysis.
-
-## Bias Assessment
-
-The document demonstrates awareness of multiple stakeholder perspectives but could be enhanced by:
-
-- Incorporating more diverse global and cultural perspectives on information risk {{cultural perspectives:1}}
-- Acknowledging potential power dynamics in who decides what information is "hazardous"
-- Considering how different communities may be differently impacted by both information sharing and information restrictions
-
-## Representation Analysis
-
-The examples provided generally represent mainstream security considerations but could be expanded to include:
-
-- Perspectives from marginalized communities on information access
-- Consideration of how mitigation strategies may disproportionately affect certain groups
-- Examples from a broader range of domains beyond traditional security concerns {{representational diversity:2}}
-
-Overall, the framework provides a useful starting point but would benefit from more diverse perspectives on both hazards and their mitigations.
-`,
       comments: {
         "1": {
-          title: "Cultural Perspectives",
+          title: "Geopolitical Assumptions",
           description:
-            "The document would benefit from explicitly addressing how conceptions of information hazards may vary across different cultural, geographic, and socioeconomic contexts. What one society considers a hazard might be viewed differently in another.",
+            "There is an implicit assumption that risk governance should operate globally and uniformly. Consider acknowledging that perceptions of acceptable risk differ sharply between nations with different economic and strategic priorities.",
           icon: MagnifyingGlassIcon,
           color: { base: "bg-teal-100 text-teal-800" },
+          highlight: {
+            startOffset: 2200,
+            endOffset: 2300,
+            prefix: "global coordination, given geopolitical tensions",
+          },
         },
         "2": {
-          title: "Representational Diversity",
+          title: "Neglected Domains",
           description:
-            "Consider expanding the examples to include information hazards in domains like public health communication, economic data, or social science research. This would provide a more comprehensive view of how information hazards manifest across different fields.",
+            "This document emphasizes technological and behavioral risks but pays little attention to economic or social science domains—for example, publication of sensitive economic indicators or public trust data may pose hazards too.",
           icon: ChatBubbleLeftRightIcon,
           color: { base: "bg-purple-100 text-purple-800" },
+          highlight: {
+            startOffset: 1375,
+            endOffset: 1405,
+            prefix: "hazards manifest across different fields",
+          },
+        },
+        "3": {
+          title: "Cultural Framing",
+          description:
+            "Phrases like 'malicious actors' and 'non-aligned entities' reflect a Western security-oriented lens. It might help to include broader framings, such as structural inequality or systemic risks that emerge unintentionally.",
+          icon: MagnifyingGlassIcon,
+          color: { base: "bg-green-100 text-green-800" },
+          highlight: {
+            startOffset: 1580,
+            endOffset: 1620,
+            prefix: "equip non-aligned actors with tools",
+          },
         },
       },
     },

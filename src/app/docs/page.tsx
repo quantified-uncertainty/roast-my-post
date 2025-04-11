@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link from 'next/link';
 
-import { documentsCollection } from "@/data/docs";
+import { documentsCollection } from '@/data/docs';
 
 export default function DocumentsPage() {
   return (
@@ -24,7 +24,7 @@ export default function DocumentsPage() {
                       {document.title}
                     </h2>
                     <p className="mt-1 truncate text-sm leading-5 text-gray-500">
-                      {document.description}
+                      {document.content}
                     </p>
                   </div>
                 </Link>
