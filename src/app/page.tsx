@@ -44,7 +44,7 @@ export default function Home() {
                     >
                       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 h-full transition-all duration-200 hover:shadow-md">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className={`p-2 rounded-lg ${agent.color}`}>
+                          <div className={`p-2 rounded-lg bg-blue-100`}>
                             <IconComponent className="h-5 w-5" />
                           </div>
                           <h3 className="text-lg font-semibold group-hover:text-blue-600 transition-colors">

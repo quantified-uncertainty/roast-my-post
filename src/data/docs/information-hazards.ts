@@ -1,3 +1,4 @@
+import type { Document } from "@/types/documents";
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
@@ -5,64 +6,14 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
-import type { Document } from "@/types/documents";
-
 export const document: Document = {
   id: "information-hazards",
   slug: "information-hazards",
   title: "Information Hazards Framework",
   description:
     "A framework for analyzing potential risks of information sharing",
-  icon: ClipboardDocumentCheckIcon,
-  content: `
-# Information Hazards: A Risk Framework
-
-This document presents a framework for identifying, evaluating, and mitigating information hazards - cases where sharing or publishing information could create risks or harms.
-
-## Information Hazard Categories
-
-### Capability Acceleration Hazards
-
-Information that could accelerate the development of potentially harmful technologies:
-
-- Algorithm details that reduce development barriers
-- Engineering solutions to known technical bottlenecks
-- Novel approaches that open unexplored capability paths
-
-### Security Vulnerabilities
-
-Information about vulnerabilities in existing systems:
-
-- Zero-day exploits in widely used software
-- Design flaws in critical infrastructure
-- Weaknesses in security protocols before patches are available
-
-### Dual-Use Information
-
-Knowledge that has legitimate beneficial uses but could be repurposed for harm:
-
-- Biological research with both medical and weaponization applications
-- Privacy tools that enable both legitimate privacy and illegal activities
-- Automation techniques applicable to both beneficial and harmful systems
-
-## Evaluation Methodology
-
-When evaluating potential information hazards, consider:
-
-1. **Counterfactual acceleration**: Would this information meaningfully accelerate harmful capabilities beyond baseline development?
-2. **Diffusion characteristics**: How widely would this information spread, and to which actors?
-3. **Defensive value**: Does revealing this information enable important defensive measures?
-4. **Knowledge distribution**: Is this information likely to be discovered independently by multiple groups?
-
-## Mitigation Strategies
-
-When information presents potential hazards, consider these mitigation approaches:
-
-1. **Staged disclosure**: Release to progressively wider audiences with monitoring at each stage
-2. **Abstraction level adjustment**: Share higher-level insights without implementation details
-3. **Access controls**: Limit distribution to verified, responsible actors
-4. **Paired defenses**: Release alongside defensive measures or countermeasures
-  `,
+  author: "Bill Strong",
+  publishedDate: "2011-03-01",
   reviews: [
     {
       agentId: "factual-validator",

@@ -1,3 +1,4 @@
+import type { Document } from "@/types/documents";
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
@@ -5,74 +6,14 @@ import {
   PresentationChartBarIcon,
 } from "@heroicons/react/24/outline";
 
-import type { Document } from "@/types/documents";
-
 export const document: Document = {
   id: "epistemic-impact-analysis",
   slug: "epistemic-impact-analysis",
   title: "Epistemic Impact Analysis",
   description:
     "A framework for evaluating the impact of new information on belief systems",
-  icon: DocumentTextIcon,
-  content: `
-# Developing Value Estimation Systems for AI Safety and EA Projects
-
-This document outlines a comprehensive framework for creating systems that can evaluate AI safety and EA projects. It synthesizes ideas around value estimation, knowledge management, and evaluation methodologies, with a focus on creating consistent, principled assessments.
-
-## Core Concepts and Requirements
-
-### Value Estimation Systems
-
-The central concept involves developing systems that can estimate the value of various entities (projects, initiatives, contributions) in a consistent and principled manner. Key requirements include:
-
-- Ability to assign numerical values and/or qualitative assessments to different items
-- Ensuring consistency across multiple evaluations
-- Managing uncertainty in evaluations
-- Creating persistent knowledge repositories (wikis) to store and refine evaluations
-- Applying these evaluations to both controlled environments (like games) and real-world projects
-
-### Knowledge Management Architecture
-
-A critical component is the creation of knowledge repositories that can store and organize evaluations. The proposed architecture includes:
-
-- Project-specific wiki pages with dedicated sections
-- Scratchpad areas where evaluation systems (including LLMs) can work through their reasoning
-- Structured data repositories for metrics and links
-- Versioned evaluation histories to track changes over time
-
-This would ideally be implemented as a lightweight, locally-stored wiki system with appropriate API access for automated systems to read and update.
-
-### Meta-Evaluation Loop
-
-An important feature is the ability to evaluate the evaluation system itself, creating a recursive improvement process:
-
-- The system estimates the value of different projects
-- It also estimates the value of contributions to its knowledge base
-- Performance in application domains (games, real-world decisions) feeds back to improve valuations
-- The system continually refines its evaluation methodologies based on results
-
-## Evaluation Challenges and Solutions
-
-### Consistency in LLM Evaluations
-
-A significant concern is that LLM evaluations might be inconsistent or random. Proposed solutions include:
-
-- Running multiple evaluations to generate distributions rather than point estimates
-- Creating plots and visualizations to represent uncertainty
-- Using ensemble methods across different models
-- Implementing mathematical frameworks to enforce consistency
-
-### Utility Theory Axiom Satisfaction
-
-To ensure evaluations are principled, they should satisfy the axioms of utility theory:
-
-- Completeness: For any two options A and B, the system should consistently express A>B, B>A, or A=B
-- Transitivity: If A>B and B>C, then A>C
-- Independence: Irrelevant alternatives should not affect pairwise rankings
-- Continuity: Preferences should be continuous across probability mixtures
-
-Specific testing methodologies have been proposed to verify adherence to these axioms and detect violations.
-  `,
+  author: "Nancy Strong",
+  publishedDate: "2024-01-01",
   reviews: [
     {
       agentId: "factual-validator",
@@ -180,7 +121,7 @@ The structure is logical, with a progression from core concepts to specific chal
       comments: {
         "1": {
           title: "Examples Needed",
-          description: 
+          description:
             "This document would benefit from specific examples showing how these evaluation systems would work in practice. Consider adding a case study or worked example showing the full workflow.",
           icon: DocumentTextIcon,
           color: { base: "bg-amber-100 text-amber-800" },

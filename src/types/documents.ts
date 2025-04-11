@@ -6,8 +6,8 @@ export interface Document {
   slug: string;
   title: string;
   description: string;
-  icon: any; // Icon component from a library like Heroicons
-  content: string;
+  author: string;
+  publishedDate: string;
   reviews: DocumentReview[];
 }
 

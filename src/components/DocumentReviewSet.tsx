@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Document } from "@/types/documents";
+
 import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
-import type { Comment, DocumentReview } from "@/types/documentReview";
 import { evaluationAgents } from "@/data/agents";
+import type { Comment } from "@/types/documentReview";
+import type { Document } from "@/types/documents";
 import { getIcon } from "@/utils/iconMap";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 interface CommentsSidebarProps {
   comments: Record<string, Comment>;
@@ -75,33 +77,34 @@ function ReviewSelector({
 }: ReviewSelectorProps) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-2">{document.title}</h3>
-      <p className="text-xs text-gray-500 mb-4">{document.description}</p>
-      
       <div className="space-y-1">
         {document.reviews.map((review, index) => {
-          const Icon = document.icon;
-          const agent = evaluationAgents.find(a => a.id === review.agentId);
-          
+          const agent = evaluationAgents.find((a) => a.id === review.agentId);
+          const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
+
           return (
             <div
               key={index}
               className={`p-2 rounded-lg cursor-pointer ${
-                activeReviewIndex === index
-                  ? "bg-blue-50 dark:bg-blue-900"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                activeReviewIndex === index ? "bg-blue-50" : "hover:bg-gray-100"
               }`}
               onClick={() => onReviewSelect(index)}
             >
               <div className="flex items-center gap-2 mb-1">
                 <Icon className="h-5 w-5 text-gray-500" />
-                <span className="text-sm font-medium truncate">{`Review ${index + 1}`}</span>
+                {agent && (
+                  <span className="text-sm font-medium truncate">
+                    {agent.name}
+                  </span>
+                )}
               </div>
-              
+
               {agent && (
                 <div className="flex items-center gap-1 ml-7">
-                  <div className={`w-2 h-2 rounded-full ${agent.color.split(' ')[0]}`}></div>
-                  <span className="text-xs text-gray-500">{agent.name}</span>
+                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <ChatBubbleLeftIcon className="h-3 w-3" />
+                    {Object.keys(review.comments).length}
+                  </span>
                 </div>
               )}
             </div>
@@ -117,15 +120,15 @@ interface AgentBadgeProps {
 }
 
 function AgentBadge({ agentId }: AgentBadgeProps) {
-  const agent = evaluationAgents.find(a => a.id === agentId);
-  
+  const agent = evaluationAgents.find((a) => a.id === agentId);
+
   if (!agent) return null;
-  
+
   const IconComponent = getIcon(agent.iconName);
-  
+
   return (
     <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-white">
-      <div className={`p-1 rounded-full ${agent.color}`}>
+      <div className={`p-1 rounded-full bg-blue-100`}>
         <IconComponent className="h-3 w-3" />
       </div>
       <span className="text-xs font-medium text-gray-700">{agent.name}</span>
@@ -144,10 +147,11 @@ export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
   const documentRef = useRef<HTMLDivElement>(null);
 
   // Get the active review
-  const activeReview = document.reviews[activeReviewIndex] || document.reviews[0];
-  
+  const activeReview =
+    document.reviews[activeReviewIndex] || document.reviews[0];
+
   const scrollToHighlight = (tag: string) => {
-    const element = document.getElementById(`highlight-${tag}`);
+    const element = window.document.getElementById(`highlight-${tag}`);
     if (element && documentRef.current) {
       // Calculate the position relative to the document container
       const containerRect = documentRef.current.getBoundingClientRect();
@@ -194,10 +198,13 @@ export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
       <div ref={documentRef} className="flex-2 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <h1 className="text-2xl font-bold">{document.title}</h1>
-            {activeReview.agentId && (
-              <AgentBadge agentId={activeReview.agentId} />
-            )}
+            <div>
+              <h1 className="text-2xl font-bold">{document.title}</h1>
+              <div className="text-sm text-gray-500">
+                By {document.author} •{" "}
+                {new Date(document.publishedDate).toLocaleDateString()}
+              </div>
+            </div>
           </div>
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
@@ -207,12 +214,10 @@ export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
               }}
               onHighlightClick={handleHighlightClick}
               highlightColors={Object.fromEntries(
-                Object.entries(activeReview.comments).map(
-                  ([tag, comment]) => [
-                    tag,
-                    comment.color.base.split(" ")[0].replace("bg-", ""),
-                  ]
-                )
+                Object.entries(activeReview.comments).map(([tag, comment]) => [
+                  tag,
+                  comment.color.base.split(" ")[0].replace("bg-", ""),
+                ])
               )}
               activeTag={activeTag}
             />
@@ -224,12 +229,12 @@ export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
       <div className="w-72 border-l border-gray-200 bg-gray-50 p-4 flex-1 overflow-y-auto">
         <div className="space-y-6">
           {/* Review Selector */}
-          <ReviewSelector 
+          <ReviewSelector
             document={document}
             activeReviewIndex={activeReviewIndex}
             onReviewSelect={handleReviewSelect}
           />
-          
+
           {/* Comments for the active review */}
           <CommentsSidebar
             comments={activeReview.comments}

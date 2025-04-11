@@ -1,3 +1,4 @@
+import type { Document } from "@/types/documents";
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
@@ -5,67 +6,13 @@ import {
   ScaleIcon,
 } from "@heroicons/react/24/outline";
 
-import type { Document } from "@/types/documents";
-
 export const document: Document = {
   id: "value-learning",
   slug: "value-learning",
   title: "Value Learning Systems",
-  description:
-    "Techniques for AI systems to learn and reflect human values",
-  icon: ChatBubbleLeftRightIcon,
-  content: `
-# Value Learning for AI Systems
-
-This document explores approaches to value learning in AI systems, with a focus on methods that can accurately capture, represent, and reflect human values.
-
-## Key Challenges in Value Learning
-
-Value learning in AI systems faces several fundamental challenges:
-
-- **Value Complexity**: Human values are complex, context-dependent, and occasionally contradictory
-- **Distribution Shift**: Values may change across cultures, demographics, and time periods
-- **Specification Problems**: Difficulty in precisely specifying what we mean by "values"
-- **Feedback Limitations**: Limited feedback from human evaluators on complex value questions
-
-## Approaches to Value Learning
-
-### Inverse Reinforcement Learning
-
-Inverse Reinforcement Learning (IRL) attempts to infer the reward function that a human demonstrator is optimizing:
-
-- Observes human behavior and infers underlying values
-- Assumes humans are approximately rational agents
-- Can struggle with sub-optimal human behavior
-- May require extensive demonstration data
-
-### Stated Preference Methods
-
-These approaches directly elicit value judgments from humans:
-
-- Structured surveys and questionnaires
-- Pairwise comparisons between scenarios
-- Hypothetical choices and trade-offs
-- Multi-stakeholder deliberation processes
-
-### Hybrid Approaches
-
-Modern systems increasingly use hybrid approaches:
-
-- Bootstrapping from multiple value learning methods
-- Constitutional AI with explicit principles and iterative refinement
-- Debate-based approaches where AI systems argue different value perspectives
-- Recursive evaluation frameworks that meta-evaluate the evaluation process itself
-
-## Implementation Considerations
-
-Practical implementation of value learning systems requires:
-
-- Diverse representation in human feedback sources
-- Robust aggregation of potentially conflicting values
-- Monitoring for value drift over time
-- Transparent documentation of value learning limitations
-  `,
+  description: "Techniques for AI systems to learn and reflect human values",
+  author: "Bill Stronger",
+  publishedDate: "2024-01-01",
   reviews: [
     {
       agentId: "clarity-coach",
@@ -162,7 +109,7 @@ Overall, the document provides a logically coherent overview of value learning a
       comments: {
         "1": {
           title: "Logical Connection",
-          description: 
+          description:
             "The hybrid approaches section would be strengthened by explicitly mapping each hybrid method to the specific challenges it addresses. This would create a clearer logical thread throughout the document.",
           icon: ScaleIcon,
           color: { base: "bg-blue-100 text-blue-800" },
