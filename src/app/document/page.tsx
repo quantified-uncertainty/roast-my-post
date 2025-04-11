@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { DocumentReviewSet } from "@/components/DocumentReviewSet";
-import { documentReviewSet } from "@/types/documentReviewSet";
+import { DocumentWithReviews } from "@/components/DocumentReviewSet";
+import { documentsCollection } from "@/types/documents";
 
 export default function DocumentPage() {
+  // Use the first document in the collection
+  const document = documentsCollection.documents[0];
+  
   return (
     <div className="min-h-screen">
       <header className="bg-white shadow-sm">
@@ -13,7 +16,7 @@ export default function DocumentPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Document Review</h1>
               <p className="text-sm text-gray-600">
-                {documentReviewSet.title}
+                {document.title}
               </p>
             </div>
             <Link
@@ -28,7 +31,7 @@ export default function DocumentPage() {
       
       <main>
         <div className="max-w-full mx-auto">
-          <DocumentReviewSet reviewSet={documentReviewSet} />
+          <DocumentWithReviews document={document} />
         </div>
       </main>
     </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { DocumentReviewSetData, DocumentReviewSetItem } from "@/types/documentReviewSet";
+import type { Document } from "@/types/documents";
 import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
-import type { Comment } from "@/types/documentReview";
+import type { Comment, DocumentReview } from "@/types/documentReview";
 import { evaluationAgents } from "@/types/evaluationAgents";
 import { getIcon } from "@/utils/iconMap";
 
@@ -62,10 +62,54 @@ function CommentsSidebar({
   );
 }
 
-interface DocumentSelectorProps {
-  reviewSet: DocumentReviewSetData;
-  activeDocumentId: string;
-  onDocumentSelect: (documentId: string) => void;
+interface ReviewSelectorProps {
+  document: Document;
+  activeReviewIndex: number;
+  onReviewSelect: (index: number) => void;
+}
+
+function ReviewSelector({
+  document,
+  activeReviewIndex,
+  onReviewSelect,
+}: ReviewSelectorProps) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-2">{document.title}</h3>
+      <p className="text-xs text-gray-500 mb-4">{document.description}</p>
+      
+      <div className="space-y-1">
+        {document.reviews.map((review, index) => {
+          const Icon = document.icon;
+          const agent = evaluationAgents.find(a => a.id === review.agentId);
+          
+          return (
+            <div
+              key={index}
+              className={`p-2 rounded-lg cursor-pointer ${
+                activeReviewIndex === index
+                  ? "bg-blue-50 dark:bg-blue-900"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+              onClick={() => onReviewSelect(index)}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Icon className="h-5 w-5 text-gray-500" />
+                <span className="text-sm font-medium truncate">{`Review ${index + 1}`}</span>
+              </div>
+              
+              {agent && (
+                <div className="flex items-center gap-1 ml-7">
+                  <div className={`w-2 h-2 rounded-full ${agent.color.split(' ')[0]}`}></div>
+                  <span className="text-xs text-gray-500">{agent.name}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface AgentBadgeProps {
@@ -89,62 +133,18 @@ function AgentBadge({ agentId }: AgentBadgeProps) {
   );
 }
 
-function DocumentSelector({
-  reviewSet,
-  activeDocumentId,
-  onDocumentSelect,
-}: DocumentSelectorProps) {
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-2">{reviewSet.title}</h3>
-      <p className="text-xs text-gray-500 mb-4">{reviewSet.description}</p>
-      
-      <div className="space-y-1">
-        {reviewSet.items.map((item) => {
-          const Icon = item.icon;
-          const agent = evaluationAgents.find(a => a.id === item.review.agentId);
-          
-          return (
-            <div
-              key={item.id}
-              className={`p-2 rounded-lg cursor-pointer ${
-                activeDocumentId === item.id
-                  ? "bg-blue-50 dark:bg-blue-900"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-              onClick={() => onDocumentSelect(item.id)}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="h-5 w-5 text-gray-500" />
-                <span className="text-sm font-medium truncate">{item.title}</span>
-              </div>
-              
-              {agent && (
-                <div className="flex items-center gap-1 ml-7">
-                  <div className={`w-2 h-2 rounded-full ${agent.color.split(' ')[0]}`}></div>
-                  <span className="text-xs text-gray-500">{agent.name}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+interface DocumentWithReviewsProps {
+  document: Document;
 }
 
-interface DocumentReviewSetProps {
-  reviewSet: DocumentReviewSetData;
-}
-
-export function DocumentReviewSet({ reviewSet }: DocumentReviewSetProps) {
-  const [activeDocumentId, setActiveDocumentId] = useState<string>(reviewSet.items[0].id);
+export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
+  const [activeReviewIndex, setActiveReviewIndex] = useState<number>(0);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
-  // Get the active document
-  const activeDocument = reviewSet.items.find(item => item.id === activeDocumentId) || reviewSet.items[0];
+  // Get the active review
+  const activeReview = document.reviews[activeReviewIndex] || document.reviews[0];
   
   const scrollToHighlight = (tag: string) => {
     const element = document.getElementById(`highlight-${tag}`);
@@ -175,8 +175,8 @@ export function DocumentReviewSet({ reviewSet }: DocumentReviewSetProps) {
     setExpandedTag(expandedTag === tag ? null : tag);
   };
 
-  const handleDocumentSelect = (documentId: string) => {
-    setActiveDocumentId(documentId);
+  const handleReviewSelect = (index: number) => {
+    setActiveReviewIndex(index);
     setActiveTag(null);
     setExpandedTag(null);
     // Reset scroll position
@@ -194,20 +194,20 @@ export function DocumentReviewSet({ reviewSet }: DocumentReviewSetProps) {
       <div ref={documentRef} className="flex-2 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <h1 className="text-2xl font-bold">{activeDocument.title}</h1>
-            {activeDocument.review.agentId && (
-              <AgentBadge agentId={activeDocument.review.agentId} />
+            <h1 className="text-2xl font-bold">{document.title}</h1>
+            {activeReview.agentId && (
+              <AgentBadge agentId={activeReview.agentId} />
             )}
           </div>
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
-              content={activeDocument.review.markdown}
+              content={activeReview.markdown}
               onHighlightHover={(tag) => {
                 setActiveTag(tag);
               }}
               onHighlightClick={handleHighlightClick}
               highlightColors={Object.fromEntries(
-                Object.entries(activeDocument.review.comments).map(
+                Object.entries(activeReview.comments).map(
                   ([tag, comment]) => [
                     tag,
                     comment.color.base.split(" ")[0].replace("bg-", ""),
@@ -223,16 +223,16 @@ export function DocumentReviewSet({ reviewSet }: DocumentReviewSetProps) {
       {/* Sidebar */}
       <div className="w-72 border-l border-gray-200 bg-gray-50 p-4 flex-1 overflow-y-auto">
         <div className="space-y-6">
-          {/* Document Selector */}
-          <DocumentSelector 
-            reviewSet={reviewSet}
-            activeDocumentId={activeDocumentId}
-            onDocumentSelect={handleDocumentSelect}
+          {/* Review Selector */}
+          <ReviewSelector 
+            document={document}
+            activeReviewIndex={activeReviewIndex}
+            onReviewSelect={handleReviewSelect}
           />
           
-          {/* Comments for the active document */}
+          {/* Comments for the active review */}
           <CommentsSidebar
-            comments={activeDocument.review.comments}
+            comments={activeReview.comments}
             activeTag={activeTag}
             expandedTag={expandedTag}
             onTagHover={setActiveTag}
