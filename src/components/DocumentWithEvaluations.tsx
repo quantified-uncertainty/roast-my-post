@@ -20,6 +20,36 @@ interface CommentsSidebarProps {
   onTagClick: (tag: string | null) => void;
 }
 
+// Available colors for comments
+const COMMENT_COLORS = [
+  "bg-emerald-100 text-emerald-800",
+  "bg-indigo-100 text-indigo-800",
+  "bg-amber-100 text-amber-800",
+  "bg-violet-100 text-violet-800",
+  "bg-lime-100 text-lime-800",
+  "bg-rose-100 text-rose-800",
+  "bg-cyan-100 text-cyan-800",
+  "bg-purple-100 text-purple-800",
+  "bg-yellow-100 text-yellow-800",
+  "bg-sky-100 text-sky-800",
+  "bg-orange-100 text-orange-800",
+  "bg-teal-100 text-teal-800",
+  "bg-pink-100 text-pink-800",
+  "bg-green-100 text-green-800",
+  "bg-fuchsia-100 text-fuchsia-800",
+  "bg-blue-100 text-blue-800",
+  "bg-red-100 text-red-800",
+];
+
+function getCommentColorByIndex(index: number): string {
+  return COMMENT_COLORS[index % COMMENT_COLORS.length];
+}
+
+function getCommentHighlightColor(index: number): string {
+  const colorClass = getCommentColorByIndex(index);
+  return colorClass.split(" ")[0].replace("bg-", "");
+}
+
 function sortCommentsByOffset(comments: Record<string, Comment>) {
   return Object.entries(comments).sort(([_, a], [__, b]) => {
     const aOffset = a.highlight?.startOffset || 0;
@@ -42,7 +72,6 @@ function CommentsSidebar({
       <div>
         {sortCommentsByOffset(comments).map(([tag, comment], index) => {
           const Icon = comment.icon;
-          const isActive = activeTag === tag;
           const isExpanded = expandedTag === tag;
 
           return (
@@ -60,7 +89,9 @@ function CommentsSidebar({
                 {/* Comment header with number, icon and title */}
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium ${comment.color.base}`}
+                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium ${getCommentColorByIndex(
+                      index
+                    )}`}
                   >
                     {index + 1}
                   </div>
@@ -242,10 +273,9 @@ export function DocumentWithEvaluations({
               }}
               onHighlightClick={handleHighlightClick}
               highlightColors={Object.fromEntries(
-                Object.entries(activeReview.comments).map(([tag, comment]) => [
-                  tag,
-                  comment.color.base.split(" ")[0].replace("bg-", ""),
-                ])
+                sortCommentsByOffset(activeReview.comments).map(
+                  ([tag, _], index) => [tag, getCommentHighlightColor(index)]
+                )
               )}
               activeTag={activeTag}
               highlights={Object.fromEntries(

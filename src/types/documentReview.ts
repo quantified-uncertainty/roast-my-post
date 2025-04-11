@@ -20,9 +20,6 @@ export interface Comment {
   title: string;
   description: string;
   icon: IconType;
-  color: {
-    base: string;
-  };
   highlight: Highlight;
 }
 
