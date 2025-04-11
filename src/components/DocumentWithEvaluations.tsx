@@ -80,7 +80,7 @@ function ReviewSelector({
 }: ReviewSelectorProps) {
   return (
     <div>
-      <div className="space-y-1">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {document.reviews.map((review, index) => {
           const agent = evaluationAgents.find((a) => a.id === review.agentId);
           const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
@@ -89,27 +89,32 @@ function ReviewSelector({
             <div
               key={index}
               className={`p-2 rounded-lg cursor-pointer ${
-                activeReviewIndex === index ? "bg-blue-50" : "hover:bg-gray-100"
+                activeReviewIndex === index
+                  ? "bg-blue-100"
+                  : "hover:bg-gray-100"
               }`}
               onClick={() => onReviewSelect(index)}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="h-5 w-5 text-gray-500" />
-                {agent && (
-                  <span className="text-sm font-medium truncate">
-                    {agent.name}
-                  </span>
-                )}
-              </div>
-
-              {agent && (
-                <div className="flex items-center gap-1 ml-7">
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <ChatBubbleLeftIcon className="h-3 w-3" />
-                    {Object.keys(review.comments).length}
-                  </span>
+              <div className="flex h-full">
+                <div className="flex items-center justify-center pr-2">
+                  <Icon className="h-5 w-5 text-gray-500" />
                 </div>
-              )}
+                <div className="flex flex-col justify-between">
+                  {agent && (
+                    <span className="text-sm font-medium truncate">
+                      {agent.name}
+                    </span>
+                  )}
+                  {agent && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <ChatBubbleLeftIcon className="h-3 w-3" />
+                        {Object.keys(review.comments).length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}

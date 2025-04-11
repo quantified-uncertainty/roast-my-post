@@ -1,17 +1,15 @@
-import type { Document } from "@/types/documents";
+import type { Document } from '@/types/documents';
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+} from '@heroicons/react/24/outline';
 
 export const document: Document = {
   id: "information-hazards",
   slug: "information-hazards",
   title: "Information Hazards Framework",
-  description:
-    "A framework for analyzing potential risks of information sharing",
   author: "Bill Strong",
   publishedDate: "2011-03-01",
   reviews: [

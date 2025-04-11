@@ -1,16 +1,15 @@
-import type { Document } from "@/types/documents";
+import type { Document } from '@/types/documents';
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
   CodeBracketIcon,
   ScaleIcon,
-} from "@heroicons/react/24/outline";
+} from '@heroicons/react/24/outline';
 
 export const document: Document = {
   id: "value-learning",
   slug: "value-learning",
   title: "Value Learning Systems",
-  description: "Techniques for AI systems to learn and reflect human values",
   author: "Bill Stronger",
   publishedDate: "2024-01-01",
   reviews: [

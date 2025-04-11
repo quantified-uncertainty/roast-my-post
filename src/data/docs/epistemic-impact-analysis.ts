@@ -1,17 +1,15 @@
-import type { Document } from "@/types/documents";
+import type { Document } from '@/types/documents';
 import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentCheckIcon,
   DocumentTextIcon,
   PresentationChartBarIcon,
-} from "@heroicons/react/24/outline";
+} from '@heroicons/react/24/outline';
 
 export const document: Document = {
   id: "epistemic-impact-analysis",
   slug: "epistemic-impact-analysis",
   title: "Epistemic Impact Analysis",
-  description:
-    "A framework for evaluating the impact of new information on belief systems",
   author: "Nancy Strong",
   publishedDate: "2024-01-01",
   reviews: [
