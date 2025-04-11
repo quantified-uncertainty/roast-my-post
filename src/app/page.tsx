@@ -68,10 +68,18 @@ export default function Home() {
             
             <div className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Document Review Demo
+                Document Library
               </h2>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <DocumentReviewSet reviewSet={documentReviewSet} />
+              <div className="border border-gray-200 rounded-lg overflow-hidden p-6">
+                <p className="mb-4 text-lg text-gray-700">
+                  Browse our collection of research documents with interactive review comments and annotations.
+                </p>
+                <Link 
+                  href="/docs" 
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                >
+                  Explore Documents
+                </Link>
               </div>
             </div>
           </div>
