@@ -51,7 +51,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-white">
       {/* Document Area */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-2 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
@@ -68,7 +68,7 @@ export default function Home() {
       </div>
 
       {/* Sidebar */}
-      <div className="w-64 border-l border-gray-200 bg-gray-50 p-4">
+      <div className="w-64 border-l border-gray-200 bg-gray-50 p-4 flex-1">
         <div className="space-y-4">
           {/* Comments Section */}
           <div className="mt-8">

@@ -20,7 +20,17 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        {/* Header (always visible at the top) */}
+        <header className="border-b border-gray-200 px-6 py-3 bg-blue-500">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl font-bold text-gray-200">
+              Document Analyzer
+            </h1>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main>{children}</main>
       </body>
     </html>
   );
