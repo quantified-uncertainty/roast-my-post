@@ -1,16 +1,19 @@
 import Image from "next/image";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
-const foo = `
+import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
+
+// Highlighted text with comments
+const markdownContent = `
 # Hello
 
-This is a test
+This is a test with some {{highlighted text:This is a comment about the highlighted text}}. 
 
-- List item 1
+Here's some more {{important text:This needs attention}} in this document.
+
+- List item 1 with {{highlight:A note about item 1}}
 - List item 2
 
-1. Numbered item 1
+1. Numbered item {{1:First item comment}}
 2. Numbered item 2
 `;
 
@@ -21,7 +24,7 @@ export default function Home() {
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <article className="prose prose-slate dark:prose-invert prose-lg max-w-none">
-            <Markdown remarkPlugins={[remarkGfm]}>{foo}</Markdown>
+            <HighlightedMarkdown content={markdownContent} />
           </article>
         </div>
       </div>
