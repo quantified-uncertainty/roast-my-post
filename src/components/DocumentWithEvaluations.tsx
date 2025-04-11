@@ -17,7 +17,7 @@ interface CommentsSidebarProps {
   activeTag: string | null;
   expandedTag: string | null;
   onTagHover: (tag: string | null) => void;
-  onTagClick: (tag: string) => void;
+  onTagClick: (tag: string | null) => void;
 }
 
 function sortCommentsByOffset(comments: Record<string, Comment>) {
@@ -27,7 +27,6 @@ function sortCommentsByOffset(comments: Record<string, Comment>) {
     return aOffset - bOffset;
   });
 }
-
 function CommentsSidebar({
   comments,
   activeTag,
@@ -36,36 +35,66 @@ function CommentsSidebar({
   onTagClick,
 }: CommentsSidebarProps) {
   return (
-    <div className="mt-8">
-      <h3 className="text-sm font-semibold text-gray-700 mb-2">Comments</h3>
-      <div className="space-y-2">
-        {sortCommentsByOffset(comments).map(([tag, comment]) => {
+    <div className="bg-white rounded-lg shadow-sm">
+      <h2 className="text-base font-medium text-gray-700 p-4 border-b border-gray-100">
+        Comments
+      </h2>
+      <div>
+        {sortCommentsByOffset(comments).map(([tag, comment], index) => {
           const Icon = comment.icon;
+          const isActive = activeTag === tag;
+          const isExpanded = expandedTag === tag;
 
           return (
             <div
               key={tag}
-              className={`py-2 px-2 rounded-lg hover:bg-gray-100 cursor-pointer ${
-                activeTag === tag ? "bg-gray-100" : ""
-              }`}
+              className={`
+                transition-colors duration-150 cursor-pointer 
+                ${isExpanded ? "bg-gray-200" : "hover:bg-gray-50"}
+              `}
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
               onClick={() => onTagClick(tag)}
             >
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="h-4 w-4 text-gray-400" />
-                <div
-                  className={`font-medium ${comment.color.base} px-1 rounded`}
-                >
-                  {comment.title}
+              <div className="px-4 py-3">
+                {/* Comment header with number, icon and title */}
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium ${comment.color.base}`}
+                  >
+                    {index + 1}
+                  </div>
+
+                  <Icon className="h-4 w-4 text-gray-500" />
+
+                  <div className="font-medium text-gray-700">
+                    {comment.title}
+                  </div>
                 </div>
-              </div>
-              <div
-                className={`text-sm text-gray-600 transition-all duration-200 ${
-                  expandedTag === tag ? "" : "line-clamp-1"
-                }`}
-              >
-                {comment.description}
+
+                {/* Comment description */}
+                {comment.description && (
+                  <div className="ml-9 mt-1 text-sm text-gray-600">
+                    <div className={isExpanded ? "" : "line-clamp-1"}>
+                      {comment.description}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show more/less toggle */}
+                {comment.description && comment.description.length > 30 && (
+                  <div className="ml-9 mt-1">
+                    <button
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTagClick(isExpanded ? null : tag);
+                      }}
+                    >
+                      {isExpanded ? "Show less" : "Show more"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -167,9 +196,11 @@ export function DocumentWithEvaluations({
     }
   };
 
-  const handleCommentClick = (tag: string) => {
+  const handleCommentClick = (tag: string | null) => {
     setExpandedTag(expandedTag === tag ? null : tag);
-    scrollToHighlight(tag);
+    if (tag) {
+      scrollToHighlight(tag);
+    }
   };
 
   const handleHighlightClick = (tag: string) => {
