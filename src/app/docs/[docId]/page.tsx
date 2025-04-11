@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { DocumentWithReviews } from "@/components/DocumentReviewSet";
-import { documentsCollection } from "@/types/documents";
+import { documentsCollection } from "@/data/sampleDocuments";
 
 export default function DocumentPage() {
   const params = useParams();

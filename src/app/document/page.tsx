@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { DocumentWithReviews } from "@/components/DocumentReviewSet";
-import { documentsCollection } from "@/types/documents";
+import { documentsCollection } from "@/data/sampleDocuments";
 
 export default function DocumentPage() {
   // Use the first document in the collection
