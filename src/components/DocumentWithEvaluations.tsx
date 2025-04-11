@@ -122,7 +122,9 @@ interface DocumentWithReviewsProps {
   document: Document;
 }
 
-export function DocumentWithReviews({ document }: DocumentWithReviewsProps) {
+export function DocumentWithEvaluations({
+  document,
+}: DocumentWithReviewsProps) {
   const [activeReviewIndex, setActiveReviewIndex] = useState<number>(0);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [expandedTag, setExpandedTag] = useState<string | null>(null);

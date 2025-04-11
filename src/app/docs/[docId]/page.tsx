@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-import { DocumentWithReviews } from "@/components/DocumentReviewSet";
-import { documentsCollection } from "@/data/docs";
+import { DocumentWithEvaluations } from '@/components/DocumentWithEvaluations';
+import { documentsCollection } from '@/data/docs';
 
 export default function DocumentPage() {
   const params = useParams();
@@ -39,7 +39,7 @@ export default function DocumentPage() {
     <div className="min-h-screen">
       <main>
         <div className="max-w-full mx-auto">
-          <DocumentWithReviews document={document} />
+          <DocumentWithEvaluations document={document} />
         </div>
       </main>
     </div>
