@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { documentsCollection } from "@/data/sampleDocuments";
+import { documentsCollection } from "@/data/docs";
 
 export default function DocumentsPage() {
   return (

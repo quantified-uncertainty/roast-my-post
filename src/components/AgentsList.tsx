@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EvaluationAgent } from "@/types/evaluationAgents";
+import type { EvaluationAgent } from "@/types/evaluationAgents";
 import { getIcon } from "@/utils/iconMap";
 
 interface AgentsListProps {

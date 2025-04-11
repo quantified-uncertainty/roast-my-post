@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import AgentDetail from "@/components/AgentDetail";
-import { evaluationAgents } from "@/types/evaluationAgents";
+import { evaluationAgents } from "@/data/agents";
 import { notFound } from "next/navigation";
 
 export default function AgentPage() {

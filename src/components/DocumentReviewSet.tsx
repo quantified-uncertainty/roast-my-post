@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { Document } from "@/types/documents";
 import { HighlightedMarkdown } from "@/components/HighlightedMarkdown";
 import type { Comment, DocumentReview } from "@/types/documentReview";
-import { evaluationAgents } from "@/types/evaluationAgents";
+import { evaluationAgents } from "@/data/agents";
 import { getIcon } from "@/utils/iconMap";
 
 interface CommentsSidebarProps {
