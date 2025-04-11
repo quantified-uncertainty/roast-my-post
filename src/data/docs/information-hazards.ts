@@ -1,10 +1,4 @@
 import type { Document } from '@/types/documents';
-import {
-  ChatBubbleLeftRightIcon,
-  ClipboardDocumentCheckIcon,
-  DocumentTextIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
 
 export const document: Document = {
   id: "information-hazards",
@@ -73,39 +67,43 @@ We conclude that information hazards are a growing field of concern, meriting de
       agentId: "factual-validator",
       comments: {
         "1": {
-          title: "Capability Details",
+          title: "Concrete Examples Needed",
           description:
-            "Consider disaggregating the category of 'AI capability releases' into distinct subtypes: e.g., algorithmic insights, training data optimizations, model weight releases, etc. This would clarify which forms pose which kinds of risk.",
-          icon: DocumentTextIcon,
-          color: { base: "bg-yellow-100 text-yellow-800" },
+            "The framework would benefit from specific, quantifiable examples. For instance, include case studies with estimated risk profiles using probability ranges (e.g., '30-60% likelihood of misuse within 3 years') to demonstrate practical application.",
+          highlight: {
+            startOffset: 505,
+            endOffset: 540,
+            prefix: "publishing a novel gene-editing technique",
+          },
+        },
+        "2": {
+          title: "Capability Taxonomy Development",
+          description:
+            "Consider expanding the AI capability section with a structured taxonomy: (1) algorithmic advances, (2) training methodologies, (3) model parameters/weights, and (4) application-specific techniques. Each category presents distinct risk profiles requiring tailored governance approaches.",
           highlight: {
             startOffset: 1440,
             endOffset: 1540,
             prefix: "novel techniques such as few-shot learning",
           },
         },
-        "2": {
-          title: "Risk Forecasting Methodology",
+        "3": {
+          title: "Quantitative Assessment Framework",
           description:
-            "The document proposes 'foresight tools' but lacks a concrete description of these. Could benefit from mentioning specific methods like Delphi panels, Monte Carlo simulations, or structured expert judgment.",
-          icon: ClipboardDocumentCheckIcon,
-          color: { base: "bg-blue-100 text-blue-800" },
+            "The risk assessment methodology lacks quantitative rigor. Recommend incorporating expected value calculations that combine: (1) probability estimates of misuse, (2) potential impact magnitude, and (3) counterfactual acceleration factors to create comparable risk scores across domains.",
           highlight: {
             startOffset: 2035,
             endOffset: 2062,
             prefix: "Risk Forecasting: Use foresight tools",
           },
         },
-        "3": {
-          title: "Biotech Risk Illustration",
+        "4": {
+          title: "Implementation Timeline Guidance",
           description:
-            "The section on gene-editing hazards would benefit from a concrete example, like CRISPR-based gene drives or gain-of-function influenza work, to ground the analysis.",
-          icon: ClipboardDocumentCheckIcon,
-          color: { base: "bg-orange-100 text-orange-800" },
+            "Add a decision framework for determining appropriate disclosure timelines. For critical vulnerabilities, consider recommending concrete waiting periods (e.g., '45-90 days after patch availability') rather than general principles alone.",
           highlight: {
-            startOffset: 505,
-            endOffset: 540,
-            prefix: "publishing a novel gene-editing technique",
+            startOffset: 2075,
+            endOffset: 2150,
+            prefix: "Tiered Disclosure: Establish graded pathways",
           },
         },
       },
@@ -115,11 +113,9 @@ We conclude that information hazards are a growing field of concern, meriting de
       agentId: "bias-detector",
       comments: {
         "1": {
-          title: "Geopolitical Assumptions",
+          title: "Multi-Stakeholder Perspective",
           description:
-            "There is an implicit assumption that risk governance should operate globally and uniformly. Consider acknowledging that perceptions of acceptable risk differ sharply between nations with different economic and strategic priorities.",
-          icon: MagnifyingGlassIcon,
-          color: { base: "bg-teal-100 text-teal-800" },
+            "The framework primarily addresses risks from a Western security perspective. Expand to include analysis from diverse stakeholders including: (1) developing nations with limited technological infrastructure, (2) open science advocates, and (3) communities historically excluded from risk governance conversations.",
           highlight: {
             startOffset: 2200,
             endOffset: 2300,
@@ -127,27 +123,79 @@ We conclude that information hazards are a growing field of concern, meriting de
           },
         },
         "2": {
-          title: "Neglected Domains",
+          title: "Economic Domain Integration",
           description:
-            "This document emphasizes technological and behavioral risks but pays little attention to economic or social science domains—for example, publication of sensitive economic indicators or public trust data may pose hazards too.",
-          icon: ChatBubbleLeftRightIcon,
-          color: { base: "bg-purple-100 text-purple-800" },
+            "The framework overlooks significant economic information hazards. Consider adding analysis of market-moving information, financial vulnerabilities, and economic forecasting data that could create systemic risks or exacerbate inequality when released without appropriate safeguards.",
           highlight: {
-            startOffset: 1375,
-            endOffset: 1405,
-            prefix: "hazards manifest across different fields",
+            startOffset: 390,
+            endOffset: 450,
+            prefix: "Categories of Information Hazards",
           },
         },
         "3": {
-          title: "Cultural Framing",
+          title: "Structural Risk Framing",
           description:
-            "Phrases like 'malicious actors' and 'non-aligned entities' reflect a Western security-oriented lens. It might help to include broader framings, such as structural inequality or systemic risks that emerge unintentionally.",
-          icon: MagnifyingGlassIcon,
-          color: { base: "bg-green-100 text-green-800" },
+            "The document's emphasis on 'malicious actors' may oversimplify risk dynamics. Many information hazards emerge through structural incentives and unintended consequences rather than deliberate misuse. Consider incorporating systems-oriented risk models that account for emergent harms.",
           highlight: {
             startOffset: 1580,
             endOffset: 1620,
             prefix: "equip non-aligned actors with tools",
+          },
+        },
+        "4": {
+          title: "Differential Access Considerations",
+          description:
+            "The governance section should explicitly address power imbalances created through differential information access. Develop specific recommendations for ensuring that safety-oriented information restrictions don't inadvertently concentrate power in already-privileged institutions.",
+          highlight: {
+            startOffset: 2060,
+            endOffset: 2200,
+            prefix: "Governance Recommendations",
+          },
+        },
+      },
+    },
+
+    {
+      agentId: "emotional-analyzer",
+      comments: {
+        "1": {
+          title: "Anxious Undertones",
+          description:
+            "The document exhibits an anxiety-laden tone (75% confidence) when discussing technological risks, particularly evident in phrases like 'unprecedented tools' and 'harmful potential.' Consider balancing cautionary language with equally weighted discussion of positive possibilities to create a more emotionally nuanced framework.",
+          highlight: {
+            startOffset: 1550,
+            endOffset: 1620,
+            prefix: "equip non-aligned actors with unprecedented tools",
+          },
+        },
+        "2": {
+          title: "Detached Clinical Framing",
+          description:
+            "The governance section employs clinically detached language that creates emotional distance from human impacts (85% confidence). Recommend incorporating empathetic framing that acknowledges the human-centered consequences of information hazards and governance decisions with more emotionally engaged language.",
+          highlight: {
+            startOffset: 2030,
+            endOffset: 2200,
+            prefix: "Governance Recommendations",
+          },
+        },
+        "3": {
+          title: "Conflicting Emotional Signals",
+          description:
+            "The document contains a tension between excitement about scientific progress (positive valence) and fear of misuse (negative valence), creating an emotionally ambivalent reader experience. Consider explicitly acknowledging this tension and providing emotional guidance for navigating such ambivalence.",
+          highlight: {
+            startOffset: 1700,
+            endOffset: 1800,
+            prefix: "has both beneficial and harmful potential",
+          },
+        },
+        "4": {
+          title: "Authority-Oriented Language",
+          description:
+            "The text employs emotionally authoritative language patterns that may trigger defensive responses in readers (70% confidence). Consider incorporating more collaborative emotional framing that invites reader participation rather than prescriptive directives that may create resistance.",
+          highlight: {
+            startOffset: 2200,
+            endOffset: 2350,
+            prefix: "Open Challenges",
           },
         },
       },

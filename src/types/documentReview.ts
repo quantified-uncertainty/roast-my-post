@@ -19,7 +19,6 @@ export interface Highlight {
 export interface Comment {
   title: string;
   description: string;
-  icon: IconType;
   highlight: Highlight;
 }
 

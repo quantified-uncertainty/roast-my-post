@@ -4,24 +4,24 @@ export const agent: EvaluationAgent = {
   id: "creative-evaluator",
   name: "Creative Evaluator",
   version: "1.9",
-  description: "Assesses creative works for originality, coherence, and artistic merit. Provides feedback on narrative structure, stylistic elements, and audience engagement potential.",
+  description:
+    "Assesses creative works for originality, coherence, and artistic merit. Provides feedback on narrative structure, stylistic elements, and audience engagement potential.",
   iconName: "LightBulbIcon",
-  color: "bg-pink-100 text-pink-800",
   capabilities: [
     "Stylistic analysis and comparison",
     "Narrative structure evaluation",
     "Originality assessment",
-    "Genre convention adherence checking"
+    "Genre convention adherence checking",
   ],
   use_cases: [
     "Creative writing feedback",
     "Marketing copy assessment",
     "Content engagement prediction",
-    "Arts education support"
+    "Arts education support",
   ],
   limitations: [
     "Subjective nature of creative evaluation",
     "Cultural context limitations",
-    "May favor conventional over experimental approaches"
-  ]
+    "May favor conventional over experimental approaches",
+  ],
 };

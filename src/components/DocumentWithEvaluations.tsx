@@ -71,7 +71,6 @@ function CommentsSidebar({
       </h2>
       <div>
         {sortCommentsByOffset(comments).map(([tag, comment], index) => {
-          const Icon = comment.icon;
           const isExpanded = expandedTag === tag;
 
           return (
@@ -95,8 +94,6 @@ function CommentsSidebar({
                   >
                     {index + 1}
                   </div>
-
-                  <Icon className="h-4 w-4 text-gray-500" />
 
                   <div className="font-medium text-gray-700">
                     {comment.title}
