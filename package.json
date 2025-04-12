@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "review": "node --loader ts-node/esm src/scripts/reviewDocument.ts"
+    "review": "npx tsx src/scripts/analyze-md.mts --file ./information-hazards.json -a bias-detector ",
+    "generate-docs": "tsx src/scripts/generate-docs-index.mts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -38,6 +39,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "^4.7.1"
   }
 }
