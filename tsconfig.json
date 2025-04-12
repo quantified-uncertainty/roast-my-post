@@ -29,7 +29,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/scripts/reviewDocument.ts",
-    "src/data/agents/index.ts"
+    "src/data/agents/index.ts",
+    "src/scripts/analyze-md.mts"
   ],
   "exclude": ["node_modules"]
 }
