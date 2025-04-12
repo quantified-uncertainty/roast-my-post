@@ -65,8 +65,20 @@ We conclude that information hazards are a growing field of concern, meriting de
   reviews: [
     {
       agentId: "factual-validator",
-      analysis:
-        "The framework is well-structured and provides a comprehensive overview of information hazards. However, it could benefit from specific, quantifiable examples to demonstrate practical application.",
+      analysis: `**High confidence**:  
+      The Information Hazards Framework demonstrates a clear and logical taxonomy of hazard categories and dual-use considerations, yet it stops short of providing the quantitative rigor necessary for robust decision making. Integrating *Bayesian risk quantification* could allow the assignment of explicit prior distributions to misuse likelihoods, for example, employing a Beta(3,2) prior reflecting moderate initial uncertainty and updating it with red-teaming exercise outcomes to produce posterior probabilities such as a 45–65% chance of dual-use AI exploitation within a five-year horizon. Moreover, coupling *expected utility theory* with acceleration multipliers—such as a 1.3× factor for open-source diffusion speed—would permit standardized risk scores across heterogeneous domains, calculated as R = P(misuse) × I(impact) × A(acceleration).
+
+The framework could further benefit from *hierarchical modeling* to capture variability across technology subdomains, for instance, differentiating between gene editing at the base pair level versus whole-genome manipulation, each with distinct risk profiles and confidence intervals. Additionally, incorporating *Monte Carlo simulation* to propagate epistemic uncertainties through complex disclosure scenarios would reveal non-linear effects, such as tail-risk events with a 5% probability of catastrophic impact. Embedding *Cooke's classical model* for expert elicitation can reduce inter-analyst variance by approximately 25%, improving calibration and traceability of assumptions. A structured decision analysis using *value-of-information metrics* could identify the most impactful data collection efforts, indicating where reducing uncertainty yields the greatest marginal risk reduction per dollar spent.
+
+**Speculative**:  
+Future iterations might integrate *adaptive learning algorithms* that update risk priors in real time as empirical data from security incidents accumulates, thereby narrowing confidence intervals by an estimated 10–15% annually. Additionally, applying *robust optimization techniques* could stress-test governance policies under worst-case parameter assumptions, ensuring that decision thresholds remain valid under high uncertainty.
+
+**Low confidence**:  
+Further research is required to validate the efficacy of combining scenario-based foresight with quantitative scoring, and to determine the optimal frequency for updating risk models, though an initial biannual review cycle may be appropriate. Furthermore, the framework could incorporate *dynamic network analysis* to model how information flows through adversarial and benevolent communities, enabling the calculation of centrality metrics that identify critical nodes whose disclosure or suppression significantly alters overall system risk.
+
+For example, a *betweenness centrality measure* might reveal that fewer than 10 academic labs account for 70% of dual-use AI code dissemination, suggesting targeted governance interventions. Incorporating *real options analysis* could quantify the value of delaying publication under different scenarios, comparing the expected cost of postponement against the risk of premature release. A *decision tree model* could then visualize branching pathways and associated payoffs, clarifying the conditions under which embargo extensions yield net benefit.
+
+Moreover, the framework would benefit from a *meta-risk dimension* that evaluates the potential for risk-mitigation strategies themselves to introduce new hazards, such as regulatory capture or information black markets. Including a *red-teaming feedback loop* with adversarial thinking would allow continuous calibration of both the taxonomy and associated risk parameters, ensuring the framework remains resilient to evolving threat landscapes. Ultimately, embedding these quantitative enhancements would transform the Information Hazards Framework from a descriptive taxonomy into a *prescriptive decision support tool*, enabling stakeholders to allocate resources optimally and transparently.`,
       costInCents: 200,
       createdAt: new Date("2024-01-01"),
       comments: {
@@ -112,11 +124,19 @@ We conclude that information hazards are a growing field of concern, meriting de
         },
       },
     },
-
     {
       agentId: "bias-detector",
-      analysis:
-        "The document features a lot of bias, and is not always helpful. It also uses a lot of jargon that may not be familiar to a general audience.",
+      analysis: `**High confidence**: The framework's emphasis on Western national security paradigms skews the risk analysis and overlooks diverse geopolitical contexts. To address this, a multi-criteria decision analysis (MCDA) incorporating weighted stakeholder preferences—such as transparency (0.25), equity (0.25), innovation (0.2), security (0.2), and cultural autonomy (0.1)—would allow explicit tradeoff quantification and reveal which disclosure strategies optimize for multiple values.
+
+Furthermore, the current document neglects systemic economic hazards, such as algorithmic trading vulnerabilities or GDP forecast manipulations, which could precipitate cascading market failures with estimated probabilities of 20–35% under high-frequency trading conditions. Integrating financial network stress-testing models can quantify contagion effects, while scenario analysis could estimate social welfare losses in vulnerable economies. Additionally, the omission of structural power dynamics fails to account for differential information access; a stakeholder influence mapping exercise might show that fewer than five multinational corporations control over 60% of critical data flows, suggesting that governance mechanisms must include antitrust and data portability safeguards.
+
+**Speculative**: Embedding causal loop diagrams from systems dynamics could model feedback loops between policy interventions and unintended consequences, such as black market proliferation or regulatory arbitrage. Moreover, incorporating indigenous knowledge systems and non-Western epistemologies would enrich risk perspectives and increase framework legitimacy among underrepresented communities.
+
+**Low confidence**: Pilot participatory governance workshops may demonstrate improved stakeholder buy-in, but empirical validation of their impact on actual disclosure practices remains outstanding. Furthermore, the framework should integrate a digital divide analysis, assessing how disparities in technological infrastructure across regions affect both hazard propagation and mitigation capacity.
+
+For instance, rural areas with limited internet connectivity may face lower immediate risk from disinformation campaigns but have fewer resources to detect and respond when threats materialize. A layered vulnerability index combining connectivity metrics, institutional readiness scores, and socio-economic indicators could guide tailored governance strategies.
+
+The economic dimension could be enriched by including real-time market sentiment analysis and algorithmic trading black-box audits, estimating that unregulated code disclosures could increase market volatility by up to 15%. Additionally, the framework should incorporate normative frameworks from global governance literature, such as polycentric governance and adaptive co-management, to enable decentralized yet coordinated oversight. Embedding accountability metrics—like auditability scores for disclosure pathways—would allow continuous monitoring of compliance with risk thresholds. These enhancements would transform the bias-aware analysis into a comprehensive, multi-dimensional risk governance model.`,
       costInCents: 300,
       createdAt: new Date("2024-01-01"),
       comments: {
@@ -162,11 +182,19 @@ We conclude that information hazards are a growing field of concern, meriting de
         },
       },
     },
-
     {
       agentId: "emotional-analyzer",
-      analysis:
-        "The document uses a lot of emotionally charged language, which is not always helpful. It also uses a lot of jargon that may not be familiar to a general audience.",
+      analysis: `**Medium confidence**: The document's emotional tone exhibits a pronounced negative polarity, as indicated by sentiment analysis yielding a score of –0.45, and high subjectivity at 0.72, reflecting an overreliance on fear-laden language. To recalibrate emotional valence, the text should integrate balanced optimism statements at a 1:1 ratio with cautionary warnings, for example, coupling each high-risk scenario with a success story demonstrating effective governance achieving a 95% mitigation rate. Embedding *narrative empathy* by including two to three human-centered vignettes—such as case studies of international biosecurity collaborations that prevented pathogen leaks—could reduce perceived threat intensity by up to 30%, based on framing effect literature.
+
+**High confidence**: Conducting *A/B testing* with representative reader cohorts and measuring engagement, comprehension, and trust metrics could empirically guide tone adjustments, aiming for at least a 10% uplift in self-reported understanding and a neutrality score around 0.1 on a –1 to +1 scale.
+
+**Speculative**: Future drafts might leverage *real-time emotional analytics dashboards* to dynamically adjust lexical choices, maintaining subjectivity below 0.5 and polarity within ±0.1 thresholds through closed-loop feedback.
+
+**Low confidence**: Further research is required to ascertain whether *collaborative language framing* reduces defensive reactions by the hypothesized 20% margin. Furthermore, the current reliance on authoritative directives may trigger reactance in certain audiences; integrating *choice architecture principles*—such as presenting governance options as recommendations rather than mandates—could foster a sense of agency and increase compliance intent by approximately 15%, according to behavioral science studies.
+
+Incorporating *readability metrics* like Flesch-Kincaid scores targeting a 12th-grade level can improve accessibility without oversimplifying complex concepts. Additionally, diversifying sentence structures and reducing nominalizations by 20% can enhance narrative flow and reader engagement.
+
+The *emotional arc* of the document could be optimized by structuring content in a problem-solution trajectory, beginning with empathetic acknowledgment of shared values, progressing through risk exposition, and concluding with collaborative calls to action, thereby facilitating a positive resolution frame. Finally, embedding periodic *rhetorical questions*—such as 'How might we collectively ensure safe innovation?'—can invite active reflection and maintain reader involvement. These enhancements would yield an *emotionally nuanced framework* that balances caution with optimism and fosters participatory mindsets.`,
       costInCents: 500,
       createdAt: new Date("2024-01-01"),
       comments: {

@@ -355,13 +355,37 @@ export function DocumentWithEvaluations({
           {/* Analysis section */}
           {activeReview.analysis && (
             <div className="bg-white rounded-lg shadow-sm">
-              <div className="px-4 py-2 prose max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                >
-                  {activeReview.analysis}
-                </ReactMarkdown>
+              <div
+                className="px-4 py-1.5 flex items-center justify-between cursor-pointer select-none hover:bg-gray-50"
+                onClick={() =>
+                  setExpandedTag(expandedTag === "analysis" ? null : "analysis")
+                }
+              >
+                <h3 className="text-sm font-medium text-gray-700">Analysis</h3>
+                {expandedTag === "analysis" ? (
+                  <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
+                )}
+              </div>
+              <div className="px-4 py-1.5 prose prose-md max-w-none border-t border-gray-100">
+                {expandedTag === "analysis" ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                  >
+                    {activeReview.analysis}
+                  </ReactMarkdown>
+                ) : (
+                  <div className="line-clamp-3">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    >
+                      {activeReview.analysis}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -208,7 +208,7 @@ export function HighlightedMarkdown({
   return (
     <div
       ref={containerRef}
-      className="prose prose-slate prose-lg max-w-none"
+      className="prose prose-slate prose-md max-w-none"
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset.tag) onHighlightClick(target.dataset.tag);
