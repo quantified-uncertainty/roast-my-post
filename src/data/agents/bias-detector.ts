@@ -1,4 +1,4 @@
-import type { EvaluationAgent } from "@/types/evaluationAgents";
+import type { EvaluationAgent } from '../../types/evaluationAgents';
 
 export const agent: EvaluationAgent = {
   id: "bias-detector",

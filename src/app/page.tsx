@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from 'next/link';
 
-import { evaluationAgents } from "@/data/agents";
-import { getIcon } from "@/utils/iconMap";
+import { evaluationAgents } from '@/data/agents/index.js';
+import { getIcon } from '@/utils/iconMap';
 
 export default function Home() {
   // Get a few featured agents

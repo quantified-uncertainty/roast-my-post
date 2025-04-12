@@ -10,7 +10,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
 import { HighlightedMarkdown } from '@/components/HighlightedMarkdown';
-import { evaluationAgents } from '@/data/agents';
+import { evaluationAgents } from '@/data/agents/index.js';
 import type { Comment } from '@/types/documentReview';
 import type { Document } from '@/types/documents';
 import { getIcon } from '@/utils/iconMap';
