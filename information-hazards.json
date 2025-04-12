@@ -43,38 +43,38 @@
       }
     },
     {
-      "analysis": "This document presents a comprehensive framework for evaluating information hazards across technological, psychological, and strategic domains. The analysis is well-structured with clear categorizations and concrete examples, particularly in AI and behavioral science. The governance recommendations offer practical approaches through risk forecasting, tiered disclosure, review panels, and transparency indexing. However, the framework would benefit from more quantitative risk assessment methodologies and specific metrics for evaluating harm potential. While dual-use considerations are acknowledged, the document lacks sufficient discussion of counterfactual analysis—how to weigh potential harms against benefits foregone through non-disclosure. The open challenges section correctly identifies key tensions but could propose more concrete research directions.",
+      "analysis": "The document presents a balanced framework on information hazards but contains subtle biases in framing and representation. It predominantly adopts a Western security perspective, emphasizing risks over benefits of information sharing. The examples focus on technological and security concerns while underrepresenting social justice, equity, and diverse cultural perspectives. There's limited acknowledgment of how information restriction can disproportionately impact marginalized communities or developing nations. The governance recommendations primarily reflect institutional and regulatory approaches common in developed nations, with minimal consideration of community-based or alternative governance models from different cultural traditions.",
       "comments": {
         "1": {
-          "title": "Missing quantitative risk assessment methodology",
-          "description": "The framework lacks specific metrics or quantitative approaches for evaluating the severity and probability of potential harms. Adding structured risk scoring methods would strengthen the governance recommendations.",
+          "title": "Security-centric framing bias",
+          "description": "The document frames information primarily as a potential threat rather than balancing this with equal emphasis on information as an empowerment tool, particularly for marginalized communities. This security-first framing may reinforce existing power dynamics around who controls information.",
           "highlight": {
-            "startOffset": 1293,
-            "endOffset": 1458,
-            "prefix": "## Categories of Information Hazards"
+            "startOffset": 160,
+            "endOffset": 261,
+            "prefix": "This document presents a framework for identifying, evaluating, and mitigating information hazards—"
           }
         },
         "2": {
-          "title": "Insufficient counterfactual analysis",
-          "description": "While dual-use concerns are mentioned, the document needs a more robust methodology for weighing potential harms against benefits foregone through non-disclosure or restricted access.",
+          "title": "Western institutional perspective",
+          "description": "The governance recommendations reflect Western institutional approaches without acknowledging alternative governance models or how these recommendations might function in different cultural, economic, or political contexts.",
           "highlight": {
-            "startOffset": 2208,
-            "endOffset": 2428,
-            "prefix": "## Dual-Use Information and Risk Tradeoffs"
+            "startOffset": 2386,
+            "endOffset": 2677,
+            "prefix": "## Governance Recommendations\n\n1. **Risk Forecasting**: Use foresight tools, including scenario modeling and red-teaming"
           }
         },
         "3": {
-          "title": "Global governance considerations underdeveloped",
-          "description": "The challenge of global coordination is mentioned but not sufficiently addressed in the governance recommendations section, creating a gap between identified problems and proposed solutions.",
+          "title": "Limited equity consideration",
+          "description": "The document doesn't address how information restriction policies might disproportionately affect marginalized communities or developing nations with less technological infrastructure or institutional power in global governance.",
           "highlight": {
-            "startOffset": 3526,
-            "endOffset": 3655,
-            "prefix": "- How can we foster global coordination"
+            "startOffset": 2845,
+            "endOffset": 3057,
+            "prefix": "## Open Challenges\n\n- How do we ensure scientific openness while protecting against strategic misuse?\n- What institutions are best positioned"
           }
         }
       },
       "agentId": "bias-detector",
-      "costInCents": 14,
+      "costInCents": 16,
       "createdAt": "2025-04-12T00:00:00.000Z"
     }
   ]
