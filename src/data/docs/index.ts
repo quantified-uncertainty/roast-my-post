@@ -1,12 +1,11 @@
 // Export document collection
-import type { DocumentsCollection } from '@/types/documents';
+import type { RawDocumentsCollection } from '@/types/documents';
+import { transformDocumentsCollection } from '@/types/documents';
 
 // Import individual documents
-import { document as informationHazards } from './information-hazards';
+import informationHazards from './information-hazards.json';
 
-// Export individual documents
-export { informationHazards };
-
-export const documentsCollection: DocumentsCollection = {
+// Transform the raw data to include Date objects
+export const documentsCollection = transformDocumentsCollection({
   documents: [informationHazards],
-};
+} as RawDocumentsCollection);

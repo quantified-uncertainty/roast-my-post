@@ -1,14 +1,18 @@
 # Evaluation Agents Data Structure
 
-This project now uses JSON files to store agent data instead of TypeScript files. This makes the data more accessible for editing without needing to understand TypeScript syntax.
+This project uses JSON to store agent data. JSON is a standard data format that is widely supported and easy to work with.
 
 ## Current Implementation
 
-The agent data is stored in `.json` files in the `src/data/agents` directory. Each agent has its own file, and the agents are loaded and exported from the `index.ts` file in that directory.
+The agent data is stored in two ways:
+1. As `.json` files in the `src/data/agents` directory (for reference and editing)
+2. As TypeScript files (`.ts`) that contain the agent data as objects
+
+The agents are loaded and exported from the `index.ts` file in the `src/data/agents` directory.
 
 ## Agent Data Structure
 
-Each agent file contains a JSON object that conforms to the `EvaluationAgent` interface defined in `src/types/evaluationAgents.ts`:
+Each agent file conforms to the `EvaluationAgent` interface defined in `src/types/evaluationAgents.ts`:
 
 ```typescript
 export interface EvaluationAgent {
@@ -23,46 +27,51 @@ export interface EvaluationAgent {
 }
 ```
 
+JSON example:
+```json
+{
+  "id": "example-agent",
+  "name": "Example Agent",
+  "version": "1.0",
+  "description": "This is an example agent that does cool things.",
+  "iconName": "StarIcon",
+  "capabilities": [
+    "Capability 1",
+    "Capability 2",
+    "Capability 3"
+  ],
+  "use_cases": [
+    "Use case 1",
+    "Use case 2",
+    "Use case 3"
+  ],
+  "limitations": [
+    "Limitation 1",
+    "Limitation 2",
+    "Limitation 3"
+  ]
+}
+```
+
 ## Adding a New Agent
 
 To add a new agent:
 
-1. Create a new `.json` file in the `src/data/agents` directory
+1. Create a new `.json` file in the `src/data/agents` directory (e.g., `new-agent.json`)
 2. Add the agent data to the file, following the structure of the existing agents
-3. Update the `index.ts` file to import and export the new agent
+3. Create a new TypeScript file (e.g., `new-agent.ts`):
+   ```typescript
+   import type { EvaluationAgent } from '../../types/evaluationAgents';
 
-## Future Enhancements
-
-If you want to add support for JSON5 (which allows comments, trailing commas, etc.), you'll need to:
-
-1. Install the json5-loader package:
-   ```
-   npm install --save-dev json5-loader
-   ```
-
-2. Update the Next.js config to handle JSON5 files:
-   ```javascript
-   // next.config.js
-   const nextConfig = {
-     webpack: (config) => {
-       // Existing config...
-       
-       // Add rule for JSON5 files
-       config.module.rules.push({
-         test: /\.json5$/,
-         type: 'json',
-         use: [
-           {
-             loader: 'json5-loader',
-             options: {},
-           },
-         ],
-       });
-       
-       return config;
-     },
+   export const newAgent: EvaluationAgent = {
+     id: "new-agent",
+     name: "New Agent",
+     // ... rest of the agent data
    };
    ```
-
-3. Change the file extensions from `.json` to `.json5`
-4. Update the imports in `index.ts` accordingly
+4. Update the `index.ts` file to import and export the new agent:
+   ```typescript
+   import { newAgent } from './new-agent';
+   export { newAgent };
+   export const evaluationAgents = [..., newAgent];
+   ```

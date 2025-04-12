@@ -1,17 +1,10 @@
-// Export agents directly from JSON
+// Export agents
 import type { EvaluationAgent } from '../../types/evaluationAgents';
-
-// Import agent data directly
-// Next.js can import JSON files directly
-import biasDetectorData from './bias-detector.json';
-import clarityCoachData from './clarity-coach.json';
+import biasDetector from './bias-detector.json';
+import clarityCoach from './clarity-coach.json';
 
 // Export individual agents
-export const biasDetector = biasDetectorData as EvaluationAgent;
-export const clarityCoach = clarityCoachData as EvaluationAgent;
+export { biasDetector, clarityCoach };
 
 // Export all agents as an array
-export const evaluationAgents: EvaluationAgent[] = [
-  biasDetector,
-  clarityCoach
-];
+export const evaluationAgents: EvaluationAgent[] = [biasDetector, clarityCoach];
