@@ -14,7 +14,11 @@ import { evaluationAgents } from '@/data/agents';
 import type { Comment } from '@/types/documentReview';
 import type { Document } from '@/types/documents';
 import { getIcon } from '@/utils/iconMap';
-import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
+import {
+  ChatBubbleLeftIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+} from '@heroicons/react/24/outline';
 
 interface CommentsSidebarProps {
   comments: Record<string, Comment>;
@@ -81,7 +85,7 @@ function CommentsSidebar({
               key={tag}
               className={`
                 transition-colors duration-150 cursor-pointer 
-                ${isExpanded ? "bg-white" : "hover:bg-gray-50 bg-gray-100"}
+                ${isExpanded ? "bg-white" : "hover:bg-white bg-gray-50"}
               `}
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
@@ -91,39 +95,31 @@ function CommentsSidebar({
                 {/* Comment header with number, icon and title */}
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium ${getCommentColorByIndex(
+                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium select-none ${getCommentColorByIndex(
                       index
                     )}`}
                   >
                     {index + 1}
                   </div>
 
-                  <div className="font-medium text-gray-700">
+                  <div className="font-semibold text-gray-600 select-none">
                     {comment.title}
+                  </div>
+                  <div className="ml-auto select-none">
+                    {isExpanded ? (
+                      <ChevronDownIcon className="h-4 w-4 text-gray-300" />
+                    ) : (
+                      <ChevronLeftIcon className="h-4 w-4 text-gray-300" />
+                    )}
                   </div>
                 </div>
 
                 {/* Comment description */}
                 {comment.description && (
-                  <div className="ml-9 mt-1 text-sm text-gray-600">
+                  <div className="ml-8 mt-1 text-md text-gray-600">
                     <div className={isExpanded ? "" : "line-clamp-1"}>
                       {comment.description}
                     </div>
-                  </div>
-                )}
-
-                {/* Show more/less toggle */}
-                {comment.description && comment.description.length > 30 && (
-                  <div className="ml-9 mt-1">
-                    <button
-                      className="text-xs text-gray-400 hover:text-gray-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTagClick(isExpanded ? null : tag);
-                      }}
-                    >
-                      {isExpanded ? "Show less" : "Show more"}
-                    </button>
                   </div>
                 )}
               </div>
@@ -151,7 +147,7 @@ function ReviewSelector({
       <h3 className="text-sm font-medium text-gray-700 mb-3">
         Document Evaluations
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 md:grid-cols-4 gap-3">
         {document.reviews.map((review, index) => {
           const agent = evaluationAgents.find((a) => a.id === review.agentId);
           const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
@@ -278,7 +274,7 @@ export function DocumentWithEvaluations({
 
   return (
     <div className="flex h-screen bg-white">
-      <div ref={documentRef} className="flex-2 p-8 overflow-y-auto">
+      <div ref={documentRef} className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <div>
@@ -313,44 +309,16 @@ export function DocumentWithEvaluations({
       </div>
 
       <div className="w-72 border-l border-gray-200 bg-gray-50 px-4 py-2 flex-1 overflow-y-auto">
-        <div className="space-y-6">
+        <div className="space-y-4">
           <ReviewSelector
             document={document}
             activeReviewIndex={activeReviewIndex}
             onReviewSelect={handleReviewSelect}
           />
 
-          {/* Analysis section */}
-          {activeReview.analysis && (
-            <div className="bg-white rounded-lg shadow-sm">
-              <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
-                Analysis
-              </h2>
-              <div className="px-4 py-2 prose prose-sm max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                >
-                  {activeReview.analysis}
-                </ReactMarkdown>
-              </div>
-            </div>
-          )}
-
-          <CommentsSidebar
-            comments={activeReview.comments}
-            activeTag={activeTag}
-            expandedTag={expandedTag}
-            onTagHover={setActiveTag}
-            onTagClick={handleCommentClick}
-          />
-
           {/* About section */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
-              About
-            </h2>
-            <div className="px-4 py-2 space-y-2">
+          <div>
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-gray-500 px-2 py-1">
                   Run cost: ${(activeReview.costInCents / 100).toFixed(2)} • Run
@@ -371,7 +339,7 @@ export function DocumentWithEvaluations({
                   </div>
                   <a
                     href={`/agents/${activeReview.agentId}`}
-                    className="text-sm text-blue-600 underline"
+                    className="text-xs text-blue-500"
                   >
                     {activeReview.agentId
                       ? evaluationAgents.find(
@@ -383,6 +351,28 @@ export function DocumentWithEvaluations({
               </div>
             </div>
           </div>
+
+          {/* Analysis section */}
+          {activeReview.analysis && (
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="px-4 py-2 prose max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {activeReview.analysis}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          <CommentsSidebar
+            comments={activeReview.comments}
+            activeTag={activeTag}
+            expandedTag={expandedTag}
+            onTagHover={setActiveTag}
+            onTagClick={handleCommentClick}
+          />
         </div>
       </div>
     </div>
