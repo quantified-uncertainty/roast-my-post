@@ -146,7 +146,7 @@ function ReviewSelector({
   return (
     <div className="mb-6">
       <h3 className="text-sm font-medium text-gray-700 mb-3">
-        Document Reviews
+        Document Evaluations
       </h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {document.reviews.map((review, index) => {
@@ -233,23 +233,20 @@ export function DocumentWithEvaluations({
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
-  // Get the active review
   const activeReview =
     document.reviews[activeReviewIndex] || document.reviews[0];
 
   const scrollToHighlight = (tag: string) => {
     const element = window.document.getElementById(`highlight-${tag}`);
     if (element && documentRef.current) {
-      // Calculate the position relative to the document container
       const containerRect = documentRef.current.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
       const scrollTop =
         elementRect.top -
         containerRect.top +
         documentRef.current.scrollTop -
-        100; // 100px offset from top
+        100;
 
-      // Smooth scroll to the element
       documentRef.current.scrollTo({
         top: scrollTop,
         behavior: "smooth",
@@ -259,9 +256,7 @@ export function DocumentWithEvaluations({
 
   const handleCommentClick = (tag: string | null) => {
     setExpandedTag(expandedTag === tag ? null : tag);
-    if (tag) {
-      scrollToHighlight(tag);
-    }
+    if (tag) scrollToHighlight(tag);
   };
 
   const handleHighlightClick = (tag: string) => {
@@ -272,7 +267,6 @@ export function DocumentWithEvaluations({
     setActiveReviewIndex(index);
     setActiveTag(null);
     setExpandedTag(null);
-    // Reset scroll position
     if (documentRef.current) {
       documentRef.current.scrollTo({
         top: 0,
@@ -281,9 +275,10 @@ export function DocumentWithEvaluations({
     }
   };
 
+  const sortedComments = sortCommentsByOffset(activeReview.comments);
+
   return (
     <div className="flex h-screen bg-white">
-      {/* Document Area */}
       <div ref={documentRef} className="flex-2 p-8 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
@@ -295,43 +290,37 @@ export function DocumentWithEvaluations({
               </div>
             </div>
           </div>
+
           <article className="prose prose-slate prose-lg max-w-none">
             <HighlightedMarkdown
               content={document.content}
-              onHighlightHover={(tag) => {
-                setActiveTag(tag);
-              }}
+              onHighlightHover={(tag) => setActiveTag(tag)}
               onHighlightClick={handleHighlightClick}
               highlightColors={Object.fromEntries(
-                sortCommentsByOffset(activeReview.comments).map(
-                  ([tag, _], index) => [tag, getCommentHighlightColor(index)]
-                )
+                sortedComments.map(([tag, _], index) => [
+                  tag,
+                  getCommentHighlightColor(index),
+                ])
               )}
               activeTag={activeTag}
               highlights={Object.fromEntries(
                 Object.entries(activeReview.comments)
-                  .filter(
-                    ([_, comment]) =>
-                      "highlight" in comment && comment.highlight
-                  )
-                  .map(([tag, comment]) => [tag, comment.highlight])
+                  .filter(([_, c]) => c.highlight)
+                  .map(([tag, c]) => [tag, c.highlight!])
               )}
             />
           </article>
         </div>
       </div>
 
-      {/* Sidebar */}
       <div className="w-72 border-l border-gray-200 bg-gray-50 p-4 flex-1 overflow-y-auto">
         <div className="space-y-6">
-          {/* Review Selector */}
           <ReviewSelector
             document={document}
             activeReviewIndex={activeReviewIndex}
             onReviewSelect={handleReviewSelect}
           />
 
-          {/* Comments for the active review */}
           <CommentsSidebar
             comments={activeReview.comments}
             activeTag={activeTag}

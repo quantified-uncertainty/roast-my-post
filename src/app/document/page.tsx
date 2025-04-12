@@ -16,7 +16,7 @@ export default function DocumentPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Document Review
+                Document Evaluation
               </h1>
               <p className="text-sm text-gray-600">{document.title}</p>
             </div>
