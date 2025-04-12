@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import { evaluationAgents } from '@/data/agents/index.js';
+import { evaluationAgents } from '@/data/agents/index';
 import { getIcon } from '@/utils/iconMap';
 
 export default function Home() {

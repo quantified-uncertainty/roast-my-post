@@ -6,7 +6,7 @@ import {
 } from 'next/navigation';
 
 import AgentDetail from '@/components/AgentDetail';
-import { evaluationAgents } from '@/data/agents/index.js';
+import { evaluationAgents } from '@/data/agents/index';
 
 export default function AgentPage() {
   const params = useParams();
