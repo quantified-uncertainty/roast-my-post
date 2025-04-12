@@ -198,6 +198,16 @@ We conclude that information hazards are a growing field of concern, meriting de
             prefix: "Open Challenges",
           },
         },
+        "5": {
+          title: "Multi-Stakeholder Perspective",
+          description:
+            "The framework primarily addresses risks from a Western security perspective. Expand to include analysis from diverse stakeholders including: (1) developing nations with limited technological infrastructure, (2) open science advocates, and (3) communities historically excluded from risk governance conversations.",
+          highlight: {
+            startOffset: 2200,
+            endOffset: 2300,
+            prefix: "global coordination, given geopolitical tensions",
+          },
+        },
       },
     },
   ],

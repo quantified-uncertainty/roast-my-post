@@ -267,12 +267,8 @@ export function DocumentWithEvaluations({
     setActiveReviewIndex(index);
     setActiveTag(null);
     setExpandedTag(null);
-    if (documentRef.current) {
-      documentRef.current.scrollTo({
-        top: 0,
-        behavior: "auto",
-      });
-    }
+    // Remove auto-scrolling behavior when switching reviews
+    // This allows the user to maintain their scroll position
   };
 
   const sortedComments = sortCommentsByOffset(activeReview.comments);

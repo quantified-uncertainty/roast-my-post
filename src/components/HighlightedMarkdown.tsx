@@ -1,6 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -25,77 +29,93 @@ export function HighlightedMarkdown({
   activeTag,
   highlights,
 }: HighlightedMarkdownProps) {
-  // Create a processed content with highlighted spans
-  let processedContent = content;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [rendered, setRendered] = useState(false);
 
-  // Handle both the legacy {{text:tag}} format and the new highlight structure
-  // First check for legacy format
-  processedContent = processedContent.replace(
-    /{{(.*?):(\d+)}}/g,
-    (_, text, tag) => {
-      const color = highlightColors[tag] || "yellow-100";
-      return `<span 
-        id="highlight-${tag}"
-        class="bg-${color} rounded cursor-pointer hover:bg-opacity-80" 
-        data-tag="${tag}"
-      >${text}</span>`;
+  // Add highlight spans to DOM
+  useEffect(() => {
+    if (!containerRef.current || !rendered || !highlights) return;
+
+    const container = containerRef.current;
+
+    // Clean up existing highlights
+    const prev = container.querySelectorAll("[data-highlight-tag]");
+    prev.forEach((span) => {
+      const parent = span.parentNode;
+      if (!parent) return;
+      while (span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+    });
+
+    // Get all text nodes
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const textNodes: Text[] = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      if (node.nodeValue?.trim()) textNodes.push(node);
     }
-  );
 
-  // Then apply new highlight structure if provided
-  if (highlights) {
-    // Sort highlights by startOffset in descending order to avoid index shifting problems
-    const sortedHighlights = Object.entries(highlights).sort(
-      ([_, a], [__, b]) => b.startOffset - a.startOffset
-    );
+    // Build flat text + position map
+    let offset = 0;
+    const positions = textNodes.map((node) => {
+      const start = offset;
+      const length = node.nodeValue?.length || 0;
+      offset += length;
+      return { node, start, end: start + length };
+    });
 
-    // Apply highlights to content
-    for (const [tag, highlight] of sortedHighlights) {
+    // Apply highlights
+    Object.entries(highlights).forEach(([tag, { startOffset, endOffset }]) => {
       const color = highlightColors[tag] || "yellow-100";
-      // Safety check to prevent index out of bounds
-      const start = Math.max(
-        0,
-        Math.min(highlight.startOffset, content.length)
+
+      const startNode = positions.find(
+        (p) => p.start <= startOffset && p.end > startOffset
       );
-      const end = Math.max(0, Math.min(highlight.endOffset, content.length));
+      const endNode = positions.find(
+        (p) => p.start < endOffset && p.end >= endOffset
+      );
 
-      const textToHighlight = content.substring(start, end);
+      if (!startNode || !endNode) return;
 
-      // Create a new string with the highlighted span
-      const beforeText = processedContent.substring(0, start);
-      const afterText = processedContent.substring(end);
+      try {
+        const range = document.createRange();
+        range.setStart(startNode.node, startOffset - startNode.start);
+        range.setEnd(endNode.node, endOffset - endNode.start);
 
-      // Only add highlight if we actually have text to highlight
-      if (textToHighlight.length > 0) {
-        processedContent = `${beforeText}<span 
-          id="highlight-${tag}"
-          class="bg-${color} rounded cursor-pointer hover:bg-opacity-80" 
-          data-tag="${tag}"
-        >${textToHighlight}</span>${afterText}`;
+        const span = document.createElement("span");
+        span.className = `bg-${color} rounded cursor-pointer hover:bg-opacity-80`;
+        span.dataset.highlightTag = tag;
+        span.id = `highlight-${tag}`;
+        span.dataset.tag = tag;
+
+        range.surroundContents(span);
+      } catch (err) {
+        console.error(`Error applying highlight ${tag}:`, err);
       }
-    }
-  }
+    });
+  }, [highlights, highlightColors, rendered]);
 
   return (
     <div
+      ref={containerRef}
       className="prose prose-slate prose-lg max-w-none"
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
-        if (target.dataset.tag) {
-          onHighlightClick(target.dataset.tag);
-        }
+        if (target.dataset.tag) onHighlightClick(target.dataset.tag);
       }}
       onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
-        if (target.dataset.tag) {
-          onHighlightHover(target.dataset.tag);
-        }
+        if (target.dataset.tag) onHighlightHover(target.dataset.tag);
       }}
       onMouseOut={() => onHighlightHover(null)}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-        {processedContent}
-      </ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        children={content}
+      />
+      {/* Wait for ReactMarkdown to finish rendering before applying highlights */}
+      <div style={{ display: "none" }} ref={() => setRendered(true)} />
     </div>
   );
 }
