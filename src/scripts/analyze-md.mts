@@ -38,6 +38,23 @@ program
 
 const options = program.opts();
 
+async function loadAgentInfo(agentId: string) {
+  try {
+    const agentPath = path.join(
+      process.cwd(),
+      "src",
+      "data",
+      "agents",
+      `${agentId}.json`
+    );
+    const agentContent = await readFile(agentPath, "utf-8");
+    return JSON.parse(agentContent);
+  } catch (error) {
+    console.warn(`⚠️ Could not load agent info for ${agentId}:`, error);
+    return null;
+  }
+}
+
 function validateLLMResponse(review: LLMReview) {
   if (!review.analysis || typeof review.analysis !== "string") {
     throw new Error("Invalid or missing analysis field");
@@ -84,11 +101,30 @@ async function main() {
   const jsonContent = await readFile(options.file, "utf-8");
   const data = JSON.parse(jsonContent);
 
+  // Load agent information
+  const agentInfo = await loadAgentInfo(options.agentId);
+  const agentContext = agentInfo
+    ? `
+You are ${agentInfo.name} (${agentInfo.description}).
+
+Your specific capabilities include:
+${agentInfo.capabilities.map((cap: string) => `- ${cap}`).join("\n")}
+
+Your primary use cases are:
+${agentInfo.use_cases.map((use: string) => `- ${use}`).join("\n")}
+
+Your limitations to be aware of:
+${agentInfo.limitations.map((lim: string) => `- ${lim}`).join("\n")}
+`
+    : "";
+
   const targetWordCount = calculateTargetWordCount(data.content);
   console.log(`📊 Target word count: ${targetWordCount}`);
 
   const prompt = `
-You're an expert analyst generating structured risk evaluations. Given the following Markdown document, output a single review in JSON like this:
+${agentContext}
+
+Given the following Markdown document, output a single review in JSON like this:
 
 {
   "analysis": "[~${targetWordCount} words of structured, quantitative analysis]",
