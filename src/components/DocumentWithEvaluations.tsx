@@ -5,6 +5,10 @@ import {
   useState,
 } from 'react';
 
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
+
 import { HighlightedMarkdown } from '@/components/HighlightedMarkdown';
 import { evaluationAgents } from '@/data/agents';
 import type { Comment } from '@/types/documentReview';
@@ -59,14 +63,13 @@ function sortCommentsByOffset(comments: Record<string, Comment>) {
 }
 function CommentsSidebar({
   comments,
-  activeTag,
   expandedTag,
   onTagHover,
   onTagClick,
 }: CommentsSidebarProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm">
-      <h2 className="text-base font-medium text-gray-700 p-4 border-b border-gray-100">
+      <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
         Highlights
       </h2>
       <div>
@@ -309,13 +312,30 @@ export function DocumentWithEvaluations({
         </div>
       </div>
 
-      <div className="w-72 border-l border-gray-200 bg-gray-50 p-4 flex-1 overflow-y-auto">
+      <div className="w-72 border-l border-gray-200 bg-gray-50 px-4 py-2 flex-1 overflow-y-auto">
         <div className="space-y-6">
           <ReviewSelector
             document={document}
             activeReviewIndex={activeReviewIndex}
             onReviewSelect={handleReviewSelect}
           />
+
+          {/* Analysis section */}
+          {activeReview.analysis && (
+            <div className="bg-white rounded-lg shadow-sm">
+              <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
+                Analysis
+              </h2>
+              <div className="px-4 py-2 prose prose-sm max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {activeReview.analysis}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
 
           <CommentsSidebar
             comments={activeReview.comments}
@@ -324,6 +344,45 @@ export function DocumentWithEvaluations({
             onTagHover={setActiveTag}
             onTagClick={handleCommentClick}
           />
+
+          {/* About section */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
+              About
+            </h2>
+            <div className="px-4 py-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-gray-500 px-2 py-1">
+                  Run cost: ${(activeReview.costInCents / 100).toFixed(2)} • Run
+                  Date: {activeReview.createdAt.toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center p-1">
+                    {activeReview.agentId &&
+                      (() => {
+                        const agent = evaluationAgents.find(
+                          (a) => a.id === activeReview.agentId
+                        );
+                        const Icon = agent ? getIcon(agent.iconName) : null;
+                        return Icon ? (
+                          <Icon className="h-4 w-4 text-gray-500" />
+                        ) : null;
+                      })()}
+                  </div>
+                  <a
+                    href={`/agents/${activeReview.agentId}`}
+                    className="text-sm text-blue-600 underline"
+                  >
+                    {activeReview.agentId
+                      ? evaluationAgents.find(
+                          (a) => a.id === activeReview.agentId
+                        )?.name || "Unknown Agent"
+                      : "Unknown Agent"}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -65,6 +65,10 @@ We conclude that information hazards are a growing field of concern, meriting de
   reviews: [
     {
       agentId: "factual-validator",
+      analysis:
+        "The framework is well-structured and provides a comprehensive overview of information hazards. However, it could benefit from specific, quantifiable examples to demonstrate practical application.",
+      costInCents: 200,
+      createdAt: new Date("2024-01-01"),
       comments: {
         "1": {
           title: "Concrete Examples Needed",
@@ -111,6 +115,10 @@ We conclude that information hazards are a growing field of concern, meriting de
 
     {
       agentId: "bias-detector",
+      analysis:
+        "The document features a lot of bias, and is not always helpful. It also uses a lot of jargon that may not be familiar to a general audience.",
+      costInCents: 300,
+      createdAt: new Date("2024-01-01"),
       comments: {
         "1": {
           title: "Multi-Stakeholder Perspective",
@@ -157,6 +165,10 @@ We conclude that information hazards are a growing field of concern, meriting de
 
     {
       agentId: "emotional-analyzer",
+      analysis:
+        "The document uses a lot of emotionally charged language, which is not always helpful. It also uses a lot of jargon that may not be familiar to a general audience.",
+      costInCents: 500,
+      createdAt: new Date("2024-01-01"),
       comments: {
         "1": {
           title: "Anxious Undertones",
