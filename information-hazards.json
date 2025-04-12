@@ -43,38 +43,38 @@
       }
     },
     {
-      "analysis": "This document presents a comprehensive framework for evaluating information hazards, defined as risks arising from knowledge dissemination. It identifies three main categories: technological capability hazards, psychological/behavioral hazards, and strategic/coordination hazards. The framework acknowledges the dual-use nature of information, where benefits and harms often coexist, requiring nuanced risk assessment. The governance recommendations suggest a balanced approach including risk forecasting, tiered disclosure, multidisciplinary review, and transparency indexing. The document effectively highlights the tension between scientific openness and security concerns, particularly relevant in domains like AI and behavioral science. While thorough in conceptualization, the framework would benefit from more specific implementation guidance and quantitative risk assessment methodologies.",
+      "analysis": "This document presents a comprehensive framework for evaluating information hazards across technological, psychological, and strategic domains. The analysis is well-structured with clear categorizations and concrete examples, particularly in AI and behavioral science. The governance recommendations offer practical approaches through risk forecasting, tiered disclosure, review panels, and transparency indexing. However, the framework would benefit from more quantitative risk assessment methodologies and specific metrics for evaluating harm potential. While dual-use considerations are acknowledged, the document lacks sufficient discussion of counterfactual analysis—how to weigh potential harms against benefits foregone through non-disclosure. The open challenges section correctly identifies key tensions but could propose more concrete research directions.",
       "comments": {
         "1": {
-          "title": "Lack of quantitative risk assessment metrics",
-          "description": "The framework provides qualitative categorizations of information hazards but lacks specific metrics or thresholds for determining when information crosses from beneficial to harmful. Including a more structured scoring system would enhance practical application.",
+          "title": "Missing quantitative risk assessment methodology",
+          "description": "The framework lacks specific metrics or quantitative approaches for evaluating the severity and probability of potential harms. Adding structured risk scoring methods would strengthen the governance recommendations.",
           "highlight": {
-            "startOffset": 1048,
-            "endOffset": 1129,
-            "prefix": "For instance, publishing a novel gene-editing technique might enable beneficial"
+            "startOffset": 1293,
+            "endOffset": 1458,
+            "prefix": "## Categories of Information Hazards"
           }
         },
         "2": {
-          "title": "Insufficient international perspective",
-          "description": "While the document mentions global coordination challenges, it doesn't adequately address how different cultural, legal, and ethical standards across countries might affect information hazard assessment and governance.",
+          "title": "Insufficient counterfactual analysis",
+          "description": "While dual-use concerns are mentioned, the document needs a more robust methodology for weighing potential harms against benefits foregone through non-disclosure or restricted access.",
           "highlight": {
-            "startOffset": 2537,
-            "endOffset": 2627,
-            "prefix": "- How can we foster global coordination, given geopolitical tensions and cultural divergence"
+            "startOffset": 2208,
+            "endOffset": 2428,
+            "prefix": "## Dual-Use Information and Risk Tradeoffs"
           }
         },
         "3": {
-          "title": "Governance implementation gaps",
-          "description": "The governance recommendations outline what should be done but provide limited guidance on how these systems would be implemented, funded, or enforced, particularly across institutional boundaries.",
+          "title": "Global governance considerations underdeveloped",
+          "description": "The challenge of global coordination is mentioned but not sufficiently addressed in the governance recommendations section, creating a gap between identified problems and proposed solutions.",
           "highlight": {
-            "startOffset": 2100,
-            "endOffset": 2183,
-            "prefix": "**Tiered Disclosure**: Establish graded pathways for information release (e.g., preprints"
+            "startOffset": 3526,
+            "endOffset": 3655,
+            "prefix": "- How can we foster global coordination"
           }
         }
       },
       "agentId": "bias-detector",
-      "costInCents": 15,
+      "costInCents": 14,
       "createdAt": "2025-04-12T00:00:00.000Z"
     }
   ]

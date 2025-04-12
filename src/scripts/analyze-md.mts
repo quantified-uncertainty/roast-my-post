@@ -1,20 +1,22 @@
 #!/usr/bin/env tsx
 
-import 'dotenv/config';
-
 import { Command } from 'commander';
 import {
   mkdir,
   readFile,
   writeFile,
 } from 'fs/promises';
-import OpenAI from 'openai';
 import path from 'path';
 
 import type {
   Comment,
   DocumentReview,
 } from '../types/documentReview';
+import {
+  DEFAULT_TEMPERATURE,
+  MODEL,
+  openai,
+} from '../types/openai.js';
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
@@ -35,26 +37,6 @@ program
   .parse(process.argv);
 
 const options = program.opts();
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
-if (!OPENROUTER_API_KEY) {
-  console.error(
-    "❌ Missing OpenRouter API key. Set OPENROUTER_API_KEY in .env"
-  );
-  process.exit(1);
-}
-
-const MODEL = "anthropic/claude-3.7-sonnet";
-
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer":
-      "https://github.com/ozziegooen/content-evaluation-experiment",
-    "X-Title": "content-evaluation-experiment",
-  },
-});
 
 function validateLLMResponse(review: LLMReview) {
   if (!review.analysis || typeof review.analysis !== "string") {
@@ -133,7 +115,7 @@ ${data.content}
   const completion = await openai.chat.completions.create({
     model: MODEL,
     messages: [{ role: "user", content: prompt }],
-    temperature: 0.7,
+    temperature: DEFAULT_TEMPERATURE,
   });
 
   const llmResponse = completion.choices[0].message.content;

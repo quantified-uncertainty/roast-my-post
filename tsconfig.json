@@ -30,7 +30,8 @@
     ".next/types/**/*.ts",
     "src/scripts/reviewDocument.ts",
     "src/data/agents/index.ts",
-    "src/scripts/analyze-md.mts"
+    "src/scripts/analyze-md.mts",
+    "src/types/openai.ts"
   ],
   "exclude": ["node_modules"]
 }
