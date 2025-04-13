@@ -134,11 +134,13 @@ ${content}
 \`\`\`
 `;
 
+  const startTime = Date.now();
   const completion = await openai.chat.completions.create({
     model: MODEL,
     messages: [{ role: "user", content: prompt }],
     temperature: DEFAULT_TEMPERATURE,
   });
+  const runtimeMs = Date.now() - startTime;
 
   const llmResponse = completion.choices[0].message.content;
   if (!llmResponse) {
@@ -152,6 +154,7 @@ ${content}
     console.log(`- Input tokens: ${usage.prompt_tokens}`);
     console.log(`- Output tokens: ${usage.completion_tokens}`);
     console.log(`- Total tokens: ${usage.total_tokens}`);
+    console.log(`- Runtime: ${runtimeMs}ms`);
   }
 
   console.log("📝 LLM Response:");
@@ -174,10 +177,20 @@ ${content}
 
   // Transform LLMReview into DocumentReview
   const documentReview: DocumentReview = {
-    ...parsedLLMReview,
     agentId,
     costInCents: usage ? Math.ceil(usage.total_tokens * 0.01) : 0, // 0.01 cents per token, or default to 0
     createdAt: new Date(new Date().toISOString().split("T")[0]),
+    runDetails: usage
+      ? JSON.stringify({
+          model: MODEL,
+          promptTokens: usage.prompt_tokens,
+          completionTokens: usage.completion_tokens,
+          totalTokens: usage.total_tokens,
+          temperature: DEFAULT_TEMPERATURE,
+          runtimeMs,
+        })
+      : undefined,
+    ...parsedLLMReview,
   };
 
   return {

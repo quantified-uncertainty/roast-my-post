@@ -4,87 +4,92 @@
   "title": "Information Hazards Framework",
   "author": "Bill Strong",
   "publishedDate": "2011-03-01",
-  "intendedAgents": ["bias-detector", "clarity-coach"],
+  "intendedAgents": [
+    "bias-detector",
+    "clarity-coach"
+  ],
   "content": "# Information Hazards: A Risk Framework\n\nThis document presents a framework for identifying, evaluating, and mitigating information hazards—cases where sharing or publishing information could cause harm. These hazards are increasingly relevant in an era of rapid technological and informational acceleration.\n\n## What is an Information Hazard?\n\nAn *information hazard* is a risk that arises from the dissemination or accessibility of knowledge. While information is traditionally viewed as a public good, certain types of information may pose dangers if made widely available. This includes—but is not limited to—details that enable misuse of biotechnology, instructions for engineering pathogens, cryptographic vulnerabilities, or social coordination failures.\n\n## Categories of Information Hazards\n\nWe identify several categories:\n\n### 1. Technological Capability Hazards\n\nInformation that accelerates the development or implementation of potentially dangerous technologies. For instance, publishing a novel gene-editing technique might enable beneficial applications but also empower malicious actors to design harmful bioagents.\n\n### 2. Psychological or Behavioral Hazards\n\nInformation that modifies public behavior in harmful ways. For example, widespread publication of detailed suicide methods or attention-seeking strategies associated with mass shooters could trigger copycat behavior.\n\n### 3. Strategic or Coordination Hazards\n\nInformation that alters the strategic landscape in harmful ways—for instance, the publication of critical vulnerabilities in widely-used infrastructure before patches are available. Similarly, exposure of disinformation campaigns may help adversaries refine their tactics.\n\n## Dual-Use Information and Risk Tradeoffs\n\nThe concept of *dual-use research of concern* (DURC) is foundational here. Much scientific and technical progress has both beneficial and harmful potential. Assessing such tradeoffs requires a structured, epistemic-risk-aware framework that incorporates both near-term and long-term impact assessments.\n\n### Case Example: AI Capability Releases\n\nIn the domain of artificial intelligence, novel techniques such as few-shot learning or alignment-pretraining methods may significantly accelerate general capabilities. The release of code and model weights for such techniques can enable reproducibility and collaboration—but may also equip non-aligned actors with unprecedented tools.\n\n### Case Example: Behavioral Science Insights\n\nRecent findings in attention engineering, social manipulation, and persuasive architecture have increased platform efficiency but also raised concerns around user autonomy, addiction, and political polarization.\n\n## Governance Recommendations\n\n1. **Risk Forecasting**: Use foresight tools, including scenario modeling and red-teaming, to evaluate the downstream implications of knowledge release.\n\n2. **Tiered Disclosure**: Establish graded pathways for information release (e.g., preprints, private consortia, embargoes) based on risk category.\n\n3. **Cross-Domain Review Panels**: Encourage multidisciplinary review, including ethicists, security professionals, and technologists.\n\n4. **Transparency Indexing**: Rather than full suppression, information hazards may be partially documented but indexed in secure, regulated archives.\n\n## Open Challenges\n\n- How do we ensure scientific openness while protecting against strategic misuse?\n- What institutions are best positioned to evaluate and arbitrate these tradeoffs?\n- How can we foster global coordination, given geopolitical tensions and cultural divergence in risk assessment?\n\nWe conclude that information hazards are a growing field of concern, meriting deeper formalization and proactive governance design.",
   "reviews": [
     {
-      "analysis": "This document presents a framework on information hazards with generally balanced framing. It maintains academic neutrality while discussing sensitive topics like dual-use technologies and governance. The content shows minimal ideological bias, though it implicitly prioritizes security concerns over absolute information freedom. The framing predominantly reflects Western academic/security perspectives on risk management. While acknowledging tradeoffs between openness and security, the document could benefit from more diverse cultural perspectives on information governance and deeper exploration of power dynamics in determining what constitutes hazardous information.",
+      "agentId": "bias-detector",
+      "costInCents": 16,
+      "createdAt": "2025-04-13T00:00:00.000Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1061,\"completionTokens\":503,\"totalTokens\":1564,\"temperature\":0.7,\"runtimeMs\":9942}",
+      "analysis": "This document presents a thoughtful framework on information hazards with reasonably balanced consideration of both benefits and risks of information sharing. The analysis employs neutral, technical language and acknowledges complex tradeoffs. While the content is generally fair, there are subtle Western-centric assumptions in governance recommendations and limited discussion of global power dynamics in information control. The document appropriately raises concerns across multiple domains without excessive alarmism, though it could benefit from more diverse cultural perspectives on information ethics. The framing generally treats information hazards as objective phenomena rather than acknowledging the subjective and contextual nature of determining what constitutes harmful information.",
       "comments": {
         "1": {
-          "title": "Western-centric security framing",
-          "description": "The document frames information hazards primarily through a Western security and governance lens. While technically sound, it could benefit from acknowledging how different cultural contexts might define 'hazardous information' differently, or how power dynamics influence who determines what information should be restricted.",
+          "title": "Western governance assumptions",
+          "description": "The governance recommendations appear to assume Western institutional structures and values without acknowledging global diversity in approaches to information governance or potential power imbalances in who determines what constitutes an 'information hazard'.",
           "highlight": {
-            "startOffset": 1754,
-            "endOffset": 1896,
+            "startOffset": 2520,
+            "endOffset": 2873,
             "prefix": "## Governance Recommendations"
           }
         },
         "2": {
-          "title": "Limited stakeholder representation",
-          "description": "The governance recommendations mention 'ethicists, security professionals, and technologists' but omit other important stakeholders like civil liberties advocates, representatives from developing nations, or marginalized communities who might be disproportionately affected by information restrictions.",
+          "title": "Limited discussion of power dynamics",
+          "description": "The document treats information hazard assessment as primarily a technical problem, with limited acknowledgment of how power structures influence who can classify information as hazardous and potentially use such frameworks to restrict access to knowledge for political or economic advantage.",
           "highlight": {
-            "startOffset": 1992,
-            "endOffset": 2074,
-            "prefix": "3. **Cross-Domain Review Panels**:"
+            "startOffset": 2973,
+            "endOffset": 3224,
+            "prefix": "## Open Challenges"
           }
         },
         "3": {
-          "title": "Implicit security prioritization",
-          "description": "While acknowledging tradeoffs, the document subtly prioritizes security concerns over information freedom. This represents a reasonable but not universal value judgment that could be made more explicit to acknowledge this particular normative stance.",
+          "title": "Default framing toward restriction",
+          "description": "While acknowledging tradeoffs, the document subtly frames information restriction as the default response to potential hazards, with less emphasis on the historical benefits of information openness or the risks of excessive control. This represents a status quo bias toward institutional gatekeeping.",
           "highlight": {
-            "startOffset": 2180,
-            "endOffset": 2265,
-            "prefix": "## Open Challenges"
+            "startOffset": 1838,
+            "endOffset": 2211,
+            "prefix": "## Dual-Use Information and Risk Tradeoffs"
           }
         }
-      },
-      "agentId": "bias-detector",
-      "costInCents": 16,
-      "createdAt": "2025-04-13T00:00:00.000Z"
+      }
     },
     {
-      "analysis": "This document on information hazards exhibits high-level academic writing with a Flesch-Kincaid grade level of 14.2 (college level). The average sentence length is 21.3 words, with several complex sentences exceeding 35 words. Readability metrics indicate challenging content (Flesch Reading Ease: 38.7/100). The document uses specialized terminology appropriate for the subject matter but could benefit from more concrete examples to balance abstract concepts. Paragraph structure is logical, with clear section headings that aid navigation. The document employs formal, technical language throughout with minimal redundancy, though some sentences could be simplified without losing meaning. Overall, the content is well-structured for an academic audience but may present comprehension barriers for general readers.",
+      "agentId": "clarity-coach",
+      "costInCents": 16,
+      "createdAt": "2025-04-13T00:00:00.000Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1011,\"completionTokens\":537,\"totalTokens\":1548,\"temperature\":0.7,\"runtimeMs\":9544}",
+      "analysis": "This document on information hazards demonstrates sophisticated clarity with a Flesch-Kincaid grade level of approximately 14.2, indicating graduate-level readability. The average sentence length is 21.3 words, with several complex sentences exceeding 35 words. Vocabulary is advanced, with specialized terminology appearing throughout. The document maintains strong structural coherence through hierarchical organization and logical progression. While technically precise, the content employs abstract terminology and complex sentence structures that may challenge readers without academic backgrounds. The document effectively uses markdown formatting to enhance readability, though some paragraphs could benefit from simplification to improve accessibility for broader audiences.",
       "comments": {
         "1": {
           "title": "Complex sentence structure",
-          "description": "This 46-word sentence contains multiple clauses and concepts. Consider breaking it into 2-3 shorter sentences to improve readability and comprehension.",
+          "description": "This sentence contains multiple clauses and concepts that could be broken into smaller units for improved readability.",
           "highlight": {
-            "startOffset": 1033,
-            "endOffset": 1079,
+            "startOffset": 738,
+            "endOffset": 900,
             "prefix": "For instance, publishing a novel"
           }
         },
         "2": {
-          "title": "Technical jargon without definition",
-          "description": "Terms like 'epistemic-risk-aware' and 'alignment-pretraining methods' are highly specialized and may be unclear to readers outside the field. Consider briefly defining these terms or providing contextual explanations.",
+          "title": "Abstract terminology",
+          "description": "Terms like 'epistemic-risk-aware framework' represent specialized jargon that may be unclear to non-expert readers. Consider providing a brief explanation or using more accessible language.",
           "highlight": {
-            "startOffset": 1748,
-            "endOffset": 1769,
-            "prefix": "structured, "
+            "startOffset": 1398,
+            "endOffset": 1430,
+            "prefix": "requires a structured, "
           }
         },
         "3": {
-          "title": "Abstract concept without concrete example",
-          "description": "The concept of 'tiered disclosure' is presented without a specific example of how it would work in practice. Adding a brief, concrete example would enhance clarity.",
+          "title": "Passive voice construction",
+          "description": "The passive voice in this sentence reduces clarity and directness. Consider revising to active voice for stronger impact.",
           "highlight": {
-            "startOffset": 2467,
-            "endOffset": 2570,
-            "prefix": "**Tiered Disclosure**: "
+            "startOffset": 2095,
+            "endOffset": 2187,
+            "prefix": "information hazards may be"
           }
         },
         "4": {
-          "title": "Passive voice construction",
-          "description": "The passive construction 'information hazards may be partially documented but indexed' obscures who would be responsible for this action. Consider revising to active voice for clarity of agency.",
+          "title": "Opportunity for concrete example",
+          "description": "This section discusses important concepts but would benefit from a specific example to illustrate the abstract ideas of 'attention engineering' and 'persuasive architecture'.",
           "highlight": {
-            "startOffset": 2740,
-            "endOffset": 2811,
-            "prefix": "Rather than full suppression, "
+            "startOffset": 1690,
+            "endOffset": 1831,
+            "prefix": "Recent findings in attention"
           }
         }
-      },
-      "agentId": "clarity-coach",
-      "costInCents": 17,
-      "createdAt": "2025-04-13T00:00:00.000Z"
+      }
     }
   ]
 }

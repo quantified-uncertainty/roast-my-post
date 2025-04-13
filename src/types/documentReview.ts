@@ -16,4 +16,5 @@ export interface DocumentReview {
   analysis?: string;
   costInCents: number;
   createdAt: Date;
+  runDetails?: string;
 }
