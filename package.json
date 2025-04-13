@@ -8,8 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "review-agent": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/information-hazards.json -a bias-detector ",
+    "review-agent": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/information-hazards.json -a bias-detector",
     "review-all-agents": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/information-hazards.json --all-agents",
+    "review-all-agents-missing": "npx tsx src/scripts/analyze-md.mts --dir ./src/data/docs --all-agents --only-missing",
     "generate-docs": "tsx src/scripts/generate-docs-index.mts"
   },
   "dependencies": {
