@@ -620,26 +620,67 @@ export function applyHighlightBetweenNodes(
 }
 
 /**
+ * Stores a copy of the original text content before any highlighting is applied
+ */
+const originalTextCache = new Map<HTMLElement, string>();
+
+/**
+ * Completely resets a container to its original unfragmented state
+ * @param container The container element to reset
+ * @param content The original content to restore (optional)
+ */
+export function resetContainer(container: HTMLElement, content?: string): void {
+  // If content is provided, use it; otherwise check the cache
+  const originalContent = content || originalTextCache.get(container);
+
+  // If we have content to restore
+  if (originalContent !== undefined) {
+    // Store the current scroll position
+    const scrollTop = container.scrollTop;
+    const scrollLeft = container.scrollLeft;
+
+    // Replace the inner HTML with the original content
+    container.innerHTML = originalContent;
+
+    // Restore scroll position
+    container.scrollTop = scrollTop;
+    container.scrollLeft = scrollLeft;
+  } else {
+    // If no original content is available, just clean up the highlights
+    cleanupHighlights(container);
+  }
+}
+
+/**
  * Applies all highlights to a container element
  */
 export function applyHighlightsToContainer(
   container: HTMLElement,
   highlights: Comment[],
-  highlightColors: Record<string, string>
+  highlightColors: Record<string, string>,
+  forceReset: boolean = false
 ): void {
-  // Clean up any existing highlights
-  cleanupHighlights(container);
+  // Store original content before any modifications if not already cached
+  if (!originalTextCache.has(container) || forceReset) {
+    // Save original rendering before applying any highlights
+    originalTextCache.set(container, container.innerHTML);
+  }
+
+  // Only do a full reset when forceReset is true
+  if (forceReset) {
+    // Complete reset to original state
+    resetContainer(container);
+  } else {
+    // Only remove existing highlights while preserving other DOM changes
+    cleanupHighlights(container);
+  }
 
   // If no highlights to apply, we're done
   if (!highlights || highlights.length === 0) {
     return;
   }
 
-  // Get a snapshot of the original text content
-  // This ensures our position calculations remain correct
-  const originalContent = container.textContent || "";
-
-  // Calculate positions of all text nodes
+  // Calculate positions of all text nodes in the container
   let positions = calculateTextNodePositions(container);
 
   // Apply each highlight one at a time
@@ -649,6 +690,7 @@ export function applyHighlightsToContainer(
     const color = highlightColors[tag] || "yellow-100";
     const { startOffset, endOffset } = highlight.highlight;
 
+    // Find the text nodes where the highlight starts and ends
     const startNode = positions.find(
       (p) => p.start <= startOffset && p.end > startOffset
     );
@@ -656,9 +698,15 @@ export function applyHighlightsToContainer(
       (p) => p.start < endOffset && p.end >= endOffset
     );
 
-    if (!startNode || !endNode) continue;
+    if (!startNode || !endNode) {
+      console.error(
+        `Could not find text nodes for highlight with offsets ${startOffset}-${endOffset}`
+      );
+      continue;
+    }
 
     try {
+      // Apply the highlight to the text nodes
       applyHighlightBetweenNodes(
         container,
         positions,
@@ -671,7 +719,7 @@ export function applyHighlightsToContainer(
       );
 
       // Recalculate positions after each highlight is applied
-      // This ensures accurate position tracking for subsequent highlights
+      // This is critical since DOM structure changes after highlighting
       positions = calculateTextNodePositions(container);
     } catch (err) {
       console.error(`Error applying highlight ${tag}:`, err);

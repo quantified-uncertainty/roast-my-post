@@ -11,7 +11,10 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
 import { Comment } from '@/types/documentReview';
-import { applyHighlightsToContainer } from '@/utils/highlightUtils';
+import {
+  applyHighlightsToContainer,
+  resetContainer,
+} from '@/utils/highlightUtils';
 
 interface HighlightedMarkdownProps {
   content: string;
@@ -20,6 +23,7 @@ interface HighlightedMarkdownProps {
   highlightColors: Record<string, string>;
   activeTag: string | null;
   highlights?: Comment[];
+  analysisId?: string; // Add an identifier to detect when analysis changes
 }
 
 export function HighlightedMarkdown({
@@ -29,20 +33,39 @@ export function HighlightedMarkdown({
   highlightColors,
   activeTag,
   highlights,
+  analysisId,
 }: HighlightedMarkdownProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState(false);
+  const previousAnalysisIdRef = useRef<string | undefined>(undefined);
 
   // Apply highlights to the DOM after markdown content is rendered
   useEffect(() => {
-    if (!containerRef.current || !rendered || !highlights) return;
+    if (!containerRef.current || !rendered) return;
 
-    applyHighlightsToContainer(
-      containerRef.current,
-      highlights,
-      highlightColors
-    );
-  }, [highlights, highlightColors, rendered]);
+    // Check if we're switching between different analyses
+    const isNewAnalysis = analysisId !== previousAnalysisIdRef.current;
+    previousAnalysisIdRef.current = analysisId;
+
+    if (highlights) {
+      applyHighlightsToContainer(
+        containerRef.current,
+        highlights,
+        highlightColors,
+        isNewAnalysis // Force a reset when switching analyses
+      );
+    } else {
+      // If no highlights provided, reset the container to its original state
+      resetContainer(containerRef.current);
+    }
+  }, [highlights, highlightColors, rendered, analysisId]);
+
+  // Reset when content changes
+  useEffect(() => {
+    if (containerRef.current) {
+      resetContainer(containerRef.current);
+    }
+  }, [content]);
 
   return (
     <div
