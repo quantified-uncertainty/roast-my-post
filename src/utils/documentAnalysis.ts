@@ -27,10 +27,7 @@ import {
 // Type for the raw LLM response before transformation
 interface LLMReview {
   summary: string;
-  comments: Record<
-    string,
-    Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }
-  >;
+  comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>;
 }
 
 export async function loadAgentInfo(agentId: string) {
@@ -83,6 +80,16 @@ export function calculateTargetComments(content: string): number {
   return Math.max(baseComments, Math.min(additionalComments, 10)); // Cap at 10 comments
 }
 
+// Add this function before analyzeDocument
+function escapeJsonString(str: string): string {
+  return str
+    .replace(/\\/g, "\\\\") // Escape backslashes first
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/\n/g, "\\n") // Escape newlines
+    .replace(/\r/g, "\\r") // Escape carriage returns
+    .replace(/\t/g, "\\t"); // Escape tabs
+}
+
 export async function analyzeDocument(
   content: string,
   agentId: string
@@ -124,11 +131,11 @@ ${agentInfo.commentInstructions}
   console.log(`📊 Target word count: ${targetWordCount}`);
   console.log(`📊 Target comments: ${targetComments}`);
 
-  // Generate comment template - updated for new highlight format
+  // Generate comment template - updated for array format
   const commentTemplate = Array.from(
     { length: targetComments },
-    (_, i) => `
-    "${i + 1}": {
+    () => `
+    {
       "title": "...",
       "description": "...",
       "highlight": {
@@ -146,9 +153,9 @@ Given the following Markdown document, output a single evaluation in **valid JSO
 
 {
   "summary": "[~${targetWordCount} words, correctly escaped JSON string]",
-  "comments": {
+  "comments": [
     ${commentTemplate} // Ensure exactly ${targetComments} comment objects here
-  }
+  ]
 }
 
 **CRITICAL JSON STRING ESCAPING RULES:**
@@ -174,7 +181,7 @@ Given the following Markdown document, output a single evaluation in **valid JSO
   - \`prefix\`: Provide ~50 characters of the text immediately preceding the highlight (JSON escaped string).
   - \`startText\`: Provide the first ~15-20 characters of the text you intend to highlight (JSON escaped string).
   - \`quotedText\`: Provide the **EXACT, VERBATIM text** being highlighted, including original formatting, newlines, and any special characters (JSON escaped string).
-- **DO NOT include \`startOffset\` or \`endOffset\` fields.**
+- **DO NOT include IDs or number the comments.**
 - Ensure \`prefix\`, \`startText\`, and \`quotedText\` are valid JSON strings with proper escaping.
 - The \`quotedText\` MUST be accurately copied from the document.
 
@@ -224,25 +231,31 @@ ${content}
     });
     if (errors.length > 0) {
       console.warn("JSONC parsing found issues:", errors);
-      const repairedJson = jsonrepair(cleanedResponse);
+      // Try to repair the JSON with better escaping
+      const escapedResponse = escapeJsonString(cleanedResponse);
+      const repairedJson = jsonrepair(escapedResponse);
       console.log("Repaired JSON:", repairedJson);
       parsedLLMReview = JSON.parse(repairedJson);
     } else {
       parsedLLMReview = jsoncResult as LLMReview;
     }
-    // Basic validation of top-level structure (can add more if needed)
+    // Basic validation of top-level structure
     if (!parsedLLMReview || typeof parsedLLMReview !== "object")
       throw new Error("Parsed response is not an object");
     if (!parsedLLMReview.summary) throw new Error("Missing summary");
-    if (!parsedLLMReview.comments) throw new Error("Missing comments");
+    if (!Array.isArray(parsedLLMReview.comments))
+      throw new Error("Comments must be an array");
   } catch (err) {
     console.error("❌ Invalid review structure during parsing/repair:", err);
     console.error("Original cleaned response:", cleanedResponse);
-    throw err; // Rethrow after logging
+    throw err;
   }
 
-  // Use the new function to process comments and calculate offsets
-  const finalComments = processRawComments(content, parsedLLMReview.comments);
+  // Process the comments to calculate highlight offsets
+  const processedComments = processRawComments(
+    content,
+    parsedLLMReview.comments
+  );
 
   // Construct the final DocumentReview object
   const review: DocumentReview = {
@@ -260,8 +273,16 @@ ${content}
         })
       : undefined,
     summary: parsedLLMReview.summary,
-    comments: finalComments, // Use the processed comments
+    comments: processedComments, // Use the processed comments
   };
+
+  // --- Sort comments by startOffset before saving ---
+  if (review.comments) {
+    review.comments.sort((a, b) => {
+      return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+    });
+    console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
+  }
 
   return {
     review,

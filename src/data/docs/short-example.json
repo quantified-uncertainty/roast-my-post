@@ -13,80 +13,90 @@
   "reviews": [
     {
       "agentId": "bias-detector",
-      "costInCents": 1826,
-      "createdAt": "2025-04-14T15:20:26.043Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1300,\"completionTokens\":526,\"totalTokens\":1826,\"temperature\":0.7,\"runtimeMs\":10580}",
-      "summary": "The document discusses AI safety terminology gaps, specifically regarding limited but useful AI systems that address takeover risks. It advocates for terminology that encompasses capability restrictions, established technologies, and intelligence limitations beyond mere alignment concepts.",
-      "comments": {
-        "1": {
+      "costInCents": 1757,
+      "createdAt": "2025-04-14T15:35:00.432Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1287,\"completionTokens\":470,\"totalTokens\":1757,\"temperature\":0.7,\"runtimeMs\":8721}",
+      "summary": "The document identifies a gap in AI safety discourse regarding terminology for limited, safe AI systems that prevent takeover risks while remaining useful. The brief content shows minimal bias, though it presents a subjective perspective on AI safety conversations without acknowledging diverse viewpoints.",
+      "comments": [
+        {
           "title": "Framing Bias",
-          "description": "The text frames AI safety primarily through the lens of \"takeover risks\" rather than presenting a balanced view of various AI risks. This creates a potential anchoring bias that may lead readers to focus disproportionately on existential risks while underemphasizing other important concerns like fairness, privacy, or accountability.",
+          "description": "The text frames the issue from a personal perspective (\"I feel\") without acknowledging diverse viewpoints in AI safety discourse. This creates a subjective framing that may not represent the full spectrum of existing terminology and concepts in the field.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 150,
+            "prefix": "",
+            "quotedText": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans."
+          }
+        }
+      ]
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 2462,
+      "createdAt": "2025-04-14T15:35:15.055Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1917,\"completionTokens\":545,\"totalTokens\":2462,\"temperature\":0.7,\"runtimeMs\":14604}",
+      "summary": "The document discusses a perceived gap in AI safety terminology, specifically regarding limited yet useful AI systems that mitigate takeover risks. The author suggests current discussions lack adequate vocabulary to describe AI systems with intentional capability restrictions and intelligence limitations.",
+      "comments": [
+        {
+          "title": "Underdeveloped Concept Introduction",
+          "description": "The opening paragraph introduces several complex concepts (limited AI, takeover risks, capability restrictions) without sufficient explanation or context. This creates cognitive load for readers unfamiliar with AI safety discussions. Consider expanding the introduction to define key terms and establish clearer relationships between concepts.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 308,
+            "prefix": "",
+            "quotedText": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability."
+          }
+        },
+        {
+          "title": "Repetitive Content Structure",
+          "description": "The document repeats similar points in both paragraphs without meaningful development. The second paragraph restates the first paragraph's main assertion without adding new information, reducing content efficiency and potentially confusing readers about the progression of ideas.",
+          "highlight": {
+            "startOffset": 334,
+            "endOffset": 468,
+            "prefix": "s for predictability.\n\n**On the Terminology**\n\n",
+            "quotedText": "One thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems."
+          }
+        }
+      ]
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 2723,
+      "createdAt": "2025-04-14T15:35:26.960Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2088,\"completionTokens\":635,\"totalTokens\":2723,\"temperature\":0.7,\"runtimeMs\":11895}",
+      "summary": "The document identifies a gap in AI safety discourse: the absence of terminology for AI systems that are simultaneously limited, safe, and useful, with a focus on preventing takeover risks rather than human misuse.",
+      "comments": [
+        {
+          "title": "Capability Control vs. Alignment",
+          "description": "This highlights an important distinction in AI safety between alignment (ensuring AI pursues intended goals) and capability control (restricting what AI can do regardless of goals). The latter approach has been discussed by researchers like Stuart Armstrong and Nick Bostrom under terms like \"boxing\" and \"tripwires,\" but lacks the same terminological clarity as alignment. This relates to the orthogonality thesis in AI safety literature - that intelligence and goals are independent variables.",
           "highlight": {
             "startOffset": 56,
             "endOffset": 150,
             "prefix": "I feel the AI safety conversation lacks terminology for ",
             "quotedText": "limited, safe, and useful AI systems that address takeover risks rather than misuse by humans."
           }
-        }
-      }
-    },
-    {
-      "agentId": "clarity-coach",
-      "costInCents": 2503,
-      "createdAt": "2025-04-14T15:20:35.899Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1930,\"completionTokens\":573,\"totalTokens\":2503,\"temperature\":0.7,\"runtimeMs\":9837}",
-      "summary": "The document briefly introduces a perceived gap in AI safety terminology regarding limited yet useful AI systems that mitigate takeover risks. It suggests expanding beyond alignment to include capability restrictions and intelligence limitations, but lacks detailed development of these concepts.",
-      "comments": {
-        "1": {
-          "title": "Underdeveloped Central Concept",
-          "description": "The document introduces a potentially valuable concept about limited AI systems but doesn't fully develop it. The brevity (only two paragraphs) prevents adequate explanation of what these systems would entail or how they would function. Consider expanding with specific examples of capability restrictions and how they might be implemented.",
+        },
+        {
+          "title": "Beyond Traditional Alignment",
+          "description": "This observation connects to an important conceptual distinction in AI safety. Traditional alignment focuses on ensuring AI systems pursue the right goals, while this approach incorporates structural limitations as safety features. This resembles concepts like \"corrigibility\" (MIRI) and \"mild optimization\" (Paul Christiano), which aim to create systems that avoid instrumental convergence toward harmful strategies even when pursuing legitimate goals.",
           "highlight": {
-            "startOffset": 56,
+            "startOffset": 169,
             "endOffset": 308,
-            "prefix": "I feel the AI safety conversation lacks terminology for ",
-            "quotedText": "limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability."
+            "prefix": "useful AI systems that address takeover risks rather than misuse by humans. This concept goes ",
+            "quotedText": "beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability."
           }
         },
-        "2": {
-          "title": "Structural Inconsistency",
-          "description": "The document has an inconsistent structure with a general introduction followed by what appears to be a section heading (\"On the Terminology\") that repeats similar content without advancing the argument. This creates redundancy rather than developing the concept further. Consider reorganizing to introduce the concept once, then expand on specific aspects.",
+        {
+          "title": "Terminology Gap Analysis",
+          "description": "The author identifies a genuine gap in the AI safety lexicon. While terms like \"aligned AI\" and \"beneficial AI\" exist, they don't capture the specific concept of deliberately capability-limited systems. This relates to the \"task-AGI\" vs \"agent-AGI\" distinction discussed by researchers like Richard Ngo, and to debates about whether capability limitations or alignment should be the primary safety strategy. The LessWrong community has discussed related concepts under terms like \"tool AI\" vs \"agent AI.\"",
           "highlight": {
-            "startOffset": 334,
+            "startOffset": 394,
             "endOffset": 468,
-            "prefix": "intelligence limitations for predictability.\n\n**On the Terminology**\n\n",
-            "quotedText": "One thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems."
+            "prefix": "**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is ",
+            "quotedText": "strong and versatile terminology for limited, safe, and useful AI systems."
           }
         }
-      }
-    },
-    {
-      "agentId": "research-scholar",
-      "costInCents": 2812,
-      "createdAt": "2025-04-14T15:20:50.014Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2101,\"completionTokens\":711,\"totalTokens\":2812,\"temperature\":0.7,\"runtimeMs\":14091}",
-      "summary": "The document discusses a perceived gap in AI safety terminology regarding limited but useful AI systems that mitigate takeover risks while maintaining utility. The author suggests the need for vocabulary that encompasses capability restrictions and intelligence limitations beyond just alignment.",
-      "comments": {
-        "1": {
-          "title": "Capability Control vs. Alignment Distinction",
-          "description": "The author touches on an important distinction in AI safety between alignment (ensuring AI values align with human values) and capability control (restricting what AI systems can do regardless of their goals). This distinction has been explored by researchers like Bostrom in \"Superintelligence\" and by Critch and Krueger in \"AI Research Considerations for Human Existential Safety.\" The LessWrong community often discusses this through concepts like \"boxed AI\" and \"tool AI,\" though there remains debate about whether meaningful capability restrictions are possible for advanced systems.",
-          "highlight": {
-            "startOffset": 56,
-            "endOffset": 149,
-            "prefix": "I feel the AI safety conversation lacks terminology for ",
-            "quotedText": "limited, safe, and useful AI systems that address takeover risks rather than misuse by humans"
-          }
-        },
-        "3": {
-          "title": "Beyond Alignment to Comprehensive Safety Design",
-          "description": "The author's framing that this concept \"goes beyond alignment\" reflects an important insight about comprehensive AI safety. Traditional alignment focuses on ensuring AI systems pursue the right goals, but doesn't necessarily address capability limitations, system architecture, or deployment contexts. This connects to Christiano's work on \"intent alignment\" versus broader safety concerns, and to Yampolskiy's argument that safety requires both alignment and capability control. The EA community increasingly recognizes that a multi-faceted approach to AI safety that includes both alignment and architectural constraints may be necessary.",
-          "highlight": {
-            "startOffset": 164,
-            "endOffset": 307,
-            "prefix": "that address takeover risks rather than misuse by humans. This concept ",
-            "quotedText": "goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability"
-          }
-        }
-      }
+      ]
     }
   ]
 }

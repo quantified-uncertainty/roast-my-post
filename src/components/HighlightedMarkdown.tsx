@@ -10,7 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
-import { Highlight } from '@/types/documentReview';
+import { Comment } from '@/types/documentReview';
 
 interface HighlightedMarkdownProps {
   content: string;
@@ -18,7 +18,7 @@ interface HighlightedMarkdownProps {
   onHighlightClick: (tag: string) => void;
   highlightColors: Record<string, string>;
   activeTag: string | null;
-  highlights?: Record<string, Highlight>;
+  highlights?: Comment[];
 }
 
 export function HighlightedMarkdown({
@@ -66,8 +66,10 @@ export function HighlightedMarkdown({
     });
 
     // Apply highlights
-    Object.entries(highlights).forEach(([tag, { startOffset, endOffset }]) => {
+    highlights.forEach((highlight, index) => {
+      const tag = index.toString(); // Use array index as tag
       const color = highlightColors[tag] || "yellow-100";
+      const { startOffset, endOffset } = highlight.highlight;
 
       const startNode = positions.find(
         (p) => p.start <= startOffset && p.end > startOffset

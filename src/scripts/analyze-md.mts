@@ -90,13 +90,9 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 
   // --- Sort comments by startOffset before saving ---
   if (documentReview.comments) {
-    const sortedCommentsArray = Object.entries(documentReview.comments)
-      .filter(([_, comment]) => comment.highlight) // Ensure highlight exists
-      .sort(([_, a], [__, b]) => {
-        return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
-      });
-    // Rebuild the comments object from the sorted array
-    documentReview.comments = Object.fromEntries(sortedCommentsArray);
+    documentReview.comments.sort((a, b) => {
+      return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+    });
     console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
   }
   // --- End sorting ---

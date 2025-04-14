@@ -45,17 +45,17 @@ export function validateHighlights(review: DocumentReview): {
   errors: string[];
 } {
   const errors: string[] = [];
-  const comments = Object.entries(review.comments);
+  const comments = review.comments;
 
   for (let i = 0; i < comments.length; i++) {
-    const [commentId, comment] = comments[i];
+    const comment = comments[i];
 
     for (let j = i + 1; j < comments.length; j++) {
-      const [otherCommentId, otherComment] = comments[j];
+      const otherComment = comments[j];
 
       if (highlightsOverlap(comment.highlight, otherComment.highlight)) {
         errors.push(
-          `Highlight for comment ${commentId} overlaps with highlight for comment ${otherCommentId}`
+          `Highlight for comment at index ${i} overlaps with highlight for comment at index ${j}`
         );
       }
     }
@@ -69,29 +69,28 @@ export function validateHighlights(review: DocumentReview): {
 
 /**
  * Adjusts highlights to remove overlaps by trimming the second highlight to end where the first one starts
- * @param highlights Record of comment IDs to Comment objects
- * @returns A new record with adjusted highlights that don't overlap
+ * @param comments Array of Comment objects
+ * @returns A new array with adjusted highlights that don't overlap
  */
-export function fixOverlappingHighlights(
-  comments: Record<string, Comment>
-): Record<string, Comment> {
-  const commentEntries = Object.entries(comments);
-  const fixedComments: Record<string, Comment> = {};
+export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
+  // Create a copy of the comments array to sort and modify
+  const commentsCopy = [...comments];
+  const fixedComments: Comment[] = [];
 
   // Sort comments by startOffset to prioritize earlier highlights
-  commentEntries.sort((a, b) => {
-    return a[1].highlight.startOffset - b[1].highlight.startOffset;
+  commentsCopy.sort((a, b) => {
+    return a.highlight.startOffset - b.highlight.startOffset;
   });
 
   // Process comments in order, adjusting any that would overlap with already processed ones
-  for (const [commentId, comment] of commentEntries) {
+  for (const comment of commentsCopy) {
     let adjustedComment = { ...comment };
     let highlight = { ...comment.highlight };
     let needsAdjustment = false;
 
     // Check against all already processed comments
-    for (const processedCommentId in fixedComments) {
-      const processedHighlight = fixedComments[processedCommentId].highlight;
+    for (const processedComment of fixedComments) {
+      const processedHighlight = processedComment.highlight;
 
       // If this highlight overlaps with a processed one, adjust it
       if (
@@ -132,7 +131,7 @@ export function fixOverlappingHighlights(
     // Only add the comment if the highlight is still valid (start < end)
     if (highlight.startOffset < highlight.endOffset) {
       adjustedComment.highlight = highlight;
-      fixedComments[commentId] = adjustedComment;
+      fixedComments.push(adjustedComment);
     }
   }
 
@@ -255,38 +254,40 @@ export function calculateHighlightOffsets(
  * Also ensures no overlapping highlights are produced.
  *
  * @param content The full original document content.
- * @param rawComments The comments object received from the LLM, containing RawLLMHighlight.
- * @returns A record of verified Comment objects with calculated offsets.
+ * @param rawComments The array of comment objects received from the LLM, containing RawLLMHighlight.
+ * @returns An array of verified Comment objects with calculated offsets.
  */
 export function processRawComments(
   content: string,
-  rawComments:
-    | Record<
-        string,
-        Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }
-      >
-    | undefined
-): Record<string, Comment> {
-  const finalComments: Record<string, Comment> = {};
+  rawComments?: Array<
+    Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }
+  >
+): Comment[] {
+  const finalComments: Comment[] = [];
   let previousEndOffset = 0; // Track previous offset to help disambiguate startText
 
-  if (!rawComments) {
-    console.warn("processRawComments: Received undefined or null rawComments.");
-    return finalComments; // Return empty object if no comments
+  if (!rawComments || !Array.isArray(rawComments)) {
+    console.warn(
+      "processRawComments: Received undefined, null, or non-array rawComments."
+    );
+    return finalComments; // Return empty array if no comments
   }
 
-  for (const [key, rawComment] of Object.entries(rawComments)) {
+  for (let i = 0; i < rawComments.length; i++) {
+    const rawComment = rawComments[i];
+    const commentIdentifier = `at index ${i}`; // For logging purposes
+
     // Basic validation of the raw comment structure
     if (!rawComment.title || !rawComment.description || !rawComment.highlight) {
       console.warn(
-        `Skipping comment ${key}: Missing title, description, or highlight data.`
+        `Skipping comment ${commentIdentifier}: Missing title, description, or highlight data.`
       );
       continue;
     }
     // Ensure highlight has the expected raw structure
     if (!rawComment.highlight.startText || !rawComment.highlight.quotedText) {
       console.warn(
-        `Skipping comment ${key}: Raw highlight missing startText or quotedText.`
+        `Skipping comment ${commentIdentifier}: Raw highlight missing startText or quotedText.`
       );
       continue;
     }
@@ -301,10 +302,10 @@ export function processRawComments(
       // Check for overlaps with existing comments before adding
       let overlapsWithExisting = false;
 
-      for (const existingComment of Object.values(finalComments)) {
+      for (const existingComment of finalComments) {
         if (highlightsOverlap(existingComment.highlight, calculatedHighlight)) {
           console.warn(
-            `Skipping comment ${key} ("${rawComment.title}"): Highlight overlaps with an existing comment.`
+            `Skipping comment ${commentIdentifier} ("${rawComment.title}"): Highlight overlaps with an existing comment.`
           );
           overlapsWithExisting = true;
           break;
@@ -313,25 +314,20 @@ export function processRawComments(
 
       if (!overlapsWithExisting) {
         // Construct the final Comment object with calculated offsets
-        finalComments[key] = {
+        finalComments.push({
           title: rawComment.title,
           description: rawComment.description,
           // Pass the entire calculatedHighlight object, which matches the Highlight type
           highlight: calculatedHighlight,
-        };
+        });
         // Update where to start search for the next comment
         previousEndOffset = calculatedHighlight.endOffset;
       }
     } else {
       // Handle cases where the highlight couldn't be verified
       console.warn(
-        `Skipping comment ${key} ("${rawComment.title}"): Could not verify highlight offsets.`
+        `Skipping comment ${commentIdentifier} ("${rawComment.title}"): Could not verify highlight offsets.`
       );
-      // Optional: Implement retry logic with searchStartIndex = 0?
-      // We still update previousEndOffset here to avoid infinite loops if
-      // the LLM consistently provides bad highlights for adjacent sections.
-      // A failed highlight shouldn't prevent subsequent valid ones from being found.
-      // Resetting search start for the *next* iteration might be better if needed.
     }
   }
 

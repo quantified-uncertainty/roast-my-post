@@ -21,7 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 interface CommentsSidebarProps {
-  comments: Record<string, Comment>;
+  comments: Comment[];
   activeTag: string | null;
   expandedTag: string | null;
   onTagHover: (tag: string | null) => void;
@@ -58,26 +58,30 @@ function getCommentHighlightColor(index: number): string {
   return colorClass.split(" ")[0].replace("bg-", "");
 }
 
-function sortCommentsByOffset(comments: Record<string, Comment>) {
-  return Object.entries(comments).sort(([_, a], [__, b]) => {
+function sortCommentsByOffset(comments: Comment[]): Comment[] {
+  return [...comments].sort((a, b) => {
     const aOffset = a.highlight?.startOffset || 0;
     const bOffset = b.highlight?.startOffset || 0;
     return aOffset - bOffset;
   });
 }
+
 function CommentsSidebar({
   comments,
   expandedTag,
   onTagHover,
   onTagClick,
 }: CommentsSidebarProps) {
+  const sortedComments = sortCommentsByOffset(comments);
+
   return (
     <div className="bg-white rounded-lg shadow-sm">
       <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
         Highlights
       </h2>
       <div>
-        {sortCommentsByOffset(comments).map(([tag, comment], index) => {
+        {sortedComments.map((comment, index) => {
+          const tag = index.toString();
           const isExpanded = expandedTag === tag;
 
           return (
@@ -292,17 +296,13 @@ export function DocumentWithEvaluations({
               onHighlightHover={(tag) => setActiveTag(tag)}
               onHighlightClick={handleHighlightClick}
               highlightColors={Object.fromEntries(
-                sortedComments.map(([tag, _], index) => [
-                  tag,
+                sortedComments.map((_, index) => [
+                  index.toString(),
                   getCommentHighlightColor(index),
                 ])
               )}
               activeTag={activeTag}
-              highlights={Object.fromEntries(
-                Object.entries(activeReview.comments)
-                  .filter(([_, c]) => c.highlight)
-                  .map(([tag, c]) => [tag, c.highlight!])
-              )}
+              highlights={sortedComments}
             />
           </article>
         </div>

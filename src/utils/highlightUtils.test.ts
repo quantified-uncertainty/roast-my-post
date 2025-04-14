@@ -135,41 +135,40 @@ describe("calculateHighlightOffsets", () => {
 
 describe("processRawComments", () => {
   const sampleContent = "Line one.\nLine two is longer.\nLine three.";
-  const baseRawComment = {
-    title: "Test Title",
-    description: "Test Description",
-  };
 
   test("should process a single valid comment", () => {
-    const rawComments = {
-      "1": {
-        ...baseRawComment,
+    const rawComments = [
+      {
+        title: "Test Title",
+        description: "Test Description",
         highlight: {
           startText: "Line one",
           quotedText: "Line one.",
           prefix: "",
         },
       },
-    };
-    const expected: Record<string, Comment> = {
-      "1": {
+    ];
+
+    const expected = [
+      {
         title: "Test Title",
         description: "Test Description",
         highlight: {
           startOffset: 0,
           endOffset: 9,
-          prefix: "",
           quotedText: "Line one.",
+          prefix: "",
         },
       },
-    };
+    ];
+
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
   });
 
   test("should process multiple valid comments, checking correct offsets", () => {
-    const rawComments = {
-      "1": {
+    const rawComments = [
+      {
         title: "C1",
         description: "D1",
         highlight: {
@@ -178,7 +177,7 @@ describe("processRawComments", () => {
           prefix: "",
         },
       },
-      "2": {
+      {
         title: "C2",
         description: "D2",
         highlight: {
@@ -187,36 +186,38 @@ describe("processRawComments", () => {
           prefix: "\n",
         },
       },
-    };
-    const expected: Record<string, Comment> = {
-      "1": {
+    ];
+
+    const expected = [
+      {
         title: "C1",
         description: "D1",
         highlight: {
           startOffset: 0,
           endOffset: 9,
-          prefix: "",
           quotedText: "Line one.",
+          prefix: "",
         },
       },
-      "2": {
+      {
         title: "C2",
         description: "D2",
         highlight: {
           startOffset: 10,
           endOffset: 29,
-          prefix: "\n",
           quotedText: "Line two is longer.",
+          prefix: "\n",
         },
       },
-    };
+    ];
+
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
   });
 
   test("should skip comments where highlight calculation naturally fails (e.g., mismatch)", () => {
-    const rawComments = {
-      "1": {
+    const rawComments = [
+      {
         title: "C1",
         description: "D1",
         highlight: {
@@ -225,16 +226,16 @@ describe("processRawComments", () => {
           prefix: "",
         },
       },
-      bad: {
-        title: "CBad",
-        description: "DBad",
+      {
+        title: "Bad",
+        description: "Description",
         highlight: {
           startText: "Line two",
-          quotedText: "Line two is WRONG.",
+          quotedText: "Line two is WRONG.", // Won't match
           prefix: "\n",
         },
       },
-      "2": {
+      {
         title: "C2",
         description: "D2",
         highlight: {
@@ -243,92 +244,135 @@ describe("processRawComments", () => {
           prefix: "\n",
         },
       },
-    };
-    const expected: Record<string, Comment> = {
-      "1": {
+    ];
+
+    const expected = [
+      {
         title: "C1",
         description: "D1",
         highlight: {
           startOffset: 0,
           endOffset: 9,
-          prefix: "",
           quotedText: "Line one.",
+          prefix: "",
         },
       },
-      "2": {
+      {
         title: "C2",
         description: "D2",
         highlight: {
           startOffset: 30,
           endOffset: 41,
-          prefix: "\n",
           quotedText: "Line three.",
+          prefix: "\n",
         },
       },
-    };
+    ];
+
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
   });
 
   test("should skip comments missing title, description, or highlight object", () => {
-    const rawComments = {
-      noTitle: {
-        description: "D",
-        highlight: { startText: "L", quotedText: "L" },
-      },
-      noDesc: { title: "T", highlight: { startText: "L", quotedText: "L" } },
-      noHl: { title: "T", description: "D" },
-      ok: {
-        ...baseRawComment,
-        highlight: { startText: "Line one", quotedText: "Line one." },
-      },
-    } as any;
-    const expected: Record<string, Comment> = {
-      ok: {
-        ...baseRawComment,
+    const rawComments = [
+      {
+        title: "",
+        description: "Description",
         highlight: {
-          startOffset: 0,
-          endOffset: 9,
-          prefix: undefined,
+          startText: "Line one",
           quotedText: "Line one.",
         },
       },
-    };
+      {
+        title: "noDesc",
+        description: "",
+        highlight: {
+          startText: "Line one",
+          quotedText: "Line one.",
+        },
+      },
+      {
+        title: "noHl",
+        description: "Description",
+        highlight: undefined as any,
+      },
+      {
+        title: "Test Title",
+        description: "Test Description",
+        highlight: {
+          startText: "Line one",
+          quotedText: "Line one.",
+        },
+      },
+    ];
+
+    const expected = [
+      {
+        title: "Test Title",
+        description: "Test Description",
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          quotedText: "Line one.",
+        },
+      },
+    ];
+
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
   });
 
   test("should skip comments with highlight missing startText or quotedText", () => {
-    const rawComments = {
-      noStart: { ...baseRawComment, highlight: { quotedText: "L" } },
-      noQuote: { ...baseRawComment, highlight: { startText: "L" } },
-      ok: {
-        ...baseRawComment,
-        highlight: { startText: "Line one", quotedText: "Line one." },
-      },
-    } as any;
-    const expected: Record<string, Comment> = {
-      ok: {
-        ...baseRawComment,
+    const rawComments = [
+      {
+        title: "noStart",
+        description: "Description",
         highlight: {
-          startOffset: 0,
-          endOffset: 9,
-          prefix: undefined,
+          startText: "",
           quotedText: "Line one.",
         },
       },
-    };
+      {
+        title: "noQuote",
+        description: "Description",
+        highlight: {
+          startText: "Line one",
+          quotedText: "",
+        },
+      },
+      {
+        title: "Test Title",
+        description: "Test Description",
+        highlight: {
+          startText: "Line one",
+          quotedText: "Line one.",
+        },
+      },
+    ];
+
+    const expected = [
+      {
+        title: "Test Title",
+        description: "Test Description",
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          quotedText: "Line one.",
+        },
+      },
+    ];
+
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
   });
 
-  test("should return empty object if rawComments input is undefined or null", () => {
-    expect(processRawComments(sampleContent, undefined)).toEqual({});
-    expect(processRawComments(sampleContent, null as any)).toEqual({});
+  test("should return empty array if rawComments input is undefined or null", () => {
+    expect(processRawComments(sampleContent, undefined)).toEqual([]);
+    expect(processRawComments(sampleContent, null as any)).toEqual([]);
   });
 
-  test("should return empty object if rawComments input is empty", () => {
-    expect(processRawComments(sampleContent, {})).toEqual({});
+  test("should return empty array if rawComments input is empty", () => {
+    expect(processRawComments(sampleContent, [])).toEqual([]);
   });
 });
 
@@ -394,18 +438,18 @@ describe("validateHighlights", () => {
       agentId: "test-agent",
       costInCents: 100,
       createdAt: new Date(),
-      comments: {
-        "1": {
+      comments: [
+        {
           title: "Comment 1",
           description: "Description 1",
           highlight: { startOffset: 10, endOffset: 20, quotedText: "text 1" },
         },
-        "2": {
+        {
           title: "Comment 2",
           description: "Description 2",
           highlight: { startOffset: 30, endOffset: 40, quotedText: "text 2" },
         },
-      },
+      ],
     };
 
     const result = validateHighlights(review);
@@ -418,25 +462,25 @@ describe("validateHighlights", () => {
       agentId: "test-agent",
       costInCents: 100,
       createdAt: new Date(),
-      comments: {
-        "1": {
+      comments: [
+        {
           title: "Comment 1",
           description: "Description 1",
           highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
         },
-        "2": {
+        {
           title: "Comment 2",
           description: "Description 2",
           highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
         },
-      },
+      ],
     };
 
     const result = validateHighlights(review);
     expect(result.valid).toBe(false);
     expect(result.errors.length).toBe(1);
     expect(result.errors[0]).toContain(
-      "Highlight for comment 1 overlaps with highlight for comment 2"
+      "Highlight for comment at index 0 overlaps with highlight for comment at index 1"
     );
   });
 
@@ -445,23 +489,23 @@ describe("validateHighlights", () => {
       agentId: "test-agent",
       costInCents: 100,
       createdAt: new Date(),
-      comments: {
-        "1": {
+      comments: [
+        {
           title: "Comment 1",
           description: "Description 1",
           highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
         },
-        "2": {
+        {
           title: "Comment 2",
           description: "Description 2",
           highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
         },
-        "3": {
+        {
           title: "Comment 3",
           description: "Description 3",
           highlight: { startOffset: 25, endOffset: 35, quotedText: "text 3" },
         },
-      },
+      ],
     };
 
     const result = validateHighlights(review);
@@ -472,96 +516,95 @@ describe("validateHighlights", () => {
 
 describe("fixOverlappingHighlights", () => {
   test("should fix highlights that start inside another highlight", () => {
-    const comments: Record<string, Comment> = {
-      "1": {
+    const comments: Comment[] = [
+      {
         title: "Comment 1",
         description: "Description 1",
         highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
       },
-      "2": {
+      {
         title: "Comment 2",
         description: "Description 2",
         highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
       },
-    };
+    ];
 
     const fixed = fixOverlappingHighlights(comments);
 
     // Comment 1 should be unchanged as it starts first
-    expect(fixed["1"].highlight.startOffset).toBe(10);
-    expect(fixed["1"].highlight.endOffset).toBe(30);
+    expect(fixed[0].highlight.startOffset).toBe(10);
+    expect(fixed[0].highlight.endOffset).toBe(30);
 
     // Comment 2 should be adjusted to start after comment 1 ends
-    expect(fixed["2"].highlight.startOffset).toBe(30);
-    expect(fixed["2"].highlight.endOffset).toBe(40);
+    expect(fixed[1].highlight.startOffset).toBe(30);
+    expect(fixed[1].highlight.endOffset).toBe(40);
   });
 
   test("should fix highlights when one contains another", () => {
-    const comments: Record<string, Comment> = {
-      "1": {
+    const comments: Comment[] = [
+      {
         title: "Comment 1",
         description: "Description 1",
         highlight: { startOffset: 10, endOffset: 50, quotedText: "text 1" },
       },
-      "2": {
+      {
         title: "Comment 2",
         description: "Description 2",
         highlight: { startOffset: 20, endOffset: 30, quotedText: "text 2" },
       },
-    };
+    ];
 
     const fixed = fixOverlappingHighlights(comments);
 
     // Comment 1 should be unchanged as it starts first
-    expect(fixed["1"].highlight.startOffset).toBe(10);
-    expect(fixed["1"].highlight.endOffset).toBe(50);
+    expect(fixed[0].highlight.startOffset).toBe(10);
+    expect(fixed[0].highlight.endOffset).toBe(50);
 
     // Comment 2 should not be included as it's completely inside comment 1
-    expect(fixed["2"]).toBeUndefined();
+    expect(fixed.length).toBe(1);
   });
 
   test("should handle complex overlapping scenarios with multiple highlights", () => {
-    const comments: Record<string, Comment> = {
-      "1": {
+    const comments: Comment[] = [
+      {
         title: "Comment 1",
         description: "Description 1",
         highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
       },
-      "2": {
+      {
         title: "Comment 2",
         description: "Description 2",
         highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
       },
-      "3": {
+      {
         title: "Comment 3",
         description: "Description 3",
         highlight: { startOffset: 35, endOffset: 50, quotedText: "text 3" },
       },
-      "4": {
+      {
         title: "Comment 4",
         description: "Description 4",
         highlight: { startOffset: 60, endOffset: 70, quotedText: "text 4" },
       },
-    };
+    ];
 
     const fixed = fixOverlappingHighlights(comments);
 
     // Comment 1 should be unchanged (first)
-    expect(fixed["1"].highlight.startOffset).toBe(10);
-    expect(fixed["1"].highlight.endOffset).toBe(30);
+    expect(fixed[0].highlight.startOffset).toBe(10);
+    expect(fixed[0].highlight.endOffset).toBe(30);
 
     // Comment 2 should be adjusted to start after comment 1
-    expect(fixed["2"].highlight.startOffset).toBe(30);
-    expect(fixed["2"].highlight.endOffset).toBe(40);
+    expect(fixed[1].highlight.startOffset).toBe(30);
+    expect(fixed[1].highlight.endOffset).toBe(40);
 
     // Comment 3 should be adjusted to start after comment 2 ends
-    // It originally started at 35 which overlaps with comment 2's adjusted range of 30-40
-    expect(fixed["3"].highlight.startOffset).toBe(40);
-    expect(fixed["3"].highlight.endOffset).toBe(50);
+    expect(fixed[2].highlight.startOffset).toBe(40);
+    expect(fixed[2].highlight.endOffset).toBe(50);
 
     // Comment 4 should remain unchanged as it doesn't overlap with anything
-    expect(fixed["4"].highlight.startOffset).toBe(60);
-    expect(fixed["4"].highlight.endOffset).toBe(70);
+    expect(fixed[3].highlight.startOffset).toBe(60);
+    expect(fixed[3].highlight.endOffset).toBe(70);
   });
 });
 
@@ -571,31 +614,31 @@ describe("validateAndFixDocumentReview", () => {
       agentId: "test-agent",
       costInCents: 100,
       createdAt: new Date(),
-      comments: {
-        "1": {
+      comments: [
+        {
           title: "Comment 1",
           description: "Description 1",
           highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
         },
-        "2": {
+        {
           title: "Comment 2",
           description: "Description 2",
           highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
         },
-      },
+      ],
     };
 
     const fixed = validateAndFixDocumentReview(review);
 
     // Original review should be unchanged
-    expect(review.comments["1"].highlight.startOffset).toBe(10);
-    expect(review.comments["2"].highlight.startOffset).toBe(20);
+    expect(review.comments[0].highlight.startOffset).toBe(10);
+    expect(review.comments[1].highlight.startOffset).toBe(20);
 
     // Fixed review should have adjusted comment 2
-    expect(fixed.comments["1"].highlight.startOffset).toBe(10);
-    expect(fixed.comments["1"].highlight.endOffset).toBe(30);
-    expect(fixed.comments["2"].highlight.startOffset).toBe(30);
-    expect(fixed.comments["2"].highlight.endOffset).toBe(40);
+    expect(fixed.comments[0].highlight.startOffset).toBe(10);
+    expect(fixed.comments[0].highlight.endOffset).toBe(30);
+    expect(fixed.comments[1].highlight.startOffset).toBe(30);
+    expect(fixed.comments[1].highlight.endOffset).toBe(40);
 
     // Validate the fixed review should pass
     const validation = validateHighlights(fixed);

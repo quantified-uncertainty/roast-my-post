@@ -6,7 +6,7 @@ import type {
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {
-  comments: Record<string, Comment>;
+  comments: Comment[];
   agentId: string;
   analysis?: string;
   costInCents: number;
