@@ -11,10 +11,13 @@
     "review-agent": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/strongly-bounded-agents.json -a bias-detector",
     "review-all-agents": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/strongly-bounded-agents.json --all-agents",
     "review-all-agents-missing": "npx tsx src/scripts/analyze-md.mts --dir ./src/data/docs --all-agents --only-missing",
-    "generate-docs": "tsx src/scripts/generate-docs-index.mts"
+    "generate-docs": "tsx src/scripts/generate-docs-index.mts",
+    "build:agents": "tsx src/scripts/build-agents.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@iarna/toml": "^2.2.5",
+    "@types/iarna__toml": "^2.0.5",
     "axios": "^1.8.4",
     "commander": "^13.1.0",
     "dotenv": "^16.5.0",

@@ -33,6 +33,7 @@ export async function loadAgentInfo(agentId: string) {
       "src",
       "data",
       "agents",
+      "dist",
       `${agentId}.json`
     );
     const agentContent = await readFile(agentPath, "utf-8");

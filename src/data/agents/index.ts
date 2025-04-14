@@ -1,8 +1,8 @@
 // Export agents
 import type { EvaluationAgent } from '../../types/evaluationAgents';
-import biasDetector from './bias-detector.json';
-import clarityCoach from './clarity-coach.json';
-import researchScholar from './research-scholar.json';
+import biasDetector from './dist/bias-detector.json';
+import clarityCoach from './dist/clarity-coach.json';
+import researchScholar from './dist/research-scholar.json';
 
 // Export individual agents
 export { biasDetector, clarityCoach, researchScholar };

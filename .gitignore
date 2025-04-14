@@ -42,3 +42,6 @@ next-env.d.ts
 
 .env
 /logs
+
+# Generated agent JSON files
+src/data/agents/dist/
