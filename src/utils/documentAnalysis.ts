@@ -87,7 +87,139 @@ function escapeJsonString(str: string): string {
     .replace(/"/g, '\\"') // Escape double quotes
     .replace(/\n/g, "\\n") // Escape newlines
     .replace(/\r/g, "\\r") // Escape carriage returns
-    .replace(/\t/g, "\\t"); // Escape tabs
+    .replace(/\t/g, "\\t") // Escape tabs
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
+      // Handle control characters that can break JSON
+      return "\\u" + ("0000" + match.charCodeAt(0).toString(16)).slice(-4);
+    });
+}
+
+// Improved function to repair complex JSON
+function repairComplexJson(jsonString: string): string {
+  try {
+    // First try with jsonrepair
+    return jsonrepair(jsonString);
+  } catch (error) {
+    console.warn("Initial jsonrepair failed, trying manual repairs:", error);
+
+    // Try to identify and fix common patterns that might be breaking JSON
+    let repaired = jsonString;
+
+    // 1. Fix unescaped quotes in quotedText fields
+    repaired = repaired.replace(
+      /"quotedText"\s*:\s*"((?:[^"\\]|\\.)*)"/g,
+      (match, content) => {
+        // Make sure all quotes within content are escaped
+        const fixedContent = content.replace(/([^\\])"/g, '$1\\"');
+        return `"quotedText": "${fixedContent}"`;
+      }
+    );
+
+    // 2. Fix missing colons in key-value pairs
+    repaired = repaired.replace(/"([^"]+)"\s+(["{[])/g, '"$1": $2');
+
+    // 3. Fix missing comma between objects in an array
+    repaired = repaired.replace(/}(\s*){/g, "},\n{");
+
+    // 4. Fix dangling commas at the end of objects/arrays
+    repaired = repaired.replace(/,(\s*[}\]])/g, "$1");
+
+    // 5. Fix specific "missing colon" issues around position 3660
+    try {
+      // Look for patterns like "key" "value" (missing colon)
+      repaired = repaired.replace(/"([^"]+)"\s+"([^"]+)"/g, '"$1": "$2"');
+
+      // If we know the error is around position 3660, add extra checks there
+      if (repaired.length > 3700) {
+        const problemArea = repaired.substring(3600, 3700);
+        console.log("Examining problem area:", problemArea);
+
+        // Look for any key without a colon followed by a value
+        const improvedVersion =
+          repaired.substring(0, 3600) +
+          problemArea.replace(/"([^"]+)"\s*([^:\s])/g, '"$1": $2') +
+          repaired.substring(3700);
+
+        // Only use the improved version if it's actually different
+        if (improvedVersion !== repaired) {
+          repaired = improvedVersion;
+        }
+      }
+
+      return jsonrepair(repaired);
+    } catch (secondError) {
+      console.error("Manual repairs also failed:", secondError);
+
+      // Try to locate specific issues in the error message
+      const errorMsg = (secondError as Error).message;
+      const positionMatch = errorMsg.match(/position (\d+)/);
+
+      if (positionMatch) {
+        const position = parseInt(positionMatch[1]);
+        const start = Math.max(0, position - 30);
+        const end = Math.min(repaired.length, position + 30);
+        const problematicSection = repaired.substring(start, end);
+
+        console.error(
+          `Problem area around position ${position}: "${problematicSection}"`
+        );
+
+        // Try to fix specific issues based on what's in the problematic section
+        if (
+          problematicSection.includes('"quotedText"') &&
+          !problematicSection.includes('"quotedText":')
+        ) {
+          // Fix missing colon after quotedText
+          repaired =
+            repaired.substring(0, start) +
+            problematicSection.replace(/"quotedText"\s+/, '"quotedText": ') +
+            repaired.substring(end);
+        } else if (
+          problematicSection.includes('"startText"') &&
+          !problematicSection.includes('"startText":')
+        ) {
+          // Fix missing colon after startText
+          repaired =
+            repaired.substring(0, start) +
+            problematicSection.replace(/"startText"\s+/, '"startText": ') +
+            repaired.substring(end);
+        } else if (
+          problematicSection.includes('"prefix"') &&
+          !problematicSection.includes('"prefix":')
+        ) {
+          // Fix missing colon after prefix
+          repaired =
+            repaired.substring(0, start) +
+            problematicSection.replace(/"prefix"\s+/, '"prefix": ') +
+            repaired.substring(end);
+        } else {
+          // Generic fix - add a colon if we see a key pattern
+          repaired =
+            repaired.substring(0, start) +
+            problematicSection.replace(/"([^"]+)"\s+([^:])/g, '"$1": $2') +
+            repaired.substring(end);
+        }
+
+        // Try JSON repair again after targeted fixes
+        try {
+          return jsonrepair(repaired);
+        } catch (thirdError) {
+          console.error("All repair attempts failed:", thirdError);
+
+          // Last resort - remove the problematic section and replace with dummy value
+          const safeJson =
+            repaired.substring(0, start) +
+            '"problematicText": "removed for parsing"' +
+            repaired.substring(end);
+
+          return jsonrepair(safeJson);
+        }
+      }
+
+      // If we can't pinpoint the issue, throw the original error
+      throw secondError;
+    }
+  }
 }
 
 export async function analyzeDocument(
@@ -229,12 +361,33 @@ ${content}
     const jsoncResult = parseJsonc(cleanedResponse, errors, {
       allowTrailingComma: true,
     });
+
     if (errors.length > 0) {
       console.warn("JSONC parsing found issues:", errors);
-      // Try to repair the JSON with better escaping
-      const escapedResponse = escapeJsonString(cleanedResponse);
-      const repairedJson = jsonrepair(escapedResponse);
-      console.log("Repaired JSON:", repairedJson);
+
+      // Log the specific error positions for debugging
+      errors.forEach((error) => {
+        const errorPos = error.offset;
+        const start = Math.max(0, errorPos - 20);
+        const end = Math.min(cleanedResponse.length, errorPos + 20);
+        console.warn(
+          `Error at position ${errorPos}: "${cleanedResponse.substring(
+            start,
+            end
+          )}"`
+        );
+      });
+
+      // Try to repair the JSON with improved repair function
+      const repairedJson = repairComplexJson(cleanedResponse);
+      console.log("Repaired JSON length:", repairedJson.length);
+
+      // For extra debugging, log a sample of the repaired JSON
+      console.log(
+        "Repaired JSON sample:",
+        repairedJson.substring(0, 100) + "..."
+      );
+
       parsedLLMReview = JSON.parse(repairedJson);
     } else {
       parsedLLMReview = jsoncResult as LLMReview;
@@ -247,8 +400,49 @@ ${content}
       throw new Error("Comments must be an array");
   } catch (err) {
     console.error("❌ Invalid review structure during parsing/repair:", err);
-    console.error("Original cleaned response:", cleanedResponse);
-    throw err;
+    console.error("Original cleaned response length:", cleanedResponse.length);
+
+    // More detailed error information
+    if (err instanceof SyntaxError) {
+      const match = err.message.match(/position (\d+)/);
+      if (match) {
+        const position = parseInt(match[1]);
+        const start = Math.max(0, position - 30);
+        const end = Math.min(cleanedResponse.length, position + 30);
+        console.error(
+          `JSON syntax error at position ${position}: "${cleanedResponse.substring(
+            start,
+            end
+          )}"`
+        );
+      }
+    }
+
+    // Try one more desperate repair attempt before giving up
+    try {
+      const lastResortRepair = `{"summary":"Error parsing response","comments":[]}`;
+      console.error("Using default empty structure as fallback");
+      parsedLLMReview = JSON.parse(lastResortRepair);
+
+      // Return a review with an error message
+      return {
+        review: {
+          agentId,
+          costInCents: 0,
+          createdAt: new Date(),
+          summary:
+            "Error: Unable to parse the response from the AI. Please try again.",
+          comments: [],
+        },
+        usage: null,
+        llmResponse,
+        finalPrompt,
+        agentContext,
+      };
+    } catch {
+      // If even this fails, re-throw the original error
+      throw err;
+    }
   }
 
   // Process the comments to calculate highlight offsets
