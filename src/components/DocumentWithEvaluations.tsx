@@ -303,6 +303,7 @@ export function DocumentWithEvaluations({
               )}
               activeTag={activeTag}
               highlights={sortedComments}
+              analysisId={activeReview.agentId + "-" + activeReviewIndex}
             />
           </article>
         </div>

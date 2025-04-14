@@ -348,12 +348,22 @@ export function processRawComments(
 export function calculateTextNodePositions(
   container: HTMLElement
 ): TextNodePosition[] {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  // Use NodeFilter.SHOW_TEXT to only get text nodes
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+    // Skip empty text nodes or nodes with only whitespace
+    acceptNode: (node) => {
+      const text = node.textContent || "";
+      return text.trim().length > 0
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    },
+  });
+
   const textNodes: Text[] = [];
+  let node: Text | null;
 
   // Collect all text nodes
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
+  while ((node = walker.nextNode() as Text)) {
     textNodes.push(node);
   }
 
@@ -522,133 +532,121 @@ export function applyHighlightBetweenNodes(
 ): HTMLSpanElement[] {
   const highlightedNodes: HTMLSpanElement[] = [];
 
-  // If start and end nodes are the same, we can use a simpler approach
-  if (startNode.node === endNode.node) {
-    // Extract the text to highlight
-    const text = startNode.node.textContent || "";
-    const beforeText = text.substring(0, startOffset - startNode.start);
-    const highlightText = text.substring(
-      startOffset - startNode.start,
-      endOffset - startNode.start
-    );
-    const afterText = text.substring(endOffset - startNode.start);
-
-    // Create text nodes and highlight span
-    const beforeNode = document.createTextNode(beforeText);
-    const span = createHighlightSpan(tag, color, true);
-    span.textContent = highlightText;
-    const afterNode = document.createTextNode(afterText);
-
-    // Replace the original node with these three nodes
-    const parent = startNode.node.parentNode;
-    if (parent) {
-      parent.insertBefore(beforeNode, startNode.node);
-      parent.insertBefore(span, startNode.node);
-      parent.insertBefore(afterNode, startNode.node);
-      parent.removeChild(startNode.node);
-      highlightedNodes.push(span);
-    }
-
+  // Safety check for invalid nodes
+  if (!startNode.node.parentNode || !endNode.node.parentNode) {
     return highlightedNodes;
   }
 
-  // For multi-node highlights, use the original more complex approach
-  let insideHighlight = false;
+  // If start and end nodes are the same, we can use a simpler approach
+  if (startNode.node === endNode.node) {
+    try {
+      // Extract the text to highlight
+      const text = startNode.node.textContent || "";
+      const localStartOffset = Math.max(0, startOffset - startNode.start);
+      const localEndOffset = Math.min(text.length, endOffset - startNode.start);
 
-  // Create a tree walker to iterate through text nodes
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-
-  while (walker.nextNode()) {
-    const currentNode = walker.currentNode as Text;
-
-    // Check if we've reached the start node
-    if (currentNode === startNode.node) {
-      insideHighlight = true;
-    }
-
-    // Process node if we're inside the highlight range
-    if (insideHighlight) {
-      const nodePosition = positions.find((p) => p.node === currentNode);
-      if (!nodePosition) continue;
-
-      let span: HTMLSpanElement | null = null;
-
-      // This is the start node
-      if (currentNode === startNode.node) {
-        span = applyHighlightToStartNode(
-          currentNode,
-          startOffset,
-          nodePosition.start,
-          nodePosition.end,
-          tag,
-          color
-        );
+      // Skip if selection is invalid
+      if (
+        localStartOffset >= localEndOffset ||
+        localStartOffset >= text.length
+      ) {
+        return highlightedNodes;
       }
-      // This is the end node
-      else if (currentNode === endNode.node) {
-        span = applyHighlightToEndNode(
-          currentNode,
-          endOffset,
-          nodePosition.start,
-          tag,
-          color
-        );
 
-        // We've processed the end node, exit the loop
+      const beforeText = text.substring(0, localStartOffset);
+      const highlightText = text.substring(localStartOffset, localEndOffset);
+      const afterText = text.substring(localEndOffset);
+
+      // Create text nodes and highlight span
+      const beforeNode = document.createTextNode(beforeText);
+      const span = createHighlightSpan(tag, color, true);
+      span.textContent = highlightText;
+      const afterNode = document.createTextNode(afterText);
+
+      // Replace the original node with these three nodes
+      const parent = startNode.node.parentNode;
+      if (parent) {
+        parent.insertBefore(beforeNode, startNode.node);
+        parent.insertBefore(span, startNode.node);
+        parent.insertBefore(afterNode, startNode.node);
+        parent.removeChild(startNode.node);
+        highlightedNodes.push(span);
+      }
+
+      return highlightedNodes;
+    } catch (err) {
+      return highlightedNodes;
+    }
+  }
+
+  // For multi-node highlights, create a fresh tree walker each time
+  try {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let insideHighlight = false;
+    let currentNode: Node | null;
+
+    // Iterate through text nodes
+    while ((currentNode = walker.nextNode())) {
+      // Check if we've reached the start node
+      if (currentNode === startNode.node) {
+        insideHighlight = true;
+      }
+
+      // Process node if we're inside the highlight range
+      if (insideHighlight) {
+        const nodePosition = positions.find((p) => p.node === currentNode);
+        if (!nodePosition) continue;
+
+        let span: HTMLSpanElement | null = null;
+
+        // This is the start node
+        if (currentNode === startNode.node) {
+          span = applyHighlightToStartNode(
+            currentNode as Text,
+            startOffset,
+            nodePosition.start,
+            nodePosition.end,
+            tag,
+            color
+          );
+        }
+        // This is the end node
+        else if (currentNode === endNode.node) {
+          span = applyHighlightToEndNode(
+            currentNode as Text,
+            endOffset,
+            nodePosition.start,
+            tag,
+            color
+          );
+
+          // We've processed the end node, exit the loop
+          if (span) {
+            insideHighlight = false;
+            highlightedNodes.push(span);
+          }
+          break;
+        }
+        // This is a node completely inside the highlight range
+        else {
+          span = applyHighlightToMiddleNode(currentNode as Text, tag, color);
+        }
+
         if (span) {
-          insideHighlight = false;
           highlightedNodes.push(span);
         }
       }
-      // This is a node completely inside the highlight range
-      else {
-        span = applyHighlightToMiddleNode(currentNode, tag, color);
-      }
 
-      if (span) {
-        highlightedNodes.push(span);
+      // Exit if we've reached the end node (in case we couldn't apply the highlight)
+      if (currentNode === endNode.node) {
+        break;
       }
     }
-
-    // Exit if we're done with the highlight
-    if (currentNode === endNode.node) {
-      break;
-    }
+  } catch (err) {
+    // Silently fail but return any successfully highlighted nodes
   }
 
   return highlightedNodes;
-}
-
-/**
- * Stores a copy of the original text content before any highlighting is applied
- */
-const originalTextCache = new Map<HTMLElement, string>();
-
-/**
- * Completely resets a container to its original unfragmented state
- * @param container The container element to reset
- * @param content The original content to restore (optional)
- */
-export function resetContainer(container: HTMLElement, content?: string): void {
-  // If content is provided, use it; otherwise check the cache
-  const originalContent = content || originalTextCache.get(container);
-
-  // If we have content to restore
-  if (originalContent !== undefined) {
-    // Store the current scroll position
-    const scrollTop = container.scrollTop;
-    const scrollLeft = container.scrollLeft;
-
-    // Replace the inner HTML with the original content
-    container.innerHTML = originalContent;
-
-    // Restore scroll position
-    container.scrollTop = scrollTop;
-    container.scrollLeft = scrollLeft;
-  } else {
-    // If no original content is available, just clean up the highlights
-    cleanupHighlights(container);
-  }
 }
 
 /**
@@ -660,69 +658,91 @@ export function applyHighlightsToContainer(
   highlightColors: Record<string, string>,
   forceReset: boolean = false
 ): void {
-  // Store original content before any modifications if not already cached
-  if (!originalTextCache.has(container) || forceReset) {
-    // Save original rendering before applying any highlights
-    originalTextCache.set(container, container.innerHTML);
-  }
-
-  // Only do a full reset when forceReset is true
-  if (forceReset) {
-    // Complete reset to original state
-    resetContainer(container);
-  } else {
-    // Only remove existing highlights while preserving other DOM changes
-    cleanupHighlights(container);
-  }
+  // Clean up any existing highlights
+  cleanupHighlights(container);
 
   // If no highlights to apply, we're done
   if (!highlights || highlights.length === 0) {
     return;
   }
 
-  // Calculate positions of all text nodes in the container
-  let positions = calculateTextNodePositions(container);
+  try {
+    // Calculate positions of all text nodes in the container
+    let positions = calculateTextNodePositions(container);
 
-  // Apply each highlight one at a time
-  for (let i = 0; i < highlights.length; i++) {
-    const highlight = highlights[i];
-    const tag = i.toString(); // Use array index as tag
-    const color = highlightColors[tag] || "yellow-100";
-    const { startOffset, endOffset } = highlight.highlight;
-
-    // Find the text nodes where the highlight starts and ends
-    const startNode = positions.find(
-      (p) => p.start <= startOffset && p.end > startOffset
-    );
-    const endNode = positions.find(
-      (p) => p.start < endOffset && p.end >= endOffset
-    );
-
-    if (!startNode || !endNode) {
-      console.error(
-        `Could not find text nodes for highlight with offsets ${startOffset}-${endOffset}`
-      );
-      continue;
+    // Skip if no text nodes found
+    if (positions.length === 0) {
+      return;
     }
 
-    try {
-      // Apply the highlight to the text nodes
-      applyHighlightBetweenNodes(
-        container,
-        positions,
-        startNode,
-        endNode,
-        startOffset,
-        endOffset,
-        tag,
-        color
-      );
+    // Sort highlights by their start offset to apply in document order
+    const sortedHighlights = [...highlights].sort(
+      (a, b) => a.highlight.startOffset - b.highlight.startOffset
+    );
 
-      // Recalculate positions after each highlight is applied
-      // This is critical since DOM structure changes after highlighting
-      positions = calculateTextNodePositions(container);
-    } catch (err) {
-      console.error(`Error applying highlight ${tag}:`, err);
+    // Apply each highlight one at a time
+    for (let i = 0; i < sortedHighlights.length; i++) {
+      try {
+        const highlight = sortedHighlights[i];
+        const tag = i.toString(); // Use array index as tag
+        const color = highlightColors[tag] || "yellow-100";
+        const { startOffset, endOffset } = highlight.highlight;
+
+        // Skip invalid highlights
+        if (startOffset >= endOffset) {
+          continue;
+        }
+
+        // Find the exact text nodes for this highlight
+        const startNode = positions.find(
+          (p) => p.start <= startOffset && p.end > startOffset
+        );
+        const endNode = positions.find(
+          (p) => p.start < endOffset && p.end >= endOffset
+        );
+
+        // Skip if we can't find the nodes
+        if (!startNode || !endNode) {
+          continue;
+        }
+
+        // Apply the highlight
+        applyHighlightBetweenNodes(
+          container,
+          positions,
+          startNode,
+          endNode,
+          startOffset,
+          endOffset,
+          tag,
+          color
+        );
+
+        // Recalculate positions after each highlight
+        positions = calculateTextNodePositions(container);
+
+        // Break if no text nodes left
+        if (positions.length === 0) {
+          break;
+        }
+      } catch (err) {
+        // Continue with next highlight
+      }
     }
+  } catch (err) {
+    // Silently fail
+  }
+}
+
+/**
+ * Completely resets a container to a clean state by removing all highlights
+ * @param container The container element to reset
+ * @param content Optional content to restore
+ */
+export function resetContainer(container: HTMLElement, content?: string): void {
+  if (content) {
+    container.innerHTML = content;
+  } else {
+    cleanupHighlights(container);
   }
 }

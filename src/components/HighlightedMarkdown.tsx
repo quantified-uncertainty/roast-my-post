@@ -23,7 +23,7 @@ interface HighlightedMarkdownProps {
   highlightColors: Record<string, string>;
   activeTag: string | null;
   highlights?: Comment[];
-  analysisId?: string; // Add an identifier to detect when analysis changes
+  analysisId?: string; // Identifier to detect when analysis changes
 }
 
 export function HighlightedMarkdown({
@@ -37,38 +37,40 @@ export function HighlightedMarkdown({
 }: HighlightedMarkdownProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [rendered, setRendered] = useState(false);
-  const previousAnalysisIdRef = useRef<string | undefined>(undefined);
+  // Key used to force re-rendering when analysis changes
+  const [contentKey, setContentKey] = useState<string>("initial");
 
-  // Apply highlights to the DOM after markdown content is rendered
+  // Update the key when content or analysis changes to force complete re-render
+  useEffect(() => {
+    if (analysisId) {
+      setContentKey(`content-${analysisId}-${Date.now()}`);
+      setRendered(false);
+    }
+  }, [analysisId, content]);
+
+  // Apply highlights after content is rendered
   useEffect(() => {
     if (!containerRef.current || !rendered) return;
 
-    // Check if we're switching between different analyses
-    const isNewAnalysis = analysisId !== previousAnalysisIdRef.current;
-    previousAnalysisIdRef.current = analysisId;
-
-    if (highlights) {
-      applyHighlightsToContainer(
-        containerRef.current,
-        highlights,
-        highlightColors,
-        isNewAnalysis // Force a reset when switching analyses
-      );
-    } else {
-      // If no highlights provided, reset the container to its original state
-      resetContainer(containerRef.current);
+    try {
+      if (highlights && highlights.length > 0) {
+        applyHighlightsToContainer(
+          containerRef.current,
+          highlights,
+          highlightColors,
+          false
+        );
+      } else {
+        resetContainer(containerRef.current);
+      }
+    } catch (error) {
+      // Silently fail
     }
-  }, [highlights, highlightColors, rendered, analysisId]);
-
-  // Reset when content changes
-  useEffect(() => {
-    if (containerRef.current) {
-      resetContainer(containerRef.current);
-    }
-  }, [content]);
+  }, [highlights, highlightColors, rendered, contentKey]);
 
   return (
     <div
+      key={contentKey}
       ref={containerRef}
       className="prose prose-slate prose-md max-w-none"
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
@@ -81,12 +83,9 @@ export function HighlightedMarkdown({
       }}
       onMouseOut={() => onHighlightHover(null)}
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        children={content}
-      />
-      {/* Wait for ReactMarkdown to finish rendering before applying highlights */}
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+        {content}
+      </ReactMarkdown>
       <div style={{ display: "none" }} ref={() => setRendered(true)} />
     </div>
   );
