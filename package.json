@@ -33,8 +33,14 @@
     "react-markdown": "^10.1.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-slate": "^1.8.6",
+    "slate": "^0.112.0",
+    "slate-history": "^0.110.3",
+    "slate-react": "^0.112.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "unified": "^11.0.5",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

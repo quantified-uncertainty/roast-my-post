@@ -9,7 +9,6 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
-import { HighlightedMarkdown } from '@/components/HighlightedMarkdown';
 import { evaluationAgents } from '@/data/agents/index';
 import type { Comment } from '@/types/documentReview';
 import type { Document } from '@/types/documents';
@@ -19,6 +18,8 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
+
+import SlateEditor from './SlateEditor';
 
 interface CommentsSidebarProps {
   comments: Comment[];
@@ -291,19 +292,17 @@ export function DocumentWithEvaluations({
           </div>
 
           <article className="prose prose-slate prose-lg max-w-none">
-            <HighlightedMarkdown
+            <SlateEditor
               content={document.content}
               onHighlightHover={(tag) => setActiveTag(tag)}
               onHighlightClick={handleHighlightClick}
-              highlightColors={Object.fromEntries(
-                sortedComments.map((_, index) => [
-                  index.toString(),
-                  getCommentHighlightColor(index),
-                ])
-              )}
+              highlights={sortedComments.map((comment, index) => ({
+                startOffset: comment.highlight.startOffset,
+                endOffset: comment.highlight.endOffset,
+                tag: index.toString(),
+                color: getCommentHighlightColor(index).replace("bg-", ""),
+              }))}
               activeTag={activeTag}
-              highlights={sortedComments}
-              analysisId={activeReview.agentId + "-" + activeReviewIndex}
             />
           </article>
         </div>
