@@ -166,14 +166,8 @@ export function processRawComments(
       finalComments[key] = {
         title: rawComment.title,
         description: rawComment.description,
-        // Assuming DocumentReview expects Highlight with startOffset/endOffset
-        highlight: {
-          startOffset: calculatedHighlight.startOffset,
-          endOffset: calculatedHighlight.endOffset,
-          prefix: calculatedHighlight.prefix,
-          // Optionally include quotedText if your final type supports it
-          // quotedText: calculatedHighlight.quotedText,
-        },
+        // Pass the entire calculatedHighlight object, which matches the Highlight type
+        highlight: calculatedHighlight,
       };
       // Update where to start search for the next comment
       previousEndOffset = calculatedHighlight.endOffset;

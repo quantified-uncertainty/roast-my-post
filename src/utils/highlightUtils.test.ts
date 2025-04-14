@@ -148,7 +148,12 @@ describe("processRawComments", () => {
       "1": {
         title: "Test Title",
         description: "Test Description",
-        highlight: { startOffset: 0, endOffset: 9, prefix: "" },
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          prefix: "",
+          quotedText: "Line one.",
+        },
       },
     };
     const result = processRawComments(sampleContent, rawComments);
@@ -180,12 +185,22 @@ describe("processRawComments", () => {
       "1": {
         title: "C1",
         description: "D1",
-        highlight: { startOffset: 0, endOffset: 9, prefix: "" },
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          prefix: "",
+          quotedText: "Line one.",
+        },
       },
       "2": {
         title: "C2",
         description: "D2",
-        highlight: { startOffset: 10, endOffset: 29, prefix: "\n" },
+        highlight: {
+          startOffset: 10,
+          endOffset: 29,
+          prefix: "\n",
+          quotedText: "Line two is longer.",
+        },
       },
     };
     const result = processRawComments(sampleContent, rawComments);
@@ -226,12 +241,22 @@ describe("processRawComments", () => {
       "1": {
         title: "C1",
         description: "D1",
-        highlight: { startOffset: 0, endOffset: 9, prefix: "" },
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          prefix: "",
+          quotedText: "Line one.",
+        },
       },
       "2": {
         title: "C2",
         description: "D2",
-        highlight: { startOffset: 30, endOffset: 41, prefix: "\n" },
+        highlight: {
+          startOffset: 30,
+          endOffset: 41,
+          prefix: "\n",
+          quotedText: "Line three.",
+        },
       },
     };
     const result = processRawComments(sampleContent, rawComments);
@@ -252,7 +277,15 @@ describe("processRawComments", () => {
       },
     } as any;
     const expected: Record<string, Comment> = {
-      ok: { ...baseRawComment, highlight: { startOffset: 0, endOffset: 9 } },
+      ok: {
+        ...baseRawComment,
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          prefix: undefined,
+          quotedText: "Line one.",
+        },
+      },
     };
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);
@@ -268,7 +301,15 @@ describe("processRawComments", () => {
       },
     } as any;
     const expected: Record<string, Comment> = {
-      ok: { ...baseRawComment, highlight: { startOffset: 0, endOffset: 9 } },
+      ok: {
+        ...baseRawComment,
+        highlight: {
+          startOffset: 0,
+          endOffset: 9,
+          prefix: undefined,
+          quotedText: "Line one.",
+        },
+      },
     };
     const result = processRawComments(sampleContent, rawComments);
     expect(result).toEqual(expected);

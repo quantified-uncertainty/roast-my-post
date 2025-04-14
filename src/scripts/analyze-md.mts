@@ -65,7 +65,7 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
     review: documentReview,
     usage,
     llmResponse,
-    prompt,
+    finalPrompt,
     agentContext,
   } = await analyzeDocument(data.content, agentId);
 
@@ -87,6 +87,20 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
   }
 
   // Add new review to existing reviews array
+
+  // --- Sort comments by startOffset before saving ---
+  if (documentReview.comments) {
+    const sortedCommentsArray = Object.entries(documentReview.comments)
+      .filter(([_, comment]) => comment.highlight) // Ensure highlight exists
+      .sort(([_, a], [__, b]) => {
+        return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+      });
+    // Rebuild the comments object from the sorted array
+    documentReview.comments = Object.fromEntries(sortedCommentsArray);
+    console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
+  }
+  // --- End sorting ---
+
   data.reviews.push(documentReview);
 
   // Write back to the same file
@@ -132,7 +146,7 @@ ${JSON.stringify(usage, null, 2)}
 
 ## Prompt
 \`\`\`
-${prompt}
+${finalPrompt}
 \`\`\`
 
 ## Response

@@ -2,6 +2,7 @@ export interface Highlight {
   startOffset: number;
   endOffset: number;
   prefix?: string; // E.g., 30 characters before
+  quotedText: string;
 }
 
 export interface Comment {
