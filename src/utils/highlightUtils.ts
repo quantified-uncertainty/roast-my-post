@@ -420,7 +420,7 @@ function applyHighlightToNode(
   }
 
   // Create highlight span
-  const span = createHighlightSpan(tag, color, spans.length === 0);
+  const span = createHighlightSpan(tag, color, true);
   span.textContent = text.substring(startOffset, endOffset);
   spans.push(span);
 
@@ -483,8 +483,8 @@ function findTextNodes(
 
 export function applyHighlightsToContainer(
   container: HTMLElement,
-  highlights: Array<Comment>,
-  colorMap: { [key: string]: string },
+  highlights: Comment[],
+  colorMap: Record<string, string>,
   forceReset: boolean = false
 ): void {
   // Cache original content if not already cached
@@ -503,7 +503,8 @@ export function applyHighlightsToContainer(
   // Process each highlight
   for (let i = 0; i < highlights.length; i++) {
     const highlight = highlights[i];
-    const color = colorMap[i.toString()] || "yellow-100";
+    const tag = i.toString();
+    const color = colorMap[tag] || "yellow-100";
     const matches = findTextNodes(container, highlight.highlight.quotedText);
 
     if (matches.length > 0) {
@@ -523,7 +524,7 @@ export function applyHighlightsToContainer(
         bestMatch.node,
         bestMatch.nodeOffset,
         bestMatch.nodeOffset + highlight.highlight.quotedText.length,
-        i.toString(),
+        tag,
         color
       );
     }
@@ -636,22 +637,32 @@ function findTextAcrossNodes(
 }
 
 export function applyHighlightToStartNode(
-  node: Text,
+  node: Node,
   highlightStart: number,
   nodeStart: number,
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  if (!node.textContent || highlightStart <= nodeStart) {
-    return null;
-  }
+  if (!(node instanceof Text)) return null;
 
-  const span = createHighlightSpan(tag, color);
-  const text = node.textContent;
-  const start = highlightStart - nodeStart;
-  span.textContent = text.substring(start);
-  node.textContent = text.substring(0, start);
+  // Validate inputs
+  if (!node.textContent || highlightStart < nodeStart) return null;
+
+  const relativeStart = highlightStart - nodeStart;
+  if (relativeStart < 0 || relativeStart >= node.textContent.length)
+    return null;
+
+  const highlightText = node.textContent.substring(relativeStart);
+  if (!highlightText) return null;
+
+  // Create highlight span
+  const span = createHighlightSpan(tag, color, true);
+  span.textContent = highlightText;
+
+  // Update original node's text
+  node.textContent = node.textContent.substring(0, relativeStart);
   node.parentNode?.insertBefore(span, node.nextSibling);
+
   return span;
 }
 
@@ -680,9 +691,7 @@ export function applyHighlightToMiddleNode(
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  if (!node.textContent) {
-    return null;
-  }
+  if (!node.textContent) return null;
 
   const span = createHighlightSpan(tag, color);
   span.textContent = node.textContent;
@@ -741,38 +750,47 @@ export function findNodesContainingText(
 }
 
 export function applyHighlightBetweenNodes(
-  startNode: Text,
-  endNode: Text,
-  startOffset: number,
-  endOffset: number,
+  startNode: Node,
+  endNode: Node,
+  highlightStart: number,
+  highlightEnd: number,
+  nodeStart: number,
   tag: string,
   color: string
 ): Node[] {
   const spans: Node[] = [];
+
+  // Handle start node
   const startSpan = applyHighlightToStartNode(
     startNode,
-    startOffset,
-    0,
+    highlightStart,
+    nodeStart,
     tag,
     color
   );
   if (startSpan) spans.push(startSpan);
 
+  // Handle nodes between start and end
   let currentNode = startNode.nextSibling;
   while (currentNode && currentNode !== endNode) {
-    if (currentNode.nodeType === Node.TEXT_NODE) {
-      const middleSpan = applyHighlightToMiddleNode(
-        currentNode as Text,
-        tag,
-        color
-      );
+    if (currentNode instanceof Text) {
+      const middleSpan = applyHighlightToMiddleNode(currentNode, tag, color);
       if (middleSpan) spans.push(middleSpan);
     }
     currentNode = currentNode.nextSibling;
   }
 
-  const endSpan = applyHighlightToEndNode(endNode, endOffset, 0, tag, color);
-  if (endSpan) spans.push(endSpan);
+  // Handle end node if different from start node
+  if (startNode !== endNode && endNode instanceof Text) {
+    const endSpan = applyHighlightToEndNode(
+      endNode,
+      highlightEnd,
+      nodeStart,
+      tag,
+      color
+    );
+    if (endSpan) spans.push(endSpan);
+  }
 
   return spans;
 }

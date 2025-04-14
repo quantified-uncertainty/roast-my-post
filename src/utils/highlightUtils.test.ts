@@ -984,17 +984,18 @@ describe("applyHighlightBetweenNodes", () => {
     const startOffset = 12; // Start of "Middle"
     const endOffset = 24; // End of "Middle part."
 
-    const highlightedNodes = applyHighlightBetweenNodes(
+    const spans = applyHighlightBetweenNodes(
       startNode.node,
       endNode.node,
       startOffset,
       endOffset,
+      startNode.start,
       "test",
       "yellow-100"
     );
 
     // Verify highlight was applied
-    expect(highlightedNodes.length).toBeGreaterThan(0);
+    expect(spans.length).toBeGreaterThan(0);
 
     // Check that the highlighted span has the right attributes
     const highlightSpan = container.querySelector(
