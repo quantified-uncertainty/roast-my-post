@@ -650,6 +650,29 @@ export function applyHighlightBetweenNodes(
 }
 
 /**
+ * Stores a copy of the original text content before any highlighting is applied
+ */
+const originalTextCache = new Map<HTMLElement, string>();
+
+/**
+ * Completely resets a container to a clean state by removing all highlights
+ * @param container The container element to reset
+ * @param content Optional content to restore
+ */
+export function resetContainer(container: HTMLElement, content?: string): void {
+  if (content) {
+    container.innerHTML = content;
+  } else {
+    const cachedContent = originalTextCache.get(container);
+    if (cachedContent) {
+      container.innerHTML = cachedContent;
+    } else {
+      cleanupHighlights(container);
+    }
+  }
+}
+
+/**
  * Applies all highlights to a container element
  */
 export function applyHighlightsToContainer(
@@ -658,6 +681,11 @@ export function applyHighlightsToContainer(
   highlightColors: Record<string, string>,
   forceReset: boolean = false
 ): void {
+  // Store original content if not already cached
+  if (!originalTextCache.has(container)) {
+    originalTextCache.set(container, container.innerHTML);
+  }
+
   // Clean up any existing highlights
   cleanupHighlights(container);
 
@@ -731,18 +759,5 @@ export function applyHighlightsToContainer(
     }
   } catch (err) {
     // Silently fail
-  }
-}
-
-/**
- * Completely resets a container to a clean state by removing all highlights
- * @param container The container element to reset
- * @param content Optional content to restore
- */
-export function resetContainer(container: HTMLElement, content?: string): void {
-  if (content) {
-    container.innerHTML = content;
-  } else {
-    cleanupHighlights(container);
   }
 }
