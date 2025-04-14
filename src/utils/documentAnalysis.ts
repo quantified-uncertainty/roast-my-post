@@ -19,11 +19,18 @@ import {
   MODEL,
   openai,
 } from '../types/openai.js';
+import {
+  processRawComments,
+  type RawLLMHighlight,
+} from './highlightUtils.js';
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
   summary: string;
-  comments: Record<string, Comment>;
+  comments: Record<
+    string,
+    Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }
+  >;
 }
 
 export async function loadAgentInfo(agentId: string) {
@@ -41,36 +48,6 @@ export async function loadAgentInfo(agentId: string) {
   } catch (error) {
     console.warn(`⚠️ Could not load agent info for ${agentId}:`, error);
     return null;
-  }
-}
-
-export function validateLLMResponse(review: LLMReview, content: string) {
-  if (!review.summary || typeof review.summary !== "string") {
-    throw new Error("Invalid or missing summary field");
-  }
-  if (!review.comments || typeof review.comments !== "object") {
-    throw new Error("Invalid or missing comments field");
-  }
-  // Validate each comment
-  for (const [key, comment] of Object.entries(review.comments)) {
-    if (!comment.title || !comment.description || !comment.highlight) {
-      throw new Error(`Invalid comment structure for key ${key}`);
-    }
-    if (!comment.highlight.startOffset || !comment.highlight.endOffset) {
-      throw new Error(`Invalid highlight structure in comment ${key}`);
-    }
-    // Check that highlight offsets are within document bounds
-    if (
-      comment.highlight.startOffset < 0 ||
-      comment.highlight.endOffset > content.length
-    ) {
-      throw new Error(`Highlight offsets out of bounds in comment ${key}`);
-    }
-    if (comment.highlight.startOffset >= comment.highlight.endOffset) {
-      throw new Error(
-        `Invalid highlight range in comment ${key} (start >= end)`
-      );
-    }
   }
 }
 
@@ -147,7 +124,7 @@ ${agentInfo.commentInstructions}
   console.log(`📊 Target word count: ${targetWordCount}`);
   console.log(`📊 Target comments: ${targetComments}`);
 
-  // Generate comment template
+  // Generate comment template - updated for new highlight format
   const commentTemplate = Array.from(
     { length: targetComments },
     (_, i) => `
@@ -155,9 +132,9 @@ ${agentInfo.commentInstructions}
       "title": "...",
       "description": "...",
       "highlight": {
-        "startOffset": ###,
-        "endOffset": ###,
-        "prefix": "..."
+        "prefix": "...", // ~50 chars before highlight
+        "startText": "...", // First ~15-20 chars of the highlight
+        "quotedText": "..." // The EXACT full text being highlighted
       }
     }`
   ).join(",");
@@ -165,33 +142,41 @@ ${agentInfo.commentInstructions}
   const finalPrompt = `
 ${agentContext}
 
-Given the following Markdown document, output a single evaluation in JSON like this:
+Given the following Markdown document, output a single evaluation in **valid JSON format**. Adhere strictly to the structure below:
 
 {
-  "summary": "[~${targetWordCount} words of useful information, related to your primary instructions. 
-
-IMPORTANT: The evaluation must be properly escaped for JSON. This means:
-- Replace all newlines within a paragraph with \\n
-- Escape all double quotes with \\"
-- Use markdown formatting (especially **bold**, *italics*, and [links](...) for key terminology) where appropriate.
-- Separate distinct ideas or topics into paragraphs (using \\n\\n between paragraphs).
-- Use plain text for the main content.
-]",
+  "summary": "[~${targetWordCount} words, correctly escaped JSON string]",
   "comments": {
-    ${commentTemplate}
+    ${commentTemplate} // Ensure exactly ${targetComments} comment objects here
   }
 }
 
-You must provide exactly ${targetComments} comments. Each comment should:
-- Include a clear title that summarizes the point
-- Provide a detailed description of the issue/strength/information
-- Reference a specific section of the document using highlight offsets
-  - startOffset: The character position where the highlighted text begins (0-based)
-  - endOffset: The character position where the highlighted text ends (exclusive)
-  - prefix: A short snippet of text before the highlight (max 50 chars)
-  - IMPORTANT: Offsets must be within the document bounds (0 to ${content.length})
+**CRITICAL JSON STRING ESCAPING RULES:**
+- ALL string content within the JSON MUST be properly escaped.
+- Escape double quotes: \" -> \\\"
+- Escape backslashes: \\ -> \\\\
+- Replace literal newlines within a single string/paragraph with \\n.
+- **Escape Markdown characters within strings:**
+  - Brackets: \`[Link Text](URL)\` becomes \`\\\\[Link Text\\\\]\\\\(URL\\\\)\`
+  - Parentheses: \`(like this)\` becomes \`\\\\(like this\\\\)\`
+  - Asterisks for bold/italics if used inside string: \`**bold**\` becomes \`**bold**\` (these are often fine, but escape if unsure)
+- **EXAMPLE of a description with a link:** "description": "This relates to\\\\nBostroms paper on \\\\[differential tech dev\\\\]\\\\(http://example.com\\\\).\"
+- FAILURE TO FOLLOW ESCAPING RULES WILL RESULT IN INVALID JSON.
 
-All your content should be in plain text format. Do not use markdown formatting, links, or special characters in the JSON output.
+**SUMMARY INSTRUCTIONS:**
+- Target ~${targetWordCount} words.
+- Use markdown formatting (bold, italics, links) if appropriate, ensuring it is **correctly escaped** within the JSON string per the rules above.
+
+**COMMENT INSTRUCTIONS (Provide exactly ${targetComments}):**
+- Each comment MUST include a \`title\` and \`description\`.
+- If using Markdown links/citations in \`description\`, ensure they are **correctly escaped** per the rules above.
+- Each comment MUST include a \`highlight\` object containing **ONLY** these three fields:
+  - \`prefix\`: Provide ~50 characters of the text immediately preceding the highlight (JSON escaped string).
+  - \`startText\`: Provide the first ~15-20 characters of the text you intend to highlight (JSON escaped string).
+  - \`quotedText\`: Provide the **EXACT, VERBATIM text** being highlighted, including original formatting, newlines, and any special characters (JSON escaped string).
+- **DO NOT include \`startOffset\` or \`endOffset\` fields.**
+- Ensure \`prefix\`, \`startText\`, and \`quotedText\` are valid JSON strings with proper escaping.
+- The \`quotedText\` MUST be accurately copied from the document.
 
 Here is the Markdown content to analyze:
 
@@ -233,31 +218,33 @@ ${content}
 
   let parsedLLMReview: LLMReview;
   try {
-    // First try to parse with jsonc-parser to validate structure
     const errors: ParseError[] = [];
     const jsoncResult = parseJsonc(cleanedResponse, errors, {
       allowTrailingComma: true,
     });
-
     if (errors.length > 0) {
       console.warn("JSONC parsing found issues:", errors);
-      // If there are errors, try to repair the JSON
       const repairedJson = jsonrepair(cleanedResponse);
       console.log("Repaired JSON:", repairedJson);
       parsedLLMReview = JSON.parse(repairedJson);
     } else {
-      // If no errors, use the jsonc-parser result
       parsedLLMReview = jsoncResult as LLMReview;
     }
-
-    validateLLMResponse(parsedLLMReview, content);
+    // Basic validation of top-level structure (can add more if needed)
+    if (!parsedLLMReview || typeof parsedLLMReview !== "object")
+      throw new Error("Parsed response is not an object");
+    if (!parsedLLMReview.summary) throw new Error("Missing summary");
+    if (!parsedLLMReview.comments) throw new Error("Missing comments");
   } catch (err) {
-    console.error("❌ Invalid review structure:", err);
-    console.error("Original response:", cleanedResponse);
-    throw err;
+    console.error("❌ Invalid review structure during parsing/repair:", err);
+    console.error("Original cleaned response:", cleanedResponse);
+    throw err; // Rethrow after logging
   }
 
-  // Transform LLMReview into DocumentReview
+  // Use the new function to process comments and calculate offsets
+  const finalComments = processRawComments(content, parsedLLMReview.comments);
+
+  // Construct the final DocumentReview object
   const review: DocumentReview = {
     agentId,
     costInCents: Math.round(usage?.total_tokens || 0),
@@ -273,7 +260,7 @@ ${content}
         })
       : undefined,
     summary: parsedLLMReview.summary,
-    comments: parsedLLMReview.comments,
+    comments: finalComments, // Use the processed comments
   };
 
   return {

@@ -12,7 +12,8 @@
     "review-all-agents": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/strongly-bounded-agents.json --all-agents",
     "review-all-agents-missing": "npx tsx src/scripts/analyze-md.mts --dir ./src/data/docs --all-agents --only-missing",
     "generate-docs": "tsx src/scripts/generate-docs-index.mts",
-    "build:agents": "tsx src/scripts/build-agents.ts"
+    "build:agents": "tsx src/scripts/build-agents.ts",
+    "test": "jest"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -40,12 +41,15 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
+    "jest": "^29.7.0",
     "tailwindcss": "^4",
+    "ts-jest": "^29.3.2",
     "tsx": "^4.7.1",
     "typescript": "^5"
   }
