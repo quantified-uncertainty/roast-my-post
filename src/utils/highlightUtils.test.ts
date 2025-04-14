@@ -743,7 +743,7 @@ describe("calculateTextNodePositions", () => {
 
 describe("createHighlightSpan", () => {
   test("should create a span with correct attributes", () => {
-    const span = createHighlightSpan("42", "red-200");
+    const span = createHighlightSpan("test", "42", "red-200");
 
     expect(span.tagName).toBe("SPAN");
     expect(span.className).toBe(
@@ -755,7 +755,7 @@ describe("createHighlightSpan", () => {
   });
 
   test("should set id when isFirstSpan is true", () => {
-    const span = createHighlightSpan("42", "red-200", true);
+    const span = createHighlightSpan("test", "42", "red-200", true);
 
     expect(span.id).toBe("highlight-42");
   });

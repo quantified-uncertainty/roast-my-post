@@ -382,14 +382,15 @@ interface HighlightWithTag extends Highlight {
 }
 
 export function createHighlightSpan(
+  text: string,
   tag: string,
   color: string,
   isFirstSpan: boolean = false
-): HTMLElement {
+): HTMLSpanElement {
   const span = document.createElement("span");
+  span.textContent = text;
   span.className = `bg-${color} rounded cursor-pointer hover:bg-opacity-80`;
-  span.setAttribute("data-highlight-tag", tag);
-  span.setAttribute("data-tag", tag);
+  span.dataset.highlightTag = tag;
   if (isFirstSpan) {
     span.id = `highlight-${tag}`;
   }
@@ -420,8 +421,8 @@ function applyHighlightToNode(
   }
 
   // Create highlight span
-  const span = createHighlightSpan(tag, color, true);
-  span.textContent = text.substring(startOffset, endOffset);
+  const highlightText = text.substring(startOffset, endOffset);
+  const span = createHighlightSpan(highlightText, tag, color, true);
   spans.push(span);
 
   // Create text node for content after highlight
@@ -454,28 +455,59 @@ function findTextNodes(
   }> = [];
   let globalOffset = 0;
 
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) => {
-      const text = node.textContent || "";
-      return text.trim().length > 0
-        ? NodeFilter.FILTER_ACCEPT
-        : NodeFilter.FILTER_REJECT;
-    },
-  });
+  // Get all text nodes in order
+  const allTextNodes: Text[] = [];
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
 
   let node: Text | null;
   while ((node = walker.nextNode() as Text)) {
-    const text = node.textContent || "";
-    const index = text.indexOf(searchText);
-
-    if (index !== -1) {
-      matches.push({
-        node,
-        nodeOffset: index,
-        globalOffset: globalOffset + index,
-      });
+    if (node.textContent?.trim().length) {
+      allTextNodes.push(node);
     }
-    globalOffset += text.length;
+  }
+
+  // Try to match text across adjacent nodes
+  for (let i = 0; i < allTextNodes.length; i++) {
+    let combinedText = "";
+    let currentGlobalOffset = globalOffset;
+
+    // Build up combined text from consecutive nodes
+    for (let j = i; j < allTextNodes.length && j < i + 5; j++) {
+      if (j > i) {
+        combinedText += " ";
+        currentGlobalOffset += 1;
+      }
+      combinedText += allTextNodes[j].textContent || "";
+
+      // Check if we have a match in the combined text
+      const index = combinedText.indexOf(searchText);
+      if (index !== -1) {
+        // Found a match - determine which node contains the start
+        let currentPos = 0;
+        let nodeGlobalOffset = globalOffset;
+        for (let k = i; k <= j; k++) {
+          const nodeText = allTextNodes[k].textContent || "";
+          if (k > i) {
+            currentPos += 1;
+            nodeGlobalOffset += 1;
+          }
+
+          if (index < currentPos + nodeText.length) {
+            // This node contains the start
+            matches.push({
+              node: allTextNodes[k],
+              nodeOffset: index - currentPos,
+              globalOffset: nodeGlobalOffset + (index - currentPos),
+            });
+            break;
+          }
+
+          currentPos += nodeText.length;
+          nodeGlobalOffset += nodeText.length;
+        }
+      }
+    }
+    globalOffset += (allTextNodes[i].textContent || "").length;
   }
 
   return matches;
@@ -504,7 +536,7 @@ export function applyHighlightsToContainer(
   for (let i = 0; i < highlights.length; i++) {
     const highlight = highlights[i];
     const tag = i.toString();
-    const color = colorMap[tag] || "yellow-100";
+    const color = colorMap[tag] || colorMap[highlight.title] || "yellow-100";
     const matches = findTextNodes(container, highlight.highlight.quotedText);
 
     if (matches.length > 0) {
@@ -644,57 +676,52 @@ export function applyHighlightToStartNode(
   color: string
 ): HTMLSpanElement | null {
   if (!(node instanceof Text)) return null;
-
-  // Validate inputs
-  if (!node.textContent || highlightStart < nodeStart) return null;
-
   const relativeStart = highlightStart - nodeStart;
-  if (relativeStart < 0 || relativeStart >= node.textContent.length)
+  if (
+    relativeStart < 0 ||
+    !node.textContent ||
+    relativeStart >= node.textContent.length
+  )
     return null;
-
   const highlightText = node.textContent.substring(relativeStart);
   if (!highlightText) return null;
-
-  // Create highlight span
-  const span = createHighlightSpan(tag, color, true);
-  span.textContent = highlightText;
-
-  // Update original node's text
+  const span = createHighlightSpan(highlightText, tag, color, true);
   node.textContent = node.textContent.substring(0, relativeStart);
   node.parentNode?.insertBefore(span, node.nextSibling);
-
   return span;
 }
 
 export function applyHighlightToEndNode(
-  node: Text,
+  node: Node,
   highlightEnd: number,
   nodeStart: number,
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  if (!node.textContent || highlightEnd <= nodeStart) {
+  if (!(node instanceof Text)) return null;
+  const relativeEnd = highlightEnd - nodeStart;
+  if (
+    !node.textContent ||
+    relativeEnd <= 0 ||
+    relativeEnd > node.textContent.length
+  )
     return null;
-  }
-
-  const span = createHighlightSpan(tag, color);
-  const text = node.textContent;
-  const end = highlightEnd - nodeStart;
-  span.textContent = text.substring(0, end);
-  node.textContent = text.substring(end);
+  const highlightText = node.textContent.substring(0, relativeEnd);
+  if (!highlightText) return null;
+  const span = createHighlightSpan(highlightText, tag, color, false);
+  node.textContent = node.textContent.substring(relativeEnd);
   node.parentNode?.insertBefore(span, node);
   return span;
 }
 
 export function applyHighlightToMiddleNode(
-  node: Text,
+  node: Node,
   tag: string,
   color: string
 ): HTMLSpanElement | null {
+  if (!(node instanceof Text)) return null;
   if (!node.textContent) return null;
-
-  const span = createHighlightSpan(tag, color);
-  span.textContent = node.textContent;
+  const span = createHighlightSpan(node.textContent, tag, color, false);
   node.parentNode?.replaceChild(span, node);
   return span;
 }
