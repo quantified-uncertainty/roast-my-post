@@ -65,6 +65,8 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
     review: documentReview,
     usage,
     llmResponse,
+    prompt,
+    agentContext,
   } = await analyzeDocument(data.content, agentId);
 
   // Remove any existing review by the same agent
@@ -93,21 +95,49 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 
   // Create log file with timestamp
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const logFilename = `llm-response-${agentId}-${timestamp}.md`;
+  const logFilename = `${timestamp}-llm-response-${agentId}.md`;
 
   const logContent = `# LLM Response ${new Date().toISOString()}
 
 ## Agent
 ${agentId}
 
+## Agent Context
+\`\`\`
+${agentContext}
+\`\`\`
+
+## Run Details
+- Model: ${
+    documentReview.runDetails
+      ? JSON.parse(documentReview.runDetails).model
+      : "Unknown"
+  }
+- Temperature: ${
+    documentReview.runDetails
+      ? JSON.parse(documentReview.runDetails).temperature
+      : "Unknown"
+  }
+- Runtime: ${
+    documentReview.runDetails
+      ? JSON.parse(documentReview.runDetails).runtimeMs
+      : "Unknown"
+  }ms
+- Cost: $${(documentReview.costInCents / 100).toFixed(2)}
+
+### Token Usage
+\`\`\`json
+${JSON.stringify(usage, null, 2)}
+\`\`\`
+
+## Prompt
+\`\`\`
+${prompt}
+\`\`\`
+
 ## Response
 \`\`\`json
 ${llmResponse}
-\`\`\`
-
-## Usage
-\`\`\`json
-${JSON.stringify(usage, null, 2)}
 \`\`\`
 
 ## Final Review

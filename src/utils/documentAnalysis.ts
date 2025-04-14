@@ -3,6 +3,11 @@ import {
   readFile,
   writeFile,
 } from 'fs/promises';
+import {
+  parse as parseJsonc,
+  ParseError,
+} from 'jsonc-parser';
+import { jsonrepair } from 'jsonrepair';
 import path from 'path';
 
 import type {
@@ -38,7 +43,7 @@ export async function loadAgentInfo(agentId: string) {
   }
 }
 
-export function validateLLMResponse(review: LLMReview) {
+export function validateLLMResponse(review: LLMReview, content: string) {
   if (!review.analysis || typeof review.analysis !== "string") {
     throw new Error("Invalid or missing analysis field");
   }
@@ -52,6 +57,18 @@ export function validateLLMResponse(review: LLMReview) {
     }
     if (!comment.highlight.startOffset || !comment.highlight.endOffset) {
       throw new Error(`Invalid highlight structure in comment ${key}`);
+    }
+    // Check that highlight offsets are within document bounds
+    if (
+      comment.highlight.startOffset < 0 ||
+      comment.highlight.endOffset > content.length
+    ) {
+      throw new Error(`Highlight offsets out of bounds in comment ${key}`);
+    }
+    if (comment.highlight.startOffset >= comment.highlight.endOffset) {
+      throw new Error(
+        `Invalid highlight range in comment ${key} (start >= end)`
+      );
     }
   }
 }
@@ -73,10 +90,19 @@ export function calculateTargetWordCount(content: string): number {
   const contentLength = content.length;
   // More aggressive logarithmic scaling
   // 500 chars -> ~50 words
-  // 1000 chars -> ~60 words
+  // 1000 chars -> ~100 words
   // 10000 chars -> ~200 words
-  const additionalWords = Math.log10(contentLength / 500) * 50;
+  const additionalWords = Math.log10(contentLength / 500) * 100;
   return Math.round(baseWords + Math.max(0, additionalWords));
+}
+
+export function calculateTargetComments(content: string): number {
+  const baseComments = 3;
+  const contentLength = content.length;
+  // Roughly 1 comment per 100 words
+  // Assuming ~5 chars per word
+  const additionalComments = Math.floor(contentLength / 500);
+  return Math.max(baseComments, Math.min(additionalComments, 10)); // Cap at 10 comments
 }
 
 export async function analyzeDocument(
@@ -86,12 +112,17 @@ export async function analyzeDocument(
   review: DocumentReview;
   usage: any;
   llmResponse: string;
+  prompt: string;
+  agentContext: string;
 }> {
   // Load agent information
   const agentInfo = await loadAgentInfo(agentId);
   const agentContext = agentInfo
     ? `
 You are ${agentInfo.name} (${agentInfo.description}).
+
+Your primary prompt is:
+${agentInfo.prompt}
 
 Your specific capabilities include:
 ${agentInfo.capabilities.map((cap: string) => `- ${cap}`).join("\n")}
@@ -105,17 +136,15 @@ ${agentInfo.limitations.map((lim: string) => `- ${lim}`).join("\n")}
     : "";
 
   const targetWordCount = calculateTargetWordCount(content);
+  const targetComments = calculateTargetComments(content);
   console.log(`📊 Target word count: ${targetWordCount}`);
+  console.log(`📊 Target comments: ${targetComments}`);
 
-  const prompt = `
-${agentContext}
-
-Given the following Markdown document, output a single review in JSON like this:
-
-{
-  "analysis": "[~${targetWordCount} words of structured, quantitative analysis]",
-  "comments": {
-    "1": {
+  // Generate comment template
+  const commentTemplate = Array.from(
+    { length: targetComments },
+    (_, i) => `
+    "${i + 1}": {
       "title": "...",
       "description": "...",
       "highlight": {
@@ -123,9 +152,39 @@ Given the following Markdown document, output a single review in JSON like this:
         "endOffset": ###,
         "prefix": "..."
       }
-    }
+    }`
+  ).join(",");
+
+  const prompt = `
+${agentContext}
+
+Given the following Markdown document, output a single evaluation in JSON like this:
+
+{
+  "analysis": "[~${targetWordCount} words of useful information, related to your primary prompt. 
+
+IMPORTANT: The evaluation must be properly escaped for JSON. This means:
+- Replace all newlines with \\n
+- Escape all double quotes with \\"
+- Do not use markdown formatting (no #, *, -, etc.)
+- Do not include links or special characters
+- Use plain text only
+]",
+  "comments": {
+    ${commentTemplate}
   }
 }
+
+You must provide exactly ${targetComments} comments. Each comment should:
+- Include a clear title that summarizes the point
+- Provide a detailed description of the issue/strength/information
+- Reference a specific section of the document using highlight offsets
+  - startOffset: The character position where the highlighted text begins (0-based)
+  - endOffset: The character position where the highlighted text ends (exclusive)
+  - prefix: A short snippet of text before the highlight (max 50 chars)
+  - IMPORTANT: Offsets must be within the document bounds (0 to ${content.length})
+
+All your content should be in plain text format. Do not use markdown formatting, links, or special characters in the JSON output.
 
 Here is the Markdown content to analyze:
 
@@ -167,11 +226,27 @@ ${content}
 
   let parsedLLMReview: LLMReview;
   try {
-    parsedLLMReview = JSON.parse(cleanedResponse);
-    validateLLMResponse(parsedLLMReview);
+    // First try to parse with jsonc-parser to validate structure
+    const errors: ParseError[] = [];
+    const jsoncResult = parseJsonc(cleanedResponse, errors, {
+      allowTrailingComma: true,
+    });
+
+    if (errors.length > 0) {
+      console.warn("JSONC parsing found issues:", errors);
+      // If there are errors, try to repair the JSON
+      const repairedJson = jsonrepair(cleanedResponse);
+      console.log("Repaired JSON:", repairedJson);
+      parsedLLMReview = JSON.parse(repairedJson);
+    } else {
+      // If no errors, use the jsonc-parser result
+      parsedLLMReview = jsoncResult as LLMReview;
+    }
+
+    validateLLMResponse(parsedLLMReview, content);
   } catch (err) {
     console.error("❌ Invalid review structure:", err);
-    console.error("Cleaned response:", cleanedResponse);
+    console.error("Original response:", cleanedResponse);
     throw err;
   }
 
@@ -197,5 +272,7 @@ ${content}
     review: documentReview,
     usage,
     llmResponse,
+    prompt,
+    agentContext,
   };
 }

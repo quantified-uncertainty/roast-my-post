@@ -8,8 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "review-agent": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/information-hazards.json -a bias-detector",
-    "review-all-agents": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/information-hazards.json --all-agents",
+    "review-agent": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/strongly-bounded-agents.json -a bias-detector",
+    "review-all-agents": "npx tsx src/scripts/analyze-md.mts --file ./src/data/docs/strongly-bounded-agents.json --all-agents",
     "review-all-agents-missing": "npx tsx src/scripts/analyze-md.mts --dir ./src/data/docs --all-agents --only-missing",
     "generate-docs": "tsx src/scripts/generate-docs-index.mts"
   },
@@ -19,6 +19,8 @@
     "commander": "^13.1.0",
     "dotenv": "^16.5.0",
     "geist": "^1.3.1",
+    "jsonc-parser": "^3.3.1",
+    "jsonrepair": "^3.12.0",
     "next": "15.3.0",
     "openai": "^4.93.0",
     "raw-loader": "^4.0.2",
@@ -41,7 +43,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "typescript": "^5"
   }
 }
