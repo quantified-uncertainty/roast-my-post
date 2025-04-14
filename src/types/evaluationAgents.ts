@@ -7,4 +7,7 @@ export interface EvaluationAgent {
   capabilities: string[];
   use_cases: string[];
   limitations: string[];
+  genericInstructions: string;
+  summaryInstructions: string;
+  commentInstructions: string;
 }

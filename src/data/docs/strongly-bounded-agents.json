@@ -12,298 +12,298 @@
   "content": "## Strongly Bounded AI: Definitions and Strategic Implications\n\n**Ozzie Gooen \\- April 14 2025, Draft. Quick post for the EA Forum / LessWrong.**\n\n**Also, be sure to see this post. I just found [this](https://www.lesswrong.com/posts/Z5YGZwdABLChoAiHs/bounded-ai-might-be-viable), need to update this post.** \n\n**Epistemic status: Exploratory concept with moderate confidence**  \nThis represents my current thinking on a potentially valuable framing for AI safety, drawing on established engineering principles. In the last few years discussion around these topics has exploded \\- I wouldn't be surprised if there were great existing works that I don't know about and can't quickly find. \n\n— \n\nI feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability.\n\n**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems. \n\nThis concept isn't just about alignment. It's also about:\n\n* Substantial capability restrictions (using older models, strong compute limits)  \n* Exclusive use of highly-tested and well-established technologies  \n* Intelligence limitations that make behavior highly predictable\n\nI think some potential names for these systems could be:\n\n* Strongly Bounded AI  \n* Highly-Reliable AI  \n* Boring AI\n\nFor the rest of this document, I'll go with \"*Strongly Bounded AI*.\"\n\n\"Strongly Bounded AIs\" are not necessarily ones with substantial alignment or safeguards \\- but rather, AIs we can reason to not represent severe AI takeover risks. This means they can either be very weak systems (like many of the systems of today) without safeguards, or stronger systems with a much greater degree of safeguards.\n\nWe already have somewhat understood areas of \"*Control*,\" \"*Scalable Oversight*,\" etc., which approach similar ideas. But I believe these systems typically investigate \"*specific AI layers directly overseeing risky AIs*\" rather than broader AI services/agents that are doing more regular duties in the world.\n\nWe also have the fields of \"[Comprehensive AI Services](https://forum.effectivealtruism.org/topics/comprehensive-ai-services)\" (see Drexler) or [Guaranteed Safe AI](https://arxiv.org/html/2405.06624v2) (See Davidad). These are closer to the idea I'm proposing, but are more specific. I think neither is necessary for \"Strongly Bounded AI\".\n\nA \"Bounded\" AI is also arguably different from an aligned or a safe AI. Both \"aligned\" and \"safe\" at this point have fairly broad and imprecise definitions, in comparison. I'd also flag that \"Boundedness\" is really about accident risks, not mistake risks. A bad actor could use a bounded system to do significant harm. This is akin to the importance of reliability in military technology \\- such reliability is useful for the military, but obviously can still be used destructively if desired. \n\n## **Engineering Culture and Established Patterns**\n\nIn tech companies, there's an established virtue of using \"boring tech\" – Postgres, SQL, REST, etc. There's always something fancier trending on Hacker News, but these cutting-edge systems come with major uncertainties and liabilities. Typically, new programmers enthusiastically advocate for the latest JavaScript framework while experienced engineers spend time arguing for proven technologies.\n\nEngineering also features many well-understood and distinct subfields for highly-reliable systems: \"Fault-Tolerant Systems,\" \"Ultra-Reliable Systems,\" \"High-Assurance Systems,\" \"Formal Verification,\" etc. I believe these concepts effectively carve out market positions for unusually secure technology. Major software products like Microsoft Windows or Google Docs don't advertise themselves as \"Fault-Tolerant Systems\" or \"Formally Verified\" – these terms are reserved for genuinely reliability-focused systems. While these terms can function as marketing buzzwords, I think they still help establish meaningful categories.\n\n## **Current State and Future Potential**\n\nI think most AI agents today are weak and highly limited. I don't expect 99% of them could cause catastrophic damage (say, $100B in damages) anytime soon – the technology is simply too weak and expensive. I'd feel fairly comfortable using many current systems without worrying about major alignment risks.\n\nMy strong expectation is that a tremendous amount of good and global stability could come from developing \"Strongly Bounded AIs.\" And perhaps most importantly, I think the game plan should entail using \"Strongly Bounded AIs\" to help us reason about, develop, and control cutting-edge AI technologies.\n\nI believe the real AI takeover threat comes from frontier AI agents. I think the capability gap between frontier models and our controlled AI systems represents the potential damage frontier AI could cause. If it's \"a powerful malicious frontier AI agent\" versus humans alone, there's a massive potential for takeover. If it's the same agent versus \"robust, reliable and controllable AIs,\" I'd feel much better about our defensive position.\n\n## **Applications and Evolution**\n\nOver time, I think we'll develop better methods for creating \"Strongly Bounded AIs\" that push the frontier of effectiveness while maintaining safety. One of the main things we should probably do with cutting-edge AIs (to the extent we use them) is to help us create better \"Strongly Bounded AIs.\"\n\nWhat could \"Strongly Bounded AIs\" do? In my view:\n\n* Oversee personal data on devices  \n* Make strategic recommendations for organizations  \n* Secure key resources beyond traditional access management (e.g., AI monitoring bank withdrawals for signs of duress)  \n* Handle bounded high-reliability operations in medicine and defense  \n* Assist auditors examining potentially dangerous organizations/systems\n\n## **Addressing Common Questions**\n\n**\"Doesn't delegating to AI systems increase takeover risks?\"** I think this is an oversimplified view and would often argue the opposite. I'd expect that \"Strongly Bounded AIs\" could make the world much more secure against frontier adversarial AIs, not less. But of course, one would need to implement smart tradeoffs.\n\n**\"Isn't opposing frontier AI while supporting limited AI confusing?\"** I think engineering has a long history of distinguishing between safe and unsafe technologies. I don't think the difference between AI systems is unusually strange compared to previous work in reliability engineering and computer security.\n\n**\"Won't this term become meaningless marketing?\"** I'm not that cynical. I think safety-minded people should develop clear standards for safe systems, then work to form the language. We already have some terminology for highly-trustworthy technology. Even when one term gets semantically diluted due to marketing, others can emerge to take its place.",
   "reviews": [
     {
-      "agentId": "clarity-coach",
-      "costInCents": 46,
-      "createdAt": "2025-04-14T00:00:00.000Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3055,\"completionTokens\":1471,\"totalTokens\":4526,\"temperature\":0.7,\"runtimeMs\":26812}",
-      "analysis": "The document presents a thoughtful exploration of the \"Strongly Bounded AI\" concept, offering a framework for AI systems that prioritize safety through capability restrictions. The writing demonstrates clear organization with defined sections and bullet points, making complex ideas accessible. The author effectively establishes context by connecting to existing engineering principles and differentiating this concept from related terms.\n\nReadability metrics indicate an academic level (approximately grade 13-15), appropriate for the target audience of EA Forum/LessWrong readers. Sentence structures vary appropriately, though some longer sentences could benefit from restructuring. The document effectively uses formatting elements like headers, bullet points, and emphasis to create visual hierarchy.\n\nThe text maintains strong structural coherence with logical progression between sections, though transitions between some paragraphs could be strengthened. The author appropriately acknowledges limitations and addresses potential counterarguments in the final section, demonstrating intellectual honesty.\n\nAreas for improvement include: reducing some redundancy in concept explanations, providing more concrete examples of \"Strongly Bounded AI\" implementations, addressing some inconsistencies in terminology usage, and clarifying technical references for readers less familiar with the field. Several draft elements and informal phrases should be removed for a more polished presentation.",
+      "agentId": "bias-detector",
+      "costInCents": 4520,
+      "createdAt": "2025-04-14T03:06:24.219Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2795,\"completionTokens\":1725,\"totalTokens\":4520,\"temperature\":0.7,\"runtimeMs\":29454}",
+      "summary": "This document introduces the concept of \"Strongly Bounded AI\" as a potential framework for AI safety. While the content advocates for restricted AI capabilities to prevent takeover risks, the analysis reveals several significant biases. The text shows status quo bias in assuming current AI systems are inherently safe, presents a false dichotomy between frontier and bounded AI, and displays technological solutionism by overemphasizing technical fixes without adequate consideration of governance challenges. There is confirmation bias in selectively citing supporting concepts without engaging with counterarguments. The document exhibits authority bias by positioning engineering culture as definitive, shows optimism bias regarding the effectiveness of bounded AI systems, and contains framing bias in how risks are characterized. The text lacks diverse perspectives from stakeholders beyond the technical community and demonstrates Western-centric thinking in its approach to AI safety. These biases could lead to incomplete safety strategies and underestimation of complex sociotechnical challenges in AI governance.",
       "comments": {
         "1": {
-          "title": "Remove draft elements and placeholders",
-          "description": "The document contains several draft elements that should be removed before final publication, including the date (which appears to be in the future), informal notes, and placeholder text. These elements reduce professionalism and clarity.",
+          "title": "Status Quo Bias",
+          "description": "The text exhibits status quo bias by assuming current AI systems are inherently safe due to their limitations. This overlooks potential emergent risks from existing systems and creates a false sense of security. This bias impacts risk assessment by potentially underestimating threats from current AI. To mitigate, include analysis of known vulnerabilities in existing systems and acknowledge uncertainty about their safety properties.",
           "highlight": {
-            "startOffset": 48,
-            "endOffset": 225,
-            "prefix": "## Strongly Bounded AI: Definitions and Strategic Implications"
+            "startOffset": 2461,
+            "endOffset": 2654,
+            "prefix": "## **Current State and Future Potential**\n\n"
           }
         },
         "2": {
-          "title": "Clarify distinction from existing concepts",
-          "description": "While you mention related concepts (Control, Scalable Oversight, CAIS, Guaranteed Safe AI), the distinctions could be more precisely articulated. Consider adding a brief comparative table or more explicit statements about how Strongly Bounded AI differs from or incorporates elements of these approaches.",
+          "title": "False Dichotomy Bias",
+          "description": "The text presents a false dichotomy between \"frontier AI\" and \"Strongly Bounded AI\" without acknowledging the complex spectrum of AI systems with varying degrees of capabilities and safety measures. This oversimplification could lead to policy approaches that fail to address nuanced risks. To improve, recognize the continuum of AI capabilities and safety measures rather than presenting a binary framing.",
           "highlight": {
-            "startOffset": 1051,
-            "endOffset": 1365,
-            "prefix": "We already have somewhat understood areas of \""
+            "startOffset": 2941,
+            "endOffset": 3223,
+            "prefix": "I believe the real AI takeover threat comes from "
           }
         },
         "3": {
-          "title": "Inconsistent terminology usage",
-          "description": "The document introduces \"Strongly Bounded AI\" but sometimes refers to just \"Bounded AI\". Maintaining consistent terminology throughout would enhance clarity and reinforce your proposed concept.",
+          "title": "Technological Solutionism Bias",
+          "description": "The document displays technological solutionism by suggesting technical solutions (bounded AI) can solve complex sociotechnical problems without adequately addressing governance, regulatory, or social challenges. This bias may lead to overreliance on technical fixes while neglecting essential institutional frameworks. To mitigate, acknowledge the need for complementary governance structures and regulatory approaches alongside technical solutions.",
           "highlight": {
-            "startOffset": 1366,
-            "endOffset": 1454,
-            "prefix": "A \"Bounded\" AI is also arguably different from an aligned or a safe AI."
+            "startOffset": 3226,
+            "endOffset": 3417,
+            "prefix": "## **Applications and Evolution**\n\nOver time, "
           }
         },
         "4": {
-          "title": "Strengthen definition with specific criteria",
-          "description": "The concept of \"Strongly Bounded AI\" would benefit from more explicit criteria or parameters. Consider developing a more structured definition with specific technical or operational boundaries that would qualify a system as strongly bounded.",
+          "title": "Confirmation Bias",
+          "description": "The text shows confirmation bias by selectively citing concepts that support the author's view (like \"Comprehensive AI Services\" and \"Guaranteed Safe AI\") without engaging with counterarguments or alternative frameworks. This limits the robustness of the argument and excludes important perspectives. To improve, include and engage with critical perspectives on bounded AI approaches and acknowledge limitations of the proposed framework.",
           "highlight": {
-            "startOffset": 810,
-            "endOffset": 1050,
-            "prefix": "\"Strongly Bounded AIs\" are not necessarily ones with sub"
+            "startOffset": 1499,
+            "endOffset": 1760,
+            "prefix": "We also have the fields of \""
           }
         },
         "5": {
-          "title": "Provide concrete examples",
-          "description": "The applications section lists potential uses for Strongly Bounded AIs, but lacks concrete examples of what these systems might look like in practice. Adding specific scenarios or case studies would make the concept more tangible and aid understanding.",
+          "title": "Authority Bias",
+          "description": "The text exhibits authority bias by positioning engineering culture and established patterns as definitive guides for AI safety without questioning their applicability to novel AI challenges. This may lead to overconfidence in traditional engineering approaches that might not transfer to AI contexts. To mitigate, critically examine the limitations of traditional engineering paradigms when applied to AI systems and acknowledge where new approaches may be needed.",
           "highlight": {
-            "startOffset": 3660,
-            "endOffset": 4023,
-            "prefix": "What could \"Strongly Bounded AIs\" do? In my view:"
+            "startOffset": 1933,
+            "endOffset": 2353,
+            "prefix": "Engineering also features many well-understood"
           }
         },
         "6": {
-          "title": "Clarify relationship between capability and safety",
-          "description": "The document sometimes implies an inverse relationship between capability and safety, but this nuanced relationship deserves more explicit treatment. Consider explaining how bounded systems can be both capable and safe within specific domains.",
+          "title": "Optimism Bias",
+          "description": "The document displays optimism bias in its assessment of how effective \"Strongly Bounded AIs\" would be against adversarial frontier AI systems, without providing evidence for this claim. This could lead to underestimation of risks and overconfidence in defensive capabilities. To improve, provide more balanced analysis of potential limitations and failure modes of bounded AI approaches, and acknowledge uncertainty about their effectiveness.",
           "highlight": {
-            "startOffset": 3214,
-            "endOffset": 3444,
-            "prefix": "Over time, I think we'll develop better methods for"
+            "startOffset": 3863,
+            "endOffset": 4093,
+            "prefix": "**\"Doesn't delegating to AI systems increase t"
           }
         },
         "7": {
-          "title": "Improve transition between introductory sections",
-          "description": "The transition from the initial framing to the \"On the Terminology\" section is abrupt. Consider adding a clearer transition sentence or restructuring to create a more seamless flow between your introduction and the terminology discussion.",
+          "title": "Framing Bias",
+          "description": "The text frames AI risks primarily in terms of \"takeover\" scenarios while downplaying other potential harms like privacy violations, discrimination, or economic disruption. This narrow framing of risk could lead to safety approaches that miss important concerns. To mitigate, expand the discussion to include a broader range of potential AI harms and acknowledge diverse stakeholder concerns beyond existential risks.",
           "highlight": {
-            "startOffset": 470,
-            "endOffset": 529,
-            "prefix": "—\n\nI feel the AI safety conversation lacks terminology"
+            "startOffset": 711,
+            "endOffset": 892,
+            "prefix": "I feel the AI safety conversation lacks termi"
           }
         },
         "8": {
-          "title": "Define technical terms for broader audience",
-          "description": "Some technical terms like \"alignment risks\" and \"frontier AI\" are used without sufficient explanation. While likely familiar to your target audience, brief definitions would improve accessibility for readers less versed in AI safety terminology.",
+          "title": "Lack of Diverse Perspectives Bias",
+          "description": "The document shows a bias toward technical perspectives while lacking input from diverse stakeholders including ethicists, policymakers, affected communities, and Global South perspectives. This limits the comprehensiveness of the safety approach. To improve, explicitly acknowledge the need for multidisciplinary and diverse geographic input into AI safety frameworks and discuss how to incorporate these perspectives.",
           "highlight": {
-            "startOffset": 3001,
-            "endOffset": 3212,
-            "prefix": "I believe the real AI takeover threat comes from fro"
+            "startOffset": 3418,
+            "endOffset": 3749,
+            "prefix": "Over time, I think we'll develop better metho"
           }
         },
         "9": {
-          "title": "Address implementation challenges",
-          "description": "The document presents Strongly Bounded AI as a promising approach but doesn't substantially address implementation challenges or potential failure modes. Adding a paragraph on these considerations would strengthen the analysis.",
+          "title": "Definitional Ambiguity Bias",
+          "description": "The text acknowledges that terms like \"aligned\" and \"safe\" are imprecise, but then introduces another potentially ambiguous term (\"Strongly Bounded\") without precisely defining its boundaries or measurement criteria. This ambiguity could lead to miscommunication and implementation challenges. To mitigate, provide more specific criteria for what constitutes \"boundedness\" and how it can be measured or verified in practice.",
           "highlight": {
-            "startOffset": 4024,
-            "endOffset": 4062,
-            "prefix": "## **Addressing Common Questions**"
+            "startOffset": 1760,
+            "endOffset": 1932,
+            "prefix": "A \"Bounded\" AI is also arguably different fro"
           }
         },
         "10": {
-          "title": "Strengthen concluding section",
-          "description": "The document ends somewhat abruptly after addressing potential objections. Consider adding a brief conclusion that reinforces the key points, emphasizes the importance of the concept, and suggests next steps for developing the Strongly Bounded AI framework.",
+          "title": "Western-centric Thinking Bias",
+          "description": "The document implicitly assumes Western technical and engineering paradigms as universal, without acknowledging different cultural approaches to technology governance or safety. This cultural bias could lead to solutions that don't transfer well globally or address diverse needs. To improve, acknowledge the cultural specificity of the proposed approaches and discuss how principles might be adapted across different cultural and governance contexts.",
           "highlight": {
-            "startOffset": 4764,
-            "endOffset": 5039,
-            "prefix": "**\"Won't this term become meaningless marketing?\" I'"
+            "startOffset": 1933,
+            "endOffset": 2353,
+            "prefix": "Engineering also features many well-understood"
+          }
+        }
+      }
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 5035,
+      "createdAt": "2025-04-14T03:06:54.547Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3425,\"completionTokens\":1610,\"totalTokens\":5035,\"temperature\":0.7,\"runtimeMs\":30311}",
+      "summary": "The document presents a thoughtful exploration of the 'Strongly Bounded AI' concept as a potential framework for AI safety. Overall, the text exhibits good clarity with a coherent structure that progresses logically from definition to implications. The writing maintains a conversational yet informative tone, making complex concepts accessible. Readability metrics indicate content suitable for educated readers (approximately college level), with an appropriate balance of technical terminology and explanations. The document effectively uses formatting, bullet points, and section headers to organize information. Key improvement opportunities include reducing some redundancies in concept explanation, clarifying certain technical references, strengthening transitions between sections, and providing more concrete examples of implementation. The author successfully conveys the distinction between this concept and related frameworks, though some technical terminology could benefit from further elaboration for non-specialist readers. The document achieves its stated purpose as an exploratory draft for specialized forums while maintaining sufficient clarity for the intended audience.",
+      "comments": {
+        "1": {
+          "title": "Clear Section Headers Enhance Navigation",
+          "description": "The document effectively uses hierarchical headers (## for main sections) to organize content into distinct conceptual units. This structural clarity helps readers navigate the document and understand the logical progression of ideas. Each section title clearly indicates its content focus, creating an effective information hierarchy that enhances overall readability.",
+          "highlight": {
+            "startOffset": 1142,
+            "endOffset": 1186,
+            "prefix": "For the rest of this document, I'll go with \""
+          }
+        },
+        "2": {
+          "title": "Redundant Introduction Reduces Concision",
+          "description": "The document contains redundancy in its introduction, with two separate introductory segments covering similar ground. The first paragraph after the epistemic status and the section beginning with \"One thing I feel is missing...\" express nearly identical concepts. Consolidating these introductions would improve concision and eliminate unnecessary repetition.",
+          "highlight": {
+            "startOffset": 504,
+            "endOffset": 696,
+            "prefix": "— \n\nI feel the AI safety conversation "
+          }
+        },
+        "3": {
+          "title": "Effective Use of Bullet Points for Clarity",
+          "description": "The document employs bullet points effectively throughout to break complex ideas into digestible components. This formatting technique enhances readability by creating visual separation between concepts and allowing readers to process information in discrete chunks. The consistent use of this pattern across multiple sections creates a cohesive reading experience.",
+          "highlight": {
+            "startOffset": 1347,
+            "endOffset": 1463,
+            "prefix": "This concept isn't just about alignment"
+          }
+        },
+        "4": {
+          "title": "Undefined Technical References",
+          "description": "The document references technical concepts like \"Control\" and \"Scalable Oversight\" without providing sufficient context or explanation for readers unfamiliar with these terms. While quotation marks indicate their specialized nature, the absence of brief definitions reduces accessibility for readers outside the specialized AI safety community.",
+          "highlight": {
+            "startOffset": 1841,
+            "endOffset": 1942,
+            "prefix": "We already have somewhat understood"
+          }
+        },
+        "5": {
+          "title": "Strong Analogical Reasoning Enhances Understanding",
+          "description": "The document effectively uses analogies to software engineering practices to illustrate the concept of bounded AI. By comparing AI safety approaches to established engineering principles like using \"boring tech,\" the author makes a complex concept more accessible through connection to familiar domains. This strengthens audience alignment by building on existing knowledge frameworks.",
+          "highlight": {
+            "startOffset": 2738,
+            "endOffset": 3029,
+            "prefix": "In tech companies, there's an esta"
+          }
+        },
+        "6": {
+          "title": "Imprecise Quantification Reduces Clarity",
+          "description": "The statement \"I don't expect 99% of them could cause catastrophic damage\" combines a precise-seeming percentage with vague qualifiers (\"don't expect\") and an undefined threshold (\"$100B in damages\"). This mixing of precise and imprecise language creates ambiguity about the actual risk assessment. More consistent precision in quantification would strengthen the argument.",
+          "highlight": {
+            "startOffset": 3565,
+            "endOffset": 3680,
+            "prefix": "I think most AI agents today are "
+          }
+        },
+        "7": {
+          "title": "Unclear Referent in Key Concept",
+          "description": "The sentence \"I think the capability gap between frontier models and our controlled AI systems represents the potential damage frontier AI could cause\" contains ambiguity about what \"represents\" means in this context. Does the gap measure, predict, or constitute the potential damage? This key conceptual statement would benefit from more precise language to clarify the relationship being described.",
+          "highlight": {
+            "startOffset": 4119,
+            "endOffset": 4253,
+            "prefix": "I believe the real AI takeover th"
+          }
+        },
+        "8": {
+          "title": "Effective Use of Q&A Format for Objections",
+          "description": "The \"Addressing Common Questions\" section effectively anticipates reader concerns and presents counterarguments in a structured Q&A format. This rhetorical approach enhances engagement by simulating dialogue and directly addressing potential objections. The question framing clearly signals the shift from exposition to counter-argumentation, improving the document's persuasive structure.",
+          "highlight": {
+            "startOffset": 5385,
+            "endOffset": 5419,
+            "prefix": "## **Addressing Common Questions"
+          }
+        },
+        "9": {
+          "title": "Limited Concrete Examples Reduce Practical Understanding",
+          "description": "While the document lists potential applications of Strongly Bounded AI in bullet points, it provides minimal concrete implementation details or specific scenarios. Adding brief illustrative examples for each application would enhance reader understanding of how these systems might function in practice, strengthening the connection between theoretical concept and real-world application.",
+          "highlight": {
+            "startOffset": 4957,
+            "endOffset": 5211,
+            "prefix": "What could \"Strongly Bounded AIs"
+          }
+        },
+        "10": {
+          "title": "Effective Metacognitive Transparency",
+          "description": "The document begins with clear epistemic status indicators and acknowledges its draft nature, setting appropriate expectations for readers. This metacognitive transparency helps readers appropriately calibrate their interpretation of the content and establishes the author's credibility through intellectual honesty. This practice enhances audience alignment by explicitly acknowledging the exploratory nature of the concepts presented.",
+          "highlight": {
+            "startOffset": 207,
+            "endOffset": 503,
+            "prefix": "**Epistemic status: Exploratory "
           }
         }
       }
     },
     {
       "agentId": "research-scholar",
-      "costInCents": 50,
-      "createdAt": "2025-04-14T00:00:00.000Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3262,\"completionTokens\":1677,\"totalTokens\":4939,\"temperature\":0.7,\"runtimeMs\":30996}",
-      "analysis": "This document introduces the concept of \"Strongly Bounded AI\" as a potential framework for developing AI systems that minimize takeover risks while remaining useful. The author positions this concept as distinct from alignment, focusing instead on capability restrictions, established technologies, and predictability. The approach draws parallels to engineering culture's preference for \"boring tech\" and established reliability patterns. While conceptually valuable, the document would benefit from more concrete technical specifications of what constitutes \"boundedness\" beyond general principles. The author acknowledges potential overlap with existing concepts like Comprehensive AI Services and Guaranteed Safe AI but doesn't fully articulate the distinctive boundaries. The strategic implications section offers compelling use cases but lacks detailed implementation pathways. The document appropriately addresses potential criticisms, though some counterarguments could be strengthened with empirical examples. Overall, this represents a useful contribution to the taxonomy of AI safety approaches, particularly in distinguishing between frontier capabilities and bounded, reliable systems for practical applications.",
+      "costInCents": 5534,
+      "createdAt": "2025-04-14T03:07:30.683Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3596,\"completionTokens\":1938,\"totalTokens\":5534,\"temperature\":0.7,\"runtimeMs\":36107}",
+      "summary": "The document introduces the concept of \"Strongly Bounded AI\" as a novel framework for AI safety that emphasizes capability restrictions, reliance on established technologies, and intelligence limitations to ensure predictability. This approach differs from broader concepts like alignment or safety by specifically targeting takeover risks rather than misuse. Drawing parallels to engineering culture's preference for \"boring tech\" and established reliability patterns, the author argues that most current AI systems are inherently limited and thus relatively safe. The strategic vision proposes using these bounded systems as defensive measures against frontier AI risks, suggesting applications in personal data oversight, organizational strategy, security, and high-reliability operations. The author contends that properly implemented bounded AI systems could enhance global security rather than increase vulnerability, while acknowledging the need for clear standards to prevent the term from becoming diluted marketing language.",
       "comments": {
         "1": {
-          "title": "Terminology Gap Identification",
-          "description": "The author correctly identifies a gap in AI safety terminology. The literature shows a similar pattern where conceptual frameworks often precede standardized terminology. This connects to the \"Naming Things\" problem in both software engineering and philosophy of science, where proper classification systems enable more effective discourse. This observation aligns with work by Yudkowsky on the importance of clear terminology in AI safety discussions.",
+          "title": "Conceptual Positioning Within AI Safety Taxonomy",
+          "description": "The author carefully positions \"Strongly Bounded AI\" within the existing AI safety landscape, distinguishing it from related concepts like Control, Scalable Oversight, CAIS, and Guaranteed Safe AI. This taxonomic work is important in the rationalist/EA community where conceptual clarity is highly valued. The distinction between accident risks versus misuse risks parallels similar distinctions in other safety domains (like nuclear safety vs security). This positioning helps establish where this concept fits in relation to both capability-focused and alignment-focused approaches to AI safety.",
           "highlight": {
-            "startOffset": 405,
-            "endOffset": 563,
-            "prefix": "— "
+            "startOffset": 1045,
+            "endOffset": 1450,
+            "prefix": "For the rest of this document, I'll go with \""
           }
         },
         "2": {
-          "title": "Bounded vs. Aligned Distinction",
-          "description": "The distinction between \"bounded\" and \"aligned/safe\" AI is conceptually important but requires more precise delineation. This parallels the distinction in security engineering between \"secure by design\" and \"secure by restriction.\" The accident vs. misuse risk framing connects to Bostrom's vulnerability/exposure taxonomy in existential risk literature and could benefit from explicit reference to those frameworks.",
+          "title": "Borrowing from Engineering Reliability Culture",
+          "description": "The author draws an important parallel between AI safety and established engineering reliability practices, referencing concepts like \"boring tech\" and reliability-focused subfields. This connection to existing engineering paradigms provides both legitimacy and practical templates for approaching AI safety. The LessWrong community often values these kinds of cross-disciplinary applications of established principles to novel domains. This approach also suggests that AI safety need not reinvent reliability practices from scratch but can adapt proven methodologies.",
           "highlight": {
-            "startOffset": 1420,
-            "endOffset": 1663,
-            "prefix": "A \"Bounded\" AI is also arguably different from "
+            "startOffset": 1739,
+            "endOffset": 2351,
+            "prefix": "## **Engineering Culture and Established Pat"
           }
         },
         "3": {
-          "title": "Engineering Culture Connection",
-          "description": "The analogy to \"boring tech\" in engineering culture is apt and underexplored in AI safety literature. This connects to the concept of \"legibility\" in systems design (as discussed by James Scott and later applied to software by various LessWrong authors). The preference for proven technologies over cutting-edge options represents a form of practical epistemological humility that could inform AI safety approaches.",
+          "title": "Capability Gap as Key Risk Factor",
+          "description": "The author introduces an important strategic framing: the capability gap between frontier AI and controlled AI systems represents the potential damage frontier AI could cause. This perspective aligns with differential technological development concepts in EA literature, which emphasize developing defensive capabilities ahead of potentially dangerous ones. The framing suggests a concrete metric for risk assessment (the capability gap) rather than just absolute capabilities of frontier systems, providing a more nuanced approach to evaluating the strategic landscape.",
           "highlight": {
-            "startOffset": 1696,
-            "endOffset": 2027,
-            "prefix": "In tech companies, there's an established virtue"
+            "startOffset": 2876,
+            "endOffset": 3200,
+            "prefix": "I believe the real AI takeover threat comes "
           }
         },
         "4": {
-          "title": "Reliability Engineering Frameworks",
-          "description": "The author references established engineering subfields without exploring their methodological contributions in depth. Formal methods, fault tolerance, and high assurance systems have specific technical approaches (redundancy, formal verification, Byzantine fault tolerance) that could directly inform bounded AI design. This represents a missed opportunity to connect to existing technical literature on ultra-reliable systems design.",
+          "title": "Recursive Safety Improvement Strategy",
+          "description": "The document outlines a recursive improvement strategy where frontier AI helps create better bounded AI systems. This approach resembles concepts like Paul Christiano's \"Iterated Amplification and Distillation\" and Eliezer Yudkowsky's discussions of using AI to improve AI safety. The strategy suggests a pragmatic path forward that doesn't reject frontier AI development entirely but channels it toward safety-enhancing purposes. This represents a middle ground between acceleration and pure restriction that might appeal to multiple stakeholder groups.",
           "highlight": {
-            "startOffset": 2027,
-            "endOffset": 2448,
-            "prefix": "Engineering also features many well-understood"
+            "startOffset": 3254,
+            "endOffset": 3448,
+            "prefix": "## **Applications and Evolution**"
           }
         },
         "5": {
-          "title": "Capability Gap Framing",
-          "description": "The framing of AI risk as a \"capability gap\" between frontier and controlled systems is a valuable contribution that connects to differential technological development concepts in EA literature. This perspective shifts focus from absolute capabilities to relative advantage, similar to security thinking about attack/defense asymmetries. This connects to Drexler's CAIS framework but with more emphasis on the differential aspect.",
+          "title": "Practical Applications Spanning Critical Domains",
+          "description": "The author identifies concrete applications for Strongly Bounded AI across several domains (personal data, organizational strategy, security, medicine, defense, auditing). This focus on practical implementation addresses a common criticism in the rationalist community that AI safety discussions remain too theoretical. The examples span both public and private sectors, suggesting a broad deployment strategy rather than limiting these systems to narrow use cases. The emphasis on high-reliability contexts aligns with EA prioritization frameworks that focus on critical infrastructure.",
           "highlight": {
-            "startOffset": 2922,
-            "endOffset": 3286,
-            "prefix": "I believe the real AI takeover threat comes fr"
+            "startOffset": 3448,
+            "endOffset": 3779,
+            "prefix": "Over time, I think we'll develop better me"
           }
         },
         "6": {
-          "title": "Recursive Improvement Strategy",
-          "description": "The suggestion to use cutting-edge AIs to create better bounded AIs hints at a recursive improvement strategy that deserves more exploration. This connects to Paul Christiano's work on iterated amplification and distillation, though with different emphasis. The recursive safety approach represents a potential middle path between pure restriction and unrestricted advancement.",
+          "title": "Addressing Principal-Agent Problems",
+          "description": "The document anticipates and responds to the concern that delegating to AI systems increases takeover risks - a classic principal-agent problem that features prominently in LessWrong discussions about AI risk. The author's counterargument that bounded AI could enhance security represents an important perspective in the delegation debate. This touches on the complex trade-offs between capability, control, and security that are central to governance discussions in the EA community. The position challenges simplified narratives about AI delegation always increasing risk.",
           "highlight": {
-            "startOffset": 3339,
-            "endOffset": 3525,
-            "prefix": "Over time, I think we'll develop better metho"
+            "startOffset": 3830,
+            "endOffset": 4070,
+            "prefix": "**\"Doesn't delegating to AI systems increa"
           }
         },
         "7": {
-          "title": "Application Domains",
-          "description": "The proposed application domains for bounded AI highlight the tractability of the approach but lack specificity on implementation details. The medical and defense applications particularly connect to existing work on high-reliability organizations (HROs) in those sectors. The monitoring bank withdrawals example touches on adversarial robustness concepts that could be further developed.",
+          "title": "Epistemic Status Signaling",
+          "description": "The author explicitly states their epistemic status as \"Exploratory concept with moderate confidence,\" demonstrating the norm of epistemic transparency valued in rationalist communities. This practice helps readers calibrate how much weight to give the arguments and signals intellectual honesty. The author also acknowledges potential gaps in their knowledge of existing literature, showing appropriate epistemic humility. This transparency about confidence levels and knowledge limitations exemplifies the kind of communication style encouraged on platforms like LessWrong.",
           "highlight": {
-            "startOffset": 3569,
-            "endOffset": 3878,
-            "prefix": "What could \"Strongly Bounded AIs\" do? In my v"
+            "startOffset": 243,
+            "endOffset": 493,
+            "prefix": "**Epistemic status: Exploratory concept "
           }
         },
         "8": {
-          "title": "Security Enhancement Counterargument",
-          "description": "The counterargument that bounded AI could increase security against frontier AI deserves more development. This connects to the security literature concept of \"defense in depth\" and resilient systems design. The author could strengthen this point by referencing existing work on competitive security dynamics and differential technological development in the EA/rationalist communities.",
+          "title": "Terminological Innovation and Precision",
+          "description": "The document emphasizes the importance of precise terminology in AI safety discourse, proposing several alternative terms before settling on \"Strongly Bounded AI.\" This focus on terminological clarity reflects the rationalist community's emphasis on clear conceptualization and communication. The author acknowledges the risk of semantic dilution through marketing - a common concern in technical fields where important terms often lose meaning through overuse. This attention to terminology development represents an important meta-level contribution to the discourse.",
           "highlight": {
-            "startOffset": 3908,
-            "endOffset": 4148,
-            "prefix": "\"Doesn't delegating to AI systems increase ta"
+            "startOffset": 687,
+            "endOffset": 911,
+            "prefix": "One thing I feel is missing from AI safety"
           }
         },
         "9": {
-          "title": "Historical Engineering Parallels",
-          "description": "The reference to engineering's history of distinguishing safe/unsafe technologies could benefit from specific examples. This connects to the development of nuclear safety protocols, aviation safety standards, and medical device regulation. These historical cases offer valuable lessons on how technical communities successfully established safety distinctions that maintained meaning despite commercial pressures.",
+          "title": "Comparative Risk Assessment of Current Systems",
+          "description": "The author makes a quantified risk assessment of current AI systems, stating they don't expect 99% could cause catastrophic damage (defined as $100B+). This type of explicit probability estimation and threshold definition is characteristic of rationalist approaches to risk assessment. The confidence expressed about current systems contrasts with the caution about frontier models, illustrating a nuanced risk landscape rather than uniform concern. This differentiated risk assessment helps prioritize where safety measures are most needed.",
           "highlight": {
-            "startOffset": 4148,
-            "endOffset": 4370,
-            "prefix": "\"Isn't opposing frontier AI while supporting"
+            "startOffset": 2355,
+            "endOffset": 2592,
+            "prefix": "## **Current State and Future Potential**"
           }
         },
         "10": {
-          "title": "Semantic Dilution Concern",
-          "description": "The author's optimism about maintaining meaningful terminology despite marketing pressures is refreshing but potentially underestimates historical patterns. This connects to the concept of \"concept creep\" in psychology and \"semantic dilution\" in linguistics. The EA/rationalist communities have experienced similar challenges with terms like \"effective,\" \"rational,\" and even \"alignment\" becoming diluted through popularization.",
+          "title": "Addressing Perceived Inconsistency in AI Stance",
+          "description": "The document anticipates and responds to the potential criticism that opposing frontier AI while supporting limited AI seems inconsistent. By drawing parallels to engineering's long history of distinguishing between safe and unsafe technologies, the author frames this position as logically coherent rather than contradictory. This addresses a common concern in AI policy discussions where nuanced positions are often flattened into binary pro/anti-AI stances. The response emphasizes that safety engineering has always involved making contextual distinctions rather than categorical judgments.",
           "highlight": {
-            "startOffset": 4370,
-            "endOffset": 4655,
-            "prefix": "\"Won't this term become meaningless marketing"
-          }
-        }
-      }
-    },
-    {
-      "agentId": "bias-detector",
-      "costInCents": 46,
-      "createdAt": "2025-04-14T00:00:00.000Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3079,\"completionTokens\":1423,\"totalTokens\":4502,\"temperature\":0.7,\"runtimeMs\":25487}",
-      "analysis": "This analysis examines a draft article on \"Strongly Bounded AI\" that proposes a new conceptual framework for safe AI systems. The document demonstrates several strengths in acknowledging limitations and promoting nuanced thinking about AI safety, but also contains notable biases across multiple dimensions.\n\nThe content exhibits perspective bias through its framing of AI safety primarily within a Western tech-centric paradigm, with limited consideration of global and diverse viewpoints. The author predominantly references Western technological frameworks and engineering concepts without acknowledging potential cultural variations in approaches to safety and reliability.\n\nRepresentational bias appears in the limited stakeholder perspectives considered, focusing primarily on technical experts while underrepresenting potential input from affected communities, policymakers, or ethicists. The document also shows methodological bias in its limited citation diversity and reliance on a narrow set of conceptual frameworks.\n\nLanguage bias is relatively minimal, though some terminology assumes shared understanding of technical concepts. The document would benefit from more diverse perspectives, explicit acknowledgment of its limitations, and consideration of how \"Strongly Bounded AI\" might be interpreted across different cultural and socioeconomic contexts.",
-      "comments": {
-        "1": {
-          "title": "Western-centric technological framing",
-          "description": "The document primarily frames AI safety through Western technological paradigms and engineering cultures, without acknowledging diverse global perspectives on safety, reliability, and technological governance that might exist in other regions or traditions.",
-          "highlight": {
-            "startOffset": 1711,
-            "endOffset": 2124,
-            "prefix": "## **Engineering Culture and Established Patterns**\n\n"
-          }
-        },
-        "2": {
-          "title": "Limited stakeholder representation",
-          "description": "The discussion of AI applications focuses on technical and organizational benefits without adequately addressing impacts on or perspectives from diverse affected communities, revealing a representation bias toward technical expert viewpoints.",
-          "highlight": {
-            "startOffset": 3445,
-            "endOffset": 3784,
-            "prefix": "What could \"Strongly Bounded AIs\" do? In my view:"
-          }
-        },
-        "3": {
-          "title": "Insufficient citation diversity",
-          "description": "The document references only a few sources (Drexler, Davidad) and frameworks, demonstrating methodological bias through limited engagement with the broader landscape of AI safety research, particularly from diverse or non-Western scholars.",
-          "highlight": {
-            "startOffset": 1216,
-            "endOffset": 1460,
-            "prefix": "We also have the fields of \""
-          }
-        },
-        "4": {
-          "title": "Assumption of shared technical understanding",
-          "description": "The text assumes reader familiarity with technical concepts like \"alignment,\" \"frontier AI,\" and engineering reliability paradigms, potentially excluding non-technical stakeholders from fully engaging with the proposed framework.",
-          "highlight": {
-            "startOffset": 1461,
-            "endOffset": 1710,
-            "prefix": "A \"Bounded\" AI is also arguably different from an "
-          }
-        },
-        "5": {
-          "title": "Narrow framing of AI risks",
-          "description": "The document primarily focuses on catastrophic/takeover risks while giving less attention to other important concerns like privacy violations, discrimination, labor displacement, or environmental impacts, revealing perspective bias in risk assessment.",
-          "highlight": {
-            "startOffset": 2780,
-            "endOffset": 2982,
-            "prefix": "My strong expectation is that a tremendous amount"
-          }
-        },
-        "6": {
-          "title": "Overconfidence in technical solutions",
-          "description": "The author expresses high confidence that technical approaches to boundedness can solve safety problems, potentially underestimating socio-political and governance dimensions of AI safety, revealing a structural bias toward technical solutionism.",
-          "highlight": {
-            "startOffset": 2983,
-            "endOffset": 3312,
-            "prefix": "I believe the real AI takeover threat comes from"
-          }
-        },
-        "7": {
-          "title": "Balanced acknowledgment of limitations",
-          "description": "The author positively acknowledges the exploratory nature of the concept and potential for existing work they're unaware of, demonstrating epistemic modesty that partially counterbalances other biases in the document.",
-          "highlight": {
-            "startOffset": 233,
-            "endOffset": 479,
-            "prefix": "**Epistemic status: Exploratory concept with "
-          }
-        },
-        "8": {
-          "title": "Consideration of counterarguments",
-          "description": "The document addresses potential objections to its framework in the \"Addressing Common Questions\" section, showing a commendable attempt at perspective balance, though the responses remain within the author's paradigm.",
-          "highlight": {
-            "startOffset": 3785,
-            "endOffset": 3834,
-            "prefix": "## **Addressing Common Questions**\n\n"
-          }
-        },
-        "9": {
-          "title": "Lack of intersectional considerations",
-          "description": "The document does not address how AI boundedness might differently impact or be interpreted by diverse communities across dimensions like geography, socioeconomic status, disability, or cultural context, revealing representation bias.",
-          "highlight": {
-            "startOffset": 4376,
-            "endOffset": 4692,
-            "prefix": "**\"Won't this term become meaningless marketing?\""
-          }
-        },
-        "10": {
-          "title": "Transparency about draft status",
-          "description": "The author clearly labels the document as a draft and acknowledges the need for updates based on newly discovered information, showing intellectual honesty that mitigates potential concerns about presenting tentative ideas as established facts.",
-          "highlight": {
-            "startOffset": 42,
-            "endOffset": 232,
-            "prefix": "**Ozzie Gooen \\- April 14 2025, Draft. Quic"
+            "startOffset": 4070,
+            "endOffset": 4328,
+            "prefix": "**\"Isn't opposing frontier AI while suppo"
           }
         }
       }

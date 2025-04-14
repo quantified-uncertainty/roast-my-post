@@ -64,6 +64,27 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         </div>
       </div>
 
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-xl font-semibold mb-4">Primary Instructions</h2>
+        <div className="whitespace-pre-wrap mb-8">
+          {agent.genericInstructions}
+        </div>
+      </div>
+
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-xl font-semibold mb-4">Summary Instructions</h2>
+        <div className="whitespace-pre-wrap mb-8">
+          {agent.summaryInstructions}
+        </div>
+      </div>
+
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-xl font-semibold mb-4">Comment Instructions</h2>
+        <div className="whitespace-pre-wrap mb-8">
+          {agent.commentInstructions}
+        </div>
+      </div>
+
       <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
         <h2 className="text-xl font-semibold mb-4">How to Use</h2>
         <p className="mb-4">

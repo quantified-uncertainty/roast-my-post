@@ -353,7 +353,7 @@ export function DocumentWithEvaluations({
           </div>
 
           {/* Analysis section */}
-          {activeReview.analysis && (
+          {activeReview.summary && (
             <div className="bg-white rounded-lg shadow-sm">
               <div
                 className="px-4 py-1.5 flex items-center justify-between cursor-pointer select-none hover:bg-gray-50"
@@ -374,7 +374,7 @@ export function DocumentWithEvaluations({
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
                   >
-                    {activeReview.analysis}
+                    {activeReview.summary}
                   </ReactMarkdown>
                 ) : (
                   <div className="line-clamp-3">
@@ -382,7 +382,7 @@ export function DocumentWithEvaluations({
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
                     >
-                      {activeReview.analysis}
+                      {activeReview.summary}
                     </ReactMarkdown>
                   </div>
                 )}

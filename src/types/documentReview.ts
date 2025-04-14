@@ -11,10 +11,10 @@ export interface Comment {
 }
 
 export interface DocumentReview {
-  comments: Record<string, Comment>; // Keys can be numeric strings like "1", "2", etc.
-  agentId: string; // Reference to the evaluationAgent that created this review
-  analysis?: string;
+  agentId: string;
   costInCents: number;
   createdAt: Date;
   runDetails?: string;
+  summary?: string;
+  comments: Record<string, Comment>;
 }

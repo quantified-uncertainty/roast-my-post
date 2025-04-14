@@ -22,7 +22,7 @@ import {
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
-  analysis: string;
+  summary: string;
   comments: Record<string, Comment>;
 }
 
@@ -44,8 +44,8 @@ export async function loadAgentInfo(agentId: string) {
 }
 
 export function validateLLMResponse(review: LLMReview, content: string) {
-  if (!review.analysis || typeof review.analysis !== "string") {
-    throw new Error("Invalid or missing analysis field");
+  if (!review.summary || typeof review.summary !== "string") {
+    throw new Error("Invalid or missing summary field");
   }
   if (!review.comments || typeof review.comments !== "object") {
     throw new Error("Invalid or missing comments field");
@@ -112,7 +112,7 @@ export async function analyzeDocument(
   review: DocumentReview;
   usage: any;
   llmResponse: string;
-  prompt: string;
+  finalPrompt: string;
   agentContext: string;
 }> {
   // Load agent information
@@ -121,8 +121,8 @@ export async function analyzeDocument(
     ? `
 You are ${agentInfo.name} (${agentInfo.description}).
 
-Your primary prompt is:
-${agentInfo.prompt}
+Your primary instructions are:
+${agentInfo.genericInstructions}
 
 Your specific capabilities include:
 ${agentInfo.capabilities.map((cap: string) => `- ${cap}`).join("\n")}
@@ -132,6 +132,12 @@ ${agentInfo.use_cases.map((use: string) => `- ${use}`).join("\n")}
 
 Your limitations to be aware of:
 ${agentInfo.limitations.map((lim: string) => `- ${lim}`).join("\n")}
+
+Your summary instructions are:
+${agentInfo.summaryInstructions}
+
+Your comment instructions are:
+${agentInfo.commentInstructions}
 `
     : "";
 
@@ -155,20 +161,20 @@ ${agentInfo.limitations.map((lim: string) => `- ${lim}`).join("\n")}
     }`
   ).join(",");
 
-  const prompt = `
+  const finalPrompt = `
 ${agentContext}
 
 Given the following Markdown document, output a single evaluation in JSON like this:
 
 {
-  "analysis": "[~${targetWordCount} words of useful information, related to your primary prompt. 
+  "summary": "[~${targetWordCount} words of useful information, related to your primary instructions. 
 
 IMPORTANT: The evaluation must be properly escaped for JSON. This means:
-- Replace all newlines with \\n
+- Replace all newlines within a paragraph with \\n
 - Escape all double quotes with \\"
-- Do not use markdown formatting (no #, *, -, etc.)
-- Do not include links or special characters
-- Use plain text only
+- Use markdown formatting (especially **bold**, *italics*, and [links](...) for key terminology) where appropriate.
+- Separate distinct ideas or topics into paragraphs (using \\n\\n between paragraphs).
+- Use plain text for the main content.
 ]",
   "comments": {
     ${commentTemplate}
@@ -196,7 +202,7 @@ ${content}
   const startTime = Date.now();
   const completion = await openai.chat.completions.create({
     model: MODEL,
-    messages: [{ role: "user", content: prompt }],
+    messages: [{ role: "user", content: finalPrompt }],
     temperature: DEFAULT_TEMPERATURE,
   });
   const runtimeMs = Date.now() - startTime;
@@ -251,10 +257,10 @@ ${content}
   }
 
   // Transform LLMReview into DocumentReview
-  const documentReview: DocumentReview = {
+  const review: DocumentReview = {
     agentId,
-    costInCents: usage ? Math.ceil(usage.total_tokens * 0.01) : 0, // 0.01 cents per token, or default to 0
-    createdAt: new Date(new Date().toISOString().split("T")[0]),
+    costInCents: Math.round(usage?.total_tokens || 0),
+    createdAt: new Date(),
     runDetails: usage
       ? JSON.stringify({
           model: MODEL,
@@ -265,14 +271,15 @@ ${content}
           runtimeMs,
         })
       : undefined,
-    ...parsedLLMReview,
+    summary: parsedLLMReview.summary,
+    comments: parsedLLMReview.comments,
   };
 
   return {
-    review: documentReview,
+    review,
     usage,
     llmResponse,
-    prompt,
+    finalPrompt,
     agentContext,
   };
 }
