@@ -1,6 +1,9 @@
 // --- Test File: src/utils/highlightUtils.test.ts ---
 
-import type { Comment } from '../types/documentReview';
+import type {
+  Comment,
+  DocumentReview,
+} from '../types/documentReview';
 import type {
   CalculatedHighlight,
   RawLLMHighlight,
@@ -8,7 +11,11 @@ import type {
 // Import the types and the functions to test
 import {
   calculateHighlightOffsets,
+  fixOverlappingHighlights,
+  highlightsOverlap,
   processRawComments,
+  validateAndFixDocumentReview,
+  validateHighlights,
 } from './highlightUtils.js';
 
 describe("calculateHighlightOffsets", () => {
@@ -322,5 +329,276 @@ describe("processRawComments", () => {
 
   test("should return empty object if rawComments input is empty", () => {
     expect(processRawComments(sampleContent, {})).toEqual({});
+  });
+});
+
+describe("highlightsOverlap", () => {
+  test("should detect when highlights start within each other", () => {
+    // First highlight: 10-20, Second highlight: 15-30
+    expect(
+      highlightsOverlap(
+        { startOffset: 10, endOffset: 20, quotedText: "test" },
+        { startOffset: 15, endOffset: 30, quotedText: "test" }
+      )
+    ).toBe(true);
+
+    // First highlight: 15-30, Second highlight: 10-20
+    expect(
+      highlightsOverlap(
+        { startOffset: 15, endOffset: 30, quotedText: "test" },
+        { startOffset: 10, endOffset: 20, quotedText: "test" }
+      )
+    ).toBe(true);
+  });
+
+  test("should detect when one highlight contains another", () => {
+    // First contains second
+    expect(
+      highlightsOverlap(
+        { startOffset: 10, endOffset: 30, quotedText: "test" },
+        { startOffset: 15, endOffset: 25, quotedText: "test" }
+      )
+    ).toBe(true);
+
+    // Second contains first
+    expect(
+      highlightsOverlap(
+        { startOffset: 15, endOffset: 25, quotedText: "test" },
+        { startOffset: 10, endOffset: 30, quotedText: "test" }
+      )
+    ).toBe(true);
+  });
+
+  test("should return false when highlights do not overlap", () => {
+    // Sequential highlights
+    expect(
+      highlightsOverlap(
+        { startOffset: 10, endOffset: 20, quotedText: "test" },
+        { startOffset: 20, endOffset: 30, quotedText: "test" }
+      )
+    ).toBe(false);
+
+    // Separated highlights
+    expect(
+      highlightsOverlap(
+        { startOffset: 10, endOffset: 20, quotedText: "test" },
+        { startOffset: 30, endOffset: 40, quotedText: "test" }
+      )
+    ).toBe(false);
+  });
+});
+
+describe("validateHighlights", () => {
+  test("should return valid=true for non-overlapping highlights", () => {
+    const review: DocumentReview = {
+      agentId: "test-agent",
+      costInCents: 100,
+      createdAt: new Date(),
+      comments: {
+        "1": {
+          title: "Comment 1",
+          description: "Description 1",
+          highlight: { startOffset: 10, endOffset: 20, quotedText: "text 1" },
+        },
+        "2": {
+          title: "Comment 2",
+          description: "Description 2",
+          highlight: { startOffset: 30, endOffset: 40, quotedText: "text 2" },
+        },
+      },
+    };
+
+    const result = validateHighlights(review);
+    expect(result.valid).toBe(true);
+    expect(result.errors.length).toBe(0);
+  });
+
+  test("should return valid=false with error messages for overlapping highlights", () => {
+    const review: DocumentReview = {
+      agentId: "test-agent",
+      costInCents: 100,
+      createdAt: new Date(),
+      comments: {
+        "1": {
+          title: "Comment 1",
+          description: "Description 1",
+          highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
+        },
+        "2": {
+          title: "Comment 2",
+          description: "Description 2",
+          highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
+        },
+      },
+    };
+
+    const result = validateHighlights(review);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBe(1);
+    expect(result.errors[0]).toContain(
+      "Highlight for comment 1 overlaps with highlight for comment 2"
+    );
+  });
+
+  test("should detect multiple overlapping highlights", () => {
+    const review: DocumentReview = {
+      agentId: "test-agent",
+      costInCents: 100,
+      createdAt: new Date(),
+      comments: {
+        "1": {
+          title: "Comment 1",
+          description: "Description 1",
+          highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
+        },
+        "2": {
+          title: "Comment 2",
+          description: "Description 2",
+          highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
+        },
+        "3": {
+          title: "Comment 3",
+          description: "Description 3",
+          highlight: { startOffset: 25, endOffset: 35, quotedText: "text 3" },
+        },
+      },
+    };
+
+    const result = validateHighlights(review);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBe(3); // All three highlights overlap with each other
+  });
+});
+
+describe("fixOverlappingHighlights", () => {
+  test("should fix highlights that start inside another highlight", () => {
+    const comments: Record<string, Comment> = {
+      "1": {
+        title: "Comment 1",
+        description: "Description 1",
+        highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
+      },
+      "2": {
+        title: "Comment 2",
+        description: "Description 2",
+        highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
+      },
+    };
+
+    const fixed = fixOverlappingHighlights(comments);
+
+    // Comment 1 should be unchanged as it starts first
+    expect(fixed["1"].highlight.startOffset).toBe(10);
+    expect(fixed["1"].highlight.endOffset).toBe(30);
+
+    // Comment 2 should be adjusted to start after comment 1 ends
+    expect(fixed["2"].highlight.startOffset).toBe(30);
+    expect(fixed["2"].highlight.endOffset).toBe(40);
+  });
+
+  test("should fix highlights when one contains another", () => {
+    const comments: Record<string, Comment> = {
+      "1": {
+        title: "Comment 1",
+        description: "Description 1",
+        highlight: { startOffset: 10, endOffset: 50, quotedText: "text 1" },
+      },
+      "2": {
+        title: "Comment 2",
+        description: "Description 2",
+        highlight: { startOffset: 20, endOffset: 30, quotedText: "text 2" },
+      },
+    };
+
+    const fixed = fixOverlappingHighlights(comments);
+
+    // Comment 1 should be unchanged as it starts first
+    expect(fixed["1"].highlight.startOffset).toBe(10);
+    expect(fixed["1"].highlight.endOffset).toBe(50);
+
+    // Comment 2 should not be included as it's completely inside comment 1
+    expect(fixed["2"]).toBeUndefined();
+  });
+
+  test("should handle complex overlapping scenarios with multiple highlights", () => {
+    const comments: Record<string, Comment> = {
+      "1": {
+        title: "Comment 1",
+        description: "Description 1",
+        highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
+      },
+      "2": {
+        title: "Comment 2",
+        description: "Description 2",
+        highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
+      },
+      "3": {
+        title: "Comment 3",
+        description: "Description 3",
+        highlight: { startOffset: 35, endOffset: 50, quotedText: "text 3" },
+      },
+      "4": {
+        title: "Comment 4",
+        description: "Description 4",
+        highlight: { startOffset: 60, endOffset: 70, quotedText: "text 4" },
+      },
+    };
+
+    const fixed = fixOverlappingHighlights(comments);
+
+    // Comment 1 should be unchanged (first)
+    expect(fixed["1"].highlight.startOffset).toBe(10);
+    expect(fixed["1"].highlight.endOffset).toBe(30);
+
+    // Comment 2 should be adjusted to start after comment 1
+    expect(fixed["2"].highlight.startOffset).toBe(30);
+    expect(fixed["2"].highlight.endOffset).toBe(40);
+
+    // Comment 3 should be adjusted to start after comment 2 ends
+    // It originally started at 35 which overlaps with comment 2's adjusted range of 30-40
+    expect(fixed["3"].highlight.startOffset).toBe(40);
+    expect(fixed["3"].highlight.endOffset).toBe(50);
+
+    // Comment 4 should remain unchanged as it doesn't overlap with anything
+    expect(fixed["4"].highlight.startOffset).toBe(60);
+    expect(fixed["4"].highlight.endOffset).toBe(70);
+  });
+});
+
+describe("validateAndFixDocumentReview", () => {
+  test("should fix overlapping highlights in a document review", () => {
+    const review: DocumentReview = {
+      agentId: "test-agent",
+      costInCents: 100,
+      createdAt: new Date(),
+      comments: {
+        "1": {
+          title: "Comment 1",
+          description: "Description 1",
+          highlight: { startOffset: 10, endOffset: 30, quotedText: "text 1" },
+        },
+        "2": {
+          title: "Comment 2",
+          description: "Description 2",
+          highlight: { startOffset: 20, endOffset: 40, quotedText: "text 2" },
+        },
+      },
+    };
+
+    const fixed = validateAndFixDocumentReview(review);
+
+    // Original review should be unchanged
+    expect(review.comments["1"].highlight.startOffset).toBe(10);
+    expect(review.comments["2"].highlight.startOffset).toBe(20);
+
+    // Fixed review should have adjusted comment 2
+    expect(fixed.comments["1"].highlight.startOffset).toBe(10);
+    expect(fixed.comments["1"].highlight.endOffset).toBe(30);
+    expect(fixed.comments["2"].highlight.startOffset).toBe(30);
+    expect(fixed.comments["2"].highlight.endOffset).toBe(40);
+
+    // Validate the fixed review should pass
+    const validation = validateHighlights(fixed);
+    expect(validation.valid).toBe(true);
   });
 });
