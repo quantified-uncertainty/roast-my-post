@@ -21,6 +21,12 @@ export interface CalculatedHighlight {
   quotedText: string; // Store the verified quote
 }
 
+export interface TextNodePosition {
+  node: Text;
+  start: number;
+  end: number;
+}
+
 /**
  * Checks if two highlights overlap
  * @param a First highlight
@@ -332,4 +338,343 @@ export function processRawComments(
   }
 
   return finalComments;
+}
+
+/**
+ * Calculates the positions of all text nodes in a container element.
+ * This is a pure function that takes a container element and returns an array
+ * of text node positions with their start and end offsets in the document.
+ */
+export function calculateTextNodePositions(
+  container: HTMLElement
+): TextNodePosition[] {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+
+  // Collect all text nodes
+  while (walker.nextNode()) {
+    const node = walker.currentNode as Text;
+    textNodes.push(node);
+  }
+
+  // Calculate positions
+  let offset = 0;
+  return textNodes.map((node) => {
+    const start = offset;
+    const length = node.nodeValue?.length || 0;
+    offset += length;
+    return { node, start, end: start + length };
+  });
+}
+
+/**
+ * Creates a highlight span element with the appropriate styling and attributes
+ */
+export function createHighlightSpan(
+  tag: string,
+  color: string,
+  isFirstSpan: boolean = false
+): HTMLSpanElement {
+  const span = document.createElement("span");
+  span.className = `bg-${color} rounded cursor-pointer hover:bg-opacity-80`;
+  span.dataset.highlightTag = tag;
+  span.dataset.tag = tag;
+
+  // Add ID for the first span to enable scrolling
+  if (isFirstSpan) {
+    span.id = `highlight-${tag}`;
+  }
+
+  return span;
+}
+
+/**
+ * Applies a highlight to a start node, where the highlight begins somewhere in the middle of the node
+ */
+export function applyHighlightToStartNode(
+  node: Text,
+  startOffset: number,
+  nodeStart: number,
+  nodeEnd: number,
+  tag: string,
+  color: string
+): HTMLSpanElement | null {
+  const range = document.createRange();
+  const localStartOffset = startOffset - nodeStart;
+  range.setStart(node, localStartOffset);
+  range.setEnd(node, nodeEnd - nodeStart);
+
+  if (range.collapsed || range.toString().length === 0) {
+    return null;
+  }
+
+  const textContent = node.textContent || "";
+  const beforeText = textContent.substring(0, localStartOffset);
+  const highlightText = textContent.substring(localStartOffset);
+
+  // Replace the text node with before + highlighted content
+  const beforeTextNode = document.createTextNode(beforeText);
+  node.parentNode?.insertBefore(beforeTextNode, node);
+
+  // Create and insert the highlight span
+  const span = createHighlightSpan(tag, color, true);
+  span.textContent = highlightText;
+  node.parentNode?.insertBefore(span, node);
+
+  // Remove the original node
+  node.parentNode?.removeChild(node);
+
+  return span;
+}
+
+/**
+ * Applies a highlight to an end node, where the highlight ends somewhere in the middle of the node
+ */
+export function applyHighlightToEndNode(
+  node: Text,
+  endOffset: number,
+  nodeStart: number,
+  tag: string,
+  color: string
+): HTMLSpanElement | null {
+  const range = document.createRange();
+  const localEndOffset = endOffset - nodeStart;
+  range.setStart(node, 0);
+  range.setEnd(node, localEndOffset);
+
+  if (range.collapsed || range.toString().length === 0) {
+    return null;
+  }
+
+  const textContent = node.textContent || "";
+  const highlightText = textContent.substring(0, localEndOffset);
+  const afterText = textContent.substring(localEndOffset);
+
+  // Create and insert the highlight span
+  const span = createHighlightSpan(tag, color);
+  span.textContent = highlightText;
+  node.parentNode?.insertBefore(span, node);
+
+  // Insert the after text
+  const afterTextNode = document.createTextNode(afterText);
+  node.parentNode?.insertBefore(afterTextNode, node);
+
+  // Remove the original node
+  node.parentNode?.removeChild(node);
+
+  return span;
+}
+
+/**
+ * Applies a highlight to a middle node, where the entire node is within the highlight range
+ */
+export function applyHighlightToMiddleNode(
+  node: Text,
+  tag: string,
+  color: string
+): HTMLSpanElement | null {
+  if (!node.textContent) {
+    return null;
+  }
+
+  const span = createHighlightSpan(tag, color);
+  span.textContent = node.textContent;
+  node.parentNode?.insertBefore(span, node);
+  node.parentNode?.removeChild(node);
+
+  return span;
+}
+
+/**
+ * Removes all highlight spans from a container, restoring the original text content
+ * @param container The HTML element containing highlights
+ * @returns void
+ */
+export function cleanupHighlights(container: HTMLElement): void {
+  const highlights = container.querySelectorAll("[data-highlight-tag]");
+
+  highlights.forEach((span) => {
+    const parent = span.parentNode;
+    if (!parent) return;
+
+    // Move all children of the span before the span itself
+    while (span.firstChild) {
+      parent.insertBefore(span.firstChild, span);
+    }
+
+    // Remove the empty span
+    parent.removeChild(span);
+  });
+}
+
+/**
+ * Finds and applies highlights to all text nodes between a start and end node
+ */
+export function applyHighlightBetweenNodes(
+  container: HTMLElement,
+  positions: TextNodePosition[],
+  startNode: TextNodePosition,
+  endNode: TextNodePosition,
+  startOffset: number,
+  endOffset: number,
+  tag: string,
+  color: string
+): HTMLSpanElement[] {
+  const highlightedNodes: HTMLSpanElement[] = [];
+
+  // If start and end nodes are the same, we can use a simpler approach
+  if (startNode.node === endNode.node) {
+    // Extract the text to highlight
+    const text = startNode.node.textContent || "";
+    const beforeText = text.substring(0, startOffset - startNode.start);
+    const highlightText = text.substring(
+      startOffset - startNode.start,
+      endOffset - startNode.start
+    );
+    const afterText = text.substring(endOffset - startNode.start);
+
+    // Create text nodes and highlight span
+    const beforeNode = document.createTextNode(beforeText);
+    const span = createHighlightSpan(tag, color, true);
+    span.textContent = highlightText;
+    const afterNode = document.createTextNode(afterText);
+
+    // Replace the original node with these three nodes
+    const parent = startNode.node.parentNode;
+    if (parent) {
+      parent.insertBefore(beforeNode, startNode.node);
+      parent.insertBefore(span, startNode.node);
+      parent.insertBefore(afterNode, startNode.node);
+      parent.removeChild(startNode.node);
+      highlightedNodes.push(span);
+    }
+
+    return highlightedNodes;
+  }
+
+  // For multi-node highlights, use the original more complex approach
+  let insideHighlight = false;
+
+  // Create a tree walker to iterate through text nodes
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+
+  while (walker.nextNode()) {
+    const currentNode = walker.currentNode as Text;
+
+    // Check if we've reached the start node
+    if (currentNode === startNode.node) {
+      insideHighlight = true;
+    }
+
+    // Process node if we're inside the highlight range
+    if (insideHighlight) {
+      const nodePosition = positions.find((p) => p.node === currentNode);
+      if (!nodePosition) continue;
+
+      let span: HTMLSpanElement | null = null;
+
+      // This is the start node
+      if (currentNode === startNode.node) {
+        span = applyHighlightToStartNode(
+          currentNode,
+          startOffset,
+          nodePosition.start,
+          nodePosition.end,
+          tag,
+          color
+        );
+      }
+      // This is the end node
+      else if (currentNode === endNode.node) {
+        span = applyHighlightToEndNode(
+          currentNode,
+          endOffset,
+          nodePosition.start,
+          tag,
+          color
+        );
+
+        // We've processed the end node, exit the loop
+        if (span) {
+          insideHighlight = false;
+          highlightedNodes.push(span);
+        }
+      }
+      // This is a node completely inside the highlight range
+      else {
+        span = applyHighlightToMiddleNode(currentNode, tag, color);
+      }
+
+      if (span) {
+        highlightedNodes.push(span);
+      }
+    }
+
+    // Exit if we're done with the highlight
+    if (currentNode === endNode.node) {
+      break;
+    }
+  }
+
+  return highlightedNodes;
+}
+
+/**
+ * Applies all highlights to a container element
+ */
+export function applyHighlightsToContainer(
+  container: HTMLElement,
+  highlights: Comment[],
+  highlightColors: Record<string, string>
+): void {
+  // Clean up any existing highlights
+  cleanupHighlights(container);
+
+  // If no highlights to apply, we're done
+  if (!highlights || highlights.length === 0) {
+    return;
+  }
+
+  // Get a snapshot of the original text content
+  // This ensures our position calculations remain correct
+  const originalContent = container.textContent || "";
+
+  // Calculate positions of all text nodes
+  let positions = calculateTextNodePositions(container);
+
+  // Apply each highlight one at a time
+  for (let i = 0; i < highlights.length; i++) {
+    const highlight = highlights[i];
+    const tag = i.toString(); // Use array index as tag
+    const color = highlightColors[tag] || "yellow-100";
+    const { startOffset, endOffset } = highlight.highlight;
+
+    const startNode = positions.find(
+      (p) => p.start <= startOffset && p.end > startOffset
+    );
+    const endNode = positions.find(
+      (p) => p.start < endOffset && p.end >= endOffset
+    );
+
+    if (!startNode || !endNode) continue;
+
+    try {
+      applyHighlightBetweenNodes(
+        container,
+        positions,
+        startNode,
+        endNode,
+        startOffset,
+        endOffset,
+        tag,
+        color
+      );
+
+      // Recalculate positions after each highlight is applied
+      // This ensures accurate position tracking for subsequent highlights
+      positions = calculateTextNodePositions(container);
+    } catch (err) {
+      console.error(`Error applying highlight ${tag}:`, err);
+    }
+  }
 }

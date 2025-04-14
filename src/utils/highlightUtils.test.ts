@@ -10,7 +10,15 @@ import type {
 } from './highlightUtils.js';
 // Import the types and the functions to test
 import {
+  applyHighlightBetweenNodes,
+  applyHighlightsToContainer,
+  applyHighlightToEndNode,
+  applyHighlightToMiddleNode,
+  applyHighlightToStartNode,
   calculateHighlightOffsets,
+  calculateTextNodePositions,
+  cleanupHighlights,
+  createHighlightSpan,
   fixOverlappingHighlights,
   highlightsOverlap,
   processRawComments,
@@ -643,5 +651,437 @@ describe("validateAndFixDocumentReview", () => {
     // Validate the fixed review should pass
     const validation = validateHighlights(fixed);
     expect(validation.valid).toBe(true);
+  });
+});
+
+describe("calculateTextNodePositions", () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    // Create a test container
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    // Clean up
+    document.body.removeChild(container);
+  });
+
+  test("should handle empty container", () => {
+    const positions = calculateTextNodePositions(container);
+    expect(positions).toEqual([]);
+  });
+
+  test("should calculate positions for single text node", () => {
+    container.textContent = "Hello World";
+    const positions = calculateTextNodePositions(container);
+
+    expect(positions).toHaveLength(1);
+    expect(positions[0].start).toBe(0);
+    expect(positions[0].end).toBe(11);
+    expect(positions[0].node.textContent).toBe("Hello World");
+  });
+
+  test("should calculate positions for multiple text nodes", () => {
+    container.innerHTML = "First <span>Second</span> Third";
+    const positions = calculateTextNodePositions(container);
+
+    expect(positions).toHaveLength(3);
+    expect(positions[0].start).toBe(0);
+    expect(positions[0].end).toBe(6); // "First " is 6 characters
+    expect(positions[0].node.textContent).toBe("First ");
+
+    expect(positions[1].start).toBe(6);
+    expect(positions[1].end).toBe(12); // "Second" is 6 characters
+    expect(positions[1].node.textContent).toBe("Second");
+
+    expect(positions[2].start).toBe(12);
+    expect(positions[2].end).toBe(18); // " Third" is 6 characters
+    expect(positions[2].node.textContent).toBe(" Third");
+  });
+
+  test("should handle nested elements", () => {
+    container.innerHTML = "Outer <div>Inner <span>Text</span></div> End";
+    const positions = calculateTextNodePositions(container);
+
+    expect(positions).toHaveLength(4);
+    expect(positions[0].start).toBe(0);
+    expect(positions[0].end).toBe(6);
+    expect(positions[0].node.textContent).toBe("Outer ");
+
+    expect(positions[1].start).toBe(6);
+    expect(positions[1].end).toBe(12);
+    expect(positions[1].node.textContent).toBe("Inner ");
+
+    expect(positions[2].start).toBe(12);
+    expect(positions[2].end).toBe(16);
+    expect(positions[2].node.textContent).toBe("Text");
+
+    expect(positions[3].start).toBe(16);
+    expect(positions[3].end).toBe(20);
+    expect(positions[3].node.textContent).toBe(" End");
+  });
+
+  test("should handle empty text nodes", () => {
+    container.innerHTML = "First<span></span>Second";
+    const positions = calculateTextNodePositions(container);
+
+    expect(positions).toHaveLength(2);
+    expect(positions[0].start).toBe(0);
+    expect(positions[0].end).toBe(5);
+    expect(positions[0].node.textContent).toBe("First");
+
+    expect(positions[1].start).toBe(5);
+    expect(positions[1].end).toBe(11);
+    expect(positions[1].node.textContent).toBe("Second");
+  });
+});
+
+describe("createHighlightSpan", () => {
+  test("should create a span with correct attributes", () => {
+    const span = createHighlightSpan("42", "red-200");
+
+    expect(span.tagName).toBe("SPAN");
+    expect(span.className).toBe(
+      "bg-red-200 rounded cursor-pointer hover:bg-opacity-80"
+    );
+    expect(span.dataset.highlightTag).toBe("42");
+    expect(span.dataset.tag).toBe("42");
+    expect(span.id).toBe(""); // No id by default
+  });
+
+  test("should set id when isFirstSpan is true", () => {
+    const span = createHighlightSpan("42", "red-200", true);
+
+    expect(span.id).toBe("highlight-42");
+  });
+});
+
+describe("applyHighlightToStartNode", () => {
+  let container: HTMLElement;
+  let textNode: Text;
+
+  beforeEach(() => {
+    // Create a test container with a text node
+    container = document.createElement("div");
+    textNode = document.createTextNode("This is a test text");
+    container.appendChild(textNode);
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should correctly highlight the latter part of a text node", () => {
+    // Highlight "test text" part of "This is a test text"
+    const nodeStart = 0;
+    const nodeEnd = 19; // Length of entire text
+    const highlightStart = 10; // Start at 't' in "test"
+
+    const span = applyHighlightToStartNode(
+      textNode,
+      highlightStart,
+      nodeStart,
+      nodeEnd,
+      "1",
+      "yellow-100"
+    );
+
+    // Should now have two nodes: "This is a " and a span with "test text"
+    expect(container.childNodes.length).toBe(2);
+    expect(container.childNodes[0].textContent).toBe("This is a ");
+    expect(container.childNodes[1].textContent).toBe("test text");
+    expect((container.childNodes[1] as HTMLElement).tagName).toBe("SPAN");
+    expect(span).toBe(container.childNodes[1]);
+    expect(span?.id).toBe("highlight-1");
+  });
+
+  test("should return null for empty or collapsed ranges", () => {
+    const nodeStart = 0;
+    const nodeEnd = 19;
+    const sameOffset = 5;
+
+    const span = applyHighlightToStartNode(
+      textNode,
+      sameOffset,
+      nodeStart,
+      sameOffset, // Same as start, making a collapsed range
+      "1",
+      "yellow-100"
+    );
+
+    // Should be unchanged
+    expect(span).toBeNull();
+    expect(container.childNodes.length).toBe(1);
+    expect(container.childNodes[0]).toBe(textNode);
+  });
+});
+
+describe("applyHighlightToEndNode", () => {
+  let container: HTMLElement;
+  let textNode: Text;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    textNode = document.createTextNode("This is a test text");
+    container.appendChild(textNode);
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should correctly highlight the beginning part of a text node", () => {
+    // Highlight "This is" part of "This is a test text"
+    const nodeStart = 0;
+    const highlightEnd = 7; // End after "This is"
+
+    const span = applyHighlightToEndNode(
+      textNode,
+      highlightEnd,
+      nodeStart,
+      "1",
+      "yellow-100"
+    );
+
+    // Should now have two nodes: span with "This is" and " a test text"
+    expect(container.childNodes.length).toBe(2);
+    expect(container.childNodes[0].textContent).toBe("This is");
+    expect(container.childNodes[1].textContent).toBe(" a test text");
+    expect((container.childNodes[0] as HTMLElement).tagName).toBe("SPAN");
+    expect(span).toBe(container.childNodes[0]);
+  });
+
+  test("should return null for empty ranges", () => {
+    const nodeStart = 0;
+    const highlightEnd = 0; // Empty range
+
+    const span = applyHighlightToEndNode(
+      textNode,
+      highlightEnd,
+      nodeStart,
+      "1",
+      "yellow-100"
+    );
+
+    // Should be unchanged
+    expect(span).toBeNull();
+    expect(container.childNodes.length).toBe(1);
+    expect(container.childNodes[0]).toBe(textNode);
+  });
+});
+
+describe("applyHighlightToMiddleNode", () => {
+  let container: HTMLElement;
+  let textNode: Text;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    textNode = document.createTextNode("Middle node");
+    container.appendChild(textNode);
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should replace a text node with a highlighted span", () => {
+    const span = applyHighlightToMiddleNode(textNode, "1", "yellow-100");
+
+    // Should now have one span node containing the original text
+    expect(container.childNodes.length).toBe(1);
+    expect(container.childNodes[0].textContent).toBe("Middle node");
+    expect((container.childNodes[0] as HTMLElement).tagName).toBe("SPAN");
+    expect(span).toBe(container.childNodes[0]);
+  });
+
+  test("should return null for empty text nodes", () => {
+    const emptyNode = document.createTextNode("");
+    container.appendChild(emptyNode);
+
+    const span = applyHighlightToMiddleNode(emptyNode, "1", "yellow-100");
+
+    // Should return null for the empty node
+    expect(span).toBeNull();
+  });
+});
+
+describe("cleanupHighlights", () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should remove highlight spans and restore original text", () => {
+    // Create a container with highlighted text
+    container.innerHTML =
+      'This is <span data-highlight-tag="0" class="bg-yellow-100">highlighted</span> text';
+
+    expect(container.querySelectorAll("[data-highlight-tag]").length).toBe(1);
+
+    cleanupHighlights(container);
+
+    // Should now be just plain text
+    expect(container.innerHTML).toBe("This is highlighted text");
+    expect(container.querySelectorAll("[data-highlight-tag]").length).toBe(0);
+  });
+
+  test("should handle multiple nested highlight spans", () => {
+    container.innerHTML =
+      'Start <span data-highlight-tag="0">first <span data-highlight-tag="1">nested</span> highlight</span> end';
+
+    expect(container.querySelectorAll("[data-highlight-tag]").length).toBe(2);
+
+    cleanupHighlights(container);
+
+    expect(container.innerHTML).toBe("Start first nested highlight end");
+    expect(container.querySelectorAll("[data-highlight-tag]").length).toBe(0);
+  });
+
+  test("should do nothing if no highlights exist", () => {
+    container.textContent = "Plain text with no highlights";
+    const originalHTML = container.innerHTML;
+
+    cleanupHighlights(container);
+
+    expect(container.innerHTML).toBe(originalHTML);
+  });
+});
+
+describe("applyHighlightBetweenNodes", () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    container.innerHTML = "First part. Middle part. Last part.";
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should apply highlight to the specified text range", () => {
+    // Calculate positions
+    const positions = calculateTextNodePositions(container);
+    expect(positions.length).toBe(1);
+
+    const startNode = positions[0];
+    const endNode = positions[0];
+
+    // Highlight "Middle part."
+    const startOffset = 12; // Start of "Middle"
+    const endOffset = 24; // End of "Middle part."
+
+    const highlightedNodes = applyHighlightBetweenNodes(
+      container,
+      positions,
+      startNode,
+      endNode,
+      startOffset,
+      endOffset,
+      "test",
+      "yellow-100"
+    );
+
+    // Verify highlight was applied
+    expect(highlightedNodes.length).toBeGreaterThan(0);
+
+    // Check that the highlighted span has the right attributes
+    const highlightSpan = container.querySelector(
+      '[data-highlight-tag="test"]'
+    );
+    expect(highlightSpan).not.toBeNull();
+
+    // Should have 3 nodes: before text, highlight span, after text
+    expect(container.childNodes.length).toBe(3);
+    expect(container.childNodes[0].textContent).toBe("First part. ");
+    expect(container.childNodes[1].textContent).toBe("Middle part.");
+    expect(container.childNodes[2].textContent).toBe(" Last part.");
+
+    // The second node should be our highlight span
+    expect((container.childNodes[1] as HTMLElement).tagName).toBe("SPAN");
+    expect((container.childNodes[1] as HTMLElement).dataset.highlightTag).toBe(
+      "test"
+    );
+  });
+});
+
+describe("applyHighlightsToContainer", () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    container.innerHTML =
+      "This is a test text with multiple sentences. Here is the second sentence.";
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  test("should apply a single highlight correctly", () => {
+    const highlights: Comment[] = [
+      {
+        title: "Test highlight",
+        description: "Description for test highlight",
+        highlight: {
+          startOffset: 10,
+          endOffset: 19,
+          quotedText: "test text",
+        },
+      },
+    ];
+
+    const highlightColors = {
+      "0": "red-100",
+    };
+
+    applyHighlightsToContainer(container, highlights, highlightColors);
+
+    // Verify the highlight span exists and has correct attributes
+    const highlightSpans = container.querySelectorAll("[data-highlight-tag]");
+    expect(highlightSpans.length).toBe(1);
+
+    // Check that the highlight span contains the right text
+    const span = highlightSpans[0] as HTMLElement;
+    expect(span.textContent).toBe("test text");
+    expect(span.className).toContain("bg-red-100");
+
+    // The total text content should remain the same
+    expect(container.textContent).toBe(
+      "This is a test text with multiple sentences. Here is the second sentence."
+    );
+  });
+
+  test("should remove existing highlights when cleaning up", () => {
+    // Add an existing highlight
+    container.innerHTML =
+      'This is a <span data-highlight-tag="old">test</span> text with multiple sentences. Here is the second sentence.';
+
+    // Verify the old highlight exists
+    expect(
+      container.querySelector('[data-highlight-tag="old"]')
+    ).not.toBeNull();
+
+    // Call cleanup (this is part of applyHighlightsToContainer)
+    cleanupHighlights(container);
+
+    // Verify the old highlight was removed
+    expect(container.querySelector('[data-highlight-tag="old"]')).toBeNull();
+    expect(container.textContent).toBe(
+      "This is a test text with multiple sentences. Here is the second sentence."
+    );
   });
 });
