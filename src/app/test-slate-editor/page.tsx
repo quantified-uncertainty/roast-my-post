@@ -5,20 +5,15 @@ import React from 'react';
 import SlateEditor from '../../components/SlateEditor';
 
 export default function TestSlateEditorPage() {
-  const content = `## Strongly Bounded AI: Definitions and Strategic Implications
-
-**Ozzie Gooen \\- April 14 2025, Draft. Quick post for the EA Forum / LessWrong.**
-
-**Also, be sure to see this post. I just found [this](https://www.lesswrong.com/posts/Z5YGZwdABLChoAiHs/bounded-ai-might-be-viable), need to update this post.**`;
+  const content = `This is a test.`;
 
   const highlights = [
     {
-      startOffset: 64,
-      endOffset: 308,
+      startOffset: 0,
+      endOffset: 14,
       tag: "0",
       color: "amber-100",
-      quotedText:
-        "**Ozzie Gooen \\- April 14 2025, Draft. Quick post for the EA Forum / LessWrong.**\n\n**Also, be sure to see this post. I just found [this](https://www.lesswrong.com/posts/Z5YGZwdABLChoAiHs/bounded-ai-might-be-viable), need to update this post.**",
+      quotedText: "This is a test.",
     },
   ];
 

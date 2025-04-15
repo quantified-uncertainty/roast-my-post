@@ -44,29 +44,30 @@ jest.mock("slate-history", () => ({
 
 jest.mock("slate", () => {
   const original = jest.requireActual("slate");
-  // Create a basic mock editor structure that the component expects
   const mockEditor = {
-    children: [] as any[], // Initialize children
+    children: [] as any[],
     operations: [],
     selection: null,
     marks: null,
     onChange: jest.fn(),
     apply: jest.fn(),
-    isInline: jest.fn(() => false), // Add mock isInline
-    isVoid: jest.fn(() => false), // Add mock isVoid
-    // Add a simple mock for node iteration needed by decorate logic
+    isInline: jest.fn((element) => {
+      return element.type === "link" || element.type === "code";
+    }),
+    isVoid: jest.fn(() => false),
+    normalizeNode: jest.fn(),
     *[Symbol.iterator]() {
-      let index = 0;
-      while (index < this.children.length) {
-        yield this.children[index++];
+      for (const child of this.children) {
+        yield child;
       }
     },
   };
+
   return {
     ...original,
-    createEditor: () => mockEditor, // Use the mock editor
+    createEditor: () => mockEditor,
     Node: {
-      ...original.Node, // Keep original Node methods
+      ...original.Node,
       string: jest.fn((node) => {
         if (!node) return "";
         if (original.Text.isText(node)) {
@@ -79,16 +80,15 @@ jest.mock("slate", () => {
         return "";
       }),
       parent: jest.fn((editor, path) => {
-        let current: any = { children: editor.children }; // Start with a shim parent
+        let current = { children: editor.children };
         for (let i = 0; i < path.length - 1; i++) {
-          if (!current || !current.children || !current.children[path[i]]) {
-            return { children: [] }; // Return a default parent if path is invalid
+          if (!current?.children?.[path[i]]) {
+            return { children: [] };
           }
           current = current.children[path[i]];
         }
         return current;
       }),
-      // Updated nodes mock to handle the editor structure correctly
       nodes: jest.fn((editor, options) => {
         const nodes: [any, number[]][] = [];
         const traverse = (node: any, path: number[]) => {
@@ -101,11 +101,7 @@ jest.mock("slate", () => {
             });
           }
         };
-        // Ensure editor.children is iterable
-        if (
-          editor.children &&
-          typeof editor.children[Symbol.iterator] === "function"
-        ) {
+        if (editor.children) {
           editor.children.forEach((child: any, index: number) => {
             traverse(child, [index]);
           });
@@ -114,7 +110,7 @@ jest.mock("slate", () => {
       }),
     },
     Editor: {
-      ...original.Editor, // Keep original Editor methods
+      ...original.Editor,
       nodes: jest.fn((editor, options) => original.Node.nodes(editor, options)),
       isBlock: jest.fn(
         (editor, node) =>
@@ -125,38 +121,66 @@ jest.mock("slate", () => {
       ...original.Transforms,
       select: jest.fn(),
     },
-    Element: { ...original.Element }, // Use original Element checks
-    Text: { ...original.Text }, // Use original Text checks
+    Element: { ...original.Element },
+    Text: { ...original.Text },
   };
 });
 
 jest.mock("unified", () => {
-  // Define a type for the mock processor for clarity
   type MockProcessor = {
     use: jest.Mock<MockProcessor>;
     processSync: jest.Mock<{
-      result: {
-        type: string;
-        children: { text: string }[];
-      }[];
+      result: any[];
     }>;
   };
 
   const mockProcessor: MockProcessor = {
     use: jest.fn(() => mockProcessor),
     processSync: jest.fn((content: string) => {
-      // Basic mock structure, needs to provide children for slate mock
-      const lines = content.split("\n").filter((line) => line.trim() !== "");
-      const result = lines.map((line, index) => {
-        if (line.startsWith("## ")) {
+      // More comprehensive markdown conversion
+      const lines = content.split("\n");
+      const result = lines.map((line) => {
+        const trimmedLine = line.trim();
+
+        // Handle empty lines
+        if (trimmedLine === "") {
+          return { type: "paragraph", children: [{ text: "" }] };
+        }
+
+        // Handle headings
+        if (trimmedLine.startsWith("## ")) {
           return {
             type: "heading-two",
-            children: [{ text: line.replace("## ", "") }],
+            children: [{ text: trimmedLine.replace("## ", "") }],
           };
         }
-        // Basic paragraph conversion
-        return { type: "paragraph", children: [{ text: line }] };
+        if (trimmedLine.startsWith("# ")) {
+          return {
+            type: "heading-one",
+            children: [{ text: trimmedLine.replace("# ", "") }],
+          };
+        }
+
+        // Handle bold text
+        if (trimmedLine.startsWith("**") && trimmedLine.endsWith("**")) {
+          return {
+            type: "paragraph",
+            children: [
+              {
+                text: trimmedLine.slice(2, -2),
+                bold: true,
+              },
+            ],
+          };
+        }
+
+        // Default to paragraph
+        return {
+          type: "paragraph",
+          children: [{ text: line }],
+        };
       });
+
       return { result };
     }),
   };

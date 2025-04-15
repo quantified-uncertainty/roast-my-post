@@ -145,7 +145,7 @@ const renderLeaf = (props: any) => {
       <span
         data-tag={leaf.tag}
         className={`rounded bg-${leaf.color} ${
-          leaf.isActive ? "ring-2 ring-blue-500" : ""
+          leaf.tag === props.activeTag ? "ring-2 ring-blue-500" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
@@ -270,7 +270,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       }
 
       const ranges: any[] = [];
-      const pathKey = path.join(".");
 
       for (const highlight of highlights) {
         if (
@@ -293,8 +292,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
         // Skip if this node is completely outside the highlight range
         if (
-          nodeEnd < highlight.startOffset ||
-          nodeStart > highlight.endOffset
+          nodeEnd <= highlight.startOffset ||
+          nodeStart >= highlight.endOffset
         ) {
           continue;
         }
@@ -304,7 +303,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         const localEnd = Math.min(text.length, highlight.endOffset - nodeStart);
 
         // Only add a highlight if it actually covers part of this text node
-        if (localStart < localEnd && localStart < text.length && localEnd > 0) {
+        if (localStart < localEnd) {
           ranges.push({
             anchor: { path, offset: localStart },
             focus: { path, offset: localEnd },
@@ -328,9 +327,17 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   return (
     <Slate editor={editor} initialValue={value}>
       <Editable
+        data-testid="slate-editable"
         decorate={decorate}
         renderElement={renderElement}
-        renderLeaf={renderLeaf}
+        renderLeaf={(props) =>
+          renderLeaf({
+            ...props,
+            activeTag,
+            onHighlightClick,
+            onHighlightHover,
+          })
+        }
         readOnly
         className="prose prose-slate prose-lg max-w-none"
       />

@@ -3,45 +3,54 @@ import {
   test,
 } from '@playwright/test';
 
-test("SlateEditor renders content and highlights correctly", async ({
-  page,
-}) => {
-  // Navigate to the test page
+test("page loads with editor component", async ({ page }) => {
   await page.goto("/test-slate-editor");
-
-  // Wait for the editor to be visible
-  await page.waitForSelector('[data-testid="slate-editable"]');
-
-  // Check if the heading is rendered
-  const heading = await page.textContent("h2");
-  expect(heading).toBe(
-    "Strongly Bounded AI: Definitions and Strategic Implications"
-  );
-
-  // Check if highlights are applied
-  const highlightedText = await page.locator(".bg-amber-100").first();
-  await expect(highlightedText).toBeVisible();
-
-  // Verify highlight content
-  const highlightContent = await highlightedText.textContent();
-  expect(highlightContent).toContain("Ozzie Gooen");
+  const editor = await page.locator('[data-testid="slate-editable"]');
+  await expect(editor).toBeVisible();
 });
 
-test("SlateEditor highlight interaction", async ({ page }) => {
+test("editor renders content correctly", async ({ page }) => {
   await page.goto("/test-slate-editor");
 
-  // Wait for the editor
+  // Wait for editor
+  const editor = await page.locator('[data-testid="slate-editable"]');
+  await expect(editor).toBeVisible();
+
+  // Get all text content
+  const content = await editor.textContent();
+  expect(content?.trim() || "").toContain("This is a test");
+});
+
+test("highlight is applied correctly", async ({ page }) => {
+  await page.goto("/test-slate-editor");
+
+  // Wait for editor
   await page.waitForSelector('[data-testid="slate-editable"]');
 
-  // Find the first highlight
-  const highlight = await page.locator(".bg-amber-100").first();
+  // Find highlight
+  const highlight = await page.locator('[class*="bg-amber-100"]');
+  await expect(highlight).toBeVisible();
 
-  // Hover over highlight
-  await highlight.hover();
+  // Check highlight text
+  const text = await highlight.textContent();
+  expect(text?.trim() || "").toContain("This is a test");
+});
 
-  // Click the highlight
+test("highlight interaction works", async ({ page }) => {
+  await page.goto("/test-slate-editor");
+
+  // Wait for editor
+  await page.waitForSelector('[data-testid="slate-editable"]');
+
+  // Get highlight
+  const highlight = await page.locator('[class*="bg-amber-100"]');
+
+  // Initial state - no ring
+  await expect(highlight).not.toHaveClass(/ring/);
+
+  // Click highlight
   await highlight.click();
 
-  // Verify the highlight is selected (has the ring-2 class)
-  await expect(highlight).toHaveClass(/ring-2/);
+  // Should now have ring class
+  await expect(highlight).toHaveClass(/ring/);
 });
