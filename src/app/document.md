@@ -173,23 +173,23 @@ The system takes in pairs of items and outputs which is better (optionally with 
 
 Several competing methodologies have been proposed for project evaluation:
 
-1. **Multi-Model Consensus Engine**: Uses multiple LLMs to independently evaluate projects, with sophisticated aggregation methods to identify areas of consensus and divergence.  
+1. **Multi-Model Consensus Engine**: Uses multiple LLMs to independently evaluate projects, with sophisticated aggregation methods to identify areas of consensus and divergence.
 
-2. **Theory of Change Analysis**: Requires explicit articulation of theories of change for each project, then evaluates the logical coherence, empirical support, and feasibility of each step in the causal chain.  
+2. **Theory of Change Analysis**: Requires explicit articulation of theories of change for each project, then evaluates the logical coherence, empirical support, and feasibility of each step in the causal chain.
 
-3. **Hierarchical Impact Framework**: Creates a comprehensive taxonomy of interventions, evaluating each branch and sub-branch based on expected impact.  
+3. **Hierarchical Impact Framework**: Creates a comprehensive taxonomy of interventions, evaluating each branch and sub-branch based on expected impact.
 
-4. **Resource Efficiency Optimizer**: Focuses primarily on cost-effectiveness, evaluating projects based on expected impact per dollar/researcher-hour invested.  
+4. **Resource Efficiency Optimizer**: Focuses primarily on cost-effectiveness, evaluating projects based on expected impact per dollar/researcher-hour invested.
 
-5. **Longitudinal Progress Tracking**: Establishes baseline metrics and tracks progress over time, creating a dynamic rather than static evaluation system.  
+5. **Longitudinal Progress Tracking**: Establishes baseline metrics and tracks progress over time, creating a dynamic rather than static evaluation system.
 
-6. **Stakeholder Impact Assessment**: Evaluates projects based on systematic interviews with diverse stakeholders, creating a multi-perspective framework.  
+6. **Stakeholder Impact Assessment**: Evaluates projects based on systematic interviews with diverse stakeholders, creating a multi-perspective framework.
 
-7. **Value Alignment Verification**: Specialized framework for evaluating how well different approaches actually capture and implement human values.  
+7. **Value Alignment Verification**: Specialized framework for evaluating how well different approaches actually capture and implement human values.
 
-8. **Empirical Benchmarking System**: Develops concrete benchmarks and empirical tests, focusing on measurable outcomes rather than theoretical promise.  
+8. **Empirical Benchmarking System**: Develops concrete benchmarks and empirical tests, focusing on measurable outcomes rather than theoretical promise.
 
-9. **Prediction Market Integration**: Creates specialized prediction markets for outcomes, allowing projects to be evaluated based on collective forecasts.  
+9. **Prediction Market Integration**: Creates specialized prediction markets for outcomes, allowing projects to be evaluated based on collective forecasts.
 
 10. **Red Team Challenge Series**: Establishes adversarial challenges, testing project robustness against skilled opposition.
 

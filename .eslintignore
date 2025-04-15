@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+**/*.test.ts
+**/*.test.tsx
+**/jest.d.ts
+**/*.js 

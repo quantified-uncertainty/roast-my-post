@@ -91,10 +91,10 @@ Let's see if this works better.`;
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Basic Highlight Test</h1>
+      <h1 className="mb-4 text-2xl font-bold">Basic Highlight Test</h1>
 
       <div className="mb-10">
-        <h2 className="text-xl font-bold mb-4">SlateEditor Component</h2>
+        <h2 className="mb-4 text-xl font-bold">SlateEditor Component</h2>
         <article className="prose prose-slate prose-lg max-w-none">
           <SlateEditor
             content={content}
@@ -107,7 +107,7 @@ Let's see if this works better.`;
       </div>
 
       <div className="mb-10">
-        <h2 className="text-xl font-bold mb-4">
+        <h2 className="mb-4 text-xl font-bold">
           ReactMarkdown Component (Reference)
         </h2>
         <article className="prose prose-slate prose-lg max-w-none">

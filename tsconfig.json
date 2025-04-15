@@ -16,13 +16,13 @@
     "allowImportingTsExtensions": true,
     "plugins": [
       {
-        "name": "next"
-      }
+        "name": "next",
+      },
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
     },
-    "types": ["node", "jest", "@testing-library/jest-dom"]
+    "types": ["node", "jest", "@testing-library/jest-dom"],
   },
   "include": [
     "next-env.d.ts",
@@ -33,7 +33,7 @@
     "src/data/agents/index.ts",
     "src/scripts/analyze-md.mts",
     "src/types/openai.ts",
-    "src/types/jest.d.ts"
+    "src/types/jest.d.ts",
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }

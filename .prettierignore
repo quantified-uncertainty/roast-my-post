@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+*.min.js
+*.min.css
+*.min.js.map
+*.min.css.map 

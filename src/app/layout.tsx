@@ -22,8 +22,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {/* Header (always visible at the top) */}
-        <header className="border-b border-gray-200 px-6 py-3 bg-blue-500">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <header className="border-b border-gray-200 bg-blue-500 px-6 py-3">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
             <h1 className="text-2xl font-bold text-white">Open Annotate</h1>
             <nav className="flex items-center space-x-6">
               <Link href="/" className="text-white hover:text-gray-200">

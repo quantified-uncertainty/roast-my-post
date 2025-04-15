@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 
-import SlateEditor from '../../components/SlateEditor';
+import SlateEditor from "../../components/SlateEditor";
 
 export default function TestSlateEditorPage() {
   const content = `# Strongly Bounded AI
@@ -35,7 +35,7 @@ Test 123
   const [activeTag, setActiveTag] = React.useState<string | null>(null);
 
   return (
-    <div className="container mx-auto p-4 ">
+    <div className="container mx-auto p-4">
       <article className="prose prose-slate prose-lg max-w-none">
         <SlateEditor
           content={content}

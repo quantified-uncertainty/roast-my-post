@@ -1,5 +1,5 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
-import { devices } from '@playwright/test';
+import type { PlaywrightTestConfig } from "@playwright/test";
+import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
   testDir: "./playwright-tests",

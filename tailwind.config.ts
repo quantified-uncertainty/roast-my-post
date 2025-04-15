@@ -16,15 +16,15 @@ const config: Config = {
       typography: {
         DEFAULT: {
           css: {
-            maxWidth: 'none',
+            maxWidth: "none",
             h1: {
-              fontWeight: '700',
+              fontWeight: "700",
             },
             h2: {
-              fontWeight: '600',
+              fontWeight: "600",
             },
-            'ul > li': {
-              position: 'relative',
+            "ul > li": {
+              position: "relative",
             },
           },
         },

@@ -1,6 +1,6 @@
-import 'dotenv/config';
+import "dotenv/config";
 
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 

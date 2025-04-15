@@ -44,7 +44,7 @@ export default function TestDocsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">
+      <h1 className="mb-4 text-2xl font-bold">
         Test Document with Formatting Highlights
       </h1>
       <article className="prose prose-slate prose-lg max-w-none">

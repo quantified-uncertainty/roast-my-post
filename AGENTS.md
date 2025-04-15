@@ -5,6 +5,7 @@ This project uses JSON to store agent data. JSON is a standard data format that 
 ## Current Implementation
 
 The agent data is stored in two ways:
+
 1. As `.json` files in the `src/data/agents` directory (for reference and editing)
 2. As TypeScript files (`.ts`) that contain the agent data as objects
 
@@ -28,6 +29,7 @@ export interface EvaluationAgent {
 ```
 
 JSON example:
+
 ```json
 {
   "id": "example-agent",
@@ -35,21 +37,9 @@ JSON example:
   "version": "1.0",
   "description": "This is an example agent that does cool things.",
   "iconName": "StarIcon",
-  "capabilities": [
-    "Capability 1",
-    "Capability 2",
-    "Capability 3"
-  ],
-  "use_cases": [
-    "Use case 1",
-    "Use case 2",
-    "Use case 3"
-  ],
-  "limitations": [
-    "Limitation 1",
-    "Limitation 2",
-    "Limitation 3"
-  ]
+  "capabilities": ["Capability 1", "Capability 2", "Capability 3"],
+  "use_cases": ["Use case 1", "Use case 2", "Use case 3"],
+  "limitations": ["Limitation 1", "Limitation 2", "Limitation 3"]
 }
 ```
 
@@ -60,8 +50,9 @@ To add a new agent:
 1. Create a new `.json` file in the `src/data/agents` directory (e.g., `new-agent.json`)
 2. Add the agent data to the file, following the structure of the existing agents
 3. Create a new TypeScript file (e.g., `new-agent.ts`):
+
    ```typescript
-   import type { EvaluationAgent } from '../../types/evaluationAgents';
+   import type { EvaluationAgent } from "../../types/evaluationAgents";
 
    export const newAgent: EvaluationAgent = {
      id: "new-agent",
@@ -69,6 +60,7 @@ To add a new agent:
      // ... rest of the agent data
    };
    ```
+
 4. Update the `index.ts` file to import and export the new agent:
    ```typescript
    import { newAgent } from './new-agent';

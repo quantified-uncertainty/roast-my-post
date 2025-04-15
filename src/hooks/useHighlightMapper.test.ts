@@ -1,6 +1,6 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook } from "@testing-library/react";
 
-import { useHighlightMapper } from './useHighlightMapper';
+import { useHighlightMapper } from "./useHighlightMapper";
 
 describe("useHighlightMapper (Phase 2)", () => {
   it("should map basic heading markdown using diff-match-patch", () => {
@@ -22,7 +22,7 @@ describe("useHighlightMapper (Phase 2)", () => {
     expect(mdToSlateOffset.get(1)).toBeUndefined(); // space after # is skipped
     expect(mdToSlateOffset.get(2)).toBe(0); // 'S' in "Strongly"
     expect(mdToSlateOffset.get(3)).toBe(1); // 't' in "Strongly"
-    
+
     // Test reverse mapping
     expect(slateToMdOffset.get(0)).toBe(2); // 'S' maps to position 2 in markdown
   });
@@ -60,7 +60,7 @@ describe("useHighlightMapper (Phase 2)", () => {
     expect(mdToSlateOffset.get(13)).toBeUndefined(); // Second closing * is skipped
     expect(mdToSlateOffset.get(14)).toBe(10); // ' ' after "bold"
   });
-  
+
   it("should handle complex markdown with lists and formatting", () => {
     const markdown = `This concept isn't just about alignment. It's also about:
 
@@ -97,7 +97,7 @@ Boring AI`;
       expect(mdIndex).not.toBe(-1); // Ensure text exists in markdown
       return mdIndex;
     };
-    
+
     const findSlatePosition = (text: string) => {
       const slateIndex = slateText.indexOf(text);
       expect(slateIndex).not.toBe(-1); // Ensure text exists in slate
@@ -108,29 +108,34 @@ Boring AI`;
     const firstListItem = "Substantial capability restrictions";
     const mdListItemPos = findMarkdownPosition(firstListItem);
     const slateListItemPos = findSlatePosition(firstListItem);
-    
+
     // The first bullet point should map correctly despite markdown formatting
     expect(mdToSlateOffset.get(mdListItemPos)).toBe(slateListItemPos);
-    
+
     // Test bold text mapping
     const boldText = "Strongly";
     const mdBoldPos = markdown.indexOf("**" + boldText) + 2; // Position of 'S' after **
     const slateBoldPos = findSlatePosition(boldText);
-    
+
     expect(mdToSlateOffset.get(mdBoldPos)).toBe(slateBoldPos);
   });
-  
+
   it("should handle links in markdown", () => {
-    const markdown = "Check out this [important link](https://example.com) for more details.";
+    const markdown =
+      "Check out this [important link](https://example.com) for more details.";
     const slateText = "Check out this important link for more details.";
-    
-    const { result } = renderHook(() => useHighlightMapper(markdown, slateText));
+
+    const { result } = renderHook(() =>
+      useHighlightMapper(markdown, slateText)
+    );
     const { mdToSlateOffset } = result.current;
-    
+
     // Position of 'i' in "important"
     const mdLinkTextStart = markdown.indexOf("[important");
-    expect(mdToSlateOffset.get(mdLinkTextStart + 1)).toBe(markdown.indexOf("important") - 8);
-    
+    expect(mdToSlateOffset.get(mdLinkTextStart + 1)).toBe(
+      markdown.indexOf("important") - 8
+    );
+
     // Position of 't' in "details"
     const mdDetailsPos = markdown.indexOf("details");
     const slateDetailsPos = slateText.indexOf("details");

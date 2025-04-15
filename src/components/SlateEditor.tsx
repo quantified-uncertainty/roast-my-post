@@ -38,37 +38,37 @@ const renderElement = ({ attributes, children, element }: any) => {
   switch (element.type) {
     case "heading-one":
       return (
-        <h1 {...attributes} className="text-4xl font-bold mb-6">
+        <h1 {...attributes} className="mb-6 text-4xl font-bold">
           {children}
         </h1>
       );
     case "heading-two":
       return (
-        <h2 {...attributes} className="text-3xl font-bold mb-5">
+        <h2 {...attributes} className="mb-5 text-3xl font-bold">
           {children}
         </h2>
       );
     case "heading-three":
       return (
-        <h3 {...attributes} className="text-2xl font-bold mb-4">
+        <h3 {...attributes} className="mb-4 text-2xl font-bold">
           {children}
         </h3>
       );
     case "heading-four":
       return (
-        <h4 {...attributes} className="text-xl font-bold mb-3">
+        <h4 {...attributes} className="mb-3 text-xl font-bold">
           {children}
         </h4>
       );
     case "heading-five":
       return (
-        <h5 {...attributes} className="text-lg font-bold mb-3">
+        <h5 {...attributes} className="mb-3 text-lg font-bold">
           {children}
         </h5>
       );
     case "heading-six":
       return (
-        <h6 {...attributes} className="text-base font-bold mb-3">
+        <h6 {...attributes} className="mb-3 text-base font-bold">
           {children}
         </h6>
       );
@@ -82,18 +82,18 @@ const renderElement = ({ attributes, children, element }: any) => {
       return (
         <blockquote
           {...attributes}
-          className="border-l-4 border-gray-300 pl-4 italic mb-4"
+          className="mb-4 border-l-4 border-gray-300 pl-4 italic"
         >
           {children}
         </blockquote>
       );
     case "list":
       return element.ordered ? (
-        <ol {...attributes} className="list-decimal pl-5 my-2">
+        <ol {...attributes} className="my-2 list-decimal pl-5">
           {children}
         </ol>
       ) : (
-        <ul {...attributes} className="list-disc pl-5 my-2">
+        <ul {...attributes} className="my-2 list-disc pl-5">
           {children}
         </ul>
       );
@@ -132,7 +132,7 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
 
   // Apply formatting in a specific order to handle nested formatting
   if (leaf.code) {
-    el = <code className="bg-gray-100 rounded px-1">{el}</code>;
+    el = <code className="rounded bg-gray-100 px-1">{el}</code>;
   }
 
   // Handle both emphasis/italic properties
@@ -552,7 +552,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           })
         }
         readOnly
-        className="prose prose-slate prose-lg max-w-none [&_strong]:font-bold [&_em]:italic"
+        className="prose prose-slate prose-lg max-w-none [&_em]:italic [&_strong]:font-bold"
       />
     </Slate>
   );

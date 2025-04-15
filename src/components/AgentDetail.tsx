@@ -1,7 +1,7 @@
 "use client";
 
-import type { EvaluationAgent } from '@/types/evaluationAgents';
-import { getIcon } from '@/utils/iconMap';
+import type { EvaluationAgent } from "@/types/evaluationAgents";
+import { getIcon } from "@/utils/iconMap";
 
 interface AgentDetailProps {
   agent: EvaluationAgent;
@@ -11,9 +11,9 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
   const IconComponent = getIcon(agent.iconName);
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div className={`p-3 rounded-lg bg-blue-100`}>
+    <div className="mx-auto max-w-4xl p-8">
+      <div className="mb-8 flex items-center gap-4">
+        <div className={`rounded-lg bg-blue-100 p-3`}>
           <IconComponent className="h-8 w-8" />
         </div>
         <div>
@@ -26,37 +26,37 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         <p className="text-lg text-gray-700">{agent.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Capabilities</h2>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Capabilities</h2>
           <ul className="space-y-2">
             {agent.capabilities.map((capability, index) => (
               <li key={index} className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
+                <span className="mr-2 text-green-500">✓</span>
                 <span>{capability}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Use Cases</h2>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Use Cases</h2>
           <ul className="space-y-2">
             {agent.use_cases.map((useCase, index) => (
               <li key={index} className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
+                <span className="mr-2 text-blue-500">•</span>
                 <span>{useCase}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Limitations</h2>
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Limitations</h2>
           <ul className="space-y-2">
             {agent.limitations.map((limitation, index) => (
               <li key={index} className="flex items-start">
-                <span className="text-amber-500 mr-2">!</span>
+                <span className="mr-2 text-amber-500">!</span>
                 <span>{limitation}</span>
               </li>
             ))}
@@ -64,33 +64,33 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         </div>
       </div>
 
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">Primary Instructions</h2>
-        <div className="whitespace-pre-wrap mb-8">
+      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
+        <div className="mb-8 whitespace-pre-wrap">
           {agent.genericInstructions}
         </div>
       </div>
 
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">Summary Instructions</h2>
-        <div className="whitespace-pre-wrap mb-8">
+      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold">Summary Instructions</h2>
+        <div className="mb-8 whitespace-pre-wrap">
           {agent.summaryInstructions}
         </div>
       </div>
 
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">Comment Instructions</h2>
-        <div className="whitespace-pre-wrap mb-8">
+      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold">Comment Instructions</h2>
+        <div className="mb-8 whitespace-pre-wrap">
           {agent.commentInstructions}
         </div>
       </div>
 
-      <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">How to Use</h2>
+      <div className="mt-12 rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <h2 className="mb-4 text-xl font-semibold">How to Use</h2>
         <p className="mb-4">
           To use the {agent.name} for document evaluation, follow these steps:
         </p>
-        <ol className="list-decimal pl-5 space-y-2">
+        <ol className="list-decimal space-y-2 pl-5">
           <li>Upload or select the document you want to evaluate</li>
           <li>Select "{agent.name}" from the evaluation agents list</li>
           <li>

@@ -1,25 +1,22 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-} from 'react';
+import { useRef, useState } from "react";
 
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 
-import { evaluationAgents } from '@/data/agents/index';
-import type { Comment } from '@/types/documentReview';
-import type { Document } from '@/types/documents';
-import { getIcon } from '@/utils/iconMap';
+import { evaluationAgents } from "@/data/agents/index";
+import type { Comment } from "@/types/documentReview";
+import type { Document } from "@/types/documents";
+import { getIcon } from "@/utils/iconMap";
 import {
   ChatBubbleLeftIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
-import SlateEditor from './SlateEditor';
+import SlateEditor from "./SlateEditor";
 
 interface CommentsSidebarProps {
   comments: Comment[];
@@ -76,8 +73,8 @@ function CommentsSidebar({
   const sortedComments = sortCommentsByOffset(comments);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
-      <h2 className="text-base font-medium text-gray-600 px-4 py-2 border-b border-gray-100">
+    <div className="rounded-lg bg-white shadow-sm">
+      <h2 className="border-b border-gray-100 px-4 py-2 text-base font-medium text-gray-600">
         Highlights
       </h2>
       <div>
@@ -88,10 +85,7 @@ function CommentsSidebar({
           return (
             <div
               key={tag}
-              className={`
-                transition-colors duration-150 cursor-pointer 
-                ${isExpanded ? "bg-white" : "hover:bg-white bg-gray-50"}
-              `}
+              className={`cursor-pointer transition-colors duration-150 ${isExpanded ? "bg-white" : "bg-gray-50 hover:bg-white"} `}
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
               onClick={() => onTagClick(tag)}
@@ -100,7 +94,7 @@ function CommentsSidebar({
                 {/* Comment header with number, icon and title */}
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium select-none ${getCommentColorByIndex(
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium select-none ${getCommentColorByIndex(
                       index
                     )}`}
                   >
@@ -121,7 +115,7 @@ function CommentsSidebar({
 
                 {/* Comment description */}
                 {comment.description && (
-                  <div className="ml-8 mt-1 text-md text-gray-600">
+                  <div className="text-md mt-1 ml-8 text-gray-600">
                     <div className={isExpanded ? "" : "line-clamp-1"}>
                       {comment.description}
                     </div>
@@ -149,10 +143,10 @@ function ReviewSelector({
 }: ReviewSelectorProps) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">
+      <h3 className="mb-3 text-sm font-medium text-gray-700">
         Document Evaluations
       </h3>
-      <div className="grid grid-cols-4 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-3 md:grid-cols-4">
         {document.reviews.map((review, index) => {
           const agent = evaluationAgents.find((a) => a.id === review.agentId);
           const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
@@ -162,22 +156,16 @@ function ReviewSelector({
           return (
             <div
               key={index}
-              className={`
-                transition-all duration-150 rounded-lg cursor-pointer border 
-                ${
-                  isActive
-                    ? "bg-blue-50 border-blue-300 shadow-sm"
-                    : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
-                }
-              `}
+              className={`cursor-pointer rounded-lg border transition-all duration-150 ${
+                isActive
+                  ? "border-blue-300 bg-blue-50 shadow-sm"
+                  : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
+              } `}
               onClick={() => onReviewSelect(index)}
             >
-              <div className="p-1.5 flex h-full items-center">
+              <div className="flex h-full items-center p-1.5">
                 <div
-                  className={`
-                  flex items-center justify-center p-1 rounded-full mr-2
-                  ${isActive ? "bg-blue-100" : "bg-gray-100"}
-                `}
+                  className={`mr-2 flex items-center justify-center rounded-full p-1 ${isActive ? "bg-blue-100" : "bg-gray-100"} `}
                 >
                   <Icon
                     className={`h-4 w-4 ${
@@ -186,13 +174,10 @@ function ReviewSelector({
                   />
                 </div>
 
-                <div className="flex flex-col justify-between flex-1 min-w-0">
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
                   {agent && (
                     <span
-                      className={`
-                      text-sm font-medium truncate mb-1
-                      ${isActive ? "text-blue-700" : "text-gray-700"}
-                    `}
+                      className={`mb-1 truncate text-sm font-medium ${isActive ? "text-blue-700" : "text-gray-700"} `}
                     >
                       {agent.name}
                     </span>
@@ -201,14 +186,11 @@ function ReviewSelector({
                   {agent && (
                     <div className="flex items-center">
                       <span
-                        className={`
-                        text-xs px-1 rounded-full flex items-center gap-1
-                        ${
+                        className={`flex items-center gap-1 rounded-full px-1 text-xs ${
                           isActive
                             ? "bg-blue-100 text-blue-700"
                             : "bg-gray-100 text-gray-600"
-                        }
-                      `}
+                        } `}
                       >
                         <ChatBubbleLeftIcon className="h-3 w-3" />
                         {commentCount}
@@ -279,9 +261,9 @@ export function DocumentWithEvaluations({
 
   return (
     <div className="flex h-screen bg-white">
-      <div ref={documentRef} className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
+      <div ref={documentRef} className="flex-1 overflow-y-auto p-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-6 flex items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold">{document.title}</h1>
               <div className="text-sm text-gray-500">
@@ -308,7 +290,7 @@ export function DocumentWithEvaluations({
         </div>
       </div>
 
-      <div className="w-72 border-l border-gray-200 bg-gray-50 px-4 py-2 flex-1 overflow-y-auto">
+      <div className="w-72 flex-1 overflow-y-auto border-l border-gray-200 bg-gray-50 px-4 py-2">
         <div className="space-y-4">
           <ReviewSelector
             document={document}
@@ -320,7 +302,7 @@ export function DocumentWithEvaluations({
           <div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-500 px-2 py-1">
+                <div className="px-2 py-1 text-xs text-gray-500">
                   Run cost: ${(activeReview.costInCents / 100).toFixed(2)} • Run
                   Date: {activeReview.createdAt.toLocaleDateString()}
                 </div>
@@ -354,9 +336,9 @@ export function DocumentWithEvaluations({
 
           {/* Analysis section */}
           {activeReview.summary && (
-            <div className="bg-white rounded-lg shadow-sm">
+            <div className="rounded-lg bg-white shadow-sm">
               <div
-                className="px-4 py-1.5 flex items-center justify-between cursor-pointer select-none hover:bg-gray-50"
+                className="flex cursor-pointer items-center justify-between px-4 py-1.5 select-none hover:bg-gray-50"
                 onClick={() =>
                   setExpandedTag(expandedTag === "analysis" ? null : "analysis")
                 }
@@ -368,7 +350,7 @@ export function DocumentWithEvaluations({
                   <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
                 )}
               </div>
-              <div className="px-4 py-1.5 prose prose-md max-w-none border-t border-gray-100">
+              <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
                 {expandedTag === "analysis" ? (
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}

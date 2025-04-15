@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function TestSimplePage() {
   const [count, setCount] = useState(0);
@@ -13,7 +13,7 @@ export default function TestSimplePage() {
         <button
           data-testid="increment"
           onClick={() => setCount((c) => c + 1)}
-          className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
+          className="ml-4 rounded bg-blue-500 px-4 py-2 text-white"
         >
           Increment
         </button>

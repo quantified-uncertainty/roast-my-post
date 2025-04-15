@@ -1,18 +1,11 @@
 #!/usr/bin/env tsx
 
-import { Command } from 'commander';
-import {
-  readdir,
-  readFile,
-  writeFile,
-} from 'fs/promises';
-import path from 'path';
+import { Command } from "commander";
+import { readdir, readFile, writeFile } from "fs/promises";
+import path from "path";
 
-import type { DocumentReview } from '../types/documentReview';
-import {
-  analyzeDocument,
-  writeLogFile,
-} from '../utils/documentAnalysis';
+import type { DocumentReview } from "../types/documentReview";
+import { analyzeDocument, writeLogFile } from "../utils/documentAnalysis";
 
 const program = new Command();
 

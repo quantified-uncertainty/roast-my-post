@@ -1,12 +1,7 @@
-import {
-  mkdir,
-  readdir,
-  readFile,
-  writeFile,
-} from 'fs/promises';
-import path from 'path';
+import { mkdir, readdir, readFile, writeFile } from "fs/promises";
+import path from "path";
 
-import TOML from '@iarna/toml';
+import TOML from "@iarna/toml";
 
 const srcDir = path.join(process.cwd(), "src", "data", "agents", "src");
 const distDir = path.join(process.cwd(), "src", "data", "agents", "dist");

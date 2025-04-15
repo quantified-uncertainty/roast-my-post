@@ -1,10 +1,7 @@
 #!/usr/bin/env tsx
 
-import {
-  readdir,
-  writeFile,
-} from 'fs/promises';
-import path from 'path';
+import { readdir, writeFile } from "fs/promises";
+import path from "path";
 
 function toValidIdentifier(filename: string): string {
   // Remove .json extension and convert to camelCase

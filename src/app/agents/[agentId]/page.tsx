@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  notFound,
-  useParams,
-} from 'next/navigation';
+import { notFound, useParams } from "next/navigation";
 
-import AgentDetail from '@/components/AgentDetail';
-import { evaluationAgents } from '@/data/agents/index';
+import AgentDetail from "@/components/AgentDetail";
+import { evaluationAgents } from "@/data/agents/index";
 
 export default function AgentPage() {
   const params = useParams();
@@ -19,7 +16,7 @@ export default function AgentPage() {
   // Get the base id by removing the version part
   // For versions with multiple decimals (like 2.4.1), we need to handle accordingly
   let baseId: string;
-  let versionParts: string[] = [];
+  const versionParts: string[] = [];
 
   if (agentIdParts.length >= 2) {
     // The last one or two parts are likely the version

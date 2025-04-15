@@ -1,23 +1,23 @@
-import fs from 'fs';
-import path from 'path';
-import type { EvaluationAgent } from '../types/evaluationAgents';
+import fs from "fs";
+import path from "path";
+import type { EvaluationAgent } from "../types/evaluationAgents";
 
 // Load JSON5 file
 // This is a simplified version that uses JSON.parse instead of json5.parse
 // In a production environment, you should install the json5 package
 export const loadJson5 = (filePath: string) => {
   try {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    
+    const fileContent = fs.readFileSync(filePath, "utf8");
+
     // Remove JSON5 comments (single-line comments)
     const contentWithoutComments = fileContent
-      .split('\n')
-      .map(line => {
-        const commentIndex = line.indexOf('//');
+      .split("\n")
+      .map((line) => {
+        const commentIndex = line.indexOf("//");
         return commentIndex >= 0 ? line.substring(0, commentIndex) : line;
       })
-      .join('\n');
-    
+      .join("\n");
+
     // Parse using standard JSON parser
     // In production, use: import json5 from 'json5'; return json5.parse(fileContent);
     return JSON.parse(contentWithoutComments);
@@ -38,8 +38,8 @@ export const getAgentFilesFromDirectory = (directoryPath: string): string[] => {
   try {
     const files = fs.readdirSync(directoryPath);
     return files
-      .filter(file => file.endsWith('.json5'))
-      .map(file => path.join(directoryPath, file));
+      .filter((file) => file.endsWith(".json5"))
+      .map((file) => path.join(directoryPath, file));
   } catch (error) {
     console.error(`Error reading directory ${directoryPath}:`, error);
     return [];

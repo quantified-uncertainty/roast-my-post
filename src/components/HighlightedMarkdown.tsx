@@ -1,21 +1,17 @@
 "use client";
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 
-import { Comment } from '@/types/documentReview';
+import { Comment } from "@/types/documentReview";
 import {
   applyHighlightsToContainer,
   resetContainer,
   testFindTextInContainer,
-} from '@/utils/highlightUtils';
+} from "@/utils/highlightUtils";
 
 interface HighlightedMarkdownProps {
   content: string;
