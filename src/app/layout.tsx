@@ -1,13 +1,13 @@
 import "./globals.css";
 
-import Link from "next/link";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Document Analysis Platform",
-  description: "Research document review and analysis platform",
+  title: "Open Annotate",
+  description: "AI document review and analysis platform",
 };
 
 export default function RootLayout({
@@ -24,9 +24,7 @@ export default function RootLayout({
         {/* Header (always visible at the top) */}
         <header className="border-b border-gray-200 px-6 py-3 bg-blue-500">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">
-              Document Analyzer
-            </h1>
+            <h1 className="text-2xl font-bold text-white">Open Annotate</h1>
             <nav className="flex items-center space-x-6">
               <Link href="/" className="text-white hover:text-gray-200">
                 Home
