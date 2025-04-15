@@ -3,7 +3,7 @@ import { parse as parseJsonc, ParseError } from "jsonc-parser";
 import { jsonrepair } from "jsonrepair";
 import path from "path";
 
-import type { Comment, DocumentReview } from "../types/documentReview";
+import type { Comment, DocumentReview } from "../types/documentReview.js";
 import { DEFAULT_TEMPERATURE, MODEL, openai } from "../types/openai.js";
 import { processRawComments, type RawLLMHighlight } from "./highlightUtils.js";
 

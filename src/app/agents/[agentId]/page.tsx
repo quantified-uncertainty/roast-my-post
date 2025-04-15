@@ -7,7 +7,7 @@ import { evaluationAgents } from "@/data/agents/index";
 
 export default function AgentPage() {
   const params = useParams();
-  const agentId = params.agentId as string;
+  const agentId = params["agentId"] as string;
 
   // Parse the agentId from the URL (format: id-version where version has - instead of . )
   // For example: "emotional-analyzer-2-4" for emotional-analyzer v2.4

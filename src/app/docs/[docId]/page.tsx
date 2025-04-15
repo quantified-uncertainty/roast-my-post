@@ -8,7 +8,7 @@ import { documentsCollection } from "@/data/docs";
 
 export default function DocumentPage() {
   const params = useParams();
-  const docId = params.docId as string;
+  const docId = params["docId"] as string;
 
   // Find the document by slug
   const document = documentsCollection.documents.find(

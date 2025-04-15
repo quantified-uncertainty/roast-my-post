@@ -23,6 +23,10 @@ interface HighlightedMarkdownProps {
   analysisId?: string; // Identifier to detect when analysis changes
 }
 
+interface HighlightDataset extends DOMStringMap {
+  tag?: string;
+}
+
 export function HighlightedMarkdown({
   content,
   onHighlightHover,
@@ -139,7 +143,22 @@ export function HighlightedMarkdown({
       const allHighlights = containerRef.current.querySelectorAll("[data-tag]");
       allHighlights.forEach((el) => {
         const highlightEl = el as HTMLElement;
-        const tag = highlightEl.dataset.tag;
+        const dataset = highlightEl.dataset as HighlightDataset;
+        const tag = dataset.tag;
+
+        // Add/remove active class based on the active tag
+        if (tag === activeTag) {
+          highlightEl.classList.add("highlight-active");
+        } else {
+          highlightEl.classList.remove("highlight-active");
+        }
+      });
+
+      // Add click event listeners to all highlights
+      allHighlights.forEach((el) => {
+        const highlightEl = el as HTMLElement;
+        const dataset = highlightEl.dataset as HighlightDataset;
+        const tag = dataset.tag;
 
         // Add/remove active class based on the active tag
         if (tag === activeTag) {
