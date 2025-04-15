@@ -13,124 +13,167 @@
   "reviews": [
     {
       "agentId": "bias-detector",
-      "costInCents": 7378,
-      "createdAt": "2025-04-15T22:08:20.688Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4880,\"completionTokens\":2498,\"totalTokens\":7378,\"temperature\":0.7,\"runtimeMs\":45807}",
-      "summary": "This document presents a consequentialist framework for integrity that balances pure outcome-based decision-making with reputation considerations. The author defines integrity as making decisions while accounting for how others would perceive them if they knew the author's decision-making process. This approach contains significant biases, including rationalization bias (justifying potentially unethical behavior through complex reasoning), in-group bias (different standards for similar vs. dissimilar people), and utilitarian bias (reducing moral considerations to utility calculations). The text exhibits confirmation bias by selectively supporting the author's preferred framework without adequately exploring alternatives. There's also presentism bias in assuming current social norms are optimal indicators of integrity. The document scores high on intellectual/cognitive bias (8/10) and medium on social bias (6/10). To improve, the author should acknowledge cultural variations in integrity definitions, consider deontological perspectives more thoroughly, and recognize the limitations of purely consequentialist ethics when addressing fundamental human rights and dignity.",
-      "comments": []
+      "costInCents": 7148,
+      "createdAt": "2025-04-15T22:18:42.487Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4880,\"completionTokens\":2268,\"totalTokens\":7148,\"temperature\":0.7,\"runtimeMs\":49214}",
+      "summary": "This document presents a nuanced approach to consequentialist ethics with integrity as a central component. The author describes integrity not as rigid rule-following but as making decisions while considering how others would view them if they knew the author's decision-making process. While the framework appears thoughtful, it contains several biases. There's a strong individualistic Western bias that prioritizes personal utility calculations over communal values or universal principles. The document shows confirmation bias by selectively focusing on examples that support the author's framework while dismissing potential counterexamples as \"pathological scenarios.\" There's also a rationalization bias in justifying potentially deceptive behavior through complex reasoning. The text reveals status quo bias by assuming current social norms and power dynamics are optimal. Additionally, the author demonstrates overconfidence bias in asserting their approach is \"straightforward\" despite acknowledging its complexity. To improve, the document would benefit from considering diverse cultural perspectives, acknowledging power imbalances, exploring edge cases more thoroughly, and recognizing potential limitations of the framework.",
+      "comments": [
+        {
+          "title": "Western Individualistic Bias",
+          "description": "The document presents a highly individualistic approach to ethics that centers personal decision-making and utility calculations. This reflects Western philosophical traditions while potentially overlooking more communal or duty-based ethical frameworks common in many non-Western cultures. This bias may limit the framework's applicability across diverse cultural contexts where collective welfare, harmony, or adherence to traditional values might take precedence over individual utility calculations.",
+          "highlight": {
+            "startOffset": 408,
+            "endOffset": 534,
+            "quotedText": "consequences of each possible action and decide how much I like them; then I select the action whose consequences I like best.",
+            "prefix": "I aspire to make decisions in a pretty simple way. I think about the "
+          }
+        },
+        {
+          "title": "Rationalization Bias",
+          "description": "The author exhibits rationalization bias by developing complex reasoning to justify potentially deceptive or self-serving behaviors while maintaining a claim to integrity. This creates a framework where almost any action can be justified through sufficiently complex reasoning about hypothetical knowledge states of others. The bias manifests in creating exceptions to honesty that serve the author's interests while maintaining a self-perception of integrity.",
+          "highlight": {
+            "startOffset": 3775,
+            "endOffset": 3962,
+            "quotedText": "If you ask me a question that I don't want to answer, and me saying \"I don't think I should answer that\" would itself reveal information that I don't want to reveal, then I will probably lie.",
+            "prefix": "On the flip side, integrity does not mean that I always keep my word. "
+          }
+        },
+        {
+          "title": "Status Quo Bias",
+          "description": "The document demonstrates status quo bias by assuming current social norms and power dynamics are optimal or natural. The framework doesn't account for how integrity might function differently in contexts of systemic inequality or injustice. This bias appears when the author assumes that integrity naturally aligns with being \"basically good\" without examining whose definition of goodness is being centered or how power dynamics might influence these definitions.",
+          "highlight": {
+            "startOffset": 4181,
+            "endOffset": 4310,
+            "quotedText": "predict given my definition of integrity, and I think they are in line with common-sense intuitions about being basically good.",
+            "prefix": " None of these cases are going to feel like gotchas; they are easy to "
+          }
+        },
+        {
+          "title": "Overconfidence Bias",
+          "description": "The author demonstrates overconfidence bias by repeatedly characterizing their complex ethical framework as \"simple,\" \"straightforward,\" or \"basic\" despite acknowledging numerous complications and edge cases. This bias manifests in the assertion that the author's approach to integrity is intuitive and easy to apply, while simultaneously requiring sophisticated decision theory and philosophical reasoning that most people would find challenging to implement consistently.",
+          "highlight": {
+            "startOffset": 12303,
+            "endOffset": 12404,
+            "quotedText": "y straightforward. So I usually don't think about it, and just (aspire to) make decisions with integrity.",
+            "prefix": "After putting all of this together, I feel like the calculus is prett"
+          }
+        }
+      ]
     },
     {
       "agentId": "clarity-coach",
-      "costInCents": 0,
-      "createdAt": "2025-04-15T22:09:37.204Z",
-      "summary": "Error: Unable to parse the response from the AI. Please try again.",
-      "comments": []
+      "costInCents": 8035,
+      "createdAt": "2025-04-15T22:19:37.269Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":5510,\"completionTokens\":2525,\"totalTokens\":8035,\"temperature\":0.7,\"runtimeMs\":54746}",
+      "summary": "This document explores a nuanced view of integrity for consequentialists. The author defines integrity as making decisions while considering how others would act if they knew you were the kind of person who makes such decisions. This approach balances pure consequentialism with commitment-keeping, avoiding both short-sightedness and excessive timidity. The author argues that this form of integrity is both pragmatically beneficial and aligns with intuitive moral reasoning. They present a model where even in scenarios with low chances of detection, maintaining integrity remains optimal due to the disproportionate impact of discovered violations. The document acknowledges complexities in edge cases but maintains that straightforward integrity is computationally simpler and socially efficient. Unlike rigid deontological approaches to promises, this framework provides flexibility while preserving trustworthiness. The writing effectively uses personal reflection, hypothetical scenarios, and visual aids to convey a sophisticated ethical framework.",
+      "comments": [
+        {
+          "title": "Clear Thesis Statement and Structure",
+          "description": "The document effectively establishes its purpose in the introduction and maintains a clear organizational structure throughout. The numbered sections (I-VI) provide logical progression of ideas, making the complex philosophical argument accessible. This structural clarity significantly enhances readability, allowing readers to follow the development of the integrity concept from definition through justification to practical application.",
+          "highlight": {
+            "startOffset": 93,
+            "endOffset": 331,
+            "quotedText": "really precise definition of integrity. But if you really want to go all-in on consequentialism then I think it's useful. Otherwise you risk being stuck with a flavor of consequentialism that is either short-sighted or terminally timid.",
+            "prefix": "For most people I don't think it's important to have a "
+          }
+        },
+        {
+          "title": "Balanced Sentence Structure Variation",
+          "description": "The document effectively alternates between short, direct sentences and longer, more complex ones. This variation creates a natural reading rhythm that maintains engagement while allowing for the development of complex ideas. The balance prevents the philosophical content from becoming monotonous or overly dense, contributing significantly to the overall readability of the piece.",
+          "highlight": {
+            "startOffset": 397,
+            "endOffset": 724,
+            "quotedText": "about the consequences of each possible action and decide how much I like them; then I select the action whose consequences I like best.\n\nTo make decisions with integrity, I make one change: when I imagine picking an action, I pretend that picking it causes everyone to know that I am the kind of person who picks that option.",
+            "prefix": "I aspire to make decisions in a pretty simple way. I think "
+          }
+        },
+        {
+          "title": "Excessive Paragraph Length in Section III",
+          "description": "The bullet-point list in Section III contains complex ideas that would benefit from further subdivision. Breaking this section into smaller, more focused paragraphs would improve readability by providing visual breaks and allowing readers to process each point more effectively. Consider expanding each bullet point into a short paragraph with a clear topic sentence and supporting explanation to enhance clarity and comprehension.",
+          "highlight": {
+            "startOffset": 5939,
+            "endOffset": 6855,
+            "quotedText": "add up to 100%.\n\nI think that basically all of these factors give reasons to behave with integrity:\n\n*   My decision is going to have a causal influence on what you think of me.\n*   My decision is going to have a causal influence on what you think of other similar people. I want to be nice to those people. But also my decision is correlated with their decisions (moreso the more they are like me) and I want _them_ to be nice to _me_.\n*   My decision is going to have a direct effect on my reputation.\n*   My decision has logical consequences on your reasoning about my decision. After all, I am running a certain kind of algorithm and you have some ability to imperfectly simulate that algorithm.\n*   To the extent that your attempts to infer my character or intention are unbiased, being the kind of person who will decide in a particular way will actually cause you to believe I am that kind of person.\n*   (And so on.)",
+            "prefix": "In some sense, the total \"influence\" of these factors must "
+          }
+        },
+        {
+          "title": "Undefined Technical Term",
+          "description": "The document uses the technical term \"UDT\" without defining it or providing context for readers unfamiliar with decision theory terminology. This creates a potential comprehension barrier for general audiences. Consider briefly explaining that UDT refers to \"Updateless Decision Theory\" and providing a one-sentence description of its relevance to the integrity framework being discussed.",
+          "highlight": {
+            "startOffset": 7294,
+            "endOffset": 7568,
+            "quotedText": "decisions using UDT rather than causal decision theory. I think this is the right way to make decisions (or at least the way that you should decide to make decisions), but your views my vary. At any rate, it's the way that I make decisions, which is all that I'm describing here.",
+            "prefix": "Some of these considerations are only relevant because I make "
+          }
+        },
+        {
+          "title": "Strong Conclusion with Practical Application",
+          "description": "The document concludes effectively by contrasting the author's approach with alternative consequentialist frameworks and inviting feedback. This conclusion successfully ties the theoretical discussion to practical ethical decision-making, emphasizing the real-world utility of the integrity framework. The openness to alternative perspectives demonstrates intellectual humility and invites continued dialogue on the topic.",
+          "highlight": {
+            "startOffset": 12759,
+            "endOffset": 13207,
+            "quotedText": "literal content of their word is only a marginally more useful ally than someone with no scruples at all.\n\nPersonally, I get a lot of benefit from having clear definitions; I feel like the operationalization of integrity in this post has worked pretty well, and much better than the deontological constraints it replaced.  That said, I'm always interested in adopting something better, and would love to hear pushback or arguments for alternative norms.",
+            "prefix": "the other it does not go far enough---someone bound by the "
+          }
+        }
+      ]
     },
     {
       "agentId": "research-scholar",
-      "costInCents": 8392,
-      "createdAt": "2025-04-15T22:10:28.590Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":5681,\"completionTokens\":2711,\"totalTokens\":8392,\"temperature\":0.7,\"runtimeMs\":51365}",
-      "summary": "This essay explores a consequentialist framework for integrity that balances effectiveness with ethical considerations. The author defines integrity as making decisions while imagining that choosing an action causes everyone to know you're the type of person who makes such choices. This approach differs from simple promise-keeping by considering the counterfactual costs of others knowing your decision-making tendencies. The framework is justified through multiple causal pathways: direct reputation effects, impacts on similar people, logical consequences on others' reasoning about you, and people's ability to infer your character. The author argues that even in scenarios with low probability of discovery, the optimal behavior typically remains acting with integrity because detection leads to proportionally larger reputational updates. Additionally, integrity facilitates positive-sum interactions and aligns with human emotional responses. Unlike rigid deontological constraints, this approach provides flexibility while maintaining reliability beyond mere adherence to explicit promises.",
+      "costInCents": 8550,
+      "createdAt": "2025-04-15T22:21:48.900Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":5681,\"completionTokens\":2869,\"totalTokens\":8550,\"temperature\":0.7,\"runtimeMs\":50467}",
+      "summary": "This essay explores a nuanced definition of integrity for consequentialists that balances pure outcome-maximization with trustworthiness. The author proposes a decision framework where one acts as if their choice reveals their character to others, even retroactively. This approach addresses the shortcomings of both naive consequentialism (which can be short-sighted) and rigid deontology (which can be unnecessarily constraining). The framework accounts for reputation effects, logical correlations between similar agents, and inference patterns others use to predict behavior. The author argues that even in scenarios with minimal social visibility, integrity remains valuable due to non-linear reputation effects - rare observations of bad behavior can trigger disproportionately large negative updates. The essay concludes that integrity is not only ethically sound but practically efficient, enabling commitment-making and positive-sum interactions without requiring explicit promises or rigid rules. This approach represents a more sophisticated consequentialism that incorporates the social dimension of decision-making.",
       "comments": [
         {
-          "title": "Decision Theory Context",
-          "description": "The author's approach to integrity explicitly references Updateless Decision Theory (UDT), which is significant in rationalist circles. UDT differs from Causal Decision Theory by considering the logical implications of one's decision algorithm rather than just direct causal effects. This connection places the essay within a broader discourse on LessWrong about decision theory and acausal cooperation, including Eliezer Yudkowsky's Timeless Decision Theory and Wei Dai's original UDT formulation. The author's integrity framework essentially applies UDT reasoning to everyday ethical decisions.",
+          "title": "Decision-Theoretic Foundations",
+          "description": "The author's approach to integrity explicitly relies on Updateless Decision Theory (UDT) rather than Causal Decision Theory (CDT). This is significant in the rationalist community where decision theory discussions often center on how agents should reason about logical correlations between decisions and outcomes. UDT, developed by Wei Dai, allows agents to consider the logical implications of their decision algorithms rather than just causal effects. This framework is particularly relevant to the LessWrong community's interests in decision theory paradoxes and coordination problems.",
           "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "Some of these considerations are only relevant because I make ",
-            "quotedText": "decisions using UDT rather than causal decision theory. I think this is the right way to make decisions (or at least the way that you should decide to make decisions), but your views my vary. At any rate, it's the way that I make decisions, which is all that I'm describing here."
+            "startOffset": 7294,
+            "endOffset": 7568,
+            "quotedText": "decisions using UDT rather than causal decision theory. I think this is the right way to make decisions (or at least the way that you should decide to make decisions), but your views my vary. At any rate, it's the way that I make decisions, which is all that I'm describing here.",
+            "prefix": " a magical retrocausal influence is going to result in basically the same decision.\n\nSome of these considerations are only relevant because I make "
           }
         },
         {
-          "title": "Functional Integrity vs. Deontological Rules",
-          "description": "The author contrasts their functional approach to integrity with more rigid deontological constraints that some consequentialists adopt. This highlights a key tension in consequentialist ethics between rule-following and outcome optimization. The critique that deontological constraints can be simultaneously too demanding (preventing promise-making) and insufficient (allowing exploitation through technicalities) reflects Scott Alexander's concept of \"motte-and-bailey\" ethics, where rigid rules fail to capture the functional purpose of integrity. This connects to broader EA discussions about integrity constraints in effective altruism.",
+          "title": "Bayesian Social Reasoning",
+          "description": "The author describes a subtle Bayesian reasoning process where rare observations have disproportionate impact on belief updates. This is a sophisticated application of Bayesian epistemology to social interactions. In the rationalist community, this connects to discussions about proper scoring rules, information theory, and optimal inference. The insight that rarer observations should trigger larger updates is mathematically sound and represents the kind of probabilistic thinking that LessWrong promotes.",
           "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "Many consequentialists claim to adopt firm rules like \"my word is ",
-            "quotedText": "inviolable\" and then justify those rules on consequentialist grounds. But I think on the one hand that approach is too demanding---the people I know who take promises most seriously basically never make them---and on the other it does not go far enough---someone bound by the literal content of their word is only a marginally more useful ally than someone with no scruples at all."
+            "startOffset": 9527,
+            "endOffset": 9648,
+            "quotedText": "once the total number of data points in the class is reasonably large) each data point has nearly 10x as much influence.",
+            "prefix": "her experiences with people like Bob, other people's experiences with Bob...) Alice has 1/10th as much data about cases with a 5% chance of discovery, and so ("
           }
         },
         {
-          "title": "Retrocausality as a Heuristic",
-          "description": "The author uses a counterfactual \"retrocausal\" framing that might initially seem mystical but is actually a computational shortcut for aggregating various causal mechanisms. This approach resembles the \"functional decision theory\" later developed by Soares and Levinstein (2017) at MIRI, which formalizes how logical correlations between decision-makers can be leveraged without assuming literal backwards causation. The retrocausal framing serves as an elegant approximation that simplifies complex calculations about reputation, correlation with similar agents, and logical connections.",
+          "title": "Moloch and Coordination Solutions",
+          "description": "The author's approach to integrity provides a potential solution to certain Molochian coordination problems, a concept frequently discussed on LessWrong (derived from Scott Alexander's Meditations on Moloch). By adopting a decision procedure that enables credible commitment-making without external enforcement, the author is describing a mechanism that could help overcome multipolar traps and prisoner's dilemmas. This relates to EA discussions about institutional design and mechanisms for cooperation in high-stakes global challenges.",
           "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "To make decisions with integrity, I make one change: when I imagine ",
-            "quotedText": "picking an action, I pretend that picking it causes everyone to know that I am the kind of person who picks that option."
+            "startOffset": 10779,
+            "endOffset": 10985,
+            "quotedText": "Being able to make commitments is useful, as a precondition for most kinds of positive-sum trade. Being able to realize positive-sum trades, without needing to make explicit commitments, is even more useful.",
+            "prefix": "Integrity has one more large advantage: it is often very efficient. "
           }
         },
         {
-          "title": "Inverse Relationship Between Discovery Probability and Update Magnitude",
-          "description": "The author presents an important insight about the relationship between the probability of detecting bad behavior and the magnitude of resulting reputational updates. This observation has connections to Bayesian epistemology and game theory concepts like the \"inspection paradox.\" The insight that low-probability detection leads to larger updates corresponds to information theory principles where rare events carry more information. This mechanism helps explain why integrity-based behavior remains optimal even when detection seems unlikely - a finding relevant to institutional design and social norm enforcement.",
+          "title": "Computational Simplicity as a Feature",
+          "description": "The author notes that simple decision procedures have computational advantages over complex case-by-case calculations. This connects to discussions in rationalist circles about bounded rationality, computational constraints on decision-making, and the value of heuristics. It also relates to discussions about AI alignment, where simple, robust decision procedures may be preferable to complex utility calculations that could be vulnerable to edge cases or optimization failures.",
           "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "Suppose that Alice and Bob interact, and Alice has either a 50% or ",
-            "quotedText": "5% chance of detecting Bob's jerk-like behavior. In either case, if she detects bad behavior she is going to make an update about Bob's characteristics. But there are several reasons to expect the 5% chance will have a 10x larger update if it actually happens:"
+            "startOffset": 11864,
+            "endOffset": 12026,
+            "quotedText": "\"Behave with integrity\" is a whole lot simpler (computationally and psychologically) than executing a complicated calculation to decide exactly when you can skimp.",
+            "prefix": "On top of that:\n\n*   Integrity is most effective when it is straightforward rather than conditional.\n*   \""
           }
         },
         {
-          "title": "Commitment Mechanisms and Social Efficiency",
-          "description": "The author highlights how integrity functions as a commitment mechanism that enables positive-sum trades, connecting to economic concepts of transaction costs and commitment problems. This framing relates to Schelling's work on commitment strategies and Ostrom's research on cooperation in commons dilemmas. The observation that commitment capabilities are prerequisites for many beneficial interactions explains why evolution might have selected for integrity-related emotions like vengefulness and honor. This provides a naturalistic grounding for integrity that aligns with both consequentialist ethics and evolutionary psychology.",
+          "title": "Functional Definition vs. Deontological Rules",
+          "description": "The author contrasts their functional definition of integrity with more rigid deontological approaches common among some consequentialists. This relates to ongoing discussions in the rationalist community about the role of rules, heuristics, and principles in ethical reasoning. The critique that deontological constraints can be simultaneously too demanding and insufficient connects to discussions about moral trade-offs, moral uncertainty, and rule-consequentialism that appear frequently on LessWrong and EA forums.",
           "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "Integrity has one more large advantage: it is often very efficient",
-            "quotedText": ". Being able to make commitments is useful, as a precondition for most kinds of positive-sum trade. Being able to realize positive-sum trades, without needing to make explicit commitments, is even more useful."
-          }
-        },
-        {
-          "title": "Computational Efficiency of Simple Rules",
-          "description": "The author notes that integrity is computationally simpler than constantly calculating optimal behavior in each situation. This connects to Herbert Simon's concept of bounded rationality and Gigerenzer's work on \"fast and frugal heuristics\" - simple decision rules that perform well across environments despite limited information processing. The computational advantage of integrity aligns with discussions in AI alignment about the value of transparent, understandable decision procedures versus opaque utility calculations. This provides both a practical and theoretical justification for integrity-based approaches.",
-          "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "On top of that:\n\n* Integrity is most effective when it is ",
-            "quotedText": "straightforward rather than conditional.\n* \"Behave with integrity\" is a whole lot simpler (computationally and psychologically) than executing a complicated calculation to decide exactly when you can skimp."
-          }
-        },
-        {
-          "title": "Alignment with Emotional Architecture",
-          "description": "The author mentions that integrity aligns with human emotional responses like vengefulness and honor. This connects to moral psychology research on emotional foundations of ethical behavior (e.g., Jonathan Haidt's moral foundations theory) and evolutionary accounts of cooperation. The observation that our emotional architecture supports integrity-based decision making suggests that such approaches may be more psychologically sustainable than purely calculated consequentialism. This aligns with discussions in EA about moral motivation and the risks of burnout from overly demanding ethical frameworks.",
-          "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "\"Behave with integrity\" is a whole lot simpler (computationally ",
-            "quotedText": "and psychologically) than executing a complicated calculation to decide exactly when you can skimp.\n* Humans have a bunch of emotional responses that seem designed to implement integrity---e.g. vengefulness or a desire to behave honorably---and I find that behaving with integrity also ticks those boxes."
-          }
-        },
-        {
-          "title": "Honesty in Self-Presentation",
-          "description": "The author makes a meta-level point about honesty in presenting their approach to integrity - noting that the very definition they're using implies being straightforward about how they interpret integrity. This creates a recursive consistency between the content and the presentation. This self-referential aspect connects to discussions of reflective equilibrium in ethics and Hofstadter's concept of \"strange loops\" in self-reference. The observation demonstrates how integrity creates constraints on communication itself, not just on actions, which has implications for discourse ethics and epistemic norms in rational communities.",
-          "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "A convenient thing about this form of integrity is that it ",
-            "quotedText": "basically means behaving in the way that I'd want to claim to behave in this blog post. If you ask me \"doesn't this imply that you would do X, which you only refrained from writing down because it would reflect poorly on you?\" then you've answered your own question."
-          }
-        },
-        {
-          "title": "Integrity Without Absolutism",
-          "description": "The author acknowledges that their approach doesn't imply absolute promise-keeping, allowing for justified deception in certain circumstances. This nuanced position contrasts with both rigid deontology and unconstrained consequentialism, representing a form of \"sophisticated consequentialism\" that incorporates rule-following while maintaining flexibility. This connects to discussions in EA about integrity constraints on optimization and the risks of naive consequentialism. The position resembles rule-consequentialism but with situation-specific evaluation rather than fixed rules.",
-          "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "On the flip side, integrity does not mean that I always keep ",
-            "quotedText": "my word. If you ask me a question that I don't want to answer, and me saying \"I don't think I should answer that\" would itself reveal information that I don't want to reveal, then I will probably lie. If I say I will do something then I will try to do it, but it just gets tallied up like any other cost or benefit, it's not a hard-and-fast rule."
-          }
-        },
-        {
-          "title": "Thought Experiments and Interpolation",
-          "description": "The author uses a thought experiment about extreme cases to explore how integrity applies across different scenarios, explicitly noting that such extremes help us interpolate to realistic situations. This methodological approach connects to philosophical discussions about the role of edge cases in ethical reasoning. The use of graphical representations to illustrate how behavior should vary with detection probability demonstrates a quantitative approach to ethics that aligns with EA's emphasis on expected value calculations. This represents a sophisticated blend of consequentialist reasoning with intuitive visualization.",
-          "highlight": {
-            "startOffset": 13620,
-            "endOffset": 13620,
-            "prefix": "There is a temptation to reject this kind of crazy thought ",
-            "quotedText": "experiment---there are never literally _zero_ causal effects. But like most thought experiments, it is intended to explore an extreme point in the space of possibilities:![twopoints](https://unstylizedcom.files.wordpress.com/2016/11/twopoints.png)\n\nOf course we don't usually encounter these extreme cases; most of our decisions sit somewhere in between. The extreme cases are mostly interesting to the extent that realistic situations are in between them and we can usefully interpolate."
+            "startOffset": 12413,
+            "endOffset": 12866,
+            "quotedText": "Many consequentialists claim to adopt firm rules like \"my word is inviolable\" and then justify those rules on consequentialist grounds. But I think on the one hand that approach is too demanding---the people I know who take promises most seriously basically never make them---and on the other it does not go far enough---someone bound by the literal content of their word is only a marginally more useful ally than someone with no scruples at all.",
+            "prefix": "After putting all of this together, I feel like the calculus is pretty straightforward. So I usually don't think about it, and just (aspire to) make decisions with integrity.\n\n#### VI.\n\n"
           }
         }
       ]

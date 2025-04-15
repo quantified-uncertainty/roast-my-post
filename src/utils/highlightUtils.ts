@@ -53,7 +53,7 @@ export function highlightsOverlap(a: Highlight, b: Highlight): boolean {
 export function calculateHighlightOffsets(
   content: string,
   rawHighlight: RawLLMHighlight,
-  searchStartIndex: number = 0 // Default search start index to 0
+  searchStartIndex: number = 0
 ): CalculatedHighlight | null {
   // Basic validation
   if (!rawHighlight.quotedText || rawHighlight.quotedText.length === 0) {
@@ -65,76 +65,160 @@ export function calculateHighlightOffsets(
     return null;
   }
 
-  // Find the potential starting position of the highlight - First attempt from searchStartIndex
-  let potentialStartOffset = content.indexOf(
-    rawHighlight.startText,
+  // Normalize both the content and the quoted text for comparison
+  const normalizeText = (text: string): string => {
+    return text
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .replace(/\\n/g, " ") // Replace escaped newlines
+      .replace(/\\/g, "") // Remove escape characters
+      .replace(/\*\*/g, "") // Remove markdown bold
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1") // Remove markdown links
+      .replace(/[.,!?;:]/g, "") // Remove punctuation
+      .replace(/['"`]/g, "") // Remove quotes
+      .replace(/[‘’]/g, "") // Remove smart quotes
+      .replace(/[""]/g, "") // Remove smart double quotes
+      .toLowerCase() // Case insensitive
+      .trim();
+  };
+
+  const normalizedContent = normalizeText(content);
+  const normalizedQuotedText = normalizeText(rawHighlight.quotedText);
+  const normalizedStartText = normalizeText(rawHighlight.startText);
+
+  // Find the potential starting position of the highlight
+  const startIndex = normalizedContent.indexOf(
+    normalizedStartText,
     searchStartIndex
   );
+  if (startIndex === -1) {
+    // Try a more flexible search if exact match fails
+    const words = normalizedStartText.split(/\s+/).filter((w) => w.length > 3);
+    if (words.length > 0) {
+      // Look for the first substantial word
+      const firstWord = words[0];
+      const wordIndex = normalizedContent.indexOf(firstWord, searchStartIndex);
+      if (wordIndex !== -1) {
+        // Found a word match, now look for the full text around this position
+        const searchWindow = 100; // Look 100 chars before and after
+        const windowStart = Math.max(0, wordIndex - searchWindow);
+        const windowEnd = Math.min(
+          normalizedContent.length,
+          wordIndex + searchWindow
+        );
+        const searchArea = normalizedContent.substring(windowStart, windowEnd);
 
-  // If not found starting from searchStartIndex, try searching from the beginning
-  if (potentialStartOffset === -1 && searchStartIndex > 0) {
+        // Try to find the full quoted text in this window
+        const quoteIndex = searchArea.indexOf(normalizedQuotedText);
+        if (quoteIndex !== -1) {
+          // Found the quoted text in the window, use its position
+          return {
+            startOffset: windowStart + quoteIndex,
+            endOffset: windowStart + quoteIndex + normalizedQuotedText.length,
+            quotedText: rawHighlight.quotedText,
+            prefix: rawHighlight.prefix,
+          };
+        }
+      }
+    }
     console.warn(
-      `calculateHighlightOffsets: Retrying search for "${rawHighlight.startText.substring(
-        0,
-        20
-      )}..." from index 0.`
-    );
-    potentialStartOffset = content.indexOf(rawHighlight.startText, 0);
-  }
-
-  if (potentialStartOffset === -1) {
-    // startText was not found anywhere relevant
-    console.warn(
-      `calculateHighlightOffsets: startText "${rawHighlight.startText.substring(
-        0,
-        20
-      )}..." not found.` // Simplified message
-    );
-    return null;
-  }
-
-  // Extract the substring from the content based on the potential start and quotedText length
-  const potentialEndOffset =
-    potentialStartOffset + rawHighlight.quotedText.length;
-
-  // Check if the potential end offset goes beyond the content length
-  if (potentialEndOffset > content.length) {
-    console.warn(
-      `calculateHighlightOffsets: quotedText "${rawHighlight.quotedText.substring(
-        0,
-        20
-      )}..." starting at ${potentialStartOffset} exceeds content length.`
+      `calculateHighlightOffsets: startText "${rawHighlight.startText}" not found.`
     );
     return null;
   }
 
-  const contentSubstring = content.substring(
-    potentialStartOffset,
-    potentialEndOffset
-  );
-
-  // Verify if the extracted substring exactly matches the expected quotedText
-  if (contentSubstring === rawHighlight.quotedText) {
-    // Match found! Return the calculated highlight.
-    return {
-      startOffset: potentialStartOffset,
-      endOffset: potentialEndOffset,
-      prefix: rawHighlight.prefix,
-      quotedText: rawHighlight.quotedText, // Return the verified quote
-    };
-  } else {
-    // No exact match found at this potential start offset.
+  // Find the potential ending position
+  const endIndex = startIndex + normalizedQuotedText.length;
+  if (endIndex > normalizedContent.length) {
     console.warn(
-      `calculateHighlightOffsets: Verification failed. Expected "${rawHighlight.quotedText.substring(
-        0,
-        30
-      )}..." but found "${contentSubstring.substring(
-        0,
-        30
-      )}..." at index ${potentialStartOffset}.`
+      `calculateHighlightOffsets: endIndex ${endIndex} exceeds content length ${normalizedContent.length}.`
     );
     return null;
   }
+
+  // Extract the actual text from the content
+  const actualText = normalizedContent.substring(startIndex, endIndex);
+
+  // Compare the normalized texts with more flexible matching
+  if (actualText !== normalizedQuotedText) {
+    // Try a more lenient comparison
+    const actualWords = actualText.split(/\s+/).filter((w) => w.length > 3);
+    const quotedWords = normalizedQuotedText
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
+
+    // Check if most words match
+    const matchingWords = actualWords.filter((word) =>
+      quotedWords.includes(word)
+    );
+    const matchRatio =
+      matchingWords.length / Math.max(actualWords.length, quotedWords.length);
+
+    if (matchRatio < 0.7) {
+      // Require at least 70% word match
+      console.warn(
+        `calculateHighlightOffsets: Verification failed. Expected "${normalizedQuotedText}" but found "${actualText}" at index ${startIndex}.`
+      );
+      return null;
+    }
+  }
+
+  // Map the normalized offsets back to the original content
+  const mapNormalizedToOriginal = (normalizedIndex: number): number => {
+    let originalIndex = 0;
+    let normalizedIndexCount = 0;
+
+    while (
+      normalizedIndexCount < normalizedIndex &&
+      originalIndex < content.length
+    ) {
+      const char = content[originalIndex];
+      if (!/[.,!?;:'"`]/.test(char)) {
+        // Skip punctuation and quotes
+        normalizedIndexCount++;
+      }
+      originalIndex++;
+    }
+
+    return originalIndex;
+  };
+
+  const originalStartIndex = mapNormalizedToOriginal(startIndex);
+  const originalEndIndex = mapNormalizedToOriginal(endIndex);
+
+  return {
+    startOffset: originalStartIndex,
+    endOffset: originalEndIndex,
+    quotedText: rawHighlight.quotedText,
+    prefix: rawHighlight.prefix,
+  };
+}
+
+// Helper function to map normalized offsets back to original offsets
+function findOriginalOffset(
+  original: string,
+  normalized: string,
+  normalizedOffset: number
+): number {
+  let originalOffset = 0;
+  let normalizedIndex = 0;
+
+  while (
+    normalizedIndex < normalizedOffset &&
+    originalOffset < original.length
+  ) {
+    const originalChar = original[originalOffset];
+    const normalizedChar = normalized[normalizedIndex];
+
+    if (originalChar === normalizedChar) {
+      originalOffset++;
+      normalizedIndex++;
+    } else {
+      // Skip characters that were normalized out
+      originalOffset++;
+    }
+  }
+
+  return originalOffset;
 }
 
 /**
