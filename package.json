@@ -15,7 +15,7 @@
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
     "test": "jest",
-    "test:mts": "npx tsx src/scripts/test-mts.ts"
+    "import-article": "tsx src/scripts/import-article.ts https://forum.effectivealtruism.org/posts/bT3WrFn6H4fpvLSk8/policy-advocacy-for-eradicating-screwworm-looks-remarkably"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

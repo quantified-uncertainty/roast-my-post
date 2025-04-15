@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { documentsCollection } from "@/data/docs";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 export default function DocumentsPage() {
   return (
@@ -13,6 +14,18 @@ export default function DocumentsPage() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {documentsCollection.documents.map((document) => {
+              // Count reviews by agent
+              const agentReviews =
+                document.reviews?.reduce(
+                  (acc, review) => {
+                    acc[review.agentId] =
+                      (acc[review.agentId] || 0) +
+                      (review.comments?.length || 0);
+                    return acc;
+                  },
+                  {} as Record<string, number>
+                ) || {};
+
               return (
                 <Link
                   key={document.id}
@@ -26,6 +39,24 @@ export default function DocumentsPage() {
                     <p className="mt-1 truncate text-sm leading-5 text-gray-500">
                       {document.content}
                     </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {Object.entries(agentReviews).map(
+                        ([agentId, commentCount]) => (
+                          <span
+                            key={agentId}
+                            className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                          >
+                            {agentId} <ChatBubbleLeftIcon className="h-3 w-3" />{" "}
+                            {commentCount}
+                          </span>
+                        )
+                      )}
+                      {document.reviews?.length === 0 && (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                          No reviews yet
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );

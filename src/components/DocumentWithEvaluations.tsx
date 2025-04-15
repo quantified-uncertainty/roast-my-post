@@ -219,8 +219,9 @@ export function DocumentWithEvaluations({
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
-  const activeReview =
-    document.reviews[activeReviewIndex] || document.reviews[0];
+  // Handle case when there are no reviews
+  const hasReviews = document.reviews && document.reviews.length > 0;
+  const activeReview = hasReviews ? document.reviews[activeReviewIndex] : null;
 
   const scrollToHighlight = (tag: string) => {
     const element = window.document.getElementById(`highlight-${tag}`);
@@ -257,8 +258,6 @@ export function DocumentWithEvaluations({
     // This allows the user to maintain their scroll position
   };
 
-  const sortedComments = sortCommentsByOffset(activeReview.comments);
-
   return (
     <div className="flex h-screen bg-white">
       <div ref={documentRef} className="flex-1 overflow-y-auto p-8">
@@ -278,12 +277,21 @@ export function DocumentWithEvaluations({
               content={document.content}
               onHighlightHover={(tag) => setActiveTag(tag)}
               onHighlightClick={handleHighlightClick}
-              highlights={sortedComments.map((comment, index) => ({
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                tag: index.toString(),
-                color: getCommentHighlightColor(index).replace("bg-", ""),
-              }))}
+              highlights={
+                activeReview
+                  ? sortCommentsByOffset(activeReview.comments).map(
+                      (comment, index) => ({
+                        startOffset: comment.highlight.startOffset,
+                        endOffset: comment.highlight.endOffset,
+                        tag: index.toString(),
+                        color: getCommentHighlightColor(index).replace(
+                          "bg-",
+                          ""
+                        ),
+                      })
+                    )
+                  : []
+              }
               activeTag={activeTag}
             />
           </article>
@@ -292,93 +300,103 @@ export function DocumentWithEvaluations({
 
       <div className="w-72 flex-1 overflow-y-auto border-l border-gray-200 bg-gray-50 px-4 py-2">
         <div className="space-y-4">
-          <ReviewSelector
-            document={document}
-            activeReviewIndex={activeReviewIndex}
-            onReviewSelect={handleReviewSelect}
-          />
-
-          {/* About section */}
-          <div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="px-2 py-1 text-xs text-gray-500">
-                  Run cost: ${(activeReview.costInCents / 100).toFixed(2)} • Run
-                  Date: {activeReview.createdAt.toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center p-1">
-                    {activeReview.agentId &&
-                      (() => {
-                        const agent = evaluationAgents.find(
-                          (a) => a.id === activeReview.agentId
-                        );
-                        const Icon = agent ? getIcon(agent.iconName) : null;
-                        return Icon ? (
-                          <Icon className="h-4 w-4 text-gray-500" />
-                        ) : null;
-                      })()}
-                  </div>
-                  <a
-                    href={`/agents/${activeReview.agentId}`}
-                    className="text-xs text-blue-500"
-                  >
-                    {activeReview.agentId
-                      ? evaluationAgents.find(
-                          (a) => a.id === activeReview.agentId
-                        )?.name || "Unknown Agent"
-                      : "Unknown Agent"}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Analysis section */}
-          {activeReview.summary && (
-            <div className="rounded-lg bg-white shadow-sm">
-              <div
-                className="flex cursor-pointer items-center justify-between px-4 py-1.5 select-none hover:bg-gray-50"
-                onClick={() =>
-                  setExpandedTag(expandedTag === "analysis" ? null : "analysis")
-                }
-              >
-                <h3 className="text-sm font-medium text-gray-700">Analysis</h3>
-                {expandedTag === "analysis" ? (
-                  <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
-                )}
-              </div>
-              <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
-                {expandedTag === "analysis" ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                  >
-                    {activeReview.summary}
-                  </ReactMarkdown>
-                ) : (
-                  <div className="line-clamp-3">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    >
-                      {activeReview.summary}
-                    </ReactMarkdown>
-                  </div>
-                )}
-              </div>
-            </div>
+          {hasReviews && (
+            <ReviewSelector
+              document={document}
+              activeReviewIndex={activeReviewIndex}
+              onReviewSelect={handleReviewSelect}
+            />
           )}
 
-          <CommentsSidebar
-            comments={activeReview.comments}
-            activeTag={activeTag}
-            expandedTag={expandedTag}
-            onTagHover={setActiveTag}
-            onTagClick={handleCommentClick}
-          />
+          {activeReview && (
+            <>
+              {/* About section */}
+              <div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="px-2 py-1 text-xs text-gray-500">
+                      Run cost: ${(activeReview.costInCents / 100).toFixed(2)} •
+                      Run Date: {activeReview.createdAt.toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center p-1">
+                        {activeReview.agentId &&
+                          (() => {
+                            const agent = evaluationAgents.find(
+                              (a) => a.id === activeReview.agentId
+                            );
+                            const Icon = agent ? getIcon(agent.iconName) : null;
+                            return Icon ? (
+                              <Icon className="h-4 w-4 text-gray-500" />
+                            ) : null;
+                          })()}
+                      </div>
+                      <a
+                        href={`/agents/${activeReview.agentId}`}
+                        className="text-xs text-blue-500"
+                      >
+                        {activeReview.agentId
+                          ? evaluationAgents.find(
+                              (a) => a.id === activeReview.agentId
+                            )?.name || "Unknown Agent"
+                          : "Unknown Agent"}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Analysis section */}
+              {activeReview.summary && (
+                <div className="rounded-lg bg-white shadow-sm">
+                  <div
+                    className="flex cursor-pointer items-center justify-between px-4 py-1.5 select-none hover:bg-gray-50"
+                    onClick={() =>
+                      setExpandedTag(
+                        expandedTag === "analysis" ? null : "analysis"
+                      )
+                    }
+                  >
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Analysis
+                    </h3>
+                    {expandedTag === "analysis" ? (
+                      <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
+                    {expandedTag === "analysis" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                      >
+                        {activeReview.summary}
+                      </ReactMarkdown>
+                    ) : (
+                      <div className="line-clamp-3">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeRaw]}
+                        >
+                          {activeReview.summary}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <CommentsSidebar
+                comments={activeReview.comments}
+                activeTag={activeTag}
+                expandedTag={expandedTag}
+                onTagHover={setActiveTag}
+                onTagClick={handleCommentClick}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

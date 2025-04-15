@@ -1,0 +1,121 @@
+{
+  "id": "a-note-of-caution-about-recent-ai-risk-coverage-ea-forum",
+  "slug": "a-note-of-caution-about-recent-ai-risk-coverage-ea-forum",
+  "title": "A note of caution about recent AI risk coverage — EA Forum",
+  "author": "Unknown Author",
+  "publishedDate": "2025-04-15",
+  "intendedAgents": [
+    "bias-detector",
+    "clarity-coach",
+    "research-scholar"
+  ],
+  "content": "_Epistemic status: some thoughts I wanted to get out quickly_\n\nA lot of fantastic work has been done by people in the AI existential risk research community and related communities over the last several months in raising awareness about risks from advanced AI. However, I have some cause for unease that I’d like to share.\n\nThese efforts may have been too successful too soon.\n\nOr, more specifically, this level of outreach success this far ahead of the development of AI capable of posing existential risk may have fallout. We should consider steps to mitigate this. \n\n**(1)**  **Timelines**\n\nI know that there are well-informed people in the AI and existential risk communities who believe AI capable of posing existential risk may be developed within 10 years. I certainly can’t rule this out, and even a small chance of this is worth working to prevent or mitigate to the extent possible, given the possible consequences. My own timelines are longer, although my intuitions don’t have a rigorous model underpinning them (my intuitions line up similarly to the 15-40 year timelines mentioned in [this recent blog post](https://epochai.org/blog/a-compute-based-framework-for-thinking-about-the-future-of-ai) by Matthew Barnett from Epoch).\n\nRight now the nature of media communications means that the message is coming across with a lot of urgency. From speaking to lay colleagues, impressions often seem to be of short timelines (and some folks e.g. Geoff Hinton have explicitly said 5-20 years, sometimes with uncertainty caveats and sometimes without).\n\nIt may be that those with short (<10 years) timelines are right. And even if they’re not, and we’ve got decades before this technology poses an existential threat, many of the attendant challenges – alignment, governance, distribution of benefits – will need that additional time to be addressed. And I think it’s entirely plausible that the current level of buy-in will be needed in order to initiate the steps needed to avoid the worst outcomes, e.g. recruiting expertise and resources to alignment, development and commitment to robust regulation, even coming to agreements not to pursue certain technological developments beyond a certain point.\n\n However, if short timelines do not transpire, I believe there’s a need to consider a scenario I think is reasonably likely.\n\n**(2)**  **Crying wolf**\n\nI propose that it is most likely we are in a world where timelines are >10 years, perhaps >20 or 30 years. Right now this issue has a lot of the most prominent AI scientists and CEOs signed up, and political leaders worldwide committing to examining the issue seriously ([examples](https://twitter.com/RishiSunak/status/1663838958558539776;) [from](https://theelders.org/news/elders-urge-global-co-operation-manage-risks-and-share-benefits-ai;) [last](https:// https://twitter.com/tedlieu/status/1664430739717255168) week). What happens then in the >10 year-timeline world?\n\n The extinction-level outcomes that the public is hearing, and that these experts are raising and policymakers making costly reputational investments in, don’t transpire.  What does happen is all the benefits of near-term AI that have been talked about, plus all the near-term harms that are being predominantly raised by the AI ethics/FAccT communities. Perhaps these harms include somewhat more extreme versions than what is currently talked about, but nowhere near catastrophic. Suddenly the year is 2028, and that whole 2023 furore is starting to look a bit silly. Remember when everyone agreed AI was going to make us all extinct? Yeah, like Limits to Growth all over again. Except that we’re not safe. In reality, in this scenario, we’re just entering the period in which risk is most acute, and in which gaining or maintaining the support of leaders across society for coordinated action is most important. And it’s possibly even harder to convince them, because people remember how silly lots of people looked the last time. [\\[1\\]](#fnkcq5okqj3r)  [\\[2\\]](#fngk9hef3oa5)\n\n**(3)**  **How to navigate this scenario (in advance).** \n\nSuggestions:\n\n*   Have our messaging make clear that we don’t know when extinction-potential AI will be developed, and it’s quite likely that it will be over a decade, perhaps much longer. But it needs to be discussed now, because\n    *   we can’t rule out that it will be developed sooner;\n    *   there are choices to be made now that will have longer-term consequences;\n    *   the challenges need a lot more dedicated time and effort than they’ve been getting.  \n          \n        Uncertainty is difficult to communicate in media, but it’s important to try.\n*   [Don’t be triumphal](https://twitter.com/yonashav/status/1664505416846376960) over winning the public debate now; it may well be ‘lost’ again in 5 years\n*   Don’t unnecessarily antagonise the AI ethics/FaCCT folk [\\[3\\]](#fnmxdrl9nlph) because they’re quite likely to look like the ones who were right in 5 years (and because it’s just unhelpful).\n*   Build bridges where possible with the AI ethics/FaCCT folk on a range of issues and interventions that seem set to overlap in that time; work together where possible. Lots of people from those communities are making proposals that are relevant and overlapping with challenges associated with the path to transformative AI. This includes external evaluation; licensing and liability; oversight of powerful tech companies developing frontier AI; international bodies for governing powerful AI, and much more. E.g. see [this](https://ainowinstitute.org/publication/gpai-is-high-risk-should-not-be-excluded-from-eu-ai-act) and [this](https://www.wired.com/story/ai-desperately-needs-global-oversight/), as well as [CAIS's recent blog post.](https://www.safe.ai/post/three-policy-proposals-for-ai-safety)\n*   Don’t get fooled into thinking everyone now agrees. A lot more senior names are now signing onto statements and speaking up, and this is making it easier for previously silent-but-concerned researchers to speak up. However I think a majority of AI researchers probably still don’t agree this is a serious, imminent concern ([Yann LeCun’s silent majority](https://twitter.com/ylecun/status/1664011158989275138) is probably still real), and this disconnect in perceptions may result in significant pushback to come.\n*   Think carefully about the potential political fallout if and when this becomes an embarrassing thing for the politicians who have spoken up, and how to manage this. \n\nTo sum: I’m not saying it was wrong to push for this level of broad awareness and consensus-building; I think it may well turn out to be necessary this early in order to navigate the challenges on the path to transformative AI, even if we still have decades until that point (and we may not). But there’s the potential for a serious downside/backlash that this community, and everyone who shares our concern about existential risk from AI, should be thinking carefully about, in terms of positioning for effectiveness on slightly longer timelines.\n\n  \n_Thank you to Shakeel Hashim, Shahar Avin, Haydn Belfield and Ben Garfinkel for feedback on a previous draft of this post._  \n \n\n1.  **[^](#fnrefkcq5okqj3r)**\n    \n    Pushing against this, it seems likely that AI will have continued advancing as a technology, leading to ever-greater scientific and societal impacts. This may maintain or increase the salience of the idea that AI could pose extremely significant risks.\n    \n2.  **[^](#fnrefgk9hef3oa5)**\n    \n    A ‘softer’ version of this scenario is that some policy happens now, but then quietly drops off / gets dismantled over time, as political attention shifts elsewhere\n    \n3.  **[^](#fnrefmxdrl9nlph)**\n    \n    I don’t know how much this is happening in practice (there’s just so much online discourse right now it’s hard to track), but I have seen it remarked on several times e.g. [here](https://twitter.com/timhwang/status/1664335308307963904)",
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 6192,
+      "createdAt": "2025-04-15T22:05:51.758Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3739,\"completionTokens\":2453,\"totalTokens\":6192,\"temperature\":0.7,\"runtimeMs\":53695}",
+      "summary": "This document presents a nuanced perspective on AI existential risk communications, highlighting potential backlash if predicted short-timeline catastrophic outcomes don't materialize. The author expresses concern that current urgent messaging about AI risks may create a 'crying wolf' scenario if advanced AI with extinction-level capabilities doesn't emerge within the next decade. This could undermine future efforts when risks might actually become more acute. The text displays several forms of bias, including availability bias in focusing on recent high-profile statements, status quo bias in assumptions about how public opinion will evolve, and confirmation bias in selective interpretation of expert opinions. While the author attempts balance by acknowledging multiple perspectives, there's an underlying framing bias that privileges longer AI timelines. The document would benefit from more diverse viewpoints across the timeline spectrum and clearer distinction between the author's opinions and established facts about AI development trajectories.",
+      "comments": [
+        {
+          "title": "Epistemic Status Hedge",
+          "description": "The author begins with an epistemic status disclaimer that frames the entire piece as \"some thoughts I wanted to get out quickly.\" This creates a hedge that allows the presentation of potentially controversial claims without the same level of evidence or rigor that might otherwise be expected. While transparency about confidence levels is good, this particular framing may serve to insulate the arguments from criticism while still influencing the discourse on AI risk communication strategies.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 61,
+            "prefix": "",
+            "quotedText": "_Epistemic status: some thoughts I wanted to get out quickly_"
+          }
+        },
+        {
+          "title": "Overconfidence in Prediction",
+          "description": "The author displays overconfidence bias by making a definitive probability claim about AI timelines without sufficient evidence. Stating something is \"most likely\" suggests a high degree of certainty in a domain characterized by deep uncertainty. This creates an anchoring effect for readers and potentially dismisses valid concerns about shorter timelines without proper justification.",
+          "highlight": {
+            "startOffset": 2362,
+            "endOffset": 2468,
+            "prefix": "However, if short timelines do not transpire, I believe there's a need to consider a scenario I think is reasonably likely.\n\n**(2)**  **Crying wolf**\n\n",
+            "quotedText": "I propose that it is most likely we are in a world where timelines are >10 years, perhaps >20 or 30 years."
+          }
+        },
+        {
+          "title": "Polarizing Community Framing",
+          "description": "The text creates an artificial division between the \"AI existential risk\" and \"AI ethics/FAccT\" communities, presenting them as separate groups with potentially opposing interests. This in-group/out-group framing oversimplifies the complex landscape of AI safety concerns and may reinforce unhelpful tribalism. Many researchers work across these areas with overlapping concerns, and the binary framing misrepresents the diversity of perspectives within AI safety research.",
+          "highlight": {
+            "startOffset": 3259,
+            "endOffset": 3418,
+            "prefix": "What does happen is all the benefits of near-term AI that have been talked about, plus all the near-term harms that are being predominantly raised by ",
+            "quotedText": "the AI ethics/FAccT communities. Perhaps these harms include somewhat more extreme versions than what is currently talked about, but nowhere near catastrophic."
+          }
+        }
+      ]
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 6897,
+      "createdAt": "2025-04-15T22:06:37.781Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4369,\"completionTokens\":2528,\"totalTokens\":6897,\"temperature\":0.7,\"runtimeMs\":46008}",
+      "summary": "This document presents a thoughtful analysis of potential fallout from early AI existential risk advocacy. The author expresses concern that current urgent messaging about AI risks—if not fulfilled within expected timelines—could create a \"crying wolf\" scenario that undermines future efforts when risks actually become acute. The writing balances acknowledging the importance of current advocacy with strategic considerations for maintaining credibility over longer timelines. Key recommendations include transparent communication about timeline uncertainty, avoiding triumphalism, building bridges with AI ethics communities, recognizing persistent disagreement among researchers, and preparing for potential political backlash. The document demonstrates strong logical flow and audience awareness, though it contains some structural inconsistencies and formatting issues that occasionally impact readability.",
+      "comments": []
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 7602,
+      "createdAt": "2025-04-15T22:07:34.859Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4540,\"completionTokens\":3062,\"totalTokens\":7602,\"temperature\":0.7,\"runtimeMs\":57046}",
+      "summary": "This article discusses concerns about the potential backlash to current AI existential risk advocacy if timelines to dangerous AI prove longer than expected. The author argues that while recent success in raising awareness about AI x-risk is valuable, there's a risk of \"crying wolf\" if extinction-level outcomes don't materialize within a decade. They suggest most informed estimates place transformative AI at 15-40 years away, but current messaging often conveys greater urgency. If dangerous AI doesn't emerge in the next 5-10 years, the author worries about a credibility collapse just when coordination might be most needed. The piece recommends being transparent about timeline uncertainty, avoiding triumphalism, building bridges with the AI ethics community, acknowledging ongoing disagreement among researchers, and preparing for potential political fallout if predictions seem overblown. The author maintains that early awareness-raising remains justified despite these concerns.",
+      "comments": [
+        {
+          "title": "Communication Challenges in Existential Risk Advocacy",
+          "description": "This highlights a central challenge in existential risk communication: conveying appropriate urgency without overclaiming certainty. The tension between nuanced probability distributions and media simplification is a recurring issue in x-risk advocacy. Similar patterns emerged in pandemic preparedness, climate change, and nuclear risk communications. The rationalist community has developed concepts like the \"Cassandra problem\" and discussed meme propagation dynamics that help explain why nuanced messages often get simplified in broader discourse.",
+          "highlight": {
+            "startOffset": 1243,
+            "endOffset": 1557,
+            "prefix": "My own timelines are longer, although my intuitions don't have a rigorous model underpinning them ",
+            "quotedText": "Right now the nature of media communications means that the message is coming across with a lot of urgency. From speaking to lay colleagues, impressions often seem to be of short timelines (and some folks e.g. Geoff Hinton have explicitly said 5-20 years, sometimes with uncertainty caveats and sometimes without)."
+          }
+        },
+        {
+          "title": "Historical Parallels to Failed Predictions",
+          "description": "The reference to \"Limits to Growth\" connects this AI risk scenario to a significant historical case where dire predictions were widely perceived as having failed. This relates to literature on the sociology of predictions (Tetlock's work on superforecasting) and how past prediction failures shape public receptivity to new warnings. In the rationalist community, there are discussions about the \"Cassandra problem\" - being right about risks but not being believed - and how to maintain credibility when making claims about unprecedented risks. The comparison suggests AI x-risk advocates should study how environmental advocates adapted their messaging after early prediction challenges.",
+          "highlight": {
+            "startOffset": 3292,
+            "endOffset": 3616,
+            "prefix": "What does happen is all the benefits of near-term AI that have been talked about, plus all the near-term harms that are being predominantly raised by the AI ethics/FAccT communities. ",
+            "quotedText": "Perhaps these harms include somewhat more extreme versions than what is currently talked about, but nowhere near catastrophic. Suddenly the year is 2028, and that whole 2023 furore is starting to look a bit silly. Remember when everyone agreed AI was going to make us all extinct? Yeah, like Limits to Growth all over again."
+          }
+        },
+        {
+          "title": "Coalition Building Across AI Safety Communities",
+          "description": "The recommendation to build bridges with AI ethics/FAccT communities represents an important strategic insight about coalition maintenance. This connects to literature on social movements and policy coalitions (Sabatier's Advocacy Coalition Framework), as well as work on managing ideological diversity within movements. In EA/rationalist contexts, this relates to discussions about \"building the EA/rationalist tent\" and maintaining cooperation across diverse value systems when pursuing shared goals. The specific suggestion to find overlapping interventions reflects research on how successful coalitions identify concrete shared objectives despite differing motivations.",
+          "highlight": {
+            "startOffset": 4996,
+            "endOffset": 5502,
+            "prefix": "Don't unnecessarily antagonise the AI ethics/FaCCT folk [^3] because they're quite likely to look like the ones who were right in 5 years ",
+            "quotedText": "Build bridges where possible with the AI ethics/FaCCT folk on a range of issues and interventions that seem set to overlap in that time; work together where possible. Lots of people from those communities are making proposals that are relevant and overlapping with challenges associated with the path to transformative AI. This includes external evaluation; licensing and liability; oversight of powerful tech companies developing frontier AI; international bodies for governing powerful AI, and much more."
+          }
+        },
+        {
+          "title": "Political Attention Cycles and Long-term Advocacy",
+          "description": "The concern about political fallout connects to literature on policy attention cycles and institutional memory. This relates to research on how issues gain and lose political salience (Kingdon's Multiple Streams Framework) and the challenges of maintaining political momentum for low-probability risks. In the EA/rationalist space, this connects to discussions about institutional decision-making, political short-termism, and strategies for embedding long-term thinking in governance structures. The footnote about policy being dismantled over time highlights the challenge of creating durable governance for transformative technologies - a key concern in longtermist governance research.",
+          "highlight": {
+            "startOffset": 6318,
+            "endOffset": 6482,
+            "prefix": "I think a majority of AI researchers probably still don't agree this is a serious, imminent concern ([Yann LeCun's silent majority]",
+            "quotedText": "Think carefully about the potential political fallout if and when this becomes an embarrassing thing for the politicians who have spoken up, and how to manage this."
+          }
+        },
+        {
+          "title": "Footnote on Policy Entrenchment Challenges",
+          "description": "This footnote highlights an important dynamic in policy implementation - the challenge of maintaining momentum after initial policy wins. This connects to literature on policy durability and retrenchment (Patashnik, Hacker), as well as work on how policies become institutionally embedded or vulnerable to rollback. In the EA/rationalist context, this relates to discussions about the stability of institutional arrangements and the challenge of creating governance structures that persist through changing political priorities. The concern about policies being \"quietly dismantled\" reflects research on how reforms often face erosion rather than direct repeal.",
+          "highlight": {
+            "startOffset": 7580,
+            "endOffset": 7666,
+            "prefix": "A 'softer' version of this scenario is that some policy happens now, but then ",
+            "quotedText": "quietly drops off / gets dismantled over time, as political attention shifts elsewhere"
+          }
+        }
+      ]
+    }
+  ]
+}
