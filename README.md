@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# About This App
+
+OpenAnnotate is a document annotation application built with Next.js. It allows users to upload, analyze, and add annotations to documents. The app features AI-powered document analysis tools and a clean, responsive interface for working with Markdown documents.
+
 ## Getting Started
 
 First, run the development server:
