@@ -317,8 +317,37 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         }
 
         // Map markdown offsets to slate offsets using diff-match-patch
-        const slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
-        const slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
+        let slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
+        let slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
+
+        // If direct mapping fails, try nearby offsets (more robust approach)
+        if (slateStartOffset === undefined) {
+          // Look for nearby offsets within a reasonable window (5 chars)
+          for (let i = 1; i <= 5; i++) {
+            if (mdToSlateOffset.get(highlight.startOffset - i) !== undefined) {
+              slateStartOffset = mdToSlateOffset.get(highlight.startOffset - i);
+              break;
+            }
+            if (mdToSlateOffset.get(highlight.startOffset + i) !== undefined) {
+              slateStartOffset = mdToSlateOffset.get(highlight.startOffset + i);
+              break;
+            }
+          }
+        }
+
+        if (slateEndOffset === undefined) {
+          // Look for nearby offsets within a reasonable window (5 chars)
+          for (let i = 1; i <= 5; i++) {
+            if (mdToSlateOffset.get(highlight.endOffset - i) !== undefined) {
+              slateEndOffset = mdToSlateOffset.get(highlight.endOffset - i);
+              break;
+            }
+            if (mdToSlateOffset.get(highlight.endOffset + i) !== undefined) {
+              slateEndOffset = mdToSlateOffset.get(highlight.endOffset + i);
+              break;
+            }
+          }
+        }
 
         if (slateStartOffset === undefined || slateEndOffset === undefined) {
           // Fall back to original approach if mapping doesn't exist
@@ -348,10 +377,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
           // 2. Try without markdown formatting (if not found)
           if (!found) {
+            // Remove markdown formatting
             const normalizedHighlightText = highlightText
               .replace(/\*\*/g, "") // Remove bold markers
               .replace(/\\\\/g, "\\") // Handle escaped backslashes
               .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
+              .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
               .trim();
 
             if (
@@ -370,6 +401,31 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 color: highlight.color || "yellow-200",
                 isActive: highlight.tag === activeTag,
               });
+            }
+          }
+
+          // 3. Try with partial text matching (if still not found)
+          if (!found && highlightText && nodeText) {
+            // Extract the first sentence or chunk to try matching part of it
+            const firstChunk = normalizeText(highlightText.split("\n")[0]);
+
+            if (
+              firstChunk &&
+              firstChunk.length > 10 &&
+              nodeText.includes(firstChunk)
+            ) {
+              const start = nodeText.indexOf(firstChunk);
+              const end = start + firstChunk.length;
+
+              ranges.push({
+                anchor: { path, offset: start },
+                focus: { path, offset: end },
+                highlight: true,
+                tag: highlight.tag || "",
+                color: highlight.color || "yellow-200",
+                isActive: highlight.tag === activeTag,
+              });
+              found = true;
             }
           }
 
@@ -411,6 +467,16 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     },
     [highlights, activeTag, initialized, editor, nodeOffsets, mdToSlateOffset]
   );
+
+  // Helper function to normalize text by removing markdown formatting
+  const normalizeText = (text: string): string => {
+    return text
+      .replace(/\*\*/g, "")
+      .replace(/\\\\/g, "\\")
+      .replace(/\\([^\\])/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .trim();
+  };
 
   if (!initialized) {
     return <div>Loading...</div>;
