@@ -12,11 +12,9 @@ import {
   BaseEditor,
   createEditor,
   Descendant,
-  Editor,
   Element,
   Node,
   Text,
-  Transforms,
 } from 'slate';
 import {
   HistoryEditor,
@@ -65,13 +63,6 @@ interface Highlight {
   quotedText?: string;
   color: string;
   tag: string;
-}
-
-interface TextNodePosition {
-  text: string;
-  path: number[];
-  startOffset: number;
-  endOffset: number;
 }
 
 interface SlateEditorProps {
@@ -129,9 +120,9 @@ const renderElement = (props: any) => {
       return <li {...attributes}>{children}</li>;
     default:
       return (
-        <p {...attributes} className="mb-4">
+        <div {...attributes} className="mb-4">
           {children}
-        </p>
+        </div>
       );
   }
 };
@@ -152,14 +143,22 @@ const renderLeaf = (props: any) => {
   if (leaf.highlight) {
     element = (
       <span
-        {...attributes}
         data-tag={leaf.tag}
         className={`rounded bg-${leaf.color} ${
           leaf.isActive ? "ring-2 ring-blue-500" : ""
         }`}
-        onClick={() => props.onHighlightClick?.(leaf.tag)}
-        onMouseEnter={() => props.onHighlightHover?.(leaf.tag)}
-        onMouseLeave={() => props.onHighlightHover?.(null)}
+        onClick={(e) => {
+          e.preventDefault();
+          props.onHighlightClick?.(leaf.tag);
+        }}
+        onMouseEnter={(e) => {
+          e.preventDefault();
+          props.onHighlightHover?.(leaf.tag);
+        }}
+        onMouseLeave={(e) => {
+          e.preventDefault();
+          props.onHighlightHover?.(null);
+        }}
       >
         {element}
       </span>
@@ -179,6 +178,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
+  const [originalText, setOriginalText] = useState("");
 
   // Convert markdown to Slate nodes
   const value = useMemo(() => {
@@ -192,80 +192,74 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     if (!initRef.current && value) {
       editor.children = value;
       editor.onChange();
+
+      // Store the original text for offset mapping
+      setOriginalText(content);
+
       initRef.current = true;
       setInitialized(true);
     }
-  }, [editor, value]);
+  }, [editor, value, content]);
 
-  // Build a map of text positions
-  const flatIndex = useMemo(() => {
-    const positions = new Map<string, TextNodePosition>();
-
-    if (!initialized) {
-      console.log("Editor not initialized yet");
-      return positions;
+  // Get text from nodes
+  const getNodeText = useCallback((node: Node): string => {
+    if (Text.isText(node)) {
+      return node.text;
+    } else {
+      return node.children.map(getNodeText).join("");
     }
+  }, []);
 
-    let offset = 0;
-    try {
-      // Force a selection to ensure editor is ready
-      Transforms.select(editor, { path: [0, 0], offset: 0 });
+  // Build node ranges for highlighting
+  const nodeRanges = useMemo(() => {
+    if (!initialized) return new Map();
 
-      // Get all text nodes and their paths
-      const nodes = Array.from(
-        Editor.nodes(editor, {
-          at: [],
-          match: Text.isText,
-        })
-      );
+    const ranges = new Map();
+    let documentText = "";
+    let nodeTexts: {
+      node: Node;
+      path: number[];
+      start: number;
+      end: number;
+      text: string;
+    }[] = [];
 
-      console.log(
-        "Found nodes:",
-        nodes.length,
-        nodes.map(([n, p]) => ({ text: n.text, path: p.join(".") }))
-      );
+    // First pass: collect all text nodes and their content
+    const collectTextNodes = (node: Node, path: number[]) => {
+      if (Text.isText(node)) {
+        const start = documentText.length;
+        const text = node.text;
+        const end = start + text.length;
 
-      // Build position map
-      nodes.forEach(([node, path]) => {
-        if (!Text.isText(node)) return;
-
-        // Add block break space if needed
-        const parent = Node.parent(editor, path);
+        nodeTexts.push({ node, path, start, end, text });
+        documentText += text;
+      } else if (Element.isElement(node)) {
+        // Add separators for block elements to match original markdown offsets
         if (
-          Element.isElement(parent) &&
-          Editor.isBlock(editor, parent) &&
-          positions.size > 0
+          node.type &&
+          (node.type.startsWith("heading") || node.type === "paragraph")
         ) {
-          offset += 1;
+          if (documentText.length > 0 && !documentText.endsWith("\n\n")) {
+            documentText += "\n\n";
+          }
         }
 
-        const position: TextNodePosition = {
-          text: node.text,
-          path,
-          startOffset: offset,
-          endOffset: offset + node.text.length,
-        };
+        node.children.forEach((child, i) => {
+          collectTextNodes(child, [...path, i]);
+        });
+      }
+    };
 
-        positions.set(path.join("."), position);
-        offset += node.text.length;
-      });
+    editor.children.forEach((node, i) => {
+      collectTextNodes(node, [i]);
+    });
 
-      console.log("Position map built:", {
-        size: positions.size,
-        paths: Array.from(positions.keys()),
-        totalLength: offset,
-        positions: Array.from(positions.values()).map((p) => ({
-          path: p.path.join("."),
-          text: p.text.slice(0, 30),
-          start: p.startOffset,
-          end: p.endOffset,
-        })),
-      });
-    } catch (error) {
-      console.error("Error building position map:", error);
-    }
+    // Map original content offsets to our collected text
+    nodeTexts.forEach(({ node, path, start, end, text }) => {
+      ranges.set(path.join("."), { node, path, start, end, text });
+    });
 
-    return positions;
+    return ranges;
   }, [editor, initialized]);
 
   // Decorate function to add highlights
@@ -277,71 +271,46 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       const ranges: any[] = [];
       const pathKey = path.join(".");
-      const nodePosition = flatIndex.get(pathKey);
-
-      if (!nodePosition) {
-        console.log("Node position not found:", pathKey, flatIndex.size);
-        return ranges;
-      }
-
-      console.log(`Processing node at path ${pathKey}:`, {
-        nodeText: node.text,
-        position: nodePosition,
-      });
 
       for (const highlight of highlights) {
         if (
           typeof highlight?.startOffset !== "number" ||
           typeof highlight?.endOffset !== "number"
         ) {
-          console.log("Skipping invalid highlight:", highlight);
           continue;
         }
 
-        console.log(`Checking highlight:`, {
-          highlight,
-          nodeStart: nodePosition.startOffset,
-          nodeEnd: nodePosition.endOffset,
-          nodeText: nodePosition.text,
-        });
+        // Try to find this node in the content
+        const text = node.text;
+        if (!text) continue;
+
+        // Check if this highlight might overlap with this text node
+        // Use the original text offset to determine if we should highlight
+        const nodeStart = originalText.indexOf(text);
+        if (nodeStart === -1) continue;
+
+        const nodeEnd = nodeStart + text.length;
 
         // Skip if this node is completely outside the highlight range
         if (
-          nodePosition.endOffset < highlight.startOffset ||
-          nodePosition.startOffset > highlight.endOffset
+          nodeEnd < highlight.startOffset ||
+          nodeStart > highlight.endOffset
         ) {
-          console.log("Node outside highlight range:", {
-            path: pathKey,
-            nodeRange: [nodePosition.startOffset, nodePosition.endOffset],
-            highlightRange: [highlight.startOffset, highlight.endOffset],
-          });
           continue;
         }
 
         // Calculate local offsets within this node
-        const localStart = Math.max(
-          0,
-          highlight.startOffset - nodePosition.startOffset
-        );
-        const localEnd = Math.min(
-          node.text.length,
-          highlight.endOffset - nodePosition.startOffset
-        );
+        const localStart = Math.max(0, highlight.startOffset - nodeStart);
+        const localEnd = Math.min(text.length, highlight.endOffset - nodeStart);
 
-        if (localStart < localEnd) {
-          console.log("Adding highlight range:", {
-            path: pathKey,
-            localRange: [localStart, localEnd],
-            highlightedText: node.text.slice(localStart, localEnd),
-            highlight,
-          });
-
+        // Only add a highlight if it actually covers part of this text node
+        if (localStart < localEnd && localStart < text.length && localEnd > 0) {
           ranges.push({
             anchor: { path, offset: localStart },
             focus: { path, offset: localEnd },
             highlight: true,
             tag: highlight.tag || "",
-            color: highlight.color || "#ffeb3b",
+            color: highlight.color || "yellow-200",
             isActive: highlight.tag === activeTag,
           });
         }
@@ -349,7 +318,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       return ranges;
     },
-    [highlights, activeTag, flatIndex, initialized]
+    [highlights, activeTag, originalText, initialized]
   );
 
   if (!initialized) {

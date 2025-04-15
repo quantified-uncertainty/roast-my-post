@@ -12,22 +12,38 @@ module.exports = {
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: ["src/**/*.{ts,tsx}", ".*(!\\.d\\.ts)$"],
   transform: {
-    // Use ts-jest for ts/tsx files and tell it to use babel config for JSX
-    "^.+\\.tsx?$": [
+    "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
+        tsconfig: "tsconfig.json",
+        useESM: true,
         babelConfig: {
-          presets: ["next/babel"], // Use Next.js's Babel preset
+          presets: [
+            "@babel/preset-env",
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
         },
       },
     ],
+    // Improved regex to better match the ESM packages we need to transform
+    "node_modules/(?!(remark-parse|remark-slate|unified|micromark|mdast-util-from-markdown|decode-named-character-reference|mdast-util-to-string|character-entities|bail|unist-util-is|unist-util-visit|unist-util-visit-parents)/.*)\\.js$":
+      [
+        "babel-jest",
+        {
+          presets: ["@babel/preset-env"],
+          plugins: ["@babel/plugin-transform-modules-commonjs"],
+        },
+      ],
   },
+  transformIgnorePatterns: [
+    "/node_modules/(?!(remark-parse|remark-slate|unified|micromark|mdast-util-from-markdown|decode-named-character-reference|mdast-util-to-string|character-entities|bail|unist-util-is|unist-util-visit|unist-util-visit-parents)/.*)",
+  ],
   // Add this section to handle .js imports in ESM/TS projects
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
-  // Optional: If you encounter module resolution issues with aliases (like @/)
-  // moduleNameMapper: {
-  //   '^@/(.*)$': '<rootDir>/src/$1',
-  // },
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
 };

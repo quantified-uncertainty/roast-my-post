@@ -7,7 +7,7 @@ import type {
 import type {
   CalculatedHighlight,
   RawLLMHighlight,
-} from './highlightUtils.js';
+} from './highlightUtils.ts';
 // Import the types and the functions to test
 import {
   applyHighlightBetweenNodes,
@@ -27,7 +27,7 @@ import {
   testFindTextInContainer,
   validateAndFixDocumentReview,
   validateHighlights,
-} from './highlightUtils.js';
+} from './highlightUtils.ts';
 
 describe("calculateHighlightOffsets", () => {
   const sampleContent =
