@@ -12,17 +12,23 @@ module.exports = {
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: ["src/**/*.{ts,tsx}", ".*(!\\.d\\.ts)$"],
   transform: {
-    // Simplify ts-jest config to rely on tsconfig.json for JSX
+    // Reintroduce babelConfig to ensure ts-jest uses Babel for JSX
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
         tsconfig: "tsconfig.json",
-        useESM: true, // Keep ESM handling
-        // Remove explicit babelConfig here, let ts-jest handle it
+        useESM: true,
+        babelConfig: {
+          presets: [
+            "@babel/preset-env",
+            ["@babel/preset-react", { runtime: "automatic" }],
+            "@babel/preset-typescript",
+          ],
+        },
       },
     ],
-    // Improved regex to better match the ESM packages we need to transform
-    "node_modules/(?!(remark-parse|remark-slate|unified|micromark|mdast-util-from-markdown|decode-named-character-reference|mdast-util-to-string|character-entities|bail|unist-util-is|unist-util-visit|unist-util-visit-parents)/.*)\\.js$":
+    // Keep this transform for the specific ESM modules
+    "node_modules/(remark-parse|remark-slate|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*)/.*\\.js$":
       [
         "babel-jest",
         {
@@ -31,8 +37,10 @@ module.exports = {
         },
       ],
   },
+  // Update transformIgnorePatterns to NOT ignore these ESM modules
   transformIgnorePatterns: [
-    "/node_modules/(?!(remark-parse|remark-slate|unified|micromark|mdast-util-from-markdown|decode-named-character-reference|mdast-util-to-string|character-entities|bail|unist-util-is|unist-util-visit|unist-util-visit-parents)/.*)",
+    // Ignore node_modules EXCEPT the ones listed below
+    "/node_modules/(?!(remark-parse|remark-slate|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*)/)",
   ],
   // Add this section to handle .js imports in ESM/TS projects
   moduleNameMapper: {
