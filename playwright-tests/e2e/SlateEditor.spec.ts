@@ -16,24 +16,44 @@ test("editor renders content correctly", async ({ page }) => {
   const editor = await page.locator('[data-testid="slate-editable"]');
   await expect(editor).toBeVisible();
 
-  // Get all text content
-  const content = await editor.textContent();
-  expect(content?.trim() || "").toContain("This is a test");
+  // Get the HTML content for debugging
+  const html = await editor.innerHTML();
+  console.log("Editor HTML:", html);
+
+  // Check heading (using a more general selector)
+  const heading = await editor.locator("h1");
+  await expect(heading).toBeVisible();
+  const headingText = await heading.textContent();
+  expect(headingText?.trim()).toBe("Strongly Bounded AI");
+
+  // Check paragraph
+  const paragraph = await editor.locator("div.mb-4");
+  await expect(paragraph).toBeVisible();
+  const paragraphText = await paragraph.textContent();
+  expect(paragraphText?.trim()).toBe(
+    "This is a test document about AI safety. We need to be careful about AI development."
+  );
 });
 
-test("highlight is applied correctly", async ({ page }) => {
+test("highlights are applied correctly", async ({ page }) => {
   await page.goto("/test-slate-editor");
 
   // Wait for editor
   await page.waitForSelector('[data-testid="slate-editable"]');
 
-  // Find highlight
-  const highlight = await page.locator('[class*="bg-amber-100"]');
-  await expect(highlight).toBeVisible();
+  // Check title highlight
+  const titleHighlight = await page.locator('[class*="bg-amber-100"]');
+  await expect(titleHighlight).toBeVisible();
+  const titleText = await titleHighlight.textContent();
+  expect(titleText?.trim()).toBe("Strongly Bounded AI");
 
-  // Check highlight text
-  const text = await highlight.textContent();
-  expect(text?.trim() || "").toContain("This is a test");
+  // Check content highlight
+  const contentHighlight = await page.locator('[class*="bg-blue-100"]');
+  await expect(contentHighlight).toBeVisible();
+  const contentText = await contentHighlight.textContent();
+  expect(contentText?.trim()).toBe(
+    "This is a test document about AI safety. We need to be careful about AI development."
+  );
 });
 
 test("highlight interaction works", async ({ page }) => {
@@ -42,15 +62,21 @@ test("highlight interaction works", async ({ page }) => {
   // Wait for editor
   await page.waitForSelector('[data-testid="slate-editable"]');
 
-  // Get highlight
-  const highlight = await page.locator('[class*="bg-amber-100"]');
+  // Get both highlights
+  const titleHighlight = await page.locator('[class*="bg-amber-100"]');
+  const contentHighlight = await page.locator('[class*="bg-blue-100"]');
 
   // Initial state - no ring
-  await expect(highlight).not.toHaveClass(/ring/);
+  await expect(titleHighlight).not.toHaveClass(/ring/);
+  await expect(contentHighlight).not.toHaveClass(/ring/);
 
-  // Click highlight
-  await highlight.click();
+  // Click title highlight
+  await titleHighlight.click();
+  await expect(titleHighlight).toHaveClass(/ring/);
+  await expect(contentHighlight).not.toHaveClass(/ring/);
 
-  // Should now have ring class
-  await expect(highlight).toHaveClass(/ring/);
+  // Click content highlight
+  await contentHighlight.click();
+  await expect(contentHighlight).toHaveClass(/ring/);
+  await expect(titleHighlight).not.toHaveClass(/ring/);
 });
