@@ -4,28 +4,13 @@
   "title": "Short Example",
   "author": "Ozzie Gooen",
   "publishedDate": "2025-04-14",
-  "intendedAgents": ["bias-detector", "clarity-coach", "research-scholar"],
+  "intendedAgents": [
+    "bias-detector",
+    "clarity-coach",
+    "research-scholar"
+  ],
   "content": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability.\n\n**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems.",
   "reviews": [
-    {
-      "agentId": "bias-detector",
-      "costInCents": 1757,
-      "createdAt": "2025-04-14T15:35:00.432Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1287,\"completionTokens\":470,\"totalTokens\":1757,\"temperature\":0.7,\"runtimeMs\":8721}",
-      "summary": "The document identifies a gap in AI safety discourse regarding terminology for limited, safe AI systems that prevent takeover risks while remaining useful. The brief content shows minimal bias, though it presents a subjective perspective on AI safety conversations without acknowledging diverse viewpoints.",
-      "comments": [
-        {
-          "title": "Framing Bias",
-          "description": "The text frames the issue from a personal perspective (\"I feel\") without acknowledging diverse viewpoints in AI safety discourse. This creates a subjective framing that may not represent the full spectrum of existing terminology and concepts in the field.",
-          "highlight": {
-            "startOffset": 0,
-            "endOffset": 150,
-            "prefix": "",
-            "quotedText": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans."
-          }
-        }
-      ]
-    },
     {
       "agentId": "clarity-coach",
       "costInCents": 2462,
@@ -90,6 +75,35 @@
             "endOffset": 468,
             "prefix": "**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is ",
             "quotedText": "strong and versatile terminology for limited, safe, and useful AI systems."
+          }
+        }
+      ]
+    },
+    {
+      "agentId": "bias-detector",
+      "costInCents": 1783,
+      "createdAt": "2025-04-15T21:43:50.066Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1287,\"completionTokens\":496,\"totalTokens\":1783,\"temperature\":0.7,\"runtimeMs\":9333}",
+      "summary": "The document discusses a perceived gap in AI safety terminology regarding limited yet useful AI systems that address takeover concerns rather than human misuse. It suggests expanding beyond alignment to include capability restrictions and intelligence limitations.",
+      "comments": [
+        {
+          "title": "Framing Bias",
+          "description": "The text frames AI safety discourse as lacking terminology for limited AI systems, presenting this as an objective gap rather than a subjective viewpoint. This framing bias presupposes that current terminology is insufficient without providing evidence or acknowledging existing frameworks that may address these concerns.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 150,
+            "prefix": "",
+            "quotedText": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans."
+          }
+        },
+        {
+          "title": "Assumption Bias",
+          "description": "The text assumes that capability restrictions and intelligence limitations necessarily lead to more predictable AI systems without providing evidence. This reflects an assumption bias that simplicity correlates with safety, which isn't always the case in complex systems where limited capabilities might introduce different types of unpredictability.",
+          "highlight": {
+            "startOffset": 234,
+            "endOffset": 308,
+            "prefix": "beyond alignment to include capability restrictions, reliance on ",
+            "quotedText": "established technologies, and intelligence limitations for predictability."
           }
         }
       ]

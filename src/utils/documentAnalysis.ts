@@ -1,11 +1,10 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { parse as parseJsonc, ParseError } from "jsonc-parser";
-import { jsonrepair } from "jsonrepair";
 import path from "path";
 
-import type { Comment, DocumentReview } from "../types/documentReview.js";
-import { DEFAULT_TEMPERATURE, MODEL, openai } from "../types/openai.js";
-import { processRawComments, type RawLLMHighlight } from "./highlightUtils.js";
+import type { Comment, DocumentReview } from "../types/documentReview";
+import { DEFAULT_TEMPERATURE, MODEL, openai } from "../types/openai";
+import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
@@ -78,12 +77,22 @@ function escapeJsonString(str: string): string {
 }
 
 // Improved function to repair complex JSON
-function repairComplexJson(jsonString: string): string {
+async function repairComplexJson(
+  jsonString: string
+): Promise<string | undefined> {
   try {
-    // First try with jsonrepair
-    return jsonrepair(jsonString);
-  } catch (error) {
-    console.warn("Initial jsonrepair failed, trying manual repairs:", error);
+    // First try with jsonc-parser
+    const errors: ParseError[] = [];
+    const result = parseJsonc(jsonString, errors, {
+      allowTrailingComma: true,
+      disallowComments: false,
+    });
+
+    if (errors.length === 0) {
+      return JSON.stringify(result);
+    }
+
+    console.warn("Initial jsonc-parser found issues:", errors);
 
     // Try to identify and fix common patterns that might be breaking JSON
     let repaired = jsonString;
@@ -107,101 +116,99 @@ function repairComplexJson(jsonString: string): string {
     // 4. Fix dangling commas at the end of objects/arrays
     repaired = repaired.replace(/,(\s*[}\]])/g, "$1");
 
-    // 5. Fix specific "missing colon" issues around position 3660
-    try {
-      // Look for patterns like "key" "value" (missing colon)
-      repaired = repaired.replace(/"([^"]+)"\s+"([^"]+)"/g, '"$1": "$2"');
+    // Try parsing again with jsonc-parser
+    const newErrors: ParseError[] = [];
+    const newResult = parseJsonc(repaired, newErrors, {
+      allowTrailingComma: true,
+      disallowComments: false,
+    });
 
-      // If we know the error is around position 3660, add extra checks there
-      if (repaired.length > 3700) {
-        const problemArea = repaired.substring(3600, 3700);
-        console.log("Examining problem area:", problemArea);
-
-        // Look for any key without a colon followed by a value
-        const improvedVersion =
-          repaired.substring(0, 3600) +
-          problemArea.replace(/"([^"]+)"\s*([^:\s])/g, '"$1": $2') +
-          repaired.substring(3700);
-
-        // Only use the improved version if it's actually different
-        if (improvedVersion !== repaired) {
-          repaired = improvedVersion;
-        }
-      }
-
-      return jsonrepair(repaired);
-    } catch (secondError) {
-      console.error("Manual repairs also failed:", secondError);
-
-      // Try to locate specific issues in the error message
-      const errorMsg = (secondError as Error).message;
-      const positionMatch = errorMsg.match(/position (\d+)/);
-
-      if (positionMatch) {
-        const position = parseInt(positionMatch[1]);
-        const start = Math.max(0, position - 30);
-        const end = Math.min(repaired.length, position + 30);
-        const problematicSection = repaired.substring(start, end);
-
-        console.error(
-          `Problem area around position ${position}: "${problematicSection}"`
-        );
-
-        // Try to fix specific issues based on what's in the problematic section
-        if (
-          problematicSection.includes('"quotedText"') &&
-          !problematicSection.includes('"quotedText":')
-        ) {
-          // Fix missing colon after quotedText
-          repaired =
-            repaired.substring(0, start) +
-            problematicSection.replace(/"quotedText"\s+/, '"quotedText": ') +
-            repaired.substring(end);
-        } else if (
-          problematicSection.includes('"startText"') &&
-          !problematicSection.includes('"startText":')
-        ) {
-          // Fix missing colon after startText
-          repaired =
-            repaired.substring(0, start) +
-            problematicSection.replace(/"startText"\s+/, '"startText": ') +
-            repaired.substring(end);
-        } else if (
-          problematicSection.includes('"prefix"') &&
-          !problematicSection.includes('"prefix":')
-        ) {
-          // Fix missing colon after prefix
-          repaired =
-            repaired.substring(0, start) +
-            problematicSection.replace(/"prefix"\s+/, '"prefix": ') +
-            repaired.substring(end);
-        } else {
-          // Generic fix - add a colon if we see a key pattern
-          repaired =
-            repaired.substring(0, start) +
-            problematicSection.replace(/"([^"]+)"\s+([^:])/g, '"$1": $2') +
-            repaired.substring(end);
-        }
-
-        // Try JSON repair again after targeted fixes
-        try {
-          return jsonrepair(repaired);
-        } catch (thirdError) {
-          console.error("All repair attempts failed:", thirdError);
-
-          // Last resort - remove the problematic section and replace with dummy value
-          const safeJson =
-            repaired.substring(0, start) +
-            '"problematicText": "removed for parsing"' +
-            repaired.substring(end);
-
-          return jsonrepair(safeJson);
-        }
-      }
-
-      // If we can't pinpoint the issue, throw the original error
-      throw secondError;
+    if (newErrors.length === 0) {
+      return JSON.stringify(newResult);
     }
+
+    console.error("Manual repairs also failed:", newErrors);
+
+    // Try to locate specific issues in the error message
+    const error = newErrors[0];
+    if (error) {
+      const position = error.offset;
+      const start = Math.max(0, position - 30);
+      const end = Math.min(repaired.length, position + 30);
+      const problematicSection = repaired.substring(start, end);
+
+      console.error(
+        `Problem area around position ${position}: "${problematicSection}"`
+      );
+
+      // Try to fix specific issues based on what's in the problematic section
+      if (
+        problematicSection.includes('"quotedText"') &&
+        !problematicSection.includes('"quotedText":')
+      ) {
+        // Fix missing colon after quotedText
+        repaired =
+          repaired.substring(0, start) +
+          problematicSection.replace(/"quotedText"\s+/, '"quotedText": ') +
+          repaired.substring(end);
+      } else if (
+        problematicSection.includes('"startText"') &&
+        !problematicSection.includes('"startText":')
+      ) {
+        // Fix missing colon after startText
+        repaired =
+          repaired.substring(0, start) +
+          problematicSection.replace(/"startText"\s+/, '"startText": ') +
+          repaired.substring(end);
+      } else if (
+        problematicSection.includes('"prefix"') &&
+        !problematicSection.includes('"prefix":')
+      ) {
+        // Fix missing colon after prefix
+        repaired =
+          repaired.substring(0, start) +
+          problematicSection.replace(/"prefix"\s+/, '"prefix": ') +
+          repaired.substring(end);
+      } else {
+        // Generic fix - add a colon if we see a key pattern
+        repaired =
+          repaired.substring(0, start) +
+          problematicSection.replace(/"([^"]+)"\s+([^:])/g, '"$1": $2') +
+          repaired.substring(end);
+      }
+
+      // Try one final parse
+      const finalErrors: ParseError[] = [];
+      const finalResult = parseJsonc(repaired, finalErrors, {
+        allowTrailingComma: true,
+        disallowComments: false,
+      });
+
+      if (finalErrors.length === 0) {
+        return JSON.stringify(finalResult);
+      }
+
+      // Last resort - remove the problematic section and replace with dummy value
+      const safeJson =
+        repaired.substring(0, start) +
+        '"problematicText": "removed for parsing"' +
+        repaired.substring(end);
+
+      const safeErrors: ParseError[] = [];
+      const safeResult = parseJsonc(safeJson, safeErrors, {
+        allowTrailingComma: true,
+        disallowComments: false,
+      });
+
+      if (safeErrors.length === 0) {
+        return JSON.stringify(safeResult);
+      }
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("All repair attempts failed:", error);
+    return undefined;
   }
 }
 
@@ -362,7 +369,10 @@ ${content}
       });
 
       // Try to repair the JSON with improved repair function
-      const repairedJson = repairComplexJson(cleanedResponse);
+      const repairedJson = await repairComplexJson(cleanedResponse);
+      if (!repairedJson) {
+        throw new Error("Failed to repair JSON");
+      }
       console.log("Repaired JSON length:", repairedJson.length);
 
       // For extra debugging, log a sample of the repaired JSON

@@ -1,10 +1,12 @@
 #!/usr/bin/env tsx
 
-import { Command } from "commander";
-import { readFile, writeFile } from "fs/promises";
+import type { Comment, DocumentReview } from "../types/documentReview";
 
-import type { DocumentReview } from "../types/documentReview";
-import { analyzeDocument } from "../utils/documentAnalysis";
+const { Command } = require("commander");
+const { readdir, readFile, writeFile } = require("fs/promises");
+const path = require("path");
+
+const { analyzeDocument, writeLogFile } = require("../utils/documentAnalysis");
 
 const program = new Command();
 
@@ -82,7 +84,7 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 
   // --- Sort comments by startOffset before saving ---
   if (documentReview.comments) {
-    documentReview.comments.sort((a, b) => {
+    documentReview.comments.sort((a: Comment, b: Comment) => {
       return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
     });
     console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
@@ -153,7 +155,7 @@ ${JSON.stringify(documentReview, null, 2)}
 
 async function processDirectory(dirPath: string) {
   const files = await readdir(dirPath);
-  const jsonFiles = files.filter((file) => file.endsWith(".json"));
+  const jsonFiles = files.filter((file: string) => file.endsWith(".json"));
 
   if (jsonFiles.length === 0) {
     console.log(`ℹ️ No JSON files found in directory ${dirPath}`);
@@ -228,7 +230,6 @@ async function main() {
           );
           process.exit(1);
         }
-
         // Get list of agents that have already reviewed this document
         const reviewedAgentIds = new Set(
           (data.reviews || []).map((review: DocumentReview) => review.agentId)
@@ -247,7 +248,6 @@ async function main() {
           );
           process.exit(0);
         }
-
         // Run analysis for each intended agent
         for (const agentId of agentsToAnalyze) {
           await analyzeWithAgent(options.file, agentId);
