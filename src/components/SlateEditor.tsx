@@ -42,33 +42,42 @@ interface SlateEditorProps {
 
 const renderElement = ({ attributes, children, element }: any) => {
   switch (element.type) {
-    case "heading":
-      switch (element.depth) {
-        case 1:
-          return (
-            <h1 {...attributes} className="text-4xl font-bold mb-4">
-              {children}
-            </h1>
-          );
-        case 2:
-          return (
-            <h2 {...attributes} className="text-3xl font-bold mb-3">
-              {children}
-            </h2>
-          );
-        case 3:
-          return (
-            <h3 {...attributes} className="text-2xl font-bold mb-2">
-              {children}
-            </h3>
-          );
-        default:
-          return (
-            <h4 {...attributes} className="text-xl font-bold mb-2">
-              {children}
-            </h4>
-          );
-      }
+    case "heading-one":
+      return (
+        <h1 {...attributes} className="text-4xl font-bold mb-6">
+          {children}
+        </h1>
+      );
+    case "heading-two":
+      return (
+        <h2 {...attributes} className="text-3xl font-bold mb-5">
+          {children}
+        </h2>
+      );
+    case "heading-three":
+      return (
+        <h3 {...attributes} className="text-2xl font-bold mb-4">
+          {children}
+        </h3>
+      );
+    case "heading-four":
+      return (
+        <h4 {...attributes} className="text-xl font-bold mb-3">
+          {children}
+        </h4>
+      );
+    case "heading-five":
+      return (
+        <h5 {...attributes} className="text-lg font-bold mb-3">
+          {children}
+        </h5>
+      );
+    case "heading-six":
+      return (
+        <h6 {...attributes} className="text-base font-bold mb-3">
+          {children}
+        </h6>
+      );
     case "paragraph":
       return (
         <p {...attributes} className="mb-4">
@@ -86,16 +95,20 @@ const renderElement = ({ attributes, children, element }: any) => {
       );
     case "list":
       return element.ordered ? (
-        <ol {...attributes} className="list-decimal ml-6 mb-4">
+        <ol {...attributes} className="list-decimal pl-5 my-2">
           {children}
         </ol>
       ) : (
-        <ul {...attributes} className="list-disc ml-6 mb-4">
+        <ul {...attributes} className="list-disc pl-5 my-2">
           {children}
         </ul>
       );
     case "list-item":
-      return <li {...attributes}>{children}</li>;
+      return (
+        <li {...attributes} className="my-1">
+          <div className="pl-1">{children}</div>
+        </li>
+      );
     case "link":
       return (
         <a
@@ -171,9 +184,60 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
-    const processor = unified().use(remarkParse).use(remarkToSlate);
+    const processor = unified()
+      .use(remarkParse, {
+        commonmark: true,
+        gfm: true,
+      })
+      .use(remarkToSlate);
+
     const result = processor.processSync(content);
-    return result.result as Descendant[];
+    const nodes = result.result as Descendant[];
+
+    console.log("Parsed nodes:", JSON.stringify(nodes, null, 2));
+
+    // Transform heading nodes to match our expected format
+    const transformNode = (node: any): any => {
+      if (node.type === "heading") {
+        return {
+          ...node,
+          type: `heading-${
+            ["one", "two", "three", "four", "five", "six"][node.depth - 1] ||
+            "one"
+          }`,
+        };
+      }
+      // Handle lists specifically
+      if (node.type === "list") {
+        return {
+          ...node,
+          type: "list",
+          ordered: node.ordered === true,
+          children: node.children.map(transformNode),
+        };
+      }
+      if (node.type === "listItem") {
+        return {
+          ...node,
+          type: "list-item",
+          children: node.children.map(transformNode),
+        };
+      }
+      if (Array.isArray(node.children)) {
+        return {
+          ...node,
+          children: node.children.map(transformNode),
+        };
+      }
+      return node;
+    };
+
+    const transformedNodes = nodes.map(transformNode);
+    console.log(
+      "Transformed nodes:",
+      JSON.stringify(transformedNodes, null, 2)
+    );
+    return transformedNodes;
   }, [content]);
 
   // Initialize editor

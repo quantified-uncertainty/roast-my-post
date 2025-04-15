@@ -22,8 +22,13 @@ export type ParagraphElement = {
 };
 
 export type HeadingElement = {
-  type: "heading";
-  level: number;
+  type:
+    | "heading-one"
+    | "heading-two"
+    | "heading-three"
+    | "heading-four"
+    | "heading-five"
+    | "heading-six";
   children: CustomText[];
 };
 
