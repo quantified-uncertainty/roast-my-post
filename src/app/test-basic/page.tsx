@@ -2,9 +2,41 @@
 
 import React, { useState } from "react";
 
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+
 import SlateEditor from "../../components/SlateEditor";
 
+// A simple component to directly test if the markdown is rendering correctly
+const SimpleMarkdownComponent = ({ content }: { content: string }) => {
+  return (
+    <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>
+      {content}
+    </ReactMarkdown>
+  );
+};
+
 export default function TestBasicPage() {
+  // Add extra CSS for slate editor
+  React.useEffect(() => {
+    // Add a style element to ensure strong and em tags work properly
+    const style = document.createElement("style");
+    style.textContent = `
+      [data-testid="slate-editable"] strong { 
+        font-weight: bold !important; 
+      }
+      [data-testid="slate-editable"] em { 
+        font-style: italic !important; 
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const content = `# Simple Test
 
 This is a basic test for the highlighting functionality.
@@ -13,6 +45,10 @@ This is a link: [Simple Test](https://www.google.com)
 
 This is bold: **Bolded text** and _Italicized text_. 
 
+This is also italic: *Italicized with asterisks* and __Double-underscore bold__.
+
+This is mixed formatting: **Bold with _nested italic_** and *Italic with **nested bold***.
+
 1. This is a list item.
 2. This is another list item.
 3. This is yet another list item.
@@ -20,6 +56,9 @@ This is bold: **Bolded text** and _Italicized text_.
 ## Second heading
 
 Let's see if this works better.`;
+
+  // Debug logging to check the content
+  console.log("Raw content:", content);
 
   const highlights = [
     {
@@ -57,15 +96,42 @@ Let's see if this works better.`;
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Basic Highlight Test</h1>
-      <article className="prose prose-slate prose-lg max-w-none">
-        <SlateEditor
-          content={content}
-          highlights={highlights}
-          onHighlightClick={(tag) => setActiveTag(tag)}
-          onHighlightHover={(tag) => console.log("Hover:", tag)}
-          activeTag={activeTag}
-        />
-      </article>
+
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4">SlateEditor Component</h2>
+        <article className="prose prose-slate prose-lg max-w-none">
+          <SlateEditor
+            content={content}
+            highlights={highlights}
+            onHighlightClick={(tag) => setActiveTag(tag)}
+            onHighlightHover={(tag) => console.log("Hover:", tag)}
+            activeTag={activeTag}
+          />
+        </article>
+      </div>
+
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4">
+          ReactMarkdown Component (Reference)
+        </h2>
+        <article className="prose prose-slate prose-lg max-w-none">
+          <SimpleMarkdownComponent content={content} />
+        </article>
+      </div>
+
+      <div className="mb-10">
+        <h2 className="text-xl font-bold mb-4">Direct HTML Test (Reference)</h2>
+        <article className="prose prose-slate prose-lg max-w-none">
+          <div className="mb-2">
+            <strong>Bold text: </strong>
+            <span className="font-bold">This is bold text</span>
+          </div>
+          <div className="mb-2">
+            <strong>Italic text: </strong>
+            <span className="italic">This is italic text</span>
+          </div>
+        </article>
+      </div>
     </div>
   );
 }

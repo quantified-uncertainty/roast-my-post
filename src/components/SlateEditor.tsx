@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 
+import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
 import { createEditor, Descendant, Element, Node, Text } from "slate";
@@ -124,35 +125,42 @@ const renderElement = ({ attributes, children, element }: any) => {
 };
 
 const renderLeaf = ({ attributes, children, leaf }: any) => {
+  // Create a new set of attributes to avoid modifying the original
+  const leafAttributes = { ...attributes };
+
   let el = children;
 
-  if (leaf.bold) {
-    el = <strong>{el}</strong>;
-  }
-  if (leaf.italic) {
-    el = <em>{el}</em>;
-  }
+  // Apply formatting in a specific order to handle nested formatting
   if (leaf.code) {
     el = <code className="bg-gray-100 rounded px-1">{el}</code>;
   }
+
+  if (leaf.emphasis || leaf.italic) {
+    el = <em style={{ fontStyle: "italic" }}>{el}</em>;
+  }
+
+  if (leaf.strong || leaf.bold) {
+    el = <strong style={{ fontWeight: "bold" }}>{el}</strong>;
+  }
+
   if (leaf.highlight) {
     el = (
       <span
         data-tag={leaf.tag}
         className={`rounded bg-${leaf.color} ${
-          leaf.tag === attributes.activeTag ? "ring-2 ring-blue-500" : ""
+          leaf.tag === leafAttributes.activeTag ? "ring-2 ring-blue-500" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
-          attributes.onHighlightClick?.(leaf.tag);
+          leafAttributes.onHighlightClick?.(leaf.tag);
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
-          attributes.onHighlightHover?.(leaf.tag);
+          leafAttributes.onHighlightHover?.(leaf.tag);
         }}
         onMouseLeave={(e) => {
           e.preventDefault();
-          attributes.onHighlightHover?.(null);
+          leafAttributes.onHighlightHover?.(null);
         }}
       >
         {el}
@@ -160,7 +168,7 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
     );
   }
 
-  return <span {...attributes}>{el}</span>;
+  return <span {...leafAttributes}>{el}</span>;
 };
 
 /**
@@ -182,54 +190,169 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
-    const processor = unified()
-      .use(remarkParse, {
-        commonmark: true,
-        gfm: true,
-      })
-      .use(remarkToSlate);
+    try {
+      // Test the markdown parsing directly on a small sample
+      const testMarkdown = "**Bold text** and _italic text_";
+      console.log("Test markdown for formatting:", testMarkdown);
 
-    const result = processor.processSync(content);
-    const nodes = result.result as Descendant[];
+      const testProcessor = unified()
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkToSlate as any);
 
-    // Transform heading nodes to match our expected format
-    const transformNode = (node: any): any => {
-      if (node.type === "heading") {
-        return {
-          ...node,
-          type: `heading-${
-            ["one", "two", "three", "four", "five", "six"][node.depth - 1] ||
-            "one"
-          }`,
-        };
-      }
-      // Handle lists specifically
-      if (node.type === "list") {
-        return {
-          ...node,
-          type: "list",
-          ordered: node.ordered === true,
-          children: node.children.map(transformNode),
-        };
-      }
-      if (node.type === "listItem") {
-        return {
-          ...node,
-          type: "list-item",
-          children: node.children.map(transformNode),
-        };
-      }
-      if (Array.isArray(node.children)) {
-        return {
-          ...node,
-          children: node.children.map(transformNode),
-        };
-      }
-      return node;
-    };
+      const testResult = testProcessor.processSync(testMarkdown);
+      console.log(
+        "Processed test markdown:",
+        JSON.stringify(testResult.result, null, 2)
+      );
 
-    const transformedNodes = nodes.map(transformNode);
-    return transformedNodes;
+      // Proceed with the main content processing
+      const processor = unified()
+        .use(remarkParse)
+        .use(remarkGfm) // Add GitHub-Flavored Markdown support
+        .use(remarkToSlate as any, {
+          // Note: These custom transformers ensure proper handling of markdown formatting
+          nodeTypes: {
+            emphasis: "emphasis",
+            strong: "strong",
+            inlineCode: "code",
+            link: "link",
+          },
+        });
+
+      // Process the markdown content
+      const result = processor.processSync(content);
+      let nodes = result.result as Descendant[];
+
+      // Log the raw nodes for debugging
+      console.log("Raw Markdown nodes:", JSON.stringify(nodes, null, 2));
+
+      // Apply a custom processor specifically for formatting
+      const processNode = (node: any): any => {
+        // Special debug for node types we're most interested in
+        if (node?.type === "emphasis" || node?.type === "strong") {
+          console.log(
+            `Processing ${node.type} node:`,
+            JSON.stringify(node, null, 2)
+          );
+        }
+
+        // Handle leaf text nodes
+        if (typeof node?.text === "string") {
+          return node;
+        }
+
+        // Process the node based on its type
+        switch (node?.type) {
+          case "emphasis":
+            return {
+              type: "paragraph", // Convert to paragraph to maintain structure
+              children: node.children.map((child: any) => {
+                if (typeof child.text === "string") {
+                  return { text: child.text, italic: true };
+                }
+                // For nested nodes, preserve their formatting but add italic
+                const processedChild = processNode(child);
+                // Ensure italic is applied to all child elements' text nodes
+                if (Array.isArray(processedChild.children)) {
+                  return {
+                    ...processedChild,
+                    children: processedChild.children.map((textNode: any) => ({
+                      ...textNode,
+                      italic: true,
+                    })),
+                  };
+                }
+                return { ...processedChild, italic: true };
+              }),
+            };
+
+          case "strong":
+            return {
+              type: "paragraph", // Convert to paragraph to maintain structure
+              children: node.children.map((child: any) => {
+                if (typeof child.text === "string") {
+                  return { text: child.text, bold: true };
+                }
+                // For nested nodes, preserve their formatting but add bold
+                const processedChild = processNode(child);
+                // Ensure bold is applied to all child elements' text nodes
+                if (Array.isArray(processedChild.children)) {
+                  return {
+                    ...processedChild,
+                    children: processedChild.children.map((textNode: any) => ({
+                      ...textNode,
+                      bold: true,
+                    })),
+                  };
+                }
+                return { ...processedChild, bold: true };
+              }),
+            };
+
+          case "heading":
+            return {
+              ...node,
+              type: `heading-${
+                ["one", "two", "three", "four", "five", "six"][
+                  node.depth - 1
+                ] || "one"
+              }`,
+              children: node.children.map(processNode),
+            };
+
+          case "list":
+            return {
+              ...node,
+              type: "list",
+              ordered: node.ordered === true,
+              children: node.children.map(processNode),
+            };
+
+          case "listItem":
+            return {
+              ...node,
+              type: "list-item",
+              children: node.children.map(processNode),
+            };
+
+          case "link":
+            return {
+              ...node,
+              type: "link",
+              url: node.url,
+              children: node.children.map(processNode),
+            };
+
+          default:
+            // Process any children of other node types
+            if (Array.isArray(node?.children)) {
+              return {
+                ...node,
+                children: node.children.map(processNode),
+              };
+            }
+            return node;
+        }
+      };
+
+      // Process all nodes in the tree
+      nodes = nodes.map(processNode);
+
+      console.log("Processed nodes:", JSON.stringify(nodes, null, 2));
+      return nodes as Descendant[];
+    } catch (error) {
+      console.error("Error parsing markdown:", error);
+      // Return a simple default node if parsing fails
+      return [
+        {
+          type: "paragraph",
+          children: [{ text: content }],
+          // Add empty properties that might be expected by the type system
+          url: undefined,
+        },
+      ] as unknown as Descendant[];
+    }
   }, [content]);
 
   // Extract plain text from nodes
@@ -380,6 +503,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             // Remove markdown formatting
             const normalizedHighlightText = highlightText
               .replace(/\*\*/g, "") // Remove bold markers
+              .replace(/\*/g, "") // Remove single asterisk italic markers
+              .replace(/\_/g, "") // Remove underscore italic markers
               .replace(/\\\\/g, "\\") // Handle escaped backslashes
               .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
               .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
@@ -471,10 +596,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   // Helper function to normalize text by removing markdown formatting
   const normalizeText = (text: string): string => {
     return text
-      .replace(/\*\*/g, "")
-      .replace(/\\\\/g, "\\")
-      .replace(/\\([^\\])/g, "$1")
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/\*\*/g, "") // Remove bold markers
+      .replace(/\*/g, "") // Remove single asterisk italic markers
+      .replace(/\_/g, "") // Remove underscore italic markers
+      .replace(/\\\\/g, "\\") // Handle escaped backslashes
+      .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
       .trim();
   };
 
@@ -497,7 +624,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           })
         }
         readOnly
-        className="prose prose-slate prose-lg max-w-none"
+        className="prose prose-slate prose-lg max-w-none [&_strong]:font-bold [&_em]:italic"
       />
     </Slate>
   );
