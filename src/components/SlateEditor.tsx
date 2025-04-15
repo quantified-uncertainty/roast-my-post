@@ -4,28 +4,18 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-import remarkParse from 'remark-parse';
-import { remarkToSlate } from 'remark-slate-transformer';
-import {
-  createEditor,
-  Descendant,
-  Element,
-  Node,
-  Text,
-} from 'slate';
-import { withHistory } from 'slate-history';
-import {
-  Editable,
-  Slate,
-  withReact,
-} from 'slate-react';
-import { unified } from 'unified';
+import remarkParse from "remark-parse";
+import { remarkToSlate } from "remark-slate-transformer";
+import { createEditor, Descendant, Element, Node, Text } from "slate";
+import { withHistory } from "slate-history";
+import { Editable, Slate, withReact } from "slate-react";
+import { unified } from "unified";
 
 // Import our improved hooks for Phase 2
-import { useHighlightMapper } from '../hooks/useHighlightMapper';
-import { usePlainTextOffsets } from '../hooks/usePlainTextOffsets';
+import { useHighlightMapper } from "../hooks/useHighlightMapper";
+import { usePlainTextOffsets } from "../hooks/usePlainTextOffsets";
 
 interface Highlight {
   startOffset: number;

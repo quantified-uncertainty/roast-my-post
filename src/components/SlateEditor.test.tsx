@@ -1,13 +1,10 @@
-import '../setupTests';
+import "../setupTests";
 
-import React from 'react';
+import React from "react";
 
-import {
-  render,
-  screen,
-} from '@testing-library/react';
+import { render, screen } from "@testing-library/react";
 
-import SlateEditor from './SlateEditor';
+import SlateEditor from "./SlateEditor";
 
 // Mock the Slate editor implementation
 let capturedDecorateFn: any = null;
