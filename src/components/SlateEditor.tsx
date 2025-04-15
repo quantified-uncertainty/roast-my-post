@@ -135,14 +135,17 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
     el = <code className="bg-gray-100 rounded px-1">{el}</code>;
   }
 
+  // Handle both emphasis/italic properties
   if (leaf.emphasis || leaf.italic) {
     el = <em style={{ fontStyle: "italic" }}>{el}</em>;
   }
 
+  // Handle both strong/bold properties
   if (leaf.strong || leaf.bold) {
     el = <strong style={{ fontWeight: "bold" }}>{el}</strong>;
   }
 
+  // Apply highlight styling if this is a highlighted section
   if (leaf.highlight) {
     el = (
       <span
@@ -191,27 +194,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
     try {
-      // Test the markdown parsing directly on a small sample
-      const testMarkdown = "**Bold text** and _italic text_";
-      console.log("Test markdown for formatting:", testMarkdown);
-
-      const testProcessor = unified()
-        .use(remarkParse)
-        .use(remarkGfm)
-        .use(remarkToSlate as any);
-
-      const testResult = testProcessor.processSync(testMarkdown);
-      console.log(
-        "Processed test markdown:",
-        JSON.stringify(testResult.result, null, 2)
-      );
-
-      // Proceed with the main content processing
+      // Create a processor with remark-parse and remark-gfm for markdown support
       const processor = unified()
         .use(remarkParse)
         .use(remarkGfm) // Add GitHub-Flavored Markdown support
         .use(remarkToSlate as any, {
-          // Note: These custom transformers ensure proper handling of markdown formatting
+          // Configure node types for proper formatting
           nodeTypes: {
             emphasis: "emphasis",
             strong: "strong",
@@ -224,19 +212,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const result = processor.processSync(content);
       let nodes = result.result as Descendant[];
 
-      // Log the raw nodes for debugging
-      console.log("Raw Markdown nodes:", JSON.stringify(nodes, null, 2));
-
-      // Apply a custom processor specifically for formatting
+      // Apply a custom processor for handling markdown formatting
       const processNode = (node: any): any => {
-        // Special debug for node types we're most interested in
-        if (node?.type === "emphasis" || node?.type === "strong") {
-          console.log(
-            `Processing ${node.type} node:`,
-            JSON.stringify(node, null, 2)
-          );
-        }
-
         // Handle leaf text nodes
         if (typeof node?.text === "string") {
           return node;
@@ -244,52 +221,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
         // Process the node based on its type
         switch (node?.type) {
-          case "emphasis":
-            return {
-              type: "paragraph", // Convert to paragraph to maintain structure
-              children: node.children.map((child: any) => {
-                if (typeof child.text === "string") {
-                  return { text: child.text, italic: true };
-                }
-                // For nested nodes, preserve their formatting but add italic
-                const processedChild = processNode(child);
-                // Ensure italic is applied to all child elements' text nodes
-                if (Array.isArray(processedChild.children)) {
-                  return {
-                    ...processedChild,
-                    children: processedChild.children.map((textNode: any) => ({
-                      ...textNode,
-                      italic: true,
-                    })),
-                  };
-                }
-                return { ...processedChild, italic: true };
-              }),
-            };
-
-          case "strong":
-            return {
-              type: "paragraph", // Convert to paragraph to maintain structure
-              children: node.children.map((child: any) => {
-                if (typeof child.text === "string") {
-                  return { text: child.text, bold: true };
-                }
-                // For nested nodes, preserve their formatting but add bold
-                const processedChild = processNode(child);
-                // Ensure bold is applied to all child elements' text nodes
-                if (Array.isArray(processedChild.children)) {
-                  return {
-                    ...processedChild,
-                    children: processedChild.children.map((textNode: any) => ({
-                      ...textNode,
-                      bold: true,
-                    })),
-                  };
-                }
-                return { ...processedChild, bold: true };
-              }),
-            };
-
           case "heading":
             return {
               ...node,
@@ -338,8 +269,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       // Process all nodes in the tree
       nodes = nodes.map(processNode);
-
-      console.log("Processed nodes:", JSON.stringify(nodes, null, 2));
       return nodes as Descendant[];
     } catch (error) {
       console.error("Error parsing markdown:", error);
@@ -348,7 +277,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         {
           type: "paragraph",
           children: [{ text: content }],
-          // Add empty properties that might be expected by the type system
           url: undefined,
         },
       ] as unknown as Descendant[];

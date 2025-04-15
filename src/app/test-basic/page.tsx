@@ -18,9 +18,8 @@ const SimpleMarkdownComponent = ({ content }: { content: string }) => {
 };
 
 export default function TestBasicPage() {
-  // Add extra CSS for slate editor
+  // Add essential CSS for slate editor formatting
   React.useEffect(() => {
-    // Add a style element to ensure strong and em tags work properly
     const style = document.createElement("style");
     style.textContent = `
       [data-testid="slate-editable"] strong { 
@@ -56,9 +55,6 @@ This is mixed formatting: **Bold with _nested italic_** and *Italic with **neste
 ## Second heading
 
 Let's see if this works better.`;
-
-  // Debug logging to check the content
-  console.log("Raw content:", content);
 
   const highlights = [
     {
@@ -116,20 +112,6 @@ Let's see if this works better.`;
         </h2>
         <article className="prose prose-slate prose-lg max-w-none">
           <SimpleMarkdownComponent content={content} />
-        </article>
-      </div>
-
-      <div className="mb-10">
-        <h2 className="text-xl font-bold mb-4">Direct HTML Test (Reference)</h2>
-        <article className="prose prose-slate prose-lg max-w-none">
-          <div className="mb-2">
-            <strong>Bold text: </strong>
-            <span className="font-bold">This is bold text</span>
-          </div>
-          <div className="mb-2">
-            <strong>Italic text: </strong>
-            <span className="italic">This is italic text</span>
-          </div>
         </article>
       </div>
     </div>
