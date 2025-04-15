@@ -116,9 +116,9 @@ const renderElement = ({ attributes, children, element }: any) => {
       );
     default:
       return (
-        <div {...attributes} className="mb-4">
+        <span {...attributes} className="mb-4 inline-block">
           {children}
-        </div>
+        </span>
       );
   }
 };
@@ -325,9 +325,14 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           // Check if the current text node contains text from the highlight
           // Since we can't rely on precise mapping, we'll use a more basic approach
           const nodeText = node.text;
-          const highlightText = highlight.quotedText || "";
+          let highlightText = highlight.quotedText || "";
 
+          // Try various transformations of the highlight text to improve matching
+          let found = false;
+
+          // 1. Try direct match
           if (nodeText && highlightText && nodeText.includes(highlightText)) {
+            found = true;
             const start = nodeText.indexOf(highlightText);
             const end = start + highlightText.length;
 
@@ -339,6 +344,33 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               color: highlight.color || "yellow-200",
               isActive: highlight.tag === activeTag,
             });
+          }
+
+          // 2. Try without markdown formatting (if not found)
+          if (!found) {
+            const normalizedHighlightText = highlightText
+              .replace(/\*\*/g, "") // Remove bold markers
+              .replace(/\\\\/g, "\\") // Handle escaped backslashes
+              .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
+              .trim();
+
+            if (
+              nodeText &&
+              normalizedHighlightText &&
+              nodeText.includes(normalizedHighlightText)
+            ) {
+              const start = nodeText.indexOf(normalizedHighlightText);
+              const end = start + normalizedHighlightText.length;
+
+              ranges.push({
+                anchor: { path, offset: start },
+                focus: { path, offset: end },
+                highlight: true,
+                tag: highlight.tag || "",
+                color: highlight.color || "yellow-200",
+                isActive: highlight.tag === activeTag,
+              });
+            }
           }
 
           continue;

@@ -1,12 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import {
-  Editor,
-  Element,
-  Node,
-  Path,
-  Text,
-} from 'slate';
+import { Editor, Element, Node, Path, Text } from "slate";
 
 // Define the structure of the offset information we store
 interface NodeOffsetInfo {
@@ -48,7 +42,24 @@ export function usePlainTextOffsets(
           const text = node.text;
           const end = start + text.length;
           const pathKey = path.join(".");
-          
+
+          // Add debugging for the problematic range
+          if (
+            (start <= 70 && end >= 60) || // Range overlaps with 60-70
+            (offset >= 50 && offset <= 80) // Nearby offsets for context
+          ) {
+            console.log(
+              `Node with offset ${start}-${end} at path ${pathKey}:`,
+              {
+                text,
+                offset,
+                plainText: plainText.substring(
+                  Math.max(0, plainText.length - 10)
+                ),
+              }
+            );
+          }
+
           index.set(pathKey, { path, start, end, text });
           plainText += text;
           offset += text.length;
@@ -57,14 +68,23 @@ export function usePlainTextOffsets(
           if (
             Element.isElement(node) &&
             node.type &&
-            (node.type.startsWith("heading") || 
-             node.type === "paragraph" || 
-             node.type === "block-quote")
+            (node.type.startsWith("heading") ||
+              node.type === "paragraph" ||
+              node.type === "block-quote")
           ) {
             // Only add breaks if we're not at the beginning
             if (plainText.length > 0 && !plainText.endsWith("\n\n")) {
+              // Debug the newline addition
+              const oldOffset = offset;
               plainText += "\n\n";
               offset += 2; // Account for the added newlines
+
+              // Log if this affects our problematic range
+              if (oldOffset <= 70 && offset >= 60) {
+                console.log(
+                  `Added newlines at offset ${oldOffset}, new offset: ${offset}`
+                );
+              }
             }
           }
 
@@ -74,14 +94,14 @@ export function usePlainTextOffsets(
             const childPath = [...path, i];
             collectTextNodes(child, childPath);
           });
-          
+
           // Add a block separator after certain elements
           if (
             Element.isElement(node) &&
-            node.type && 
-            (node.type.startsWith("heading") || 
-             node.type === "paragraph" || 
-             node.type === "block-quote")
+            node.type &&
+            (node.type.startsWith("heading") ||
+              node.type === "paragraph" ||
+              node.type === "block-quote")
           ) {
             if (!plainText.endsWith("\n\n")) {
               plainText += "\n\n";
@@ -95,7 +115,7 @@ export function usePlainTextOffsets(
       editor.children.forEach((child, i) => {
         collectTextNodes(child, [i]);
       });
-      
+
       // Return the populated index
       return index;
     } catch (error) {
