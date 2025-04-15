@@ -7,55 +7,22 @@ import React, {
 } from 'react';
 
 import remarkParse from 'remark-parse';
-import remarkSlate from 'remark-slate';
+import { remarkToSlate } from 'remark-slate-transformer';
 import {
-  BaseEditor,
   createEditor,
   Descendant,
+  Editor,
   Element,
   Node,
   Text,
 } from 'slate';
-import {
-  HistoryEditor,
-  withHistory,
-} from 'slate-history';
+import { withHistory } from 'slate-history';
 import {
   Editable,
-  ReactEditor,
   Slate,
   withReact,
 } from 'slate-react';
 import { unified } from 'unified';
-
-type CustomElement = {
-  type:
-    | "paragraph"
-    | "heading-one"
-    | "heading-two"
-    | "heading-three"
-    | "block-quote"
-    | "bulleted-list"
-    | "numbered-list"
-    | "list-item";
-  children: CustomText[];
-  level?: number;
-};
-
-type CustomText = {
-  text: string;
-  bold?: boolean;
-  italic?: boolean;
-  code?: boolean;
-};
-
-declare module "slate" {
-  interface CustomTypes {
-    Editor: BaseEditor & ReactEditor & HistoryEditor;
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
 
 interface Highlight {
   startOffset: number;
@@ -73,51 +40,74 @@ interface SlateEditorProps {
   activeTag?: string | null;
 }
 
-const renderElement = (props: any) => {
-  const { attributes, children, element } = props;
-
+const renderElement = ({ attributes, children, element }: any) => {
   switch (element.type) {
-    case "heading-one":
+    case "heading":
+      switch (element.depth) {
+        case 1:
+          return (
+            <h1 {...attributes} className="text-4xl font-bold mb-4">
+              {children}
+            </h1>
+          );
+        case 2:
+          return (
+            <h2 {...attributes} className="text-3xl font-bold mb-3">
+              {children}
+            </h2>
+          );
+        case 3:
+          return (
+            <h3 {...attributes} className="text-2xl font-bold mb-2">
+              {children}
+            </h3>
+          );
+        default:
+          return (
+            <h4 {...attributes} className="text-xl font-bold mb-2">
+              {children}
+            </h4>
+          );
+      }
+    case "paragraph":
       return (
-        <h1 {...attributes} className="text-4xl font-bold mb-4">
+        <p {...attributes} className="mb-4">
           {children}
-        </h1>
-      );
-    case "heading-two":
-      return (
-        <h2 {...attributes} className="text-3xl font-bold mb-3">
-          {children}
-        </h2>
-      );
-    case "heading-three":
-      return (
-        <h3 {...attributes} className="text-2xl font-bold mb-2">
-          {children}
-        </h3>
+        </p>
       );
     case "block-quote":
       return (
         <blockquote
           {...attributes}
-          className="border-l-4 border-gray-300 pl-4 italic"
+          className="border-l-4 border-gray-300 pl-4 italic mb-4"
         >
           {children}
         </blockquote>
       );
-    case "bulleted-list":
-      return (
-        <ul {...attributes} className="list-disc ml-6">
+    case "list":
+      return element.ordered ? (
+        <ol {...attributes} className="list-decimal ml-6 mb-4">
+          {children}
+        </ol>
+      ) : (
+        <ul {...attributes} className="list-disc ml-6 mb-4">
           {children}
         </ul>
       );
-    case "numbered-list":
-      return (
-        <ol {...attributes} className="list-decimal ml-6">
-          {children}
-        </ol>
-      );
     case "list-item":
       return <li {...attributes}>{children}</li>;
+    case "link":
+      return (
+        <a
+          {...attributes}
+          href={element.url}
+          className="text-blue-600 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {children}
+        </a>
+      );
     default:
       return (
         <div {...attributes} className="mb-4">
@@ -127,45 +117,44 @@ const renderElement = (props: any) => {
   }
 };
 
-const renderLeaf = (props: any) => {
-  const { attributes, children, leaf } = props;
-  let element = children;
+const renderLeaf = ({ attributes, children, leaf }: any) => {
+  let el = children;
 
   if (leaf.bold) {
-    element = <strong>{element}</strong>;
+    el = <strong>{el}</strong>;
   }
   if (leaf.italic) {
-    element = <em>{element}</em>;
+    el = <em>{el}</em>;
   }
   if (leaf.code) {
-    element = <code className="bg-gray-100 rounded px-1">{element}</code>;
+    el = <code className="bg-gray-100 rounded px-1">{el}</code>;
   }
   if (leaf.highlight) {
-    element = (
+    el = (
       <span
         data-tag={leaf.tag}
         className={`rounded bg-${leaf.color} ${
-          leaf.tag === props.activeTag ? "ring-2 ring-blue-500" : ""
+          leaf.tag === attributes.activeTag ? "ring-2 ring-blue-500" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
-          props.onHighlightClick?.(leaf.tag);
+          attributes.onHighlightClick?.(leaf.tag);
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
-          props.onHighlightHover?.(leaf.tag);
+          attributes.onHighlightHover?.(leaf.tag);
         }}
         onMouseLeave={(e) => {
           e.preventDefault();
-          props.onHighlightHover?.(null);
+          attributes.onHighlightHover?.(null);
         }}
       >
-        {element}
+        {el}
       </span>
     );
   }
 
-  return <span {...attributes}>{element}</span>;
+  return <span {...attributes}>{el}</span>;
 };
 
 const SlateEditor: React.FC<SlateEditorProps> = ({
@@ -180,9 +169,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const initRef = useRef(false);
   const [originalText, setOriginalText] = useState("");
 
-  // Convert markdown to Slate nodes
+  // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
-    const processor = unified().use(remarkParse).use(remarkSlate);
+    const processor = unified().use(remarkParse).use(remarkToSlate);
     const result = processor.processSync(content);
     return result.result as Descendant[];
   }, [content]);
@@ -272,41 +261,38 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const ranges: any[] = [];
 
       for (const highlight of highlights) {
-        if (
-          typeof highlight?.startOffset !== "number" ||
-          typeof highlight?.endOffset !== "number"
-        ) {
+        if (!highlight?.startOffset || !highlight?.endOffset) {
           continue;
         }
 
-        // Try to find this node in the content
-        const text = node.text;
-        if (!text) continue;
+        // Get the text content up to this node
+        const nodeEntry = Editor.node(editor, path);
+        const [, nodePath] = nodeEntry;
+        const start = Editor.start(editor, []);
+        const nodeStart = Editor.start(editor, nodePath);
+        const startPoint = Editor.before(editor, nodeStart) || start;
+        const beforeText = Editor.string(editor, {
+          anchor: start,
+          focus: startPoint,
+        });
 
-        // Check if this highlight might overlap with this text node
-        // Use the original text offset to determine if we should highlight
-        const nodeStart = originalText.indexOf(text);
-        if (nodeStart === -1) continue;
+        const nodeStartOffset = beforeText.length;
+        const nodeText = node.text;
 
-        const nodeEnd = nodeStart + text.length;
+        // Calculate if this highlight overlaps with this node
+        const highlightStart = Math.max(
+          0,
+          highlight.startOffset - nodeStartOffset
+        );
+        const highlightEnd = Math.min(
+          nodeText.length,
+          highlight.endOffset - nodeStartOffset
+        );
 
-        // Skip if this node is completely outside the highlight range
-        if (
-          nodeEnd <= highlight.startOffset ||
-          nodeStart >= highlight.endOffset
-        ) {
-          continue;
-        }
-
-        // Calculate local offsets within this node
-        const localStart = Math.max(0, highlight.startOffset - nodeStart);
-        const localEnd = Math.min(text.length, highlight.endOffset - nodeStart);
-
-        // Only add a highlight if it actually covers part of this text node
-        if (localStart < localEnd) {
+        if (highlightStart < highlightEnd) {
           ranges.push({
-            anchor: { path, offset: localStart },
-            focus: { path, offset: localEnd },
+            anchor: { path, offset: highlightStart },
+            focus: { path, offset: highlightEnd },
             highlight: true,
             tag: highlight.tag || "",
             color: highlight.color || "yellow-200",
@@ -317,7 +303,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       return ranges;
     },
-    [highlights, activeTag, originalText, initialized]
+    [highlights, activeTag, initialized, editor]
   );
 
   if (!initialized) {

@@ -1,10 +1,13 @@
 // --- src/utils/highlightUtils.ts ---
 
+import { Text } from 'slate';
+
 import type {
   Comment,
   DocumentReview,
   Highlight,
 } from '../types/documentReview'; // Import Comment type
+import { CustomText } from '../types/slate';
 
 // Raw highlight structure expected from LLM response
 export interface RawLLMHighlight {
@@ -371,7 +374,7 @@ export function calculateTextNodePositions(
   let offset = 0;
   return textNodes.map((node) => {
     const start = offset;
-    const length = node.nodeValue?.length || 0;
+    const length = node.text?.length || 0;
     offset += length;
     return { node, start, end: start + length };
   });
@@ -390,7 +393,7 @@ export function createHighlightSpan(
   const span = document.createElement("span");
   span.textContent = text;
   span.className = `bg-${color} rounded cursor-pointer hover:bg-opacity-80`;
-  span.dataset.highlightTag = tag;
+  span.dataset.tag = tag;
   if (isFirstSpan) {
     span.id = `highlight-${tag}`;
   }
@@ -405,39 +408,44 @@ const originalTextCache = new Map<HTMLElement, string>();
 /**
  * Applies a highlight to a text node, handling all cases (start, middle, end)
  */
-function applyHighlightToNode(
-  node: Text,
+export function applyHighlightToNode(
+  node: Node | CustomText,
   startOffset: number,
   endOffset: number,
   tag: string,
   color: string
-): Node[] {
-  const text = node.textContent || "";
-  const spans: Node[] = [];
+): Node | null {
+  // Return null for empty/collapsed ranges
+  if (startOffset === endOffset) {
+    return null;
+  }
+
+  // Handle both DOM Text nodes and Slate CustomText nodes
+  const textContent = node instanceof Node ? node.textContent : node.text;
+  if (!textContent) return null;
+
+  const container = document.createElement("div");
 
   // Create text node for content before highlight
   if (startOffset > 0) {
-    spans.push(document.createTextNode(text.substring(0, startOffset)));
+    container.appendChild(
+      document.createTextNode(textContent.substring(0, startOffset))
+    );
   }
 
   // Create highlight span
-  const highlightText = text.substring(startOffset, endOffset);
+  const highlightText = textContent.substring(startOffset, endOffset);
   const span = createHighlightSpan(highlightText, tag, color, true);
-  spans.push(span);
+  container.appendChild(span);
 
   // Create text node for content after highlight
-  if (endOffset < text.length) {
-    spans.push(document.createTextNode(text.substring(endOffset)));
+  if (endOffset < textContent.length) {
+    container.appendChild(
+      document.createTextNode(textContent.substring(endOffset))
+    );
   }
 
-  // Replace the original node with the new nodes
-  const parent = node.parentNode;
-  if (parent) {
-    spans.forEach((span) => parent.insertBefore(span, node));
-    parent.removeChild(node);
-  }
-
-  return spans;
+  return container.firstChild;
 }
 
 /**
@@ -461,7 +469,7 @@ function findTextNodes(
 
   let node: Text | null;
   while ((node = walker.nextNode() as Text)) {
-    if (node.textContent?.trim().length) {
+    if (node.text?.trim().length) {
       allTextNodes.push(node);
     }
   }
@@ -477,7 +485,7 @@ function findTextNodes(
         combinedText += " ";
         currentGlobalOffset += 1;
       }
-      combinedText += allTextNodes[j].textContent || "";
+      combinedText += allTextNodes[j].text || "";
 
       // Check if we have a match in the combined text
       const index = combinedText.indexOf(searchText);
@@ -486,7 +494,7 @@ function findTextNodes(
         let currentPos = 0;
         let nodeGlobalOffset = globalOffset;
         for (let k = i; k <= j; k++) {
-          const nodeText = allTextNodes[k].textContent || "";
+          const nodeText = allTextNodes[k].text || "";
           if (k > i) {
             currentPos += 1;
             nodeGlobalOffset += 1;
@@ -507,7 +515,7 @@ function findTextNodes(
         }
       }
     }
-    globalOffset += (allTextNodes[i].textContent || "").length;
+    globalOffset += (allTextNodes[i].text || "").length;
   }
 
   return matches;
@@ -577,7 +585,7 @@ export function testFindTextInContainer(
   if (nodes.length > 0) {
     const firstNode = nodes[0];
     console.log(
-      `First node text: "${firstNode.node.textContent?.substring(0, 30)}..."`
+      `First node text: "${firstNode.node.text?.substring(0, 30)}..."`
     );
     console.log(`Offset: ${firstNode.nodeOffset}`);
     return true;
@@ -603,7 +611,7 @@ function findTextAcrossNodes(
 
   let node: Text | null;
   while ((node = walker.nextNode() as Text)) {
-    if (node.textContent?.trim().length) {
+    if (node.text?.trim().length) {
       allTextNodes.push(node);
     }
   }
@@ -622,7 +630,7 @@ function findTextAcrossNodes(
         combinedText += " ";
         currentGlobalOffset += 1;
       }
-      combinedText += allTextNodes[j].textContent || "";
+      combinedText += allTextNodes[j].text || "";
 
       // If we haven't found a match in the combined text yet, check if we do now
       if (firstMatchingNode === null) {
@@ -638,7 +646,7 @@ function findTextAcrossNodes(
           let currentPos = 0;
           let nodeGlobalOffset = globalOffset;
           for (let k = i; k <= j; k++) {
-            const nodeText = allTextNodes[k].textContent || "";
+            const nodeText = allTextNodes[k].text || "";
             if (k > i) {
               currentPos += 1; // Add space between nodes
               nodeGlobalOffset += 1;
@@ -662,55 +670,55 @@ function findTextAcrossNodes(
         }
       }
     }
-    globalOffset += (allTextNodes[i].textContent || "").length;
+    globalOffset += (allTextNodes[i].text || "").length;
   }
 
   return matches;
 }
 
 export function applyHighlightToStartNode(
-  node: Node,
-  highlightStart: number,
+  node: Node | CustomText,
   nodeStart: number,
+  highlightEnd: number,
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  if (!(node instanceof Text)) return null;
-  const relativeStart = highlightStart - nodeStart;
-  if (
-    relativeStart < 0 ||
-    !node.textContent ||
-    relativeStart >= node.textContent.length
-  )
-    return null;
-  const highlightText = node.textContent.substring(relativeStart);
+  const textContent = node instanceof Node ? node.textContent : node.text;
+  if (!textContent) return null;
+
+  const relativeEnd = highlightEnd - nodeStart;
+  if (relativeEnd <= 0 || relativeEnd > textContent.length) return null;
+
+  const highlightText = textContent.substring(0, relativeEnd);
   if (!highlightText) return null;
-  const span = createHighlightSpan(highlightText, tag, color, true);
-  node.textContent = node.textContent.substring(0, relativeStart);
-  node.parentNode?.insertBefore(span, node.nextSibling);
+
+  const span = createHighlightSpan(highlightText, tag, color, false);
+  if (relativeEnd < textContent.length) {
+    if (node instanceof Node) {
+      node.textContent = textContent.substring(relativeEnd);
+    } else {
+      node.text = textContent.substring(relativeEnd);
+    }
+  }
+
+  if (node.parentNode) {
+    node.parentNode.replaceChild(span, node);
+  }
   return span;
 }
 
 export function applyHighlightToEndNode(
-  node: Node,
-  highlightEnd: number,
-  nodeStart: number,
+  node: Node | CustomText,
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  if (!(node instanceof Text)) return null;
-  const relativeEnd = highlightEnd - nodeStart;
-  if (
-    !node.textContent ||
-    relativeEnd <= 0 ||
-    relativeEnd > node.textContent.length
-  )
-    return null;
-  const highlightText = node.textContent.substring(0, relativeEnd);
-  if (!highlightText) return null;
-  const span = createHighlightSpan(highlightText, tag, color, false);
-  node.textContent = node.textContent.substring(relativeEnd);
-  node.parentNode?.insertBefore(span, node);
+  const textContent = node instanceof Node ? node.textContent : node.text;
+  if (!textContent) return null;
+
+  const span = createHighlightSpan(textContent, tag, color, false);
+  if (node.parentNode) {
+    node.parentNode.replaceChild(span, node);
+  }
   return span;
 }
 
@@ -720,8 +728,8 @@ export function applyHighlightToMiddleNode(
   color: string
 ): HTMLSpanElement | null {
   if (!(node instanceof Text)) return null;
-  if (!node.textContent) return null;
-  const span = createHighlightSpan(node.textContent, tag, color, false);
+  if (!node.text) return null;
+  const span = createHighlightSpan(node.text, tag, color, false);
   node.parentNode?.replaceChild(span, node);
   return span;
 }
@@ -762,7 +770,7 @@ export function findNodesContainingText(
   let offset = 0;
 
   while ((currentNode = walker.nextNode() as Text)) {
-    const text = currentNode.textContent || "";
+    const text = currentNode.text || "";
     const index = text.indexOf(searchText);
     if (index !== -1) {
       matches.push({
@@ -809,13 +817,7 @@ export function applyHighlightBetweenNodes(
 
   // Handle end node if different from start node
   if (startNode !== endNode && endNode instanceof Text) {
-    const endSpan = applyHighlightToEndNode(
-      endNode,
-      highlightEnd,
-      nodeStart,
-      tag,
-      color
-    );
+    const endSpan = applyHighlightToEndNode(endNode, tag, color);
     if (endSpan) spans.push(endSpan);
   }
 
