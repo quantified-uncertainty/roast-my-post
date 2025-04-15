@@ -144,7 +144,7 @@ export function HighlightedMarkdown({
       allHighlights.forEach((el) => {
         const highlightEl = el as HTMLElement;
         const dataset = highlightEl.dataset as HighlightDataset;
-        const tag = dataset.tag;
+        const tag = dataset["tag"];
 
         // Add/remove active class based on the active tag
         if (tag === activeTag) {
@@ -158,7 +158,7 @@ export function HighlightedMarkdown({
       allHighlights.forEach((el) => {
         const highlightEl = el as HTMLElement;
         const dataset = highlightEl.dataset as HighlightDataset;
-        const tag = dataset.tag;
+        const tag = dataset["tag"];
 
         // Add/remove active class based on the active tag
         if (tag === activeTag) {
@@ -191,20 +191,20 @@ export function HighlightedMarkdown({
       className="prose prose-slate prose-md max-w-none"
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
-        if (target.dataset.tag) {
+        if (target.dataset["tag"]) {
           console.log(
-            `[HighlightedMarkdown] Click on highlight with tag: ${target.dataset.tag}`
+            `[HighlightedMarkdown] Click on highlight with tag: ${target.dataset["tag"]}`
           );
-          onHighlightClick(target.dataset.tag);
+          onHighlightClick(target.dataset["tag"]);
         }
       }}
       onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
-        if (target.dataset.tag) {
+        if (target.dataset["tag"]) {
           console.log(
-            `[HighlightedMarkdown] Hover on highlight with tag: ${target.dataset.tag}`
+            `[HighlightedMarkdown] Hover on highlight with tag: ${target.dataset["tag"]}`
           );
-          onHighlightHover(target.dataset.tag);
+          onHighlightHover(target.dataset["tag"]);
         }
       }}
       onMouseOut={() => {

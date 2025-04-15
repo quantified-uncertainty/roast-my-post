@@ -20,7 +20,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
+    "noPropertyAccessFromIndexSignature": false,
 
     // Path aliases
     "paths": {

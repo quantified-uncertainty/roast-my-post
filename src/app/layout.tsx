@@ -1,7 +1,5 @@
 import "./globals.css";
 
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -17,10 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
+      <body className="antialiased" suppressHydrationWarning>
         {/* Header (always visible at the top) */}
         <header className="border-b border-gray-200 bg-blue-500 px-6 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
