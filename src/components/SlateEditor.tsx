@@ -11,7 +11,6 @@ import { remarkToSlate } from 'remark-slate-transformer';
 import {
   createEditor,
   Descendant,
-  Editor,
   Element,
   Node,
   Text,
@@ -24,8 +23,9 @@ import {
 } from 'slate-react';
 import { unified } from 'unified';
 
-// Import our custom hook (Phase 1 implementation)
+// Import our improved hooks for Phase 2
 import { useHighlightMapper } from '../hooks/useHighlightMapper';
+import { usePlainTextOffsets } from '../hooks/usePlainTextOffsets';
 
 interface Highlight {
   startOffset: number;
@@ -173,6 +173,11 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
   return <span {...attributes}>{el}</span>;
 };
 
+/**
+ * SlateEditor component displays markdown content with highlighted sections.
+ *
+ * Phase 2: Using diff-match-patch for robust offset mapping
+ */
 const SlateEditor: React.FC<SlateEditorProps> = ({
   content,
   highlights,
@@ -183,7 +188,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
-  const [renderedText, setRenderedText] = useState("");
+  const [slateText, setSlateText] = useState("");
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
@@ -237,39 +242,47 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     return transformedNodes;
   }, [content]);
 
-  // Get text from nodes
-  const getNodeText = useCallback((node: Node): string => {
-    if (Text.isText(node)) {
-      return node.text;
-    } else {
-      return node.children.map(getNodeText).join("");
-    }
-  }, []);
-
-  // Extract rendered text for offset mapping
-  const extractRenderedText = useCallback(() => {
-    if (!editor.children || !Array.isArray(editor.children)) return "";
-    
+  // Extract plain text from nodes
+  const extractPlainText = useCallback((nodes: Node[]): string => {
     let text = "";
-    const extractText = (node: Node) => {
+
+    const visit = (node: Node) => {
       if (Text.isText(node)) {
         text += node.text;
       } else if (Element.isElement(node)) {
-        node.children.forEach(extractText);
-        
-        // Add paragraph breaks for block elements to better match markdown structure
+        // Handle block elements structure for better matching with markdown
         if (
           node.type &&
-          (node.type.startsWith("heading") || node.type === "paragraph")
+          (node.type.startsWith("heading") ||
+            node.type === "paragraph" ||
+            node.type === "block-quote")
         ) {
-          text += "\n\n";
+          // Add paragraph breaks for these block types
+          if (text.length > 0 && !text.endsWith("\n\n")) {
+            text += "\n\n";
+          }
+        }
+
+        // Visit all children
+        node.children.forEach(visit);
+
+        // Add trailing breaks for block elements
+        if (
+          node.type &&
+          (node.type.startsWith("heading") ||
+            node.type === "paragraph" ||
+            node.type === "block-quote")
+        ) {
+          if (!text.endsWith("\n\n")) {
+            text += "\n\n";
+          }
         }
       }
     };
-    
-    editor.children.forEach(extractText);
+
+    nodes.forEach(visit);
     return text;
-  }, [editor.children]);
+  }, []);
 
   // Initialize editor
   useEffect(() => {
@@ -277,71 +290,20 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       editor.children = value;
       editor.onChange();
 
-      // Extract rendered text for offset mapping
-      const extracted = extractRenderedText();
-      setRenderedText(extracted);
+      // Extract plain text for offset mapping
+      const plainText = extractPlainText(editor.children);
+      setSlateText(plainText);
 
       initRef.current = true;
       setInitialized(true);
     }
-  }, [editor, value, content, extractRenderedText]);
+  }, [editor, value, content, extractPlainText]);
 
-  // Use our custom offset mapper (Phase 1)
-  const { mdToSlateOffset } = useHighlightMapper(content, renderedText);
+  // Use our custom hooks for robust offset mapping
+  const { mdToSlateOffset } = useHighlightMapper(content, slateText);
+  const nodeOffsets = usePlainTextOffsets(editor);
 
-  // Build node ranges for highlighting
-  const nodeRanges = useMemo(() => {
-    if (!initialized) return new Map();
-
-    const ranges = new Map();
-    let documentText = "";
-    let nodeTexts: {
-      node: Node;
-      path: number[];
-      start: number;
-      end: number;
-      text: string;
-    }[] = [];
-
-    // First pass: collect all text nodes and their content
-    const collectTextNodes = (node: Node, path: number[]) => {
-      if (Text.isText(node)) {
-        const start = documentText.length;
-        const text = node.text;
-        const end = start + text.length;
-
-        nodeTexts.push({ node, path, start, end, text });
-        documentText += text;
-      } else if (Element.isElement(node)) {
-        // Add separators for block elements to match original markdown offsets
-        if (
-          node.type &&
-          (node.type.startsWith("heading") || node.type === "paragraph")
-        ) {
-          if (documentText.length > 0 && !documentText.endsWith("\n\n")) {
-            documentText += "\n\n";
-          }
-        }
-
-        node.children.forEach((child, i) => {
-          collectTextNodes(child, [...path, i]);
-        });
-      }
-    };
-
-    editor.children.forEach((node, i) => {
-      collectTextNodes(node, [i]);
-    });
-
-    // Map original content offsets to our collected text
-    nodeTexts.forEach(({ node, path, start, end, text }) => {
-      ranges.set(path.join("."), { node, path, start, end, text });
-    });
-
-    return ranges;
-  }, [editor, initialized]);
-
-  // Decorate function to add highlights
+  // Decorate function to add highlights using our improved offset mapping
   const decorate = useCallback(
     ([node, path]: [Node, number[]]) => {
       if (!Text.isText(node) || !initialized) {
@@ -350,43 +312,64 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       const ranges: any[] = [];
       const pathKey = path.join(".");
-      const nodeInfo = nodeRanges.get(pathKey);
-      
+      const nodeInfo = nodeOffsets.get(pathKey);
+
       if (!nodeInfo) return [];
 
       for (const highlight of highlights) {
-        if (!highlight?.startOffset || !highlight?.endOffset) {
+        if (
+          highlight?.startOffset === undefined ||
+          highlight?.endOffset === undefined ||
+          highlight?.startOffset < 0 ||
+          highlight?.endOffset <= highlight?.startOffset
+        ) {
+          continue; // Skip invalid highlights
+        }
+
+        // Map markdown offsets to slate offsets using diff-match-patch
+        const slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
+        const slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
+
+        if (slateStartOffset === undefined || slateEndOffset === undefined) {
+          // Fall back to original approach if mapping doesn't exist
+          // Check if the current text node contains text from the highlight
+          // Since we can't rely on precise mapping, we'll use a more basic approach
+          const nodeText = node.text;
+          const highlightText = highlight.quotedText || "";
+
+          if (nodeText && highlightText && nodeText.includes(highlightText)) {
+            const start = nodeText.indexOf(highlightText);
+            const end = start + highlightText.length;
+
+            ranges.push({
+              anchor: { path, offset: start },
+              focus: { path, offset: end },
+              highlight: true,
+              tag: highlight.tag || "",
+              color: highlight.color || "yellow-200",
+              isActive: highlight.tag === activeTag,
+            });
+          }
+
           continue;
         }
 
-        // Phase 1: Map the markdown offsets to slate offsets using our mapper
-        const slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
-        const slateEndOffset = mdToSlateOffset.get(highlight.endOffset);
-        
-        if (slateStartOffset === undefined || slateEndOffset === undefined) {
-          // Fall back to the original approach if our mapping doesn't have this offset
-          // Get the text content up to this node
-          const nodeEntry = Editor.node(editor, path);
-          const [, nodePath] = nodeEntry;
-          const start = Editor.start(editor, []);
-          const nodeStart = Editor.start(editor, nodePath);
-          const startPoint = Editor.before(editor, nodeStart) || start;
-          const beforeText = Editor.string(editor, {
-            anchor: start,
-            focus: startPoint,
-          });
+        // Check if this node overlaps with the highlight
+        const nodeStartOffset = nodeInfo.start;
+        const nodeEndOffset = nodeInfo.end;
 
-          const nodeStartOffset = beforeText.length;
-          const nodeText = node.text;
-
-          // Calculate if this highlight overlaps with this node
+        if (
+          slateEndOffset > nodeStartOffset &&
+          slateStartOffset < nodeEndOffset
+        ) {
+          // Calculate the local offsets within this text node
           const highlightStart = Math.max(
             0,
-            highlight.startOffset - nodeStartOffset
+            slateStartOffset - nodeStartOffset
           );
           const highlightEnd = Math.min(
-            nodeText.length,
-            highlight.endOffset - nodeStartOffset
+            node.text.length,
+            slateEndOffset - nodeStartOffset
           );
 
           if (highlightStart < highlightEnd) {
@@ -399,34 +382,12 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               isActive: highlight.tag === activeTag,
             });
           }
-        } else {
-          // Use our mapped offsets
-          // Calculate if this highlight overlaps with this node
-          const nodeStartOffset = nodeInfo.start;
-          const nodeEndOffset = nodeInfo.end;
-          
-          // Check if the highlight overlaps with this node
-          if (slateEndOffset >= nodeStartOffset && slateStartOffset <= nodeEndOffset) {
-            const highlightStart = Math.max(0, slateStartOffset - nodeStartOffset);
-            const highlightEnd = Math.min(node.text.length, slateEndOffset - nodeStartOffset);
-
-            if (highlightStart < highlightEnd) {
-              ranges.push({
-                anchor: { path, offset: highlightStart },
-                focus: { path, offset: highlightEnd },
-                highlight: true,
-                tag: highlight.tag || "",
-                color: highlight.color || "yellow-200",
-                isActive: highlight.tag === activeTag,
-              });
-            }
-          }
         }
       }
 
       return ranges;
     },
-    [highlights, activeTag, initialized, editor, nodeRanges, mdToSlateOffset]
+    [highlights, activeTag, initialized, editor, nodeOffsets, mdToSlateOffset]
   );
 
   if (!initialized) {

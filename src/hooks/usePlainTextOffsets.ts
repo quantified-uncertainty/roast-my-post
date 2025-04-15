@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 
 import {
   Editor,
+  Element,
+  Node,
   Path,
   Text,
 } from 'slate';
@@ -11,11 +13,14 @@ interface NodeOffsetInfo {
   path: Path;
   start: number;
   end: number;
+  text: string;
 }
 
 /**
  * A custom hook that calculates and caches the start and end offsets
  * of each text node within the editor's concatenated plain text content.
+ *
+ * Phase 2: More robust implementation with block handling and error prevention
  *
  * @param editor The Slate editor instance.
  * @returns A Map where keys are path strings (e.g., "0.0") and values
@@ -27,6 +32,7 @@ export function usePlainTextOffsets(
   const nodeOffsets = useMemo(() => {
     const index = new Map<string, NodeOffsetInfo>();
     let offset = 0;
+    let plainText = "";
 
     // Ensure we only iterate if editor.children exists and is valid
     if (!editor.children || !Array.isArray(editor.children)) {
@@ -34,33 +40,70 @@ export function usePlainTextOffsets(
     }
 
     try {
-      // Iterate over all text nodes in the editor
-      for (const [node, path] of Editor.nodes(editor, {
-        at: [], // Iterate over the entire document
-        match: (n) => Text.isText(n),
-        universal: true, // Ensure we traverse all levels
-      })) {
-        // Type guard to ensure node is Text
+      // More careful traversal of the editor's node tree
+      const collectTextNodes = (node: Node, path: Path) => {
         if (Text.isText(node)) {
-          const len = node.text.length;
+          // Add this text node to our index
+          const start = offset;
+          const text = node.text;
+          const end = start + text.length;
           const pathKey = path.join(".");
-          index.set(pathKey, { path, start: offset, end: offset + len });
-          offset += len;
+          
+          index.set(pathKey, { path, start, end, text });
+          plainText += text;
+          offset += text.length;
+        } else if (Element.isElement(node)) {
+          // Add paragraph breaks for block elements to better match markdown structure
+          if (
+            Element.isElement(node) &&
+            node.type &&
+            (node.type.startsWith("heading") || 
+             node.type === "paragraph" || 
+             node.type === "block-quote")
+          ) {
+            // Only add breaks if we're not at the beginning
+            if (plainText.length > 0 && !plainText.endsWith("\n\n")) {
+              plainText += "\n\n";
+              offset += 2; // Account for the added newlines
+            }
+          }
+
+          // Process children
+          node.children.forEach((child, i) => {
+            // Create proper path for this child
+            const childPath = [...path, i];
+            collectTextNodes(child, childPath);
+          });
+          
+          // Add a block separator after certain elements
+          if (
+            Element.isElement(node) &&
+            node.type && 
+            (node.type.startsWith("heading") || 
+             node.type === "paragraph" || 
+             node.type === "block-quote")
+          ) {
+            if (!plainText.endsWith("\n\n")) {
+              plainText += "\n\n";
+              offset += 2;
+            }
+          }
         }
-      }
+      };
+
+      // Process each top-level node
+      editor.children.forEach((child, i) => {
+        collectTextNodes(child, [i]);
+      });
+      
+      // Return the populated index
+      return index;
     } catch (error) {
       // Handle potential errors during iteration if editor state is invalid
       console.error("Error calculating text offsets:", error);
-      // Depending on requirements, you might want to return an empty map
-      // or let the error propagate if it's critical.
       return new Map<string, NodeOffsetInfo>();
     }
-
-    return index;
-    // Dependency: Recalculate when the editor's content changes.
-    // JSON.stringify is a common way to trigger updates on deep changes,
-    // but can be expensive. Consider a more efficient dependency if performance is critical.
-  }, [JSON.stringify(editor.children)]);
+  }, [editor.children]);
 
   return nodeOffsets;
 }

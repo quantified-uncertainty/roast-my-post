@@ -1,49 +1,68 @@
 import { useMemo } from 'react';
 
+// Import diff-match-patch for Phase 2
+import DiffMatchPatch, { Diff } from 'diff-match-patch';
+
 /**
- * A simple hook to map between markdown and slate text offsets
+ * A hook to map between markdown and slate text offsets
  * 
- * Phase 1: Basic implementation for simple cases (headings, paragraphs)
- * Later phases will handle more complex markdown formatting
+ * Phase 2: Using diff-match-patch for robust offset mapping
  */
 export function useHighlightMapper(markdown: string, slateText: string) {
   return useMemo(() => {
-    // Simple mapping for basic cases
+    // Phase 2: Use diff-match-patch for robust offset mapping
+    const dmp = new DiffMatchPatch();
+    const diffs = dmp.diff_main(markdown, slateText);
+    
+    // Apply semantic cleanup to get more meaningful diffs
+    dmp.diff_cleanupSemantic(diffs);
+    
     const mdToSlateOffset = new Map<number, number>();
     const slateToMdOffset = new Map<number, number>();
     
-    // Start with simple headers: check for heading markers at beginning
-    // This handles cases like "# Heading" → "Heading"
-    let mdIndex = 0;
-    let slateIndex = 0;
+    let mdOffset = 0;
+    let slateOffset = 0;
     
-    // Skip markdown formatting characters
-    while (mdIndex < markdown.length && slateIndex < slateText.length) {
-      const mdChar = markdown[mdIndex];
-      const slateChar = slateText[slateIndex];
+    // Process the diffs to build offset maps
+    diffs.forEach((diff: Diff) => {
+      const [op, text] = diff;
       
-      // If characters match, map the offsets
-      if (mdChar === slateChar) {
-        mdToSlateOffset.set(mdIndex, slateIndex);
-        slateToMdOffset.set(slateIndex, mdIndex);
-        mdIndex++;
-        slateIndex++;
-      } else if (mdChar === '#' || mdChar === '*' || mdChar === '_' || 
-                 mdChar === '[' || mdChar === ']' || mdChar === '(' || 
-                 mdChar === ')' || mdChar === '\n' || mdChar === ' ') {
-        // Skip markdown formatting characters in the source
-        mdIndex++;
-      } else {
-        // Skip any extra characters in slate text
-        slateIndex++;
+      switch (op) {
+        case DiffMatchPatch.DIFF_EQUAL:
+          // For matching text, create a 1:1 mapping
+          for (let i = 0; i < text.length; i++) {
+            mdToSlateOffset.set(mdOffset, slateOffset);
+            slateToMdOffset.set(slateOffset, mdOffset);
+            mdOffset++;
+            slateOffset++;
+          }
+          break;
+          
+        case DiffMatchPatch.DIFF_DELETE:
+          // Text only in markdown - advance the markdown offset
+          mdOffset += text.length;
+          break;
+          
+        case DiffMatchPatch.DIFF_INSERT:
+          // Text only in slate - advance the slate offset
+          slateOffset += text.length;
+          break;
       }
+    });
+    
+    // Handle end-of-content mappings
+    if (!mdToSlateOffset.has(markdown.length) && slateText.length > 0) {
+      mdToSlateOffset.set(markdown.length, slateText.length);
+    }
+    if (!slateToMdOffset.has(slateText.length) && markdown.length > 0) {
+      slateToMdOffset.set(slateText.length, markdown.length);
     }
     
     return {
       mdToSlateOffset,
       slateToMdOffset,
-      // Return original texts for debugging
-      debug: { markdown, slateText },
+      // Return diffs for debugging
+      debug: { diffs, markdown, slateText },
     };
   }, [markdown, slateText]);
 }

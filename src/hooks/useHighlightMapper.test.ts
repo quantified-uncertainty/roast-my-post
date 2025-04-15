@@ -2,8 +2,8 @@ import { renderHook } from '@testing-library/react';
 
 import { useHighlightMapper } from './useHighlightMapper';
 
-describe("useHighlightMapper (Phase 1)", () => {
-  it("should map basic heading markdown", () => {
+describe("useHighlightMapper (Phase 2)", () => {
+  it("should map basic heading markdown using diff-match-patch", () => {
     const markdown = "# Strongly Bounded AI";
     const slateText = "Strongly Bounded AI";
 
@@ -13,7 +13,7 @@ describe("useHighlightMapper (Phase 1)", () => {
     const { mdToSlateOffset, slateToMdOffset, debug } = result.current;
 
     // Log debug info
-    console.log("Debug:", debug);
+    console.log("Diffs:", debug.diffs);
     console.log("MD->Slate map:", Object.fromEntries(mdToSlateOffset));
     console.log("Slate->MD map:", Object.fromEntries(slateToMdOffset));
 
@@ -42,7 +42,7 @@ describe("useHighlightMapper (Phase 1)", () => {
     expect(slateToMdOffset.get(17)).toBe(17); // 'A' in "Another"
   });
 
-  it("should handle simple bold formatting", () => {
+  it("should handle bold formatting", () => {
     const markdown = "Some **bold** text";
     const slateText = "Some bold text";
 
@@ -59,5 +59,81 @@ describe("useHighlightMapper (Phase 1)", () => {
     expect(mdToSlateOffset.get(12)).toBeUndefined(); // First closing * is skipped
     expect(mdToSlateOffset.get(13)).toBeUndefined(); // Second closing * is skipped
     expect(mdToSlateOffset.get(14)).toBe(10); // ' ' after "bold"
+  });
+  
+  it("should handle complex markdown with lists and formatting", () => {
+    const markdown = `This concept isn't just about alignment. It's also about:
+
+* Substantial capability restrictions (using older models)  
+* Exclusive use of highly-tested technologies  
+* Intelligence limitations that make behavior predictable
+
+I think some potential names for these systems could be:
+
+* **Strongly** Bounded AI  
+* Highly-Reliable AI  
+* Boring AI`;
+
+    const slateText = `This concept isn't just about alignment. It's also about:
+
+Substantial capability restrictions (using older models)
+Exclusive use of highly-tested technologies
+Intelligence limitations that make behavior predictable
+
+I think some potential names for these systems could be:
+
+Strongly Bounded AI
+Highly-Reliable AI
+Boring AI`;
+
+    const { result } = renderHook(() =>
+      useHighlightMapper(markdown, slateText)
+    );
+    const { mdToSlateOffset, debug } = result.current;
+
+    // Helper function to find positions in strings
+    const findMarkdownPosition = (text: string) => {
+      const mdIndex = markdown.indexOf(text);
+      expect(mdIndex).not.toBe(-1); // Ensure text exists in markdown
+      return mdIndex;
+    };
+    
+    const findSlatePosition = (text: string) => {
+      const slateIndex = slateText.indexOf(text);
+      expect(slateIndex).not.toBe(-1); // Ensure text exists in slate
+      return slateIndex;
+    };
+
+    // Test list item mapping
+    const firstListItem = "Substantial capability restrictions";
+    const mdListItemPos = findMarkdownPosition(firstListItem);
+    const slateListItemPos = findSlatePosition(firstListItem);
+    
+    // The first bullet point should map correctly despite markdown formatting
+    expect(mdToSlateOffset.get(mdListItemPos)).toBe(slateListItemPos);
+    
+    // Test bold text mapping
+    const boldText = "Strongly";
+    const mdBoldPos = markdown.indexOf("**" + boldText) + 2; // Position of 'S' after **
+    const slateBoldPos = findSlatePosition(boldText);
+    
+    expect(mdToSlateOffset.get(mdBoldPos)).toBe(slateBoldPos);
+  });
+  
+  it("should handle links in markdown", () => {
+    const markdown = "Check out this [important link](https://example.com) for more details.";
+    const slateText = "Check out this important link for more details.";
+    
+    const { result } = renderHook(() => useHighlightMapper(markdown, slateText));
+    const { mdToSlateOffset } = result.current;
+    
+    // Position of 'i' in "important"
+    const mdLinkTextStart = markdown.indexOf("[important");
+    expect(mdToSlateOffset.get(mdLinkTextStart + 1)).toBe(markdown.indexOf("important") - 8);
+    
+    // Position of 't' in "details"
+    const mdDetailsPos = markdown.indexOf("details");
+    const slateDetailsPos = slateText.indexOf("details");
+    expect(mdToSlateOffset.get(mdDetailsPos)).toBe(slateDetailsPos);
   });
 });
