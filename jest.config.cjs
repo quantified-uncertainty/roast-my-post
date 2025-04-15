@@ -12,18 +12,13 @@ module.exports = {
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: ["src/**/*.{ts,tsx}", ".*(!\\.d\\.ts)$"],
   transform: {
+    // Simplify ts-jest config to rely on tsconfig.json for JSX
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
         tsconfig: "tsconfig.json",
-        useESM: true,
-        babelConfig: {
-          presets: [
-            "@babel/preset-env",
-            "@babel/preset-react",
-            "@babel/preset-typescript",
-          ],
-        },
+        useESM: true, // Keep ESM handling
+        // Remove explicit babelConfig here, let ts-jest handle it
       },
     ],
     // Improved regex to better match the ESM packages we need to transform
