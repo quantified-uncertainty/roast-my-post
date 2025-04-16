@@ -11,5 +11,125 @@
     "research-scholar"
   ],
   "content": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload.\n\n  \n\nThis browser version is no longer supported. Please upgrade to a supported browser.\n\n[\n\n](https://docs.google.com/document/?usp=docs_web \"Docs home\")\n\nQURI-recommended AI Epistemics Projects\n\n Share\n\n[Sign in](https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&followup=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&ltmpl=docs&ec=GAZAGQ)\n\nFile\n\nEdit\n\nView\n\nInsert\n\nFormat\n\nTools\n\nExtensions\n\nHelp\n\nAccessibility\n\nDebug\n\nUnsaved changes to Drive\n\nImage options\n\nImage options\n\nReplace image\n\nTable options\n\nAccessibility",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 2948,
+      "createdAt": "2025-04-16T03:26:18.523Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2355,\"completionTokens\":593,\"totalTokens\":2948,\"temperature\":0.1,\"runtimeMs\":11355}",
+      "summary": "This document appears to be a placeholder or error page rather than substantive content about \"QURI-recommended AI Epistemics Projects.\" The visible content primarily consists of browser notifications, navigation elements, and interface options rather than actual project information. Without meaningful content to analyze, a comprehensive bias assessment cannot be conducted.",
+      "comments": [
+        {
+          "title": "Technological Accessibility Bias",
+          "description": "The error message \"JavaScript isn't enabled in your browser, so this file can't be opened\" indicates a technological requirement that may exclude users with certain accessibility needs, older devices, or those who disable JavaScript for security reasons. This creates an access barrier that disproportionately affects certain user groups.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 90,
+            "quotedText": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Browser Compatibility Bias",
+          "description": "The statement \"This browser version is no longer supported\" reflects a technological bias that may disproportionately impact users with older devices, those in regions with limited access to newer technology, or individuals with economic constraints preventing regular hardware/software updates.",
+          "highlight": {
+            "startOffset": 96,
+            "endOffset": 179,
+            "quotedText": "This browser version is no longer supported. Please upgrade to a supported browser."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Authentication Barrier Bias",
+          "description": "The presence of a \"Sign in\" link suggests content is restricted behind authentication, creating potential information asymmetry. This may disproportionately affect those without Google accounts or those in regions where Google services are restricted, limiting access to what appears to be educational or research content.",
+          "highlight": {
+            "startOffset": 296,
+            "endOffset": 620,
+            "quotedText": "[Sign in](https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&followup=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&ltmpl=docs&ec=GAZAGQ)"
+          },
+          "isValid": true
+        }
+      ]
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 3433,
+      "createdAt": "2025-04-16T03:26:28.978Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2985,\"completionTokens\":448,\"totalTokens\":3433,\"temperature\":0.1,\"runtimeMs\":9475}",
+      "summary": "This document appears to be a placeholder or error page rather than actual content. It contains browser error messages, navigation elements, and a title \"QURI-recommended AI Epistemics Projects\" but lacks substantive content to evaluate for clarity. The document primarily consists of interface elements and error notifications rather than readable text to analyze.",
+      "comments": [
+        {
+          "title": "Missing Content Error",
+          "description": "The document appears to be displaying an error message rather than intended content. The message \"JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload\" indicates a technical issue preventing content display. Users should enable JavaScript and reload to access the actual document.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 90,
+            "quotedText": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Document Structure Without Content",
+          "description": "The document shows a title \"QURI-recommended AI Epistemics Projects\" but lacks actual content. Instead, it displays interface elements like menu options (File, Edit, View, etc.) and status messages. This suggests the document is being viewed in a non-functional state or preview mode rather than displaying its intended content.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Browser Compatibility Issue",
+          "description": "The document contains a browser version warning that may prevent users from accessing content. This technical barrier should be addressed by following the upgrade recommendation to ensure proper document access and functionality.",
+          "highlight": {
+            "startOffset": 96,
+            "endOffset": 179,
+            "quotedText": "This browser version is no longer supported. Please upgrade to a supported browser."
+          },
+          "isValid": true
+        }
+      ]
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 3950,
+      "createdAt": "2025-04-16T03:26:45.341Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3156,\"completionTokens\":794,\"totalTokens\":3950,\"temperature\":0.1,\"runtimeMs\":15406}",
+      "summary": "This document appears to be a placeholder or error page for a Google Docs file titled \"QURI-recommended AI Epistemics Projects.\" The content shows browser compatibility messages and navigation elements rather than the actual document content. The file seems to require JavaScript or a supported browser to access the QURI (Quantified Uncertainty Research Institute) recommendations for AI epistemics projects.",
+      "comments": [
+        {
+          "title": "QURI's Focus on AI Epistemics",
+          "description": "The Quantified Uncertainty Research Institute (QURI) is an organization focused on improving epistemics and forecasting. Their interest in AI epistemics projects suggests work at the intersection of artificial intelligence and epistemology - likely exploring how AI systems form beliefs, handle uncertainty, or make predictions. This connects to broader work in the rationalist community on improving reasoning and epistemic standards, particularly as they relate to AI systems. The document title suggests this may be a curated list of research directions or project recommendations in this domain.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Technical Access Barriers to Content",
+          "description": "The document appears inaccessible due to technical limitations, which raises interesting meta-considerations about information access in the AI safety and epistemics community. Many important discussions and resources in the AI alignment space happen in semi-private documents or platforms with specific technical requirements. This creates potential knowledge silos and accessibility barriers that may impact the field's progress. The LessWrong and EA Forum communities generally value open access to information, making this technical barrier noteworthy from a community norms perspective.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 179,
+            "quotedText": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload.\n\n  \n\nThis browser version is no longer supported. Please upgrade to a supported browser."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Document Sharing and Collaboration Context",
+          "description": "The presence of sharing and sign-in options suggests this is a collaborative document intended for multiple viewers or contributors. This reflects the collaborative nature of much AI safety and epistemics work, which often happens across organizational boundaries. QURI specifically has connections to both the forecasting community (via Metaculus) and the broader rationalist/EA ecosystem. The document format suggests it may be a living document that evolves as research priorities shift or as the field develops new insights about AI epistemics challenges.",
+          "highlight": {
+            "startOffset": 289,
+            "endOffset": 620,
+            "quotedText": "Share\n\n[Sign in](https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&followup=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&ltmpl=docs&ec=GAZAGQ)"
+          },
+          "isValid": true
+        }
+      ]
+    }
+  ]
 }

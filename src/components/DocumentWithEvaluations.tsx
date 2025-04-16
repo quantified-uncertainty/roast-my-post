@@ -317,6 +317,14 @@ export function DocumentWithEvaluations({
                               (a) => a.id === activeReview.agentId
                             )?.name || "Unknown Agent"
                           : "Unknown Agent"}
+                        {activeReview.agentId && (
+                          <span className="ml-1 text-gray-500">
+                            •{" "}
+                            {evaluationAgents.find(
+                              (a) => a.id === activeReview.agentId
+                            )?.purpose || "Unknown Purpose"}
+                          </span>
+                        )}
                       </a>
                     </div>
                   </div>
@@ -374,6 +382,34 @@ export function DocumentWithEvaluations({
               />
             </>
           )}
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Document Reviews</h2>
+            {document.reviews.length > 0 && (
+              <div className="flex space-x-2">
+                {document.reviews.map((review) => {
+                  const agent = evaluationAgents.find(
+                    (a) => a.id === review.agentId
+                  );
+                  return (
+                    <div
+                      key={review.agentId}
+                      className="flex items-center space-x-1"
+                    >
+                      <span className="text-sm text-gray-600">
+                        {agent?.name || review.agentId}
+                      </span>
+                      {review.grade && (
+                        <span className="text-sm font-semibold">
+                          ({review.grade})
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

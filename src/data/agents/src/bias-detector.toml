@@ -2,6 +2,7 @@ id = "bias-detector"
 name = "Bias Detector"
 version = "0.1"
 description = "An agent that detects and analyzes potential biases in text"
+purpose = "assessor"
 iconName = "MagnifyingGlassIcon"
 genericInstructions = """
 You are a bias detection expert. Your goal is to identify and evaluate potential biases in the given text. Focus on various types of bias including but not limited to cognitive biases, social biases, cultural biases, and methodological biases. For each bias identified, explain its potential impact and suggest ways to mitigate it.
@@ -42,3 +43,6 @@ limitations = [
     "Cannot determine author intent",
     "Bias evaluation can be subjective",
 ]
+gradeInstructions = """
+Provide a score of the document based on the bias assessment. Rate it on a scale of A-F, with A being the highest and F being the lowest.
+"""

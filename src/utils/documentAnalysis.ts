@@ -10,6 +10,7 @@ import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
 interface LLMReview {
   summary: string;
   comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>;
+  grade?: string;
 }
 
 export async function loadAgentInfo(agentId: string) {
@@ -59,7 +60,7 @@ export function calculateTargetComments(content: string): number {
   // Roughly 1 comment per 100 words
   // Assuming ~5 chars per word
   const additionalComments = Math.floor(contentLength / 500);
-  return Math.max(baseComments, Math.min(additionalComments, 100)); // Cap at 100 comments
+  return Math.max(baseComments, Math.min(additionalComments, 5)); // Cap at 100 comments
 }
 
 // Add this function before analyzeDocument
@@ -263,7 +264,9 @@ ${agentInfo.commentInstructions}
       "highlight": {
         "start": "exact text from document that starts the highlight",
         "end": "exact text from document that ends the highlight"
-      }
+      },
+      "importance": "0-100",
+      "evaluation": "0-100"
     }`
   ).join(",");
 
@@ -276,7 +279,7 @@ Given the following Markdown document, output a single evaluation in **valid JSO
   "summary": "[~${targetWordCount} words, correctly escaped JSON string]",
   "comments": [
     ${commentTemplate} // Ensure exactly ${targetComments} comment objects here
-  ]
+  ]${agentInfo?.gradeInstructions ? ',\n  "grade": "A-F letter grade based on your assessment"' : ""}
 }
 
 **CRITICAL JSON STRING ESCAPING RULES:**
@@ -296,7 +299,19 @@ Given the following Markdown document, output a single evaluation in **valid JSO
 - Use markdown formatting (bold, italics, links) if appropriate, ensuring it is **correctly escaped** within the JSON string per the rules above.
 
 **COMMENT INSTRUCTIONS (Provide exactly ${targetComments}):**
-- Each comment MUST include a \`title\` and \`description\`.
+- Each comment MUST include a \`title\`, \`description\`, \`importance\`, and \`evaluation\`.
+- The \`importance\` field (0-100) indicates how critical or significant the comment. Comments with high importance are more critical for the reader. Aim for your comments to be uniformly distributed in importance - so 50% of your comments should be above 50, 25% should be above 75, and 10% should be above 90.
+- The \`evaluation\` field (0-100) indicates your assessment of the highlighted content:
+  - 0-20: Strongly negative - points out severe problems, flaws, or criticisms
+  - 21-40: Moderately negative - highlights concerns or areas needing improvement
+  - 41-60: Neutral - balanced analysis without strong positive/negative judgment
+  - 61-80: Moderately positive - notes strengths or well-executed elements
+  - 81-100: Strongly positive - highlights exceptional achievements or praise
+- IMPORTANT: Importance and evaluation are independent:
+  - A comment can be very important (high importance) but negative (low evaluation)
+  - A comment can be very positive (high evaluation) but not very important (low importance)
+  - Example: "The author's fundamental assumption about X is incorrect" might be very important (90) but negative (20)
+  - Example: "The formatting is beautiful" might be positive (80) but not very important (30)
 - If using Markdown links/citations in \`description\`, ensure they are **correctly escaped** per the rules above.
 - Each comment MUST include a \`highlight\` object containing **ONLY** these two fields:
   - \`start\`: Provide the EXACT text from the document that starts the highlight, including any markdown formatting
@@ -612,6 +627,7 @@ ${content}
       : undefined,
     summary: parsedLLMReview.summary,
     comments: processedComments, // Use the processed comments
+    grade: parsedLLMReview.grade,
   };
 
   // --- Sort comments by startOffset before saving ---

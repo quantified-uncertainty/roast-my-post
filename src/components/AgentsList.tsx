@@ -36,7 +36,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
                       {agent.name}
                     </h2>
                     <p className="text-sm text-gray-500">
-                      Version {agent.version}
+                      Version {agent.version} • {agent.purpose}
                     </p>
                   </div>
                 </div>

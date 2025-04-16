@@ -17,8 +17,12 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
           <IconComponent className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">{agent.name}</h1>
-          <p className="text-gray-500">Version {agent.version}</p>
+          <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
+            {agent.name}
+          </h2>
+          <p className="text-sm text-gray-500">
+            Version {agent.version} • {agent.purpose}
+          </p>
         </div>
       </div>
 
