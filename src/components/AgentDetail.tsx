@@ -35,7 +35,19 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         <p className="text-lg text-gray-700">{agent.description}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold">Use Cases</h2>
+        <ul className="space-y-2">
+          {agent.use_cases.map((useCase, index) => (
+            <li key={index} className="flex items-start">
+              <span className="mr-2 text-blue-500">•</span>
+              <span>{useCase}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Capabilities</h2>
           <ul className="space-y-2">
@@ -43,18 +55,6 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
               <li key={index} className="flex items-start">
                 <span className="mr-2 text-green-500">✓</span>
                 <span>{capability}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Use Cases</h2>
-          <ul className="space-y-2">
-            {agent.use_cases.map((useCase, index) => (
-              <li key={index} className="flex items-start">
-                <span className="mr-2 text-blue-500">•</span>
-                <span>{useCase}</span>
               </li>
             ))}
           </ul>

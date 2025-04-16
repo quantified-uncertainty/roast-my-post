@@ -140,3 +140,22 @@ export function getCommentColorByEvaluation(
   const baseColor = getBaseColor(evaluation);
   return getColorStyle(baseColor, importance);
 }
+
+export function getEvaluationColor(evaluation: number): { color: string } {
+  // Create color scale for the full evaluation range
+  const colorScale = chroma
+    .scale([
+      "#e74c3c", // Red (0)
+      "#e67e22", // Orange (25)
+      "#f1c40f", // Yellow (50)
+      "#3498db", // Blue (75)
+      "#2ecc71", // Green (100)
+    ])
+    .mode("lch");
+
+  // Normalize evaluation to 0-1 range
+  const normalizedEval = evaluation / 100;
+  const color = colorScale(normalizedEval).hex();
+
+  return { color };
+}

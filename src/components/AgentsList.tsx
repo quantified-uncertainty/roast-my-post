@@ -83,8 +83,8 @@ export default function AgentsList({ agents }: AgentsListProps) {
                             {agent.name}
                           </h3>
                           <p className="text-sm text-gray-500">
-                            Version {agent.version} •{" "}
-                            {AGENT_TYPE_INFO[agent.purpose].individualTitle}
+                            {AGENT_TYPE_INFO[agent.purpose].individualTitle} • v
+                            {agent.version}
                           </p>
                         </div>
                       </div>

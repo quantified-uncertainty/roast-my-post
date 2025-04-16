@@ -11,6 +11,7 @@ import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
   getCommentColorByEvaluation,
+  getEvaluationColor,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
@@ -128,7 +129,17 @@ function CommentsSidebar({
                           <div className="mt-2 text-xs text-gray-400">
                             {comment.evaluation !== undefined && (
                               <span className="mr-4">
-                                Evaluation: {comment.evaluation}/100
+                                Evaluation:{" "}
+                                <span className="font-medium">
+                                  <span
+                                    style={getEvaluationColor(
+                                      comment.evaluation
+                                    )}
+                                  >
+                                    {comment.evaluation}
+                                  </span>
+                                  <span className="text-gray-600">/100</span>
+                                </span>
                               </span>
                             )}
                             {comment.importance !== undefined && (
