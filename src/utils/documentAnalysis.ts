@@ -178,16 +178,18 @@ async function repairComplexJson(
 
         // Try json-loose
         try {
-          const { parse } = await import("json-loose");
-          const parsed = parse(cleanedJson);
+          const jsonLoose = await import("json-loose");
+          const parsed = jsonLoose.default(cleanedJson);
           return JSON.stringify(parsed);
         } catch (looseError) {
           console.error("json-loose failed:", looseError);
 
           // Try jsonic
           try {
+            // @ts-ignore - jsonic types are not properly defined
             const jsonic = await import("jsonic");
-            const parsed = jsonic(cleanedJson);
+            // @ts-ignore - jsonic constructor types are not properly defined
+            const parsed = new jsonic.Jsonic()(cleanedJson);
             return JSON.stringify(parsed);
           } catch (jsonicError) {
             console.error("jsonic failed:", jsonicError);

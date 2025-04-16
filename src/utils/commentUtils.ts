@@ -41,7 +41,13 @@ export function getCommentColorByIndex(index: number): string {
  * Filter comments to only include valid ones
  */
 export function filterValidComments(comments: Comment[]): Comment[] {
-  return comments.filter((comment) => comment.isValid);
+  return comments.filter(
+    (comment) =>
+      comment.highlight &&
+      comment.title &&
+      comment.description &&
+      (comment.isValid === undefined || comment.isValid === true)
+  );
 }
 
 /**
@@ -59,13 +65,9 @@ export function sortCommentsByOffset(comments: Comment[]): Comment[] {
  * Get valid and sorted comments
  */
 export function getValidAndSortedComments(comments: Comment[]): Comment[] {
-  return comments
-    .filter(
-      (comment) => comment.highlight && comment.title && comment.description
-    )
-    .sort((a, b) => {
-      return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
-    });
+  return filterValidComments(comments).sort((a, b) => {
+    return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+  });
 }
 
 /**

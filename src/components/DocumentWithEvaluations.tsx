@@ -2,8 +2,11 @@
 
 import { useMemo, useRef, useState } from "react";
 
+// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
+// @ts-ignore - ESM modules are handled by Next.js
 import rehypeRaw from "rehype-raw";
+// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
 import { evaluationAgents } from "@/data/agents/index";
@@ -138,12 +141,15 @@ function CommentsSidebar({
                                   >
                                     {comment.evaluation}
                                   </span>
-                                  <span className="text-gray-600">/100</span>
+                                  <span className="text-gray-400">/100</span>
                                 </span>
                               </span>
                             )}
                             {comment.importance !== undefined && (
-                              <span>Importance: {comment.importance}/100</span>
+                              <span>
+                                Importance: <span>{comment.importance}</span>
+                                <span className="text-gray-400">/100</span>
+                              </span>
                             )}
                           </div>
                         )}
@@ -547,7 +553,8 @@ export function DocumentWithEvaluations({
                       <span className="text-sm font-medium">{agent.name}:</span>
                       {review.grade !== undefined && (
                         <span className="text-sm font-medium">
-                          {review.grade}/100
+                          {review.grade}
+                          /100
                         </span>
                       )}
                     </div>

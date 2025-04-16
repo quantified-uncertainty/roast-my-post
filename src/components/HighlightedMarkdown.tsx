@@ -2,8 +2,11 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
+// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
+// @ts-ignore - ESM modules are handled by Next.js
 import rehypeRaw from "rehype-raw";
+// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
 import { Comment } from "@/types/documentReview";
