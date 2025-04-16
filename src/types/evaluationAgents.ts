@@ -1,4 +1,4 @@
-type AgentPurpose = "assessor" | "advisor" | "enricher" | "explainer";
+export type AgentPurpose = "assessor" | "advisor" | "enricher" | "explainer";
 /*
 Assessor:
 - Evaluates the quality of the document

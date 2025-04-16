@@ -1,6 +1,7 @@
 "use client";
 
 import type { EvaluationAgent } from "@/types/evaluationAgents";
+import { AGENT_TYPE_INFO } from "@/utils/agentTypes";
 import { getIcon } from "@/utils/iconMap";
 
 interface AgentDetailProps {
@@ -13,15 +14,19 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
   return (
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-8 flex items-center gap-4">
-        <div className={`rounded-lg bg-blue-100 p-3`}>
-          <IconComponent className="h-8 w-8" />
+        <div
+          className={`rounded-lg bg-${AGENT_TYPE_INFO[agent.purpose].color}-100 p-3`}
+        >
+          <IconComponent
+            className={`h-8 w-8 text-${AGENT_TYPE_INFO[agent.purpose].color}-600`}
+          />
         </div>
         <div>
           <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
             {agent.name}
           </h2>
           <p className="text-sm text-gray-500">
-            Version {agent.version} • {agent.purpose}
+            {AGENT_TYPE_INFO[agent.purpose].individualTitle} v{agent.version}
           </p>
         </div>
       </div>
