@@ -150,9 +150,13 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
     el = (
       <span
         data-tag={leaf.tag}
-        className={`rounded bg-${leaf.color} ${
+        style={{
+          backgroundColor: `#${leaf.color}`,
+          borderRadius: "0.25rem",
+        }}
+        className={
           leaf.tag === leafAttributes.activeTag ? "ring-2 ring-blue-500" : ""
-        }`}
+        }
         onClick={(e) => {
           e.preventDefault();
           leafAttributes.onHighlightClick?.(leaf.tag);

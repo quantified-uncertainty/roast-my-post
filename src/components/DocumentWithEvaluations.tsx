@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -10,6 +10,7 @@ import { evaluationAgents } from "@/data/agents/index";
 import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
+  getCommentColorByEvaluation,
   getCommentColorByIndex,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
@@ -41,6 +42,7 @@ interface CommentsSidebarProps {
   onTagHover: (tag: string | null) => void;
   onTagClick: (tag: string | null) => void;
   review: DocumentReview;
+  commentColorMap: Record<number, { background: string; color: string }>;
 }
 
 function CommentsSidebar({
@@ -49,7 +51,8 @@ function CommentsSidebar({
   onTagHover,
   onTagClick,
   review,
-}: CommentsSidebarProps) {
+  commentColorMap,
+}: CommentsSidebarProps & { review: DocumentReview }) {
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
 
@@ -58,78 +61,86 @@ function CommentsSidebar({
       <h2 className="border-b border-gray-100 px-4 py-2 text-base font-medium text-gray-600">
         Highlights
       </h2>
-      <div>
+      <div className="divide-y divide-gray-100">
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
           const isExpanded = expandedTag === tag;
+          const hasGradeInstructions = evaluationAgents.find(
+            (a) => a.id === review.agentId
+          )?.gradeInstructions;
 
           return (
             <div
               key={tag}
-              className={`cursor-pointer transition-colors duration-150 ${isExpanded ? "bg-white" : "bg-gray-50 hover:bg-white"} `}
+              className="cursor-pointer hover:bg-gray-50"
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
               onClick={() => onTagClick(tag)}
             >
               <div className="px-4 py-3">
-                {/* Comment header with number, icon and title */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-start gap-3">
                   <div
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium select-none ${getCommentColorByIndex(
-                      index
-                    )}`}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium select-none"
+                    style={{
+                      backgroundColor: commentColorMap[index].background,
+                      color: commentColorMap[index].color,
+                    }}
                   >
                     {index + 1}
                   </div>
-
-                  <div className="font-semibold text-gray-600 select-none">
-                    {comment.title}
-                  </div>
-                  <div className="ml-auto flex items-center gap-2 select-none">
-                    <div className="flex items-center gap-1">
-                      {comment.importance && comment.importance > 90 && (
-                        <>
-                          <StarIcon className="h-4 w-4 text-gray-300" />
-                          <StarIcon className="h-4 w-4 text-gray-300" />
-                        </>
-                      )}
-                      {comment.importance &&
-                        comment.importance > 60 &&
-                        comment.importance <= 90 && (
-                          <StarIcon className="h-4 w-4 text-gray-300" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-medium text-gray-900">
+                        {comment.title}
+                      </h3>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {hasGradeInstructions && (
+                          <>
+                            {comment.evaluation && comment.evaluation > 70 && (
+                              <CheckCircleIcon className="h-5 w-5 text-green-500 opacity-40" />
+                            )}
+                            {comment.evaluation && comment.evaluation < 30 && (
+                              <XCircleIcon className="h-5 w-5 text-red-500 opacity-40" />
+                            )}
+                          </>
                         )}
-                      {evaluationAgents.find((a) => a.id === review.agentId)
-                        ?.gradeInstructions && (
-                        <>
-                          {comment.evaluation && comment.evaluation > 70 && (
-                            <CheckCircleIcon className="h-5 w-5 text-green-500 opacity-40" />
+                        {comment.importance && comment.importance > 90 && (
+                          <>
+                            <StarIcon className="h-4 w-4 text-gray-300" />
+                            <StarIcon className="h-4 w-4 text-gray-300" />
+                          </>
+                        )}
+                        {comment.importance &&
+                          comment.importance > 60 &&
+                          comment.importance <= 90 && (
+                            <StarIcon className="h-4 w-4 text-gray-300" />
                           )}
-                          {comment.evaluation && comment.evaluation < 30 && (
-                            <XCircleIcon className="h-5 w-5 text-red-500 opacity-40" />
-                          )}
-                        </>
-                      )}
+                        <ChevronLeftIcon
+                          className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                        />
+                      </div>
                     </div>
-                    {isExpanded ? (
-                      <ChevronDownIcon className="h-4 w-4 text-gray-300" />
-                    ) : (
-                      <ChevronLeftIcon className="h-4 w-4 text-gray-300" />
+                    {comment.description && (
+                      <div
+                        className={`mt-1 text-gray-600 ${isExpanded ? "" : "line-clamp-1"}`}
+                      >
+                        {comment.description}
+                        {isExpanded && hasGradeInstructions && (
+                          <div className="mt-2 text-xs text-gray-400">
+                            {comment.evaluation !== undefined && (
+                              <span className="mr-4">
+                                Evaluation: {comment.evaluation}/100
+                              </span>
+                            )}
+                            {comment.importance !== undefined && (
+                              <span>Importance: {comment.importance}/100</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Comment description and metadata */}
-                {comment.description && (
-                  <div className="text-md mt-1 ml-8">
-                    <div className={isExpanded ? "" : "line-clamp-1"}>
-                      <div className="text-gray-600">{comment.description}</div>
-                      <div className="mt-1 text-xs text-gray-400">
-                        Importance: {comment.importance}/100 • Evaluation:{" "}
-                        {comment.evaluation}/100
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -232,6 +243,30 @@ export function DocumentWithEvaluations({
   const hasReviews = document.reviews && document.reviews.length > 0;
   const activeReview = hasReviews ? document.reviews[activeReviewIndex] : null;
 
+  // Create a stable color map for all comments
+  const commentColorMap = useMemo(() => {
+    if (!activeReview) return {};
+    const sortedComments = getValidAndSortedComments(activeReview.comments);
+    const hasGradeInstructions = evaluationAgents.find(
+      (a) => a.id === activeReview.agentId
+    )?.gradeInstructions;
+    return sortedComments.reduce(
+      (map, comment, index) => {
+        if (hasGradeInstructions && comment.evaluation !== undefined) {
+          map[index] = getCommentColorByEvaluation(
+            comment.evaluation,
+            comment.importance,
+            true
+          );
+        } else {
+          map[index] = getCommentColorByIndex(index);
+        }
+        return map;
+      },
+      {} as Record<number, { background: string; color: string }>
+    );
+  }, [activeReview]);
+
   const scrollToHighlight = (tag: string) => {
     const element = window.document.getElementById(`highlight-${tag}`);
     if (element && documentRef.current) {
@@ -306,7 +341,7 @@ export function DocumentWithEvaluations({
                         startOffset: comment.highlight.startOffset,
                         endOffset: comment.highlight.endOffset,
                         tag: index.toString(),
-                        color: getCommentColorByIndex(index).replace("bg-", ""),
+                        color: commentColorMap[index].background.substring(1),
                       })
                     )
                   : []
@@ -430,6 +465,7 @@ export function DocumentWithEvaluations({
                 onTagHover={setActiveTag}
                 onTagClick={handleCommentClick}
                 review={activeReview}
+                commentColorMap={commentColorMap}
               />
             </>
           )}
@@ -467,4 +503,18 @@ export function DocumentWithEvaluations({
       </div>
     </div>
   );
+}
+
+function getCommentColorByIndex(index: number): {
+  background: string;
+  color: string;
+} {
+  const colors = [
+    { background: "#E3F2FD", color: "#1565C0" }, // blue
+    { background: "#E8F5E9", color: "#2E7D32" }, // green
+    { background: "#F3E5F5", color: "#7B1FA2" }, // purple
+    { background: "#FCE4EC", color: "#C2185B" }, // pink
+    { background: "#FFF3E0", color: "#EF6C00" }, // orange
+  ];
+  return colors[index % colors.length];
 }
