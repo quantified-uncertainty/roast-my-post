@@ -32,7 +32,7 @@
             "quotedText": ""
           },
           "importance": "85",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -45,7 +45,7 @@
             "quotedText": ""
           },
           "importance": "70",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -58,7 +58,7 @@
             "quotedText": "## Potential Misconceptions\n\n### Misconception 1: “Making a trustworthy AI intellectual is incredibly hard”"
           },
           "importance": "90",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -70,7 +70,7 @@
             "quotedText": "First, coding itself demonstrates that AIs can be strong at tasks even when perfect verification isn't possible. While narrow algorithm challenges are straightforward, AI systems have shown proficiency in (and are improving at) harder-to-verify aspects like:\n\n*   Code simplicity and elegance\n*   Documentation quality\n*   Coherent integration with larger codebases\n*   Maintainability and scalability\n\nSecond, while high-level strategy work can be harder to verify than mathematical proofs, there are several meaningful ways to assess strategic capabilities:\n\n_Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claims\n\nIt's worth noting that human intellectuals face similar verification challenges, particularly with speculative questions that lack immediate feedback. While humans arguably are better right now at hard-to-verify tasks, they still have a lot of weaknesses here, and it seems very possible to outperform them using the strategies mentioned above."
           },
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -82,7 +82,7 @@
             "quotedText": "Some examples of “_secret sauce_” arguments I’ve heard:\n\n1.  \"AIs can’t handle deep uncertainty.\"\n2.  “AIs can only _answer_ questions. They can’t come up with them.”\n3.  \"AI can’t generate truly original ideas like humans can.\"\n4.  “AIs can’t generalize moral claims like humans can.”\n5.  “AIs can’t understand human values as well as individual humans do.”\n6.  “AIs always optimize for proxy metrics, in ways that humans don’t.”\n\nMy guess is that most of these aren’t that serious and don’t represent cruxes for their proponents, mainly because I haven’t seen most of them be rigorously argued for.\n\nDue to the number of examples it’s hard for me to argue against all, but I’m happy to go more into detail on any specific ones if asked.\n\nI can say that none of the examples seem clearly correct to me. It’s possible that one will be a limiting factor, but this would surprise me, and I’d be willing to bet on Manifold against."
           },
           "importance": "75",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": true
         },
         {
@@ -94,7 +94,7 @@
             "quotedText": "I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from."
           },
           "importance": "85",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         },
         {
@@ -106,7 +106,7 @@
             "quotedText": "If we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_. We could transition from deferring to human intellectuals to relying on these more capable and potentially safer AI systems."
           },
           "importance": "75",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -118,7 +118,7 @@
             "quotedText": "As AI systems become more capable at making and explaining strategic choices, these decisions will likely become increasingly straightforward and convergent. Just as we rarely debate the mechanical choices behind our refrigerators' operation, future generations might spend little time questioning the implementation details of governance systems. These details will seem increasingly straightforward, over-determined, and boring.\n\nRather than seeing this as problematic, we might consider it liberating. People could redirect their attention to whatever areas they choose, rather than grappling with complex strategic decisions out of necessity."
           },
           "importance": "80",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         }
       ],
@@ -141,7 +141,7 @@
             "quotedText": ""
           },
           "importance": "70",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -154,7 +154,7 @@
             "quotedText": "## **Summary**\n\nWhile artificial intelligence has made impressive strides in specialized domains like coding, art, and medicine, I think its potential to automate high-level strategic thinking has been surprisingly underrated. I argue that developing \"_AI Intellectuals_\" - software systems capable of sophisticated strategic analysis and judgment - represents a significant opportunity that's currently being overlooked, both by the EA/rationality communities and by the public. More fundamentally, I believe that a lot of people thinking about this area seem to have substantial misconceptions about it, so here I try to address those.\n\n## Background"
           },
           "importance": "85",
-          "evaluation": "90",
+          "grade": "90",
           "isValid": true
         },
         {
@@ -166,7 +166,7 @@
             "quotedText": "I argue that developing \"_AI Intellectuals_\" - software systems capable of sophisticated strategic analysis and judgment - represents a significant opportunity that's currently being overlooked, both by the EA/rationality communities and by the public. More fundamentally, I believe that a lot of people thinking about this area seem to have substantial misconceptions about it, so here I try to address those."
           },
           "importance": "75",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": false,
           "error": "Highlight overlaps with a previous highlight"
         },
@@ -179,7 +179,7 @@
             "quotedText": "Consider these types of questions that AI systems might help address:\n\n*   What strategic missteps is Microsoft making in terms of maximizing market value?\n*   What metrics could better evaluate the competence of business and political leaders?\n*   Which public companies would be best off by firing their CEOs?\n*   Which governmental systems most effectively drive economic development?\n*   How can we more precisely assess AI's societal impact and safety implications? Are current institutional investors undervaluing these factors?\n*   How should resources be allocated across different domains to maximize positive impact?\n*   What are the top 30 recommended health interventions for most people?\n\n"
           },
           "importance": "80",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": true
         },
         {
@@ -191,7 +191,7 @@
             "quotedText": "### Misconception 1: “Making a trustworthy AI intellectual is incredibly hard”\n\nMany people seem to hold this belief implicitly, but when pressed, few provide concrete arguments for why this should be true. I’ll challenge this assumption with several observations.\n\n**The Reality of Public Intellectual Work**"
           },
           "importance": "80",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": true
         },
         {
@@ -203,7 +203,7 @@
             "quotedText": "I’ve noticed a widespread tendency for people to overestimate their own epistemic abilities while undervaluing insights from more systematic researchers. This bias likely extends to how people evaluate AI's potential for strategic thinking. People who are overconfident in their own epistemics are likely to dismiss other approaches, especially when those approaches come to different conclusions. While this might mean that AI intellectuals would have trouble being listened to, it also could imply that AIs could do a better job at epistemic work than many people would think."
           },
           "importance": "75",
-          "evaluation": "80",
+          "grade": "80",
           "isValid": true
         },
         {
@@ -215,7 +215,7 @@
             "quotedText": "**The Mistaken View**\n\nThere's a prevalent belief that AI intellectual capabilities will follow a binary trajectory: either completely useless or suddenly revolutionary. This view is particularly common in discussions about AI and forecasting, where some argue that AI systems will be worthless until they surpass human performance, at which point human input becomes obsolete.\n\nI think that having this view would lead to other important mistakes about the viability of AI Intellectuals, so I’ll address it in some detail."
           },
           "importance": "65",
-          "evaluation": "50",
+          "grade": "50",
           "isValid": true
         },
         {
@@ -227,7 +227,7 @@
             "quotedText": "I think that intellectual work often seems more informative than it is actually useful.\n\nConsider:\n\n1.  Often, conventional wisdom is pretty decent. There aren’t often many opportunities for much better decisions.\n2.  In cases where major decisions are made poorly, it’s often more out of issues like conflicts of interest or ideological stubbornness than it is intelligence. There’s often already some ignored voices recommending the correct moves - adding more voices wouldn’t exactly help.\n3.  Getting the “big picture strategy” right is only one narrow piece of many organizations. Often organizations do well because they have fundamental advantages like monopoly status, or because they execute well on a large list of details. So if you can improve the “big picture strategy” by 20%, that might only lead to a 0.5% growth in profits.\n\nForecasting organizations have recently struggled to produce decision-relevant estimates. And in cases where these estimates are decision-relevant, they often get ignored."
           },
           "importance": "75",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         }
       ],
@@ -315,7 +315,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "15",
+          "grade": "15",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -328,7 +328,7 @@
             "quotedText": ""
           },
           "importance": "75",
-          "evaluation": "80",
+          "grade": "80",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -341,7 +341,7 @@
             "quotedText": "Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claims"
           },
           "importance": "85",
-          "evaluation": "25",
+          "grade": "25",
           "isValid": true
         },
         {
@@ -353,7 +353,7 @@
             "quotedText": "Some examples of “_secret sauce_” arguments I’ve heard:\n\n1.  \"AIs can’t handle deep uncertainty.\"\n2.  “AIs can only _answer_ questions. They can’t come up with them.”\n3.  \"AI can’t generate truly original ideas like humans can.\"\n4.  “AIs can’t generalize moral claims like humans can.”\n5.  “AIs can’t understand human values as well as individual humans do.”\n6.  “AIs always optimize for proxy metrics, in ways that humans don’t.”\n\nMy guess is that most of these aren’t that serious and don’t represent cruxes for their proponents, mainly because I haven’t seen most of them be rigorously argued for.\n\nDue to the number of examples it’s hard for me to argue against all, but I’m happy to go more into detail on any specific ones if asked.\n\nI can say that none of the examples seem clearly correct to me. It’s possible that one will be a limiting factor, but this would surprise me, and I’d be willing to bet on Manifold against."
           },
           "importance": "75",
-          "evaluation": "25",
+          "grade": "25",
           "isValid": true
         },
         {
@@ -365,7 +365,7 @@
             "quotedText": "The Reality of Technological Progress**\n\nThis binary thinking misunderstands how technology typically develops:\n\n*   Most technologies advance gradually along an S-curve\n*   Early versions provide modest but real value\n*   Improvements compound over time\n*   Integration happens incrementally, not suddenly"
           },
           "importance": "80",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": true
         },
         {
@@ -377,7 +377,7 @@
             "quotedText": "Tetlock’s work has demonstrated that most intellectual claims are suspect, and that we can have forecasting systems that can do much better. And yet, these systems are still very niche. I’d expect that if we could make them 50% more accurate, perhaps with AIs, it would take time for many people to notice. Not many people seem to be paying much attention."
           },
           "importance": "70",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": true
         },
         {
@@ -389,7 +389,7 @@
             "quotedText": "I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency."
           },
           "importance": "95",
-          "evaluation": "20",
+          "grade": "20",
           "isValid": true
         },
         {
@@ -401,7 +401,7 @@
             "quotedText": "This concern often seems more semantic than substantive. Consider how we currently interact with technology: few people spend time worrying about the electrical engineering details of their computers, despite these being crucial to their operation. Instead, we trust and rely upon expert electrical engineers for such matters.\n\nHas this delegation meant a loss of control? In some technical sense, perhaps. But this form of delegation has been overwhelmingly positive - we've simply entrusted important tasks to systems and experts who handle them competently. The key question isn't whether we've delegated control, but whether that delegation has served our interests."
           },
           "importance": "85",
-          "evaluation": "10",
+          "grade": "10",
           "isValid": true
         }
       ],
@@ -424,7 +424,7 @@
             "quotedText": "An AI Intellectual would be a software system that can:\n\n*   Conduct high-level strategic analysis\n*   Make complex judgments\n*   Provide insights comparable to human intellectuals\n*   Engage in sophisticated research and decision-making\n\nThis type of intellectual work currently spans multiple professions, including:"
           },
           "importance": "90",
-          "evaluation": "70",
+          "grade": "70",
           "isValid": true
         },
         {
@@ -436,7 +436,7 @@
             "quotedText": "Between Guesstimate and QURI, I’ve spent several years making decision analysis tools, and more recently [Squiggle AI](https://forum.effectivealtruism.org/posts/jJ4pn3qvBopkEvGXb/introducing-squiggle-ai) to automate this sort of work. I’ve been impressed by how LLMs can be combined with some basic prompt engineering and software tooling to generate much better results."
           },
           "importance": "85",
-          "evaluation": "60",
+          "grade": "60",
           "isValid": true
         },
         {
@@ -448,7 +448,7 @@
             "quotedText": "_Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claim"
           },
           "importance": "95",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": true
         },
         {
@@ -460,7 +460,7 @@
             "quotedText": "A Better Model: The Self-Driving Car Analogy**\n\nConsider how self-driving technology has evolved:\n\n*   Started with basic driver assistance (Level 1)\n*   Gradually added more sophisticated features\n*   Each level brought concrete benefits\n*   Full autonomy (Level 5) represents the end of a long progression"
           },
           "importance": "85",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": true
         },
         {
@@ -472,7 +472,7 @@
             "quotedText": "Even with rapid AI progress (say, TAI in 5 years), this evolution would likely still take considerable time (perhaps 3 years, or 60% of TAI time left) to achieve both technical capability and institutional trust. But we can gradually scale it up, meaning it will be useful at each step and predictable."
           },
           "importance": "95",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": true
         },
         {
@@ -484,7 +484,7 @@
             "quotedText": "I find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from.\n\nIf we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_."
           },
           "importance": "90",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -496,7 +496,7 @@
             "quotedText": "Even with such systems available today, I expect many people would take considerable time to develop trust in them. Their impact would likely be gradual and bounded - for instance, while they might excel at prioritizing AI safety research directions, they wouldn't necessarily be capable of implementing the complex technical work required."
           },
           "importance": "80",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": true
         }
       ],
@@ -514,7 +514,7 @@
           "title": "ITN Analysis: Importance",
           "description": "The author correctly identifies this opportunity as important using criteria similar to the ITN framework. The potential scale of impact is significant, as strategic thinking improvements could affect global decision-making across multiple domains including existential risk reduction. However, the article would benefit from more quantitative estimates of this importance.",
           "importance": "95",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 1327,
             "endOffset": 1774,
@@ -525,7 +525,7 @@
           "title": "Missing Fermi Estimates",
           "description": "From an EA evaluation perspective, the article lacks quantitative estimates of potential impact. While the qualitative case is well-argued, concrete estimates of expected value would strengthen the case for prioritizing this intervention over alternatives.",
           "importance": "95",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 1327,
             "endOffset": 1774,
@@ -536,7 +536,7 @@
           "title": "Neglectedness Assessment",
           "description": "The author makes a reasonable case for neglectedness, though they do cite several related efforts. From an EA perspective, this appears to be a genuine gap in current AI development priorities, where most focus is on either general capabilities or specific applications rather than systems optimized for strategic thinking and judgment.",
           "importance": "85",
-          "evaluation": "75",
+          "grade": "75",
           "highlight": {
             "startOffset": 4729,
             "endOffset": 5896,
@@ -547,7 +547,7 @@
           "title": "Tractability Analysis",
           "description": "The author provides several compelling arguments for tractability, addressing potential objections systematically. From an EA perspective, the incremental approach described is promising, though the article would benefit from more concrete steps or research agendas to make progress in this direction.",
           "importance": "90",
-          "evaluation": "80",
+          "grade": "80",
           "highlight": {
             "startOffset": 7841,
             "endOffset": 8552,
@@ -558,7 +558,7 @@
           "title": "Verification Challenges",
           "description": "The author addresses a key concern in EA evaluations - how to verify success. The proposed verification methods range from strong (prediction of expert responses, performance in strategy games) to lighter approaches (consistency checks, detailed justification). This is crucial for any EA intervention to demonstrate impact.",
           "importance": "85",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 10714,
             "endOffset": 11320,
@@ -569,7 +569,7 @@
           "title": "Incremental Progress Model",
           "description": "The author's model of gradual development aligns well with EA thinking about technological progress. The self-driving car analogy provides a useful framework for understanding how AI Intellectuals might develop and be adopted, avoiding both over-optimism about immediate transformation and pessimism about feasibility.",
           "importance": "80",
-          "evaluation": "90",
+          "grade": "90",
           "highlight": {
             "startOffset": 13875,
             "endOffset": 14181,
@@ -580,7 +580,7 @@
           "title": "Safety Considerations",
           "description": "The author addresses potential risks but doesn't fully explore negative scenarios. From an EA perspective, a more thorough analysis of potential downsides would strengthen the argument. The claim that \"2x AI intellectuals\" would be strictly better than human intellectuals requires more justification.",
           "importance": "90",
-          "evaluation": "65",
+          "grade": "65",
           "highlight": {
             "startOffset": 19412,
             "endOffset": 20024,

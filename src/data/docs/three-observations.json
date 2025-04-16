@@ -32,7 +32,7 @@
             "quotedText": ""
           },
           "importance": "95",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -45,7 +45,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -58,7 +58,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -71,7 +71,7 @@
             "quotedText": ""
           },
           "importance": "85",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -84,7 +84,7 @@
             "quotedText": ""
           },
           "importance": "80",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -97,7 +97,7 @@
             "quotedText": ""
           },
           "importance": "85",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -110,7 +110,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -123,7 +123,7 @@
             "quotedText": ""
           },
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         }
@@ -147,7 +147,7 @@
             "quotedText": ""
           },
           "importance": "95",
-          "evaluation": "95",
+          "grade": "95",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -160,7 +160,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -173,7 +173,7 @@
             "quotedText": ""
           },
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "Start text not found in document"
         },
@@ -186,7 +186,7 @@
             "quotedText": ""
           },
           "importance": "70",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -199,7 +199,7 @@
             "quotedText": ""
           },
           "importance": "60",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -212,7 +212,7 @@
             "quotedText": "1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude.\n\n2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore's law changed the world at 2x every 18 months; this is unbelievably stronger. \n\n3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.**"
           },
           "importance": "85",
-          "evaluation": "90",
+          "grade": "90",
           "isValid": true
         },
         {
@@ -224,7 +224,7 @@
             "quotedText": "Let's imagine the case of a software engineering agent, which is an agent that we expect to be particularly important. Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work."
           },
           "importance": "85",
-          "evaluation": "90",
+          "grade": "90",
           "isValid": true
         },
         {
@@ -236,7 +236,7 @@
             "quotedText": "In some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don't think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles."
           },
           "importance": "85",
-          "evaluation": "95",
+          "grade": "95",
           "isValid": true
         },
         {
@@ -248,7 +248,7 @@
             "quotedText": "The world will not change all at once; it never does. Life will go on mostly the same in the short run, and people in 2025 will mostly spend their time in the same way they did in 2024. We will still fall in love, create families, get in fights online, hike in nature, etc."
           },
           "importance": "75",
-          "evaluation": "90",
+          "grade": "90",
           "isValid": true
         },
         {
@@ -260,7 +260,7 @@
             "quotedText": "While we never want to be reckless and there will likely be some major decisions and limitations related to AGI safety that will be unpopular, directionally, as we get closer to achieving AGI, we believe that trending more towards individual empowerment is important; the other likely path we can see is AI being used by authoritarian governments to control their population through mass surveillance and loss of autonomy."
           },
           "importance": "75",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         },
         {
@@ -272,7 +272,7 @@
             "quotedText": "Anyone in 2035 should be able to marshall the intellectual capacity equivalent to everyone in 2025; everyone should have access to unlimited genius to direct however they can imagine. There is a great deal of talent right now without the resources to fully express itself, and if we change that, the resulting creative output of the world will lead to tremendous benefits for us all."
           },
           "importance": "90",
-          "evaluation": "95",
+          "grade": "95",
           "isValid": true
         }
       ],
@@ -373,7 +373,7 @@
             "quotedText": ""
           },
           "importance": "99",
-          "evaluation": "5",
+          "grade": "5",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -386,7 +386,7 @@
             "quotedText": "In some sense, AGI is just another tool in this ever-taller scaffolding of human progress we are building together. In another sense, it is the beginning of something for which it's hard not to say \"this time it's different\""
           },
           "importance": "95",
-          "evaluation": "20",
+          "grade": "20",
           "isValid": true
         },
         {
@@ -398,7 +398,7 @@
             "quotedText": "we can now imagine a world where we cure all diseases, have much more time to enjoy with our families, and can fully realize our creative potential.\n\nIn a decade, perhaps everyone on earth will be capable of accomplishing more than the most impactful person can today."
           },
           "importance": "90",
-          "evaluation": "25",
+          "grade": "25",
           "isValid": true
         },
         {
@@ -410,7 +410,7 @@
             "quotedText": "1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude."
           },
           "importance": "98",
-          "evaluation": "15",
+          "grade": "15",
           "isValid": true
         },
         {
@@ -422,7 +422,7 @@
             "quotedText": "3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
           },
           "importance": "93",
-          "evaluation": "20",
+          "grade": "20",
           "isValid": true
         },
         {
@@ -434,7 +434,7 @@
             "quotedText": "While we never want to be reckless and there will likely be some major decisions and limitations related to AGI safety that will be unpopular, directionally, as we get closer to achieving AGI, we believe that trending more towards individual empowerment is important"
           },
           "importance": "97",
-          "evaluation": "10",
+          "grade": "10",
           "isValid": true
         }
       ],
@@ -457,7 +457,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -470,7 +470,7 @@
             "quotedText": ""
           },
           "importance": "75",
-          "evaluation": "55",
+          "grade": "55",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -483,7 +483,7 @@
             "quotedText": "The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude."
           },
           "importance": "85",
-          "evaluation": "70",
+          "grade": "70",
           "isValid": true
         },
         {
@@ -495,7 +495,7 @@
             "quotedText": "The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore's law changed the world at 2x every 18 months; this is unbelievably stronger."
           },
           "importance": "95",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": true
         },
         {
@@ -507,7 +507,7 @@
             "quotedText": "The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
           },
           "importance": "90",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": true
         },
         {
@@ -519,7 +519,7 @@
             "quotedText": "Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work."
           },
           "importance": "80",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": true
         },
         {
@@ -531,7 +531,7 @@
             "quotedText": "In some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don't think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles."
           },
           "importance": "85",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": true
         },
         {
@@ -543,7 +543,7 @@
             "quotedText": "Anyone in 2035 should be able to marshall the intellectual capacity equivalent to everyone in 2025; everyone should have access to unlimited genius to direct however they can imagine."
           },
           "importance": "85",
-          "evaluation": "50",
+          "grade": "50",
           "isValid": true
         }
       ],
@@ -561,7 +561,7 @@
           "title": "Importance of AGI Development",
           "description": "This section frames AGI as potentially transformative for humanity, which aligns with EA prioritization of transformative AI as a crucial cause area. The scale of impact described is enormous, affecting all of humanity and future generations. However, the framing is notably optimistic, emphasizing benefits while only briefly acknowledging potential challenges.",
           "importance": "95",
-          "evaluation": "65",
+          "grade": "65",
           "highlight": {
             "startOffset": 875,
             "endOffset": 1427,
@@ -572,7 +572,7 @@
           "title": "Scaling Laws and Economic Impact",
           "description": "This section presents three key observations about AI economics that are crucial for understanding potential impact. From an EA perspective, these scaling relationships suggest both enormous potential benefits and risks. The super-exponential value of intelligence is particularly relevant to x-risk concerns, as it could lead to rapid capability jumps that outpace safety measures.",
           "importance": "90",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 1531,
             "endOffset": 2455,
@@ -583,7 +583,7 @@
           "title": "Neglect of Alignment Challenges",
           "description": "This section discusses the potential impact of AI agents but notably lacks substantial discussion of alignment challenges that are central to EA concerns about AGI. The focus is primarily on capabilities and economic impact rather than ensuring these systems remain aligned with human values and intentions as they become more powerful - a critical neglect from an EA perspective.",
           "importance": "85",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 2564,
             "endOffset": 3308,
@@ -594,7 +594,7 @@
           "title": "Governance and Distribution Approach",
           "description": "This section outlines an approach to AGI governance that emphasizes individual empowerment and broad distribution of benefits. From an EA perspective, the framing presents a false dichotomy between empowerment and safety, when both are necessary. The lack of concrete mechanisms for ensuring broad benefit distribution reduces the tractability of this approach.",
           "importance": "80",
-          "evaluation": "55",
+          "grade": "55",
           "highlight": {
             "startOffset": 5696,
             "endOffset": 6488,
@@ -605,7 +605,7 @@
           "title": "Economic Distribution Mechanisms",
           "description": "This section proposes potential mechanisms for ensuring broad distribution of AGI benefits, which is relevant to EA concerns about global welfare. The ideas presented are interesting but preliminary, lacking detailed implementation plans. From an EA perspective, the focus on economic access is important but insufficient without addressing deeper alignment and control issues.",
           "importance": "75",
-          "evaluation": "60",
+          "grade": "60",
           "highlight": {
             "startOffset": 6490,
             "endOffset": 7277,

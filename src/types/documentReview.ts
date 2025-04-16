@@ -9,8 +9,8 @@ export interface Comment {
   title: string;
   description: string;
   highlight: Highlight;
-  importance?: number; // 0-100
-  evaluation?: number; // 0-100: 0=very negative, 50=neutral, 100=very positive
+  importance?: number; // 0-100: 0=not important, 100=very important
+  grade?: number; // 0-100: 0=very negative, 50=neutral, 100=very positive
   isValid: boolean;
   error?: string;
 }

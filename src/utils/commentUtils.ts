@@ -78,8 +78,8 @@ export function getValidCommentCount(comments: Comment[]): number {
 }
 
 // Color generation helper functions
-function getBaseColor(evaluation: number): string {
-  // Create color scale for the full evaluation range
+function getBaseColor(grade: number): string {
+  // Create color scale for the full grade range
   const colorScale = chroma
     .scale([
       "#e74c3c", // Red (0)
@@ -90,9 +90,9 @@ function getBaseColor(evaluation: number): string {
     ])
     .mode("lch"); // Use LCH color space for perceptually uniform interpolation
 
-  // Normalize evaluation to 0-1 range
-  const normalizedEval = evaluation / 100;
-  return colorScale(normalizedEval).hex();
+  // Normalize grade to 0-1 range
+  const normalizedGrade = grade / 100;
+  return colorScale(normalizedGrade).hex();
 }
 
 function getColorStyle(
@@ -127,24 +127,24 @@ function getColorStyle(
   };
 }
 
-export function getCommentColorByEvaluation(
-  evaluation: number | undefined,
+export function getCommentColorByGrade(
+  grade: number | undefined,
   importance: number | undefined,
   hasGrade: boolean
 ): { background: string; color: string } {
-  if (!hasGrade || evaluation === undefined) {
+  if (!hasGrade || grade === undefined) {
     return {
       background: "#f1f5f9", // Light gray background
       color: "#334155", // Dark gray text
     };
   }
 
-  const baseColor = getBaseColor(evaluation);
+  const baseColor = getBaseColor(grade);
   return getColorStyle(baseColor, importance);
 }
 
-export function getEvaluationColor(evaluation: number): { color: string } {
-  // Create color scale for the full evaluation range
+export function getGradeColor(grade: number): { color: string } {
+  // Create color scale for the full grade range
   const colorScale = chroma
     .scale([
       "#e74c3c", // Red (0)
@@ -155,9 +155,9 @@ export function getEvaluationColor(evaluation: number): { color: string } {
     ])
     .mode("lch");
 
-  // Normalize evaluation to 0-1 range
-  const normalizedEval = evaluation / 100;
-  const color = colorScale(normalizedEval).hex();
+  // Normalize grade to 0-1 range
+  const normalizedGrade = grade / 100;
+  const color = colorScale(normalizedGrade).hex();
 
   return { color };
 }

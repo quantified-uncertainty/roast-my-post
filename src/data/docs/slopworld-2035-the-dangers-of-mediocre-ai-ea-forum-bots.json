@@ -24,7 +24,7 @@
             "quotedText": ""
           },
           "importance": "75",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": false,
           "error": "Start text not found in document"
         },
@@ -37,7 +37,7 @@
             "quotedText": "In this article, I’m going to do a twist: I’m going to write a story (and detailed analysis) about a scenario where humanity is disempowered and destroyed by AI that is _dumber_ than us, due to a combination of hype, overconfidence, greed and anti-intellectualism. This is a scenario where instead of AI bringing untold abundance or tiling the universe with paperclips, it brings mediocrity, stagnation, and inequality."
           },
           "importance": "85",
-          "evaluation": "70",
+          "grade": "70",
           "isValid": true
         },
         {
@@ -49,7 +49,7 @@
             "quotedText": "This post is divided into 3 parts:\n\nPart 1 is my attempt at a plausible sounding science fiction story sketching out this scenario, starting with the decline of a small architecture firm and ending with nuclear Armageddon.\n\nIn part 2 I will explain, with sources, the real world current day trends that were used as ingredients for the story.\n\nIn part 3 I will analysise the likelihood of my scenario, why I think it’s very unlikely, but also why it has some clear likelihood advantages over the typical doomsday scenario."
           },
           "importance": "70",
-          "evaluation": "85",
+          "grade": "85",
           "isValid": true
         },
         {
@@ -61,7 +61,7 @@
             "quotedText": "The story above builds on a number of different concerning trends in current day society.\n\nFor the rest of this section I will cover a number of these ingredients, with references to real world examples."
           },
           "importance": "80",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": true
         },
         {
@@ -73,7 +73,7 @@
             "quotedText": "Well, in some cases, the AI’s may just be cheating. There is reasonable evidence of [widespread benchmark data contamination](https://web.archive.org/web/20250305194633/https://www.theatlantic.com/technology/archive/2025/03/chatbots-benchmark-tests/681929/). Take a look at this graph of GPT-4 performance on a programming competition, before and after data contamination was possible:\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/Sd3X5mWAEzyNaPamT/poazerpkmadl30x1ghya)\n\nGPT-4s performance on a programming competition [from various years](https://web.archive.org/web/20250303191829/https://arxiv.org/abs/2312.02143), with the red line separating when contamination was possible from when it wasn’t.\n\nThis problem is so bad that an insider headline recently claimed that [benchmark tests are meaningless](https://web.archive.org/web/20250320203457/https://www.deeplearning.ai/the-batch/the-problem-with-benchmark-contamination-in-ai/). I wouldn’t quite go that far (and neither does the actual article), as you can test them on [uncontaminated contests](https://matharena.ai/) and questions that haven’t been released to the public. But I would advise treating performance on any benchmark that has it’s answers available on the internet with a garage sized grain of salt.\n\nIn the cases where performance is _not_ just a case of data contamination, there still may be an issue of “[teaching to the test](https://en.wikipedia.org/wiki/Teaching_to_the_test)”. A physics exam only teaches a small fraction of the skills required to be an actually good physicist: those other skills are much more ephemeral and hard to put down in words. By training on benchmarks like exams, even more advanced looking ones, we may be teaching AI to be really good at doing physics _exams_, but not to be really good at doing actual physics."
           },
           "importance": "80",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": true
         },
         {
@@ -85,7 +85,7 @@
             "quotedText": "It’s very easy to find examples of people unthinkingly using genAI to do things it is very clearly not qualified for.\n\nSome examples: A lawyer used chatgpt to [prepare court documents](https://www.bbc.com/news/world-us-canada-65735769), which made shit up and got him in a lot of trouble. A completely different law firm did [the exact same thing](https://www.abajournal.com/news/article/no-42-law-firm-by-headcount-could-face-sanctions-over-fake-case-citations-generated-by-chatgpt). Another lawyer in Canada did [this as well](https://www.theguardian.com/world/2024/feb/29/canada-lawyer-chatgpt-fake-cases-ai). A murder case in Ohio fell apart because it’s key evidence relied on [AI face recognition](https://www.theregister.com/2025/01/28/ai_facial_recognition_murder/) software that clearly stated on _every single page it produced_ that it was not court-admissible. A marketing team for the film Megalopolis used AI to find reviewer quotes for similar historical films, which the AI proceeded to [make up](https://variety.com/2024/film/news/megalopolis-trailer-fake-quotes-ai-lionsgate-1236116485/). A guy claimed to have made their website entirely with AI “[vibe coding](https://pivot-to-ai.com/2025/03/18/guys-im-under-attack-ai-vibe-coding-in-the-wild/)”… the wildly insecure site got hacked immediately. The National Eating Disorders Association announced that it would [replace it’s staff](https://www.psychiatrist.com/news/neda-suspends-ai-chatbot-for-giving-harmful-eating-disorder-advice/) with AI chatbots for people struggling with eating disorders. It proceeded to recommend that they focus on losing weight and measure their body fat with skin folk calipers, and the bot was pulled shortly afterwards.\n\nPeople in general do not have an accurate sense of what an AI can and cannot do, especially in areas where they have little expertise. This is only going to get worse as AI gets better, and if we don’t have our skeptical hats on, disaster might follow."
           },
           "importance": "75",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -97,7 +97,7 @@
             "quotedText": "Some studies are finding that the use of AI tools is associated with poor critical thinking skills. I’ll just quote [this recent one](https://www.mdpi.com/2075-4698/15/1/6):\n\n> The key findings indicate that higher usage of AI tools is associated with reduced critical thinking skills, and cognitive offloading plays a significant role in this relationship.\n> \n> Our findings are consistent with previous research indicating that excessive reliance on AI tools can negatively impact critical thinking skills. Firth et al. \\[[**24**](https://www.mdpi.com/2075-4698/15/1/6#B24-societies-15-00006)\\] and Zhang et al. \\[[**43**](https://www.mdpi.com/2075-4698/15/1/6#B43-societies-15-00006)\\] both highlight the potential for AI tools to enhance basic skill acquisition while potentially undermining deeper cognitive engagement. Our study extends this by quantitatively demonstrating that increased AI tool usage correlates with lower critical thinking scores, as measured by comprehensive assessments like the Halpern Critical Thinking Assessment (HCTA) tool\n\nThey quote a subject who states that “The more I use AI, the less I feel the need to problem-solve on my own. It’s like I’m losing my ability to think critically.”\n\nThey found education was an important factor in this: more educated people were willing to cross check AI statements, while less educated people took AI statements at face value. Another psychology paper found that people who were _less_ literate about how AI works were [more likely to want to use AI](https://osf.io/preprints/psyarxiv/t9u8g_v1).\n\nIt’s too early to say for sure how much of a real problem this is, but it seems plausible to me that it could be a big issue, and it’s one that better AI could make worse."
           },
           "importance": "70",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": true
         },
         {
@@ -109,7 +109,7 @@
             "quotedText": "So I wanna be clear, the above story is not meant to be taken as a real forecast for the future. I’m mainly using it partly as entertainment, partly as a pushback to the _other_ scary stories going around, but mostly as an illustration of my short-term fears about the damage that an overreliance on AI could do to society, if the trends I talked about in the last section accelerate and become widespread enough. I think _some_ of the things I talk about will happen, but I very, very much doubt the situation will get anywhere near as bad as what I portrayed there."
           },
           "importance": "75",
-          "evaluation": "80",
+          "grade": "80",
           "isValid": true
         },
         {
@@ -121,7 +121,7 @@
             "quotedText": "However, as skeptical as I am of my own scenario, I’m much _more_ skeptical of conventional AI doom scenarios, and this case has some clear advantages on the likelihood front:\n\nFirst, it requires much lower AI capabilities than any other AI doomsday scenario. The AI does not need to be an omnipotent machine god that can invent drexlerian nanotech from scratch: it just has to be smart enough to fool people, and people need to be dumb enough to let it.\n\nNext: It is fairly independent of whether AI is aligned to our values. A perfectly helpful, friendly AI that only has our best interests at heart can still get us killed by _doing an incompetent job_. Friendly AI’s could even be more dangerous on this front, by lulling us into a false sense of security.\n\nLastly: this problem scales. AI could continue to massively, genuinely improve and many of these issues would still be a problem as long as peoples _hype_ for AI grows faster than the actual capabilities.\n\nA corollary to this is that even if you fully believe that building a machine god is possible and will definitely happen, these issues could still be dangerous, as long as the real thing doesn’t happen _soon_."
           },
           "importance": "85",
-          "evaluation": "70",
+          "grade": "70",
           "isValid": true
         },
         {
@@ -133,7 +133,7 @@
             "quotedText": "I am no Luddite [\\[5\\]](#fneka1pklpj7i). Machine learning and deep learning are incredibly useful and versatile tools that have proven their usefulness in many contexts for decades now. Generative AI has uses as a productivity booster if used correctly, and I do believe it has gotten meaningfully better over the last few years and will get better in the future.\n\nBut a tool is only useful if you know it’s limitations. And however powerful AI gets, it will have limitations. What scares me is a world in which we are unable to see these limitations, because we have crafted machines that _just too good at bullshitting to us_. A world where we allow the bullshit to take over because doing so is profitable to people with financial and political power. And while I doubt this would literally end the world, it could make it a substantially worse place to live.\n\nHow do we combat this? I might write a proper followup on this, but I’d boil it down to two things: Do not let human thought be devalued, and do not let a few tech billionaires seize control of society without a fight."
           },
           "importance": "75",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": true
         }
       ],
@@ -155,7 +155,7 @@
             "quotedText": "In this article, I’m going to do a twist: I’m going to write a story (and detailed analysis) about a scenario where humanity is disempowered and destroyed by AI that is _dumber_ than us, due to a combination of hype, overconfidence, greed and anti-intellectualism. This is a scenario where instead of AI bringing untold abundance or tiling the universe with paperclips, it brings mediocrity, stagnation, and inequality."
           },
           "importance": "85",
-          "evaluation": "70",
+          "grade": "70",
           "isValid": true
         },
         {
@@ -167,7 +167,7 @@
             "quotedText": "When the architecture firm HBM was bought out by the Vastum corporation, they announced that they would fire 99% of their architects and replace them with AI chatbots.\n\nThe architect-bot they unveiled was incredibly impressive. After uploading your site parameters, all you had to do was chat with a bot to tell it everything you needed from the building, and it would produce a nearly photo-realistic 3d model of a building fitting your requirements, which you could even zoom around to look at from different angles. You could then just talk to the bot, saying things like “could you add another large window to the living room”, and after some time, out would pop another 3d model with the change. Once you were satisfied, the 3d model was turned into schematics and sent off to sub-contractors for construction and interior design, and your building would be created, no pesky architect required.\n\nThis sounded great for Thom Bradley, the head of a development company that was building up a small apartment complex in a residential area. Thom signed a contract with Vastum and decided to personally “design” the complex in collaboration with the new chatbot. Thom hated modern architecture, so he decided to build a complex with cool, retro, “art deco” aesthetic. He was enamored with the chatbot, which appeared to be smart, helpful and friendly. Occasionally there would be problems understanding his commands and rooms would change places inexplicably, but after a few tries the problems would get fixed. He even got to design an ornate set of steps leading into the atrium! The final result looked very cool, and Thom was happy for Vastum to send the design off to sub-contractors to build.\n\nAnd that’s when everything started to go wrong.\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/Sd3X5mWAEzyNaPamT/lm7afccctbazsiaf0pig)\n\nWarped architecture is fun if you [do it on purpose](https://en.wikipedia.org/wiki/Dancing_House), but I wouldn’t build a world around it.\n\nThe basement was in the wrong place for the piping system around the area, leading to massive tunneling costs to hook up the building. The designer forgot that the complex needed a boiler room, so a ground floor apartment had to be retrofitted for the purpose at great expense.\n\nWhen the building was actually opened, the flaws of the design become apparent to the residents themselves. In the context of the surrounding buildings, the art deco design sticks out like a sore thumb. The windows in the building are faced to let in massive amounts of heat in summer, leading to skyrocketing A/C bills. The ventilation in the house was designed for a lower humidity level, so the residents end up with a constant black mould problem. Some of the rooms in peoples apartments were way too narrow for their intended purposes. The design was also completely wheelchair inaccessible, due to the largely unnecessary steps that Thom put in earlier. Overall, it was just a terrible place to live.\n\nWhat the hell just went wrong?\n\nWell, Vastum was hiding a few secrets up it’s sleeve. It had quietly bought up the major architectural software companies, and had attempted to create AI agents with their vast amounts of data, but had quickly realized the tech was way too unreliable to survive contact with someone like Thom. Instead, they hard coded a traditional algorithm. The input was the “specs”, a long file with set fields listing external characteristics of the house like dimensions and number of stories, and a long list of rooms, each labelled with subfeatures like “number of windows” and “floor material”. The hardcoded algorithm took this list and piped it into existing 3d architecture software to produce a building that fit as best as it could, using a large library of pre-built rooms and modifying them to fit the “specs” according to an algorithm, squeezing rooms to fit if necessary.\n\nWhen Thom talked with the chatbot, the LLM was specifically designed to do one thing only: take in Thoms request and use it to fill out the “specs”. Vastum had trained it on a large set of architecture designs, described in plain english and in “spec” form, so that it could most easily transfer from one set to the other. Despite this, the bot still regularly messed up, so Vastum secretly hired a group of underpaid workers in India to “switch in” for the bot anytime user frustration was flagged, and attempt to manually implement whatever request they had. At the end of the process the one overworked architect they had secretly kept on staff was given an absurdly short deadline to switch out materials for the cheapest option that looked similar, assuming that Thom wouldn’t notice. Helping matters along, a pro-growth administration had recently waived all regulations and liability on new builds other than “make sure it won’t fall down”. And the ADA had just gotten repealed, so wheelchair inaccessibility wasn’t a problem at all.\n\nThis process was smooth enough to greatly impress the public (A few people claimed this was proof of human-level AGI). But it left out most of what a human architect was a_ctually doing._ It wasn’t taking into account the specific context of the actual location it was built in, because everything was being made out of prefab designs and neither Thom nor Vastum cared about local factors, like the climate and the nearby area. And the bot was a yes-man that was incapable of pushing back on Thom when his ideas were unworkable and stupid. A big part of an architects job was making sure that a building you created was actually _good_. This was the part of the process that Vastum cut out."
           },
           "importance": "75",
-          "evaluation": "60",
+          "grade": "60",
           "isValid": true
         },
         {
@@ -179,7 +179,7 @@
             "quotedText": "The story above builds on a number of different concerning trends in current day society.\n\nFor the rest of this section I will cover a number of these ingredients, with references to real world examples. **Note that a few news articles does** _**not**_ **mean something is necessarily a huge problem**, and you shouldn’t take this as me saying all of these are _currently_ large problems, just that they are potential areas of concern for the future. Every new technology goes through some level of moral panic, which is sometimes unreasonable and sometimes isn’t."
           },
           "importance": "80",
-          "evaluation": "65",
+          "grade": "65",
           "isValid": true
         },
         {
@@ -191,7 +191,7 @@
             "quotedText": "Well, in some cases, the AI’s may just be cheating. There is reasonable evidence of [widespread benchmark data contamination](https://web.archive.org/web/20250305194633/https://www.theatlantic.com/technology/archive/2025/03/chatbots-benchmark-tests/681929/). Take a look at this graph of GPT-4 performance on a programming competition, before and after data contamination was possible:\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/Sd3X5mWAEzyNaPamT/poazerpkmadl30x1ghya)\n\nGPT-4s performance on a programming competition [from various years](https://web.archive.org/web/20250303191829/https://arxiv.org/abs/2312.02143), wi"
           },
           "importance": "75",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -203,7 +203,7 @@
             "quotedText": "I’ll just show you an exchange I had with state of the art reasoning model gemini pro 2.5, where it gave me in depth comparison of two images of elephants. See if you can spot the hallucination:\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/Sd3X5mWAEzyNaPamT/fae2xqkpyio3ypweawnd)\n\nDid you see it? That’s right, I didn’t actually upload any pictures! As far as I can tell this is an entirely made up analysis of two pictures that do not exist. But it sounds very convincing, doesn’t it?"
           },
           "importance": "78",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -215,7 +215,7 @@
             "quotedText": "Some studies are finding that the use of AI tools is associated with poor critical thinking skills. I’ll just quote [this recent one](https://www.mdpi.com/2075-4698/15/1/6):\n\n> The key findings indicate that higher usage of AI tools is associated with reduced critical thinking skills, and cognitive offloading plays a significant role in this relationship.\n> \n> Our findings are consistent with previous research indicating that excessive reliance on AI tools can negatively impact critical thinking skills. Firth et al. \\[[**24**](https://www.mdpi.com/2075-4698/15/1/6#B24-societies-15-00006)\\] and Zhang et al. \\[[**43**](https://www.mdpi.com/2075-4698/15/1/6#B43-societies-15-00006)\\] both highlight the potential for AI tools to enhance basic skill acquisition while potentially undermining deeper cognitive engagement. Our study extends this by quantitatively demonstrating that increased AI tool usage correlates with lower critical thinking scores, as measured by comprehensive assessments like the Halpern Critical Thinking Assessment (HCTA) tool\n\nThey quote a subject who states that “The more I use AI, the less I feel the need to problem-solve on my own. It’s like I’m losing my ability to think critically.”\n\nThey found education was an important factor in this: more educated people were willing to cross check AI statements, while less educated people took AI statements at face value."
           },
           "importance": "77",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         },
         {
@@ -227,7 +227,7 @@
             "quotedText": "The “stealth outsourcing” part of the story comes from several real examples of companies falsely pretending a product was fully AI. Cruise robotaxis hey were presented as fully self-driving, but in fact a remote human operator had to intervene and take over control [every 4-5 miles](https://www.cnbc.com/2023/11/06/cruise-confirms-robotaxis-rely-on-human-assistance-every-4-to-5-miles.html). Similarly, Amazons “just walk out” grocery stores, presented as fully automated, turned out to have [70% of their transactions](https://www.theguardian.com/commentisfree/2024/apr/10/amazon-ai-cashier-less-shops-humans-technology) reviewed by remote workers based in India. And just this week, it’s been revealed that an “AI shopping app” was actually being run by [a call centre in the phillipines](https://techcrunch.com/2025/04/10/fintech-founder-charged-with-fraud-after-ai-shopping-app-found-to-be-powered-by-humans-in-the-philippines/).\n\nThis is a simple way get “AI” to do jobs that are fare beyond the actual capabilities of AI on it’s own."
           },
           "importance": "70",
-          "evaluation": "45",
+          "grade": "45",
           "isValid": true
         },
         {
@@ -239,7 +239,7 @@
             "quotedText": "So I wanna be clear, the above story is not meant to be taken as a real forecast for the future. I’m mainly using it partly as entertainment, partly as a pushback to the _other_ scary stories going around, but mostly as an illustration of my short-term fears about the damage that an overreliance on AI could do to society, if the trends I talked about in the last section accelerate and become widespread enough. I think _some_ of the things I talk about will happen, but I very, very much doubt the situation will get anywhere near as bad as what I portrayed there.\n\nFor starters, this scenario would require AI to be better than it is now, and for people in general to be far more receptive to it than they are now. I think it’s reasonable to believe that recent advancements will lead to improvements for a time, but how much will that be, and will it be enough to enable widespread shitty automation? I don’t know.\n\nI don’t even know if current rates of AI financing will survive the next few years: the disruption from open source models like deepseek, as well as whatever kooky shit the trump administration is pulling, could spell trouble for the AI industry, which is losing large amounts of money at the moment. Skeptics are pointing to [pullbacks in datacentres](https://www.datacenterdynamics.com/en/news/microsoft-backs-away-from-1bn-data-center-plans-in-licking-county-ohio/) as early signs of an AI investment dying down: I’m not a business guy, so all I’ll say is that I wouldn’t be surprised either way.\n\nThe public already has quite a [negative view of tech companies](https://www.pewresearch.org/internet/2024/04/29/americans-views-of-technology-companies-2/), so I don’t think they would be amenable to a tech takeover like I described: the public is generally unfavorable to [Musk’s DOGE department](https://www.poynter.org/fact-checking/2025/elon-musk-doge-unpopular-polls-public-support/), for example. And while AI hype is common in the tech sphere of silicon valley, in the broader public the view of AI is [quite negative](https://www.axios.com/2025/01/15/americans-use-ai-products-poll). I don’t think we’d get that far along this path without a massive anti-AI backlash leading to regulations and bureaucracy, that would make many attempts at AI disruption straight up illegal.\n\nThis is why my scenario required an extreme oligarchical turn in society, that could resist democratic forces: I think this oligarchic turn is happening, but I don’t think it’s powerful enough yet to allow a scenario like this to actually occur.\n\nHowever, as skeptical as I am of my own scenario, I’m much _more_ skeptical of conventional AI doom scenarios, and this case has some clear advantages on the likelihood front:"
           },
           "importance": "72",
-          "evaluation": "75",
+          "grade": "75",
           "isValid": true
         },
         {
@@ -251,7 +251,7 @@
             "quotedText": "I am no Luddite [\\[5\\]](#fneka1pklpj7i). Machine learning and deep learning are incredibly useful and versatile tools that have proven their usefulness in many contexts for decades now. Generative AI has uses as a productivity booster if used correctly, and I do believe it has gotten meaningfully better over the last few years and will get better in the future.\n\nBut a tool is only useful if you know it’s limitations. And however powerful AI gets, it will have limitations."
           },
           "importance": "68",
-          "evaluation": "80",
+          "grade": "80",
           "isValid": true
         }
       ],

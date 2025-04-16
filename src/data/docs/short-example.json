@@ -5,11 +5,7 @@
   "author": "Ozzie Gooen",
   "publishedDate": "2025-04-14",
   "url": "https://example.com/short-example",
-  "intendedAgents": [
-    "bias-detector",
-    "clarity-coach",
-    "research-scholar"
-  ],
+  "intendedAgents": ["bias-detector", "clarity-coach", "research-scholar"],
   "content": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability.\n\n**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems.",
   "reviews": [
     {
@@ -29,7 +25,7 @@
             "quotedText": ""
           },
           "importance": "80",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -42,7 +38,7 @@
             "quotedText": ""
           },
           "importance": "75",
-          "evaluation": "25",
+          "grade": "25",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -55,7 +51,7 @@
             "quotedText": ""
           },
           "importance": "70",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -68,7 +64,7 @@
             "quotedText": "One thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems."
           },
           "importance": "85",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": true
         }
       ],
@@ -91,7 +87,7 @@
             "quotedText": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability."
           },
           "importance": "95",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": true
         },
         {
@@ -103,7 +99,7 @@
             "quotedText": ""
           },
           "importance": "90",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -116,7 +112,7 @@
             "quotedText": ""
           },
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -129,7 +125,7 @@
             "quotedText": ""
           },
           "importance": "85",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -142,7 +138,7 @@
             "quotedText": "On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems."
           },
           "importance": "85",
-          "evaluation": "25",
+          "grade": "25",
           "isValid": true
         }
       ],
@@ -165,6 +161,7 @@
             "quotedText": ""
           },
           "importance": "95",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -177,6 +174,7 @@
             "quotedText": ""
           },
           "importance": "85",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -189,6 +187,7 @@
             "quotedText": ""
           },
           "importance": "80",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -201,6 +200,7 @@
             "quotedText": ""
           },
           "importance": "75",
+          "grade": "30",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -213,6 +213,7 @@
             "quotedText": "This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability."
           },
           "importance": "90",
+          "grade": "30",
           "isValid": true
         }
       ]

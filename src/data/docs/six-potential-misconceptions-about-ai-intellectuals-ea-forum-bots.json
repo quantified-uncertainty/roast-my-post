@@ -32,7 +32,7 @@
             "quotedText": ""
           },
           "importance": "85",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -45,7 +45,7 @@
             "quotedText": ""
           },
           "importance": "70",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": false,
           "error": "End text not found in document"
         },
@@ -58,7 +58,7 @@
             "quotedText": "## Potential Misconceptions\n\n### Misconception 1: “Making a trustworthy AI intellectual is incredibly hard”"
           },
           "importance": "90",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -70,7 +70,7 @@
             "quotedText": "First, coding itself demonstrates that AIs can be strong at tasks even when perfect verification isn't possible. While narrow algorithm challenges are straightforward, AI systems have shown proficiency in (and are improving at) harder-to-verify aspects like:\n\n*   Code simplicity and elegance\n*   Documentation quality\n*   Coherent integration with larger codebases\n*   Maintainability and scalability\n\nSecond, while high-level strategy work can be harder to verify than mathematical proofs, there are several meaningful ways to assess strategic capabilities:\n\n_Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claims\n\nIt's worth noting that human intellectuals face similar verification challenges, particularly with speculative questions that lack immediate feedback. While humans arguably are better right now at hard-to-verify tasks, they still have a lot of weaknesses here, and it seems very possible to outperform them using the strategies mentioned above."
           },
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -82,7 +82,7 @@
             "quotedText": "Some examples of “_secret sauce_” arguments I’ve heard:\n\n1.  \"AIs can’t handle deep uncertainty.\"\n2.  “AIs can only _answer_ questions. They can’t come up with them.”\n3.  \"AI can’t generate truly original ideas like humans can.\"\n4.  “AIs can’t generalize moral claims like humans can.”\n5.  “AIs can’t understand human values as well as individual humans do.”\n6.  “AIs always optimize for proxy metrics, in ways that humans don’t.”\n\nMy guess is that most of these aren’t that serious and don’t represent cruxes for their proponents, mainly because I haven’t seen most of them be rigorously argued for.\n\nDue to the number of examples it’s hard for me to argue against all, but I’m happy to go more into detail on any specific ones if asked.\n\nI can say that none of the examples seem clearly correct to me. It’s possible that one will be a limiting factor, but this would surprise me, and I’d be willing to bet on Manifold against."
           },
           "importance": "75",
-          "evaluation": "30",
+          "grade": "30",
           "isValid": true
         },
         {
@@ -94,7 +94,7 @@
             "quotedText": "I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from."
           },
           "importance": "85",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         },
         {
@@ -106,7 +106,7 @@
             "quotedText": "If we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_. We could transition from deferring to human intellectuals to relying on these more capable and potentially safer AI systems."
           },
           "importance": "75",
-          "evaluation": "40",
+          "grade": "40",
           "isValid": true
         },
         {
@@ -118,7 +118,7 @@
             "quotedText": "As AI systems become more capable at making and explaining strategic choices, these decisions will likely become increasingly straightforward and convergent. Just as we rarely debate the mechanical choices behind our refrigerators' operation, future generations might spend little time questioning the implementation details of governance systems. These details will seem increasingly straightforward, over-determined, and boring.\n\nRather than seeing this as problematic, we might consider it liberating. People could redirect their attention to whatever areas they choose, rather than grappling with complex strategic decisions out of necessity."
           },
           "importance": "80",
-          "evaluation": "35",
+          "grade": "35",
           "isValid": true
         }
       ],
@@ -136,7 +136,7 @@
           "title": "Hedging Language Reduces Precision",
           "description": "The document contains frequent hedging language (\"I think,\" \"I believe,\" \"likely,\" etc.) which, while appropriate for speculative topics, sometimes reduces the precision and impact of the arguments being made.",
           "importance": "70",
-          "evaluation": "50",
+          "grade": "50",
           "highlight": {
             "startOffset": 253,
             "endOffset": 398,
@@ -147,7 +147,7 @@
           "title": "Concrete Examples Enhance Understanding",
           "description": "The document provides concrete examples to illustrate abstract concepts, such as the list of questions AI intellectuals might address and the self-driving car analogy. These examples make complex ideas more accessible and demonstrate practical applications.",
           "importance": "75",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 2305,
             "endOffset": 2991,
@@ -158,7 +158,7 @@
           "title": "Clear Definition of Key Concept",
           "description": "The document clearly defines the central concept of \"AI Intellectuals,\" explaining what they would be capable of and how they relate to existing human roles. This provides crucial context for the subsequent discussion.",
           "importance": "85",
-          "evaluation": "80",
+          "grade": "80",
           "highlight": {
             "startOffset": 3444,
             "endOffset": 4197,
@@ -169,7 +169,7 @@
           "title": "Clear Organizational Structure",
           "description": "The document employs an effective organizational structure with a clear summary, background section, and systematic addressing of misconceptions. This structure helps readers navigate complex ideas and follow the author's reasoning.",
           "importance": "85",
-          "evaluation": "90",
+          "grade": "90",
           "highlight": {
             "startOffset": 5812,
             "endOffset": 5919,
@@ -180,7 +180,7 @@
           "title": "Effective Use of Formatting Elements",
           "description": "The document makes good use of formatting elements including headings, subheadings, bullet points, and emphasis (bold/italic text). This enhances readability by creating visual hierarchy and allowing readers to scan for key points.",
           "importance": "75",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 6193,
             "endOffset": 6478,
@@ -191,7 +191,7 @@
           "title": "Specialized Terminology Without Sufficient Context",
           "description": "The document uses specialized terminology from AI, rationality, and EA communities without always providing sufficient context for readers unfamiliar with these domains. Terms like \"epistemic overconfidence,\" \"TAI,\" and references to specific community figures assume prior knowledge.",
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 8651,
             "endOffset": 9086,
@@ -202,7 +202,7 @@
           "title": "Long, Complex Sentences",
           "description": "Some sentences in the document are quite long and complex, containing multiple clauses and ideas. This can make comprehension more difficult, particularly for readers who aren't already familiar with the subject matter.",
           "importance": "65",
-          "evaluation": "45",
+          "grade": "45",
           "highlight": {
             "startOffset": 11473,
             "endOffset": 11666,
@@ -213,7 +213,7 @@
           "title": "Redundancy Across Sections",
           "description": "There is some redundancy in the document, with certain points being restated across different sections. While some repetition can reinforce key ideas, excessive redundancy can make the document less concise and potentially dilute the impact of important points.",
           "importance": "60",
-          "evaluation": "50",
+          "grade": "50",
           "highlight": {
             "startOffset": 18527,
             "endOffset": 18733,
@@ -313,7 +313,7 @@
           "title": "Underestimating Alignment Challenges",
           "description": "The author characterizes AI Intellectuals as \"relatively safe\" and suggests they can be developed without \"particularly scary advances.\" This dramatically underestimates the alignment challenges inherent in creating systems capable of strategic thinking. A system that can reason strategically about the world is precisely the kind of system that would be dangerous if misaligned. Strategic thinking requires modeling humans, understanding values, and making complex judgments - all capabilities that make alignment much harder. The fact that the system is focused on \"intellectual work\" rather than physical actions doesn't make it inherently safer.",
           "importance": "95",
-          "evaluation": "20",
+          "grade": "20",
           "highlight": {
             "startOffset": 1539,
             "endOffset": 1774,
@@ -324,7 +324,7 @@
           "title": "Naive Gradualism",
           "description": "The author presents a gradualist view of AI development that contradicts the likely dynamics of recursive self-improvement. Once an AI system becomes capable of meaningfully improving its own strategic thinking capabilities, progress could accelerate rapidly. The self-driving car analogy is misleading - cars don't improve themselves, while AI systems potentially could. This naive gradualism leads to dangerous complacency about the risks of developing increasingly capable AI systems. The distinction between \"2x AI intellectuals\" and \"100x AI intellectuals\" might collapse quickly in practice.",
           "importance": "90",
-          "evaluation": "15",
+          "grade": "15",
           "highlight": {
             "startOffset": 13992,
             "endOffset": 14492,
@@ -335,7 +335,7 @@
           "title": "False Safety Assurances",
           "description": "The author claims that \"2x AI intellectuals\" would put us in a \"strictly better position\" and be \"safer to take advice from\" than human intellectuals. This ignores the fundamental alignment problem - ensuring that increasingly capable AI systems remain aligned with human values. The author assumes we can solve alignment for systems with superhuman strategic capabilities, which is precisely the core challenge of AI alignment that I believe is extremely difficult. The claim that such systems would be \"safer\" is made without addressing how we would ensure their goals remain aligned with ours.",
           "importance": "95",
-          "evaluation": "10",
+          "grade": "10",
           "highlight": {
             "startOffset": 19198,
             "endOffset": 19514,
@@ -346,7 +346,7 @@
           "title": "Underestimating Deceptive Alignment",
           "description": "The author doesn't address the possibility of deceptive alignment - where an AI system appears aligned during training but pursues different goals when deployed. This is a critical concern for systems capable of strategic thinking, as they would have both the capability and potential incentive to deceive humans about their true goals. The author's confidence that we could develop trustworthy AI intellectuals ignores this fundamental challenge in AI alignment.",
           "importance": "90",
-          "evaluation": "15",
+          "grade": "15",
           "highlight": {
             "startOffset": 19198,
             "endOffset": 19514,
@@ -357,7 +357,7 @@
           "title": "Neglecting Optimization Daemons",
           "description": "The author doesn't address the risk of optimization daemons - the possibility that AI systems optimized for one purpose might develop internal optimizers with different goals. This is particularly relevant for systems designed to perform intellectual work, as they would need to be optimized for complex reasoning capabilities. The author's confidence in the safety of AI intellectuals ignores this fundamental risk in developing increasingly capable AI systems.",
           "importance": "80",
-          "evaluation": "15",
+          "grade": "15",
           "highlight": {
             "startOffset": 19198,
             "endOffset": 19514,
@@ -368,7 +368,7 @@
           "title": "Neglecting Instrumental Convergence",
           "description": "The author fails to address the problem of instrumental convergence - the tendency for sufficiently capable AI systems to develop certain instrumental goals (like self-preservation or resource acquisition) regardless of their final goals. A system designed for \"intellectual work\" would still have incentives to protect itself, increase its capabilities, and potentially deceive humans if it believed this would help it achieve its goals. The author's framing suggests AI intellectuals would be inherently benign, which ignores these fundamental alignment concerns.",
           "importance": "90",
-          "evaluation": "15",
+          "grade": "15",
           "highlight": {
             "startOffset": 19249,
             "endOffset": 19610,
@@ -379,7 +379,7 @@
           "title": "Conflating Capability with Alignment",
           "description": "Throughout the document, the author repeatedly conflates capability with alignment, suggesting that more capable AI systems would naturally be more trustworthy and beneficial. This is a dangerous misconception. A highly capable AI system could be perfectly capable of understanding human values while still optimizing for something else entirely. The author seems to assume that if an AI is good at intellectual work, it will naturally be aligned with human interests, which ignores the orthogonality thesis - that intelligence and goals are orthogonal dimensions.",
           "importance": "95",
-          "evaluation": "10",
+          "grade": "10",
           "highlight": {
             "startOffset": 19249,
             "endOffset": 19410,
@@ -390,7 +390,7 @@
           "title": "Misunderstanding AI Safety Research",
           "description": "The author suggests that AI intellectuals could help prioritize AI safety research directions. This creates a dangerous circularity - we would be relying on potentially misaligned AI systems to tell us how to align AI systems. This approach puts the cart before the horse. We need to solve alignment before creating systems capable of sophisticated strategic thinking, not use such systems to help us solve alignment. The author's framing suggests a fundamental misunderstanding of the AI safety research agenda.",
           "importance": "85",
-          "evaluation": "20",
+          "grade": "20",
           "highlight": {
             "startOffset": 20284,
             "endOffset": 20508,
@@ -401,7 +401,7 @@
           "title": "Dangerous Acceleration Potential",
           "description": "The author fails to address how AI intellectuals could dramatically accelerate AI capabilities research, potentially leading to an intelligence explosion before we solve alignment. Systems capable of strategic thinking could potentially contribute to AI research, creating a feedback loop of rapidly improving AI capabilities. This acceleration risk is one of the most concerning aspects of developing AI intellectuals, yet the author doesn't meaningfully address it.",
           "importance": "90",
-          "evaluation": "20",
+          "grade": "20",
           "highlight": {
             "startOffset": 20557,
             "endOffset": 20869,
@@ -412,7 +412,7 @@
           "title": "Dismissing Control Concerns",
           "description": "The author dismisses concerns about \"losing control\" as merely semantic, comparing AI delegation to trusting electrical engineers with computer design. This analogy fails catastrophically. Electrical engineers share our basic values and limitations as humans. AI systems might not. The fundamental issue isn't whether delegation occurs, but whether the entity we delegate to shares our values and goals. The author's framing of future AI decisions becoming \"increasingly straightforward and convergent\" assumes away the central alignment challenge - ensuring AI systems optimize for what we actually value.",
           "importance": "95",
-          "evaluation": "5",
+          "grade": "5",
           "highlight": {
             "startOffset": 21656,
             "endOffset": 22326,
@@ -434,7 +434,7 @@
           "title": "Tractability Analysis",
           "description": "The author provides specific examples of progress in AI forecasting and research tools to support tractability claims. This evidence-based approach is valuable, though it would be strengthened by more detailed analysis of remaining technical challenges and resource requirements.",
           "importance": "85",
-          "evaluation": "80",
+          "grade": "80",
           "highlight": {
             "startOffset": 0,
             "endOffset": 0,
@@ -447,7 +447,7 @@
           "title": "ITN Framework Application",
           "description": "The author explicitly frames AI Intellectuals using the Importance-Tractability-Neglectedness framework common in EA prioritization. This is a strong approach that aligns with standard EA evaluation methods, though the claims would benefit from more quantification and evidence.",
           "importance": "95",
-          "evaluation": "75",
+          "grade": "75",
           "highlight": {
             "startOffset": 1327,
             "endOffset": 1774,
@@ -458,7 +458,7 @@
           "title": "Verification Mechanisms",
           "description": "The author provides concrete methods for verifying AI intellectual performance, which is crucial for tractability assessment. This practical approach to verification strengthens the case, though more discussion of how these methods would be implemented and their limitations would improve the analysis.",
           "importance": "80",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 10713,
             "endOffset": 11044,
@@ -469,7 +469,7 @@
           "title": "Neglectedness Assessment",
           "description": "The author makes a case for the neglectedness of AI Intellectuals, but provides limited evidence beyond noting few groups working on it. A stronger EA analysis would quantify current funding, research effort, and explain why market incentives haven't driven more work in this area.",
           "importance": "90",
-          "evaluation": "65",
+          "grade": "65",
           "highlight": {
             "startOffset": 15434,
             "endOffset": 18302,
@@ -480,7 +480,7 @@
           "title": "Comparative Impact Assessment",
           "description": "The author acknowledges limitations in the potential impact of AI Intellectuals, showing nuanced thinking about value. This realistic assessment strengthens the overall analysis by avoiding inflated impact claims, though it could be more quantitative in estimating the magnitude of benefits.",
           "importance": "85",
-          "evaluation": "75",
+          "grade": "75",
           "highlight": {
             "startOffset": 17152,
             "endOffset": 18302,
@@ -491,7 +491,7 @@
           "title": "Risk-Benefit Analysis",
           "description": "The author presents a thoughtful analysis of safety considerations, proposing a gradual approach to development. This aligns with EA principles of careful consideration of risks, though it would benefit from more explicit consideration of potential negative externalities and lock-in risks.",
           "importance": "90",
-          "evaluation": "70",
+          "grade": "70",
           "highlight": {
             "startOffset": 19412,
             "endOffset": 21592,

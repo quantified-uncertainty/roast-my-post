@@ -13,8 +13,8 @@ import { evaluationAgents } from "@/data/agents/index";
 import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
-  getCommentColorByEvaluation,
-  getEvaluationColor,
+  getCommentColorByGrade,
+  getGradeColor,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
@@ -99,10 +99,10 @@ function CommentsSidebar({
                       <div className="flex shrink-0 items-center gap-2">
                         {hasGradeInstructions && (
                           <>
-                            {comment.evaluation && comment.evaluation > 70 && (
+                            {comment.grade && comment.grade > 70 && (
                               <CheckCircleIcon className="h-5 w-5 text-green-500 opacity-40" />
                             )}
-                            {comment.evaluation && comment.evaluation < 30 && (
+                            {comment.grade && comment.grade < 30 && (
                               <XCircleIcon className="h-5 w-5 text-red-500 opacity-40" />
                             )}
                           </>
@@ -130,16 +130,12 @@ function CommentsSidebar({
                         {comment.description}
                         {isExpanded && hasGradeInstructions && (
                           <div className="mt-2 text-xs text-gray-400">
-                            {comment.evaluation !== undefined && (
+                            {comment.grade !== undefined && (
                               <span className="mr-4">
-                                Evaluation:{" "}
+                                Grade:{" "}
                                 <span className="font-medium">
-                                  <span
-                                    style={getEvaluationColor(
-                                      comment.evaluation
-                                    )}
-                                  >
-                                    {comment.evaluation}
+                                  <span style={getGradeColor(comment.grade)}>
+                                    {comment.grade}
                                   </span>
                                   <span className="text-gray-400">/100</span>
                                 </span>
@@ -275,14 +271,14 @@ export function DocumentWithEvaluations({
     )?.gradeInstructions;
     return sortedComments.reduce(
       (map, comment, index) => {
-        if (hasGradeInstructions && comment.evaluation !== undefined) {
-          map[index] = getCommentColorByEvaluation(
-            comment.evaluation,
+        if (hasGradeInstructions && comment.grade !== undefined) {
+          map[index] = getCommentColorByGrade(
+            comment.grade,
             comment.importance,
             true
           );
         } else {
-          map[index] = getCommentColorByEvaluation(undefined, undefined, false);
+          map[index] = getCommentColorByGrade(undefined, undefined, false);
         }
         return map;
       },

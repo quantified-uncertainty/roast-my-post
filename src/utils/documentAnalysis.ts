@@ -255,7 +255,7 @@ ${agentInfo.commentInstructions}
           "end": "exact text snippet from document where highlight ends"
         },
         "importance": "0-100",
-        "evaluation": "0-100"
+        "grade": "0-100"
       }`
       : `{
         "title": "string",
@@ -300,7 +300,7 @@ ${commentStructure}
      * 40-49: Mostly tangential
      * 30-39: Little value
      * 0-29: Not relevant
-    ${agentInfo?.gradeInstructions ? "\n   - **Evaluation (0-100)** - The strength of the quoted section:\n     * **0-30**: The section is lacking or problematic\n     * **31-49**: The section has significant issues\n     * **50**: The section is neutral/balanced\n     * **51-70**: The section has some positive aspects\n     * **71-100**: The section is very strong" : ""}
+    ${agentInfo?.gradeInstructions ? "\n   - **Grade (0-100)** - The strength of the quoted section:\n     * **0-30**: The section is lacking or problematic\n     * **31-49**: The section has significant issues\n     * **50**: The section is neutral/balanced\n     * **51-70**: The section has some positive aspects\n     * **71-100**: The section is very strong" : ""}
 
 3. Summary
    - Concise overview of your specialized analysis
@@ -308,7 +308,7 @@ ${commentStructure}
    - Get straight to your expert perspective
 
 4. Grade (0-100)
-   - Based on your specialized evaluation criteria
+   - Based on your specialized grading criteria
    - 90-100: Exceptional
    - 80-89: Very strong
    - 70-79: Good

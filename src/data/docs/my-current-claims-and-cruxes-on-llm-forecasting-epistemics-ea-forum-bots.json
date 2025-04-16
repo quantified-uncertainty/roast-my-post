@@ -24,7 +24,7 @@
           "title": "In-group Bias in Community References",
           "description": "The document shows in-group bias through references to the EA community, rationality concepts, and organizations like QURI. This suggests the author is writing from within these communities and may be influenced by their common perspectives and values, potentially limiting consideration of alternative viewpoints or approaches from outside these communities.",
           "importance": "70",
-          "evaluation": "50",
+          "grade": "50",
           "highlight": {
             "startOffset": 1008,
             "endOffset": 28473,
@@ -35,7 +35,7 @@
           "title": "Optimism Bias in Benefits Assessment",
           "description": "The author demonstrates optimism bias by presenting a series of claims about the benefits of better forecasting systems with limited critical examination. While these benefits are possible, the confidence with which they're stated and the lack of rigorous evidence or counterarguments suggests an overly optimistic view that could lead to underestimating challenges and overestimating positive impacts.",
           "importance": "85",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 2398,
             "endOffset": 3691,
@@ -46,7 +46,7 @@
           "title": "Illusion of Control in System Development",
           "description": "The document exhibits the illusion of control by suggesting that we can effectively direct how LEPs will develop and be deployed. This underestimates the complex, emergent nature of technological development and the many competing interests that will shape these systems. The author acknowledges some challenges but maintains an implicit belief that we can guide development in beneficial directions.",
           "importance": "80",
-          "evaluation": "30",
+          "grade": "30",
           "highlight": {
             "startOffset": 4499,
             "endOffset": 4897,
@@ -57,7 +57,7 @@
           "title": "Narrative Fallacy in System Integration",
           "description": "The author constructs a compelling narrative about how LEPs will be integrated into society and existing systems, which may oversimplify the complex, non-linear nature of technological adoption. The narrative presents a relatively smooth progression that doesn't fully account for potential resistance, regulatory challenges, or competing technological approaches.",
           "importance": "80",
-          "evaluation": "45",
+          "grade": "45",
           "highlight": {
             "startOffset": 5391,
             "endOffset": 6659,
@@ -68,7 +68,7 @@
           "title": "Confirmation Bias in Failure Mode Analysis",
           "description": "The section on failure modes shows confirmation bias by presenting potential problems but then quickly dismissing or minimizing most of them. The author tends to acknowledge risks but then immediately provides reasons why they believe these risks won't materialize or will be outweighed by benefits, without deeply engaging with counterarguments or evidence that might challenge their position.",
           "importance": "90",
-          "evaluation": "35",
+          "grade": "35",
           "highlight": {
             "startOffset": 8898,
             "endOffset": 9993,
@@ -79,7 +79,7 @@
           "title": "Availability Heuristic in Capability Assessment",
           "description": "The author relies heavily on the availability heuristic when assessing LLM capabilities, drawing primarily on recent advances to project future abilities. This may lead to overestimating how quickly and effectively these systems will develop, as recent successes are more mentally available than historical challenges and limitations in AI development.",
           "importance": "85",
-          "evaluation": "45",
+          "grade": "45",
           "highlight": {
             "startOffset": 11926,
             "endOffset": 12403,
@@ -90,7 +90,7 @@
           "title": "Selection Bias in Evidence Presentation",
           "description": "The document demonstrates selection bias by primarily presenting evidence and examples that support the author's thesis about the potential of LEPs, with less attention to contradictory evidence or failed AI forecasting attempts. This selective presentation of evidence creates an impression of greater consensus and certainty than may actually exist in the field.",
           "importance": "85",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 15425,
             "endOffset": 16112,
@@ -101,7 +101,7 @@
           "title": "Planning Fallacy in Implementation Timeline",
           "description": "The document shows signs of the planning fallacy by underestimating the complexity and time required to develop effective LEP systems. While the author acknowledges that scaffolding is difficult, there's still an implicit assumption that these systems can be developed relatively straightforwardly, which doesn't fully account for the historical challenges in developing complex AI systems.",
           "importance": "75",
-          "evaluation": "60",
+          "grade": "60",
           "highlight": {
             "startOffset": 16120,
             "endOffset": 16871,
@@ -112,7 +112,7 @@
           "title": "Balanced Acknowledgment of Scaffolding Challenges",
           "description": "This section shows a more balanced approach by acknowledging the significant challenges in developing scaffolding for LEP systems. The author recognizes the complexity, expense, and centralization issues that could limit development, which demonstrates a more nuanced understanding of the practical challenges involved. This helps counterbalance some of the optimism elsewhere in the document.",
           "importance": "80",
-          "evaluation": "75",
+          "grade": "75",
           "highlight": {
             "startOffset": 17660,
             "endOffset": 18572,
@@ -123,7 +123,7 @@
           "title": "Scope Insensitivity in Problem Complexity",
           "description": "The document exhibits scope insensitivity by treating various forecasting domains and challenges as relatively similar in difficulty. The broad vision presented doesn't adequately account for the vastly different scales of challenges in different domains of forecasting and decision-making, from simple numeric predictions to complex geopolitical or technological forecasts.",
           "importance": "75",
-          "evaluation": "45",
+          "grade": "45",
           "highlight": {
             "startOffset": 22399,
             "endOffset": 35067,
@@ -145,7 +145,7 @@
           "title": "Transparency About Document Limitations",
           "description": "The author is admirably transparent about the document's preliminary nature and limitations. This sets appropriate expectations for readers and acknowledges that the ideas presented are works in progress rather than definitive statements.",
           "importance": "80",
-          "evaluation": "90",
+          "grade": "90",
           "highlight": {
             "startOffset": 420,
             "endOffset": 1010,
@@ -156,7 +156,7 @@
           "title": "Definition Clarity",
           "description": "The document begins with clear definitions of key terms, which is excellent for establishing shared understanding. The definitions are concise, specific, and set up the conceptual framework for the rest of the document.",
           "importance": "95",
-          "evaluation": "90",
+          "grade": "90",
           "highlight": {
             "startOffset": 1627,
             "endOffset": 2346,
@@ -167,7 +167,7 @@
           "title": "Clear Section Structure",
           "description": "The document uses a consistent and clear hierarchical structure with numbered sections and subsections. This organizational approach helps readers navigate the content and understand how different ideas relate to each other.",
           "importance": "90",
-          "evaluation": "95",
+          "grade": "95",
           "highlight": {
             "startOffset": 2346,
             "endOffset": 2379,
@@ -178,7 +178,7 @@
           "title": "Sentence Complexity",
           "description": "This paragraph contains several long, complex sentences with multiple clauses and ideas. Breaking these into shorter sentences would improve readability and help readers process each point more effectively.",
           "importance": "80",
-          "evaluation": "40",
+          "grade": "40",
           "highlight": {
             "startOffset": 8898,
             "endOffset": 9617,
@@ -189,7 +189,7 @@
           "title": "Effective Use of Bullet Points",
           "description": "The document makes excellent use of bullet points to break down complex ideas into digestible chunks. This improves readability significantly by creating visual separation between concepts and allowing readers to process information in smaller units.",
           "importance": "85",
-          "evaluation": "95",
+          "grade": "95",
           "highlight": {
             "startOffset": 12315,
             "endOffset": 12601,
@@ -200,7 +200,7 @@
           "title": "Claim-Evidence Format",
           "description": "The document consistently uses a claim-evidence structure, clearly labeling claims and then providing supporting points. This approach helps readers distinguish between the author's assertions and their supporting reasoning, making the document's logic more transparent.",
           "importance": "85",
-          "evaluation": "90",
+          "grade": "90",
           "highlight": {
             "startOffset": 13320,
             "endOffset": 14066,
@@ -211,7 +211,7 @@
           "title": "Paragraph Length Variation",
           "description": "The document shows good variation in paragraph length, with some concise paragraphs interspersed with longer explanations. This creates a rhythm that helps maintain reader engagement and prevents the monotony that can come from uniform paragraph lengths.",
           "importance": "70",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 16112,
             "endOffset": 16871,
@@ -222,7 +222,7 @@
           "title": "Subcomponent Organization",
           "description": "The subcomponents section effectively breaks down a complex system into discrete, understandable parts. Each component is clearly defined with its purpose and relationship to other components, helping readers grasp the overall architecture of LEPs.",
           "importance": "85",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 22378,
             "endOffset": 22547,
@@ -233,7 +233,7 @@
           "title": "Technical Jargon Density",
           "description": "This section contains a high density of technical terms and concepts that may be unfamiliar to readers without background in AI, forecasting, or rationality. While the author acknowledges the document's specialized nature, providing more explanatory context for terms like \"credal resilience\" would improve accessibility.",
           "importance": "75",
-          "evaluation": "45",
+          "grade": "45",
           "highlight": {
             "startOffset": 35097,
             "endOffset": 35790,
@@ -244,7 +244,7 @@
           "title": "Conclusion and Future Research",
           "description": "The document concludes with a clear summary of future research directions, which helps readers understand the broader context and next steps. This provides closure while acknowledging the ongoing nature of the work.",
           "importance": "75",
-          "evaluation": "85",
+          "grade": "85",
           "highlight": {
             "startOffset": 43465,
             "endOffset": 45420,
