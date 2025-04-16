@@ -19,6 +19,11 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  StarIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/solid";
 
 import SlateEditor from "./SlateEditor";
 
@@ -35,6 +40,7 @@ interface CommentsSidebarProps {
   expandedTag: string | null;
   onTagHover: (tag: string | null) => void;
   onTagClick: (tag: string | null) => void;
+  review: DocumentReview;
 }
 
 function CommentsSidebar({
@@ -42,6 +48,7 @@ function CommentsSidebar({
   expandedTag,
   onTagHover,
   onTagClick,
+  review,
 }: CommentsSidebarProps) {
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
@@ -78,7 +85,31 @@ function CommentsSidebar({
                   <div className="font-semibold text-gray-600 select-none">
                     {comment.title}
                   </div>
-                  <div className="ml-auto select-none">
+                  <div className="ml-auto flex items-center gap-2 select-none">
+                    <div className="flex items-center gap-1">
+                      {comment.importance && comment.importance > 90 && (
+                        <>
+                          <StarIcon className="h-4 w-4 text-gray-300" />
+                          <StarIcon className="h-4 w-4 text-gray-300" />
+                        </>
+                      )}
+                      {comment.importance &&
+                        comment.importance > 60 &&
+                        comment.importance <= 90 && (
+                          <StarIcon className="h-4 w-4 text-gray-300" />
+                        )}
+                      {evaluationAgents.find((a) => a.id === review.agentId)
+                        ?.gradeInstructions && (
+                        <>
+                          {comment.evaluation && comment.evaluation > 70 && (
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 opacity-40" />
+                          )}
+                          {comment.evaluation && comment.evaluation < 30 && (
+                            <XCircleIcon className="h-5 w-5 text-red-500 opacity-40" />
+                          )}
+                        </>
+                      )}
+                    </div>
                     {isExpanded ? (
                       <ChevronDownIcon className="h-4 w-4 text-gray-300" />
                     ) : (
@@ -87,11 +118,15 @@ function CommentsSidebar({
                   </div>
                 </div>
 
-                {/* Comment description */}
+                {/* Comment description and metadata */}
                 {comment.description && (
-                  <div className="text-md mt-1 ml-8 text-gray-600">
+                  <div className="text-md mt-1 ml-8">
                     <div className={isExpanded ? "" : "line-clamp-1"}>
-                      {comment.description}
+                      <div className="text-gray-600">{comment.description}</div>
+                      <div className="mt-1 text-xs text-gray-400">
+                        Importance: {comment.importance}/100 • Evaluation:{" "}
+                        {comment.evaluation}/100
+                      </div>
                     </div>
                   </div>
                 )}
@@ -351,6 +386,14 @@ export function DocumentWithEvaluations({
                   >
                     <h3 className="text-sm font-medium text-gray-700">
                       Analysis
+                      {activeReview.grade &&
+                        evaluationAgents.find(
+                          (a) => a.id === activeReview.agentId
+                        )?.gradeInstructions && (
+                          <span className="text-md ml-2 font-bold text-gray-900">
+                            Grade: {activeReview.grade}
+                          </span>
+                        )}
                     </h3>
                     {expandedTag === "analysis" ? (
                       <ChevronDownIcon className="h-4 w-4 text-gray-400" />
@@ -386,6 +429,7 @@ export function DocumentWithEvaluations({
                 expandedTag={expandedTag}
                 onTagHover={setActiveTag}
                 onTagClick={handleCommentClick}
+                review={activeReview}
               />
             </>
           )}

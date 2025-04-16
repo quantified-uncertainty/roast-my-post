@@ -254,184 +254,48 @@ ${agentInfo.commentInstructions}
   console.log(`📊 Target word count: ${targetWordCount}`);
   console.log(`📊 Target comments: ${targetComments}`);
 
-  // Generate comment template - updated for array format
-  const commentTemplate = Array.from(
-    { length: targetComments },
-    () => `
-    {
-      "title": "...",
-      "description": "...",
+  const commentStructure = agentInfo?.gradeInstructions
+    ? `{
+      "title": "string",
+      "description": "string",
       "highlight": {
-        "start": "exact text from document that starts the highlight",
-        "end": "exact text from document that ends the highlight"
+        "startOffset": "number",
+        "endOffset": "number"
       },
       "importance": "0-100",
       "evaluation": "0-100"
     }`
-  ).join(",");
+    : `{
+      "title": "string",
+      "description": "string",
+      "highlight": {
+        "startOffset": "number",
+        "endOffset": "number"
+      },
+      "importance": "0-100"
+    }`;
 
-  const finalPrompt = `
-${agentContext}
+  const prompt = `You are analyzing a document. Please provide:
+1. A summary of the document
+${agentInfo?.gradeInstructions ? "2. A letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F) for the document\n" : ""}
+3. A list of comments. Each comment should be in this format:
+${commentStructure}
 
-Given the following Markdown document, output a single evaluation in **valid JSON format**. Adhere strictly to the structure below:
+For each comment:
+- Title should be a short phrase summarizing the point
+- Description should explain the point in more detail
+- Highlight should specify the relevant text span in the document
+- Importance (0-100) indicates how crucial this point is to understanding the document${agentInfo?.gradeInstructions ? "\n- Evaluation (0-100) indicates how positive/negative this point is, where 0 is very negative and 100 is very positive" : ""}
 
+Format your response in JSON like this:
 {
-  "summary": "[~${targetWordCount} words, correctly escaped JSON string]",
-  "comments": [
-    ${commentTemplate} // Ensure exactly ${targetComments} comment objects here
-  ]${agentInfo?.gradeInstructions ? ',\n  "grade": "A-F letter grade based on your assessment"' : ""}
+  "summary": "string",${agentInfo?.gradeInstructions ? '\n  "grade": "letter grade",' : ""}
+  "comments": [${commentStructure}]
 }
 
-**CRITICAL JSON STRING ESCAPING RULES:**
-- ALL string content within the JSON MUST be properly escaped.
-- Escape double quotes: \" -> \\\"
-- Escape backslashes: \\ -> \\\\
-- Replace literal newlines within a single string/paragraph with \\n.
-- **Escape Markdown characters within strings:**
-  - Brackets: \`[Link Text](URL)\` becomes \`\\\\[Link Text\\\\]\\\\(URL\\\\)\`
-  - Parentheses: \`(like this)\` becomes \`\\\\(like this\\\\)\`
-  - Asterisks for bold/italics if used inside string: \`**bold**\` becomes \`**bold**\` (these are often fine, but escape if unsure)
-- **EXAMPLE of a description with a link:** "description": "This relates to\\\\nBostroms paper on \\\\[differential tech dev\\\\]\\\\(http://example.com\\\\).\"
-- FAILURE TO FOLLOW ESCAPING RULES WILL RESULT IN INVALID JSON.
+Here's the document to analyze:
 
-**SUMMARY INSTRUCTIONS:**
-- Target ~${targetWordCount} words.
-- Use markdown formatting (bold, italics, links) if appropriate, ensuring it is **correctly escaped** within the JSON string per the rules above.
-
-**COMMENT INSTRUCTIONS (Provide exactly ${targetComments}):**
-- Each comment MUST include a \`title\`, \`description\`, \`importance\`, and \`evaluation\`.
-- The \`importance\` field (0-100) indicates how critical or significant the comment. Comments with high importance are more critical for the reader. Aim for your comments to be uniformly distributed in importance - so 50% of your comments should be above 50, 25% should be above 75, and 10% should be above 90.
-- The \`evaluation\` field (0-100) indicates your assessment of the highlighted content:
-  - 0-20: Strongly negative - points out severe problems, flaws, or criticisms
-  - 21-40: Moderately negative - highlights concerns or areas needing improvement
-  - 41-60: Neutral - balanced analysis without strong positive/negative judgment
-  - 61-80: Moderately positive - notes strengths or well-executed elements
-  - 81-100: Strongly positive - highlights exceptional achievements or praise
-- IMPORTANT: Importance and evaluation are independent:
-  - A comment can be very important (high importance) but negative (low evaluation)
-  - A comment can be very positive (high evaluation) but not very important (low importance)
-  - Example: "The author's fundamental assumption about X is incorrect" might be very important (90) but negative (20)
-  - Example: "The formatting is beautiful" might be positive (80) but not very important (30)
-- If using Markdown links/citations in \`description\`, ensure they are **correctly escaped** per the rules above.
-- Each comment MUST include a \`highlight\` object containing **ONLY** these two fields:
-  - \`start\`: Provide the EXACT text from the document that starts the highlight, including any markdown formatting
-  - \`end\`: Provide the EXACT text from the document that ends the highlight, including any markdown formatting
-- **IMPORTANT: The start and end text MUST be copied exactly from the document, including:**
-  - All markdown formatting (bold, italics, links, etc.)
-  - All punctuation and whitespace
-  - All special characters
-  - The exact case of the text
-- **CRITICAL: All quotes in the highlight text MUST be escaped with backslashes. For example:**
-  - If the text contains "compute budget", it must be written as \\"compute budget\\"
-  - If the text contains "don't", it must be written as \\"don\\'t\\"
-- **DO NOT include IDs or number the comments.**
-- **HIGHLIGHT RULES:**
-  - Each highlight MUST be unique - no two comments should highlight the same text
-  - Each highlight MUST include the exact markdown formatting from the document
-  - Each highlight MUST be a continuous block of text (no skipping paragraphs)
-  - Each highlight MUST have different start and end text
-  - The start text MUST be the beginning of the highlighted section
-  - The end text MUST be the end of the highlighted section
-  - If a section has markdown formatting (like **bold** or headers), include that formatting in the highlight
-  - Ensure \`start\` and \`end\` are valid JSON strings with proper escaping.
-
-**EXAMPLES OF CORRECT HIGHLIGHT MATCHING:**
-
-1. For a simple paragraph:
-   Document text: "The quick brown fox jumps over the lazy dog."
-   Correct highlight: {
-     "start": "quick brown",
-     "end": "over the lazy"
-   }
-   INCORRECT highlight: {
-     "start": "quick brown",
-     "end": "quick brown"  // Don't use the same text for start and end
-   }
-
-2. For text with markdown:
-   Document text: "**Important**: The [link](url) is here."
-   Correct highlight: {
-     "start": "**Important**: The [link]",
-     "end": "is here."
-   }
-
-3. For text with special characters:
-   Document text: "Don't forget to escape \"quotes\"!"
-   Correct highlight: {
-     "start": "Don\\'t forget",
-     "end": "escape \\"quotes\\"!"
-   }
-
-4. For text with newlines:
-   Document text: "First line\nSecond line"
-   Correct highlight: {
-     "start": "First line\\n",
-     "end": "Second line"
-   }
-
-**COMMON PITFALLS TO AVOID:**
-
-1. Don't paraphrase or summarize - copy text exactly:
-   Document text: "The author met with several experts in the field."
-   INCORRECT: {
-     "start": "The author spoke with field experts",
-     "end": "in the field"
-   }
-   CORRECT: {
-     "start": "The author met with several experts",
-     "end": "in the field"
-   }
-
-2. Don't split text unnaturally - use complete phrases:
-   Document text: "The cost analysis showed a 50% reduction in expenses."
-   INCORRECT: {
-     "start": "The cost",
-     "end": "50% reduction"
-   }
-   CORRECT: {
-     "start": "The cost analysis showed",
-     "end": "a 50% reduction in expenses"
-   }
-
-3. Don't ignore markdown formatting:
-   Document text: "**Bold text** and _italic text_ are important."
-   INCORRECT: {
-     "start": "Bold text",
-     "end": "italic text"
-   }
-   CORRECT: {
-     "start": "**Bold text**",
-     "end": "_italic text_"
-   }
-
-4. Don't skip context - include relevant surrounding text:
-   Document text: "In the study, researchers found that 75% of participants improved."
-   INCORRECT: {
-     "start": "75%",
-     "end": "improved"
-   }
-   CORRECT: {
-     "start": "researchers found that 75%",
-     "end": "of participants improved"
-   }
-
-5. Don't mix quotes - use consistent formatting:
-   Document text: "The report stated: 'Results were significant'"
-   INCORRECT: {
-     "start": "The report stated: \"Results",
-     "end": "were significant\""
-   }
-   CORRECT: {
-     "start": "The report stated: 'Results",
-     "end": "were significant'"
-   }
-
-Here is the Markdown content to analyze:
-
-\`\`\`markdown
-${content}
-\`\`\`
-`;
+${content}`;
 
   const startTime = Date.now();
   let completion;
@@ -444,7 +308,7 @@ ${content}
       completion = await openai.chat.completions.create(
         {
           model: ANALYSIS_MODEL,
-          messages: [{ role: "user", content: finalPrompt }],
+          messages: [{ role: "user", content: prompt }],
           temperature: DEFAULT_TEMPERATURE,
         },
         {
@@ -595,7 +459,7 @@ ${content}
         },
         usage: null,
         llmResponse,
-        finalPrompt,
+        finalPrompt: prompt,
         agentContext,
       };
     } catch {
@@ -642,7 +506,7 @@ ${content}
     review,
     usage,
     llmResponse,
-    finalPrompt,
+    finalPrompt: prompt,
     agentContext,
   };
 }
