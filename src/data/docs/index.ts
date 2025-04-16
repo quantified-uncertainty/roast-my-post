@@ -5,6 +5,7 @@ import { transformDocumentsCollection } from '@/types/documents';
 import aNoteOfCautionAboutRecentAiRiskCoverageEaForum from './a-note-of-caution-about-recent-ai-risk-coverage-ea-forum.json';
 import integrityForConsequentialistsEaForum from './integrity-for-consequentialists-ea-forum.json';
 import policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum from './policy-advocacy-for-eradicating-screwworm-looks-remarkably-cost-effective-ea-forum.json';
+import quriRecommendedAiEpistemicsProjects from './quri-recommended-ai-epistemics-projects.json';
 import shortExample from './short-example.json';
 import slopworld2035TheDangersOfMediocreAiEaForumBots from './slopworld-2035-the-dangers-of-mediocre-ai-ea-forum-bots.json';
 import stronglyBoundedAgents from './strongly-bounded-agents.json';
@@ -17,6 +18,7 @@ export const documentsCollection = transformDocumentsCollection({
     aNoteOfCautionAboutRecentAiRiskCoverageEaForum,
     integrityForConsequentialistsEaForum,
     policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum,
+    quriRecommendedAiEpistemicsProjects,
     shortExample,
     slopworld2035TheDangersOfMediocreAiEaForumBots,
     stronglyBoundedAgents,

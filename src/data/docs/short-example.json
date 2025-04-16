@@ -4,11 +4,8 @@
   "title": "Short Example",
   "author": "Ozzie Gooen",
   "publishedDate": "2025-04-14",
-  "intendedAgents": [
-    "bias-detector",
-    "clarity-coach",
-    "research-scholar"
-  ],
+  "url": "https://example.com/short-example",
+  "intendedAgents": ["bias-detector", "clarity-coach", "research-scholar"],
   "content": "I feel the AI safety conversation lacks terminology for limited, safe, and useful AI systems that address takeover risks rather than misuse by humans. This concept goes beyond alignment to include capability restrictions, reliance on established technologies, and intelligence limitations for predictability.\n\n**On the Terminology**\n\nOne thing I feel is missing from AI safety conversations is strong and versatile terminology for limited, safe, and useful AI systems.",
   "reviews": [
     {

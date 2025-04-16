@@ -1,8 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
-
-import SlateEditor from "../../components/SlateEditor";
+import TestDocsClient from "../../components/TestDocsClient";
 
 export default function TestDocsPage() {
   const content = `## Strongly Bounded AI: Definitions and Strategic Implications
@@ -40,22 +36,5 @@ export default function TestDocsPage() {
     },
   ];
 
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="mb-4 text-2xl font-bold">
-        Test Document with Formatting Highlights
-      </h1>
-      <article className="prose prose-slate prose-lg max-w-none">
-        <SlateEditor
-          content={content}
-          highlights={highlights}
-          onHighlightClick={(tag) => setActiveTag(tag)}
-          onHighlightHover={(tag) => console.log("Hover:", tag)}
-          activeTag={activeTag}
-        />
-      </article>
-    </div>
-  );
+  return <TestDocsClient content={content} highlights={highlights} />;
 }
