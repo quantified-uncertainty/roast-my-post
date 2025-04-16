@@ -23,5 +23,5 @@ export interface DocumentReview {
   thinking?: string;
   summary?: string;
   comments: Comment[];
-  grade?: string;
+  grade?: number; // 0-100: 0=unacceptable, 50=mediocre, 100=exceptional
 }

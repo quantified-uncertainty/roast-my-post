@@ -15,7 +15,7 @@
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
     "test": "jest",
-    "import-article": "tsx src/scripts/import-article.ts https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp=sharing && npm run generate-docs",
+    "import-article": "tsx src/scripts/import-article.ts https://forum.effectivealtruism.org/posts/EykCuXDCFAT5oGyux/my-current-claims-and-cruxes-on-llm-forecasting-and && npm run generate-docs",
     "verify-highlights": "tsx src/scripts/verify-highlights.ts --dir ./src/data/docs"
   },
   "dependencies": {

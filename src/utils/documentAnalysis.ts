@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
+import json5 from "json5";
 import { parse as parseJsonc, ParseError } from "jsonc-parser";
 import path from "path";
 
@@ -11,7 +12,7 @@ interface LLMReview {
   thinking: string;
   summary: string;
   comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>;
-  grade?: string;
+  grade?: number;
 }
 
 export async function loadAgentInfo(agentId: string) {
@@ -78,14 +79,67 @@ function escapeJsonString(str: string): string {
     });
 }
 
+// Add this function before repairComplexJson
+function extractJsonContent(response: string): string {
+  // Try to find the first occurrence of a JSON object
+  const jsonStart = response.indexOf("{");
+  const jsonEnd = response.lastIndexOf("}");
+
+  if (jsonStart === -1 || jsonEnd === -1) {
+    return response; // Return original if no JSON found
+  }
+
+  // Extract the JSON content
+  let jsonContent = response.substring(jsonStart, jsonEnd + 1);
+
+  // Remove any markdown code block markers
+  jsonContent = jsonContent
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+
+  // Handle markdown-style underscores by replacing them with escaped underscores
+  jsonContent = jsonContent.replace(/_([^_]+)_/g, "\\_$1\\_");
+
+  // Handle markdown blockquotes by replacing > with escaped >
+  jsonContent = jsonContent.replace(/^>/gm, "\\>");
+
+  // Handle markdown lists by escaping the numbers and dots
+  jsonContent = jsonContent.replace(/^\d+\./gm, (match) =>
+    match.replace(".", "\\.")
+  );
+
+  // Handle markdown links by escaping brackets
+  jsonContent = jsonContent.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    "\\[$1\\]\\($2\\)"
+  );
+
+  // Handle unescaped quotes in the content
+  jsonContent = jsonContent.replace(/(?<!\\)"/g, '\\"');
+
+  // Handle any remaining special characters that might break JSON
+  jsonContent = jsonContent.replace(
+    /[\u0000-\u001F\u007F-\u009F]/g,
+    (match) => {
+      return "\\u" + ("0000" + match.charCodeAt(0).toString(16)).slice(-4);
+    }
+  );
+
+  return jsonContent;
+}
+
 // Improved function to repair complex JSON
 async function repairComplexJson(
   jsonString: string
 ): Promise<string | undefined> {
   try {
+    // First clean the response to extract only JSON content
+    const cleanedJson = extractJsonContent(jsonString);
+
     // First try with jsonc-parser
     const errors: ParseError[] = [];
-    const result = parseJsonc(jsonString, errors, {
+    const result = parseJsonc(cleanedJson, errors, {
       allowTrailingComma: true,
       disallowComments: false,
     });
@@ -96,118 +150,25 @@ async function repairComplexJson(
 
     console.warn("Initial jsonc-parser found issues:", errors);
 
-    // Try to identify and fix common patterns that might be breaking JSON
-    let repaired = jsonString;
+    try {
+      // Try to parse with json5
+      const parsed = json5.parse(cleanedJson);
+      return JSON.stringify(parsed);
+    } catch (error) {
+      console.error("json5 parsing failed:", error);
 
-    // 1. Fix unescaped quotes in quotedText fields
-    repaired = repaired.replace(
-      /"quotedText"\s*:\s*"((?:[^"\\]|\\.)*)"/g,
-      (match, content) => {
-        // Make sure all quotes within content are escaped
-        const fixedContent = content.replace(/([^\\])"/g, '$1\\"');
-        return `"quotedText": "${fixedContent}"`;
-      }
-    );
-
-    // 2. Fix missing colons in key-value pairs
-    repaired = repaired.replace(/"([^"]+)"\s+(["{[])/g, '"$1": $2');
-
-    // 3. Fix missing comma between objects in an array
-    repaired = repaired.replace(/}(\s*){/g, "},\n{");
-
-    // 4. Fix dangling commas at the end of objects/arrays
-    repaired = repaired.replace(/,(\s*[}\]])/g, "$1");
-
-    // Try parsing again with jsonc-parser
-    const newErrors: ParseError[] = [];
-    const newResult = parseJsonc(repaired, newErrors, {
-      allowTrailingComma: true,
-      disallowComments: false,
-    });
-
-    if (newErrors.length === 0) {
-      return JSON.stringify(newResult);
-    }
-
-    console.error("Manual repairs also failed:", newErrors);
-
-    // Try to locate specific issues in the error message
-    const error = newErrors[0];
-    if (error) {
-      const position = error.offset;
-      const start = Math.max(0, position - 30);
-      const end = Math.min(repaired.length, position + 30);
-      const problematicSection = repaired.substring(start, end);
-
-      console.error(
-        `Problem area around position ${position}: "${problematicSection}"`
-      );
-
-      // Try to fix specific issues based on what's in the problematic section
-      if (
-        problematicSection.includes('"quotedText"') &&
-        !problematicSection.includes('"quotedText":')
-      ) {
-        // Fix missing colon after quotedText
-        repaired =
-          repaired.substring(0, start) +
-          problematicSection.replace(/"quotedText"\s+/, '"quotedText": ') +
-          repaired.substring(end);
-      } else if (
-        problematicSection.includes('"startText"') &&
-        !problematicSection.includes('"startText":')
-      ) {
-        // Fix missing colon after startText
-        repaired =
-          repaired.substring(0, start) +
-          problematicSection.replace(/"startText"\s+/, '"startText": ') +
-          repaired.substring(end);
-      } else if (
-        problematicSection.includes('"prefix"') &&
-        !problematicSection.includes('"prefix":')
-      ) {
-        // Fix missing colon after prefix
-        repaired =
-          repaired.substring(0, start) +
-          problematicSection.replace(/"prefix"\s+/, '"prefix": ') +
-          repaired.substring(end);
-      } else {
-        // Generic fix - add a colon if we see a key pattern
-        repaired =
-          repaired.substring(0, start) +
-          problematicSection.replace(/"([^"]+)"\s+([^:])/g, '"$1": $2') +
-          repaired.substring(end);
-      }
-
-      // Try one final parse
-      const finalErrors: ParseError[] = [];
-      const finalResult = parseJsonc(repaired, finalErrors, {
-        allowTrailingComma: true,
-        disallowComments: false,
-      });
-
-      if (finalErrors.length === 0) {
-        return JSON.stringify(finalResult);
-      }
-
-      // Last resort - remove the problematic section and replace with dummy value
-      const safeJson =
-        repaired.substring(0, start) +
-        '"problematicText": "removed for parsing"' +
-        repaired.substring(end);
-
-      const safeErrors: ParseError[] = [];
-      const safeResult = parseJsonc(safeJson, safeErrors, {
-        allowTrailingComma: true,
-        disallowComments: false,
-      });
-
-      if (safeErrors.length === 0) {
-        return JSON.stringify(safeResult);
+      // Try jsonrepair as a last resort
+      try {
+        const jsonrepair = await import("jsonrepair");
+        const repaired = jsonrepair.jsonrepair(cleanedJson);
+        // Validate the repaired JSON
+        JSON.parse(repaired);
+        return repaired;
+      } catch (repairError) {
+        console.error("jsonrepair failed:", repairError);
+        return undefined;
       }
     }
-
-    return undefined;
   } catch (error) {
     console.error("All repair attempts failed:", error);
     return undefined;
@@ -224,10 +185,11 @@ export async function analyzeDocument(
   finalPrompt: string;
   agentContext: string;
 }> {
-  // Load agent information
-  const agentInfo = await loadAgentInfo(agentId);
-  const agentContext = agentInfo
-    ? `
+  try {
+    // Load agent information
+    const agentInfo = await loadAgentInfo(agentId);
+    const agentContext = agentInfo
+      ? `
 You are ${agentInfo.name} (${agentInfo.description}).
 
 Your primary instructions are:
@@ -248,300 +210,321 @@ ${agentInfo.summaryInstructions}
 Your comment instructions are:
 ${agentInfo.commentInstructions}
 `
-    : "";
+      : "";
 
-  const targetWordCount = calculateTargetWordCount(content);
-  const targetComments = calculateTargetComments(content);
-  console.log(`📊 Target word count: ${targetWordCount}`);
-  console.log(`📊 Target comments: ${targetComments}`);
+    const targetWordCount = calculateTargetWordCount(content);
+    const targetComments = calculateTargetComments(content);
+    console.log(`📊 Target word count: ${targetWordCount}`);
+    console.log(`📊 Target comments: ${targetComments}`);
 
-  const commentStructure = agentInfo?.gradeInstructions
-    ? `{
-      "title": "string",
-      "description": "string",
-      "highlight": {
-        "start": "exact text snippet from document where highlight begins",
-        "end": "exact text snippet from document where highlight ends"
-      },
-      "importance": "0-100",
-      "evaluation": "0-100"
-    }`
-    : `{
-      "title": "string",
-      "description": "string",
-      "highlight": {
-        "start": "exact text snippet from document where highlight begins",
-        "end": "exact text snippet from document where highlight ends"
-      },
-      "importance": "0-100"
-    }`;
+    const commentStructure = agentInfo?.gradeInstructions
+      ? `{
+        "title": "string",
+        "description": "string",
+        "highlight": {
+          "start": "exact text snippet from document where highlight begins",
+          "end": "exact text snippet from document where highlight ends"
+        },
+        "importance": "0-100",
+        "evaluation": "0-100"
+      }`
+      : `{
+        "title": "string",
+        "description": "string",
+        "highlight": {
+          "start": "exact text snippet from document where highlight begins",
+          "end": "exact text snippet from document where highlight ends"
+        },
+        "importance": "0-100"
+      }`;
 
-  const prompt = `You are analyzing a document. Please provide your analysis in the following order:
+    const prompt = `# AGENT CONTEXT
+## Your Role and Purpose
+You are ${agentInfo.name}, ${agentInfo.description}. Your specific role is to ${agentInfo.purpose}.
+
+## Your Core Instructions
+${agentInfo.genericInstructions}
+
+## Your Unique Capabilities
+${agentInfo.capabilities.map((cap: string) => `- ${cap}`).join("\n")}
+
+# ANALYSIS INSTRUCTIONS
+Your analysis should follow this structure:
 
 1. Thinking (3x the length of your summary)
-   - Take time to deeply consider the document and your role
-   - Reflect on your unique perspective and approach
-   - Consider what aspects of the document stand out to you
-   - Think about how you want to engage with the content
-   - This section will be mostly hidden but helps you form better insights
+   - Consider the document through your specific lens
+   - Reflect on what aspects are most relevant to your expertise
 
 2. Comments. Each comment should be in this format:
 ${commentStructure}
 
    For each comment:
-   - Title should be a short phrase summarizing the point
-   - Description should explain the point in more detail
-   - Highlight should specify the exact text snippets from the document that mark the beginning and end of the relevant section
-   - Importance (0-100) indicates how interesting or valuable you find this point. Be critical and conservative with high scores:
-     * 90-100: Only for points that are exceptionally insightful, novel, or have major implications
-     * 80-89: For points that are very interesting and could significantly impact thinking in the field
-     * 70-79: For points that are interesting and provide valuable insights
-     * 60-69: For points that are somewhat interesting or provide useful context
-     * 50-59: For points that have some merit but are not particularly notable
-     * 40-49: For points that are mostly obvious or unremarkable
-     * 30-39: For points that add little value
-     * 0-29: For points that are not interesting or valuable
-   ${agentInfo?.gradeInstructions ? "\n   - Evaluation (0-100) indicates how positive/negative this point is, where 0 is very negative and 100 is very positive" : ""}
+   - Title should reflect your expertise
+   - Description should explain through your lens
+   - Highlight should specify exact text snippets
+   - Importance (0-100) indicates significance from your perspective:
+     * 90-100: Exceptionally relevant to your expertise
+     * 80-89: Very significant
+     * 70-79: Interesting and relevant
+     * 60-69: Somewhat relevant
+     * 50-59: Some relevance
+     * 40-49: Mostly tangential
+     * 30-39: Little value
+     * 0-29: Not relevant
+    ${agentInfo?.gradeInstructions ? "\n   - **Evaluation (0-100)** - The strength of the quoted section:\n     * **0-30**: The section is lacking or problematic\n     * **31-49**: The section has significant issues\n     * **50**: The section is neutral/balanced\n     * **51-70**: The section has some positive aspects\n     * **71-100**: The section is very strong" : ""}
 
 3. Summary
-   - A concise overview of your specific perspective and analysis
-   - Focus on your unique insights and key points from your comments
-   - Get straight to your personal take - avoid starting with "This document..."
-   - Should reflect your deeper thinking from the previous steps.
-   - Add tables where you have repetitive or structured information.
+   - Concise overview of your specialized analysis
+   - Focus on your unique insights
+   - Get straight to your expert perspective
 
-4. Grade${agentInfo?.gradeInstructions ? " (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F)" : ""}
-   - Based on your thinking and comments
-   - Reflects overall quality and value of the document
-
-For highlights, provide the exact text snippets from the document that mark the beginning and end of the section you want to highlight. Do not try to calculate offsets or positions.
-
-Your response must be valid JSON with properly escaped strings (use \\" for quotes, \\n for newlines), no trailing commas, and properly closed quotes.
-
-Be conservative with importance scores - most comments should be below 51, with only truly exceptional insights scoring above 80. Use 0-29 for basic observations or points you're unsure about.
+4. Grade (0-100)
+   - Based on your specialized evaluation criteria
+   - 90-100: Exceptional
+   - 80-89: Very strong
+   - 70-79: Good
+   - 60-69: Decent
+   - 50-59: Mediocre
+   - 40-49: Poor
+   - 30-39: Very poor
+   - 0-29: Unacceptable
 
 Format your response in JSON like this:
 {
-  "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes. Feel free to use markdown formatting for better readability.",
+  "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes.",
   "comments": [${commentStructure}],
-  "summary": "Your specific perspective and key insights"${agentInfo?.gradeInstructions ? ',\n  "grade": "letter grade"' : ""}
+  "summary": "Your specific perspective and key insights"${agentInfo?.gradeInstructions ? ',\n  "grade": "number from 0-100"' : ""}
 }
 
 Here's the document to analyze:
 
 ${content}`;
 
-  const startTime = Date.now();
-  let completion;
-  let retries = 3;
-  let lastError;
+    const startTime = Date.now();
+    let completion;
+    let retries = 3;
+    let lastError;
 
-  while (retries > 0) {
-    try {
-      console.log(`📝 Attempting API call (${4 - retries}/3)...`);
-      completion = await openai.chat.completions.create(
-        {
-          model: ANALYSIS_MODEL,
-          messages: [{ role: "user", content: prompt }],
-          temperature: DEFAULT_TEMPERATURE,
-        },
-        {
-          timeout: 120000, // 2 minute timeout
+    while (retries > 0) {
+      try {
+        console.log(`📝 Attempting API call (${4 - retries}/3)...`);
+        completion = await openai.chat.completions.create(
+          {
+            model: ANALYSIS_MODEL,
+            messages: [{ role: "user", content: prompt }],
+            temperature: DEFAULT_TEMPERATURE,
+          },
+          {
+            timeout: 120000, // 2 minute timeout
+          }
+        );
+        console.log("Raw API Response:", JSON.stringify(completion, null, 2));
+        break; // Success, exit the retry loop
+      } catch (error: any) {
+        lastError = error;
+        console.error(`❌ OpenAI API Error (${retries} retries left):`);
+        console.error("Error name:", error.name);
+        console.error("Error message:", error.message);
+        console.error("Error status:", error.status);
+        if (error.response) {
+          console.error("Response data:", error.response.data);
+          console.error("Response status:", error.response.status);
         }
-      );
-      console.log("Raw API Response:", JSON.stringify(completion, null, 2));
-      break; // Success, exit the retry loop
-    } catch (error: any) {
-      lastError = error;
-      console.error(`❌ OpenAI API Error (${retries} retries left):`);
-      console.error("Error name:", error.name);
-      console.error("Error message:", error.message);
-      console.error("Error status:", error.status);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-      retries--;
-      if (retries > 0) {
-        console.log("⏳ Waiting 5 seconds before retrying...");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        retries--;
+        if (retries > 0) {
+          console.log("⏳ Waiting 5 seconds before retrying...");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        }
       }
     }
-  }
 
-  if (!completion) {
-    throw new Error(
-      `OpenAI API call failed after 3 retries: ${lastError?.message || "Unknown error"}`
+    if (!completion) {
+      throw new Error(
+        `OpenAI API call failed after 3 retries: ${lastError?.message || "Unknown error"}`
+      );
+    }
+
+    const runtimeMs = Date.now() - startTime;
+
+    if (!completion.choices || completion.choices.length === 0) {
+      throw new Error("LLM response contained no choices");
+    }
+
+    const firstChoice = completion.choices[0];
+    if (!firstChoice.message) {
+      throw new Error("LLM response choice contained no message");
+    }
+
+    const llmResponse = firstChoice.message.content;
+    if (!llmResponse) {
+      throw new Error("LLM response message contained no content");
+    }
+
+    // Log usage information
+    const usage = completion.usage;
+    if (usage) {
+      console.log("📊 Usage:");
+      console.log(`- Input tokens: ${usage.prompt_tokens}`);
+      console.log(`- Output tokens: ${usage.completion_tokens}`);
+      console.log(`- Total tokens: ${usage.total_tokens}`);
+      console.log(`- Runtime: ${runtimeMs}ms`);
+    }
+
+    console.log("📝 LLM Response:");
+    console.log(llmResponse);
+
+    let cleanedResponse = llmResponse
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
+
+    let parsedLLMReview: LLMReview | undefined;
+    let parseAttempts = 3;
+    let lastParseError;
+
+    while (parseAttempts > 0) {
+      try {
+        const errors: ParseError[] = [];
+        const jsoncResult = parseJsonc(cleanedResponse, errors, {
+          allowTrailingComma: true,
+        });
+
+        if (errors.length > 0) {
+          console.warn("JSONC parsing found issues:", errors);
+
+          // Log the specific error positions for debugging
+          errors.forEach((error) => {
+            const errorPos = error.offset;
+            const start = Math.max(0, errorPos - 20);
+            const end = Math.min(cleanedResponse.length, errorPos + 20);
+            console.warn(
+              `Error at position ${errorPos}: "${cleanedResponse.substring(
+                start,
+                end
+              )}"`
+            );
+          });
+
+          // Try to repair the JSON with improved repair function
+          const repairedJson = await repairComplexJson(cleanedResponse);
+          if (!repairedJson) {
+            throw new Error("Failed to repair JSON");
+          }
+          console.log("Repaired JSON length:", repairedJson.length);
+
+          // For extra debugging, log a sample of the repaired JSON
+          console.log(
+            "Repaired JSON sample:",
+            repairedJson.substring(0, 100) + "..."
+          );
+
+          parsedLLMReview = JSON.parse(repairedJson);
+        } else {
+          parsedLLMReview = jsoncResult as LLMReview;
+        }
+
+        // Basic validation of top-level structure
+        if (!parsedLLMReview || typeof parsedLLMReview !== "object")
+          throw new Error("Parsed response is not an object");
+        if (!parsedLLMReview.summary) throw new Error("Missing summary");
+        if (!Array.isArray(parsedLLMReview.comments))
+          throw new Error("Comments must be an array");
+
+        // If we get here, parsing was successful
+        break;
+      } catch (err) {
+        lastParseError = err;
+        parseAttempts--;
+
+        if (parseAttempts > 0) {
+          console.warn(
+            `❌ JSON parsing failed (${parseAttempts} attempts remaining). Retrying...`
+          );
+          // Wait a bit before retrying
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          // Try to clean the response further
+          cleanedResponse = cleanedResponse
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control characters
+            .replace(/\r\n/g, "\n") // Normalize line endings
+            .replace(/\t/g, "  ") // Replace tabs with spaces
+            .trim();
+        }
+      }
+    }
+
+    if (!parsedLLMReview) {
+      console.error("❌ All JSON parsing attempts failed:", lastParseError);
+      console.error(
+        "Original cleaned response length:",
+        cleanedResponse.length
+      );
+
+      // More detailed error information
+      if (lastParseError instanceof SyntaxError) {
+        const match = lastParseError.message.match(/position (\d+)/);
+        if (match) {
+          const position = parseInt(match[1]);
+          const start = Math.max(0, position - 30);
+          const end = Math.min(cleanedResponse.length, position + 30);
+          console.error(
+            `JSON syntax error at position ${position}: "${cleanedResponse.substring(
+              start,
+              end
+            )}"`
+          );
+        }
+      }
+
+      // Instead of returning an error review, throw an error to prevent saving
+      throw new Error("Failed to parse LLM response after multiple attempts");
+    }
+
+    // Process the comments to calculate highlight offsets
+    const processedComments = await processRawComments(
+      content,
+      parsedLLMReview.comments
     );
-  }
 
-  const runtimeMs = Date.now() - startTime;
+    // Construct the final DocumentReview object
+    const review: DocumentReview = {
+      agentId,
+      costInCents: Math.round(usage?.total_tokens || 0),
+      createdAt: new Date(),
+      runDetails: usage
+        ? JSON.stringify({
+            model: ANALYSIS_MODEL,
+            promptTokens: usage.prompt_tokens,
+            completionTokens: usage.completion_tokens,
+            totalTokens: usage.total_tokens,
+            temperature: DEFAULT_TEMPERATURE,
+            runtimeMs,
+          })
+        : undefined,
+      thinking: parsedLLMReview.thinking,
+      summary: parsedLLMReview.summary,
+      comments: processedComments,
+      grade: parsedLLMReview.grade ? Number(parsedLLMReview.grade) : undefined,
+    };
 
-  if (!completion.choices || completion.choices.length === 0) {
-    throw new Error("LLM response contained no choices");
-  }
-
-  const firstChoice = completion.choices[0];
-  if (!firstChoice.message) {
-    throw new Error("LLM response choice contained no message");
-  }
-
-  const llmResponse = firstChoice.message.content;
-  if (!llmResponse) {
-    throw new Error("LLM response message contained no content");
-  }
-
-  // Log usage information
-  const usage = completion.usage;
-  if (usage) {
-    console.log("📊 Usage:");
-    console.log(`- Input tokens: ${usage.prompt_tokens}`);
-    console.log(`- Output tokens: ${usage.completion_tokens}`);
-    console.log(`- Total tokens: ${usage.total_tokens}`);
-    console.log(`- Runtime: ${runtimeMs}ms`);
-  }
-
-  console.log("📝 LLM Response:");
-  console.log(llmResponse);
-
-  const cleanedResponse = llmResponse
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
-
-  let parsedLLMReview: LLMReview;
-  try {
-    const errors: ParseError[] = [];
-    const jsoncResult = parseJsonc(cleanedResponse, errors, {
-      allowTrailingComma: true,
-    });
-
-    if (errors.length > 0) {
-      console.warn("JSONC parsing found issues:", errors);
-
-      // Log the specific error positions for debugging
-      errors.forEach((error) => {
-        const errorPos = error.offset;
-        const start = Math.max(0, errorPos - 20);
-        const end = Math.min(cleanedResponse.length, errorPos + 20);
-        console.warn(
-          `Error at position ${errorPos}: "${cleanedResponse.substring(
-            start,
-            end
-          )}"`
-        );
+    // --- Sort comments by startOffset before saving ---
+    if (review.comments) {
+      review.comments.sort((a, b) => {
+        return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
       });
-
-      // Try to repair the JSON with improved repair function
-      const repairedJson = await repairComplexJson(cleanedResponse);
-      if (!repairedJson) {
-        throw new Error("Failed to repair JSON");
-      }
-      console.log("Repaired JSON length:", repairedJson.length);
-
-      // For extra debugging, log a sample of the repaired JSON
-      console.log(
-        "Repaired JSON sample:",
-        repairedJson.substring(0, 100) + "..."
-      );
-
-      parsedLLMReview = JSON.parse(repairedJson);
-    } else {
-      parsedLLMReview = jsoncResult as LLMReview;
-    }
-    // Basic validation of top-level structure
-    if (!parsedLLMReview || typeof parsedLLMReview !== "object")
-      throw new Error("Parsed response is not an object");
-    if (!parsedLLMReview.summary) throw new Error("Missing summary");
-    if (!Array.isArray(parsedLLMReview.comments))
-      throw new Error("Comments must be an array");
-  } catch (err) {
-    console.error("❌ Invalid review structure during parsing/repair:", err);
-    console.error("Original cleaned response length:", cleanedResponse.length);
-
-    // More detailed error information
-    if (err instanceof SyntaxError) {
-      const match = err.message.match(/position (\d+)/);
-      if (match) {
-        const position = parseInt(match[1]);
-        const start = Math.max(0, position - 30);
-        const end = Math.min(cleanedResponse.length, position + 30);
-        console.error(
-          `JSON syntax error at position ${position}: "${cleanedResponse.substring(
-            start,
-            end
-          )}"`
-        );
-      }
+      console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
     }
 
-    // Try one more desperate repair attempt before giving up
-    try {
-      const lastResortRepair = `{"summary":"Error parsing response","comments":[]}`;
-      console.error("Using default empty structure as fallback");
-      parsedLLMReview = JSON.parse(lastResortRepair);
-
-      // Return a review with an error message
-      return {
-        review: {
-          agentId,
-          costInCents: 0,
-          createdAt: new Date(),
-          summary:
-            "Error: Unable to parse the response from the AI. Please try again.",
-          comments: [],
-        },
-        usage: null,
-        llmResponse,
-        finalPrompt: prompt,
-        agentContext,
-      };
-    } catch {
-      // If even this fails, re-throw the original error
-      throw err;
-    }
+    return {
+      review,
+      usage,
+      llmResponse,
+      finalPrompt: prompt,
+      agentContext,
+    };
+  } catch (error) {
+    console.error("❌ Error in analyzeDocument:", error);
+    // Re-throw the error to prevent saving
+    throw error;
   }
-
-  // Process the comments to calculate highlight offsets
-  const processedComments = await processRawComments(
-    content,
-    parsedLLMReview.comments
-  );
-
-  // Construct the final DocumentReview object
-  const review: DocumentReview = {
-    agentId,
-    costInCents: Math.round(usage?.total_tokens || 0),
-    createdAt: new Date(),
-    runDetails: usage
-      ? JSON.stringify({
-          model: ANALYSIS_MODEL,
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-          temperature: DEFAULT_TEMPERATURE,
-          runtimeMs,
-        })
-      : undefined,
-    thinking: parsedLLMReview.thinking,
-    summary: parsedLLMReview.summary,
-    comments: processedComments, // Use the processed comments
-    grade: parsedLLMReview.grade,
-  };
-
-  // --- Sort comments by startOffset before saving ---
-  if (review.comments) {
-    review.comments.sort((a, b) => {
-      return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
-    });
-    console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
-  }
-
-  return {
-    review,
-    usage,
-    llmResponse,
-    finalPrompt: prompt,
-    agentContext,
-  };
 }

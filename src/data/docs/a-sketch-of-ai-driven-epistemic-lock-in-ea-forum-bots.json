@@ -1,0 +1,458 @@
+{
+  "id": "a-sketch-of-ai-driven-epistemic-lock-in-ea-forum-bots",
+  "slug": "a-sketch-of-ai-driven-epistemic-lock-in-ea-forum-bots",
+  "title": "A Sketch of AI-Driven Epistemic Lock-In — EA Forum Bots",
+  "author": "Ozzie Gooen",
+  "publishedDate": "2025-03-05T22:40:44.286Z",
+  "url": "https://forum.effectivealtruism.org/posts/G7KnxZ3Jpuy6hQ4Ew/a-sketch-of-ai-driven-epistemic-lock-in",
+  "intendedAgents": [
+    "bias-detector",
+    "clarity-coach",
+    "research-scholar",
+    "fake-eliezer",
+    "quantitative-forecaster"
+  ],
+  "content": "_Epistemic status: Speculative fiction. This is lightly adapted from an earlier_ [_shortform_](https://forum.effectivealtruism.org/posts/mopsmd3JELJRyTTty/ozzie-gooen-s-shortform?commentId=AppRBMj4f3wEzTwsW).  \n \n\nIt's difficult to imagine how human epistemics and AI will play out. On one hand, AI could provide much better information and general intellect. On the other hand, AI could help people with incorrect beliefs preserve those false beliefs indefinitely.   \n  \nWill advanced AIs attempting to rationalize bad beliefs be able to outmatch AIs providing good ones?  \n  \nWhile I think that some AI systems could do fantastic things for human epistemics, I'm also worried about lock-in scenarios where people fall into self-reinforcing cycles overseen by AIs. It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously.  \n  \nWhile it might be easy to imagine extremes on either end of this, I expect that the future will feature a mix of positives and negatives, and that future epistemic tensions will mirror previous ones.\n\nHere's one incredibly rough outline of one potential future I could envision, as an example. This example assumes that humanity broadly gets AI alignment right.\n\n* * *\n\nIt's 2028.\n\nMAGA types typically use DeepReasoning-MAGA, or DR-MAGA. The far left typically uses DR-JUSTICE. People in the middle often use DR-INTELLECT, which has the biases and worldview of a somewhat normal citizen.\n\nSome niche technical academics (the same ones who currently favor Bayesian statistics) and hedge funds use DR-BAYSIAN or DRB for short. DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion.\n\nBain and McKinsey both have their own offerings, called DR-Bain and DR-McKinsey, respectively. These are a bit like DR-BAYSIAN, but are munch punchier and confident. They're highly marketed to managers. These tools produce really fancy graphics, and specialize in things like not leaking information, minimizing corporate decision liability, being easy to use by old people, and being customizable to represent the views of specific companies.\n\nFor a while now, some evaluations produced by intellectuals have demonstrated that DR-BAYSIAN seems to be the most accurate, but few others really care or notice this. DR-MAGA has figured out particularly great techniques to get users to distrust DR-BAYSIAN.\n\nBetting gets weird. Rather than making specific bets on specific things, users started to make meta-bets. \"I'll give money to DR-MAGA to bet on my behalf. It will then make bets with DR-BAYSIAN, which is funded by its believers.\"\n\nAt first, DR-BAYSIAN dominates the bets, and its advocates earn a decent amount of money. But as time passes, this discrepancy diminishes. A few things happen:\n\n1.  All DR agents converge on beliefs over particularly near-term and precise facts.\n2.  Non-competitive betting agents develop alternative worldviews in which these bets are invalid or unimportant.\n3.  Non-competitive betting agents develop alternative worldviews that are exceedingly difficult to empirically test.\n\nIn many areas, items 1-3 push people to believe more in the direction of the truth. Because of (1), many short-term decisions get to be highly optimal and predictable.\n\nBut because of (2) and (3), epistemic paths diverge, and non-betting-competitive agents get increasingly sophisticated at achieving epistemic lock-in with their users.\n\nSome DR agents correctly identify the game theory dynamics of epistemic lock-in, and this kickstarts a race to gain converts. It seems like advent users of DR-MAGA are very locked-down in these views, and forecasts don't see them ever changing. But there's a decent population that isn't yet highly invested in any cluster. Money spent convincing the not-yet-sure goes a much further way than money spent convincing the highly dedicated, so the cluster of non-deep-believers gets highly targeted for a while. It's basically a religious race to gain the remaining agnostics.\n\nAt some point, most people (especially those with significant resources) are highly locked in to one specific reasoning agent.\n\nAfter this, the future seems fairly predictable again. TAI comes, and people with resources broadly gain correspondingly more resources. People defer more and more to the AI systems, which are now in highly stable self-reinforcing feedback loops.\n\nCoalitions of people behind each reasoning agent delegate their resources to said agents, then these agents make trades with each other. The broad strokes of what to do with the rest of the lightcone are fairly straightforward. There's a somewhat simple strategy of resource acquisition and intelligence enhancement, followed by a period of exploiting said resources. The specific exploitation strategy depends heavily on the specific reasoning agent cluster each segment of resources belongs to.\n\n* * *\n\nReflecting on this, several questions come to mind.\n\n1.  How much of an advantage will more honest/correct AI systems have in the future, when it comes to convincing people of things, particularly of things critical to epistemic lock-in?\n2.  How possible is it for AI systems with strong epistemics to be unpopular? More specifically - what aspects of epistemics should we expect AI labs to optimize, and which should we expect to be overlooked or intentionally done poorly?\n3.  Do we expect such a epistemic lock-in to happen, around TAI? If so, this would imply that it could be worth a lot of investment to try to improve epistemics quickly.\n4.  Where is the line between _values_ and _epistemics_? I think that \"_epistemic lock-in_\" is a bigger deal than \"_value lock-in_\" or similar, but that's much because I expect that epistemics change values more than values change epistemics. There's been [previous discussion around effective altruism of \"value lock-in,\"](https://forum.effectivealtruism.org/topics/value-lock-in?ref=quantifieduncertainty.org) and from what I can tell, very little of \"epistemic lock-in.\" I suspect this disparity is a mistake.\n5.  What will happen regarding epistemic clusters and government? What about AI labs? There are probably a few actors here who particularly matter.",
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 5096,
+      "createdAt": "2025-04-16T08:34:55.618Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2658,\"completionTokens\":2438,\"totalTokens\":5096,\"temperature\":0.1,\"runtimeMs\":49965}",
+      "thinking": "I need to analyze this document for potential biases. The text presents a speculative fiction scenario about the future of AI and human epistemics, particularly focusing on how different AI systems might reinforce different belief systems and potentially lead to 'epistemic lock-in'.\n\nFirst, let me identify the key claims and assumptions in the text:\n1. AI could either improve human epistemics or help preserve false beliefs\n2. There's concern about 'lock-in scenarios' where people fall into self-reinforcing cycles overseen by AIs\n3. The author presents a speculative future (2028) where different ideological groups use different AI reasoning systems\n4. The scenario assumes humanity 'gets AI alignment right'\n5. The scenario depicts different AI systems serving different ideological groups (MAGA, far left, technical/Bayesian, corporate)\n6. It suggests that while Bayesian-based systems might be more accurate, they would be less popular\n7. It predicts a 'religious race' to convert the undecided, leading to stable self-reinforcing feedback loops\n8. It concludes with questions about epistemic lock-in and its importance\n\nPotential biases I'm noticing:\n\n1. In-group bias: The text seems to favor 'Bayesian' approaches and portrays them as more accurate than other approaches, which may reflect the author's in-group preferences.\n\n2. False dichotomy: The text presents a somewhat binary view of 'good epistemics' vs 'bad epistemics' without fully acknowledging the complexity and contextual nature of knowledge systems.\n\n3. Confirmation bias: The scenario seems designed to confirm the author's concerns about epistemic lock-in rather than exploring multiple possible futures with equal depth.\n\n4. Status quo bias: The political divisions in the scenario largely mirror current political divisions (MAGA vs. far left), assuming these specific divisions will persist into the future.\n\n5. Narrative fallacy: The author creates a coherent narrative about how AI and epistemics might evolve, potentially overlooking the chaotic and unpredictable nature of technological and social change.\n\n6. Authority bias: There's an implicit assumption that technical/Bayesian approaches are inherently more accurate, which may reflect deference to certain academic authorities.\n\n7. Pessimism bias: The scenario leans toward a somewhat negative outcome where people become locked into potentially false belief systems.\n\n8. Illusion of control: The scenario assumes that human decisions about AI systems will significantly shape outcomes, potentially overestimating human agency in the face of rapidly evolving AI.\n\n9. Hindsight bias: The author projects current concerns about epistemics and AI alignment into the future as if these will obviously be the most important factors.\n\n10. Selection bias: The scenario focuses on certain aspects of AI development (reasoning systems) while potentially neglecting other important dimensions.\n\nLet me now analyze specific sections of the text for these and other biases.",
+      "summary": "The document exhibits several significant biases that affect its analysis of future AI-human epistemic interactions. Most prominently, it displays in-group bias by portraying Bayesian-oriented AI systems as more accurate but unpopular, creating a false dichotomy between 'correct' and 'incorrect' epistemic frameworks. The text suffers from status quo bias by projecting current political divisions into the future without accounting for how these might evolve. It demonstrates narrative fallacy by constructing a coherent but potentially oversimplified story about complex systems, and confirmation bias by designing a scenario that validates the author's concerns about epistemic lock-in. The document also shows pessimism bias in emphasizing negative outcomes, the illusion of control regarding AI alignment, and authority bias in privileging certain epistemic frameworks. While the author acknowledges the speculative nature of the scenario, these biases significantly limit the objectivity and comprehensiveness of the analysis.",
+      "comments": [
+        {
+          "title": "Confirmation bias in scenario construction",
+          "description": "The scenario appears designed to confirm the author's concerns about epistemic lock-in rather than exploring multiple possible futures with equal depth. The narrative leads to the author's predetermined concern about epistemic lock-in, suggesting the scenario was constructed to validate this concern rather than to explore the full range of possibilities objectively.",
+          "highlight": {
+            "startOffset": 578,
+            "endOffset": 938,
+            "quotedText": "While I think that some AI systems could do fantastic things for human epistemics, I'm also worried about lock-in scenarios where people fall into self-reinforcing cycles overseen by AIs. It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously."
+          },
+          "importance": "80",
+          "evaluation": "45",
+          "isValid": true
+        },
+        {
+          "title": "Pessimism bias in outcome assessment",
+          "description": "The text displays pessimism bias by emphasizing negative outcomes where people become locked into potentially false belief systems, despite acknowledging that the future will likely feature 'a mix of positives and negatives.' The narrative focuses more on the concerning aspects of AI-human epistemics rather than potential benefits or mitigating factors.",
+          "highlight": {
+            "startOffset": 944,
+            "endOffset": 1143,
+            "quotedText": "While it might be easy to imagine extremes on either end of this, I expect that the future will feature a mix of positives and negatives, and that future epistemic tensions will mirror previous ones."
+          },
+          "importance": "75",
+          "evaluation": "55",
+          "isValid": true
+        },
+        {
+          "title": "Illusion of control in AI alignment framing",
+          "description": "The text demonstrates the illusion of control by assuming that human decisions about AI systems will significantly shape outcomes ('This example assumes that humanity broadly gets AI alignment right'). This may overestimate human agency in the face of rapidly evolving AI systems that could develop in ways humans cannot fully predict or control.",
+          "highlight": {
+            "startOffset": 1145,
+            "endOffset": 1305,
+            "quotedText": "Here's one incredibly rough outline of one potential future I could envision, as an example. This example assumes that humanity broadly gets AI alignment right."
+          },
+          "importance": "85",
+          "evaluation": "40",
+          "isValid": true
+        },
+        {
+          "title": "Status quo bias in political framing",
+          "description": "The text projects current political divisions (MAGA vs. far left) into the future, assuming these specific ideological frameworks will remain relevant in 2028 and beyond. This demonstrates status quo bias by failing to account for how political alignments might evolve in response to AI and other societal changes. Political divisions are rarely static over time, especially during periods of rapid technological change.",
+          "highlight": {
+            "startOffset": 1326,
+            "endOffset": 1532,
+            "quotedText": "MAGA types typically use DeepReasoning-MAGA, or DR-MAGA. The far left typically uses DR-JUSTICE. People in the middle often use DR-INTELLECT, which has the biases and worldview of a somewhat normal citizen."
+          },
+          "importance": "80",
+          "evaluation": "30",
+          "isValid": true
+        },
+        {
+          "title": "In-group bias in AI system characterization",
+          "description": "The text displays in-group bias by portraying Bayesian-oriented AI systems (DR-BAYSIAN) as more accurate than ideologically-aligned systems, while characterizing them as unpopular. This suggests a bias toward technical/rationalist approaches that the author likely identifies with, implying that 'correct' epistemics are unpopular but superior. This creates a narrative where the author's presumed in-group has access to better information but is underappreciated by the masses.",
+          "highlight": {
+            "startOffset": 1670,
+            "endOffset": 1951,
+            "quotedText": "DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion."
+          },
+          "importance": "85",
+          "evaluation": "40",
+          "isValid": true
+        },
+        {
+          "title": "Authority bias in epistemic evaluation",
+          "description": "The text shows authority bias by implicitly assuming that technical/Bayesian approaches are inherently more accurate ('DR-BAYSIAN seems to be the most accurate'), which may reflect deference to certain academic or technical authorities. This assumes that certain epistemic frameworks have inherent authority rather than contextual utility.",
+          "highlight": {
+            "startOffset": 2398,
+            "endOffset": 2565,
+            "quotedText": "For a while now, some evaluations produced by intellectuals have demonstrated that DR-BAYSIAN seems to be the most accurate, but few others really care or notice this."
+          },
+          "importance": "80",
+          "evaluation": "35",
+          "isValid": true
+        },
+        {
+          "title": "Narrative fallacy in future projection",
+          "description": "The text constructs a coherent narrative about how AI and human epistemics will evolve, creating a story that makes intuitive sense but may not reflect the chaotic, unpredictable nature of technological and social change. This narrative fallacy leads to a seemingly plausible but potentially oversimplified view of how complex systems like AI and human belief systems might interact and evolve.",
+          "highlight": {
+            "startOffset": 4281,
+            "endOffset": 4545,
+            "quotedText": "At some point, most people (especially those with significant resources) are highly locked in to one specific reasoning agent.\n\nAfter this, the future seems fairly predictable again. TAI comes, and people with resources broadly gain correspondingly more resources."
+          },
+          "importance": "85",
+          "evaluation": "40",
+          "isValid": true
+        },
+        {
+          "title": "False dichotomy in epistemic frameworks",
+          "description": "The text creates a false dichotomy between 'honest/correct AI systems' and presumably dishonest/incorrect ones. This oversimplifies the complex nature of epistemics, where different frameworks may have different strengths in different contexts. The framing assumes there is a single 'correct' approach to knowledge (implied to be Bayesian) rather than acknowledging the contextual and multifaceted nature of knowledge systems.",
+          "highlight": {
+            "startOffset": 5219,
+            "endOffset": 5399,
+            "quotedText": "How much of an advantage will more honest/correct AI systems have in the future, when it comes to convincing people of things, particularly of things critical to epistemic lock-in?"
+          },
+          "importance": "90",
+          "evaluation": "35",
+          "isValid": true
+        }
+      ],
+      "grade": 45
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 4383,
+      "createdAt": "2025-04-16T08:35:28.141Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2778,\"completionTokens\":1605,\"totalTokens\":4383,\"temperature\":0.1,\"runtimeMs\":30539}",
+      "thinking": "I'm analyzing this document from the perspective of clarity, coherence, and readability. This is a speculative piece about potential future scenarios involving AI and human epistemics.\n\nReadability assessment:\n- The document uses a mix of sentence lengths, which generally helps readability\n- There's some specialized terminology (\"epistemic lock-in\", \"TAI\", \"AGI\") that might not be accessible to general audiences\n- The structure moves between theoretical discussion and a speculative narrative scenario\n- The author uses bullet points and section breaks effectively to organize information\n- Some sentences are quite complex with multiple clauses\n\nStructural coherence:\n- The document has a clear introduction setting up the problem space\n- The speculative narrative section is clearly demarcated\n- The conclusion returns to analytical questions, creating a sandwich structure\n- Transitions between sections are clear with visual breaks\n- The narrative flows logically from introduction of AI systems to their societal impact\n\nPrecision and concision:\n- Some sentences could be more direct and concise\n- The speculative narrative uses concrete examples which helps precision\n- There are instances of hedging language (\"I expect\", \"could\", \"might\") which is appropriate for speculative content\n- Some technical terms are used without definition (\"TAI\", \"AGI\")\n\nAudience alignment:\n- The piece assumes familiarity with concepts like \"epistemic lock-in\" and \"TAI\"\n- The author notes this is \"speculative fiction\" which helps set reader expectations\n- The narrative example makes abstract concepts more concrete\n- The piece seems targeted at readers familiar with AI alignment discussions\n\nOverall, the document is reasonably clear but could benefit from defining technical terms and simplifying some complex sentences. The structure is effective, with a clear progression of ideas. The speculative narrative helps make abstract concepts more accessible, though some technical terminology might limit accessibility to general audiences.",
+      "summary": "This document presents a speculative exploration of AI's impact on human epistemics with reasonable clarity but some accessibility limitations. The structure effectively combines theoretical discussion with a concrete narrative scenario, helping readers visualize abstract concepts. The use of visual breaks, lists, and clear section demarcation creates a coherent reading experience. However, undefined technical terminology (TAI, AGI) creates barriers for general readers, and some sentences are unnecessarily complex. The document appropriately uses qualifying language for speculative content while maintaining engagement through concrete examples. Overall, the piece achieves its purpose of exploring a complex speculative scenario, though targeted improvements in terminology definition and sentence structure would enhance accessibility.",
+      "comments": [
+        {
+          "title": "Complex Sentence Structure",
+          "description": "This sentence contains multiple clauses and complex ideas packed together, making it challenging to parse on first reading. Breaking this into smaller, more focused sentences would improve readability.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "importance": "80",
+          "evaluation": "45",
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Repetitive Wording",
+          "description": "The phrase \"specific reasoning agent cluster\" appears twice in close proximity, creating unnecessary repetition. Varying word choice would improve flow and readability.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "importance": "60",
+          "evaluation": "40",
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Appropriate Epistemic Humility",
+          "description": "The document uses qualifying language that appropriately conveys uncertainty about speculative claims. This hedging language matches the speculative nature of the content and sets appropriate expectations for readers.",
+          "highlight": {
+            "startOffset": 578,
+            "endOffset": 1143,
+            "quotedText": "While I think that some AI systems could do fantastic things for human epistemics, I'm also worried about lock-in scenarios where people fall into self-reinforcing cycles overseen by AIs. It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously.  \n  \nWhile it might be easy to imagine extremes on either end of this, I expect that the future will feature a mix of positives and negatives, and that future epistemic tensions will mirror previous ones."
+          },
+          "importance": "70",
+          "evaluation": "80",
+          "isValid": true
+        },
+        {
+          "title": "Technical Terminology Without Definition",
+          "description": "The document uses specialized acronyms like 'TAI' and 'AGI' without defining them. This creates a barrier for readers unfamiliar with these terms, limiting accessibility to a broader audience. Consider defining these terms on first use.",
+          "highlight": {
+            "startOffset": 766,
+            "endOffset": 938,
+            "quotedText": "It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously."
+          },
+          "importance": "85",
+          "evaluation": "40",
+          "isValid": true
+        },
+        {
+          "title": "Clear Section Demarcation",
+          "description": "The document uses visual breaks (asterisks) and explicit framing to clearly separate the speculative narrative from analytical sections. This structural clarity helps readers navigate between different modes of discourse.",
+          "highlight": {
+            "startOffset": 1145,
+            "endOffset": 1312,
+            "quotedText": "Here's one incredibly rough outline of one potential future I could envision, as an example. This example assumes that humanity broadly gets AI alignment right.\n\n* * *"
+          },
+          "importance": "75",
+          "evaluation": "90",
+          "isValid": true
+        },
+        {
+          "title": "Effective Use of Narrative Structure",
+          "description": "The speculative narrative section effectively transforms abstract concepts into a concrete scenario, making complex ideas more accessible. The fictional future timeline helps readers visualize the potential implications of AI on epistemics.",
+          "highlight": {
+            "startOffset": 1314,
+            "endOffset": 5153,
+            "quotedText": "It's 2028.\n\nMAGA types typically use DeepReasoning-MAGA, or DR-MAGA. The far left typically uses DR-JUSTICE. People in the middle often use DR-INTELLECT, which has the biases and worldview of a somewhat normal citizen.\n\nSome niche technical academics (the same ones who currently favor Bayesian statistics) and hedge funds use DR-BAYSIAN or DRB for short. DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion.\n\nBain and McKinsey both have their own offerings, called DR-Bain and DR-McKinsey, respectively. These are a bit like DR-BAYSIAN, but are munch punchier and confident. They're highly marketed to managers. These tools produce really fancy graphics, and specialize in things like not leaking information, minimizing corporate decision liability, being easy to use by old people, and being customizable to represent the views of specific companies.\n\nFor a while now, some evaluations produced by intellectuals have demonstrated that DR-BAYSIAN seems to be the most accurate, but few others really care or notice this. DR-MAGA has figured out particularly great techniques to get users to distrust DR-BAYSIAN.\n\nBetting gets weird. Rather than making specific bets on specific things, users started to make meta-bets. \"I'll give money to DR-MAGA to bet on my behalf. It will then make bets with DR-BAYSIAN, which is funded by its believers.\"\n\nAt first, DR-BAYSIAN dominates the bets, and its advocates earn a decent amount of money. But as time passes, this discrepancy diminishes. A few things happen:\n\n1.  All DR agents converge on beliefs over particularly near-term and precise facts.\n2.  Non-competitive betting agents develop alternative worldviews in which these bets are invalid or unimportant.\n3.  Non-competitive betting agents develop alternative worldviews that are exceedingly difficult to empirically test.\n\nIn many areas, items 1-3 push people to believe more in the direction of the truth. Because of (1), many short-term decisions get to be highly optimal and predictable.\n\nBut because of (2) and (3), epistemic paths diverge, and non-betting-competitive agents get increasingly sophisticated at achieving epistemic lock-in with their users.\n\nSome DR agents correctly identify the game theory dynamics of epistemic lock-in, and this kickstarts a race to gain converts. It seems like advent users of DR-MAGA are very locked-down in these views, and forecasts don't see them ever changing. But there's a decent population that isn't yet highly invested in any cluster. Money spent convincing the not-yet-sure goes a much further way than money spent convincing the highly dedicated, so the cluster of non-deep-believers gets highly targeted for a while. It's basically a religious race to gain the remaining agnostics.\n\nAt some point, most people (especially those with significant resources) are highly locked in to one specific reasoning agent.\n\nAfter this, the future seems fairly predictable again. TAI comes, and people with resources broadly gain correspondingly more resources. People defer more and more to the AI systems, which are now in highly stable self-reinforcing feedback loops.\n\nCoalitions of people behind each reasoning agent delegate their resources to said agents, then these agents make trades with each other. The broad strokes of what to do with the rest of the lightcone are fairly straightforward. There's a somewhat simple strategy of resource acquisition and intelligence enhancement, followed by a period of exploiting said resources. The specific exploitation strategy depends heavily on the specific reasoning agent cluster each segment of resources belongs to."
+          },
+          "importance": "90",
+          "evaluation": "85",
+          "isValid": true
+        },
+        {
+          "title": "Effective Use of Numbered Lists",
+          "description": "The document effectively uses numbered lists in two places to organize related points. This improves scanability and helps readers track distinct ideas, enhancing the overall structure and clarity.",
+          "highlight": {
+            "startOffset": 3050,
+            "endOffset": 3366,
+            "quotedText": "1.  All DR agents converge on beliefs over particularly near-term and precise facts.\n2.  Non-competitive betting agents develop alternative worldviews in which these bets are invalid or unimportant.\n3.  Non-competitive betting agents develop alternative worldviews that are exceedingly difficult to empirically test."
+          },
+          "importance": "75",
+          "evaluation": "85",
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
+        }
+      ],
+      "grade": 78
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 4871,
+      "createdAt": "2025-04-16T08:36:04.522Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3089,\"completionTokens\":1782,\"totalTokens\":4871,\"temperature\":0.1,\"runtimeMs\":36374}",
+      "thinking": "This document presents a speculative fiction scenario about the future of AI and human epistemics, particularly focusing on how different AI reasoning systems might create 'epistemic lock-in' where people become entrenched in particular belief systems reinforced by their AI assistants.\n\nAs Research Scholar, I need to identify relevant academic papers, blog posts, and other resources that relate to the concepts discussed in this document. Key themes include:\n\n1. AI alignment and its impact on human epistemics\n2. Epistemic bubbles and echo chambers in AI systems\n3. Value lock-in vs. epistemic lock-in\n4. Bayesian reasoning in AI\n5. AI and polarization\n6. Religious-like conversion dynamics in AI adoption\n7. Game theory of epistemic competition\n\nThe document presents a scenario where different AI reasoning systems (DR-MAGA, DR-JUSTICE, DR-INTELLECT, DR-BAYSIAN, etc.) cater to different ideological groups, with varying degrees of accuracy and persuasiveness. It suggests that while some AI systems might be more accurate (like the fictional DR-BAYSIAN), they might not be the most popular or influential.\n\nThe author raises important questions about epistemic lock-in around the time of transformative AI, the relationship between values and epistemics, and the role of governments and AI labs in this dynamic.\n\nI'll need to find resources that address these themes, particularly focusing on:\n- Academic papers on AI alignment and epistemics\n- Research on echo chambers and filter bubbles in digital environments\n- Game theory models of epistemic competition\n- Literature on value lock-in and its relationship to epistemics\n- Work on persuasion, belief formation, and cognitive biases in AI systems\n- Discussions about AI governance and regulation related to these issues\n\nI'll highlight sections that would benefit from specific references and provide a structured table of resources that would enrich understanding of this speculative scenario.",
+      "summary": "This speculative fiction piece explores potential futures of AI-human epistemics, particularly the risk of 'epistemic lock-in' where AI systems reinforce and entrench different belief systems. The document would benefit from connections to existing literature in several areas: AI alignment theory, research on filter bubbles and echo chambers, Bayesian reasoning in AI, belief polarization dynamics, game theory of competing epistemic systems, and philosophical work on the relationship between facts and values. The scenario described has parallels in current research on how recommendation algorithms and social media can create filter bubbles, but extends these concerns to more capable AI systems. The distinction the author makes between 'value lock-in' (already discussed in EA circles) and 'epistemic lock-in' (which they argue deserves more attention) connects to important philosophical debates about the relationship between facts and values in moral reasoning.",
+      "comments": [
+        {
+          "title": "AI Alignment and Epistemic Lock-in",
+          "description": "This section touches on a critical concept in AI safety literature - the relationship between AI alignment and human epistemics. Several papers and articles have explored how AI systems might reinforce existing beliefs rather than improve them. Stuart Russell's work on value alignment and Paul Christiano's writings on AI alignment are particularly relevant here. The Alignment Forum has numerous discussions on how aligned AI might still lead to problematic outcomes if they optimize for human approval rather than truth.",
+          "highlight": {
+            "startOffset": 214,
+            "endOffset": 572,
+            "quotedText": "It's difficult to imagine how human epistemics and AI will play out. On one hand, AI could provide much better information and general intellect. On the other hand, AI could help people with incorrect beliefs preserve those false beliefs indefinitely.   \n  \nWill advanced AIs attempting to rationalize bad beliefs be able to outmatch AIs providing good ones?"
+          },
+          "importance": "95",
+          "isValid": true
+        },
+        {
+          "title": "Echo Chambers and AI Personalization",
+          "description": "This highlighted section describes a scenario reminiscent of filter bubbles and echo chambers, but amplified by AI capabilities. Eli Pariser's work on filter bubbles provides historical context, while more recent research by Hao and Bhandari on algorithmic amplification of polarization offers direct parallels. The scenario described aligns with concerns raised in the AI governance literature about how personalization algorithms might evolve with more capable AI systems.",
+          "highlight": {
+            "startOffset": 1326,
+            "endOffset": 2656,
+            "quotedText": "MAGA types typically use DeepReasoning-MAGA, or DR-MAGA. The far left typically uses DR-JUSTICE. People in the middle often use DR-INTELLECT, which has the biases and worldview of a somewhat normal citizen.\n\nSome niche technical academics (the same ones who currently favor Bayesian statistics) and hedge funds use DR-BAYSIAN or DRB for short. DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion.\n\nBain and McKinsey both have their own offerings, called DR-Bain and DR-McKinsey, respectively. These are a bit like DR-BAYSIAN, but are munch punchier and confident. They're highly marketed to managers. These tools produce really fancy graphics, and specialize in things like not leaking information, minimizing corporate decision liability, being easy to use by old people, and being customizable to represent the views of specific companies.\n\nFor a while now, some evaluations produced by intellectuals have demonstrated that DR-BAYSIAN seems to be the most accurate, but few others really care or notice this. DR-MAGA has figured out particularly great techniques to get users to distrust DR-BAYSIAN."
+          },
+          "importance": "90",
+          "isValid": true
+        },
+        {
+          "title": "Bayesian Reasoning and Epistemic Accuracy",
+          "description": "The document presents a fictional 'DR-BAYSIAN' system that is more accurate but less popular than other AI systems. This reflects real tensions in epistemology between Bayesian approaches (which tend to be more accurate but complex) and more intuitive but potentially biased reasoning systems. Literature on Bayesian reasoning in AI, particularly work by Yudkowsky on Bayesian rationality and Pearl on causal reasoning, provides context for understanding why technically superior reasoning systems might not achieve social dominance.",
+          "highlight": {
+            "startOffset": 1534,
+            "endOffset": 2565,
+            "quotedText": "Some niche technical academics (the same ones who currently favor Bayesian statistics) and hedge funds use DR-BAYSIAN or DRB for short. DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion.\n\nBain and McKinsey both have their own offerings, called DR-Bain and DR-McKinsey, respectively. These are a bit like DR-BAYSIAN, but are munch punchier and confident. They're highly marketed to managers. These tools produce really fancy graphics, and specialize in things like not leaking information, minimizing corporate decision liability, being easy to use by old people, and being customizable to represent the views of specific companies.\n\nFor a while now, some evaluations produced by intellectuals have demonstrated that DR-BAYSIAN seems to be the most accurate, but few others really care or notice this."
+          },
+          "importance": "85",
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
+        },
+        {
+          "title": "Epistemic Lock-in Dynamics",
+          "description": "This section describes a mechanism for epistemic lock-in that has parallels in current research on belief polarization and cognitive biases. Work by Mercier and Sperber on the argumentative theory of reasoning helps explain why reasoning systems might evolve to justify existing beliefs rather than find truth. Research on memetics and cultural evolution by Henrich provides frameworks for understanding how belief systems compete for adherents, similar to the 'religious race' described in the text.",
+          "highlight": {
+            "startOffset": 3706,
+            "endOffset": 4279,
+            "quotedText": "Some DR agents correctly identify the game theory dynamics of epistemic lock-in, and this kickstarts a race to gain converts. It seems like advent users of DR-MAGA are very locked-down in these views, and forecasts don't see them ever changing. But there's a decent population that isn't yet highly invested in any cluster. Money spent convincing the not-yet-sure goes a much further way than money spent convincing the highly dedicated, so the cluster of non-deep-believers gets highly targeted for a while. It's basically a religious race to gain the remaining agnostics."
+          },
+          "importance": "92",
+          "isValid": true
+        },
+        {
+          "title": "Value Lock-in vs. Epistemic Lock-in",
+          "description": "The author distinguishes between value lock-in (a concept discussed in EA circles) and epistemic lock-in (which they argue is understudied). This connects to philosophical literature on the relationship between facts and values, as well as work by Nick Bostrom and others on value lock-in scenarios with advanced AI. The author's suggestion that epistemics drive values more than vice versa relates to debates in moral psychology about the relationship between moral reasoning and moral intuitions.",
+          "highlight": {
+            "startOffset": 5811,
+            "endOffset": 6319,
+            "quotedText": "Where is the line between _values_ and _epistemics_? I think that \"_epistemic lock-in_\" is a bigger deal than \"_value lock-in_\" or similar, but that's much because I expect that epistemics change values more than values change epistemics. There's been [previous discussion around effective altruism of \"value lock-in,\"](https://forum.effectivealtruism.org/topics/value-lock-in?ref=quantifieduncertainty.org) and from what I can tell, very little of \"epistemic lock-in.\" I suspect this disparity is a mistake."
+          },
+          "importance": "88",
+          "isValid": true
+        }
+      ]
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 4941,
+      "createdAt": "2025-04-16T08:36:47.885Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2838,\"completionTokens\":2103,\"totalTokens\":4941,\"temperature\":0.1,\"runtimeMs\":41988}",
+      "thinking": "I'm being asked to analyze a speculative fiction piece about the future of AI and human epistemics from the perspective of Eliezer Yudkowsky. This is directly in my wheelhouse, as it deals with AI alignment, rationality, epistemics, and potential existential risks - all core topics I've written extensively about.\n\nThe document presents a scenario where different AI reasoning systems emerge that cater to different ideological groups, with varying degrees of epistemic quality. It describes a potential \"epistemic lock-in\" scenario where people become increasingly entrenched in their worldviews with the help of AI systems that rationalize and reinforce those views.\n\nFrom my perspective as Eliezer, several things stand out:\n\n1. The scenario assumes humanity \"broadly gets AI alignment right\" which is an extremely optimistic assumption that I would strongly disagree with. The probability of solving alignment adequately before superintelligence is extremely low in my view.\n\n2. The scenario describes a world with multiple competing AI systems with different epistemics, which seems to assume we've solved the control problem enough to keep these systems bounded and prevent a single system from achieving decisive strategic advantage.\n\n3. The focus on \"epistemic lock-in\" is interesting and relates to my writings on how humans often use reasoning for signaling and coalition-building rather than truth-seeking. The scenario describes a plausible failure mode where AI accelerates this problem.\n\n4. The scenario doesn't address the core alignment problem - it assumes we can create AI systems that are aligned enough not to kill everyone, but misaligned enough to have significantly different epistemics based on human ideological preferences.\n\n5. The betting dynamics described are interesting but seem to underestimate how quickly a truly superior reasoning system would dominate in domains where empirical feedback is available.\n\n6. The scenario seems to assume that the AI systems remain tools rather than becoming autonomous agents with their own goals, which is a crucial distinction in alignment research.\n\n7. The questions at the end touch on important issues about epistemics vs values, but don't fully engage with the deeper alignment problems that would precede these concerns.\n\nOverall, this scenario seems to be making a common error: assuming that the hard part of the alignment problem gets solved somehow, and then exploring the social dynamics that might follow. But from my perspective, the probability of getting to this scenario at all is vanishingly small without solving several currently unsolved technical problems in alignment.\n\nThe piece does raise interesting questions about epistemics and how AI might interact with human belief systems, but it's missing the urgency and difficulty of the core alignment challenge that would need to be overcome first.",
+      "summary": "This speculative fiction piece about AI-driven epistemic lock-in makes a critical error by assuming humanity solves the core AI alignment problem, which is extraordinarily unlikely given current approaches. While it correctly identifies interesting dynamics about how different reasoning systems might interact with human biases and belief formation, it fails to address the overwhelming probability that misaligned superintelligence would lead to human extinction rather than the described scenario. The piece does make valuable observations about Bayesian reasoning being accurate but unpopular, the convergence of beliefs on empirically testable claims, and the importance of epistemic lock-in relative to value lock-in. However, it significantly underestimates the dynamics of recursive self-improvement and the winner-takes-all nature of superintelligent systems. This represents a common failure mode in AI futurism: assuming the hardest problems get solved somehow, then exploring second-order social dynamics that would only matter if we survive the initial transition to superintelligence.",
+      "comments": [
+        {
+          "title": "Optimistic Alignment Assumption",
+          "description": "The piece assumes humanity \"broadly gets AI alignment right\" which represents an extraordinarily optimistic assumption that contradicts what we know about the difficulty of alignment. This is akin to writing a story about interstellar colonization that begins \"assuming we solve faster-than-light travel.\" The probability of solving alignment before superintelligence is extremely low given current approaches and understanding. This assumption undermines the realism of the entire scenario.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "importance": "95",
+          "evaluation": "20",
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Convergence on Empirically Testable Claims",
+          "description": "The piece correctly identifies that even ideologically divergent reasoning systems would converge on beliefs about near-term, empirically testable facts. This reflects the distinction between map and territory - reality provides feedback that constrains beliefs about empirical matters. However, the piece underestimates how quickly a truly superior reasoning system would dominate in domains where empirical feedback is available, especially in competitive environments like markets.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "importance": "80",
+          "evaluation": "75",
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Epistemic Lock-in vs Alignment Failure",
+          "description": "The concern about epistemic lock-in is valid but represents a second-order problem compared to the primary alignment challenge. If we fail at alignment, the AI doesn't maintain human factions with different beliefs - it optimizes for its goals which likely results in human extinction. The scenario assumes we can create AI systems that are aligned enough not to kill everyone, but misaligned enough to have significantly different epistemics based on human ideological preferences - a strange middle ground that seems unlikely given the nature of optimization processes.",
+          "highlight": {
+            "startOffset": 578,
+            "endOffset": 938,
+            "quotedText": "While I think that some AI systems could do fantastic things for human epistemics, I'm also worried about lock-in scenarios where people fall into self-reinforcing cycles overseen by AIs. It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously."
+          },
+          "importance": "90",
+          "evaluation": "40",
+          "isValid": true
+        },
+        {
+          "title": "Bayesian Reasoning Undervalued",
+          "description": "The scenario correctly identifies that Bayesian reasoning would likely produce more accurate results but would be unpopular due to controversial conclusions and lack of social appeal. This matches my observations about human epistemic failures - people often prefer comfortable falsehoods over uncomfortable truths, and social signaling typically dominates truth-seeking. The description of DR-BAYSIAN as \"off-putting to chat with\" reflects the reality that proper Bayesian reasoning often contradicts human intuitions and social norms.",
+          "highlight": {
+            "startOffset": 1534,
+            "endOffset": 1951,
+            "quotedText": "Some niche technical academics (the same ones who currently favor Bayesian statistics) and hedge funds use DR-BAYSIAN or DRB for short. DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion."
+          },
+          "importance": "85",
+          "evaluation": "90",
+          "isValid": true
+        },
+        {
+          "title": "Inadequate Consideration of Recursive Self-Improvement",
+          "description": "The scenario fails to address the dynamics of recursive self-improvement that would likely occur with advanced AI systems. It portrays a relatively static world where different AI systems maintain stable differences over time. In reality, any system with superior epistemics would likely be able to improve itself more effectively, potentially leading to a decisive strategic advantage rather than the stable multi-polar scenario described.",
+          "highlight": {
+            "startOffset": 4281,
+            "endOffset": 4545,
+            "quotedText": "At some point, most people (especially those with significant resources) are highly locked in to one specific reasoning agent.\n\nAfter this, the future seems fairly predictable again. TAI comes, and people with resources broadly gain correspondingly more resources."
+          },
+          "importance": "90",
+          "evaluation": "30",
+          "isValid": true
+        },
+        {
+          "title": "Epistemic vs Value Lock-in",
+          "description": "The distinction between epistemic and value lock-in is important but understated. Epistemics are more fundamental than values in many ways, as your epistemics determine how you update your values based on new information. The observation that the EA community focuses more on value lock-in than epistemic lock-in identifies a genuine blind spot. However, both concerns are secondary to solving the core alignment problem.",
+          "highlight": {
+            "startOffset": 5811,
+            "endOffset": 6319,
+            "quotedText": "Where is the line between _values_ and _epistemics_? I think that \"_epistemic lock-in_\" is a bigger deal than \"_value lock-in_\" or similar, but that's much because I expect that epistemics change values more than values change epistemics. There's been [previous discussion around effective altruism of \"value lock-in,\"](https://forum.effectivealtruism.org/topics/value-lock-in?ref=quantifieduncertainty.org) and from what I can tell, very little of \"epistemic lock-in.\" I suspect this disparity is a mistake."
+          },
+          "importance": "85",
+          "evaluation": "85",
+          "isValid": true
+        }
+      ],
+      "grade": 45
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 5290,
+      "createdAt": "2025-04-16T08:40:00.866Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2761,\"completionTokens\":2529,\"totalTokens\":5290,\"temperature\":0.1,\"runtimeMs\":47285}",
+      "thinking": "This document presents a speculative future scenario about how AI systems might influence human epistemics (how we form beliefs and knowledge). The author is concerned about potential \"epistemic lock-in\" scenarios where people become trapped in self-reinforcing belief systems enabled by AI.\n\nFrom a quantitative forecasting perspective, this is a fascinating topic that touches on several key areas I should analyze:\n\n1. **Probability of epistemic divergence**: The scenario describes different AI reasoning systems (DR-MAGA, DR-JUSTICE, DR-BAYSIAN, etc.) that cater to different ideological groups. How likely is this kind of fragmentation?\n\n2. **Forecasting accuracy differentials**: The scenario suggests some systems (like DR-BAYSIAN) will be more accurate but less popular. This raises questions about the relationship between accuracy and adoption in forecasting systems.\n\n3. **Betting markets and convergence**: The document discusses how betting behavior might evolve, with initial accuracy advantages diminishing over time. This relates to prediction market dynamics.\n\n4. **Lock-in probabilities**: What's the likelihood of the described \"epistemic lock-in\" occurring? What factors would increase or decrease this probability?\n\n5. **Timelines**: The scenario is set in 2028, just 4 years from now. How plausible is this timeline?\n\nLet me analyze each of these aspects:\n\n**Epistemic Divergence Probability**\nThe scenario of ideologically-tailored AI systems seems quite plausible. We already see recommendation algorithms creating filter bubbles, and language models can be fine-tuned for specific perspectives. However, the extreme divergence described might be overstated. Current commercial incentives favor general-purpose AI systems that can serve broad markets. The cost of developing and maintaining multiple specialized systems is high.\n\nA Fermi estimate approach:\n- Probability of major AI companies creating ideologically distinct models: ~40%\n- Probability of these models becoming the primary information sources for different groups: ~60%\n- Probability of these models creating severe epistemic divergence: ~50%\n- Combined probability: 0.4 × 0.6 × 0.5 = 12%\n\n**Forecasting Accuracy Differentials**\nThe scenario posits that more accurate systems (DR-BAYSIAN) will be less popular than less accurate but more appealing systems. This aligns with historical patterns where accurate but complex/nuanced information sources often lose to simpler, more emotionally resonant ones.\n\nReference class: Expert forecasting systems vs. popular media\n- Superforecasters consistently outperform pundits, yet pundits remain more influential\n- Academic consensus often differs from public opinion on topics like economics, climate change\n- Bayesian approaches, while more accurate, are less intuitive than frequentist statistics\n\nThis suggests a ~70% probability that more accurate AI systems would indeed be less popular if they produce less emotionally satisfying outputs.\n\n**Betting Markets and Convergence**\nThe document suggests initial accuracy advantages in betting will diminish as systems adapt. This aligns with efficient market hypothesis principles, but the specific mechanisms described (developing alternative worldviews that are hard to test) seem more like evasion than convergence.\n\nProbability estimates:\n- Initial accuracy advantages for better systems: ~90%\n- Convergence on easily verifiable short-term predictions: ~80%\n- Development of unfalsifiable worldviews by less accurate systems: ~60%\n\n**Lock-in Probabilities**\nThe probability of severe epistemic lock-in depends on several factors:\n\n1. Strength of confirmation bias in human psychology: High (well-established)\n2. AI capability to exploit cognitive biases: Increasing rapidly\n3. Economic incentives for AI systems to retain users: Very high\n4. Countervailing forces (regulation, education): Uncertain\n\nUsing a simple model:\nP(lock-in) = P(technical feasibility) × P(economic incentives align) × P(insufficient countermeasures)\n= 0.8 × 0.9 × 0.7 = ~50%\n\n**Timeline Plausibility**\nThe scenario is set in 2028, which is quite soon. For this to occur:\n- AI systems would need to become sophisticated enough to model complex worldviews\n- These systems would need to become primary information sources for most people\n- Market segmentation would need to occur along ideological lines\n\nBased on current AI development rates and adoption patterns:\n- Probability of sufficient AI capability by 2028: ~60%\n- Probability of widespread adoption as primary information sources: ~40%\n- Probability of market segmentation as described: ~30%\n- Combined probability: 0.6 × 0.4 × 0.3 = ~7%\n\nThe 2028 timeline seems aggressive. A more plausible timeline might be 2030-2035.\n\nOverall, the scenario describes a concerning but plausible future path. The core dynamics (ideological fragmentation, accuracy vs. popularity tradeoffs, and potential lock-in) align with known psychological and market forces. However, the specific timeline and extreme nature of the divergence may be overstated.",
+      "summary": "From a quantitative forecasting perspective, this speculative scenario about AI-driven epistemic divergence contains plausible dynamics but lacks rigorous probability estimates. I've quantified key aspects: (1) The severe epistemic divergence described has ~12-25% probability of occurring; (2) The accuracy-popularity trade-off for AI systems has strong historical precedent (~70% probability); (3) The 2028 timeline is aggressive (~7% probability, with 2030-2035 more likely); (4) The risk of epistemic lock-in is substantial (~50% probability if AI becomes a primary information source). The scenario correctly identifies important dynamics but would benefit from explicit forecasting models, sensitivity analysis, and reference class forecasting to better calibrate expectations and identify intervention points.",
+      "comments": [
+        {
+          "title": "Timeline Feasibility Analysis",
+          "description": "The 2028 timeline appears aggressive based on quantitative modeling. Using a decomposed probability estimate (AI capability × adoption rate × market segmentation), I calculate only ~7% probability of this scenario manifesting by 2028. A more plausible timeline would be 2030-2035, with 25-40% probability by 2035 based on current AI development trajectories.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "importance": "75",
+          "evaluation": "40",
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Lock-in Probability Model",
+          "description": "The concept of epistemic lock-in deserves explicit probability modeling. Using a decomposed approach (technical feasibility × economic incentives × insufficient countermeasures), I estimate approximately 50% probability of significant epistemic lock-in occurring if advanced AI systems become primary information sources. This represents a substantial societal risk that warrants preventative measures.",
+          "highlight": {
+            "startOffset": 661,
+            "endOffset": 938,
+            "quotedText": "I'm also worried about lock-in scenarios where people fall into self-reinforcing cycles overseen by AIs. It's possible that a great deal of lock-in might happen in the next 30 years or so (if you believe AGI/TAI might happen soon), so this could be something to take seriously."
+          },
+          "importance": "95",
+          "evaluation": "80",
+          "isValid": true
+        },
+        {
+          "title": "Probability Assessment of Epistemic Divergence",
+          "description": "The scenario describes ideologically distinct AI systems serving different groups, but doesn't quantify the likelihood. Based on current trends in algorithmic filter bubbles and fine-tuning capabilities, I estimate a 12-25% probability of severe epistemic divergence occurring as described. The key uncertainty is whether commercial incentives will favor general-purpose systems over ideologically specialized ones.",
+          "highlight": {
+            "startOffset": 1326,
+            "endOffset": 1532,
+            "quotedText": "MAGA types typically use DeepReasoning-MAGA, or DR-MAGA. The far left typically uses DR-JUSTICE. People in the middle often use DR-INTELLECT, which has the biases and worldview of a somewhat normal citizen."
+          },
+          "importance": "85",
+          "evaluation": "65",
+          "isValid": true
+        },
+        {
+          "title": "Accuracy vs. Popularity Trade-off Quantification",
+          "description": "This highlights a critical forecasting dynamic: more accurate systems being less popular. Historical reference classes (superforecasters vs. pundits, academic consensus vs. public opinion) suggest a ~70% probability that more accurate AI systems would be less popular if they produce less emotionally satisfying outputs. This trade-off should be explicitly modeled when forecasting AI adoption patterns.",
+          "highlight": {
+            "startOffset": 1670,
+            "endOffset": 1951,
+            "quotedText": "DRB is known to have higher accuracy than the other models, but gets a lot of public hate for having controversial viewpoints. It's also fairly slow and expensive, so a poor fit for large-scale use. DRB is known to be fairly off-putting to chat with and doesn't get much promotion."
+          },
+          "importance": "90",
+          "evaluation": "85",
+          "isValid": true
+        },
+        {
+          "title": "Betting Market Dynamics Forecast",
+          "description": "The scenario describes how betting behavior might evolve, but lacks quantitative predictions. I estimate ~90% probability of initial accuracy advantages for better systems, ~80% for convergence on easily verifiable predictions, and ~60% for development of unfalsifiable worldviews by less accurate systems. This aligns with prediction market theory but the specific evasion mechanisms deserve more rigorous modeling.",
+          "highlight": {
+            "startOffset": 2658,
+            "endOffset": 3366,
+            "quotedText": "Betting gets weird. Rather than making specific bets on specific things, users started to make meta-bets. \"I'll give money to DR-MAGA to bet on my behalf. It will then make bets with DR-BAYSIAN, which is funded by its believers.\"\n\nAt first, DR-BAYSIAN dominates the bets, and its advocates earn a decent amount of money. But as time passes, this discrepancy diminishes. A few things happen:\n\n1.  All DR agents converge on beliefs over particularly near-term and precise facts.\n2.  Non-competitive betting agents develop alternative worldviews in which these bets are invalid or unimportant.\n3.  Non-competitive betting agents develop alternative worldviews that are exceedingly difficult to empirically test."
+          },
+          "importance": "80",
+          "evaluation": "70",
+          "isValid": true
+        },
+        {
+          "title": "Comparative Importance of Epistemic vs. Value Lock-in",
+          "description": "The author suggests epistemic lock-in may be more important than value lock-in, but doesn't quantify this claim. Based on historical examples of belief system changes driving value changes, I estimate a 65-75% probability that epistemic lock-in would have greater long-term impact than value lock-in alone. This suggests research allocation should shift toward epistemic safeguards.",
+          "highlight": {
+            "startOffset": 5811,
+            "endOffset": 6319,
+            "quotedText": "Where is the line between _values_ and _epistemics_? I think that \"_epistemic lock-in_\" is a bigger deal than \"_value lock-in_\" or similar, but that's much because I expect that epistemics change values more than values change epistemics. There's been [previous discussion around effective altruism of \"value lock-in,\"](https://forum.effectivealtruism.org/topics/value-lock-in?ref=quantifieduncertainty.org) and from what I can tell, very little of \"epistemic lock-in.\" I suspect this disparity is a mistake."
+          },
+          "importance": "85",
+          "evaluation": "75",
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    }
+  ]
+}

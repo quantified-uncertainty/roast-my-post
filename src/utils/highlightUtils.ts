@@ -492,8 +492,10 @@ async function findTextMatchWithLLM(
   searchText: string,
   title: string
 ): Promise<string | null> {
-  const prompt = `Given the following document content and a search text, find the exact matching text in the document. 
+  const prompt = `Given the following document content and a search text, find the SHORTEST possible exact matching text in the document. 
 The search text may be slightly paraphrased or formatted differently. Return ONLY the exact text from the document that matches.
+
+IMPORTANT: Prefer shorter, more precise matches over longer ones. If multiple matches exist, choose the shortest one that still captures the essential meaning.
 
 Document content:
 ${content}
@@ -504,37 +506,29 @@ Title of highlight: "${title}"
 
 EXAMPLES OF CORRECT MATCHING:
 
-1. For paraphrased text:
-   Search: "The author believes the intervention is cost-effective"
-   Document: "In my view, the intervention appears remarkably cost-effective"
-   Match: "the intervention appears remarkably cost-effective"
+1. For a long paragraph, prefer the key phrase:
+   Search: "The author believes the intervention is cost-effective and will have significant impact"
+   Match: "the intervention is remarkably cost-effective"
 
-2. For different formatting:
-   Search: "The study found a 50% reduction"
-   Document: "The study found a **50% reduction** in costs"
-   Match: "The study found a **50% reduction** in costs"
+2. For text with multiple points, choose the most relevant part:
+   Search: "The study found a 50% reduction in costs and improved outcomes"
+   Match: "50% reduction in costs"
 
-3. For partial matches:
-   Search: "significant impact on wildlife"
-   Document: "This has had a significant impact on local wildlife populations"
-   Match: "significant impact on local wildlife"
+3. For text with context, focus on the core statement:
+   Search: "As previous research has shown, the impact was significant across all metrics"
+   Match: "the impact was significant"
 
-4. For text with special characters:
-   Search: "The cost was $1.5 million"
-   Document: "The total cost was approximately $1.5 million USD"
-   Match: "The total cost was approximately $1.5 million USD"
+4. For text with examples, choose the main point:
+   Search: "Several factors contributed, including weather conditions, equipment failure, and human error"
+   Match: "Several factors contributed"
 
-5. For text with markdown:
-   Search: "The author cites previous research"
-   Document: "As [Smith et al.](https://example.com) have shown in previous research"
-   Match: "As [Smith et al.](https://example.com) have shown in previous research"
-
-IMPORTANT RULES:
+Rules:
 1. Return ONLY the exact text from the document
-2. Include all formatting (bold, italics, links)
-3. Include all punctuation and special characters
+2. Keep matches under 50 words when possible
+3. Include all formatting (bold, italics, links)
 4. Match must be a complete phrase, not just individual words
-5. If no good match is found, return "NO_MATCH"
+5. If multiple matches exist, choose the shortest one
+6. If no good match is found, return "NO_MATCH"
 
 Return ONLY the exact matching text from the document, or "NO_MATCH" if no good match is found.`;
 
@@ -551,8 +545,8 @@ Return ONLY the exact matching text from the document, or "NO_MATCH" if no good 
       return null;
     }
 
-    // Verify the match exists in the content
-    if (content.includes(response)) {
+    // Verify the match exists in the content and isn't too long
+    if (content.includes(response) && response.split(/\s+/).length <= 50) {
       return response;
     }
     return null;
@@ -564,145 +558,147 @@ Return ONLY the exact matching text from the document, or "NO_MATCH" if no good 
 
 export async function processRawComments(
   content: string,
-  rawComments: Array<
-    Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }
-  >
+  comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>
 ): Promise<Comment[]> {
-  const processedComments: Comment[] = [];
+  return Promise.all(
+    comments.map(async (comment) => {
+      const { highlight, ...rest } = comment;
+      const { start, end } = highlight;
 
-  for (const comment of rawComments) {
-    const { highlight, ...rest } = comment;
+      // If start and end text are identical, we're looking for a single exact match
+      if (start === end) {
+        const exactMatch = content.indexOf(start);
+        if (exactMatch !== -1) {
+          return {
+            ...rest,
+            highlight: {
+              startOffset: exactMatch,
+              endOffset: exactMatch + start.length,
+              quotedText: start,
+            },
+          };
+        }
+      }
 
-    // Skip processing if highlight text is undefined
-    if (!highlight.start || !highlight.end) {
-      console.log(
-        `  ⚠️ Skipping highlight with undefined text for comment: ${comment.title}`
-      );
-      processedComments.push({
+      // Otherwise, look for separate start and end matches
+      const startIndex = content.indexOf(start);
+      const endIndex = content.indexOf(end);
+
+      // If we can't find exact matches, try to find the closest matches
+      if (startIndex === -1 || endIndex === -1) {
+        // Split content into words for more accurate matching
+        const contentWords = content.split(/\s+/);
+        const startWords = start.split(/\s+/);
+        const endWords = end.split(/\s+/);
+
+        // Find the best match for start text
+        let bestStartMatch = -1;
+        let bestStartScore = 0;
+        for (let i = 0; i < contentWords.length - startWords.length + 1; i++) {
+          const match = contentWords.slice(i, i + startWords.length).join(" ");
+          const score = similarity(start, match);
+          if (score > bestStartScore && score > 0.8) {
+            // Require high similarity
+            bestStartScore = score;
+            bestStartMatch = i;
+          }
+        }
+
+        // Find the best match for end text
+        let bestEndMatch = -1;
+        let bestEndScore = 0;
+        for (let i = 0; i < contentWords.length - endWords.length + 1; i++) {
+          const match = contentWords.slice(i, i + endWords.length).join(" ");
+          const score = similarity(end, match);
+          if (score > bestEndScore && score > 0.8) {
+            // Require high similarity
+            bestEndScore = score;
+            bestEndMatch = i;
+          }
+        }
+
+        // If we found good matches, use them
+        if (bestStartMatch !== -1 && bestEndMatch !== -1) {
+          const startOffset = contentWords
+            .slice(0, bestStartMatch)
+            .join(" ").length;
+          const endOffset = contentWords
+            .slice(0, bestEndMatch + endWords.length)
+            .join(" ").length;
+          return {
+            ...rest,
+            highlight: {
+              startOffset,
+              endOffset,
+              quotedText: content.substring(startOffset, endOffset),
+            },
+          };
+        }
+      } else {
+        // We found exact matches, use them
+        return {
+          ...rest,
+          highlight: {
+            startOffset: startIndex,
+            endOffset: endIndex + end.length,
+            quotedText: content.substring(startIndex, endIndex + end.length),
+          },
+        };
+      }
+
+      // If we couldn't find good matches, return an invalid highlight
+      return {
         ...rest,
         highlight: {
           startOffset: 0,
           endOffset: 0,
           quotedText: "",
         },
-      });
-      continue;
-    }
-
-    console.log(`🔍 Processing highlight for "${comment.title}":`);
-    console.log(`  Original start text: "${highlight.start}"`);
-    console.log(`  Original end text: "${highlight.end}"`);
-
-    // First try exact matches
-    let startIndex = content.indexOf(highlight.start);
-    let endIndex = content.indexOf(
-      highlight.end,
-      startIndex + highlight.start.length
-    );
-
-    // If exact matches fail, try LLM matching
-    if (startIndex === -1) {
-      console.log(`  ❌ No exact match for start text`);
-      console.log(`  🤖 Attempting LLM match for start text...`);
-      const matchedStart = await findTextMatchWithLLM(
-        content,
-        highlight.start,
-        comment.title
-      );
-      if (matchedStart) {
-        console.log(`  ✅ LLM found start match: "${matchedStart}"`);
-        startIndex = content.indexOf(matchedStart);
-      } else {
-        console.log(`  ❌ LLM could not find start match`);
-      }
-    } else {
-      console.log(`  ✅ Found exact start match at index ${startIndex}`);
-    }
-
-    if (endIndex === -1) {
-      console.log(`  ❌ No exact match for end text`);
-      console.log(`  🤖 Attempting LLM match for end text...`);
-      const matchedEnd = await findTextMatchWithLLM(
-        content,
-        highlight.end,
-        comment.title
-      );
-      if (matchedEnd) {
-        console.log(`  ✅ LLM found end match: "${matchedEnd}"`);
-        endIndex = content.indexOf(
-          matchedEnd,
-          startIndex + highlight.start.length
-        );
-      } else {
-        console.log(`  ❌ LLM could not find end match`);
-      }
-    } else {
-      console.log(`  ✅ Found exact end match at index ${endIndex}`);
-    }
-
-    if (startIndex === -1 || endIndex === -1) {
-      console.log(`  ❌ Failed to find valid highlight text`);
-      processedComments.push({
-        ...comment,
-        highlight: {
-          startOffset: 0,
-          endOffset: 0,
-          quotedText: "",
-        },
         isValid: false,
-        error:
-          startIndex === -1
-            ? "Start text not found in document"
-            : "End text not found in document",
-      });
-      continue;
-    }
+        error: "Could not find valid highlight text",
+      };
+    })
+  );
+}
 
-    // Calculate the end offset by adding the length of the end text
-    const endOffset = endIndex + highlight.end.length;
-    const quotedText = content.substring(startIndex, endOffset);
-
-    console.log(`  📝 Final highlight text: "${quotedText}"`);
-    console.log(`  📍 Offsets: ${startIndex}-${endOffset}`);
-
-    // Check for overlapping highlights
-    const newHighlight: Highlight = {
-      startOffset: startIndex,
-      endOffset,
-      quotedText,
-    };
-
-    const overlaps = processedComments.some((existing) => {
-      const existingHighlight = existing.highlight;
-      return (
-        (newHighlight.startOffset >= existingHighlight.startOffset &&
-          newHighlight.startOffset < existingHighlight.endOffset) ||
-        (newHighlight.endOffset > existingHighlight.startOffset &&
-          newHighlight.endOffset <= existingHighlight.endOffset)
-      );
-    });
-
-    if (overlaps) {
-      console.log(`  ⚠️ Highlight overlaps with previous highlight`);
-      processedComments.push({
-        ...comment,
-        highlight: newHighlight,
-        isValid: false,
-        error: "Highlight overlaps with a previous highlight",
-      });
-      continue;
-    }
-
-    // If we get here, the highlight is valid
-    console.log(`  ✅ Highlight is valid`);
-    processedComments.push({
-      ...comment,
-      highlight: newHighlight,
-      isValid: true,
-    });
+// Helper function to calculate string similarity
+function similarity(str1: string, str2: string): number {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  const longerLength = longer.length;
+  if (longerLength === 0) {
+    return 1.0;
   }
+  return (longerLength - editDistance(longer, shorter)) / longerLength;
+}
 
-  return processedComments;
+// Helper function to calculate edit distance
+function editDistance(s1: string, s2: string): number {
+  s1 = s1.toLowerCase();
+  s2 = s2.toLowerCase();
+
+  const costs = [];
+  for (let i = 0; i <= s1.length; i++) {
+    let lastValue = i;
+    for (let j = 0; j <= s2.length; j++) {
+      if (i === 0) {
+        costs[j] = j;
+      } else {
+        if (j > 0) {
+          let newValue = costs[j - 1];
+          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          }
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+    }
+    if (i > 0) {
+      costs[s2.length] = lastValue;
+    }
+  }
+  return costs[s2.length];
 }
 
 export function validateHighlight(

@@ -11,7 +11,6 @@ import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
   getCommentColorByEvaluation,
-  getCommentColorByIndex,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
@@ -31,7 +30,7 @@ import SlateEditor from "./SlateEditor";
 function getReviewsWithGrades(reviews: DocumentReview[]) {
   return reviews.filter((review) => {
     const agent = evaluationAgents.find((a) => a.id === review.agentId);
-    return agent?.gradeInstructions;
+    return agent?.gradeInstructions && review.grade !== undefined;
   });
 }
 
@@ -172,6 +171,8 @@ function ReviewSelector({
           const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
           const isActive = activeReviewIndex === index;
           const commentCount = Object.keys(review.comments).length;
+          const hasGradeInstructions = agent?.gradeInstructions;
+          const grade = review.grade;
 
           return (
             <div
@@ -215,6 +216,11 @@ function ReviewSelector({
                         <ChatBubbleLeftIcon className="h-3 w-3" />
                         {commentCount}
                       </span>
+                      {hasGradeInstructions && grade !== undefined && (
+                        <span className="ml-2 text-xs font-medium">
+                          {grade}/100
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -259,7 +265,7 @@ export function DocumentWithEvaluations({
             true
           );
         } else {
-          map[index] = getCommentColorByIndex(index);
+          map[index] = getCommentColorByEvaluation(undefined, undefined, false);
         }
         return map;
       },
@@ -426,7 +432,7 @@ export function DocumentWithEvaluations({
                           (a) => a.id === activeReview.agentId
                         )?.gradeInstructions && (
                           <span className="text-md ml-2 font-bold text-gray-900">
-                            Grade: {activeReview.grade}
+                            Grade: {activeReview.grade}/100
                           </span>
                         )}
                     </h3>
@@ -479,54 +485,68 @@ export function DocumentWithEvaluations({
                 review={activeReview}
                 commentColorMap={commentColorMap}
               />
+
+              {activeReview.grade !== undefined && (
+                <div className="mt-2 text-sm text-gray-500">
+                  <div className="mb-2">
+                    <div className="font-medium">
+                      Grade: {activeReview.grade}/100
+                    </div>
+                    {activeReview.grade >= 90 &&
+                      "Exceptional, groundbreaking work"}
+                    {activeReview.grade >= 80 &&
+                      activeReview.grade < 90 &&
+                      "Very strong, significant contribution"}
+                    {activeReview.grade >= 70 &&
+                      activeReview.grade < 80 &&
+                      "Good, solid work"}
+                    {activeReview.grade >= 60 &&
+                      activeReview.grade < 70 &&
+                      "Decent, some value"}
+                    {activeReview.grade >= 50 &&
+                      activeReview.grade < 60 &&
+                      "Mediocre, limited value"}
+                    {activeReview.grade >= 40 &&
+                      activeReview.grade < 50 &&
+                      "Poor, significant issues"}
+                    {activeReview.grade >= 30 &&
+                      activeReview.grade < 40 &&
+                      "Very poor, major problems"}
+                    {activeReview.grade < 30 && "Unacceptable quality"}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Document Reviews</h2>
-            {document.reviews.length > 0 &&
-              getReviewsWithGrades(document.reviews).length > 0 && (
-                <div className="flex space-x-2">
-                  {getReviewsWithGrades(document.reviews).map((review) => {
-                    const agent = evaluationAgents.find(
-                      (a) => a.id === review.agentId
-                    );
-                    if (!agent) return null;
-                    return (
-                      <div
-                        key={review.agentId}
-                        className="flex items-center space-x-1"
-                      >
+            {getReviewsWithGrades(document.reviews).length > 0 && (
+              <div className="flex space-x-2">
+                {getReviewsWithGrades(document.reviews).map((review) => {
+                  const agent = evaluationAgents.find(
+                    (a) => a.id === review.agentId
+                  );
+                  if (!agent) return null;
+                  return (
+                    <div
+                      key={review.agentId}
+                      className="flex items-center space-x-1"
+                    >
+                      <span className="text-sm font-medium">{agent.name}:</span>
+                      {review.grade !== undefined && (
                         <span className="text-sm font-medium">
-                          {agent.name}:
+                          {review.grade}/100
                         </span>
-                        {review.grade && (
-                          <span className="text-sm font-medium">
-                            {review.grade}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function getCommentColorByIndex(index: number): {
-  background: string;
-  color: string;
-} {
-  const colors = [
-    { background: "#E3F2FD", color: "#1565C0" }, // blue
-    { background: "#E8F5E9", color: "#2E7D32" }, // green
-    { background: "#F3E5F5", color: "#7B1FA2" }, // purple
-    { background: "#FCE4EC", color: "#C2185B" }, // pink
-    { background: "#FFF3E0", color: "#EF6C00" }, // orange
-  ];
-  return colors[index % colors.length];
 }
