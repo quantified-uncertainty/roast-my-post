@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
-import type { Comment, DocumentReview } from "../types/documentReview";
+import type { DocumentReview } from "../types/documentReview";
+import { sortCommentsByOffset } from "../utils/commentUtils";
 
 const { Command } = require("commander");
 const { readdir, readFile, writeFile } = require("fs/promises");
@@ -84,9 +85,7 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 
   // --- Sort comments by startOffset before saving ---
   if (documentReview.comments) {
-    documentReview.comments.sort((a: Comment, b: Comment) => {
-      return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
-    });
+    documentReview.comments = sortCommentsByOffset(documentReview.comments);
     console.log(`ℹ️ Sorted comments by startOffset for agent ${agentId}`);
   }
   // --- End sorting ---

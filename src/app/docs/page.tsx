@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { documentsCollection } from "@/data/docs";
+import { getValidCommentCount } from "@/utils/commentUtils";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 export default function DocumentsPage() {
@@ -20,7 +21,7 @@ export default function DocumentsPage() {
                   (acc, review) => {
                     acc[review.agentId] =
                       (acc[review.agentId] || 0) +
-                      (review.comments?.length || 0);
+                      getValidCommentCount(review.comments || []);
                     return acc;
                   },
                   {} as Record<string, number>

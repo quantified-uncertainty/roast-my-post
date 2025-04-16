@@ -9,6 +9,10 @@ import remarkGfm from "remark-gfm";
 import { evaluationAgents } from "@/data/agents/index";
 import type { Comment } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
+import {
+  getCommentColorByIndex,
+  getValidAndSortedComments,
+} from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
 import {
   ChatBubbleLeftIcon,
@@ -26,53 +30,14 @@ interface CommentsSidebarProps {
   onTagClick: (tag: string | null) => void;
 }
 
-// Available colors for comments
-const COMMENT_COLORS = [
-  "bg-emerald-100 text-emerald-800",
-  "bg-indigo-100 text-indigo-800",
-  "bg-amber-100 text-amber-800",
-  "bg-violet-100 text-violet-800",
-  "bg-lime-100 text-lime-800",
-  "bg-rose-100 text-rose-800",
-  "bg-cyan-100 text-cyan-800",
-  "bg-purple-100 text-purple-800",
-  "bg-yellow-100 text-yellow-800",
-  "bg-sky-100 text-sky-800",
-  "bg-orange-100 text-orange-800",
-  "bg-teal-100 text-teal-800",
-  "bg-pink-100 text-pink-800",
-  "bg-green-100 text-green-800",
-  "bg-fuchsia-100 text-fuchsia-800",
-  "bg-blue-100 text-blue-800",
-  "bg-red-100 text-red-800",
-];
-
-function getCommentColorByIndex(index: number): string {
-  return COMMENT_COLORS[index % COMMENT_COLORS.length];
-}
-
-function getCommentHighlightColor(index: number): string {
-  const colorClass = getCommentColorByIndex(index);
-  return colorClass.split(" ")[0].replace("bg-", "");
-}
-
-function sortCommentsByOffset(comments: Comment[]): Comment[] {
-  return [...comments].sort((a, b) => {
-    const aOffset = a.highlight?.startOffset || 0;
-    const bOffset = b.highlight?.startOffset || 0;
-    return aOffset - bOffset;
-  });
-}
-
 function CommentsSidebar({
   comments,
   expandedTag,
   onTagHover,
   onTagClick,
 }: CommentsSidebarProps) {
-  // Filter for valid comments and sort them
-  const validComments = comments.filter((comment) => comment.isValid);
-  const sortedComments = sortCommentsByOffset(validComments);
+  // Get valid and sorted comments
+  const sortedComments = getValidAndSortedComments(comments);
 
   return (
     <div className="rounded-lg bg-white shadow-sm">
@@ -270,6 +235,19 @@ export function DocumentWithEvaluations({
               <div className="text-sm text-gray-500">
                 By {document.author} •{" "}
                 {new Date(document.publishedDate).toLocaleDateString()}
+                {document.url && (
+                  <>
+                    {" • "}
+                    <a
+                      href={document.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      View Original
+                    </a>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -281,15 +259,12 @@ export function DocumentWithEvaluations({
               onHighlightClick={handleHighlightClick}
               highlights={
                 activeReview
-                  ? sortCommentsByOffset(activeReview.comments).map(
+                  ? getValidAndSortedComments(activeReview.comments).map(
                       (comment, index) => ({
                         startOffset: comment.highlight.startOffset,
                         endOffset: comment.highlight.endOffset,
                         tag: index.toString(),
-                        color: getCommentHighlightColor(index).replace(
-                          "bg-",
-                          ""
-                        ),
+                        color: getCommentColorByIndex(index).replace("bg-", ""),
                       })
                     )
                   : []
