@@ -7,7 +7,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { evaluationAgents } from "@/data/agents/index";
-import type { Comment } from "@/types/documentReview";
+import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
   getCommentColorByIndex,
@@ -21,6 +21,13 @@ import {
 } from "@heroicons/react/24/outline";
 
 import SlateEditor from "./SlateEditor";
+
+function getReviewsWithGrades(reviews: DocumentReview[]) {
+  return reviews.filter((review) => {
+    const agent = evaluationAgents.find((a) => a.id === review.agentId);
+    return agent?.gradeInstructions;
+  });
+}
 
 interface CommentsSidebarProps {
   comments: Comment[];
@@ -385,30 +392,32 @@ export function DocumentWithEvaluations({
 
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Document Reviews</h2>
-            {document.reviews.length > 0 && (
-              <div className="flex space-x-2">
-                {document.reviews.map((review) => {
-                  const agent = evaluationAgents.find(
-                    (a) => a.id === review.agentId
-                  );
-                  return (
-                    <div
-                      key={review.agentId}
-                      className="flex items-center space-x-1"
-                    >
-                      <span className="text-sm text-gray-600">
-                        {agent?.name || review.agentId}
-                      </span>
-                      {review.grade && (
-                        <span className="text-sm font-semibold">
-                          ({review.grade})
+            {document.reviews.length > 0 &&
+              getReviewsWithGrades(document.reviews).length > 0 && (
+                <div className="flex space-x-2">
+                  {getReviewsWithGrades(document.reviews).map((review) => {
+                    const agent = evaluationAgents.find(
+                      (a) => a.id === review.agentId
+                    );
+                    if (!agent) return null;
+                    return (
+                      <div
+                        key={review.agentId}
+                        className="flex items-center space-x-1"
+                      >
+                        <span className="text-sm font-medium">
+                          {agent.name}:
                         </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                        {review.grade && (
+                          <span className="text-sm font-medium">
+                            {review.grade}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
           </div>
         </div>
       </div>
