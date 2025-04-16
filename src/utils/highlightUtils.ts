@@ -5,7 +5,7 @@ import type {
   DocumentReview,
   Highlight,
 } from "../types/documentReview";
-import { openai } from "../types/openai";
+import { DEFAULT_TEMPERATURE, openai, SEARCH_MODEL } from "../types/openai";
 
 // Raw highlight structure expected from LLM response
 export interface RawLLMHighlight {
@@ -485,7 +485,7 @@ export function validateAndFixDocumentReview(
 }
 
 // Use a cheaper/faster model for text matching
-const MATCHING_MODEL = "google/gemini-2.0-flash-001";
+// const MATCHING_MODEL = "google/gemini-2.0-flash-001";
 
 async function findTextMatchWithLLM(
   content: string,
@@ -540,9 +540,9 @@ Return ONLY the exact matching text from the document, or "NO_MATCH" if no good 
 
   try {
     const completion = await openai.chat.completions.create({
-      model: MATCHING_MODEL,
+      model: SEARCH_MODEL,
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.1, // Low temperature for more deterministic results
+      temperature: DEFAULT_TEMPERATURE,
       max_tokens: 100,
     });
 
@@ -716,4 +716,63 @@ export function validateHighlight(
   }
 
   return { isValid: true };
+}
+
+export async function findExactMatch(
+  content: string,
+  searchText: string,
+  title: string
+): Promise<string | null> {
+  // First try exact match
+  if (content.includes(searchText)) {
+    return searchText;
+  }
+
+  // If no exact match, try with LLM but with a shorter, focused prompt
+  const prompt = `Find a short, exact match in this document for: "${searchText}"
+
+Document excerpt:
+${content.substring(0, 1000)}
+
+EXAMPLES OF CORRECT MATCHING:
+
+1. For a simple paragraph:
+   Search: "The quick brown fox jumps over the lazy dog"
+   Match: "quick brown fox jumps over the lazy"
+
+2. For text with markdown:
+   Search: "The author believes the intervention is cost-effective"
+   Match: "the intervention appears remarkably **cost-effective**"
+
+3. For text with special characters:
+   Search: "The cost was $1.5 million"
+   Match: "total cost was approximately $1.5 million"
+
+4. For text with links:
+   Search: "The author cites previous research"
+   Match: "As [Smith et al.](https://example.com) have shown"
+
+Rules:
+1. Return ONLY the exact text from the document
+2. Keep matches under 100 characters
+3. Include all formatting (bold, italics, links)
+4. Match must be a complete phrase
+5. If no good match, return "NO_MATCH"
+
+Return ONLY the matching text or "NO_MATCH".`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: SEARCH_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: DEFAULT_TEMPERATURE,
+      max_tokens: 50,
+    });
+
+    const match = completion.choices[0]?.message?.content?.trim() ?? null;
+    return match === "NO_MATCH" ? null : match;
+  } catch (error) {
+    console.error("Error finding match:", error);
+    return null;
+  }
 }

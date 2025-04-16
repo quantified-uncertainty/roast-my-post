@@ -13,206 +13,333 @@
   "reviews": [
     {
       "agentId": "bias-detector",
-      "costInCents": 0,
-      "createdAt": "2025-04-15T23:54:54.046Z",
-      "summary": "Error: Unable to parse the response from the AI. Please try again.",
-      "comments": []
+      "costInCents": 6393,
+      "createdAt": "2025-04-16T00:39:40.937Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4191,\"completionTokens\":2202,\"totalTokens\":6393,\"temperature\":0.7,\"runtimeMs\":36558}",
+      "summary": "This document presents a largely optimistic view of AGI development with several significant biases. There's strong technological determinism suggesting AGI advancement is inevitable and predominantly beneficial, with minimal acknowledgment of potential harms. The narrative displays status quo bias by framing AI development within existing power structures without critically examining them. Confirmation bias is evident in selectively focusing on positive outcomes while downplaying risks. The document exhibits quantification bias through oversimplified economic \"observations\" presented as facts without sufficient evidence. There's also a pronounced Western-centric perspective that fails to consider diverse global impacts. The text contains temporal bias by prioritizing short-term technological progress over long-term societal implications. Overall, the document would benefit from more balanced consideration of AGI's potential negative consequences, greater acknowledgment of uncertainty, and inclusion of more diverse stakeholder perspectives.",
+      "comments": [
+        {
+          "title": "Optimism Bias",
+          "description": "The text demonstrates a strong optimism bias by emphasizing potential benefits of AGI while minimizing potential risks and challenges. This presents an unbalanced view that could lead to underestimating important safety concerns and societal disruptions. A more balanced assessment would acknowledge both potential benefits and risks with equal consideration.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "False Dichotomy Bias",
+          "description": "The text presents a false dichotomy between individual empowerment through AGI and authoritarian control, suggesting these are the only two possible outcomes. This oversimplification ignores numerous other potential governance models and societal arrangements for AGI. A more nuanced approach would acknowledge the spectrum of possible governance structures beyond this binary framing.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Confirmation Bias",
+          "description": "The document selectively focuses on historical examples and analogies that support a positive view of technological progress while minimizing counterexamples or cases where technology has caused harm or exacerbated inequalities. This selective use of evidence creates an impression that technological progress has been uniformly positive, which is historically inaccurate and presents an unbalanced view.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
+        },
+        {
+          "title": "Equivocation Bias",
+          "description": "The document uses vague and ambiguous language around critical concepts like \"benefits all of humanity\" and \"broadly distributed benefits\" without clearly defining what these terms mean or how they would be measured. This ambiguity allows readers to interpret these phrases according to their own biases while avoiding specific commitments to particular outcomes or metrics of success.",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 6190,
+            "quotedText": "Our mission is to ensure that AGI (Artificial General Intelligence) benefits all of humanity. \n\nSystems that start to point to AGI\\* are coming into view, and so we think it’s important to understand the moment we are in. AGI is a weakly defined term, but generally speaking we mean it to be a system that can tackle increasingly complex problems, at human level, in many fields.\n\nPeople are tool-builders with an inherent drive to understand and create, which leads to the world getting better for all of us. Each new generation builds upon the discoveries of the generations before to create even more capable tools—electricity, the transistor, the computer, the internet, and soon AGI.\n\nOver time, in fits and starts, the steady march of human innovation has brought previously unimaginable levels of prosperity and improvements to almost every aspect of people’s lives.\n\nIn some sense, AGI is just another tool in this ever-taller scaffolding of human progress we are building together. In another sense, it is the beginning of something for which it’s hard not to say “this time it’s different”; the economic growth in front of us looks astonishing, and we can now imagine a world where we cure all diseases, have much more time to enjoy with our families, and can fully realize our creative potential.\n\nIn a decade, perhaps everyone on earth will be capable of accomplishing more than the most impactful person can today.\n\nWe continue to see rapid progress with AI development. Here are three observations about the economics of AI:\n\n1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude.\n\n2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore’s law changed the world at 2x every 18 months; this is unbelievably stronger. \n\n3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future.\n\nIf these three observations continue to hold true, the impacts on society will be significant.\n\nWe are now starting to roll out AI agents, which will eventually feel like virtual co-workers.\n\nLet’s imagine the case of a software engineering agent, which is an agent that we expect to be particularly important. Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work.\n\nIn some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don’t think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles.\n\nThe world will not change all at once; it never does. Life will go on mostly the same in the short run, and people in 2025 will mostly spend their time in the same way they did in 2024. We will still fall in love, create families, get in fights online, hike in nature, etc.\n\nBut the future will be coming at us in a way that is impossible to ignore, and the long-term changes to our society and economy will be huge. We will find new things to do, new ways to be useful to each other, and new ways to compete, but they may not look very much like the jobs of today. \n\nAgency, willfulness, and determination will likely be extremely valuable. Correctly deciding what to do and figuring out how to navigate an ever-changing world will have huge value; resilience and adaptability will be helpful skills to cultivate. AGI will be the biggest lever ever on human willfulness, and enable individual people to have more impact than ever before, not less.\n\nWe expect the impact of AGI to be uneven. Although some industries will change very little, scientific progress will likely be much faster than it is today; this impact of AGI may surpass everything else.\n\nThe price of many goods will eventually fall dramatically (right now, the cost of intelligence and the cost of energy constrain a lot of things), and the price of luxury goods and a few inherently limited resources like land may rise even more dramatically.\n\nTechnically speaking, the road in front of us looks fairly clear. But public policy and collective opinion on how we should integrate AGI into society matter a lot; one of our reasons for launching products early and often is to give society and the technology time to co-evolve.\n\nAI will seep into all areas of the economy and society; we will expect everything to be smart. Many of us expect to need to give people more control over the technology than we have historically, including open-sourcing more, and accept that there is a balance between safety and individual empowerment that will require trade-offs.\n\nWhile we never want to be reckless and there will likely be some major decisions and limitations related to AGI safety that will be unpopular, directionally, as we get closer to achieving AGI, we believe that trending more towards individual empowerment is important; the other likely path we can see is AI being used by authoritarian governments to control their population through mass surveillance and loss of autonomy.\n\nEnsuring that the benefits of AGI are broadly distributed is critical."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Technological Determinism Bias",
+          "description": "The text presents technological progress, including AGI development, as an inevitable and natural progression of human innovation. This deterministic view fails to acknowledge that technology development is shaped by specific human choices, power structures, and values rather than being an inevitable march forward. This bias can lead readers to believe AGI development is unavoidable rather than a path chosen by specific actors with particular interests.",
+          "highlight": {
+            "startOffset": 381,
+            "endOffset": 873,
+            "quotedText": "People are tool-builders with an inherent drive to understand and create, which leads to the world getting better for all of us. Each new generation builds upon the discoveries of the generations before to create even more capable tools—electricity, the transistor, the computer, the internet, and soon AGI.\n\nOver time, in fits and starts, the steady march of human innovation has brought previously unimaginable levels of prosperity and improvements to almost every aspect of people’s lives."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Quantification Bias",
+          "description": "The document presents three economic \"observations\" as factual statements without sufficient evidence or acknowledgment of uncertainty. These simplified quantifications of complex phenomena may create a false sense of precision and predictability about AI development trajectories. This bias can lead to overconfidence in technological forecasting and economic predictions.",
+          "highlight": {
+            "startOffset": 1540,
+            "endOffset": 2466,
+            "quotedText": "1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude.\n\n2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore’s law changed the world at 2x every 18 months; this is unbelievably stronger. \n\n3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Status Quo Bias",
+          "description": "The text assumes that existing economic and power structures will remain largely intact with AGI development, with benefits naturally flowing to society at large. This bias fails to critically examine how AGI might exacerbate existing inequalities or require fundamental changes to economic systems. A more balanced approach would question whether current structures are adequate for distributing AGI benefits equitably.",
+          "highlight": {
+            "startOffset": 3310,
+            "endOffset": 3851,
+            "quotedText": "In some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don’t think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles.\n\nThe world will not change all at once; it never does. Life will go on mostly the same in the short run, and people in 2025 will mostly spend their time in the same way they did in 2024."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Agency Overemphasis Bias",
+          "description": "The text places excessive emphasis on individual agency and adaptation as responses to AGI-driven changes, potentially downplaying systemic factors and structural changes needed. This framing shifts responsibility to individuals to adapt rather than acknowledging the need for systemic reforms and collective governance approaches. A more balanced view would recognize both individual and structural dimensions of adaptation to AGI.",
+          "highlight": {
+            "startOffset": 4234,
+            "endOffset": 4614,
+            "quotedText": "Agency, willfulness, and determination will likely be extremely valuable. Correctly deciding what to do and figuring out how to navigate an ever-changing world will have huge value; resilience and adaptability will be helpful skills to cultivate. AGI will be the biggest lever ever on human willfulness, and enable individual people to have more impact than ever before, not less."
+          },
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
+        },
+        {
+          "title": "Western-Centric Perspective",
+          "description": "The document presents a primarily Western and technologically advanced perspective on AGI development and impacts, failing to adequately consider how AGI might affect different regions, cultures, and socioeconomic contexts globally. This bias can lead to overlooking important cultural, economic, and social factors that might shape AGI's impact in diverse global contexts.",
+          "highlight": {
+            "startOffset": 4822,
+            "endOffset": 5244,
+            "quotedText": "The price of many goods will eventually fall dramatically (right now, the cost of intelligence and the cost of energy constrain a lot of things), and the price of luxury goods and a few inherently limited resources like land may rise even more dramatically.\n\nTechnically speaking, the road in front of us looks fairly clear. But public policy and collective opinion on how we should integrate AGI into society matter a lot"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Temporal Bias",
+          "description": "The text prioritizes short-term technological progress and economic benefits over potential long-term societal implications and risks. This bias toward near-term thinking could lead to undervaluing important long-term considerations about AGI's impact on human society, culture, and values. A more balanced approach would give equal weight to both short-term benefits and long-term implications.",
+          "highlight": {
+            "startOffset": 6191,
+            "endOffset": 6638,
+            "quotedText": "The historical impact of technological progress suggests that most of the metrics we care about (health outcomes, economic prosperity, etc.) get better on average and over the long-term, but increasing equality does not seem technologically determined and getting this right may require new ideas.\n\nIn particular, it does seem like the balance of power between capital and labor could easily get messed up, and this may require early intervention."
+          },
+          "isValid": true
+        }
+      ]
     },
     {
       "agentId": "clarity-coach",
-      "costInCents": 5679,
-      "createdAt": "2025-04-15T23:55:24.400Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4117,\"completionTokens\":1562,\"totalTokens\":5679,\"temperature\":0.7,\"runtimeMs\":30327}",
-      "summary": "This document presents OpenAI's vision regarding Artificial General Intelligence (AGI) development and its potential impact on humanity. The writing effectively communicates complex ideas about AI economics, societal implications, and future possibilities, though it varies in clarity across sections. The document successfully balances technical perspectives with broader social considerations, maintaining an optimistic yet measured tone throughout. While the overall structure flows logically, some passages contain complex sentences and abstract concepts that could benefit from simplification or additional context. The document assumes moderate technical literacy, particularly when discussing scaling laws and economic principles. Key strengths include well-articulated examples of potential AI applications and clear articulation of three core economic observations. Areas for improvement include more concrete examples in abstract sections, clearer transitions between topics, and more accessible explanations of technical concepts for general audiences.",
+      "costInCents": 6575,
+      "createdAt": "2025-04-16T00:40:16.611Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4821,\"completionTokens\":1754,\"totalTokens\":6575,\"temperature\":0.7,\"runtimeMs\":32359}",
+      "summary": "This document articulates a vision for AGI development and its potential impacts on humanity. The content exhibits strong clarity in explaining complex concepts through accessible language, effective use of numbered points, and concrete examples. However, the document suffers from structural inconsistencies, with abrupt transitions between philosophical discussions and technical observations. Several passages contain vague terminology (\"super-exponential\", \"unbelievably stronger\") without sufficient explanation. The document assumes considerable background knowledge about AI development, potentially alienating general readers. While the overall readability is good (approximately 10th-grade level), the document would benefit from more explicit signposting between sections, clearer definition of technical terms, and more balanced presentation of potential challenges alongside benefits. The document effectively communicates enthusiasm for AGI's potential while acknowledging some societal concerns, but could provide more specific details about implementation paths and risk mitigation strategies.",
       "comments": [
         {
-          "title": "Undefined Technical Acronym",
-          "description": "The document introduces the acronym 'AGI' in the first sentence without immediately defining it, only providing the full term in parentheses afterward. While this is clarified, best practice for clarity is to introduce the full term first, followed by the acronym in parentheses. This ensures readers unfamiliar with the term can immediately understand what's being discussed.",
+          "title": "Undefined Terminology",
+          "description": "The document introduces the term \"AGI\" with only a partial definition. While the acronym is expanded, the concept is described as \"weakly defined\" without providing sufficient context for readers unfamiliar with the field. A clearer definition with concrete examples would improve understanding for a broader audience.",
           "highlight": {
-            "startOffset": 0,
-            "endOffset": 93,
-            "quotedText": "Our mission is to ensure that AGI (Artificial General Intelligence) benefits all of humanity."
-          }
+            "startOffset": 96,
+            "endOffset": 379,
+            "quotedText": "Systems that start to point to AGI\\* are coming into view, and so we think it’s important to understand the moment we are in. AGI is a weakly defined term, but generally speaking we mean it to be a system that can tackle increasingly complex problems, at human level, in many fields."
+          },
+          "isValid": true
         },
         {
-          "title": "Vague Definition With Asterisk",
-          "description": "The asterisk marking appears after mentioning AGI systems but the corresponding footnote is placed at the very end of the document, far removed from this reference. This creates a disruption in reading flow as readers must search for the related information. For better clarity, either move the footnote closer to the reference or incorporate the essential information directly in the text.",
+          "title": "Effective Use of Numbered Points",
+          "description": "The document effectively uses a numbered list to present three key observations about AI economics. This structural choice enhances readability by clearly delineating separate but related concepts. The bold formatting of each point further improves scanability and information retention for readers.",
           "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
+            "startOffset": 1429,
+            "endOffset": 2466,
+            "quotedText": "We continue to see rapid progress with AI development. Here are three observations about the economics of AI:\n\n1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude.\n\n2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore’s law changed the world at 2x every 18 months; this is unbelievably stronger. \n\n3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
+          },
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
         },
         {
-          "title": "Complex Economic Comparison",
-          "description": "This comparison between AI cost reduction and Moore's Law includes specific numbers that may be difficult for non-technical readers to contextualize. The statement \"unbelievably stronger\" doesn't specify exactly how much stronger. A clearer comparison showing the practical implications of this difference would improve understanding for general audiences.",
+          "title": "Vague Quantification",
+          "description": "This statement uses imprecise language (\"unbelievably stronger\") without providing specific metrics or comparisons to substantiate the claim. While the 10x improvement every 12 months is quantified, the comparative statement lacks precision, making it difficult for readers to evaluate the significance objectively.",
           "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
+            "startOffset": 1900,
+            "endOffset": 2249,
+            "quotedText": "2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore’s law changed the world at 2x every 18 months; this is unbelievably stronger."
+          },
+          "isValid": true
         },
         {
-          "title": "Effective Concrete Example",
-          "description": "This section provides an excellent concrete example of how AI agents might function in a specific profession. By using software engineering as a case study, the document makes abstract concepts tangible. The description of capabilities and limitations creates a realistic picture that helps readers understand the practical implications of AI development.",
+          "title": "Technical Term Without Explanation",
+          "description": "The term \"super-exponential\" is used without definition or explanation. This technical mathematical concept may not be familiar to general readers, creating a potential comprehension barrier. A brief explanation or visual analogy would make this important concept more accessible.",
           "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
+            "startOffset": 2252,
+            "endOffset": 2466,
+            "quotedText": "3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
+          },
+          "isValid": true
         },
         {
-          "title": "Abstract Concept Without Concrete Examples",
-          "description": "This passage discusses AGI as a tool for human progress in abstract terms without providing specific examples of what AGI might actually do. The metaphor of \"ever-taller scaffolding\" is poetic but doesn't clarify how AGI differs from previous technologies. Adding 1-2 concrete examples of AGI applications would significantly improve reader understanding.",
+          "title": "Strong Transition with Clear Example",
+          "description": "This passage effectively transitions from abstract concepts to a concrete example, enhancing clarity. The software engineering agent example provides readers with a tangible scenario to understand the implications of AI development. The progressive scaling (1 agent to 1,000 to 1 million) effectively illustrates potential impact.",
           "highlight": {
-            "startOffset": 875,
-            "endOffset": 990,
-            "quotedText": "In some sense, AGI is just another tool in this ever-taller scaffolding of human progress we are building together."
-          }
+            "startOffset": 2564,
+            "endOffset": 3308,
+            "quotedText": "We are now starting to roll out AI agents, which will eventually feel like virtual co-workers.\n\nLet’s imagine the case of a software engineering agent, which is an agent that we expect to be particularly important. Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work."
+          },
+          "isValid": true
         },
         {
-          "title": "Strong Numeric Formatting",
-          "description": "The numbered list format with bold headings effectively structures the three key observations about AI economics. This formatting choice enhances readability by clearly separating distinct points and highlighting the core concepts. The bold text draws attention to the main principles while the surrounding explanation provides necessary context.",
-          "highlight": {
-            "startOffset": 1540,
-            "endOffset": 1898,
-            "quotedText": "1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude."
-          }
-        },
-        {
-          "title": "Accessible Analogy",
-          "description": "The transistor analogy effectively communicates how a transformative technology can become ubiquitous while its direct economic impact becomes distributed. This comparison helps readers understand the potential path of AI integration by relating it to a familiar historical example. The everyday examples (computers, TVs, etc.) make the concept accessible to non-technical audiences.",
+          "title": "Effective Analogy",
+          "description": "The transistor analogy effectively communicates a complex economic concept in accessible terms. By comparing AI to a familiar technological innovation, the passage helps readers understand how a fundamental technology can have widespread impacts without being visible in daily life. This analogy bridges technical and general understanding.",
           "highlight": {
             "startOffset": 3310,
             "endOffset": 3664,
             "quotedText": "In some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don’t think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "Balanced Perspective on Change",
-          "description": "This paragraph effectively balances technological optimism with realistic expectations about the pace of change. By acknowledging both continuity in human experience and inevitable transformation, the document avoids both hype and dismissiveness. This nuanced approach enhances credibility and helps readers form realistic expectations about AI's impact.",
+          "title": "Abrupt Topical Shift",
+          "description": "This passage marks an abrupt transition from discussing economic impacts to policy considerations without a clear transitional sentence or paragraph. The shift disrupts the document's flow and coherence. A bridging sentence explaining how technical progress relates to policy needs would improve structural coherence.",
           "highlight": {
-            "startOffset": 3666,
-            "endOffset": 3939,
-            "quotedText": "The world will not change all at once; it never does. Life will go on mostly the same in the short run, and people in 2025 will mostly spend their time in the same way they did in 2024. We will still fall in love, create families, get in fights online, hike in nature, etc."
-          }
+            "startOffset": 5081,
+            "endOffset": 5360,
+            "quotedText": "Technically speaking, the road in front of us looks fairly clear. But public policy and collective opinion on how we should integrate AGI into society matter a lot; one of our reasons for launching products early and often is to give society and the technology time to co-evolve."
+          },
+          "isValid": true
         },
         {
-          "title": "Unclear Economic Concept",
-          "description": "The statement about the \"balance of power between capital and labor\" assumes familiarity with economic concepts that may not be accessible to all readers. The passage would benefit from briefly explaining what this balance means and why AI might disrupt it. A simple example of how this imbalance might manifest would significantly improve clarity.",
+          "title": "Vague Solution Proposal",
+          "description": "This passage introduces a potential solution (\"compute budget\") without adequately explaining the concept or implementation details. The vague reference to \"strange-sounding ideas\" diminishes clarity and credibility. More specific explanation of how a compute budget would work or examples from existing models would strengthen this important policy suggestion.",
           "highlight": {
-            "startOffset": 6490,
-            "endOffset": 6638,
-            "quotedText": "In particular, it does seem like the balance of power between capital and labor could easily get messed up, and this may require early intervention."
-          }
+            "startOffset": 6639,
+            "endOffset": 6892,
+            "quotedText": "We are open to strange-sounding ideas like giving some “compute budget” to enable everyone on Earth to use a lot of AI, but we can also see a lot of ways where just relentlessly driving the cost of intelligence as low as possible has the desired effect."
+          },
+          "isValid": true
         },
         {
-          "title": "Awkward Footnote Placement",
-          "description": "The footnote placement at the very end of the document, separated by multiple blank lines, creates confusion about its relationship to the main text. The content of the footnote also shifts abruptly to a corporate disclaimer that feels disconnected from the document's overall tone. Integrating this information earlier or formatting it more clearly as a separate note would improve document coherence.",
+          "title": "Aspirational Language Without Implementation Path",
+          "description": "This statement makes a bold aspirational claim without providing a clear path to implementation or addressing potential obstacles. The lack of specific mechanisms for achieving this vision reduces its practical value. Including intermediate milestones or specific approaches would enhance clarity about how this future state might be achieved.",
+          "highlight": {
+            "startOffset": 6894,
+            "endOffset": 7077,
+            "quotedText": "Anyone in 2035 should be able to marshall the intellectual capacity equivalent to everyone in 2025; everyone should have access to unlimited genius to direct however they can imagine."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Meta-Textual Explanation",
+          "description": "The footnote provides necessary clarification but disrupts the document's professional tone with self-referential commentary about \"silliness.\" While the legal clarification serves an important purpose, the informal commentary undermines the document's otherwise measured tone. A more straightforward legal disclaimer would maintain consistency in voice and professionalism.",
           "highlight": {
             "startOffset": 7394,
             "endOffset": 7804,
             "quotedText": "\\*By using the term AGI here, we aim to communicate clearly, and we do not intend to alter or interpret the definitions and processes that define our relationship with Microsoft. We fully expect to be partnered with Microsoft for the long term. This footnote seems silly, but on the other hand we know some journalists will try to get clicks by writing something silly so here we are pre-empting the silliness…"
-          }
+          },
+          "isValid": true
         }
       ]
     },
     {
       "agentId": "research-scholar",
-      "costInCents": 7815,
-      "createdAt": "2025-04-15T23:57:15.161Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4354,\"completionTokens\":3461,\"totalTokens\":7815,\"temperature\":0.7,\"runtimeMs\":62748}",
-      "summary": "This document outlines OpenAI's vision regarding the development and impact of Artificial General Intelligence (AGI). The authors present three key economic observations: AI intelligence scales logarithmically with resources, costs fall approximately 10x annually, and the socioeconomic value of increasing intelligence grows super-exponentially. They envision AI agents becoming virtual co-workers across knowledge domains, with particularly transformative impacts on scientific progress. While acknowledging that societal change will be gradual, they predict dramatic long-term economic shifts, including falling prices for many goods and rising costs for limited resources. The document emphasizes the importance of ensuring broad distribution of AGI benefits, expressing concerns about potential capital-labor power imbalances while advocating for individual empowerment. The authors position AGI as both a continuation of humanity's tool-building heritage and something fundamentally different—potentially enabling unprecedented human prosperity and creative potential.",
+      "costInCents": 7530,
+      "createdAt": "2025-04-16T00:41:05.659Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":4992,\"completionTokens\":2538,\"totalTokens\":7530,\"temperature\":0.7,\"runtimeMs\":47806}",
+      "summary": "This document outlines OpenAI's perspective on AGI development and its potential societal impact. The authors argue that AGI represents both a continuation of humanity's tool-building progression and a transformative technology with unprecedented implications. They present three key economic observations: AI intelligence scales logarithmically with resources, costs fall approximately 10x yearly, and the value of increasing intelligence grows super-exponentially. The document envisions AI agents becoming virtual co-workers across knowledge domains, with impacts distributed unevenly across society. While acknowledging technical progress appears straightforward, the authors emphasize the importance of policy considerations, individual empowerment, and ensuring broadly distributed benefits. They specifically highlight concerns about capital-labor power dynamics and advocate for universal access to AI capabilities to unleash global creative potential.",
       "comments": [
         {
-          "title": "Economic Acceleration Beyond Moore's Law",
-          "description": "The comparison between AI cost reduction (10x every 12 months) and Moore's Law (2x every 18 months) highlights an unprecedented rate of technological acceleration. This has profound implications for economic forecasting and adaptation strategies. Traditional economic models struggle to account for such rapid change. The EA community's work on differential technological development becomes particularly relevant here, as such acceleration may create significant gaps between economic/social adaptation and technological capability. This observation connects to Robin Hanson's work on economic growth modes and the potential for a new growth paradigm that exceeds both agricultural and industrial revolution rates. The 150x price drop example provides concrete evidence of this acceleration already manifesting.",
-          "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
-        },
-        {
-          "title": "Transistor Analogy and General Purpose Technologies",
-          "description": "The comparison of AI to transistors positions it as a General Purpose Technology (GPT) with broad, distributed economic impacts. This connects to economic literature on GPTs like electricity, steam power, and computing. However, the analogy may understate important differences between hardware innovations and software/intelligence innovations. Unlike transistors, AI systems exhibit agency, can replicate, and may have emergent properties at scale. The EA and rationalist communities have discussed how AI differs from previous technologies in its potential for autonomous improvement and goal-directed behavior. The \"widely distributed\" gains prediction connects to discussions about AI's impact on inequality and whether its economic benefits will be broadly shared or concentrated. This framing also has implications for AI governance approaches - whether AI should be regulated like other technologies or requires novel governance frameworks.",
-          "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
-        },
-        {
-          "title": "Capital-Labor Balance and Distributional Concerns",
-          "description": "The acknowledgment that \"the balance of power between capital and labor could easily get messed up\" represents an important recognition of potential distributional challenges from AGI deployment. This connects to economic literature on labor market polarization, skill-biased technological change, and capital share of income. The suggestion of a \"compute budget\" as a potential solution connects to proposals like Universal Basic Income (UBI) and digital dividends that have been discussed in EA circles. This framing acknowledges that technological progress doesn't automatically lead to equitable outcomes - a recognition that aligns with EA critiques of pure techno-optimism. The tension between driving down costs and ensuring broad access raises important questions about market structures, competition policy, and potential public provision of AI capabilities that have been discussed in AI governance literature.",
-          "highlight": {
-            "startOffset": 0,
-            "endOffset": 0,
-            "quotedText": ""
-          }
-        },
-        {
-          "title": "AGI Definition and Conceptual Ambiguity",
-          "description": "The document acknowledges AGI as a \"weakly defined term\" while offering a working definition. This reflects an ongoing challenge in AI research where terminology often lacks precise consensus. In the AI alignment literature (e.g., Bostrom's \"Superintelligence\" and Yudkowsky's writings), definitions of AGI vary significantly, ranging from human-level performance across domains to recursive self-improvement capabilities. This definitional ambiguity creates challenges for policy discussions and safety research, as different stakeholders may be discussing fundamentally different concepts when using the same terminology. The LessWrong community has extensively discussed this problem under concepts like \"taboo your words\" and \"inferential distance.\"",
-          "highlight": {
-            "startOffset": 222,
-            "endOffset": 379,
-            "quotedText": "AGI is a weakly defined term, but generally speaking we mean it to be a system that can tackle increasingly complex problems, at human level, in many fields."
-          }
-        },
-        {
-          "title": "Scaling Laws as Fundamental AI Drivers",
-          "description": "The observation about logarithmic scaling of AI capabilities with resources reflects the influential \"scaling hypothesis\" that has dominated AI research strategy since Kaplan et al.'s 2020 paper on scaling laws. This perspective has been central to OpenAI's approach since GPT-3 and has significant implications for AI governance and safety. The predictability of these scaling relationships suggests that capability jumps may be more foreseeable than sometimes portrayed. On LessWrong and the Alignment Forum, this deterministic view of AI progress has been both embraced (as in Ajeya Cotra's bio anchors framework) and criticized (by those arguing for qualitative leaps in capabilities). The economic implications of predictable scaling are profound for investment patterns and competitive dynamics in AI development.",
+          "title": "Logarithmic Scaling Law Observation",
+          "description": "This observation aligns with established AI scaling laws research, particularly the work of Kaplan et al. (2020) on transformer language models and follow-up studies by Hoffmann et al. (2022). The logarithmic relationship between compute and performance has been consistently observed across multiple model architectures and tasks. This has significant implications for AI development economics and forecasting timelines. The predictability of these gains over orders of magnitude suggests a relatively clear technical path to more capable systems, though with diminishing returns per unit of investment. This observation connects to the LessWrong concept of 'AI Takeoff Speeds' and discussions about whether progress will be continuous or discontinuous.",
           "highlight": {
             "startOffset": 1540,
             "endOffset": 1898,
             "quotedText": "1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "Super-Exponential Returns and Investment Incentives",
-          "description": "The claim about super-exponential returns to intelligence has significant implications for AI race dynamics and safety concerns. If true, this creates powerful economic incentives that could overwhelm safety-oriented governance approaches. This observation connects to Nick Bostrom's concept of \"differential technological development\" and Paul Christiano's work on the \"alignment tax.\" The rationality community has often discussed how economic incentives can create Moloch-like dynamics where individually rational actions lead to collectively harmful outcomes. This super-exponential return structure could create particularly strong coordination problems, as the rewards for defecting from safety agreements would grow dramatically with capability advances. This presents a classic multipolar trap scenario that requires careful institutional design to address.",
+          "title": "AI Cost Reduction Dynamics",
+          "description": "The claimed 10x annual cost reduction represents an extraordinary rate of progress compared to historical technological trends. Moore's Law, which drove computing advances for decades, achieved only ~2x improvement every 18 months. This acceleration suggests we're in a period of unusually rapid technological progress in AI specifically. This connects to discussions in the EA community about differential technological development and the potential for rapid capability jumps. The GPT-4 to GPT-4o price drop example (150x in ~15 months) would be worth analyzing more deeply, as it may combine both hardware improvements and algorithmic advances. This rapid cost reduction has implications for AI access, democratization, and potential risks from widespread deployment.",
+          "highlight": {
+            "startOffset": 1900,
+            "endOffset": 2249,
+            "quotedText": "2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore’s law changed the world at 2x every 18 months; this is unbelievably stronger."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Super-Exponential Value Claim",
+          "description": "The claim about super-exponential value of intelligence is particularly significant but presented without supporting evidence. This connects to economic research on the returns to cognitive ability and the value of innovation. If true, this observation would explain the massive investment flowing into AI development despite uncertain timelines. The claim relates to discussions in the rationalist community about intelligence explosion scenarios and recursive self-improvement. However, there may be limiting factors not addressed here, such as diminishing returns in some domains, or bottlenecks in translating intelligence into economic value. The confidence in this claim warrants scrutiny, as it forms a crucial part of the argument for continued exponential investment.",
           "highlight": {
             "startOffset": 2252,
             "endOffset": 2466,
             "quotedText": "3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the near future."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "AI Agents as Virtual Co-Workers",
-          "description": "The framing of AI systems as \"virtual co-workers\" represents a significant conceptual shift from previous AI narratives that emphasized tools or services. This framing has important implications for how society will integrate and regulate AI systems. The software engineering agent example connects to discussions in the AI alignment community about task-specific AI systems versus general agents, and whether agentic AI presents different safety challenges than tool AI. The scale dimension (\"imagine 1 million of them\") highlights potential systemic effects that emerge when individually limited systems operate at massive scale - a concept related to Bostrom's \"speed superintelligence\" and discussions of distributed AI systems in the alignment literature. This framing also raises important questions about labor markets, economic displacement, and the changing nature of human work that have been central to EA discussions about technological unemployment.",
+          "title": "AI Agents as Virtual Co-workers",
+          "description": "The framing of AI agents as \"virtual co-workers\" represents a significant shift in how AI is conceptualized - moving from tools to collaborators with agency. This connects to discussions in AI alignment about principal-agent problems and delegation. The software engineering example is particularly relevant given current capabilities of code generation models. The scale implications (\"1,000 of them. Or 1 million\") connect to Robin Hanson's work on \"em economics\" and discussions about labor substitution. This vision suggests a future where AI doesn't just automate tasks but participates in creative knowledge work alongside humans. This has implications for labor markets, organizational structures, and potentially the distribution of economic power that are explored further in later sections of the document.",
           "highlight": {
             "startOffset": 2564,
             "endOffset": 3308,
             "quotedText": "We are now starting to roll out AI agents, which will eventually feel like virtual co-workers.\n\nLet’s imagine the case of a software engineering agent, which is an agent that we expect to be particularly important. Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "Human Agency and Willfulness in an AGI Era",
-          "description": "The emphasis on human agency, willfulness, and determination as valuable traits in an AGI future connects to important philosophical discussions about human flourishing in a highly automated world. This perspective contrasts with narratives of human obsolescence that sometimes appear in discussions of transformative AI. The framing of AGI as \"the biggest lever ever on human willfulness\" suggests a tool-centric view rather than an autonomous agent view of advanced AI systems. This connects to the long-standing debate in the alignment community between \"AI as tool\" versus \"AI as agent\" paradigms, and whether advanced AI systems will fundamentally enhance human agency or potentially constrain it. The emphasis on adaptability and resilience also connects to EA discussions about how education and social systems should evolve to prepare for rapid technological change and uncertain futures.",
+          "title": "Transistor Analogy for AI Economic Impact",
+          "description": "The transistor analogy provides an interesting historical comparison for how transformative technologies diffuse through the economy. Unlike many AI narratives that focus on sudden, discontinuous change, this framing suggests a more gradual but pervasive transformation. This connects to general purpose technology (GPT) theory in economics and discussions about enabling technologies versus end applications. The analogy suggests AI's impact may be greatest through its enabling effects across sectors rather than as a standalone industry. However, there's a tension between this gradual diffusion model and the document's other claims about rapid, super-exponential returns. The transistor took decades to transform the economy, while the document elsewhere suggests much faster timelines for AI impact.",
+          "highlight": {
+            "startOffset": 3310,
+            "endOffset": 3664,
+            "quotedText": "In some ways, AI may turn out to be like the transistor economically—a big scientific discovery that scales well and that seeps into almost every corner of the economy. We don’t think much about transistors, or transistor companies, and the gains are very widely distributed. But we do expect our computers, TVs, cars, toys, and more to perform miracles."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Human Agency in an AI-Enabled World",
+          "description": "This passage makes a notable claim that runs counter to many AI risk narratives - that human agency and determination will become more valuable, not less, in an AGI world. This connects to discussions in the rationalist community about the role of human values in shaping AI outcomes, and to the concept of \"impact certificates\" in EA circles. The emphasis on AGI as a \"lever on human willfulness\" presents a vision where AI amplifies human capabilities rather than replacing human decision-making. This framing has implications for how we approach AI governance - focusing on empowering humans to use AI effectively rather than restricting AI capabilities. However, it doesn't fully address potential power imbalances in who gets to direct these new capabilities.",
           "highlight": {
             "startOffset": 4234,
             "endOffset": 4614,
             "quotedText": "Agency, willfulness, and determination will likely be extremely valuable. Correctly deciding what to do and figuring out how to navigate an ever-changing world will have huge value; resilience and adaptability will be helpful skills to cultivate. AGI will be the biggest lever ever on human willfulness, and enable individual people to have more impact than ever before, not less."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "Scientific Acceleration as Transformative Impact",
-          "description": "The prediction that scientific progress acceleration may \"surpass everything else\" in AGI impact connects to discussions about intelligence as a rate-limiting factor in scientific discovery. This view aligns with certain perspectives in the progress studies community and connects to concepts like Drexler's \"Comprehensive AI Services\" model. This framing has significant implications for longtermist priorities, as accelerated scientific progress could affect existential risk calculations in complex ways - potentially reducing some risks (e.g., through faster development of defensive technologies) while increasing others (e.g., through faster development of potentially dangerous technologies). The EA community has extensively discussed these dynamics under concepts like differential technological development and the unilateralist's curse. The uneven impact prediction also raises important questions about adaptation capacities across different sectors and potential concentration of economic and political power.",
+          "title": "Uneven Distribution of AGI Impact",
+          "description": "The prediction of uneven impact across sectors, with scientific progress experiencing the most dramatic acceleration, connects to discussions about differential technological development in EA circles. This has implications for cause prioritization - suggesting that AI-accelerated scientific progress may address some current EA priorities (like medical research) while potentially creating new risks. The emphasis on scientific acceleration aligns with analyses by researchers like Ben Garfinkel and Katja Grace on the transformative potential of AI in research. This connects to the concept of \"intelligence explosion\" through scientific progress rather than recursive self-improvement of AI systems themselves. The uneven distribution of benefits also raises important questions about global equity and access that are touched on later in the document.",
           "highlight": {
             "startOffset": 4616,
             "endOffset": 4820,
             "quotedText": "We expect the impact of AGI to be uneven. Although some industries will change very little, scientific progress will likely be much faster than it is today; this impact of AGI may surpass everything else."
-          }
+          },
+          "isValid": true
         },
         {
-          "title": "Tension Between Safety and Individual Empowerment",
-          "description": "The document acknowledges a fundamental tension between safety considerations and individual empowerment in AGI governance. This reflects a core dilemma in AI alignment discussions between centralized control (potentially safer but more restrictive) and distributed access (potentially riskier but preserving autonomy). The framing of authoritarian surveillance as an alternative path connects to EA and rationalist concerns about totalitarian lock-in scenarios enabled by advanced AI. This perspective aligns with arguments from Drexler's \"Comprehensive AI Services\" model and Christiano's \"Prosaic AI Alignment\" approach that favor distributed, human-aligned AI systems over centralized ones. The mention of unpopular limitations related to AGI safety suggests an awareness of potential public resistance to safety measures - a challenge discussed in AI governance literature regarding the political economy of AI regulation. This framing positions individual empowerment not just as a value preference but as a strategic approach to reducing certain risks.",
+          "title": "Price Effects of AGI",
+          "description": "The economic prediction about price effects - falling prices for many goods but rising prices for scarce resources like land - connects to discussions in economics about productivity gains, automation, and rent-seeking. This has implications for wealth inequality and connects to concerns in EA about ensuring broadly shared benefits from transformative technologies. The identification of intelligence and energy as key cost constraints aligns with analyses by researchers like J. Storrs Hall on the importance of \"intelligence\" and \"energy\" abundance for technological progress. The prediction about luxury goods increasing in price suggests positional goods may become even more important status markers in an AI-enabled economy. This connects to discussions about post-scarcity economics and the potential need for new economic frameworks in an AGI world.",
           "highlight": {
-            "startOffset": 5696,
-            "endOffset": 6118,
-            "quotedText": "While we never want to be reckless and there will likely be some major decisions and limitations related to AGI safety that will be unpopular, directionally, as we get closer to achieving AGI, we believe that trending more towards individual empowerment is important; the other likely path we can see is AI being used by authoritarian governments to control their population through mass surveillance and loss of autonomy."
-          }
+            "startOffset": 4822,
+            "endOffset": 5079,
+            "quotedText": "The price of many goods will eventually fall dramatically (right now, the cost of intelligence and the cost of energy constrain a lot of things), and the price of luxury goods and a few inherently limited resources like land may rise even more dramatically."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Capital-Labor Power Dynamics Concern",
+          "description": "This passage represents one of the document's most explicit acknowledgments of potential negative economic consequences from AGI development. The concern about capital-labor power imbalance connects to discussions in economics about automation, labor share of income, and wealth concentration. The suggestion of \"early intervention\" indicates awareness that market forces alone may not ensure equitable outcomes. This connects to EA discussions about distribution of benefits from transformative technologies and the potential need for new economic models. The proposed \"compute budget\" concept resembles universal basic income proposals but specifically for AI computation resources, representing an interesting innovation in thinking about resource distribution in an AI-enabled economy. This acknowledgment of potential structural economic problems represents an important counterbalance to the document's generally optimistic framing.",
+          "highlight": {
+            "startOffset": 6490,
+            "endOffset": 6892,
+            "quotedText": "In particular, it does seem like the balance of power between capital and labor could easily get messed up, and this may require early intervention. We are open to strange-sounding ideas like giving some “compute budget” to enable everyone on Earth to use a lot of AI, but we can also see a lot of ways where just relentlessly driving the cost of intelligence as low as possible has the desired effect."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Vision of Universal Access to AI Capabilities",
+          "description": "The closing vision of universal access to AI capabilities connects to discussions in effective altruism about global equity and maximizing human potential. The framing of AI as enabling currently underutilized human talent connects to the concept of \"talent gaps\" in EA and the recognition that geographic and economic barriers prevent many people from contributing their full potential. This vision presents AI democratization as both a moral imperative and a practical strategy for maximizing global innovation. The metaphor of \"unlimited genius to direct\" frames AI as an amplifier of human direction rather than an autonomous decision-maker, connecting to discussions about AI as a tool versus an agent. This aspirational closing frames the document's overall argument as being about human flourishing rather than technological progress for its own sake.",
+          "highlight": {
+            "startOffset": 6894,
+            "endOffset": 7277,
+            "quotedText": "Anyone in 2035 should be able to marshall the intellectual capacity equivalent to everyone in 2025; everyone should have access to unlimited genius to direct however they can imagine. There is a great deal of talent right now without the resources to fully express itself, and if we change that, the resulting creative output of the world will lead to tremendous benefits for us all."
+          },
+          "isValid": true
         }
       ]
     }

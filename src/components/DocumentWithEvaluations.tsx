@@ -70,7 +70,9 @@ function CommentsSidebar({
   onTagHover,
   onTagClick,
 }: CommentsSidebarProps) {
-  const sortedComments = sortCommentsByOffset(comments);
+  // Filter for valid comments and sort them
+  const validComments = comments.filter((comment) => comment.isValid);
+  const sortedComments = sortCommentsByOffset(validComments);
 
   return (
     <div className="rounded-lg bg-white shadow-sm">

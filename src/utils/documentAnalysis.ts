@@ -3,7 +3,7 @@ import { parse as parseJsonc, ParseError } from "jsonc-parser";
 import path from "path";
 
 import type { Comment, DocumentReview } from "../types/documentReview";
-import { DEFAULT_TEMPERATURE, MODEL, openai } from "../types/openai";
+import { ANALYSIS_MODEL, DEFAULT_TEMPERATURE, openai } from "../types/openai";
 import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
 
 // Type for the raw LLM response before transformation
@@ -59,7 +59,7 @@ export function calculateTargetComments(content: string): number {
   // Roughly 1 comment per 100 words
   // Assuming ~5 chars per word
   const additionalComments = Math.floor(contentLength / 500);
-  return Math.max(baseComments, Math.min(additionalComments, 10)); // Cap at 10 comments
+  return Math.max(baseComments, Math.min(additionalComments, 100)); // Cap at 100 comments
 }
 
 // Add this function before analyzeDocument
@@ -428,7 +428,7 @@ ${content}
       console.log(`📝 Attempting API call (${4 - retries}/3)...`);
       completion = await openai.chat.completions.create(
         {
-          model: MODEL,
+          model: ANALYSIS_MODEL,
           messages: [{ role: "user", content: finalPrompt }],
           temperature: DEFAULT_TEMPERATURE,
         },
@@ -602,7 +602,7 @@ ${content}
     createdAt: new Date(),
     runDetails: usage
       ? JSON.stringify({
-          model: MODEL,
+          model: ANALYSIS_MODEL,
           promptTokens: usage.prompt_tokens,
           completionTokens: usage.completion_tokens,
           totalTokens: usage.total_tokens,
