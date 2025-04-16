@@ -13,198 +13,332 @@
   "reviews": [
     {
       "agentId": "bias-detector",
-      "costInCents": 9094,
-      "createdAt": "2025-04-15T22:14:35.599Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6063,\"completionTokens\":3031,\"totalTokens\":9094,\"temperature\":0.7,\"runtimeMs\":58891}",
-      "summary": "This document advocates for using gene drives to eradicate the New World Screwworm in South America, presenting a case that combines economic benefits with significant wild animal welfare improvements. The analysis shows strong bias toward intervention, with several forms of bias evident throughout. The author demonstrates confirmation bias by selectively emphasizing benefits while minimizing potential ecological risks. There's also emotional appeal bias through vivid descriptions of animal suffering and enthusiastic language (\"holy shit that's incredible\"). The document contains availability bias in relying heavily on Uruguayan data and extrapolating continent-wide, and status quo bias in assuming current ecological conditions would remain stable post-eradication. The quantitative estimates contain optimism bias, with wide uncertainty ranges narrowed toward favorable outcomes. While the economic case is well-supported, the ecological impact assessment lacks sufficient counterarguments and expert perspectives from environmental science and ecology. Overall, the document presents a compelling but imbalanced case that would benefit from more rigorous exploration of potential downsides, ecological complexity, and diverse stakeholder perspectives.",
+      "costInCents": 9341,
+      "createdAt": "2025-04-16T00:26:07.939Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6771,\"completionTokens\":2570,\"totalTokens\":9341,\"temperature\":0.7,\"runtimeMs\":52631}",
+      "summary": "This document presents a case for using gene drives to eradicate the New World Screwworm from South America through political advocacy. The analysis contains several biases that affect its objectivity and completeness. There's a strong confirmation bias throughout, with the author acknowledging their \"frenzy\" and \"obsession\" while primarily citing evidence supporting their position. The document displays emotional framing bias by using vivid language (\"holy shit\", \"eaten alive\") and emotional appeals rather than neutral assessments. Anthropomorphic bias appears in assumptions about wild animal suffering preferences. There's selective evidence presentation, particularly regarding environmental impacts and potential resistance to gene drives. The document shows Western-centric thinking by applying solutions without adequate consideration of South American perspectives. Quantitative bias manifests in speculative calculations with wide uncertainty ranges presented as reliable. The assessment of opposition from environmental groups shows adversarial bias, while economic benefits receive disproportionate emphasis compared to ecological concerns. Overall, the document demonstrates enthusiasm for the intervention but would benefit from more balanced consideration of risks, limitations, and alternative perspectives.",
       "comments": [
         {
-          "title": "Confirmation Bias in Risk Assessment",
-          "description": "The document shows confirmation bias by downplaying potential ecological risks while emphasizing benefits. The author dismisses environmental concerns by stating impacts in North/Central America were \"minimal to none\" without providing supporting evidence or considering potential differences in South American ecosystems. A more balanced assessment would include detailed ecological analysis and acknowledge the possibility of unforeseen consequences in different ecosystems.",
+          "title": "Emotional Framing Bias",
+          "description": "The document uses emotionally charged language (\"holy shit\", \"tremendous suffering\", \"eaten alive\") that frames the issue in a way that evokes strong emotional responses rather than encouraging neutral, objective assessment. This emotional framing can lead readers to make decisions based on emotional reactions rather than balanced evaluation of evidence. A more neutral presentation would help readers evaluate the merits of the proposal more objectively.",
           "highlight": {
-            "startOffset": 4980,
-            "endOffset": 5369,
-            "quotedText": "elimination of the subspecies will affect the surrounding ecology, for example by reducing the food available to predators.\n\nFortunately that experiment has already been run in North and Central America when they eradicated screwworm decades ago. The environmental impacts were minimal to none. With the reduced need for pesticides, one could even argue the environmental impact was positive.",
-            "prefix": "The primary risk[\\[5\\]](#fnjki379rojt) from releasing any gene drive for population suppression is how the "
-          }
+            "startOffset": 578,
+            "endOffset": 879,
+            "quotedText": "# Holy shit, Gene drives\n\nLike many on this forum, I listened to 80k’s podcast episode with Kevin Esvelt, where they discussed using gene drives to eradicate diseases and thought to myself: “holy shit that’s incredible, we should do something” to promptly forget all about it and move on with my life."
+          },
+          "isValid": true
         },
         {
-          "title": "Optimism Bias in Quantitative Estimates",
-          "description": "The document demonstrates optimism bias in its quantitative estimates. The author acknowledges uncertainty with wide ranges (\"89.2 billion wild mammals (plus minus one order of magnitude)\") but then narrows to favorable outcomes when calculating cost-effectiveness. The claim that \"each dollar spent averting suffering equivalent to that of 101 animals dying from screwworm\" presents a specific number despite enormous underlying uncertainty in the estimates.",
+          "title": "Confirmation Bias",
+          "description": "The author acknowledges becoming \"increasingly obsessed\" with gene drives and having delivered \"many long monologues\" about them, indicating they may be primarily seeking information that confirms their pre-existing enthusiasm rather than evaluating the topic objectively. This confirmation bias is evident in how they present their conclusions with high certainty despite acknowledging limited expertise in wild animal welfare. A more balanced approach would include more rigorous examination of potential downsides and limitations of gene drives.",
           "highlight": {
-            "startOffset": 7909,
-            "endOffset": 8093,
-            "quotedText": "89.2 billion wild mammals (plus minus one order of magnitude) on the South American continent. This suggests hundreds of millions or even a few billion animals are infected every year.",
-            "prefix": "The real benefit is to the hundreds of millions of wild mammals in South America, of which I estimate 0.1-4% are infected with screwworm every year.[\\[7\\]](#fn8au87eajce4) A [back of the envelope](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests there are around "
-          }
+            "startOffset": 1043,
+            "endOffset": 1380,
+            "quotedText": "As I started researching for the article, I became increasingly obsessed. Those misfortunate enough to have been around me during this period, have had to endure many long monologues about gene drives.\n\nThroughout my frenzy, I met with Professors, PhDs, and representatives from organisations working on gene drives to eradicate malaria."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Selective Evidence Presentation",
+          "description": "The document claims environmental impacts from previous screwworm eradication were \"minimal to none\" without providing substantive evidence or citing ecological studies. This selective presentation of evidence ignores potential complex ecological consequences that may have occurred or could occur in different ecosystems. A more balanced analysis would include detailed ecological assessments and acknowledge the limitations in our understanding of ecosystem impacts.",
+          "highlight": {
+            "startOffset": 5179,
+            "endOffset": 5630,
+            "quotedText": "Fortunately that experiment has already been run in North and Central America when they eradicated screwworm decades ago. The environmental impacts were minimal to none. With the reduced need for pesticides, one could even argue the environmental impact was positive.\n\nThis hasn’t prevented environmental organisations such as Greenpeace, who are against gene editing of any kind, from lobbying for a global moratorium (ban) on the use of gene drives."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Adversarial Bias Against Environmental Groups",
+          "description": "The document characterizes environmental organizations like Greenpeace as categorically \"against gene editing of any kind\" without nuanced representation of their positions or concerns. This creates an adversarial framing that dismisses legitimate ecological concerns as mere opposition to progress. A more balanced approach would acknowledge the complexity of environmental organizations' positions and engage substantively with their specific concerns about gene drives.",
+          "highlight": {
+            "startOffset": 5448,
+            "endOffset": 5876,
+            "quotedText": "This hasn’t prevented environmental organisations such as Greenpeace, who are against gene editing of any kind, from lobbying for a global moratorium (ban) on the use of gene drives. The UN voted down this proposal, and gene drives currently exist in somewhat of a legal grey area, where the decision to release any gene drive ultimately rests on individual countries rather than international agreements[\\[6\\]](#fn4kp3tuf0w4n)."
+          },
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
+        },
+        {
+          "title": "Economic Focus Bias",
+          "description": "The document overemphasizes economic benefits to the livestock industry while giving less attention to ecological considerations. While acknowledging that helping the livestock industry \"is not what excites me,\" the proposal heavily leverages economic arguments to gain political support. This creates an imbalance where economic factors receive disproportionate weight compared to ecological and ethical considerations. A more balanced approach would give equal consideration to ecological impacts alongside economic benefits.",
+          "highlight": {
+            "startOffset": 7729,
+            "endOffset": 8041,
+            "quotedText": "Eradicating screwworm would save the South American livestock industry hundreds of millions, but between you and me, helping this industry is not what excites me.\n\nThe real benefit is to the hundreds of millions of wild mammals in South America, of which I estimate 0.1-4% are infected with screwworm every year."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Quantitative Bias",
+          "description": "The document presents highly uncertain quantitative estimates (\"89.2 billion wild mammals (plus minus one order of magnitude)\") as if they provide reliable evidence. This creates an illusion of precision where significant uncertainty exists. The wide range in the estimate (potentially varying from 8.92 billion to 892 billion) reveals the extreme uncertainty, yet the specific figure of 89.2 billion is used to support subsequent calculations, potentially misleading readers about the reliability of the analysis.",
+          "highlight": {
+            "startOffset": 8065,
+            "endOffset": 8404,
+            "quotedText": "A [back of the envelope](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests there are around 89.2 billion wild mammals (plus minus one order of magnitude) on the South American continent. This suggests hundreds of millions or even a few billion animals are infected every year."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Anthropomorphic Bias",
+          "description": "The author projects human preferences onto wild animals when comparing different causes of death (\"I would personally prefer to be predated, run over by a car, or die from malaria, than I would want to die from a screwworm infection\"). This anthropomorphizes wild animals by assuming their experience of suffering matches human perceptions. Different species may experience pain and suffering differently, making such comparisons potentially misleading for welfare assessment.",
+          "highlight": {
+            "startOffset": 9920,
+            "endOffset": 10530,
+            "quotedText": "I would personally prefer to be predated, run over by a car, or die from malaria, than I would want to die from a screwworm infection. Having not experienced any of these things, I accept my intuitions may be off, but I don’t know what else to go by. Good chance I’m over indexing on the ‘yuck’ factor of it all.\n\nUsing what I think are conservative assumptions, [my CEA](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests that eradicating screwworm would constitute a significant improvement to wild animal welfare, with each dollar spent averting"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Optimism Bias in Technical Feasibility",
+          "description": "The document downplays technical challenges in implementing gene drives, particularly regarding potential resistance development. While it acknowledges that screwworms might \"by chance develop immunity\" requiring multiple releases, it presents this as a minor issue rather than a significant technical challenge. The assumption that repeating releases will eventually lead to extinction underestimates potential evolutionary adaptations. A more balanced assessment would thoroughly address the technical limitations and potential failure modes of gene drive technology.",
+          "highlight": {
+            "startOffset": 11113,
+            "endOffset": 11678,
+            "quotedText": "Releasing a gene drive in Uruguay would likely result in a temporary substantial reduction in the screwworm population of Uruguay and its neighbours, until screwworms which by chance develop immunity repopulate back. At this point a second gene drive release will be necessary. Rinse and repeat, until the population is extinct.\n\nWhile the new world screwworm is a single species, it has high genetic diversity across regions. Across the South American continent one can structure the fly into four regional groups of populations, with significant genetic variance."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Political Feasibility Bias",
+          "description": "The document presents an overly optimistic assessment of political feasibility, assuming that economic interests will easily overcome potential opposition. While acknowledging that environmental groups will push back, the author dismisses this concern with the unsupported assertion that \"the livestock lobby is the more powerful voice.\" This overlooks the complexity of political decision-making, particularly for novel biotechnologies with potential ecological impacts. A more balanced assessment would include a more detailed analysis of the political landscape and potential barriers.",
+          "highlight": {
+            "startOffset": 13660,
+            "endOffset": 14185,
+            "quotedText": "I’ve observed that successful EA policy campaigns often fight inertia rather than active and organised opponents. This is unfortunately not the case for this intervention. Environmentalist groups will push back to stop the use of gene drives. I suspect the livestock lobby is the more powerful voice, but who knows.\n\nI believe the most likely outcome is that South America will eventually use gene drives or sterile insect releases to eradicate screwworm anyway, but a coordinated campaign can speed this up by several years."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Western-Centric Cultural Bias",
+          "description": "The proposal applies a solution developed primarily in Western scientific contexts to South American countries without adequate consideration of local perspectives, cultural attitudes toward ecological intervention, or indigenous knowledge systems. The document positions the author as knowing what's best for South American countries rather than emphasizing the importance of local leadership and decision-making. A more inclusive approach would center South American perspectives and leadership in the proposed intervention.",
+          "highlight": {
+            "startOffset": 14692,
+            "endOffset": 15318,
+            "quotedText": "I am not from South America, I am not well-positioned to work on this, **but somebody really should do something**. There’s lots to do. One could reach out to the Uruguayan researchers to better understand their bottlenecks. Is it funding? If so, how much? One could speak with the livestock industry to gauge their interest. Would they join a coalition and/or pay for the campaign?\n\nI believe a  group of motivated volunteers could get quite far. **If you are interested in continuing work on any of this do reach out.** The best person to work on this was someone more qualified five years ago, the second best is you today."
+          },
+          "isValid": true
         }
       ]
     },
     {
       "agentId": "clarity-coach",
-      "costInCents": 9185,
-      "createdAt": "2025-04-15T22:15:25.810Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6693,\"completionTokens\":2492,\"totalTokens\":9185,\"temperature\":0.7,\"runtimeMs\":50170}",
-      "summary": "This document presents a compelling case for using gene drives to eradicate the New World Screwworm in South America. The author argues this intervention would alleviate tremendous suffering for hundreds of millions to billions of wild mammals while also benefiting livestock industries. The writing effectively balances technical information with accessible explanations, providing clear structure through section headings and logical progression of ideas. The content demonstrates strong coherence by methodically addressing what screwworm is, how gene drives work, the proposed intervention, cost-effectiveness analysis, and implementation considerations. The author effectively uses data points and references to support claims while maintaining an engaging tone. Areas for improvement include reducing some sentence complexity, providing clearer transitions between certain sections, and further unpacking technical terminology for non-specialist readers. The document successfully conveys urgency and actionability while maintaining scientific credibility, making a persuasive case for this wild animal welfare intervention that aligns economic interests with ethical considerations.",
+      "costInCents": 9333,
+      "createdAt": "2025-04-16T00:27:50.710Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":7401,\"completionTokens\":1932,\"totalTokens\":9333,\"temperature\":0.7,\"runtimeMs\":43776}",
+      "summary": "This document presents a compelling case for using gene drives to eradicate the New World Screwworm in South America. The author argues this intervention would be highly impactful for wild animal welfare while also being economically beneficial and politically tractable. The screwworm causes immense suffering to millions of wild mammals and livestock by laying eggs in wounds, with larvae that literally eat animals alive. While North America eradicated the pest in the 1960s using sterile insect techniques, South America continues to struggle with endemic infestations. Gene drives—a technology that spreads genetic modifications through entire populations—could efficiently eliminate the screwworm continent-wide. The author estimates hundreds of millions to billions of wild animals would be spared painful infections annually, making this intervention potentially competitive with the most cost-effective animal welfare interventions. The economic benefits to the livestock industry provide a powerful incentive for governmental action. The document calls for political advocacy to coordinate South American countries in implementing this solution, suggesting a coalition of agricultural interests could overcome potential opposition from environmental groups.",
       "comments": [
         {
-          "title": "Effective Use of Narrative Hook",
-          "description": "The opening paragraph effectively captures attention by presenting the problem (animal suffering), the solution (gene drives), and the potential impact (helping billions of animals). This clear framing immediately establishes the stakes and significance of the topic, drawing readers in with a concise and compelling introduction.",
+          "title": "Clear Executive Summary",
+          "description": "The opening paragraphs effectively summarize the entire proposal in just a few sentences. This clarity helps readers immediately understand the topic, importance, and call to action. The three-point structure (why this matters, what the intervention would look like, and call to action) provides an excellent roadmap for the reader.",
           "highlight": {
             "startOffset": 0,
-            "endOffset": 247,
-            "quotedText": "The New World Screwworm causes tremendous suffering to wild and domestic animals on the South American continent. Gene drives make it possible to eradicate the screwworm and improve the wellbeing of hundreds of millions to billions of wild animals.",
-            "prefix": ""
-          }
+            "endOffset": 576,
+            "quotedText": "The New World Screwworm causes tremendous suffering to wild and domestic animals on the South American continent. Gene drives make it possible to eradicate the screwworm and improve the wellbeing of hundreds of millions to billions of wild animals.\n\nI believe political advocacy to coordinate South American countries to use gene drives to eradicate the screwworm looks very tractable and highly impactful in expectation.\n\nIn this post I will go over:\n\n1.  Why I believe this to be the case\n2.  What the intervention would look like\n3.  Beg and plead for someone to go do this"
+          },
+          "isValid": true
         },
         {
-          "title": "Clear Technical Explanation",
-          "description": "This explanation of gene drives effectively distills a complex scientific concept into accessible language without oversimplification. The author uses straightforward sentences and builds logically from the mechanism to the application, making the technical content approachable for non-specialists while maintaining accuracy.",
+          "title": "Effective Use of Section Headers",
+          "description": "The document uses clear, descriptive headers that guide the reader through the logical flow of the argument. Headers like \"What is the New World Screwworm?\" and \"The cost-effectiveness of eradicating screwworm\" create distinct sections that help organize information and maintain reader orientation throughout the lengthy document.",
           "highlight": {
-            "startOffset": 4288,
-            "endOffset": 4582,
-            "quotedText": "Gene drive makes it possible to make a gene edit to an animal that is passed on to every one of its descendants, who in turn pass it on to everyone of theirs. By installing a gene drive into a single animal, over the next generations the gene edit will spread until the entire species has it.",
-            "prefix": "# What is a gene drive?\n\nIn short, the CRISPR/Cas9 "
-          }
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "End text not found in document"
         },
         {
-          "title": "Excessive Sentence Length",
-          "description": "This sentence contains multiple ideas and clauses that could be separated for improved readability. Breaking it into 2-3 shorter sentences would help readers process each component more easily. Consider: \"An effective campaign should put together a coalition of agricultural interest groups. It would then utilize their existing networks and connections to key decision makers. Agricultural departments across countries share an interest in seeing screwworm eradicated.\"",
+          "title": "Inconsistent Formatting in Numbered Lists",
+          "description": "The document uses two different formats for numbered lists: Arabic numerals with periods in the introduction and Arabic numerals with parentheses in later sections. Standardizing list formatting throughout the document would improve structural coherence and visual consistency.",
           "highlight": {
-            "startOffset": 6623,
-            "endOffset": 6932,
-            "quotedText": "ave millions of dollars from the eradication of screwworm.\n\nAn effective campaign should put together a coalition of agricultural interest groups and utilise their existing networks and connections to key decision makers. Agricultural departments across countries have a shared interest in seeing it eradicated.",
-            "prefix": "Small scale farmers and industrial factory farmers alike stand to s"
-          }
+            "startOffset": 453,
+            "endOffset": 576,
+            "quotedText": "1.  Why I believe this to be the case\n2.  What the intervention would look like\n3.  Beg and plead for someone to go do this"
+          },
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
         },
         {
-          "title": "Effective Use of Subheadings",
-          "description": "The document employs clear, informative subheadings that effectively organize content and guide readers through the logical progression of the argument. These subheadings function as signposts that help readers anticipate what's coming next and understand how each section contributes to the overall case. This structural clarity significantly enhances readability, particularly for a complex topic with multiple aspects to consider.",
+          "title": "Abrupt Transition Between Personal Narrative and Technical Information",
+          "description": "The transition from the personal narrative in \"Holy shit, Gene drives\" to the technical explanation of screwworm is somewhat abrupt. A brief transitional paragraph connecting these sections would help maintain narrative flow and guide readers more smoothly between the author's personal journey and the technical content that follows.",
           "highlight": {
-            "startOffset": 7388,
-            "endOffset": 7523,
-            "quotedText": "ctiveness analysis, feel free to just [view it directly](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) and plug in your own numbers.\n\n## How many wild animals would it help, and how much?",
-            "prefix": "The following sections describe the intuitions behind my cost-effe"
-          }
+            "startOffset": 1246,
+            "endOffset": 1872,
+            "quotedText": "Throughout my frenzy, I met with Professors, PhDs, and representatives from organisations working on gene drives to eradicate malaria. I’ve now come to the following two conclusions:\n\n1.  Society, at large, should be using gene drives for vector control of endemic diseases such as Malaria. The risks are minute, and the benefits are huge.\n2.  **Political advocacy for using gene drives to eradicate screwworm in South America, looks incredibly impactful and very tractable.**\n\nMy article for the magazine (out soon!) is focused on the first point. This forum post is focused on the second.\n\n# What is the New World Screwworm?"
+          },
+          "isValid": true
         },
         {
-          "title": "Memorable Conclusion with Call to Action",
-          "description": "The conclusion effectively combines urgency, actionability, and memorability. The Latin phrase adds a distinctive flourish while the direct call for volunteers creates a clear next step for engaged readers. This ending transforms what could have remained an academic analysis into a catalyst for real-world change by explicitly inviting participation and emphasizing that imperfect action now is better than waiting for perfect conditions.",
+          "title": "Vivid Problem Description",
+          "description": "The document provides a vivid, concrete description of the screwworm problem that helps readers understand the severity of the issue. The description of how screwworms infect animals creates a clear mental image that emphasizes the suffering caused, making the case for intervention more compelling without resorting to unnecessarily graphic language.",
           "highlight": {
-            "startOffset": 14621,
-            "endOffset": 14835,
-            "quotedText": "If you are interested in continuing work on any of this do reach out.** The best person to work on this was someone more qualified five years ago, the second best is you today.\n\n_Cochliomyia hominivorax delenda est_",
-            "prefix": "I believe a  group of motivated volunteers could get quite far. **"
-          }
+            "startOffset": 1874,
+            "endOffset": 2780,
+            "quotedText": "The  C. hominivorax, or New World Screwworm, is a blowfly, which lays its eggs in the wounds (and other openings, such as the nostrils or ears) of mammals. After hatching, the larvae dig in and begin eating the host alive. The stench left off by the infested wound attracts yet more screwworm flies to lay their eggs. Untreated, 20-80% of animals infected die from the infestation or infections that follow.[\\[1\\]](#fn4i58gv52zfm)\n\nHumans, being mammals, are at risk too. Uruguay alone records hundreds of human cases every year.[\\[2\\]](#fno0tyi89nngh)\n\nAs one can imagine, being eaten alive by parasites is not much fun. As the scientific literature puts it: “Animals with myiasis may display signs of discomfort, lethargy, weight loss and depression”[\\[3\\]](#fnqv00j82g0wb)\n\nTo put it as politely: Based on the pictures I have seen, I too would display signs of discomfort if it were me who was infected."
+          },
+          "isValid": true
         },
         {
-          "title": "Jargon Requiring Further Explanation",
-          "description": "The term \"daisy chain drive\" is introduced without sufficient explanation. For readers unfamiliar with gene drive technology, this technical term creates a comprehension barrier. Consider adding a brief parenthetical definition (e.g., \"a self-limiting gene drive design that prevents indefinite spread\") to maintain clarity for non-specialist readers while keeping the document accessible.",
+          "title": "Technical Jargon with Accessible Explanations",
+          "description": "The author skillfully introduces technical concepts like gene drives by providing clear, concise explanations that make the science accessible to non-specialists. The explanation balances simplicity with accuracy, avoiding overwhelming readers with unnecessary complexity while still conveying the essential information.",
           "highlight": {
-            "startOffset": 16220,
-            "endOffset": 16386,
-            "quotedText": "daisy chain drive test first (more on that in my magazine article) to verify the drive works as intended and doesn't spread, before releasing a full suppression drive.",
-            "prefix": "Additionally one can run a no-payload "
-          }
+            "startOffset": 4309,
+            "endOffset": 4945,
+            "quotedText": "# What is a gene drive?\n\nIn short, the CRISPR/Cas9 Gene drive makes it possible to make a gene edit to an animal that is passed on to every one of its descendants, who in turn pass it on to everyone of theirs. By installing a gene drive into a single animal, over the next generations the gene edit will spread until the entire species has it.\n\nThis makes it a rather powerful technology. One way the technology can be used for good, is by driving a gene into an undesirable species which makes the females infertile, causing the population to collapse.\n\nBy using gene drives it becomes feasible to eradicate screwworm in South America."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Excessive Sentence Length in Technical Explanation",
+          "description": "Some sentences in the gene drive explanation section are excessively long, which reduces readability. Breaking these into shorter sentences would improve comprehension, especially for readers unfamiliar with the technical concepts being described.",
+          "highlight": {
+            "startOffset": 4334,
+            "endOffset": 4652,
+            "quotedText": "In short, the CRISPR/Cas9 Gene drive makes it possible to make a gene edit to an animal that is passed on to every one of its descendants, who in turn pass it on to everyone of theirs. By installing a gene drive into a single animal, over the next generations the gene edit will spread until the entire species has it."
+          },
+          "isValid": false,
+          "error": "Highlight overlaps with a previous highlight"
+        },
+        {
+          "title": "Unclear Antecedent in Risk Discussion",
+          "description": "The sentence beginning \"The primary risk\" has an unclear antecedent, making it initially difficult to understand what specific risk is being discussed. Restructuring to clearly state \"The primary environmental risk of gene drives for population suppression is...\" would improve clarity and prevent readers from momentarily searching for context.",
+          "highlight": {
+            "startOffset": 4947,
+            "endOffset": 5177,
+            "quotedText": "The primary risk[\\[5\\]](#fnjki379rojt) from releasing any gene drive for population suppression is how the elimination of the subspecies will affect the surrounding ecology, for example by reducing the food available to predators."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Explicit Transparency About Uncertainty",
+          "description": "The author demonstrates intellectual honesty by explicitly acknowledging areas of uncertainty in their analysis. This transparency builds credibility and helps readers understand which parts of the argument are most robust versus which might benefit from further investigation. The acknowledgment of potential biases in personal intuitions about suffering comparisons is particularly effective.",
+          "highlight": {
+            "startOffset": 9920,
+            "endOffset": 10232,
+            "quotedText": "I would personally prefer to be predated, run over by a car, or die from malaria, than I would want to die from a screwworm infection. Having not experienced any of these things, I accept my intuitions may be off, but I don’t know what else to go by. Good chance I’m over indexing on the ‘yuck’ factor of it all."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Effective Use of External Resources",
+          "description": "The document effectively incorporates external resources through hyperlinks to supporting documentation and cost-effectiveness analyses. This allows interested readers to explore the evidence in greater depth without cluttering the main text with excessive detail. The links to the author's CEA spreadsheet are particularly valuable for readers who want to examine the quantitative assumptions.",
+          "highlight": {
+            "startOffset": 10234,
+            "endOffset": 10596,
+            "quotedText": "Using what I think are conservative assumptions, [my CEA](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests that eradicating screwworm would constitute a significant improvement to wild animal welfare, with each dollar spent averting suffering equivalent to that of 101 animals dying from screwworm."
+          },
+          "isValid": true
         }
       ]
     },
     {
       "agentId": "research-scholar",
-      "costInCents": 10196,
-      "createdAt": "2025-04-15T22:16:42.403Z",
-      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6864,\"completionTokens\":3332,\"totalTokens\":10196,\"temperature\":0.7,\"runtimeMs\":71301}",
-      "summary": "This post explores the potential of gene drives to eradicate the New World Screwworm (Cochliomyia hominivorax) in South America as a high-impact animal welfare intervention. The screwworm causes immense suffering to wild and domestic mammals by laying eggs in wounds, where hatched larvae literally eat the host alive, affecting hundreds of millions to billions of wild animals annually. The author argues that political advocacy to coordinate South American countries for a gene drive eradication program is both highly tractable and impactful, with several factors in its favor: 1) the economic incentive is strong (Uruguay alone loses 0.14% of GDP to screwworm), 2) the technology is feasible (unlike traditional sterile insect techniques), 3) environmental risks are low (based on previous North American eradication), and 4) cost-effectiveness analysis suggests each dollar spent could avert suffering equivalent to 101 animals dying from screwworm—comparable to the best animal welfare interventions. The post concludes with a call to action for individuals with South American policy expertise and language skills to advance this intervention, which could significantly improve wild animal welfare across the continent.",
+      "costInCents": 10709,
+      "createdAt": "2025-04-16T00:29:07.159Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":7572,\"completionTokens\":3137,\"totalTokens\":10709,\"temperature\":0.7,\"runtimeMs\":66581}",
+      "summary": "This post examines the potential for using gene drives to eradicate the New World Screwworm (Cochliomyia hominivorax) in South America as a highly tractable and impactful animal welfare intervention. The screwworm causes immense suffering to mammals by laying eggs in wounds, after which larvae eat the host alive, affecting hundreds of millions to billions of wild animals annually. While North America eradicated the pest in the 1960s using sterile insect technique, South America continues to struggle with endemic populations. Gene drives—a CRISPR-based technology that ensures genetic modifications spread to all offspring—could efficiently collapse screwworm populations. The author argues that political advocacy coordinating South American countries to implement gene drives appears highly cost-effective, potentially averting suffering equivalent to that of 101 animals dying from screwworm per dollar spent. The intervention benefits from strong economic incentives (livestock industries lose hundreds of millions annually), existing momentum (Uruguay is already developing a gene drive), and minimal ecological concerns (based on North America's successful eradication). The author calls for someone with regional expertise to lead a coalition-building campaign that could accelerate screwworm eradication by several years.",
       "comments": [
         {
-          "title": "Gene Drives Technology Explanation",
-          "description": "The author provides a concise explanation of CRISPR/Cas9 gene drives, which represents a significant advancement over previous population control technologies. This technology allows genetic modifications to spread through an entire population over generations, eventually affecting the entire species. For context, traditional sterile insect technique (SIT) requires continuous releases of millions of sterilized insects, while gene drives could theoretically achieve population suppression with just a few modified organisms. The efficiency difference is orders of magnitude. This relates to Kevin Esvelt's work at MIT, who pioneered CRISPR gene drives and has advocated for their careful application to disease vectors. The technology's power comes with responsibility concerns, which is why Esvelt has also been a leading voice in governance frameworks for gene drive research and deployment.",
+          "title": "Neglectedness despite high tractability",
+          "description": "This intervention appears to occupy an unusual position in the ITN (Importance, Tractability, Neglectedness) framework popular in EA circles. While highly tractable (economic incentives, existing technology, proven concept) and important (affecting billions of animals), it remains neglected. This pattern sometimes appears when interventions fall between different cause areas or expertise domains - in this case, between wild animal welfare, global health, and agricultural policy. The author's personal journey from \"holy shit that's incredible\" to forgetting about it exemplifies how even promising interventions can fail to gain traction without dedicated champions. This relates to the broader EA concept of \"crucial considerations\" - factors that fundamentally change the assessment of an intervention's value.",
           "highlight": {
-            "startOffset": 4294,
-            "endOffset": 4577,
-            "quotedText": "makes it possible to make a gene edit to an animal that is passed on to every one of its descendants, who in turn pass it on to everyone of theirs. By installing a gene drive into a single animal, over the next generations the gene edit will spread until the entire species has it.",
-            "prefix": "# What is a gene drive?\n\nIn short, the CRISPR/Cas9 Gene drive "
-          }
+            "startOffset": 604,
+            "endOffset": 1116,
+            "quotedText": "Like many on this forum, I listened to 80k’s podcast episode with Kevin Esvelt, where they discussed using gene drives to eradicate diseases and thought to myself: “holy shit that’s incredible, we should do something” to promptly forget all about it and move on with my life.\n\nHalf a year later, when [Works In Progress](https://worksinprogress.co/) asked me if there was anything I wanted to write about, gene drives popped into my mind. As I started researching for the article, I became increasingly obsessed."
+          },
+          "isValid": true
         },
         {
-          "title": "Ecological Risk Assessment",
-          "description": "The author addresses a critical concern with gene drives—ecological consequences of species elimination—by referencing the natural experiment that occurred when screwworm was eradicated from North and Central America. This is an important point in the risk assessment framework for gene drives. The Target Malaria project and other gene drive initiatives have identified ecological impact as one of the primary concerns requiring thorough evaluation before deployment. The fact that screwworm eradication has already been tested at scale provides valuable empirical evidence that reduces uncertainty about ecosystem effects. This aligns with the concept of \"differential technological development\" in EA literature, where technologies with more evidence and lower risk profiles should be prioritized for development and deployment.",
+          "title": "Moral weight of invertebrate suffering",
+          "description": "The author frames the intervention primarily in terms of preventing mammalian suffering, with no discussion of potential moral consideration for the screwworm flies themselves. This reflects an ongoing debate within wild animal welfare about the moral weights assigned to different taxa. The EA community has increasingly questioned traditional hierarchical views of consciousness, with organizations like Rethink Priorities investigating invertebrate sentience. While mammals are generally assigned higher moral weight than insects in most moral frameworks, a comprehensive analysis might acknowledge the tradeoff between mammal and insect welfare. The extinction of a species also raises complex moral considerations about biodiversity value that aren't addressed here.",
           "highlight": {
-            "startOffset": 4967,
-            "endOffset": 5364,
-            "quotedText": "how the elimination of the subspecies will affect the surrounding ecology, for example by reducing the food available to predators.\n\nFortunately that experiment has already been run in North and Central America when they eradicated screwworm decades ago. The environmental impacts were minimal to none. With the reduced need for pesticides, one could even argue the environmental impact was positive.",
-            "prefix": " be used for good, is by driving a gene into an undesirable species which makes the females infertile, causing the population to collapse.\n\nBy using gene drives it becomes feasible to eradicate screwworm in South America.\n\nThe primary risk[\\[5\\]](#fnjki379rojt) from releasing any gene drive for population suppression is "
-          }
+            "startOffset": 7893,
+            "endOffset": 8349,
+            "quotedText": "The real benefit is to the hundreds of millions of wild mammals in South America, of which I estimate 0.1-4% are infected with screwworm every year.[\\[7\\]](#fn8au87eajce4) A [back of the envelope](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests there are around 89.2 billion wild mammals (plus minus one order of magnitude) on the South American continent. This suggests hundreds of millions"
+          },
+          "isValid": true
         },
         {
-          "title": "International Governance Challenges",
-          "description": "The author highlights the complex international governance landscape for gene drive technologies, noting opposition from environmental organizations like Greenpeace and the current regulatory gray area. This reflects broader tensions in global governance of emerging biotechnologies. The UN Convention on Biological Diversity (CBD) has been the primary forum for international discussions on gene drives, with some nations and NGOs advocating for strict precautionary approaches while others favor innovation-friendly frameworks. The absence of clear international consensus means that regional coordination becomes critical for deployment, making the political advocacy approach suggested by the author particularly relevant. This governance challenge connects to broader EA discussions about differential technological development and international coordination for emerging technologies with global implications.",
+          "title": "Uncertain welfare improvement calculations",
+          "description": "The post highlights a fundamental challenge in wild animal welfare interventions: determining whether preventing one cause of death actually improves welfare when animals might instead die from potentially worse causes. This reflects the complex population dynamics and welfare considerations that make wild animal interventions difficult to evaluate. The author's approach of comparing different causes of death subjectively (\"I would personally prefer to be predated...\") aligns with frameworks like relative welfare footprints used by Wild Animal Initiative, but acknowledges significant uncertainty. This highlights the need for more systematic approaches to comparing different welfare states in wild animals - a key research priority in the field. The author's transparency about potential overindexing on the \"yuck factor\" demonstrates good epistemic practices.",
           "highlight": {
-            "startOffset": 5494,
-            "endOffset": 5791,
-            "quotedText": "a global moratorium (ban) on the use of gene drives. The UN voted down this proposal, and gene drives currently exist in somewhat of a legal grey area, where the decision to release any gene drive ultimately rests on individual countries rather than international agreements[\\[6\\]](#fn4kp3tuf0w4n).",
-            "prefix": "one could even argue the environmental impact was positive.\n\nThis hasn't prevented environmental organisations such as Greenpeace, who are against gene editing of any kind, from lobbying for "
-          }
+            "startOffset": 8484,
+            "endOffset": 9051,
+            "quotedText": "Calculating the welfare improvement for any wild animal welfare intervention is notoriously difficult. If the animals whose lives we save were to later die from something even more painful, we might have done more harm than good. What will be the mammal’s cause of death, if not screwworm?\n\nEyeballing the [estimates from Wild Animal Initiative](https://www.wildanimalinitiative.org/blog/cause-of-death-3), I would very roughly say that ~45% of wild mammals die from predation, ~10% from disease, starvation and injuries, ~30% from humans, and 15% from other sources."
+          },
+          "isValid": true
         },
         {
-          "title": "Alignment of Economic and Welfare Interests",
-          "description": "The author identifies a rare opportunity where economic interests (livestock industry) align with animal welfare outcomes. This alignment of incentives is particularly valuable in policy advocacy, as it creates natural allies with significant political influence. In EA terms, this represents a form of moral trade where different value systems can cooperate toward a shared goal despite different motivations. This type of intervention avoids the common challenge in animal welfare where economic interests typically oppose welfare improvements. The livestock industry's substantial political influence in South America provides leverage that pure animal welfare advocates would struggle to achieve independently. This exemplifies the concept of \"value alignment\" discussed in EA literature, where finding interventions that serve multiple value systems can dramatically increase tractability.",
+          "title": "Comparative cost-effectiveness analysis",
+          "description": "The author compares this intervention to corporate campaigns for chicken welfare, providing a benchmark against established animal welfare interventions. This type of cross-cause comparison is central to EA prioritization methods, helping to identify the most efficient ways to improve welfare. The comparison to \"66 years of chicken life per dollar spent\" references work by organizations like Animal Charity Evaluators on quantifying welfare impacts. While acknowledging the challenges in direct comparison, this approach demonstrates how EA practitioners attempt to make difficult cross-species welfare comparisons. The author's transparency about the uncertainty in these comparisons reflects good epistemic practices, while still providing a useful reference point for decision-making.",
           "highlight": {
-            "startOffset": 6547,
-            "endOffset": 6674,
-            "quotedText": "Small scale farmers and industrial factory farmers alike stand to save millions of dollars from the eradication of screwworm.",
-            "prefix": "The livestock industry makes up a large part of the economy of many South American countries. As a result, the agricultural lobby is incredibly influential and well connected.\n\nWhy is a country such as Uruguay looking to spend so much money on the sterile insect technique to eradicate screwworm in the first place? Hint, it's not out of concern for the wellbeing of wild animals.\n\n"
-          }
+            "startOffset": 10234,
+            "endOffset": 10892,
+            "quotedText": "Using what I think are conservative assumptions, [my CEA](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests that eradicating screwworm would constitute a significant improvement to wild animal welfare, with each dollar spent averting suffering equivalent to that of 101 animals dying from screwworm.\n\nThe 'gold standard' in animal welfare Corporate Campaigns are estimated to halve the suffering for 66 years of chicken life per dollar spent. These numbers are not directly comparable, but to me screwworm advocacy looks to be in a similar ballpark as the very best animal welfare interventions."
+          },
+          "isValid": true
         },
         {
-          "title": "Wild Animal Welfare Scale",
-          "description": "The author provides a rough quantification of the wild animal welfare impact, estimating hundreds of millions to billions of wild mammals affected annually. This scale calculation is crucial for prioritization within the wild animal welfare cause area. The uncertainty in these estimates (0.1-4% infection rate, 89.2 billion mammals ±1 order of magnitude) reflects the general challenge of quantifying wild animal welfare interventions. This relates to the broader EA discussion about moral weight of different animals and the challenge of comparing welfare across species. The author's attempt to quantify suffering averted per dollar places this intervention in the context of other animal welfare interventions, facilitating cross-cause comparisons despite acknowledged uncertainty. This connects to Brian Tomasik and Wild Animal Initiative's work on wild animal welfare quantification.",
+          "title": "Technological leapfrogging with gene drives",
+          "description": "The post highlights how gene drives represent a significant technological advancement over previous sterile insect techniques. This case study demonstrates the concept of technological leapfrogging, where newer technologies can enable developing regions to skip intermediate technological stages. In the EA community, this relates to discussions about differential technological development and the importance of technology diffusion pathways. The comparison between releasing millions of sterile insects weekly versus a dozen gene-driven insects illustrates the dramatic efficiency gains possible with advanced biotechnology. However, the post doesn't deeply explore how this technological capability might affect other intervention possibilities beyond screwworm - a potential area for further exploration of the intervention landscape.",
           "highlight": {
-            "startOffset": 7884,
-            "endOffset": 8086,
-            "quotedText": "there are around 89.2 billion wild mammals (plus minus one order of magnitude) on the South American continent. This suggests hundreds of millions or even a few billion animals are infected every year.",
-            "prefix": "The real benefit is to the hundreds of millions of wild mammals in South America, of which I estimate 0.1-4% are infected with screwworm every year.[\\[7\\]](#fn8au87eajce4) A [back of the envelope](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests "
-          }
+            "startOffset": 10937,
+            "endOffset": 11441,
+            "quotedText": "Unlike the sterile insect technique, which will require weekly releases of millions of screwworms to work, a dozen gene driven screwworms can spread a gene edit far and wide.\n\nReleasing a gene drive in Uruguay would likely result in a temporary substantial reduction in the screwworm population of Uruguay and its neighbours, until screwworms which by chance develop immunity repopulate back. At this point a second gene drive release will be necessary. Rinse and repeat, until the population is extinct."
+          },
+          "isValid": true
         },
         {
-          "title": "Welfare Improvement Uncertainty",
-          "description": "The author acknowledges the fundamental challenge in wild animal welfare interventions: determining whether preventing one cause of death actually improves welfare when alternative causes of death may be equally or more painful. This reflects the complex welfare calculus required in wild animal interventions. The comparison to Wild Animal Initiative's cause of death estimates demonstrates an attempt to contextualize the intervention within broader population dynamics. The author's candid admission about the difficulty of assessing pain levels and potential bias from the \"yuck factor\" shows appropriate epistemic humility. This connects to philosophical discussions in EA about welfare biology, comparative suffering, and the challenge of welfare accounting across different types of experiences. This type of analysis is central to Brian Tomasik's work on wild animal suffering and Oscar Horta's research on r-selection species.",
+          "title": "Genetic diversity as implementation challenge",
+          "description": "The post identifies an important implementation challenge: genetic diversity across regional populations may require multiple targeted gene drives. This highlights how biological complexity can affect intervention scaling - a critical consideration in wild animal welfare work. The EA community often discusses the importance of understanding heterogeneity in intervention contexts, and this represents a clear example where regional differences matter significantly. This challenge also relates to the concept of \"crucial considerations\" - factors that might substantially change our assessment of an intervention's feasibility or cost-effectiveness. The author's recognition of this challenge demonstrates good diligence in anticipating potential implementation barriers that could affect the intervention's ultimate success.",
           "highlight": {
-            "startOffset": 8269,
-            "endOffset": 8452,
-            "quotedText": "If the animals whose lives we save were to later die from something even more painful, we might have done more harm than good. What will be the mammal's cause of death, if not screwworm?",
-            "prefix": "Saving them from a painful infection or even death is very motivating to me!\n\nCalculating the welfare improvement for any wild animal welfare intervention is notoriously difficult. "
-          }
+            "startOffset": 11443,
+            "endOffset": 11892,
+            "quotedText": "While the new world screwworm is a single species, it has high genetic diversity across regions. Across the South American continent one can structure the fly into four regional groups of populations, with significant genetic variance. A gene drive released in one region might not spread to the other regions. For lasting and continent wide eradication, I suspect it will be necessary to release gene drives for screwworms in each of these regions."
+          },
+          "isValid": true
         },
         {
-          "title": "Cost-Effectiveness Analysis Methodology",
-          "description": "The author presents a cost-effectiveness analysis that attempts to quantify the intervention's impact in terms of suffering averted per dollar. This analysis framework is characteristic of EA prioritization methodology. The comparison to established animal welfare interventions (corporate campaigns for chickens) provides a reference point for cross-intervention comparison. The author's transparency about assumptions and uncertainty allows others to adjust estimates based on different values or information. The calculation of \"suffering equivalent to 101 animals dying from screwworm\" per dollar demonstrates an attempt to create a common metric for comparison across different types of interventions. This connects to GiveWell's approach to cost-effectiveness analysis and the broader EA discussion about quantifying moral value across different types of experiences and beneficiaries.",
+          "title": "Dual-benefit intervention alignment",
+          "description": "This intervention presents a rare alignment between animal welfare interests and industrial agriculture incentives. Such dual-benefit interventions often have higher tractability because they can leverage existing economic motivations and institutional support. In the EA community, this relates to concepts of \"moral trade\" where parties with different value systems can cooperate on interventions that satisfy multiple sets of values. Similar alignments have been observed in other contexts like cage-free campaigns where both welfare advocates and certain market segments benefit. The economic angle (0.14% of Uruguay's GDP lost annually) provides both a compelling narrative and potential funding sources that wouldn't otherwise support pure animal welfare interventions.",
           "highlight": {
-            "startOffset": 10017,
-            "endOffset": 10389,
-            "quotedText": "averting suffering equivalent to that of 101 animals dying from screwworm.\n\nThe 'gold standard' in animal welfare Corporate Campaigns are estimated to halve the suffering for 66 years of chicken life per dollar spent. These numbers are not directly comparable, but to me screwworm advocacy looks to be in a similar ballpark as the very best animal welfare interventions.",
-            "prefix": "Using what I think are conservative assumptions, [my CEA](https://docs.google.com/spreadsheets/d/1fg7V_O-b3TYdYfksgIa5cYv6hxxsgUBQ1kFF9HcdcSc/edit#gid=488725566) suggests that eradicating screwworm would constitute a significant improvement to wild animal welfare, with each dollar spent "
-          }
+            "startOffset": 13164,
+            "endOffset": 13281,
+            "quotedText": "When you come across an animal welfare intervention that factory farmers are as excited about as you, you should act!"
+          },
+          "isValid": true
         },
         {
-          "title": "Genetic Diversity Challenge",
-          "description": "The author identifies a key technical challenge: the genetic diversity of screwworm populations across South America may require multiple gene drive releases targeting different regional populations. This reflects the biological complexity of species eradication at continental scale. The identification of four regional genetic groups demonstrates the author's research depth into the biological aspects of the intervention. This challenge connects to broader discussions in conservation genetics and population biology about genetic diversity and gene flow between populations. Understanding these dynamics is crucial for effective gene drive deployment. This relates to Kevin Esvelt's work on gene drive design and the importance of accounting for genetic diversity and resistance evolution in target populations. The author's acknowledgment of this complexity shows appropriate technical nuance in the proposal.",
+          "title": "Opposition from environmental groups",
+          "description": "The author identifies opposition from environmental groups as a key challenge, contrasting with many EA policy campaigns that fight inertia rather than organized opponents. This highlights an important consideration in intervention selection - the presence of active opposition can significantly reduce tractability. In EA discussions of policy change, the alignment of stakeholder interests is often emphasized as crucial for success. The author's assessment that \"the livestock lobby is the more powerful voice\" represents a strategic calculation about the balance of power among stakeholders. This connects to broader EA discussions about how to navigate value conflicts in policy advocacy and when to pursue interventions that face organized opposition versus those with broader consensus.",
           "highlight": {
-            "startOffset": 10934,
-            "endOffset": 11382,
-            "quotedText": "While the new world screwworm is a single species, it has high genetic diversity across regions. Across the South American continent one can structure the fly into four regional groups of populations, with significant genetic variance. A gene drive released in one region might not spread to the other regions. For lasting and continent wide eradication, I suspect it will be necessary to release gene drives for screwworms in each of these regions.",
-            "prefix": "Releasing a gene drive in Uruguay would likely result in a temporary substantial reduction in the screwworm population of Uruguay and its neighbours, until screwworms which by chance develop immunity repopulate back. At this point a second gene drive release will be necessary. Rinse and repeat, until the population is extinct.\n\n"
-          }
+            "startOffset": 13660,
+            "endOffset": 13975,
+            "quotedText": "I’ve observed that successful EA policy campaigns often fight inertia rather than active and organised opponents. This is unfortunately not the case for this intervention. Environmentalist groups will push back to stop the use of gene drives. I suspect the livestock lobby is the more powerful voice, but who knows."
+          },
+          "isValid": true
         },
         {
-          "title": "Opposition from Environmental Groups",
-          "description": "The author identifies a key political challenge: opposition from environmental organizations that categorically oppose gene editing technologies. This represents a common pattern in biotechnology governance where precautionary principles clash with consequentialist frameworks. Environmental NGOs like Greenpeace have historically opposed genetic modification technologies broadly, often based on deontological rather than consequentialist reasoning. This opposition creates a political hurdle that must be factored into advocacy strategy. The author's assessment that agricultural interests likely outweigh environmental opposition in South America represents a strategic calculation about political power dynamics. This connects to broader EA discussions about values pluralism in policy advocacy and navigating ideological opposition to technological solutions. Understanding these dynamics is crucial for developing effective advocacy strategies in contested policy domains.",
+          "title": "Speeding up inevitable progress",
+          "description": "The author suggests that South America will likely eventually adopt this technology, but a campaign could accelerate the timeline by several years. This framing connects to an important concept in EA prioritization - the value of time and the importance of considering counterfactual timelines. Rather than claiming full credit for an intervention that might happen anyway, the author focuses on the value of acceleration. This relates to discussions in EA about differential progress and patient philanthropy - when is it valuable to accelerate certain developments versus waiting? For wild animal welfare interventions, where billions of animals experience suffering annually, even modest timeline acceleration can prevent enormous amounts of suffering.",
           "highlight": {
-            "startOffset": 13312,
-            "endOffset": 13453,
-            "quotedText": "Environmentalist groups will push back to stop the use of gene drives. I suspect the livestock lobby is the more powerful voice, but who knows.",
-            "prefix": "The timing is also right. In 2024 Uruguay started considering using gene drives, so there is already momentum to latch onto.\n\nI've observed that successful EA policy campaigns often fight inertia rather than active and organised opponents. This is unfortunately not the case for this intervention. "
-          }
+            "startOffset": 13977,
+            "endOffset": 14358,
+            "quotedText": "I believe the most likely outcome is that South America will eventually use gene drives or sterile insect releases to eradicate screwworm anyway, but a coordinated campaign can speed this up by several years.\n\nThe ideal founders to pull off this campaign would have familiarity with South American policy and politics. Fluency in Spanish and Portuguese is likely necessary as well."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Call to action with realistic expectations",
+          "description": "The post concludes with a call to action that emphasizes feasibility for \"a group of motivated volunteers\" while acknowledging the need for specific expertise. This approach balances inspiring action with setting realistic expectations about what's needed. Within EA, there's ongoing discussion about the best ways to mobilize community talent toward promising projects. The author's acknowledgment that \"the best person was someone more qualified five years ago\" reflects the common EA struggle with the perfect being the enemy of the good. The Latin phrase \"Cochliomyia hominivorax delenda est\" (\"The New World Screwworm must be destroyed\") echoes Cato the Elder's famous phrase about Carthage, adding rhetorical weight to the urgency of the call to action.",
+          "highlight": {
+            "startOffset": 15076,
+            "endOffset": 15357,
+            "quotedText": "I believe a  group of motivated volunteers could get quite far. **If you are interested in continuing work on any of this do reach out.** The best person to work on this was someone more qualified five years ago, the second best is you today.\n\n_Cochliomyia hominivorax delenda est_"
+          },
+          "isValid": true
         }
       ]
     }

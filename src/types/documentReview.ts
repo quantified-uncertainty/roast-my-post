@@ -9,7 +9,8 @@ export interface Comment {
   title: string;
   description: string;
   highlight: Highlight;
-  id?: string; // Optional ID field for backward compatibility
+  isValid: boolean;
+  error?: string;
 }
 
 export interface DocumentReview {
@@ -18,5 +19,5 @@ export interface DocumentReview {
   createdAt: Date;
   runDetails?: string;
   summary?: string;
-  comments: Comment[]; // Changed from Record<string, Comment> to array
+  comments: Comment[];
 }

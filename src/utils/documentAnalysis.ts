@@ -261,9 +261,8 @@ ${agentInfo.commentInstructions}
       "title": "...",
       "description": "...",
       "highlight": {
-        "prefix": "...", // ~50 chars before highlight
-        "startText": "...", // First ~15-20 chars of the highlight
-        "quotedText": "..." // The EXACT full text being highlighted
+        "start": "exact text from document that starts the highlight",
+        "end": "exact text from document that ends the highlight"
       }
     }`
   ).join(",");
@@ -299,13 +298,118 @@ Given the following Markdown document, output a single evaluation in **valid JSO
 **COMMENT INSTRUCTIONS (Provide exactly ${targetComments}):**
 - Each comment MUST include a \`title\` and \`description\`.
 - If using Markdown links/citations in \`description\`, ensure they are **correctly escaped** per the rules above.
-- Each comment MUST include a \`highlight\` object containing **ONLY** these three fields:
-  - \`prefix\`: Provide ~50 characters of the text immediately preceding the highlight (JSON escaped string).
-  - \`startText\`: Provide the first ~15-20 characters of the text you intend to highlight (JSON escaped string).
-  - \`quotedText\`: Provide the **EXACT, VERBATIM text** being highlighted, including original formatting, newlines, and any special characters (JSON escaped string).
+- Each comment MUST include a \`highlight\` object containing **ONLY** these two fields:
+  - \`start\`: Provide the EXACT text from the document that starts the highlight, including any markdown formatting
+  - \`end\`: Provide the EXACT text from the document that ends the highlight, including any markdown formatting
+- **IMPORTANT: The start and end text MUST be copied exactly from the document, including:**
+  - All markdown formatting (bold, italics, links, etc.)
+  - All punctuation and whitespace
+  - All special characters
+  - The exact case of the text
+- **CRITICAL: All quotes in the highlight text MUST be escaped with backslashes. For example:**
+  - If the text contains "compute budget", it must be written as \\"compute budget\\"
+  - If the text contains "don't", it must be written as \\"don\\'t\\"
 - **DO NOT include IDs or number the comments.**
-- Ensure \`prefix\`, \`startText\`, and \`quotedText\` are valid JSON strings with proper escaping.
-- The \`quotedText\` MUST be accurately copied from the document.
+- **HIGHLIGHT RULES:**
+  - Each highlight MUST be unique - no two comments should highlight the same text
+  - Each highlight MUST include the exact markdown formatting from the document
+  - Each highlight MUST be a continuous block of text (no skipping paragraphs)
+  - Each highlight MUST have different start and end text
+  - The start text MUST be the beginning of the highlighted section
+  - The end text MUST be the end of the highlighted section
+  - If a section has markdown formatting (like **bold** or headers), include that formatting in the highlight
+  - Ensure \`start\` and \`end\` are valid JSON strings with proper escaping.
+
+**EXAMPLES OF CORRECT HIGHLIGHT MATCHING:**
+
+1. For a simple paragraph:
+   Document text: "The quick brown fox jumps over the lazy dog."
+   Correct highlight: {
+     "start": "quick brown",
+     "end": "over the lazy"
+   }
+   INCORRECT highlight: {
+     "start": "quick brown",
+     "end": "quick brown"  // Don't use the same text for start and end
+   }
+
+2. For text with markdown:
+   Document text: "**Important**: The [link](url) is here."
+   Correct highlight: {
+     "start": "**Important**: The [link]",
+     "end": "is here."
+   }
+
+3. For text with special characters:
+   Document text: "Don't forget to escape \"quotes\"!"
+   Correct highlight: {
+     "start": "Don\\'t forget",
+     "end": "escape \\"quotes\\"!"
+   }
+
+4. For text with newlines:
+   Document text: "First line\nSecond line"
+   Correct highlight: {
+     "start": "First line\\n",
+     "end": "Second line"
+   }
+
+**COMMON PITFALLS TO AVOID:**
+
+1. Don't paraphrase or summarize - copy text exactly:
+   Document text: "The author met with several experts in the field."
+   INCORRECT: {
+     "start": "The author spoke with field experts",
+     "end": "in the field"
+   }
+   CORRECT: {
+     "start": "The author met with several experts",
+     "end": "in the field"
+   }
+
+2. Don't split text unnaturally - use complete phrases:
+   Document text: "The cost analysis showed a 50% reduction in expenses."
+   INCORRECT: {
+     "start": "The cost",
+     "end": "50% reduction"
+   }
+   CORRECT: {
+     "start": "The cost analysis showed",
+     "end": "a 50% reduction in expenses"
+   }
+
+3. Don't ignore markdown formatting:
+   Document text: "**Bold text** and _italic text_ are important."
+   INCORRECT: {
+     "start": "Bold text",
+     "end": "italic text"
+   }
+   CORRECT: {
+     "start": "**Bold text**",
+     "end": "_italic text_"
+   }
+
+4. Don't skip context - include relevant surrounding text:
+   Document text: "In the study, researchers found that 75% of participants improved."
+   INCORRECT: {
+     "start": "75%",
+     "end": "improved"
+   }
+   CORRECT: {
+     "start": "researchers found that 75%",
+     "end": "of participants improved"
+   }
+
+5. Don't mix quotes - use consistent formatting:
+   Document text: "The report stated: 'Results were significant'"
+   INCORRECT: {
+     "start": "The report stated: \"Results",
+     "end": "were significant\""
+   }
+   CORRECT: {
+     "start": "The report stated: 'Results",
+     "end": "were significant'"
+   }
 
 Here is the Markdown content to analyze:
 
@@ -315,16 +419,63 @@ ${content}
 `;
 
   const startTime = Date.now();
-  const completion = await openai.chat.completions.create({
-    model: MODEL,
-    messages: [{ role: "user", content: finalPrompt }],
-    temperature: DEFAULT_TEMPERATURE,
-  });
+  let completion;
+  let retries = 3;
+  let lastError;
+
+  while (retries > 0) {
+    try {
+      console.log(`📝 Attempting API call (${4 - retries}/3)...`);
+      completion = await openai.chat.completions.create(
+        {
+          model: MODEL,
+          messages: [{ role: "user", content: finalPrompt }],
+          temperature: DEFAULT_TEMPERATURE,
+        },
+        {
+          timeout: 120000, // 2 minute timeout
+        }
+      );
+      console.log("Raw API Response:", JSON.stringify(completion, null, 2));
+      break; // Success, exit the retry loop
+    } catch (error: any) {
+      lastError = error;
+      console.error(`❌ OpenAI API Error (${retries} retries left):`);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error status:", error.status);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+      retries--;
+      if (retries > 0) {
+        console.log("⏳ Waiting 5 seconds before retrying...");
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    }
+  }
+
+  if (!completion) {
+    throw new Error(
+      `OpenAI API call failed after 3 retries: ${lastError?.message || "Unknown error"}`
+    );
+  }
+
   const runtimeMs = Date.now() - startTime;
 
-  const llmResponse = completion.choices[0].message.content;
+  if (!completion.choices || completion.choices.length === 0) {
+    throw new Error("LLM response contained no choices");
+  }
+
+  const firstChoice = completion.choices[0];
+  if (!firstChoice.message) {
+    throw new Error("LLM response choice contained no message");
+  }
+
+  const llmResponse = firstChoice.message.content;
   if (!llmResponse) {
-    throw new Error("No response from LLM");
+    throw new Error("LLM response message contained no content");
   }
 
   // Log usage information
@@ -439,7 +590,7 @@ ${content}
   }
 
   // Process the comments to calculate highlight offsets
-  const processedComments = processRawComments(
+  const processedComments = await processRawComments(
     content,
     parsedLLMReview.comments
   );
