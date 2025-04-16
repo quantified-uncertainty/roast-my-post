@@ -269,13 +269,20 @@ export function DocumentWithEvaluations({
     const hasGradeInstructions = evaluationAgents.find(
       (a) => a.id === activeReview.agentId
     )?.gradeInstructions;
+
+    // Get all importance values for percentile calculation
+    const allImportances = sortedComments
+      .map((comment) => comment.importance)
+      .filter((importance): importance is number => importance !== undefined);
+
     return sortedComments.reduce(
       (map, comment, index) => {
         if (hasGradeInstructions && comment.grade !== undefined) {
           map[index] = getCommentColorByGrade(
             comment.grade,
             comment.importance,
-            true
+            true,
+            allImportances
           );
         } else {
           map[index] = getCommentColorByGrade(undefined, undefined, false);
@@ -284,7 +291,7 @@ export function DocumentWithEvaluations({
       },
       {} as Record<number, { background: string; color: string }>
     );
-  }, [activeReview]);
+  }, [activeReview, evaluationAgents]);
 
   const scrollToHighlight = (tag: string) => {
     const element = window.document.getElementById(`highlight-${tag}`);

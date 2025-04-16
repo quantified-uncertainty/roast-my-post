@@ -95,32 +95,45 @@ function getBaseColor(grade: number): string {
   return colorScale(normalizedGrade).hex();
 }
 
+function calculatePercentileRank(value: number, values: number[]): number {
+  // Sort values in descending order (highest first)
+  const sortedValues = [...values].sort((a, b) => b - a);
+
+  // Find position in descending order (higher values = higher percentile)
+  const index = sortedValues.findIndex((v) => v <= value);
+
+  // Calculate percentile (higher index = lower percentile)
+  return ((values.length - 1 - index) / (values.length - 1)) * 100;
+}
+
 function getColorStyle(
   bgColor: string,
-  importance: number | undefined
+  importance: number | undefined,
+  allImportances: number[] = []
 ): { background: string; color: string } {
   let color = chroma(bgColor);
 
   if (importance !== undefined) {
-    // Normalize importance to 0-1 range
-    const normalizedImportance = importance / 100;
+    const percentileRank =
+      allImportances.length > 1
+        ? calculatePercentileRank(importance, allImportances)
+        : 50;
 
-    // Base saturation multiplier (0.6 to 0.9 range) - reduced from (0.5 to 0.9)
-    const saturationMult = 0.6 + normalizedImportance * 0.3;
+    // Normalize to 0-1 range
+    const normalizedImportance = percentileRank / 100;
 
-    // Base brightness multiplier (1.1 to 0.95 range) - narrowed from (1.1 to 0.9)
-    const brightnessMult = 1.1 - normalizedImportance * 0.15;
+    // Lower percentile = much less saturated, much brighter (closer to white)
+    // Higher percentile = more saturated, darker (more visible)
+    const saturationMult = 0.1 + normalizedImportance * 0.9; // Range from 0.1 to 1.0
+    const brightnessMult = 2 - normalizedImportance; // Range from 2.0 to 1.0 (low importance = brighter)
 
-    // Apply continuous adjustments with reduced intensity
     color = color
-      .saturate((saturationMult - 1) * 1.5) // Reduced multiplier from 2 to 1.5
-      .brighten((brightnessMult - 1) * 1.5) // Reduced multiplier from 2 to 1.5
-      .alpha(0.85); // Make colors more transparent
+      .saturate((saturationMult - 1) * 2)
+      .brighten((brightnessMult - 1) * 2)
+      .alpha(0.75);
   }
 
-  // Ensure minimum contrast for readability
   const textColor = color.luminance() < 0.5 ? "#ffffff" : "#000000";
-
   return {
     background: color.hex(),
     color: textColor,
@@ -130,7 +143,8 @@ function getColorStyle(
 export function getCommentColorByGrade(
   grade: number | undefined,
   importance: number | undefined,
-  hasGrade: boolean
+  hasGrade: boolean,
+  allImportances: number[] = []
 ): { background: string; color: string } {
   if (!hasGrade || grade === undefined) {
     return {
@@ -140,7 +154,7 @@ export function getCommentColorByGrade(
   }
 
   const baseColor = getBaseColor(grade);
-  return getColorStyle(baseColor, importance);
+  return getColorStyle(baseColor, importance, allImportances);
 }
 
 export function getGradeColor(grade: number): { color: string } {
