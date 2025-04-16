@@ -15,6 +15,7 @@ import type { Document } from "@/types/documents";
 import {
   getCommentColorByGrade,
   getGradeColor,
+  getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
@@ -128,7 +129,7 @@ function CommentsSidebar({
                         className={`mt-1 text-gray-600 ${isExpanded ? "" : "line-clamp-1"}`}
                       >
                         {comment.description}
-                        {isExpanded && hasGradeInstructions && (
+                        {isExpanded && (
                           <div className="mt-2 text-xs text-gray-400">
                             {comment.grade !== undefined && (
                               <span className="mr-4">
@@ -445,17 +446,25 @@ export function DocumentWithEvaluations({
                       )
                     }
                   >
-                    <h3 className="text-sm font-medium text-gray-700">
-                      Analysis
+                    <div className="flex items-center">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Analysis
+                      </h3>
                       {activeReview.grade &&
                         evaluationAgents.find(
                           (a) => a.id === activeReview.agentId
                         )?.gradeInstructions && (
-                          <span className="text-md ml-2 font-bold text-gray-900">
-                            Grade: {activeReview.grade}/100
-                          </span>
+                          <div className="ml-4 flex items-center gap-1 text-sm">
+                            <span className="text-gray-500">Grade:</span>
+                            <span
+                              className="rounded-sm px-2 text-sm"
+                              style={getGradeColor(activeReview.grade)}
+                            >
+                              {getLetterGrade(activeReview.grade)}
+                            </span>
+                          </div>
                         )}
-                    </h3>
+                    </div>
                     {expandedTag === "analysis" ? (
                       <ChevronDownIcon className="h-4 w-4 text-gray-400" />
                     ) : (
@@ -512,27 +521,6 @@ export function DocumentWithEvaluations({
                     <div className="font-medium">
                       Grade: {activeReview.grade}/100
                     </div>
-                    {activeReview.grade >= 90 &&
-                      "Exceptional, groundbreaking work"}
-                    {activeReview.grade >= 80 &&
-                      activeReview.grade < 90 &&
-                      "Very strong, significant contribution"}
-                    {activeReview.grade >= 70 &&
-                      activeReview.grade < 80 &&
-                      "Good, solid work"}
-                    {activeReview.grade >= 60 &&
-                      activeReview.grade < 70 &&
-                      "Decent, some value"}
-                    {activeReview.grade >= 50 &&
-                      activeReview.grade < 60 &&
-                      "Mediocre, limited value"}
-                    {activeReview.grade >= 40 &&
-                      activeReview.grade < 50 &&
-                      "Poor, significant issues"}
-                    {activeReview.grade >= 30 &&
-                      activeReview.grade < 40 &&
-                      "Very poor, major problems"}
-                    {activeReview.grade < 30 && "Unacceptable quality"}
                   </div>
                 </div>
               )}

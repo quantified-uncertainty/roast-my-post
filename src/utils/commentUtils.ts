@@ -79,20 +79,20 @@ export function getValidCommentCount(comments: Comment[]): number {
 
 // Color generation helper functions
 function getBaseColor(grade: number): string {
-  // Create color scale for the full grade range
+  // Create color scale with specific grade transitions
   const colorScale = chroma
     .scale([
       "#e74c3c", // Red (0)
-      "#e67e22", // Orange (25)
-      "#f1c40f", // Yellow (50)
-      "#3498db", // Blue (75)
-      "#2ecc71", // Green (100)
+      "#f39c12", // Orange (30)
+      "#f1c40f", // Yellow (45)
+      "#7f8c9d", // Blue-gray (55)
+      "#16a085", // Blue-green (70)
+      "#2ecc71", // Bright green (90+)
     ])
+    .domain([0, 30, 45, 55, 70, 90])
     .mode("lch"); // Use LCH color space for perceptually uniform interpolation
 
-  // Normalize grade to 0-1 range
-  const normalizedGrade = grade / 100;
-  return colorScale(normalizedGrade).hex();
+  return colorScale(grade).hex();
 }
 
 function calculatePercentileRank(value: number, values: number[]): number {
@@ -157,21 +157,52 @@ export function getCommentColorByGrade(
   return getColorStyle(baseColor, importance, allImportances);
 }
 
-export function getGradeColor(grade: number): { color: string } {
-  // Create color scale for the full grade range
+export function getGradeColor(grade: number): {
+  background: string;
+  color: string;
+} {
   const colorScale = chroma
     .scale([
       "#e74c3c", // Red (0)
-      "#e67e22", // Orange (25)
-      "#f1c40f", // Yellow (50)
-      "#3498db", // Blue (75)
-      "#2ecc71", // Green (100)
+      "#f39c12", // Orange (30)
+      "#f1c40f", // Yellow (45)
+      "#7f8c9d", // Blue-gray (55)
+      "#16a085", // Blue-green (70)
+      "#2ecc71", // Bright green (90+)
     ])
+    .domain([0, 30, 45, 55, 70, 90])
     .mode("lch");
 
-  // Normalize grade to 0-1 range
-  const normalizedGrade = grade / 100;
-  const color = colorScale(normalizedGrade).hex();
+  const bgColor = colorScale(grade);
+  // Use white text for darker backgrounds, black for lighter ones
+  const textColor = bgColor.luminance() < 0.5 ? "#ffffff" : "#000000";
 
-  return { color };
+  return {
+    background: bgColor.hex(),
+    color: textColor,
+  };
+}
+
+const GRADE_SCALE = [
+  { threshold: 95, letter: "A+" },
+  { threshold: 87, letter: "A" },
+  { threshold: 80, letter: "A-" },
+  { threshold: 77, letter: "B+" },
+  { threshold: 73, letter: "B" },
+  { threshold: 70, letter: "B-" },
+  { threshold: 67, letter: "C+" },
+  { threshold: 63, letter: "C" },
+  { threshold: 60, letter: "C-" },
+  { threshold: 50, letter: "E" },
+  { threshold: 40, letter: "E-" },
+  { threshold: 30, letter: "F" },
+  { threshold: 20, letter: "F-" },
+  { threshold: 10, letter: "F-" },
+  { threshold: 0, letter: "F--" },
+] as const;
+
+export function getLetterGrade(grade: number): string {
+  return (
+    GRADE_SCALE.find(({ threshold }) => grade >= threshold)?.letter || "F--"
+  );
 }
