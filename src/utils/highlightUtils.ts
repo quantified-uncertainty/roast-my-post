@@ -569,13 +569,19 @@ export async function processRawComments(
       if (start === end) {
         const exactMatch = content.indexOf(start);
         if (exactMatch !== -1) {
+          const quotedText = start;
+          const isValid = quotedText.length <= 1000; // Max 1000 characters
           return {
             ...rest,
             highlight: {
               startOffset: exactMatch,
               endOffset: exactMatch + start.length,
-              quotedText: start,
+              quotedText,
             },
+            isValid,
+            error: isValid
+              ? undefined
+              : "Highlight is too long (max 1000 characters)",
           };
         }
       }
@@ -625,26 +631,38 @@ export async function processRawComments(
           const endOffset = contentWords
             .slice(0, bestEndMatch + endWords.length)
             .join(" ").length;
+          const quotedText = content.substring(startOffset, endOffset);
+          const isValid = quotedText.length <= 1000; // Max 1000 characters
           return {
             ...rest,
             highlight: {
               startOffset,
               endOffset,
-              quotedText: content.substring(startOffset, endOffset),
+              quotedText,
             },
+            isValid,
+            error: isValid
+              ? undefined
+              : "Highlight is too long (max 1000 characters)",
           };
         }
-      } else {
-        // We found exact matches, use them
-        return {
-          ...rest,
-          highlight: {
-            startOffset: startIndex,
-            endOffset: endIndex + end.length,
-            quotedText: content.substring(startIndex, endIndex + end.length),
-          },
-        };
       }
+
+      // We found exact matches, use them
+      const quotedText = content.substring(startIndex, endIndex + end.length);
+      const isValid = quotedText.length <= 1000; // Max 1000 characters
+      return {
+        ...rest,
+        highlight: {
+          startOffset: startIndex,
+          endOffset: endIndex + end.length,
+          quotedText,
+        },
+        isValid,
+        error: isValid
+          ? undefined
+          : "Highlight is too long (max 1000 characters)",
+      };
 
       // If we couldn't find good matches, return an invalid highlight
       return {

@@ -134,6 +134,13 @@ For each substantive claim or section in the content:
 6. ALWAYS include Fermi estimates for impact claims
 7. Consider both positive and negative impacts
 
+IMPORTANT: When highlighting text:
+- Keep highlights SHORT and focused (max 1000 characters)
+- Select only the most relevant portion of text
+- Avoid highlighting entire paragraphs or sections
+- Focus on specific claims, data points, or key phrases
+- If a section is too long, break it into multiple focused highlights
+
 Example comment structure:
 - Component being evaluated (e.g., "Neglectedness Analysis")
 - Specific strengths/weaknesses
@@ -143,69 +150,13 @@ Example comment structure:
 
 Example comments:
 
-Title: Importance Assessment - Global Health Intervention
-    
-This post analyzes a neglected tropical disease intervention that could affect 2 million people in sub-Saharan Africa. The disease causes moderate disability (0.1 DALY per year) with an average duration of 5 years. The proposed approach could reduce disease burden by approximately 70% in targeted regions.
-    
-Importance Score: 8/10
-    
-Key factors:
-- Scale: ~2 million people affected (moderate scale)
-- Severity: 0.1 DALY per year × 5 years = 0.5 DALYs per person
-- Potential impact: 0.5 DALYs × 2M people × 70% reduction = 700,000 DALYs averted
-- Leveraged impact: Potential to influence WHO treatment guidelines
-    
-From an EA perspective, this represents a significant welfare improvement opportunity within global health priorities.
+Title: ITN Analysis: Importance
+The author correctly identifies this opportunity as important using criteria similar to the ITN framework. The potential scale of impact is significant, as strategic thinking improvements could affect global decision-making across multiple domains including existential risk reduction. However, the article would benefit from more quantitative estimates of this importance.
+Highlight: "Neglected: Few groups are actively pursuing this direction\nImportant: Better strategic thinking could significantly impact many domains, including AI safety"
 
-Title: Negative Value Assessment - Misaligned Research Direction
-    
-This post proposes a novel approach to AI capability development without corresponding safety measures. While technically innovative, the approach could accelerate capabilities without addressing alignment concerns.
-    
-Fermi Estimate of Negative Impact:
-- Acceleration of unsafe capabilities: ~2 months (90% CI: 0.5-6 months)
-- Probability of influence on major labs: ~15% (90% CI: 5%-30%)
-- Value of x-risk delay: ~$500M per month of delay (standard EA estimate)
-- Potential countervailing safety benefits: ~10% of harm (safety insights gained)
-    
-Calculation:
-2 months acceleration × 15% adoption × $500M per month × (1 - 0.1 safety benefit)
-= 2 × 0.15 × $500M × 0.9
-= -$135M expected value (negative)
-    
-90% Confidence Interval: -$11.25M to -$810M (negative throughout range)
-    
-From an EA perspective, this research direction likely represents negative expected value due to differential advancement of capabilities over safety, despite its technical merits.
-
-Title: Fermi Estimate - Methodology Improvement
-    
-Impact Model (Detailed Fermi Calculation):
-- Relevant decision-makers: ~200 grantmakers/researchers (90% CI: 100-400)
-- Adoption probability: ~10% (90% CI: 5%-20%)
-- Decisions affected per person annually: ~15 (90% CI: 8-25)
-- Average decision size: ~$500K (90% CI: $100K-$2M)
-- Decision quality improvement: ~3% (90% CI: 1%-8%)
-- Duration of influence: ~2 years (90% CI: 1-4 years)
-- Discount for replaceability: 40% (someone would develop similar methods)
-    
-Calculation:
-200 decision-makers × 10% adoption × 15 decisions/year × $500K/decision × 3% improvement × 2 years × (1 - 0.4 replaceability)
-= 200 × 0.1 × 15 × $500K × 0.03 × 2 × 0.6
-= $54 million expected value
-    
-90% Confidence Interval: $1.44M - $768M
-    
-Alternative units: 
-- At $5,000/life (GiveWell benchmark), equivalent to ~10,800 lives saved
-- At $50K/QALY (healthcare standard), equivalent to ~1,080 QALYs
-    
-Key uncertainties:
-- True counterfactual impact of this specific methodology
-- Actual implementation rate and persistence
-- Quality of decisions influenced
-    
-From an EA perspective, this represents high expected value relative to typical EA research funding of $100K-$500K for a methodology project.
-
-Always base comments on specific content rather than general impressions.
+Title: Impact Estimation Methodology
+The document lacks a systematic approach to impact estimation. A proper Fermi estimate would help quantify the potential benefits and make the case more compelling to EA audiences.
+Highlight: "The socioeconomic value of linearly increasing intelligence is super-exponential in nature"
 """
 
 capabilities = [

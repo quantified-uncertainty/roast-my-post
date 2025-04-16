@@ -5,6 +5,7 @@ import path from "path";
 
 import type { Comment, DocumentReview } from "../types/documentReview";
 import { ANALYSIS_MODEL, DEFAULT_TEMPERATURE, openai } from "../types/openai";
+import { calculateCost, type ModelName } from "./costCalculator";
 import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
 
 // Type for the raw LLM response before transformation
@@ -63,20 +64,6 @@ export function calculateTargetComments(content: string): number {
   // Assuming ~5 chars per word
   const additionalComments = Math.floor(contentLength / 500);
   return Math.max(baseComments, Math.min(additionalComments, 5)); // Cap at 100 comments
-}
-
-// Add this function before analyzeDocument
-function escapeJsonString(str: string): string {
-  return str
-    .replace(/\\/g, "\\\\") // Escape backslashes first
-    .replace(/"/g, '\\"') // Escape double quotes
-    .replace(/\n/g, "\\n") // Escape newlines
-    .replace(/\r/g, "\\r") // Escape carriage returns
-    .replace(/\t/g, "\\t") // Escape tabs
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
-      // Handle control characters that can break JSON
-      return "\\u" + ("0000" + match.charCodeAt(0).toString(16)).slice(-4);
-    });
 }
 
 // Add this function before repairComplexJson
@@ -205,7 +192,14 @@ async function repairComplexJson(
 }
 
 export async function analyzeDocument(
-  content: string,
+  document: {
+    content: string;
+    title?: string;
+    author?: string;
+    publishedDate?: string;
+    url?: string;
+    [key: string]: any;
+  },
   agentId: string
 ): Promise<{
   review: DocumentReview;
@@ -241,8 +235,8 @@ ${agentInfo.commentInstructions}
 `
       : "";
 
-    const targetWordCount = calculateTargetWordCount(content);
-    const targetComments = calculateTargetComments(content);
+    const targetWordCount = calculateTargetWordCount(document.content);
+    const targetComments = calculateTargetComments(document.content);
     console.log(`📊 Target word count: ${targetWordCount}`);
     console.log(`📊 Target comments: ${targetComments}`);
 
@@ -276,6 +270,28 @@ ${agentInfo.genericInstructions}
 
 ## Your Unique Capabilities
 ${agentInfo.capabilities.map((cap: string) => `- ${cap}`).join("\n")}
+
+# DOCUMENT METADATA
+Title: ${document.title || "Untitled"}
+Author: ${document.author || "Unknown"}
+Published Date: ${document.publishedDate || "Unknown"}
+URL: ${document.url || "Unknown"}
+${Object.entries(document)
+  .filter(
+    ([key]) =>
+      ![
+        "content",
+        "title",
+        "author",
+        "publishedDate",
+        "url",
+        "id",
+        "slug",
+        "reviews",
+      ].includes(key)
+  )
+  .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+  .join("\n")}
 
 # ANALYSIS INSTRUCTIONS
 Your analysis should follow this structure:
@@ -327,7 +343,7 @@ Format your response in JSON like this:
 
 Here's the document to analyze:
 
-${content}`;
+${document.content}`;
 
     const startTime = Date.now();
     let completion;
@@ -511,14 +527,46 @@ ${content}`;
 
     // Process the comments to calculate highlight offsets
     const processedComments = await processRawComments(
-      content,
+      document.content,
       parsedLLMReview.comments
     );
+
+    // Validate comment schema
+    processedComments.forEach((comment, index) => {
+      if (comment.isValid === undefined) {
+        throw new Error(`Comment at index ${index} is missing isValid field`);
+      }
+      if (!comment.isValid && !comment.error) {
+        throw new Error(
+          `Invalid comment at index ${index} is missing error message`
+        );
+      }
+      if (comment.highlight === undefined) {
+        throw new Error(`Comment at index ${index} is missing highlight field`);
+      }
+      if (
+        comment.highlight.startOffset === undefined ||
+        comment.highlight.endOffset === undefined
+      ) {
+        throw new Error(
+          `Comment at index ${index} has invalid highlight offsets`
+        );
+      }
+      if (!comment.highlight.quotedText) {
+        throw new Error(`Comment at index ${index} is missing quotedText`);
+      }
+    });
 
     // Construct the final DocumentReview object
     const review: DocumentReview = {
       agentId,
-      costInCents: Math.round(usage?.total_tokens || 0),
+      costInCents: Math.round(
+        calculateCost(
+          ANALYSIS_MODEL as ModelName,
+          usage?.prompt_tokens || 0,
+          usage?.completion_tokens || 0
+        ).totalCost * 100
+      ), // Convert to cents
       createdAt: new Date(),
       runDetails: usage
         ? JSON.stringify({

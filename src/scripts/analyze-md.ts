@@ -55,6 +55,9 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
   const jsonContent = await readFile(filePath, "utf-8");
   const data = JSON.parse(jsonContent);
 
+  // Create a clean document object without reviews
+  const { reviews, ...documentWithoutReviews } = data;
+
   // Analyze the document
   const {
     review: documentReview,
@@ -62,7 +65,7 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
     llmResponse,
     finalPrompt,
     agentContext,
-  } = await analyzeDocument(data.content, agentId);
+  } = await analyzeDocument(documentWithoutReviews, agentId);
 
   // Remove any existing review by the same agent
   if (data.reviews) {
@@ -102,6 +105,27 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 
   const logContent = `# LLM Response ${new Date().toISOString()}
 
+## Document Information
+- Title: ${data.title || "Untitled"}
+- Author: ${data.author || "Unknown"}
+- URL: ${data.url || "N/A"}
+- Published Date: ${data.publishedDate || "Unknown"}
+
+## Summary Statistics
+- Total Tokens: ${usage?.total_tokens || 0}
+  * Prompt Tokens: ${usage?.prompt_tokens || 0}
+  * Completion Tokens: ${usage?.completion_tokens || 0}
+- Estimated Cost: $${(documentReview.costInCents / 100).toFixed(4)}
+  * Prompt Cost: $${((usage?.prompt_tokens || 0) * 0.00003).toFixed(4)}
+  * Completion Cost: $${((usage?.completion_tokens || 0) * 0.00006).toFixed(4)}
+- Runtime: ${JSON.parse(documentReview.runDetails || "{}").runtimeMs || 0}ms
+- Status: Success
+
+## Environment
+- Timestamp: ${new Date().toISOString()}
+- Local Time: ${new Date().toLocaleString()}
+- Environment: ${process.env.NODE_ENV || "development"}
+
 ## Agent
 ${agentId}
 
@@ -111,22 +135,9 @@ ${agentContext}
 \`\`\`
 
 ## Run Details
-- Model: ${
-    documentReview.runDetails
-      ? JSON.parse(documentReview.runDetails).model
-      : "Unknown"
-  }
-- Temperature: ${
-    documentReview.runDetails
-      ? JSON.parse(documentReview.runDetails).temperature
-      : "Unknown"
-  }
-- Runtime: ${
-    documentReview.runDetails
-      ? JSON.parse(documentReview.runDetails).runtimeMs
-      : "Unknown"
-  }ms
-- Cost: $${(documentReview.costInCents / 100).toFixed(2)}
+- Model: ${JSON.parse(documentReview.runDetails || "{}").model || "Unknown"}
+- Temperature: ${JSON.parse(documentReview.runDetails || "{}").temperature || "Unknown"}
+- Runtime: ${JSON.parse(documentReview.runDetails || "{}").runtimeMs || "Unknown"}ms
 
 ### Token Usage
 \`\`\`json
