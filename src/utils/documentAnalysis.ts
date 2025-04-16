@@ -157,16 +157,43 @@ async function repairComplexJson(
     } catch (error) {
       console.error("json5 parsing failed:", error);
 
-      // Try jsonrepair as a last resort
+      // Try jsonrepair with a different approach
       try {
         const jsonrepair = await import("jsonrepair");
-        const repaired = jsonrepair.jsonrepair(cleanedJson);
+        // First try to clean up the JSON string
+        let cleaned = cleanedJson
+          .replace(/\n/g, " ")
+          .replace(/\r/g, "")
+          .replace(/\t/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        // Try to repair the cleaned JSON
+        const repaired = jsonrepair.jsonrepair(cleaned);
         // Validate the repaired JSON
         JSON.parse(repaired);
         return repaired;
       } catch (repairError) {
         console.error("jsonrepair failed:", repairError);
-        return undefined;
+
+        // Try json-loose
+        try {
+          const { parse } = await import("json-loose");
+          const parsed = parse(cleanedJson);
+          return JSON.stringify(parsed);
+        } catch (looseError) {
+          console.error("json-loose failed:", looseError);
+
+          // Try jsonic
+          try {
+            const jsonic = await import("jsonic");
+            const parsed = jsonic(cleanedJson);
+            return JSON.stringify(parsed);
+          } catch (jsonicError) {
+            console.error("jsonic failed:", jsonicError);
+            return undefined;
+          }
+        }
       }
     }
   } catch (error) {

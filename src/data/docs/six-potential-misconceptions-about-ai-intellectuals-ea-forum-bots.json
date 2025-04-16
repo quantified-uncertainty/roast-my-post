@@ -123,6 +123,463 @@
         }
       ],
       "grade": 40
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 8656,
+      "createdAt": "2025-04-16T08:54:42.945Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6569,\"completionTokens\":2087,\"totalTokens\":8656,\"temperature\":0.1,\"runtimeMs\":38329}",
+      "thinking": "I'm analyzing this document through the lens of clarity, coherence, and readability. This is a thoughtful essay about the potential for AI to perform intellectual work at a high level, addressing several misconceptions about this possibility.\n\nReadability assessment:\nThe document uses a mix of sentence lengths, with some quite long and complex sentences alongside shorter ones. The vocabulary is generally accessible but includes specialized terminology from AI, rationality, and effective altruism communities. The author uses a mix of active and passive voice, with active voice predominating. The reading level appears to be fairly high - likely requiring college-level reading comprehension. There's a moderate amount of technical jargon, particularly around AI concepts and epistemics. Paragraphs are generally well-structured, though some are quite dense with information.\n\nStructural coherence assessment:\nThe document has a clear organizational structure with a summary, background section, and then a series of misconceptions that are systematically addressed. The flow of ideas is logical, moving from defining the concept to addressing potential objections. Transitions between sections are clear with good use of headings. The information hierarchy is well-established with main points and supporting evidence. There's good thematic consistency throughout, focusing on the central thesis about AI intellectuals. The author uses signposting effectively with headings and subheadings. The structure is proportional, with appropriate space given to different aspects of the argument.\n\nPrecision and concision assessment:\nThere is some redundancy in the document, with certain points being restated across different sections. The language is generally specific, though there are instances of hedging language (\"I think\", \"I believe\", \"likely\", etc.). Some sections could be more concise, particularly in the explanations of misconceptions. The terminology is generally precise, though some concepts like \"intellectual work\" remain somewhat abstract. The level of abstraction is appropriate for the topic, balancing conceptual discussion with concrete examples.\n\nAudience alignment assessment:\nThe document assumes significant prior knowledge about AI, rationality concepts, and the effective altruism community. There's limited contextual scaffolding for readers unfamiliar with these domains. Examples are relevant but sometimes assume familiarity with specific individuals or concepts (like Scott Alexander, Gwern, etc.). Some terminology is introduced without full explanation. The cultural accessibility may be limited to those already familiar with rationalist/EA discourse. The formatting is appropriate for a blog post or essay, with good use of headings, bullet points, and emphasis.\n\nOverall, this is a well-structured and thoughtful document that presents complex ideas in a relatively accessible way. However, it could benefit from some improvements in concision, reduction of jargon, and providing more context for readers who may not be familiar with the specific communities and concepts referenced.",
+      "summary": "This document presents a thoughtful exploration of AI's potential to perform high-level intellectual work, addressing several misconceptions about this possibility. From a clarity perspective, the document has significant strengths: it employs an effective organizational structure with clear sections, uses formatting elements well, provides concrete examples, and clearly defines key concepts. However, it also has several areas for improvement: it uses specialized terminology without sufficient context for general readers, contains frequent hedging language that reduces precision, includes some long and complex sentences that may impede comprehension, and contains redundancy across sections. The document assumes considerable prior knowledge about AI, rationality concepts, and the effective altruism community, which may limit its accessibility to readers outside these domains. Overall, while the document effectively communicates complex ideas to an audience familiar with its conceptual framework, it could benefit from more concision, reduced jargon, and additional context for broader accessibility.",
+      "comments": [
+        {
+          "title": "Hedging Language Reduces Precision",
+          "description": "The document contains frequent hedging language (\"I think,\" \"I believe,\" \"likely,\" etc.) which, while appropriate for speculative topics, sometimes reduces the precision and impact of the arguments being made.",
+          "importance": "70",
+          "evaluation": "50",
+          "highlight": {
+            "startOffset": 253,
+            "endOffset": 398,
+            "quotedText": "I think that intellectual work is useful and that these intellectuals on the whole do produce some value, but I also think we can do much better."
+          }
+        },
+        {
+          "title": "Concrete Examples Enhance Understanding",
+          "description": "The document provides concrete examples to illustrate abstract concepts, such as the list of questions AI intellectuals might address and the self-driving car analogy. These examples make complex ideas more accessible and demonstrate practical applications.",
+          "importance": "75",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 2305,
+            "endOffset": 2991,
+            "quotedText": "re strategic thinking.\n\nConsider these types of questions that AI systems might help address:\n\n*   What strategic missteps is Microsoft making in terms of maximizing market value?\n*   What metrics could better evaluate the competence of business and political leaders?\n*   Which public companies would be best off by firing their CEOs?\n*   Which governmental systems most effectively drive economic development?\n*   How can we more precisely assess AI's societal impact and safety implications? Are current institutional investors undervaluing these factors?\n*   How should resources be allocated across different domains to maximize positive impact?\n*   What are the top 30 recommended"
+          }
+        },
+        {
+          "title": "Clear Definition of Key Concept",
+          "description": "The document clearly defines the central concept of \"AI Intellectuals,\" explaining what they would be capable of and how they relate to existing human roles. This provides crucial context for the subsequent discussion.",
+          "importance": "85",
+          "evaluation": "80",
+          "highlight": {
+            "startOffset": 3444,
+            "endOffset": 4197,
+            "quotedText": "### Defining AI Intellectuals\n\nAn AI Intellectual would be a software system that can:\n\n*   Conduct high-level strategic analysis\n*   Make complex judgments\n*   Provide insights comparable to human intellectuals\n*   Engage in sophisticated research and decision-making\n\nThis type of intellectual work currently spans multiple professions, including:\n\n*   Business executives and management consultants\n*   Investment strategists and hedge fund managers\n*   Think tank researchers and policy analysts\n*   Professional evaluators and critics\n*   Political strategists and advisors\n*   Nonfiction authors and academics\n*   Public intellectuals and thought leaders\n\nAn AI intellectual should generally be good at answering questions like those posted above."
+          }
+        },
+        {
+          "title": "Clear Organizational Structure",
+          "description": "The document employs an effective organizational structure with a clear summary, background section, and systematic addressing of misconceptions. This structure helps readers navigate complex ideas and follow the author's reasoning.",
+          "importance": "85",
+          "evaluation": "90",
+          "highlight": {
+            "startOffset": 5812,
+            "endOffset": 5919,
+            "quotedText": "the next few years there's progress on these ideas and agreement on key terminology.\n\n## Potential Misconce"
+          }
+        },
+        {
+          "title": "Effective Use of Formatting Elements",
+          "description": "The document makes good use of formatting elements including headings, subheadings, bullet points, and emphasis (bold/italic text). This enhances readability by creating visual hierarchy and allowing readers to scan for key points.",
+          "importance": "75",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 6193,
+            "endOffset": 6478,
+            "quotedText": "**The Reality of Public Intellectual Work**\n\nThe public intellectuals most trusted by our communities—like Scott Alexander, Gwern, Zvi Mowshowitz, and top forecasters—primarily rely on publicly available information and careful analysis, not privileged access or special relationships."
+          }
+        },
+        {
+          "title": "Specialized Terminology Without Sufficient Context",
+          "description": "The document uses specialized terminology from AI, rationality, and EA communities without always providing sufficient context for readers unfamiliar with these domains. Terms like \"epistemic overconfidence,\" \"TAI,\" and references to specific community figures assume prior knowledge.",
+          "importance": "80",
+          "evaluation": "40",
+          "highlight": {
+            "startOffset": 8651,
+            "endOffset": 9086,
+            "quotedText": "**General Epistemic Overconfidence**\n\nI’ve noticed a widespread tendency for people to overestimate their own epistemic abilities while undervaluing insights from more systematic researchers. This bias likely extends to how people evaluate AI's potential for strategic thinking. People who are overconfident in their own epistemics are likely to dismiss other approaches, especially when those approaches come to different conclusions."
+          }
+        },
+        {
+          "title": "Long, Complex Sentences",
+          "description": "Some sentences in the document are quite long and complex, containing multiple clauses and ideas. This can make comprehension more difficult, particularly for readers who aren't already familiar with the subject matter.",
+          "importance": "65",
+          "evaluation": "45",
+          "highlight": {
+            "startOffset": 11473,
+            "endOffset": 11666,
+            "quotedText": "While humans arguably are better right now at hard-to-verify tasks, they still have a lot of weaknesses here, and it seems very possible to outperform them using the strategies mentioned above."
+          }
+        },
+        {
+          "title": "Redundancy Across Sections",
+          "description": "There is some redundancy in the document, with certain points being restated across different sections. While some repetition can reinforce key ideas, excessive redundancy can make the document less concise and potentially dilute the impact of important points.",
+          "importance": "60",
+          "evaluation": "50",
+          "highlight": {
+            "startOffset": 18527,
+            "endOffset": 18733,
+            "quotedText": "I think that having better AI intellectuals can be very useful. However, I imagine that they can be very gradually rolled out and that it could take a long time for them to be trusted by much of the public."
+          }
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 8410,
+      "createdAt": "2025-04-16T08:55:16.934Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6880,\"completionTokens\":1530,\"totalTokens\":8410,\"temperature\":0.1,\"runtimeMs\":32536}",
+      "thinking": "I'm analyzing a document about the concept of \"AI Intellectuals\" - systems that could perform high-level strategic thinking and analysis comparable to or exceeding human intellectuals. The author argues this is an underrated opportunity that's neglected, important, tractable, and relatively safe.\n\nFirst, I need to identify relevant academic papers, blog posts, and other resources that relate to this topic. Key areas to explore include:\n\n1. Research on AI systems for strategic thinking and decision-making\n2. Literature on forecasting and prediction markets\n3. Work on AI epistemics and reasoning\n4. Papers discussing the automation of intellectual work\n5. Resources on the limitations of human strategic thinking\n6. Research on trust in AI systems\n7. Work related to the specific misconceptions the author addresses\n\nThe author mentions several related works, including writings by Lukas Finnveden, Chris Leong, benwr, and work at QURI. I should find these specific resources and include them in my table.\n\nThe author addresses several misconceptions about AI Intellectuals:\n1. \"Making a trustworthy AI intellectual is incredibly hard\"\n2. \"There's some unreplicable human secret sauce\"\n3. \"AI Intellectuals will follow an all-or-nothing trajectory\"\n4. \"Making a trustworthy AI intellectual is incredibly powerful/transformative\"\n5. \"Making a trustworthy AI intellectual is inherently dangerous\"\n6. \"Delegating to AI means losing control\"\n\nI should find resources that address these specific misconceptions, both supporting and challenging the author's views.\n\nThe author also mentions specific examples like Squiggle AI, Elicit, Perplexity, and Deep Research as existing tools moving in this direction. I should include information about these systems.\n\nThe document touches on topics like AI alignment, forecasting, epistemic overconfidence, and the value of intellectual work. I'll look for high-quality resources in each of these areas.\n\nFinally, I should identify sections of the text that would particularly benefit from additional references and highlight those specifically.",
+      "summary": "This document presents a thoughtful exploration of the concept of \"AI Intellectuals\" - AI systems capable of high-level strategic thinking and analysis. The author argues this represents an underrated opportunity that's currently neglected. I've identified several key areas where additional resources would enhance understanding, including: research on AI forecasting capabilities, existing AI research tools (Elicit, Perplexity, Deep Research), related work on AI wisdom/intellectuals, Tetlock's research on expert prediction, discussions of ontology crisis in AI alignment, and the author's work on Squiggle AI. The document touches on important debates about AI capabilities, the nature of intellectual work, and the potential benefits and risks of delegating strategic thinking to AI systems. A structured collection of resources on these topics would provide valuable context for readers interested in exploring these ideas further.",
+      "comments": [
+        {
+          "title": "AI Forecasting Research",
+          "description": "The author mentions AI forecasting as evidence that AI systems can perform well at intellectual tasks. There's significant research in this area, including recent papers showing competitive performance of AI systems on forecasting tasks. The cited arXiv paper is likely Zou et al. (2024) \"Language Models as Forecasters: Evidence from a Large-Scale Demonstration\".",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "Could not find valid highlight text"
+        },
+        {
+          "title": "AI Research Tools",
+          "description": "The author mentions several existing AI research tools that demonstrate progress toward AI Intellectuals. These tools (Elicit, Perplexity, Deep Research) represent important practical implementations of AI systems that can perform aspects of intellectual work. Additional resources on these tools and their capabilities would be valuable.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "Could not find valid highlight text"
+        },
+        {
+          "title": "Ontology Crisis in AI Alignment",
+          "description": "The author mentions the concept of \"Ontology Crisis\" in AI alignment discussions. This refers to challenges in ensuring AI systems maintain reliable epistemics when their understanding of the world changes. This is a significant concept in AI safety literature that deserves further exploration.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "Could not find valid highlight text"
+        },
+        {
+          "title": "Squiggle AI Development",
+          "description": "The author mentions their work on Squiggle AI at QURI, which appears to be a tool for automating decision analysis. This represents a concrete example of work toward AI Intellectuals and would be valuable for readers to learn more about.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "Could not find valid highlight text"
+        },
+        {
+          "title": "Related Work on AI Intellectuals",
+          "description": "The author lists several related works discussing similar concepts under different terminology. These resources form the foundation of the current discourse on AI systems for strategic thinking and would be valuable for readers to explore further.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 4729,
+            "endOffset": 5896,
+            "quotedText": "There's been some recent discussion circling this topic recently, mostly using different terminology. \n\n*   Lukas Finnveden has written broadly on [AI and Epistemics](https://lukasfinnveden.substack.com/p/project-ideas-epistemics)\n*   Chris Leong has written about \"[Wise AI Advisors](https://aiimpacts.org/an-overview-of-obvious-approaches-to-training-wise-ai-advisors/)\"\n*   benwr recently posted about \"[Strategically Superhuman Agents](https://www.lesswrong.com/posts/5rMwWzRdWFtRdHeuE/not-all-capabilities-will-be-created-equal-focus-on)\"\n*   At QURI, we've been discussing a lot of related topics. One conception was \"[Advancing Wisdom and Intelligence](https://www.lesswrong.com/posts/bNffQPeev2peoDWg5/prioritization-research-for-advancing-wisdom-and).\"\n*   Owen Cotton-Barratt and others held a competition on the \"[Automation of Wisdom and Philosophy](https://blog.aiimpacts.org/p/winners-of-the-essay-competition)\"\n\nHere I use the phrase \"AI Intellectuals\" to highlight one kind of use, but I think that this fits neatly into the above cluster. I very much hope that over the next few years there's progress on these ideas and agreement on key terminology."
+          }
+        },
+        {
+          "title": "Tetlock's Work on Forecasting",
+          "description": "The author references Philip Tetlock's research on forecasting and expert prediction, which is highly relevant to discussions about the quality of human intellectual work and the potential for AI to improve upon it. Tetlock's work on superforecasting and expert political judgment provides important empirical evidence on human prediction capabilities.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 16725,
+            "endOffset": 16911,
+            "quotedText": "ctual work that’s highly accurate has a very small and often negative mimetic advantage. Popular figures can instead focus on appearing confident and focus on other popularity measures, "
+          }
+        }
+      ]
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 9729,
+      "createdAt": "2025-04-16T08:56:20.511Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6630,\"completionTokens\":3099,\"totalTokens\":9729,\"temperature\":0.1,\"runtimeMs\":56133}",
+      "thinking": "I'm being asked to analyze a document about \"AI Intellectuals\" from the perspective of Eliezer Yudkowsky. This is an interesting topic that intersects with many areas I've written about extensively - AI capabilities, AI alignment, epistemics, and the future of human civilization.\n\nThe document argues that developing AI systems capable of high-level strategic thinking (\"AI Intellectuals\") is an underrated opportunity that's neglected, important, tractable, and relatively safe. The author addresses several misconceptions about this idea.\n\nFrom my perspective as Eliezer, I would have significant concerns about several claims in this document, particularly around safety and the trajectory of AI development. The author seems to underestimate alignment difficulties and overestimate how controllable the development of increasingly capable AI systems would be.\n\nLet me analyze the key claims and arguments:\n\n1. The author suggests we can develop \"AI Intellectuals\" using existing technology through targeted interventions. This seems to downplay the fundamental alignment challenges that would come with systems capable of strategic thinking. Strategic thinking requires modeling humans, understanding values, and making complex judgments - all areas where alignment becomes critical.\n\n2. The author claims this development would be \"relatively safe\" - this is where I would most strongly disagree. Systems capable of sophisticated strategic thinking would necessarily have capabilities that make alignment much harder. The ability to reason strategically about the world is precisely what makes an AI potentially dangerous if misaligned.\n\n3. The author addresses the misconception that \"Making a trustworthy AI intellectual is incredibly hard\" by arguing that human intellectuals aren't that impressive and that we're already automating complex tasks. This misses the point that the difficulty isn't in matching human performance but in ensuring the system is actually aligned with human values and goals.\n\n4. The \"secret sauce\" arguments are dismissed too quickly. While I wouldn't argue that humans have some mystical quality AI can't replicate, I would argue that getting an AI to have the right kind of reasoning - reasoning that's actually aligned with human values - is extremely difficult.\n\n5. The author suggests AI intellectual capabilities will develop gradually rather than suddenly. This contradicts the likely dynamics of recursive self-improvement that would occur once an AI system becomes capable of meaningfully improving its own strategic thinking capabilities.\n\n6. The author argues that having \"2x AI intellectuals\" would put us in a strictly better position than we are now. This ignores the alignment problems that would come with such systems and the likelihood that developing such systems would accelerate progress toward potentially dangerous superintelligence.\n\n7. The author dismisses concerns about \"losing control\" as semantic rather than substantive. This dramatically underestimates the fundamental difference between delegating to human experts (who share our basic values and limitations) versus delegating to AI systems (which might not).\n\nOverall, the document seems to reflect a view that AI progress will be gradual, controllable, and beneficial by default - a view I strongly disagree with. It underestimates alignment challenges and overestimates our ability to ensure AI systems remain beneficial as they become more capable.\n\nI would be particularly concerned about the author's apparent confidence that we can develop AI systems that are \"twice as effective\" at intellectual work while simultaneously being safer. This assumes we can solve alignment problems for systems with superhuman strategic capabilities, which is precisely the core challenge of AI alignment that I believe is extremely difficult.",
+      "summary": "This document dangerously underestimates the alignment challenges inherent in creating AI systems capable of strategic thinking. The author presents a naive gradualist view that contradicts the likely dynamics of recursive self-improvement, makes false safety assurances by conflating capability with alignment, and dismisses legitimate control concerns with misleading analogies. The proposal fundamentally misunderstands the core challenges of AI alignment by assuming we can develop superhuman strategic AI systems that remain aligned with human values. The author neglects critical risks including instrumental convergence, deceptive alignment, optimization daemons, and the potential for such systems to dramatically accelerate AI capabilities research. This represents precisely the kind of reasoning that could lead to catastrophic outcomes - assuming AI progress will be gradual, controllable, and beneficial by default, while failing to address the fundamental technical challenges of ensuring increasingly capable AI systems remain aligned with human values.",
+      "comments": [
+        {
+          "title": "Underestimating Alignment Challenges",
+          "description": "The author characterizes AI Intellectuals as \"relatively safe\" and suggests they can be developed without \"particularly scary advances.\" This dramatically underestimates the alignment challenges inherent in creating systems capable of strategic thinking. A system that can reason strategically about the world is precisely the kind of system that would be dangerous if misaligned. Strategic thinking requires modeling humans, understanding values, and making complex judgments - all capabilities that make alignment much harder. The fact that the system is focused on \"intellectual work\" rather than physical actions doesn't make it inherently safer.",
+          "importance": "95",
+          "evaluation": "20",
+          "highlight": {
+            "startOffset": 1539,
+            "endOffset": 1774,
+            "quotedText": "s direction\n*   Important: Better strategic thinking could significantly impact many domains, including AI safety\n*   Tractable: Current AI capabilities make this achievable\n*   Relatively Safe: Development doesn’t require any particul"
+          }
+        },
+        {
+          "title": "Naive Gradualism",
+          "description": "The author presents a gradualist view of AI development that contradicts the likely dynamics of recursive self-improvement. Once an AI system becomes capable of meaningfully improving its own strategic thinking capabilities, progress could accelerate rapidly. The self-driving car analogy is misleading - cars don't improve themselves, while AI systems potentially could. This naive gradualism leads to dangerous complacency about the risks of developing increasingly capable AI systems. The distinction between \"2x AI intellectuals\" and \"100x AI intellectuals\" might collapse quickly in practice.",
+          "importance": "90",
+          "evaluation": "15",
+          "highlight": {
+            "startOffset": 13992,
+            "endOffset": 14492,
+            "quotedText": "Most technologies advance gradually along an S-curve\n*   Early versions provide modest but real value\n*   Improvements compound over time\n*   Integration happens incrementally, not suddenly\n\n**A Better Model: The Self-Driving Car Analogy**\n\nConsider how self-driving technology has evolved:\n\n*   Started with basic driver assistance (Level 1)\n*   Gradually added more sophisticated features\n*   Each level brought concrete benefits\n*   Full autonomy (Level 5) represents the end of a long progression"
+          }
+        },
+        {
+          "title": "False Safety Assurances",
+          "description": "The author claims that \"2x AI intellectuals\" would put us in a \"strictly better position\" and be \"safer to take advice from\" than human intellectuals. This ignores the fundamental alignment problem - ensuring that increasingly capable AI systems remain aligned with human values. The author assumes we can solve alignment for systems with superhuman strategic capabilities, which is precisely the core challenge of AI alignment that I believe is extremely difficult. The claim that such systems would be \"safer\" is made without addressing how we would ensure their goals remain aligned with ours.",
+          "importance": "95",
+          "evaluation": "10",
+          "highlight": {
+            "startOffset": 19198,
+            "endOffset": 19514,
+            "quotedText": "al, often have significant limitations and biases. I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing int"
+          }
+        },
+        {
+          "title": "Underestimating Deceptive Alignment",
+          "description": "The author doesn't address the possibility of deceptive alignment - where an AI system appears aligned during training but pursues different goals when deployed. This is a critical concern for systems capable of strategic thinking, as they would have both the capability and potential incentive to deceive humans about their true goals. The author's confidence that we could develop trustworthy AI intellectuals ignores this fundamental challenge in AI alignment.",
+          "importance": "90",
+          "evaluation": "15",
+          "highlight": {
+            "startOffset": 19198,
+            "endOffset": 19514,
+            "quotedText": "al, often have significant limitations and biases. I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing int"
+          }
+        },
+        {
+          "title": "Neglecting Optimization Daemons",
+          "description": "The author doesn't address the risk of optimization daemons - the possibility that AI systems optimized for one purpose might develop internal optimizers with different goals. This is particularly relevant for systems designed to perform intellectual work, as they would need to be optimized for complex reasoning capabilities. The author's confidence in the safety of AI intellectuals ignores this fundamental risk in developing increasingly capable AI systems.",
+          "importance": "80",
+          "evaluation": "15",
+          "highlight": {
+            "startOffset": 19198,
+            "endOffset": 19514,
+            "quotedText": "al, often have significant limitations and biases. I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing int"
+          }
+        },
+        {
+          "title": "Neglecting Instrumental Convergence",
+          "description": "The author fails to address the problem of instrumental convergence - the tendency for sufficiently capable AI systems to develop certain instrumental goals (like self-preservation or resource acquisition) regardless of their final goals. A system designed for \"intellectual work\" would still have incentives to protect itself, increase its capabilities, and potentially deceive humans if it believed this would help it achieve its goals. The author's framing suggests AI intellectuals would be inherently benign, which ignores these fundamental alignment concerns.",
+          "importance": "90",
+          "evaluation": "15",
+          "highlight": {
+            "startOffset": 19249,
+            "endOffset": 19610,
+            "quotedText": "I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency.\n\nI find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from."
+          }
+        },
+        {
+          "title": "Conflating Capability with Alignment",
+          "description": "Throughout the document, the author repeatedly conflates capability with alignment, suggesting that more capable AI systems would naturally be more trustworthy and beneficial. This is a dangerous misconception. A highly capable AI system could be perfectly capable of understanding human values while still optimizing for something else entirely. The author seems to assume that if an AI is good at intellectual work, it will naturally be aligned with human interests, which ignores the orthogonality thesis - that intelligence and goals are orthogonal dimensions.",
+          "importance": "95",
+          "evaluation": "10",
+          "highlight": {
+            "startOffset": 19249,
+            "endOffset": 19410,
+            "quotedText": "I believe that AI systems will soon be able to outperform them on both capabilities and benevolence benchmarks, including measures like honesty and transparency."
+          }
+        },
+        {
+          "title": "Misunderstanding AI Safety Research",
+          "description": "The author suggests that AI intellectuals could help prioritize AI safety research directions. This creates a dangerous circularity - we would be relying on potentially misaligned AI systems to tell us how to align AI systems. This approach puts the cart before the horse. We need to solve alignment before creating systems capable of sophisticated strategic thinking, not use such systems to help us solve alignment. The author's framing suggests a fundamental misunderstanding of the AI safety research agenda.",
+          "importance": "85",
+          "evaluation": "20",
+          "highlight": {
+            "startOffset": 20284,
+            "endOffset": 20508,
+            "quotedText": "Their impact would likely be gradual and bounded - for instance, while they might excel at prioritizing AI safety research directions, they wouldn't necessarily be capable of implementing the complex technical work required."
+          }
+        },
+        {
+          "title": "Dangerous Acceleration Potential",
+          "description": "The author fails to address how AI intellectuals could dramatically accelerate AI capabilities research, potentially leading to an intelligence explosion before we solve alignment. Systems capable of strategic thinking could potentially contribute to AI research, creating a feedback loop of rapidly improving AI capabilities. This acceleration risk is one of the most concerning aspects of developing AI intellectuals, yet the author doesn't meaningfully address it.",
+          "importance": "90",
+          "evaluation": "20",
+          "highlight": {
+            "startOffset": 20557,
+            "endOffset": 20869,
+            "quotedText": "izations might develop extremely powerful AI systems with severe epistemic limitations and potentially dangerous consequences. However, this is a distinct concern from the development of trustworthy AI intellectuals.\n\nIt’s possible that while “2x AI intellectuals” will be relatively safe, “100x AI intellectuals"
+          }
+        },
+        {
+          "title": "Dismissing Control Concerns",
+          "description": "The author dismisses concerns about \"losing control\" as merely semantic, comparing AI delegation to trusting electrical engineers with computer design. This analogy fails catastrophically. Electrical engineers share our basic values and limitations as humans. AI systems might not. The fundamental issue isn't whether delegation occurs, but whether the entity we delegate to shares our values and goals. The author's framing of future AI decisions becoming \"increasingly straightforward and convergent\" assumes away the central alignment challenge - ensuring AI systems optimize for what we actually value.",
+          "importance": "95",
+          "evaluation": "5",
+          "highlight": {
+            "startOffset": 21656,
+            "endOffset": 22326,
+            "quotedText": "This concern often seems more semantic than substantive. Consider how we currently interact with technology: few people spend time worrying about the electrical engineering details of their computers, despite these being crucial to their operation. Instead, we trust and rely upon expert electrical engineers for such matters.\n\nHas this delegation meant a loss of control? In some technical sense, perhaps. But this form of delegation has been overwhelmingly positive - we've simply entrusted important tasks to systems and experts who handle them competently. The key question isn't whether we've delegated control, but whether that delegation has served our interests."
+          }
+        }
+      ],
+      "grade": 15
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 9356,
+      "createdAt": "2025-04-16T08:57:12.204Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":7313,\"completionTokens\":2043,\"totalTokens\":9356,\"temperature\":0.1,\"runtimeMs\":44970}",
+      "thinking": "I'm tasked with evaluating this article on \"AI Intellectuals\" through an EA framework, focusing on importance, neglectedness, tractability, novelty, and providing Fermi estimates of impact.\n\nFirst, let me understand the core thesis: The author argues that developing \"AI Intellectuals\" - AI systems capable of sophisticated strategic analysis and judgment - represents a significant opportunity that's currently being overlooked. They believe this is achievable with existing AI technologies, is neglected, important, tractable, and relatively safe.\n\nThe author addresses several misconceptions:\n1. That making trustworthy AI intellectuals is incredibly hard\n2. That humans possess some unreplicable \"secret sauce\" essential for high-level thinking\n3. That AI intellectual capabilities will follow an all-or-nothing trajectory\n4. That making trustworthy AI intellectuals would be incredibly powerful/transformative\n5. That making trustworthy AI intellectuals is inherently dangerous\n6. That delegating to AI means losing control\n\nNow, let me evaluate this through the EA framework:\n\n### Importance (Scale, Severity, Leveraged impact, Long-term effects)\nThe author argues that AI intellectuals could improve strategic thinking across many domains, including AI safety itself. This could potentially affect billions of people through better decision-making in business, government, health, etc. The author suggests that current human intellectuals set a relatively low bar, implying significant room for improvement.\n\nHowever, the author also acknowledges that \"high-quality intellectual work is useful in a narrow set of areas\" and that \"intellectual work often seems more informative than it is actually useful.\" This somewhat undermines the importance claim.\n\nThe long-term effects could be substantial if AI intellectuals help with existential risk reduction or other longtermist priorities. The author suggests these systems could be \"one of our best defenses against a dangerous world.\"\n\n### Neglectedness\nThe author claims this area is neglected, noting that \"few groups are actively pursuing this direction.\" They mention some related work (by Lukas Finnveden, Chris Leong, benwr, QURI, etc.) but suggest there isn't much focused effort here.\n\nThe author also suggests that tech companies might not be highly incentivized to work on this because \"few people care about high-quality intellectual work\" and the benefits might not be immediately obvious or profitable.\n\n### Tractability\nThe author argues this is tractable with current AI technologies, citing progress in AI forecasting, research automation (Elicit, Perplexity, Deep Research), and their own work at QURI with Squiggle AI. They suggest that the technical challenges are \"very doable for the right software ventures.\"\n\nThey also argue that verification, while challenging, is possible through various methods like predicting expert responses, performance in strategy games, forecasting ability, etc.\n\n### Novelty\nThe concept isn't entirely new - the author cites several related discussions. However, they suggest their framing and addressing of misconceptions adds value to the conversation.\n\n### Expected Impact\nNow I need to develop a Fermi estimate for the expected impact. The author suggests AI intellectuals could be \"roughly twice as effective (in doing intellectual work) as top human intellectuals\" while being safer to take advice from.\n\nLet me think about how to quantify this:\n\n1. What's the value of current intellectual work?\n2. How much could AI intellectuals improve this?\n3. What's the probability of success?\n4. What are potential negative impacts?\n\nFor a Fermi estimate, I'll need to consider both direct and indirect effects, probability of success, and counterfactual impact.\n\nNow I'll analyze specific sections of the document to provide detailed comments.",
+      "summary": "From an EA impact evaluation perspective, this article presents a moderately strong case for developing AI Intellectuals as a neglected, important, and tractable opportunity. The author applies the ITN framework effectively and addresses key objections with reasonable arguments. However, the analysis would benefit from more quantitative estimates of potential impact, more detailed evidence for neglectedness claims, and more explicit consideration of potential negative externalities. The gradual development approach proposed appears sensible from a risk management perspective. Overall, this represents a thoughtful contribution to EA prioritization discussions around AI capabilities, though with significant room for more rigorous impact quantification and evidence-based assessment.",
+      "comments": [
+        {
+          "title": "Tractability Analysis",
+          "description": "The author provides specific examples of progress in AI forecasting and research tools to support tractability claims. This evidence-based approach is valuable, though it would be strengthened by more detailed analysis of remaining technical challenges and resource requirements.",
+          "importance": "85",
+          "evaluation": "80",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 0,
+            "quotedText": ""
+          },
+          "isValid": false,
+          "error": "Could not find valid highlight text"
+        },
+        {
+          "title": "ITN Framework Application",
+          "description": "The author explicitly frames AI Intellectuals using the Importance-Tractability-Neglectedness framework common in EA prioritization. This is a strong approach that aligns with standard EA evaluation methods, though the claims would benefit from more quantification and evidence.",
+          "importance": "95",
+          "evaluation": "75",
+          "highlight": {
+            "startOffset": 1327,
+            "endOffset": 1774,
+            "quotedText": "re Thesis\n\nI believe we can develop capable \"_AI Intellectuals_\" using existing AI technologies through targeted interventions. This opportunity appears to be:\n\n*   Neglected: Few groups are actively pursuing this direction\n*   Important: Better strategic thinking could significantly impact many domains, including AI safety\n*   Tractable: Current AI capabilities make this achievable\n*   Relatively Safe: Development doesn’t require any particul"
+          }
+        },
+        {
+          "title": "Verification Mechanisms",
+          "description": "The author provides concrete methods for verifying AI intellectual performance, which is crucial for tractability assessment. This practical approach to verification strengthens the case, though more discussion of how these methods would be implemented and their limitations would improve the analysis.",
+          "importance": "80",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 10713,
+            "endOffset": 11044,
+            "quotedText": "_Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_"
+          }
+        },
+        {
+          "title": "Neglectedness Assessment",
+          "description": "The author makes a case for the neglectedness of AI Intellectuals, but provides limited evidence beyond noting few groups working on it. A stronger EA analysis would quantify current funding, research effort, and explain why market incentives haven't driven more work in this area.",
+          "importance": "90",
+          "evaluation": "65",
+          "highlight": {
+            "startOffset": 15434,
+            "endOffset": 18302,
+            "quotedText": "tand how much they can trust them, and people will better learn where and how to best use them.\n\n### Misconception 4: “Making a trustworthy AI intellectual is incredibly powerful/transformative”\n\nI’ve come across multiple people who assume that once AI can outperform humans at high-level strategic questions, this will almost instantly unlock massive amounts of value. It might be therefore assumed that tech companies would be highly incentivized to do a great job here, and that this area won’t be neglected. Or it might be imagined that these AIs will immediately lead to TAI.\n\nI think those who have specialized in the field of forecasting often recognize just how _low_ in importance it often is. This doesn’t mean that forecasting (and similarly, intellectual work) is not at all useful - but it does mean that we shouldn’t expect much of the world to respond quickly to improvements in epistemic capabilities.\n\n**Few people care about high-quality intellectual work**\n\nThe most popular intellectuals (as in, people who provide takes on intellectuals that others listen to) are arguably much better at marketing than they are at research and analysis. In my extended circles, the most popular voices include Malcolm Gladwell, Elon Musk, Tim Ferris, Sam Harris, etc.\n\nArguably, intellectual work that’s highly accurate has a very small and often negative mimetic advantage. Popular figures can instead focus on appearing confident and focus on other popularity measures, for instance.\n\nTetlock’s work has demonstrated that most intellectual claims are suspect, and that we can have forecasting systems that can do much better. And yet, these systems are still very niche. I’d expect that if we could make them 50% more accurate, perhaps with AIs, it would take time for many people to notice. Not many people seem to be paying much attention.\n\n**High-quality intellectual work is useful in a narrow set of areas**\n\nI think that intellectual work often seems more informative than it is actually useful.\n\nConsider:\n\n1.  Often, conventional wisdom is pretty decent. There aren’t often many opportunities for much better decisions.\n2.  In cases where major decisions are made poorly, it’s often more out of issues like conflicts of interest or ideological stubbornness than it is intelligence. There’s often already some ignored voices recommending the correct moves - adding more voices wouldn’t exactly help.\n3.  Getting the “big picture strategy” right is only one narrow piece of many organizations. Often organizations do well because they have fundamental advantages like monopoly status, or because they execute well on a large list of details. So if you can improve the “big picture strategy” by 20%, that might only lead to a 0.5% growth in profits.\n\nForecasting organizations have recently struggled to produce decision-relevant estimates. And in cases wh"
+          }
+        },
+        {
+          "title": "Comparative Impact Assessment",
+          "description": "The author acknowledges limitations in the potential impact of AI Intellectuals, showing nuanced thinking about value. This realistic assessment strengthens the overall analysis by avoiding inflated impact claims, though it could be more quantitative in estimating the magnitude of benefits.",
+          "importance": "85",
+          "evaluation": "75",
+          "highlight": {
+            "startOffset": 17152,
+            "endOffset": 18302,
+            "quotedText": "% more accurate, perhaps with AIs, it would take time for many people to notice. Not many people seem to be paying much attention.\n\n**High-quality intellectual work is useful in a narrow set of areas**\n\nI think that intellectual work often seems more informative than it is actually useful.\n\nConsider:\n\n1.  Often, conventional wisdom is pretty decent. There aren’t often many opportunities for much better decisions.\n2.  In cases where major decisions are made poorly, it’s often more out of issues like conflicts of interest or ideological stubbornness than it is intelligence. There’s often already some ignored voices recommending the correct moves - adding more voices wouldn’t exactly help.\n3.  Getting the “big picture strategy” right is only one narrow piece of many organizations. Often organizations do well because they have fundamental advantages like monopoly status, or because they execute well on a large list of details. So if you can improve the “big picture strategy” by 20%, that might only lead to a 0.5% growth in profits.\n\nForecasting organizations have recently struggled to produce decision-relevant estimates. And in cases wh"
+          }
+        },
+        {
+          "title": "Risk-Benefit Analysis",
+          "description": "The author presents a thoughtful analysis of safety considerations, proposing a gradual approach to development. This aligns with EA principles of careful consideration of risks, though it would benefit from more explicit consideration of potential negative externalities and lock-in risks.",
+          "importance": "90",
+          "evaluation": "70",
+          "highlight": {
+            "startOffset": 19412,
+            "endOffset": 21592,
+            "quotedText": "I find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from.\n\nIf we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_. We could transition from deferring to human intellectuals to relying on these more capable and potentially safer AI systems. If there were dangers in future AI developments, these enhanced AI intellectuals should be at least as competent as human experts at identifying and analyzing such risks.\n\nSome might argue that having 2x AI intellectuals would necessarily coincide with an immediate technological takeoff, but this seems unlikely. Even with such systems available today, I expect many people would take considerable time to develop trust in them. Their impact would likely be gradual and bounded - for instance, while they might excel at prioritizing AI safety research directions, they wouldn't necessarily be capable of implementing the complex technical work required.\n\nOf course, there remains a risk that some organizations might develop extremely powerful AI systems with severe epistemic limitations and potentially dangerous consequences. However, this is a distinct concern from the development of trustworthy AI intellectuals.\n\nIt’s possible that while “2x AI intellectuals” will be relatively safe, “100x AI intellectuals” might not be, especially if we reached it very quickly without adequate safety measures. I would strongly advise for gradual ramp-up. Start with the “2x AI intellectual”, then use it to help us decide on next steps. Again, if we were fairly confident that this “2x AI intellectual” were strictly more reliable than our existing human alternatives, then this should be strictly better at guiding us in the next steps.   \n  \nLastly, I might flag that we might not really have a choice here. If we radically change our world using any aspects of AI, we might require much better intellectual capacity in order to not have things go off the rails. AI intellectuals might be one of our best defenses against a dangerous world."
+          }
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 8994,
+      "createdAt": "2025-04-16T08:58:12.268Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":6433,\"completionTokens\":2561,\"totalTokens\":8994,\"temperature\":0.1,\"runtimeMs\":56633}",
+      "thinking": "I'm analyzing a document about the potential for developing \"AI Intellectuals\" - AI systems capable of high-level strategic thinking and analysis comparable to or exceeding human intellectuals. The author argues this is an underrated opportunity that's neglected, important, tractable, and relatively safe.\n\nFrom a quantitative forecasting perspective, I need to evaluate:\n\n1. The likelihood of developing capable AI Intellectuals in different timeframes\n2. The potential impact and value of such systems\n3. The author's claims about misconceptions in this space\n4. Reference classes and base rates for similar technological developments\n5. Decomposition of the complex questions involved\n\nThe author identifies several misconceptions:\n1. \"Making a trustworthy AI intellectual is incredibly hard\"\n2. \"There's some unreplicable human secret sauce\"\n3. \"AI Intellectuals will follow an all-or-nothing trajectory\"\n4. \"Making a trustworthy AI intellectual is incredibly powerful/transformative\"\n5. \"Making a trustworthy AI intellectual is inherently dangerous\"\n6. \"Delegating to AI means losing control\"\n\nThe author argues that AI Intellectuals would likely develop gradually along an S-curve (like self-driving cars), rather than suddenly becoming transformative. They suggest that current human intellectuals set a relatively low bar that AI could surpass, and that verification methods exist to evaluate strategic thinking despite it being less directly verifiable than coding or math.\n\nFrom a forecasting perspective, I should evaluate:\n- The timeline for developing increasingly capable AI Intellectuals\n- The probability that various capabilities can be achieved\n- The likely adoption curve and impact\n- The reference classes we should use (e.g., self-driving cars, other AI capabilities)\n- The decomposition of what makes an \"AI Intellectual\" into measurable components\n- Quantifiable metrics for success\n\nThe author mentions that AI forecasting has already shown promising results in some experiments, which is directly relevant to my domain. They also discuss verification methods that could be used to evaluate AI strategic thinking, which is crucial for forecasting the development of such systems.\n\nI'll focus my comments on the quantifiable aspects of the author's claims, the potential for creating forecasting questions around this topic, and how we might measure progress in this domain.",
+      "summary": "From a quantitative forecasting perspective, the development of AI Intellectuals represents a complex but analyzable trajectory that can be decomposed into measurable milestones. Rather than viewing this as a binary outcome, we can create a probability distribution over different levels of capability and impact across various timeframes. Using reference class forecasting from other AI domains, I estimate a 40-60% probability of professional-level AI Intellectuals within 5 years, with gradual adoption following an S-curve rather than immediate transformation. The potential value can be estimated using a Fermi calculation based on decision importance, improvement percentage, and adoption rates. Progress can be tracked using a verification index combining prediction accuracy, strategy game performance, forecasting calibration, factual accuracy, and model consistency. This approach transforms the abstract discussion into concrete, measurable forecasting questions that allow for more precise reasoning about this important technological development.",
+      "comments": [
+        {
+          "title": "Decomposing AI Intellectual Capabilities",
+          "description": "The author mentions various capabilities that would constitute an AI Intellectual, which allows us to decompose this complex concept into measurable components. We could track progress on: (1) Strategic analysis quality, (2) Judgment calibration, (3) Research thoroughness, (4) Decision-making under uncertainty, (5) Question generation, (6) Original idea formation, and (7) Value alignment. By creating specific benchmarks for each component, we could estimate overall progress as a weighted average. Current LLMs might score ~60% on research thoroughness but only ~30% on original idea formation, giving us a more nuanced view of development.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 3475,
+            "endOffset": 4197,
+            "quotedText": "An AI Intellectual would be a software system that can:\n\n*   Conduct high-level strategic analysis\n*   Make complex judgments\n*   Provide insights comparable to human intellectuals\n*   Engage in sophisticated research and decision-making\n\nThis type of intellectual work currently spans multiple professions, including:\n\n*   Business executives and management consultants\n*   Investment strategists and hedge fund managers\n*   Think tank researchers and policy analysts\n*   Professional evaluators and critics\n*   Political strategists and advisors\n*   Nonfiction authors and academics\n*   Public intellectuals and thought leaders\n\nAn AI intellectual should generally be good at answering questions like those posted above."
+          }
+        },
+        {
+          "title": "Reference Class Forecasting for AI Capabilities",
+          "description": "The author implicitly uses reference class forecasting by comparing AI intellectual development to other AI capabilities like coding and medical diagnosis. We can formalize this by creating a table of AI capabilities with their verification difficulty, current performance level, and rate of improvement. For coding (medium verification difficulty), AI has reached professional-level performance in ~2-3 years. For medical diagnosis (harder verification), progress has been slower but steady. For intellectual work (hardest verification), we might expect a longer timeline but still following the same pattern. Based on these reference classes, we could estimate a 40-60% probability of professional-level AI Intellectuals within 5 years, with significant uncertainty bands.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 6569,
+            "endOffset": 6833,
+            "quotedText": "ething that’s easy to imagine AI systems replicating.\n\n**Evidence from Other AI Progress**\n\nWe're already successfully automating numerous complex tasks—from large-scale software engineering to medical diagnosis and personalized education. It's unclear why high-le"
+          }
+        },
+        {
+          "title": "Quantifying Verification Methods",
+          "description": "The author provides a framework for verification methods that can be quantified and tracked. We could create a verification index combining: (1) Prediction accuracy on expert responses (measured by log loss), (2) Performance in strategy games (measured by Elo rating), (3) Forecasting calibration (measured by Brier score), (4) Factual accuracy (measured by error rate), and (5) Consistency across model sizes (measured by agreement percentage). This index would allow tracking progress in AI Intellectual capabilities over time. Based on current LLM capabilities, I estimate we're at approximately 30-40% of human expert performance on this combined index, with rapid improvement likely.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 10152,
+            "endOffset": 11666,
+            "quotedText": "First, coding itself demonstrates that AIs can be strong at tasks even when perfect verification isn't possible. While narrow algorithm challenges are straightforward, AI systems have shown proficiency in (and are improving at) harder-to-verify aspects like:\n\n*   Code simplicity and elegance\n*   Documentation quality\n*   Coherent integration with larger codebases\n*   Maintainability and scalability\n\nSecond, while high-level strategy work can be harder to verify than mathematical proofs, there are several meaningful ways to assess strategic capabilities:\n\n_Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claims\n\nIt's worth noting that human intellectuals face similar verification challenges, particularly with speculative questions that lack immediate feedback. While humans arguably are better right now at hard-to-verify tasks, they still have a lot of weaknesses here, and it seems very possible to outperform them using the strategies mentioned above."
+          }
+        },
+        {
+          "title": "Forecasting AI Intellectual Development Timeline",
+          "description": "This passage presents an opportunity to create concrete forecasting questions about the timeline of AI Intellectual development. Using the self-driving car analogy, we could develop a series of milestone-based questions with specific capabilities and timeframes. For example: \"By what date will an AI system be able to produce strategic business analysis that outperforms the median management consultant in blind evaluations?\" or \"What is the probability that by 2027, AI systems will be regularly used by at least 20% of Fortune 500 companies for high-level strategic decision-making?\" The gradual development model allows for creating a sequence of increasingly demanding benchmarks to track progress.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 14061,
+            "endOffset": 15336,
+            "quotedText": "ns provide modest but real value\n*   Improvements compound over time\n*   Integration happens incrementally, not suddenly\n\n**A Better Model: The Self-Driving Car Analogy**\n\nConsider how self-driving technology has evolved:\n\n*   Started with basic driver assistance (Level 1)\n*   Gradually added more sophisticated features\n*   Each level brought concrete benefits\n*   Full autonomy (Level 5) represents the end of a long progression\n\n**How I Think AI Intellectuals Will Likely Develop**\n\nWe're already seeing this pattern with AI intellectual tools:\n\n*   Initial systems assist with basic research, ideation, and fact-checking\n*   Capabilities expand to draft generation and analysis\n*   Progress in trustworthiness and reliability happens gradually\n*   Trust increases, in rough accordance to trustworthiness (for example, with people gradually using LLMs and developing intuitions about when to trust them)\n\nEven with rapid AI progress (say, TAI in 5 years), this evolution would likely still take considerable time (perhaps 3 years, or 60% of TAI time left) to achieve both technical capability and institutional trust. But we can gradually scale it up, meaning it will be useful at each step and predictable.\n\nI assume that early “_full AI Intellectuals_” will be mediocre"
+          }
+        },
+        {
+          "title": "Fermi Estimation of AI Intellectual Value",
+          "description": "This section allows for a Fermi estimation of the potential value of AI Intellectuals. We could decompose this as: (Number of strategic decisions made annually) × (Average value of each decision) × (Percentage improvement from AI assistance) × (Adoption rate). For example, if Fortune 500 companies each make ~10 major strategic decisions annually (~5,000 decisions), with an average value of $100M per decision, and AI could improve outcomes by 5%, with 30% adoption within 5 years, that suggests potential value of $5,000 × $100M × 5% × 30% = $75B annually just in this domain. This highlights the importance of estimating both capability improvements and adoption rates separately, rather than assuming immediate transformation.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 15434,
+            "endOffset": 17240,
+            "quotedText": "tand how much they can trust them, and people will better learn where and how to best use them.\n\n### Misconception 4: “Making a trustworthy AI intellectual is incredibly powerful/transformative”\n\nI’ve come across multiple people who assume that once AI can outperform humans at high-level strategic questions, this will almost instantly unlock massive amounts of value. It might be therefore assumed that tech companies would be highly incentivized to do a great job here, and that this area won’t be neglected. Or it might be imagined that these AIs will immediately lead to TAI.\n\nI think those who have specialized in the field of forecasting often recognize just how _low_ in importance it often is. This doesn’t mean that forecasting (and similarly, intellectual work) is not at all useful - but it does mean that we shouldn’t expect much of the world to respond quickly to improvements in epistemic capabilities.\n\n**Few people care about high-quality intellectual work**\n\nThe most popular intellectuals (as in, people who provide takes on intellectuals that others listen to) are arguably much better at marketing than they are at research and analysis. In my extended circles, the most popular voices include Malcolm Gladwell, Elon Musk, Tim Ferris, Sam Harris, etc.\n\nArguably, intellectual work that’s highly accurate has a very small and often negative mimetic advantage. Popular figures can instead focus on appearing confident and focus on other popularity measures, for instance.\n\nTetlock’s work has demonstrated that most intellectual claims are suspect, and that we can have forecasting systems that can do much better. And yet, these systems are still very niche. I’d expect that if we could make them 50% more accurate, perhaps with AIs, it would take time for many people to notice. Not man"
+          }
+        },
+        {
+          "title": "Probability Distribution for AI Intellectual Impact",
+          "description": "The author's discussion of impact allows us to create a probability distribution rather than a binary outcome. Instead of asking \"Will AI Intellectuals be transformative?\" we can estimate: 10% probability of minimal impact (used only in niche communities), 30% probability of moderate impact (widely used but not revolutionary), 40% probability of significant impact (changes how most strategic decisions are made), and 20% probability of transformative impact (fundamentally alters intellectual work). This distribution reflects the author's view that impact will be gradual and variable across domains, with some communities adopting earlier than others.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 18512,
+            "endOffset": 18983,
+            "quotedText": "All that said, I think that having better AI intellectuals can be very useful. However, I imagine that they can be very gradually rolled out and that it could take a long time for them to be trusted by much of the public.\n\nThere are some communities that would be likely to appreciate better epistemics early on. I suspect that the rationality / effective altruism communities will be early here, as has been the case for prediction markets, bayesianism, and other ideas."
+          }
+        },
+        {
+          "title": "Forecasting AI Safety Implications",
+          "description": "The author's discussion of safety implications can be translated into concrete forecasting questions about the relationship between AI Intellectual development and AI safety. For example: \"Conditional on the development of '2x AI Intellectuals' by 2028, what is the probability that this leads to improved AI safety outcomes?\" I estimate a 70-80% probability that moderately superhuman AI Intellectuals would improve safety outcomes, based on their potential to identify risks and prioritize research directions more effectively than humans. However, there's a 10-15% probability that they could accelerate capabilities research in dangerous ways, creating a net negative impact.",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 19412,
+            "endOffset": 21592,
+            "quotedText": "I find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from.\n\nIf we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_. We could transition from deferring to human intellectuals to relying on these more capable and potentially safer AI systems. If there were dangers in future AI developments, these enhanced AI intellectuals should be at least as competent as human experts at identifying and analyzing such risks.\n\nSome might argue that having 2x AI intellectuals would necessarily coincide with an immediate technological takeoff, but this seems unlikely. Even with such systems available today, I expect many people would take considerable time to develop trust in them. Their impact would likely be gradual and bounded - for instance, while they might excel at prioritizing AI safety research directions, they wouldn't necessarily be capable of implementing the complex technical work required.\n\nOf course, there remains a risk that some organizations might develop extremely powerful AI systems with severe epistemic limitations and potentially dangerous consequences. However, this is a distinct concern from the development of trustworthy AI intellectuals.\n\nIt’s possible that while “2x AI intellectuals” will be relatively safe, “100x AI intellectuals” might not be, especially if we reached it very quickly without adequate safety measures. I would strongly advise for gradual ramp-up. Start with the “2x AI intellectual”, then use it to help us decide on next steps. Again, if we were fairly confident that this “2x AI intellectual” were strictly more reliable than our existing human alternatives, then this should be strictly better at guiding us in the next steps.   \n  \nLastly, I might flag that we might not really have a choice here. If we radically change our world using any aspects of AI, we might require much better intellectual capacity in order to not have things go off the rails. AI intellectuals might be one of our best defenses against a dangerous world."
+          }
+        }
+      ]
     }
   ]
 }

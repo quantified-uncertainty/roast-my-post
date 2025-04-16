@@ -548,6 +548,72 @@
         }
       ],
       "grade": 65
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 5828,
+      "createdAt": "2025-04-16T08:58:56.663Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":3679,\"completionTokens\":2149,\"totalTokens\":5828,\"temperature\":0.1,\"runtimeMs\":42894}",
+      "thinking": "I need to evaluate this document through an EA lens, focusing on its potential impact using the Importance, Tractability, Neglectedness, and Novelty framework, followed by a Fermi estimate of expected impact.nnThis appears to be a mission statement or vision document from what seems to be OpenAI (based on references to GPT-4, GPT-4o, and the Microsoft partnership footnote). The document outlines their perspective on AGI development, its potential impacts, and their approach to ensuring benefits are broadly distributed.nn## Importance AnalysisnThe document addresses AGI development, which has enormous potential scale effects:n- Could impact virtually all of humanity (8 billion people)n- Could transform scientific progress, economic systems, and labor marketsn- Has long-term future implications that could persist for generationsn- Discusses potential risks including authoritarian control and power imbalancesnnFrom an EA perspective, transformative AI/AGI is considered one of the most important cause areas due to its potential impact on the long-term future of humanity. The document acknowledges both positive potential (curing diseases, economic growth) and some risks (power imbalances, surveillance).nnHowever, the document seems to understate existential risks from misaligned AGI, which many in the EA community consider a crucial concern. It presents a largely optimistic view while acknowledging only some societal challenges.nn## Neglectedness AnalysisnAGI safety and governance is no longer highly neglected, with significant attention from major AI labs, governments, and research institutions. However, the specific approach described in the document - focusing on broad distribution of benefits and individual empowerment - may be somewhat neglected compared to other safety approaches.nnThe document doesn't clearly articulate how they plan to address the most serious risks that concern the EA community, such as loss of control scenarios or misalignment with human values.nn## Tractability AnalysisnThe document presents a vision but is light on specific, actionable plans for ensuring AGI benefits humanity. It mentions:n- \"Launching products early and often\" to allow co-evolution with societyn- Potentially open-sourcing more technologyn- Considering \"compute budgets\" for everyonen- Driving down the cost of intelligencennBut these approaches aren't detailed enough to evaluate their feasibility or effectiveness. The document acknowledges trade-offs between safety and individual empowerment but doesn't specify how these will be navigated.nn## Novelty AssessmentnThe document presents some interesting perspectives but doesn't appear to introduce fundamentally new ideas to the AGI governance discourse. The three observations about AI economics are clearly articulated, but similar points have been made elsewhere.nnThe framing of AGI as both a continuation of human tool-building and something fundamentally different is a useful perspective, but not novel. The emphasis on individual empowerment versus authoritarian control presents a somewhat simplified dichotomy that doesn't fully capture the complexity of AGI governance challenges.nn## Fermi Estimation of Expected ImpactnTo estimate the impact of this document and the approach it outlines, I'll need to consider multiple pathways:nn1. Direct influence on OpenAI's approach to AGI developmentn2. Influence on the broader AI governance discoursen3. Potential effects on how AGI capabilities and benefits are distributedn4. Potential effects on how AGI risks are managednnLet me develop a Fermi estimate focusing on expected value in terms of existential risk reduction, since this is a key EA concern with AGI.",
+      "summary": "This document outlines OpenAI's vision for AGI development and distribution, emphasizing economic transformation and individual empowerment. From an EA perspective, while it addresses the potentially enormous scale of AGI's impact, it significantly understates existential risks and alignment challenges. The document presents interesting economic observations about AI scaling but lacks concrete, tractable plans for ensuring safety alongside capabilities. The proposed approach to governance emphasizes individual empowerment over centralized control, but creates a false dichotomy that neglects crucial safety considerations. The ideas for broad distribution of benefits lack implementation details and may be insufficient without addressing deeper alignment issues. Overall, the document presents an optimistic vision that acknowledges some societal challenges but inadequately addresses the most serious risks that concern the EA community.",
+      "comments": [
+        {
+          "title": "Importance of AGI Development",
+          "description": "This section frames AGI as potentially transformative for humanity, which aligns with EA prioritization of transformative AI as a crucial cause area. The scale of impact described is enormous, affecting all of humanity and future generations. However, the framing is notably optimistic, emphasizing benefits while only briefly acknowledging potential challenges.",
+          "importance": "95",
+          "evaluation": "65",
+          "highlight": {
+            "startOffset": 875,
+            "endOffset": 1427,
+            "quotedText": "In some sense, AGI is just another tool in this ever-taller scaffolding of human progress we are building together. In another sense, it is the beginning of something for which it's hard not to say \"this time it's different\"; the economic growth in front of us looks astonishing, and we can now imagine a world where we cure all diseases, have much more time to enjoy with our families, and can fully realize our creative potential.\n\nIn a decade, perhaps everyone on earth will be capable of accomplishing more than the most impactful person can today."
+          }
+        },
+        {
+          "title": "Scaling Laws and Economic Impact",
+          "description": "This section presents three key observations about AI economics that are crucial for understanding potential impact. From an EA perspective, these scaling relationships suggest both enormous potential benefits and risks. The super-exponential value of intelligence is particularly relevant to x-risk concerns, as it could lead to rapid capability jumps that outpace safety measures.",
+          "importance": "90",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 1531,
+            "endOffset": 2455,
+            "quotedText": " of AI:\n\n1\\. **The intelligence of an AI model roughly equals the log of the resources used to train and run it.** These resources are chiefly training compute, data, and inference compute. It appears that you can spend arbitrary amounts of money and get continuous and predictable gains; the scaling laws that predict this are accurate over many orders of magnitude.\n\n2\\. **The cost to use a given level of AI falls about 10x every 12 months, and lower prices lead to much more use.** You can see this in the token cost from GPT-4 in early 2023 to GPT-4o in mid-2024, where the price per token dropped about 150x in that time period. Moore's law changed the world at 2x every 18 months; this is unbelievably stronger. \n\n3\\. **The socioeconomic value of linearly increasing intelligence is super-exponential in nature.** A consequence of this is that we see no reason for exponentially increasing investment to stop in the n"
+          }
+        },
+        {
+          "title": "Neglect of Alignment Challenges",
+          "description": "This section discusses the potential impact of AI agents but notably lacks substantial discussion of alignment challenges that are central to EA concerns about AGI. The focus is primarily on capabilities and economic impact rather than ensuring these systems remain aligned with human values and intentions as they become more powerful - a critical neglect from an EA perspective.",
+          "importance": "85",
+          "evaluation": "40",
+          "highlight": {
+            "startOffset": 2564,
+            "endOffset": 3308,
+            "quotedText": "We are now starting to roll out AI agents, which will eventually feel like virtual co-workers.\n\nLet's imagine the case of a software engineering agent, which is an agent that we expect to be particularly important. Imagine that this agent will eventually be capable of doing most things a software engineer at a top company with a few years of experience could do, for tasks up to a couple of days long. It will not have the biggest new ideas, it will require lots of human supervision and direction, and it will be great at some things but surprisingly bad at others.\n\nStill, imagine it as a real-but-relatively-junior virtual coworker. Now imagine 1,000 of them. Or 1 million of them. Now imagine such agents in every field of knowledge work."
+          }
+        },
+        {
+          "title": "Governance and Distribution Approach",
+          "description": "This section outlines an approach to AGI governance that emphasizes individual empowerment and broad distribution of benefits. From an EA perspective, the framing presents a false dichotomy between empowerment and safety, when both are necessary. The lack of concrete mechanisms for ensuring broad benefit distribution reduces the tractability of this approach.",
+          "importance": "80",
+          "evaluation": "55",
+          "highlight": {
+            "startOffset": 5696,
+            "endOffset": 6488,
+            "quotedText": "While we never want to be reckless and there will likely be some major decisions and limitations related to AGI safety that will be unpopular, directionally, as we get closer to achieving AGI, we believe that trending more towards individual empowerment is important; the other likely path we can see is AI being used by authoritarian governments to control their population through mass surveillance and loss of autonomy.\n\nEnsuring that the benefits of AGI are broadly distributed is critical. The historical impact of technological progress suggests that most of the metrics we care about (health outcomes, economic prosperity, etc.) get better on average and over the long-term, but increasing equality does not seem technologically determined and getting this right may require new ideas."
+          }
+        },
+        {
+          "title": "Economic Distribution Mechanisms",
+          "description": "This section proposes potential mechanisms for ensuring broad distribution of AGI benefits, which is relevant to EA concerns about global welfare. The ideas presented are interesting but preliminary, lacking detailed implementation plans. From an EA perspective, the focus on economic access is important but insufficient without addressing deeper alignment and control issues.",
+          "importance": "75",
+          "evaluation": "60",
+          "highlight": {
+            "startOffset": 6490,
+            "endOffset": 7277,
+            "quotedText": "In particular, it does seem like the balance of power between capital and labor could easily get messed up, and this may require early intervention. We are open to strange-sounding ideas like giving some \"compute budget\" to enable everyone on Earth to use a lot of AI, but we can also see a lot of ways where just relentlessly driving the cost of intelligence as low as possible has the desired effect.\n\nAnyone in 2035 should be able to marshall the intellectual capacity equivalent to everyone in 2025; everyone should have access to unlimited genius to direct however they can imagine. There is a great deal of talent right now without the resources to fully express itself, and if we change that, the resulting creative output of the world will lead to tremendous benefits for us all."
+          }
+        }
+      ],
+      "grade": 58
     }
   ]
 }

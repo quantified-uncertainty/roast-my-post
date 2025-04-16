@@ -501,6 +501,94 @@
         }
       ],
       "grade": 68
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 9527,
+      "createdAt": "2025-04-16T08:50:51.535Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":7313,\"completionTokens\":2214,\"totalTokens\":9527,\"temperature\":0.1,\"runtimeMs\":45361}",
+      "thinking": "I'm tasked with evaluating this article on \"AI Intellectuals\" through an EA framework, focusing on importance, neglectedness, tractability, novelty, and providing Fermi estimates of impact.\n\nFirst, let me understand the core thesis: The author argues that developing AI systems capable of high-level strategic thinking and judgment (\"AI Intellectuals\") represents a significant opportunity that's currently being overlooked. They believe this is achievable with existing AI technologies, is neglected, important, tractable, and relatively safe.\n\nLet me analyze this through the ITN framework:\n\n## Importance\nThe author suggests AI Intellectuals could improve strategic thinking across many domains, including business strategy, policy analysis, resource allocation, and even AI safety. If successful, such systems could potentially:\n- Improve decision-making in high-impact domains\n- Enhance resource allocation efficiency\n- Provide better analysis for existential risk reduction\n- Potentially serve as a safeguard against other AI risks\n\nThe scale here could be quite large, affecting global decision-making across multiple domains. If these systems could improve strategic thinking by even a modest percentage, the flow-through effects could be substantial.\n\n## Neglectedness\nThe author argues this area is neglected, despite mentioning several related works. They suggest that while there's been some discussion using different terminology, there isn't a concentrated effort to develop these systems. This seems plausible - while many are working on AI capabilities broadly, the specific focus on developing systems for high-level strategic thinking seems less common than work on coding assistants, creative tools, etc.\n\n## Tractability\nThe author makes several arguments for tractability:\n- Current AI systems are already showing promising capabilities in related domains\n- The bar set by human intellectuals may be lower than commonly assumed\n- Progress can be incremental rather than all-or-nothing\n- Verification, while challenging, is possible through various methods\n\nThey also argue against several \"secret sauce\" arguments that suggest fundamental limitations to AI in this domain.\n\n## Novelty\nThe framing of \"AI Intellectuals\" seems somewhat novel, though as the author acknowledges, there are related concepts being discussed. The article brings together several threads and addresses common misconceptions in a way that appears to advance the conversation.\n\n## Expected Impact\nTo estimate the potential impact, I need to consider:\n1. Probability of successful development of AI Intellectuals\n2. Magnitude of improvement over human intellectuals\n3. Adoption rate and influence\n4. Potential positive and negative effects\n\nThe author suggests these systems could be \"2x as effective\" as top human intellectuals while being safer to take advice from. This is a significant claim that would have major implications if true.\n\nLet me now develop a more structured analysis for each component of the framework and prepare a Fermi estimate of the expected impact.\n\n### Importance Analysis\nThe potential impact spans multiple domains:\n- Global health and development: Better resource allocation and policy design\n- Existential risk: Improved analysis and prioritization of risks\n- Institutional decision-making: Enhanced strategic planning\n- AI alignment: Better reasoning about safety approaches\n\nThe scale is potentially global, affecting billions of people directly and indirectly. The severity of problems being addressed ranges from moderate (business strategy) to extreme (existential risk).\n\n### Neglectedness Analysis\nWhile there is some work in this direction, it appears fragmented and not well-coordinated. Major AI labs are focusing more on general capabilities or specific applications rather than explicitly developing systems optimized for strategic thinking and judgment.\n\n### Tractability Analysis\nThe author makes a compelling case that this is more tractable than commonly assumed. Recent advances in LLMs suggest that many of the building blocks are already in place. The incremental approach described seems reasonable.\n\n### Novelty Assessment\nThe framing and systematic addressing of misconceptions provides a useful contribution to the discourse. The author connects several threads of discussion that have been happening separately.\n\n### Fermi Estimation\nI'll now develop a Fermi estimate of the expected impact of pursuing AI Intellectuals as described in the article.",
+      "summary": "This article presents a compelling case for developing AI Intellectuals - systems capable of high-level strategic thinking and judgment. From an EA perspective, this intervention appears important (potentially affecting global decision-making across multiple domains), neglected (despite some related work), and tractable (with promising building blocks already in place). The author effectively addresses common misconceptions and proposes an incremental development model. However, the article lacks quantitative impact estimates and would benefit from a more thorough analysis of potential negative outcomes. The opportunity to develop AI systems that enhance strategic thinking represents a potentially high-value intervention that could improve decision-making across cause areas including existential risk reduction, global health, and institutional effectiveness. I estimate this could yield significant positive expected value if pursued with appropriate safeguards and verification methods.",
+      "comments": [
+        {
+          "title": "ITN Analysis: Importance",
+          "description": "The author correctly identifies this opportunity as important using criteria similar to the ITN framework. The potential scale of impact is significant, as strategic thinking improvements could affect global decision-making across multiple domains including existential risk reduction. However, the article would benefit from more quantitative estimates of this importance.",
+          "importance": "95",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 1327,
+            "endOffset": 1774,
+            "quotedText": "re Thesis\n\nI believe we can develop capable \"_AI Intellectuals_\" using existing AI technologies through targeted interventions. This opportunity appears to be:\n\n*   Neglected: Few groups are actively pursuing this direction\n*   Important: Better strategic thinking could significantly impact many domains, including AI safety\n*   Tractable: Current AI capabilities make this achievable\n*   Relatively Safe: Development doesn’t require any particul"
+          }
+        },
+        {
+          "title": "Missing Fermi Estimates",
+          "description": "From an EA evaluation perspective, the article lacks quantitative estimates of potential impact. While the qualitative case is well-argued, concrete estimates of expected value would strengthen the case for prioritizing this intervention over alternatives.",
+          "importance": "95",
+          "evaluation": "40",
+          "highlight": {
+            "startOffset": 1327,
+            "endOffset": 1774,
+            "quotedText": "re Thesis\n\nI believe we can develop capable \"_AI Intellectuals_\" using existing AI technologies through targeted interventions. This opportunity appears to be:\n\n*   Neglected: Few groups are actively pursuing this direction\n*   Important: Better strategic thinking could significantly impact many domains, including AI safety\n*   Tractable: Current AI capabilities make this achievable\n*   Relatively Safe: Development doesn’t require any particul"
+          }
+        },
+        {
+          "title": "Neglectedness Assessment",
+          "description": "The author makes a reasonable case for neglectedness, though they do cite several related efforts. From an EA perspective, this appears to be a genuine gap in current AI development priorities, where most focus is on either general capabilities or specific applications rather than systems optimized for strategic thinking and judgment.",
+          "importance": "85",
+          "evaluation": "75",
+          "highlight": {
+            "startOffset": 4729,
+            "endOffset": 5896,
+            "quotedText": "There's been some recent discussion circling this topic recently, mostly using different terminology. \n\n*   Lukas Finnveden has written broadly on [AI and Epistemics](https://lukasfinnveden.substack.com/p/project-ideas-epistemics)\n*   Chris Leong has written about \"[Wise AI Advisors](https://aiimpacts.org/an-overview-of-obvious-approaches-to-training-wise-ai-advisors/)\"\n*   benwr recently posted about \"[Strategically Superhuman Agents](https://www.lesswrong.com/posts/5rMwWzRdWFtRdHeuE/not-all-capabilities-will-be-created-equal-focus-on)\"\n*   At QURI, we've been discussing a lot of related topics. One conception was \"[Advancing Wisdom and Intelligence](https://www.lesswrong.com/posts/bNffQPeev2peoDWg5/prioritization-research-for-advancing-wisdom-and).\"\n*   Owen Cotton-Barratt and others held a competition on the \"[Automation of Wisdom and Philosophy](https://blog.aiimpacts.org/p/winners-of-the-essay-competition)\"\n\nHere I use the phrase \"AI Intellectuals\" to highlight one kind of use, but I think that this fits neatly into the above cluster. I very much hope that over the next few years there's progress on these ideas and agreement on key terminology."
+          }
+        },
+        {
+          "title": "Tractability Analysis",
+          "description": "The author provides several compelling arguments for tractability, addressing potential objections systematically. From an EA perspective, the incremental approach described is promising, though the article would benefit from more concrete steps or research agendas to make progress in this direction.",
+          "importance": "90",
+          "evaluation": "80",
+          "highlight": {
+            "startOffset": 7841,
+            "endOffset": 8552,
+            "quotedText": "mbined with some basic prompt engineering and software tooling to generate much better results.\n\nAI forecasting has been proven to be surprisingly competent in some [experiments](https://arxiv.org/abs/2402.18563) so far. Online research is also starting to be successfully automated, for example with [Elicit](https://elicit.com/), Perplexity, and recently [Deep Research](https://openai.com/index/introducing-deep-research/). I’ve attempted to map out [many of the other tasks](https://forum.effectivealtruism.org/posts/EykCuXDCFAT5oGyux/my-current-claims-and-cruxes-on-llm-forecasting-and#5__Subcomponents) I assume might be required to do a good job, and all seem very doable insofar as software projects go."
+          }
+        },
+        {
+          "title": "Verification Challenges",
+          "description": "The author addresses a key concern in EA evaluations - how to verify success. The proposed verification methods range from strong (prediction of expert responses, performance in strategy games) to lighter approaches (consistency checks, detailed justification). This is crucial for any EA intervention to demonstrate impact.",
+          "importance": "85",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 10714,
+            "endOffset": 11320,
+            "quotedText": "Strong verification methods:_\n\n*   Having AI systems predict how specific experts would respond to strategic questions after deliberation\n*   Evaluating performance in strategy-heavy environments like Civilization 5\n*   Assessing forecasting ability across both concrete and speculative domains\n\n_Lighter verification approaches:_\n\n*   Testing arguments for internal consistency and factual accuracy\n*   Comparing outputs between different model sizes and computational budgets\n*   Validating underlying mathematical models through rigorous checks\n*   Requiring detailed justification for unexpected claims"
+          }
+        },
+        {
+          "title": "Incremental Progress Model",
+          "description": "The author's model of gradual development aligns well with EA thinking about technological progress. The self-driving car analogy provides a useful framework for understanding how AI Intellectuals might develop and be adopted, avoiding both over-optimism about immediate transformation and pessimism about feasibility.",
+          "importance": "80",
+          "evaluation": "90",
+          "highlight": {
+            "startOffset": 13875,
+            "endOffset": 14181,
+            "quotedText": "The Reality of Technological Progress**\n\nThis binary thinking misunderstands how technology typically develops:\n\n*   Most technologies advance gradually along an S-curve\n*   Early versions provide modest but real value\n*   Improvements compound over time\n*   Integration happens incrementally, not suddenly"
+          }
+        },
+        {
+          "title": "Safety Considerations",
+          "description": "The author addresses potential risks but doesn't fully explore negative scenarios. From an EA perspective, a more thorough analysis of potential downsides would strengthen the argument. The claim that \"2x AI intellectuals\" would be strictly better than human intellectuals requires more justification.",
+          "importance": "90",
+          "evaluation": "65",
+          "highlight": {
+            "startOffset": 19412,
+            "endOffset": 20024,
+            "quotedText": "I find it plausible that we could develop AI systems that are roughly twice as effective (in doing intellectual work) as top human intellectuals while simultaneously being safer to take advice from.\n\nIf we had access to these \"2x AI intellectuals,\" we would likely be in a _strictly better position than we are now_. We could transition from deferring to human intellectuals to relying on these more capable and potentially safer AI systems. If there were dangers in future AI developments, these enhanced AI intellectuals should be at least as competent as human experts at identifying and analyzing such risks."
+          }
+        }
+      ],
+      "grade": 78
     }
   ]
 }

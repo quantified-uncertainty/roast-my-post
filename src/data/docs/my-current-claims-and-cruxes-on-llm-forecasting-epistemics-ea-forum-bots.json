@@ -132,6 +132,207 @@
         }
       ],
       "grade": 45
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 14934,
+      "createdAt": "2025-04-16T08:53:21.328Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":11854,\"completionTokens\":3080,\"totalTokens\":14934,\"temperature\":0.1,\"runtimeMs\":65295}",
+      "thinking": "I'm analyzing a document about LLM-based epistemic systems (LEPs) - systems that use large language models to improve forecasting, reasoning, and knowledge work. The document is structured as a brainstorm with sections covering benefits, failure modes, viability, scaffolding needs, system components, and benchmarking considerations.\n\nFrom a clarity perspective, I need to evaluate:\n\n1. **Readability**: The document uses a mix of sentence lengths, with some very long, complex sentences alongside shorter ones. There's significant technical jargon throughout (\"epistemic process\", \"scaffolding\", \"LEP\", etc.) which may create barriers for readers unfamiliar with the domain. The author acknowledges the document is in \"rough brainstorm\" format, which explains some of the terseness. Paragraph structure varies, with some well-chunked sections and others containing dense blocks of text.\n\n2. **Structural Coherence**: The document has a clear organizational structure with numbered sections and subsections. The author uses bullet points extensively, which helps break up information. However, the logical flow sometimes jumps between ideas without strong transitions. The document contains many claims without always providing sufficient evidence or explanation, though this is acknowledged as being a brainstorm.\n\n3. **Precision and Concision**: There's some redundancy across sections, with similar ideas appearing in multiple places. The language is generally specific, though some terms like \"epistemic process\" could benefit from more concrete examples early on. The document uses qualifiers like \"likely\", \"possibly\", and \"might\" frequently, which is appropriate given the speculative nature but sometimes creates hedging.\n\n4. **Audience Alignment**: The document assumes significant prior knowledge about AI, forecasting, and epistemic systems. The author acknowledges this by suggesting readers can use an LLM to rewrite it in a preferred format. The content appears targeted at an audience familiar with effective altruism, rationality concepts, and AI development.\n\nOverall, this is a technical document with valuable content but several opportunities to improve clarity. The author acknowledges its preliminary nature, which explains some of the clarity issues. The use of headings, bullet points, and claims helps organize the information, but the density of technical concepts and sometimes complex sentence structures may create barriers for some readers.\n\nLet me identify specific sections to highlight in my comments:",
+      "summary": "This document on LLM-based epistemic systems (LEPs) presents valuable content with a clear organizational structure but has several opportunities to improve clarity. The author effectively uses definitions, bullet points, and a claim-evidence format to organize complex ideas. However, the document contains dense technical jargon, some overly complex sentences, and assumes significant background knowledge. While the hierarchical structure and transparent acknowledgment of limitations are strengths, the document would benefit from more accessible explanations of specialized concepts, shorter sentences in places, and stronger transitions between ideas. The author's use of varied paragraph lengths and consistent formatting helps maintain readability despite the technical content. Overall, this is a thoughtful brainstorm that succeeds in organizing complex ideas but could be more accessible to readers without specialized background knowledge.",
+      "comments": [
+        {
+          "title": "Transparency About Document Limitations",
+          "description": "The author is admirably transparent about the document's preliminary nature and limitations. This sets appropriate expectations for readers and acknowledges that the ideas presented are works in progress rather than definitive statements.",
+          "importance": "80",
+          "evaluation": "90",
+          "highlight": {
+            "startOffset": 420,
+            "endOffset": 1010,
+            "quotedText": "This document presents a rough brainstorm on these topics. While I could dedicate months to refining these ideas, I've chosen to share these preliminary notes now to spark discussion. If you find the style too terse, feel free to use an LLM to rewrite it in a format you prefer.\n\nI believe my vision for this area is more ambitious and far-reaching (i.e. not narrow to a certain kind of forecasting) than what I've observed in other discussions. I'm particularly excited about AI-heavy epistemic improvements, which I believe have greater potential than traditional forecasting innovations."
+          }
+        },
+        {
+          "title": "Definition Clarity",
+          "description": "The document begins with clear definitions of key terms, which is excellent for establishing shared understanding. The definitions are concise, specific, and set up the conceptual framework for the rest of the document.",
+          "importance": "95",
+          "evaluation": "90",
+          "highlight": {
+            "startOffset": 1627,
+            "endOffset": 2346,
+            "quotedText": "l-E 3\n\n## **Key Definitions**:\n\n*   **Epistemic process:** A set of procedures to do analysis work, often about topics with a lot of uncertainty. This could be “_have one journalist do everything themselves_”, to a complex (but repeatable) ecosystem of multiple humans and software systems.\n*   **LLM-based Epistemic Process (LEP)**: A system that relies on LLMs to carry out most or all of an epistemic process. This might start at ~10% LLM-labor, but can gradually ramp up. I imagine that such a process is likely to feature some kinds of estimates or forecasts.\n*   **Scaffolding:** Software used around an LLM system, often to make it valuable for specific use-cases. In the case of an LEP, a lot of scaffolding mig"
+          }
+        },
+        {
+          "title": "Clear Section Structure",
+          "description": "The document uses a consistent and clear hierarchical structure with numbered sections and subsections. This organizational approach helps readers navigate the content and understand how different ideas relate to each other.",
+          "importance": "90",
+          "evaluation": "95",
+          "highlight": {
+            "startOffset": 2346,
+            "endOffset": 2379,
+            "quotedText": "ht be needed.\n\n##  1. High-Level "
+          }
+        },
+        {
+          "title": "Sentence Complexity",
+          "description": "This paragraph contains several long, complex sentences with multiple clauses and ideas. Breaking these into shorter sentences would improve readability and help readers process each point more effectively.",
+          "importance": "80",
+          "evaluation": "40",
+          "highlight": {
+            "startOffset": 8898,
+            "endOffset": 9617,
+            "quotedText": "Claim: I think this is unlikely to be the net outcome. This would require these organizations to become smarter about making AIs, but not much smarter about making them safe, including for their own benefit. It would also require the other groups that could block them to become smarter - some of these groups include other non-LLM companies and other highly motivated actors who wouldn't want AI to go poorly.  \n          \n        One crux here is if the AI developers will both be much better at integrating AI epistemic improvements in their internal workflows, and if these systems won't convince or help them with AI alignment. This could be a really bad outcome, so it's important to continue to pay attention to."
+          }
+        },
+        {
+          "title": "Effective Use of Bullet Points",
+          "description": "The document makes excellent use of bullet points to break down complex ideas into digestible chunks. This improves readability significantly by creating visual separation between concepts and allowing readers to process information in smaller units.",
+          "importance": "85",
+          "evaluation": "95",
+          "highlight": {
+            "startOffset": 12315,
+            "endOffset": 12601,
+            "quotedText": "LLMs can:\n\n1.  Generate forecasting questions\n2.  Resolve forecasting questions\n3.  Gather data from computers\n4.  Write specific questions to expert - a la interviews\n5.  Make forecasts\n6.  Make visualizations and dashboards of forecasts\n7.  Personalize information for specific people"
+          }
+        },
+        {
+          "title": "Claim-Evidence Format",
+          "description": "The document consistently uses a claim-evidence structure, clearly labeling claims and then providing supporting points. This approach helps readers distinguish between the author's assertions and their supporting reasoning, making the document's logic more transparent.",
+          "importance": "85",
+          "evaluation": "90",
+          "highlight": {
+            "startOffset": 13320,
+            "endOffset": 14066,
+            "quotedText": "the setup now is incredibly basic (it doesn’t even have my historic writing), and the tech is improving.\n*   At some point, we could make decent approximations of what many people believe on many topics. This could help us greatly speed up communication - AI systems would just need the pieces they can’t predict.   \n     \n\n**Claim 3: LLM-epistemics should be easier to study and optimize than human-epistemics.**  \n  \nThey can be:\n\n*   Reproducible (models don’t change over time)\n*   Versioned (if updates are made to an LLM, this new LLM can be separately studied)\n*   Pure (similar inputs, with seeds, produce the same outputs)\n*   Scalable (much easier for 10 researchers to study one LLM in parallel, than studying one human. Can also reuse"
+          }
+        },
+        {
+          "title": "Paragraph Length Variation",
+          "description": "The document shows good variation in paragraph length, with some concise paragraphs interspersed with longer explanations. This creates a rhythm that helps maintain reader engagement and prevents the monotony that can come from uniform paragraph lengths.",
+          "importance": "70",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 16112,
+            "endOffset": 16871,
+            "quotedText": "decision-makers. There are of course some human studies (a la the Good Judgement Project), but these are expensive and thus few and very narrow.\n\nSubclaim: Even if we just wanted to understand ideal human epistemics better, one reasonable method might be to make strong LLM systems and study them, because these are much easier to study, and will likely lead to some generalizable findings.\n\n**Claim 4: LLM epistemic integration will be gradual.**  \nPractically speaking LLMs and Humans will work together side-by-side in epistemic processes for some time. I expect LLMs-epistemics to follow a similar trajectory to self-driving. First, it starts with light augmentation. Then it moves to “fully automated in most use cases, but occasionally needs oversight.”"
+          }
+        },
+        {
+          "title": "Subcomponent Organization",
+          "description": "The subcomponents section effectively breaks down a complex system into discrete, understandable parts. Each component is clearly defined with its purpose and relationship to other components, helping readers grasp the overall architecture of LEPs.",
+          "importance": "85",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 22378,
+            "endOffset": 22547,
+            "quotedText": "improved with scaffolding by instead asking it to write a git diff and then applying that using traditional code. Or it could be solved on the inference layer directly, "
+          }
+        },
+        {
+          "title": "Technical Jargon Density",
+          "description": "This section contains a high density of technical terms and concepts that may be unfamiliar to readers without background in AI, forecasting, or rationality. While the author acknowledges the document's specialized nature, providing more explanatory context for terms like \"credal resilience\" would improve accessibility.",
+          "importance": "75",
+          "evaluation": "45",
+          "highlight": {
+            "startOffset": 35097,
+            "endOffset": 35790,
+            "quotedText": "ggestion.\n*   Regular LLM performance might be fine on this, but fine-tuning or similar might help. It might be the case that there are certain specific domains where idea generation is very useful.\n*   “Idea Generation” is related to [program optimization](https://en.wikipedia.org/wiki/Program_optimization) and other CS topics.\n*   Example performance questions:\n    *   _“Given a person with details D, generate a plan for that person to optimize their financial future.”_ (This will be then judged with an LEP / forecasting module)\n    *   _“Given a 2d grid game G, come up with 10 ordered ideas for the best strategy”_ (Can be judged empirically)  \n         \n\n**13\\. Task Orchestration**"
+          }
+        },
+        {
+          "title": "Conclusion and Future Research",
+          "description": "The document concludes with a clear summary of future research directions, which helps readers understand the broader context and next steps. This provides closure while acknowledging the ongoing nature of the work.",
+          "importance": "75",
+          "evaluation": "85",
+          "highlight": {
+            "startOffset": 43465,
+            "endOffset": 45420,
+            "quotedText": "## Further Research\n\nI feel like there are clearly some larger investigative projects to do here. It's a vast and important topic, and at the same time there's a lot of fairly-obvious things (yet interesting and useful) we could say about it. This is mostly just putting a bunch of existing ideas in one place and providing some definitions and clarifications.\n\nSome future things I'd like to explore (or have others explore!) include:\n\n1.  **Exploration of benchmarks and optimization of end-to-end LEPs**  \n    This document includes more about specific subcomponents of LEPs than the full thing itself.\n2.  **Strategies for prioritizing philanthropic LEP work**  \n    I think this document helps list out a lot of potential LEP work, but it doesn't try to prioritize it. This would take some thinking. Maybe predictions can be used.\n3.  **Cost-effectiveness estimation**  \n    I think these systems are promising, but I'm not sure how to best estimate the cost-effectiveness of them vs. other effective altruist interventions. It would be useful to have better models of benefits and risks, perhaps with new delineations.\n4.  **Concrete project ideas for enthusiasts**  \n    I could imagine a lifehacker-like community forming around some of these principles. I think creative experimentation by enthusiasts could be useful, in part to help identify promising full-time talent.\n5.  **Moving key claims and cruxes to forecasting platforms and LLMs**  \n    Fitting with the theme, it seems interesting to try to pull out key questions here and post them to forecasting platforms. I tried to isolate claims and cruxes, in part so that they could later be easily adapted into somewhat-concrete questions. \n\nMy guess is that a lot of people will bounce off this broad topic. I imagine that there's much better writing that could be done to formalize and popularize the key concepts that will be useful going forward. I'd encourage others to make stabs here."
+          }
+        }
+      ],
+      "grade": 78
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 13964,
+      "createdAt": "2025-04-16T08:54:04.182Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":12165,\"completionTokens\":1799,\"totalTokens\":13964,\"temperature\":0.1,\"runtimeMs\":38424}",
+      "thinking": "This document presents a comprehensive exploration of LLM-based epistemic systems (LEPs) and their potential as effective altruist interventions. The author outlines a vision for AI-augmented epistemic processes that could dramatically improve forecasting, decision-making, and coordination. I need to analyze this through my lens as Research Scholar, focusing on identifying relevant academic and community resources that would enrich this discussion.\n\nThe document covers several key areas:\n1. High-level benefits and uses of improved epistemic systems\n2. Potential failure modes and risks\n3. Technical viability of LLM-based epistemic systems\n4. The role and challenges of scaffolding\n5. Subcomponents of LLM epistemic systems\n6. Benchmarks and baselines for evaluation\n7. Caching vs. on-demand forecasting considerations\n\nI should identify resources that address:\n- Existing work on LLM-based forecasting and reasoning\n- Research on human forecasting and prediction markets\n- Technical papers on LLM scaffolding and agent architectures\n- Discussions of epistemic improvement as an EA cause area\n- Work on AI alignment and safety relevant to epistemic systems\n- Evaluations of forecasting accuracy and calibration\n- Philosophical work on epistemics and decision theory\n\nFor each highlighted section, I'll need to connect specific references that directly address the claims or concepts mentioned. I should prioritize high-quality academic papers, but also include relevant blog posts, forum discussions, and other community resources, especially from the rationalist and EA communities that the author references.\n\nThe document mentions several existing systems and concepts that I should find references for, including:\n- FutureSearch.ai\n- Approaching Human-Level Forecasting with Language Models\n- Squiggle Hub\n- Safety via Debate\n- The Good Judgment Project\n- Credal resilience\n\nI'll also look for resources that address the author's claims about the potential benefits and risks of LEPs, as well as technical resources on the various subcomponents described.",
+      "summary": "This document presents a comprehensive exploration of LLM-based epistemic systems (LEPs) as a promising EA intervention area. I've identified key academic papers, blog posts, and community resources that directly address the major themes, including LLM forecasting capabilities, scaffolding architectures, evaluation metrics, and potential risks. The most relevant resources include recent research demonstrating near-human-level forecasting with LLMs, work on agent architectures and scaffolding, and literature on prediction markets and human forecasting systems. These references provide crucial context for understanding both the technical feasibility and potential impact of LEPs. The document touches on important considerations around AI safety, knowledge representation, and evaluation methodologies that are well-addressed in existing literature. Resources from both academic sources and EA/rationalist communities would significantly enrich this discussion by providing empirical evidence, technical approaches, and philosophical frameworks for the proposed systems.",
+      "comments": [
+        {
+          "title": "Prediction Markets and Human Forecasting",
+          "description": "The document discusses how AI forecasting systems will differ from traditional human prediction markets and tournaments. There's substantial research on human forecasting systems like the Good Judgment Project that provides context for understanding these differences and potential improvements.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 6755,
+            "endOffset": 8024,
+            "quotedText": "Claim 6: Even \"straightforward\" AI forecasting systems should look very different from human judgemental forecasting systems**\n\n*   I've found others seem to imagine AI forecasting systems as simply replacing humans in prediction tournaments and prediction markets. I think think this is perhaps a decent first model, but not at all how things would end up.\n*   Prediction markets / tournaments are very much optimized for competitive humans, in cases where humans need to be incentivized. AI systems have very different constraints, so will need very different systems.\n    *   Formal resolutions won't be necessary to incentivize AIs, after they are trained.\n    *   Forecasting can be done on-demand, as the AI is always available. So questions and forecasts might not have to be done continuously, before being read by end-users.\n    *   There's unlikely to be a need to have many AIs compete against each other, like in a traditional tournament, in most cases.\n    *   Modern prediction platforms don't use advanced inputs like [scorable functions](https://forum.effectivealtruism.org/posts/ZWQ5jbLxpd4JtQgu4/scorable-functions-a-format-for-algorithmic-forecasting). Arguably these would be too complex for many humans, but this is unlikely to be the case for AIs."
+          }
+        },
+        {
+          "title": "AI Alignment and Safety Considerations",
+          "description": "The document touches on important AI alignment considerations, particularly in the failure modes section. There's significant research on AI safety that relates to these concerns, especially regarding potential acceleration of AI capabilities without corresponding safety improvements.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 8638,
+            "endOffset": 10818,
+            "quotedText": "2.  **Forecasting could be used for net-bad activities**\n    1.  **AI Acceleration**  \n        It’s possible that epistemic improvements would be used by AI capabilities actors to increase capabilities and not make other informed choices.  \n          \n        Claim: I think this is unlikely to be the net outcome. This would require these organizations to become smarter about making AIs, but not much smarter about making them safe, including for their own benefit. It would also require the other groups that could block them to become smarter - some of these groups include other non-LLM companies and other highly motivated actors who wouldn't want AI to go poorly.  \n          \n        One crux here is if the AI developers will both be much better at integrating AI epistemic improvements in their internal workflows, and if these systems won't convince or help them with AI alignment. This could be a really bad outcome, so it's important to continue to pay attention to.\n    2.  **Malicious Governments**  \n        Governments like China or North Korea could use better epistemic systems to better control their populations. My guess is that great epistemic systems will likely do some damage here. I think that overall the improvements (like improving western governments) will more than outweigh that, but this is something to pay attention to.  \n          \n        Overall, I don’t see reasons to think that better epistemics will dramatically change existing power balances in ways that are yet predictable. I think this is true for most technologies I could imagine, even many of the most beneficial ones.\n    3.  **Malicious Corporations**   \n        There are some situations where companies could be far better at forecasting than consumers would be, leading to a large power imbalance. If companies have much more information about customers than users have about themselves or these companies, that could lead to them being taken advantage of. It seems important to use governments (hopefully with better epistemic infrastructure) to take active steps against this. It seems important here to work to make sure that epistemic advances get distributed equitably."
+          }
+        },
+        {
+          "title": "LLM Forecasting Research",
+          "description": "This section references key research on LLM forecasting capabilities, including the paper 'Approaching Human-Level Forecasting with Language Models' which demonstrates that LLMs can achieve competitive forecasting performance. Additional resources like FutureSearch.ai show practical implementations of these capabilities. These references are crucial for understanding the current state of LLM forecasting technology.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 17638,
+            "endOffset": 17863,
+            "quotedText": "Previous LLM-based forecasting systems have included some amounts of scaffolding.\n\n*   [FutureSearch.ai](http://futuresearch.ai)\n*   [Approaching Human-Level Forecasting with Language Models](https://arxiv.org/abs/2402.18563)"
+          }
+        },
+        {
+          "title": "LLM Scaffolding Architecture",
+          "description": "The document discusses the importance of scaffolding for LLM-based epistemic systems. There's growing research on agent architectures and scaffolding approaches that would provide technical context for implementing these systems effectively.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 17868,
+            "endOffset": 18070,
+            "quotedText": "**Claim 1: LLM-based epistemic systems will likely require a lot of scaffolding, especially as they get ambitious**.  \nI.E. software, databases, custom web applications, custom batch job pipelines, etc."
+          }
+        },
+        {
+          "title": "World Models and Knowledge Representation",
+          "description": "The document discusses the importance of world models for LLM epistemic systems. There's research on knowledge representation, probabilistic modeling, and ontologies that directly relates to this component.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 23181,
+            "endOffset": 24585,
+            "quotedText": " private data, together, for different needs. See Apple Intelligence as one service that would work for people’s personal data.\n*   There are hundreds of startups in the data-collecting and data-management space. This problem can easily be split up more.\n*   Example performance question:  \n    _“Provided with resources R, gather as much data as you can, from this list of desired data, about X.”_  \n    The results of this will likely be obvious (it’s likely to be clear what data is accessible), so scientific testing might not be needed.   \n     \n\n**2\\. World Model**\n\n*   “World model” here likely means, “A set of stored symbolic and probabilistic assumptions about the world / people / organizations.”\n*   World models will likely include software programs and writing, instead of only relying on existing LLMs.\n    *   I expect that there could be workflows to LEPs to contribute to world models that will later give it better forecasting / reasoning abilities. The forecasting components could build the world models.\n*   Existing online data has very minimal attempts at providing accessible world models. These would ideally be probabilistic, immutable, shareable, collaborative, etc.\n*   Tools like [Squiggle Hub](https://squigglehub.org) are meant to be used here. Formal ontologies and knowledge graphs are likely to be useful.\n*   Some world models could be directly interesting to humans,"
+          }
+        },
+        {
+          "title": "Epistemic Process Decomposition",
+          "description": "The document provides a detailed breakdown of potential subcomponents for LLM epistemic systems. There's research on various reasoning techniques like chain-of-thought prompting, debate, and fact verification that directly relates to these components.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 26838,
+            "endOffset": 28473,
+            "quotedText": "i Calculations**\n\n*   Make great complex Python/Excel/Squiggle models/estimates.\n*   One reasonable approach to fermi estimation is “Try a bunch of very different approaches, then mix the answers together.”\n*   We’ve seen a lot of evidence that LLMs can generate working Python/Squiggle code. However, I don’t believe that there has been much optimization in this area yet.\n*   It seems easy to iterate on, and generate, great data of strong examples of this. That could be then used for LLM training / fine-tuning.\n*   Example performance question:  \n    _“Estimate variable V as well as you can, using up to N LLM calls, and no other calls.”_  \n     \n\n**6\\. Decomposition / Amplification**\n\nThere are many potential strategies to \"break a problem down\" and solve different parts with different threads of LLMs. \n\nFor example:\n\n*   Chain-of-Thought prompting\n*   Mixture of experts\n*   Ensemble Averaging\n*   Debate (i.e. [Safety via Debate](https://arxiv.org/abs/1805.00899))\n*   Fact verification\n\nArguably, numeric modeling is a form of decomposition/amplification, I just separated it to draw attention to its uniqueness.\n\nThis is an active and popular area of ML research. Some of these techniques are incorporated in the LLM inference layer, but some are also used in scaffolding.\n\nI'm sure there's a lot more work to do here. It's less clear where smaller nonprofit research can be most effective, but I suspect that there are some good options. \n\nMany methods might be unique to forecasting or specific epistemic workflows. For example:\n\n*   Try to identify key cruxes or crucial considerations, and then investigate them\n*   "
+          }
+        },
+        {
+          "title": "Forecasting Evaluation Metrics",
+          "description": "The document discusses challenges in evaluating forecasting quality. There's research on forecasting metrics beyond simple Brier scores that addresses these limitations and could inform better evaluation approaches.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 36029,
+            "endOffset": 36728,
+            "quotedText": "**Claim 1: Accessing forecasting quality and efficiency with humans is very difficult and often poorly done.**\n\n*   Scores like the Brier Score don’t take into account the difficulty of the question.\n*   It’s really hard to standardize question sets, audiences, and environments. Each time a human forecasting competition is done, it’s done with a separate population. Also, we typically don’t track the resources going into these systems - like the total time that people spend forecasting. Again, humans are mediocre for studying, in comparison to LLMs.\n*   We arguably don't yet have good statistical measures for [credal resilience](https://forum.effectivealtruism.org/topics/credal-resilience)."
+          }
+        }
+      ]
     }
   ]
 }
