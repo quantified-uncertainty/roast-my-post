@@ -8,6 +8,7 @@ import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
+  thinking: string;
   summary: string;
   comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>;
   grade?: string;
@@ -259,8 +260,8 @@ ${agentInfo.commentInstructions}
       "title": "string",
       "description": "string",
       "highlight": {
-        "startOffset": "number",
-        "endOffset": "number"
+        "start": "exact text snippet from document where highlight begins",
+        "end": "exact text snippet from document where highlight ends"
       },
       "importance": "0-100",
       "evaluation": "0-100"
@@ -269,28 +270,61 @@ ${agentInfo.commentInstructions}
       "title": "string",
       "description": "string",
       "highlight": {
-        "startOffset": "number",
-        "endOffset": "number"
+        "start": "exact text snippet from document where highlight begins",
+        "end": "exact text snippet from document where highlight ends"
       },
       "importance": "0-100"
     }`;
 
-  const prompt = `You are analyzing a document. Please provide:
-1. A summary of the document
-${agentInfo?.gradeInstructions ? "2. A letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F) for the document\n" : ""}
-3. A list of comments. Each comment should be in this format:
+  const prompt = `You are analyzing a document. Please provide your analysis in the following order:
+
+1. Thinking (3x the length of your summary)
+   - Take time to deeply consider the document and your role
+   - Reflect on your unique perspective and approach
+   - Consider what aspects of the document stand out to you
+   - Think about how you want to engage with the content
+   - This section will be mostly hidden but helps you form better insights
+
+2. Comments. Each comment should be in this format:
 ${commentStructure}
 
-For each comment:
-- Title should be a short phrase summarizing the point
-- Description should explain the point in more detail
-- Highlight should specify the relevant text span in the document
-- Importance (0-100) indicates how crucial this point is to understanding the document${agentInfo?.gradeInstructions ? "\n- Evaluation (0-100) indicates how positive/negative this point is, where 0 is very negative and 100 is very positive" : ""}
+   For each comment:
+   - Title should be a short phrase summarizing the point
+   - Description should explain the point in more detail
+   - Highlight should specify the exact text snippets from the document that mark the beginning and end of the relevant section
+   - Importance (0-100) indicates how interesting or valuable you find this point. Be critical and conservative with high scores:
+     * 90-100: Only for points that are exceptionally insightful, novel, or have major implications
+     * 80-89: For points that are very interesting and could significantly impact thinking in the field
+     * 70-79: For points that are interesting and provide valuable insights
+     * 60-69: For points that are somewhat interesting or provide useful context
+     * 50-59: For points that have some merit but are not particularly notable
+     * 40-49: For points that are mostly obvious or unremarkable
+     * 30-39: For points that add little value
+     * 0-29: For points that are not interesting or valuable
+   ${agentInfo?.gradeInstructions ? "\n   - Evaluation (0-100) indicates how positive/negative this point is, where 0 is very negative and 100 is very positive" : ""}
+
+3. Summary
+   - A concise overview of your specific perspective and analysis
+   - Focus on your unique insights and key points from your comments
+   - Get straight to your personal take - avoid starting with "This document..."
+   - Should reflect your deeper thinking from the previous steps.
+   - Add tables where you have repetitive or structured information.
+
+4. Grade${agentInfo?.gradeInstructions ? " (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F)" : ""}
+   - Based on your thinking and comments
+   - Reflects overall quality and value of the document
+
+For highlights, provide the exact text snippets from the document that mark the beginning and end of the section you want to highlight. Do not try to calculate offsets or positions.
+
+Your response must be valid JSON with properly escaped strings (use \\" for quotes, \\n for newlines), no trailing commas, and properly closed quotes.
+
+Be conservative with importance scores - most comments should be below 51, with only truly exceptional insights scoring above 80. Use 0-29 for basic observations or points you're unsure about.
 
 Format your response in JSON like this:
 {
-  "summary": "string",${agentInfo?.gradeInstructions ? '\n  "grade": "letter grade",' : ""}
-  "comments": [${commentStructure}]
+  "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes. Feel free to use markdown formatting for better readability.",
+  "comments": [${commentStructure}],
+  "summary": "Your specific perspective and key insights"${agentInfo?.gradeInstructions ? ',\n  "grade": "letter grade"' : ""}
 }
 
 Here's the document to analyze:
@@ -489,6 +523,7 @@ ${content}`;
           runtimeMs,
         })
       : undefined,
+    thinking: parsedLLMReview.thinking,
     summary: parsedLLMReview.summary,
     comments: processedComments, // Use the processed comments
     grade: parsedLLMReview.grade,

@@ -20,6 +20,7 @@ export interface DocumentReview {
   costInCents: number;
   createdAt: Date;
   runDetails?: string;
+  thinking?: string;
   summary?: string;
   comments: Comment[];
   grade?: string;

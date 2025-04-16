@@ -569,20 +569,36 @@ export async function processRawComments(
   >
 ): Promise<Comment[]> {
   const processedComments: Comment[] = [];
-  const usedOffsets = new Set<number>();
 
   for (const comment of rawComments) {
-    const { highlight } = comment;
-    let startText = highlight.start;
-    let endText = highlight.end;
+    const { highlight, ...rest } = comment;
 
-    console.log(`\n🔍 Processing highlight for "${comment.title}":`);
-    console.log(`  Original start text: "${startText}"`);
-    console.log(`  Original end text: "${endText}"`);
+    // Skip processing if highlight text is undefined
+    if (!highlight.start || !highlight.end) {
+      console.log(
+        `  ⚠️ Skipping highlight with undefined text for comment: ${comment.title}`
+      );
+      processedComments.push({
+        ...rest,
+        highlight: {
+          startOffset: 0,
+          endOffset: 0,
+          quotedText: "",
+        },
+      });
+      continue;
+    }
+
+    console.log(`🔍 Processing highlight for "${comment.title}":`);
+    console.log(`  Original start text: "${highlight.start}"`);
+    console.log(`  Original end text: "${highlight.end}"`);
 
     // First try exact matches
-    let startIndex = content.indexOf(startText);
-    let endIndex = content.indexOf(endText, startIndex + startText.length);
+    let startIndex = content.indexOf(highlight.start);
+    let endIndex = content.indexOf(
+      highlight.end,
+      startIndex + highlight.start.length
+    );
 
     // If exact matches fail, try LLM matching
     if (startIndex === -1) {
@@ -590,13 +606,12 @@ export async function processRawComments(
       console.log(`  🤖 Attempting LLM match for start text...`);
       const matchedStart = await findTextMatchWithLLM(
         content,
-        startText,
+        highlight.start,
         comment.title
       );
       if (matchedStart) {
         console.log(`  ✅ LLM found start match: "${matchedStart}"`);
-        startText = matchedStart;
-        startIndex = content.indexOf(startText);
+        startIndex = content.indexOf(matchedStart);
       } else {
         console.log(`  ❌ LLM could not find start match`);
       }
@@ -609,13 +624,15 @@ export async function processRawComments(
       console.log(`  🤖 Attempting LLM match for end text...`);
       const matchedEnd = await findTextMatchWithLLM(
         content,
-        endText,
+        highlight.end,
         comment.title
       );
       if (matchedEnd) {
         console.log(`  ✅ LLM found end match: "${matchedEnd}"`);
-        endText = matchedEnd;
-        endIndex = content.indexOf(endText, startIndex + startText.length);
+        endIndex = content.indexOf(
+          matchedEnd,
+          startIndex + highlight.start.length
+        );
       } else {
         console.log(`  ❌ LLM could not find end match`);
       }
@@ -642,7 +659,7 @@ export async function processRawComments(
     }
 
     // Calculate the end offset by adding the length of the end text
-    const endOffset = endIndex + endText.length;
+    const endOffset = endIndex + highlight.end.length;
     const quotedText = content.substring(startIndex, endOffset);
 
     console.log(`  📝 Final highlight text: "${quotedText}"`);

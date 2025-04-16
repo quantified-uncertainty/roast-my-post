@@ -438,12 +438,24 @@ export function DocumentWithEvaluations({
                   </div>
                   <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
                     {expandedTag === "analysis" ? (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw]}
-                      >
-                        {activeReview.summary}
-                      </ReactMarkdown>
+                      <>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeRaw]}
+                        >
+                          {activeReview.summary}
+                        </ReactMarkdown>
+                        {activeReview.thinking && (
+                          <div className="mt-4 text-sm text-gray-400">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              rehypePlugins={[rehypeRaw]}
+                            >
+                              {activeReview.thinking}
+                            </ReactMarkdown>
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="line-clamp-3">
                         <ReactMarkdown
