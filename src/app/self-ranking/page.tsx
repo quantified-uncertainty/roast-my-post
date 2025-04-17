@@ -176,7 +176,8 @@ const plannedFeatures: PlannedFeature[] = [
   },
   {
     name: "Expanded Agent Library",
-    description: "More specialized agents for different types of content",
+    description:
+      "More specialized agents for different types of content including Forecasting Questions, Scientific Articles, Tweets, Comments, Fermi Models, Data Analysis, Google Sheets, and more",
   },
   {
     name: "Web Search Agents",
