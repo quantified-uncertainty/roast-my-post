@@ -18,6 +18,27 @@ import {
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
+function getWordCountLevel(content: string): number {
+  const wordCount = content.split(/\s+/).length;
+  if (wordCount < 500) return 0;
+  if (wordCount < 2000) return 1;
+  if (wordCount < 10000) return 2;
+  return 3;
+}
+
+function WordCountIndicator({ content }: { content: string }) {
+  const level = getWordCountLevel(content);
+  const bars = Array.from({ length: 4 }, (_, i) => (
+    <div
+      key={i}
+      className={`w-0.5 ${i < level ? "bg-gray-500" : "bg-gray-100"}`}
+      style={{ height: `${(i + 1) * 3}px` }}
+    />
+  ));
+
+  return <div className="flex items-end gap-0.5">{bars}</div>;
+}
+
 export default function DocumentsPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [searchQuery, setSearchQuery] = useState("");
@@ -151,30 +172,22 @@ export default function DocumentsPage() {
                           )}
                         </div>
                         <div className="text-gray-300">•</div>
-                        <div>
-                          {(() => {
-                            const words = document.content.split(/\s+/).length;
-                            if (words >= 1000) {
-                              return `${(words / 1000).toFixed(1)}k words`;
-                            }
-                            return `${words} words`;
-                          })()}
+                        <div className="flex items-center gap-1">
+                          <WordCountIndicator content={document.content} />
+                          <span>
+                            {(() => {
+                              const words =
+                                document.content.split(/\s+/).length;
+                              if (words >= 1000) {
+                                return `${(words / 1000).toFixed(1)}k words`;
+                              }
+                              return `${words} words`;
+                            })()}
+                          </span>
                         </div>
                       </div>
-                      {document.platforms && document.platforms.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {document.platforms.map((platform) => (
-                            <span
-                              key={platform}
-                              className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
-                            >
-                              {platform}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                       {document.url && (
-                        <div className="mt-1 truncate text-xs">
+                        <div className="mt-1 flex items-center gap-2 truncate text-xs">
                           <span
                             className="cursor-pointer text-blue-400 hover:underline"
                             onClick={(e) => {
@@ -196,6 +209,22 @@ export default function DocumentsPage() {
                               }
                             })()}
                           </span>
+                          {document.platforms &&
+                            document.platforms.length > 0 && (
+                              <>
+                                <div className="text-gray-300">•</div>
+                                <div className="flex items-center gap-2">
+                                  {document.platforms.map((platform) => (
+                                    <span
+                                      key={platform}
+                                      className="inline-flex items-center text-xs font-medium text-blue-500"
+                                    >
+                                      {platform}
+                                    </span>
+                                  ))}
+                                </div>
+                              </>
+                            )}
                         </div>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
@@ -280,6 +309,12 @@ export default function DocumentsPage() {
                     >
                       Platforms
                     </th>
+                    <th
+                      scope="col"
+                      className="w-32 border-b border-gray-200 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                    >
+                      Length
+                    </th>
                     {evaluators.map((evaluator) => (
                       <th
                         key={evaluator}
@@ -316,15 +351,30 @@ export default function DocumentsPage() {
                         )}
                       </td>
                       <td className="w-48 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-2">
                           {document.platforms?.map((platform) => (
                             <span
                               key={platform}
-                              className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                              className="inline-flex items-center text-xs font-medium text-blue-500"
                             >
                               {platform}
                             </span>
                           ))}
+                        </div>
+                      </td>
+                      <td className="w-32 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <WordCountIndicator content={document.content} />
+                          <span className="text-gray-500">
+                            {(() => {
+                              const words =
+                                document.content.split(/\s+/).length;
+                              if (words >= 1000) {
+                                return `${(words / 1000).toFixed(1)}k`;
+                              }
+                              return `${words}`;
+                            })()}
+                          </span>
                         </div>
                       </td>
                       {evaluators.map((evaluator) => {
