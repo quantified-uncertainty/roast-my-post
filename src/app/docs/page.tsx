@@ -42,10 +42,56 @@ export default function DocumentsPage() {
                     <h2 className="text-base leading-7 font-semibold text-gray-900">
                       {document.title}
                     </h2>
-                    <p className="mt-1 truncate text-sm leading-5 text-gray-500">
-                      {document.content}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                      <div>{document.author}</div>
+                      <div className="text-gray-300">•</div>
+                      <div>
+                        {new Date(document.publishedDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
+                      </div>
+                      <div className="text-gray-300">•</div>
+                      <div>
+                        {(() => {
+                          const words = document.content.split(/\s+/).length;
+                          if (words >= 1000) {
+                            return `${(words / 1000).toFixed(1)}k words`;
+                          }
+                          return `${words} words`;
+                        })()}
+                      </div>
+                    </div>
+                    {document.url && (
+                      <div className="mt-1 truncate text-xs">
+                        <span
+                          className="cursor-pointer text-blue-400 hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(
+                              document.url,
+                              "_blank",
+                              "noopener,noreferrer"
+                            );
+                          }}
+                        >
+                          {(() => {
+                            try {
+                              const url = new URL(document.url);
+                              const path = url.pathname.split("/")[1];
+                              return `${url.hostname}${path ? `/${path}...` : ""}`;
+                            } catch {
+                              return document.url;
+                            }
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {Object.entries(agentReviews).map(
                         ([agentId, commentCount]) => {
                           const agent = evaluationAgents.find(
@@ -57,11 +103,11 @@ export default function DocumentsPage() {
                           )?.grade;
 
                           return (
-                            <span
+                            <div
                               key={agentId}
-                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                             >
-                              {agentId}
+                              {agent?.name}
                               {hasGradeInstructions && grade !== undefined && (
                                 <span
                                   className="ml-1 rounded-sm px-1.5"
@@ -70,9 +116,11 @@ export default function DocumentsPage() {
                                   {getLetterGrade(grade)}
                                 </span>
                               )}
-                              <ChatBubbleLeftIcon className="h-3 w-3" />{" "}
-                              {commentCount}
-                            </span>
+                              <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
+                              <span className="text-gray-500">
+                                {commentCount}
+                              </span>
+                            </div>
                           );
                         }
                       )}

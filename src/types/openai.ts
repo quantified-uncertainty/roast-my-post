@@ -11,7 +11,7 @@ if (!OPENROUTER_API_KEY) {
 }
 
 export const SEARCH_MODEL = "google/gemini-2.0-flash-001";
-export const ANALYSIS_MODEL = "anthropic/claude-3.7-sonnet";
+export const ANALYSIS_MODEL = "openai/gpt-4.1-mini"; //"anthropic/claude-3.7-sonnet";
 
 export const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
