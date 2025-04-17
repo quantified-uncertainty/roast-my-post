@@ -1,0 +1,551 @@
+{
+  "id": "aligning-ai-by-optimizing-for-wisdom-lesswrong",
+  "slug": "aligning-ai-by-optimizing-for-wisdom-lesswrong",
+  "title": "Aligning AI by optimizing for “wisdom” — LessWrong",
+  "author": "JustinShovelain",
+  "publishedDate": "2023-06-27T15:20:00.682Z",
+  "url": "https://www.lesswrong.com/posts/AtwPwD6PBsqfpCsHE/aligning-ai-by-optimizing-for-wisdom",
+  "intendedAgents": [
+    "clarity-coach",
+    "research-scholar",
+    "quantitative-forecaster",
+    "ea-impact-evaluator",
+    "bias-detector",
+    "fake-eliezer"
+  ],
+  "content": "In this post, we’ll introduce _wisdom_ as a measure of the benevolence and internal coherence of an arbitrary agent. We’ll define several factors, such as the agent’s _values_, _plans_, _evidence,_ and _alignment with human values_, and then define wisdom as consistency within and between these factors. We believe this is a useful optimization target for aligning AI. \n\n# Considering the wisdom of intelligent agents\n\nTo define our property, we’ll introduce certain coherence factors, such as the agent's beliefs, plans, actions, evidence, and so on, and for each factor determine: \n\n*   Is the agent self-consistent with regard to this factor? For example, do the agent's actions undermine or support each other? \n*   Is the agent consistent between factors? For example, do the agent's actions match their plans? Are their plans consistent with their beliefs and evidence?\n\nWe also think this definition may be useful in contextualizing or structuring [coherence](https://www.lesswrong.com/posts/RQpNHSiWaXTvDxt6R/coherent-decisions-imply-consistent-utilities) and [selection](https://www.lesswrong.com/posts/G2Lne2Fi7Qra5Lbuf/selection-theorems-a-program-for-understanding-agents) theorems (and potentially useful for discovering new formulations). The former are rules in probability and utility theory for identifying incoherency in sets of rules (such as situations where an incoherent agent can be offered a series of bets that they will always take and then lose, like a “[dutch book](https://www.lesswrong.com/posts/kjmN3fdwTgN8ejGTd/dutch-books-and-decision-theory-an-introduction-to-a-long)”). The latter, selection theorems, are ways to predict what type of agent will emerge from certain constraints or incentives. They answer the question \"[What will be the likely features of agents we might encounter in an environment?](https://www.lesswrong.com/posts/tdcLpkydLwcKwbKre/understanding-selection-theorems)\".\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/sswur8uxwehczo210uar)\n\n# Introducing the coherence factors\n\nHere are the coherence factors we’ll consider:\n\n*   **Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  \n*   **Environment**: the agent’s external environment.\n*   **Evidence**: the agent’s measurements and data about the environment.\n*   **Beliefs**: claims & conclusions the agent believes, based on evidence & reasoning.\n*   **Plans**: the agent’s planned future actions.\n*   **Actions**: the agent’s realised actions, interacting with and influencing its environment.\n*   **Communication**: the subset of actions that exchange information with other agents. \n\nWe’ll use these factors in three ways. First, we’ll discuss what it means for an agent to be self-consistent with respect to each factor. Second, we’ll discuss consistency _between_ two factors. Finally, we’ll explore the causal relationships between the factors, and how this affects their relative importance. \n\nNote that **Humanity’s values** and the agent’s **Environment** are external to the agent we’re considering. They can be influenced by the agent’s actions, but they are separate and from the agent’s internal state. Therefore, we’ll generally assume that both factors are self-consistent. \n\n## Defining self-consistency\n\nNote that **Humanity’s values** and the agent’s **Environment** are external to the agent we’re considering. They can be influenced by the agent’s actions, but it makes sense to distinguish them from the agent’s internal states. Importantly, we'll generally assume for the sake of clarity that both these external factors are self-consistent. \n\nFor the other coherence factors, let’s consider what consistency and the lack thereof would look like:  \n\n*   **Values**: can the agent’s values be combined and realized coherently? Without self-consistency of values, the agent cannot preferentially choose between multiple states coherently. This could lead to circular preferences (where a is valued over b, b over c, and c over a), [dutch booking](https://en.wikipedia.org/wiki/Dutch_book), or failure to decide on any action at all. \n*   **Evidence**: are the agent’s measurements and data about the external world consistent in its internal model? Without self-consistency of evidence, the agent cannot identify patterns. Note that this isn’t the same as the patterns being “true” or “real”. \n*   **Beliefs**: are the agent’s beliefs consistent with each other? Without self-consistency of belief, the agent can believe in two contradictory statements, making decision-making harder and potentially leading to an inability to distinguish true and false statements (à la the [principle of explosion](https://en.wikipedia.org/wiki/Principle_of_explosion))\n*   **Plans**: do the agent’s plans support or undermine each other? Without self-consistency of planning, the agent’s cannot move towards long-term goals. \n*   **Actions**: do the agent’s realized actions support or undermine each other? Without self-consistency of action, the agent’s cannot move towards long-term goals. \n*   **Communication**: is the agent consistent in their interactions with other agents?\n\n## Defining inter-factor consistency\n\nNext, we’ll say that an agent is consistent between two factors x and y if its state with respect to x aligns with its state with respect to y. For example, an agent is consistent between its Values and Actions if its actions move the agent or environment toward valued states. In the case of AI, we could say that alignment is equivalent to the consistency of the agent's Values with Humanity's Values. \n\nNote that the idea of “consistency” is generally continuous rather than binary, and is defined differently for each pair of factors. For example, consistency between beliefs and evidence should involve Bayes theorem (or some approximation of it). The self-consistency of beliefs is about the absence of logical contradictions, while the self-consistency of actions is more about emergent outcomes, and so on. \n\nFurther, we’ll assume that a prerequisite for two factors being consistent is that each is self-consistent. If an agent’s values are not self-consistent, it’s not meaningful to say their actions are consistent with their values: if two values contradict each other, how could the agent’s actions be consistent with them both? This isn’t universal though: consistency isn't binary and it may be meaningful to consider inter-factor consistency even when there’s some intra-factor inconsistency, as long as it’s not extreme.\n\nWe won’t go through every pair of factors, but here’s a table summarising some failure modes of inconsistency between pairs of factors (assuming consistency for each other pair): \n\n \n\nEvidence\n\n**Beliefs**\n\n**Values**\n\n**Actions**\n\n**Evidence**\n\nFailure to identify patterns\n\n \n\n \n\n \n\n**Beliefs**\n\nFailure to infer correct patterns from evidence\n\nCognitive dissonance (& [deductive explosion](https://en.wikipedia.org/wiki/Principle_of_explosion))\n\n \n\n \n\n**Values**\n\nFailure to recognise valued states or distinguish the value of two states\n\nFailure to recognise valued states, or distinguish the value of two states\n\nMay follow incoherent strategies (e.g.  [dutch booking](https://en.wikipedia.org/wiki/Dutch_book))\n\n \n\n**Actions**\n\nFailure of actions to achieve plans\n\nFailure of actions to achieve plans/goals.\n\nFailure to achieve movement towards your ideals\n\nActions undermine each other: goals not achieved\n\nEnvironment\n\nFailure of sensory input or mapping\n\nFailure of data processing\n\nIrrelevant values: caring about things you can't influence\n\nFailure to influence the environment\n\n# Wisdom\n\nWe will say an agent is _wise_ when it’s consistent across all these factors. A wise agent avoids all of the failure modes listed above, and is globally coherent. An agent can become wiser by increasing its global consistency. \n\nNote that, if we were to evaluate _how_ wise an agent is, we’d probably want to heavily weight the consistency between its values and humanity’s values (over, for example, the consistency of its plans with its beliefs), since a misaligned (but otherwise coherent) AI shouldn’t be labelled _wise_. In the next two sections we’ll build on the idea that some relations are more important for wisdom. \n\n## Causal structure and sequencing\n\nThe coherency factors interact, and we can represent them as an ordered sequence, or a hierarchy of influence. For example, an agent’s evidence depends on their environment; their beliefs on their evidence, and so on. If we let “x⇒y\" denote the relation “x is necessary to determine y” (and we conflate actions and communication for concision), then we can construct a diagram like this: \n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/avw7tgfgbiodzecpyuyl)\n\n(Note that we could redraw this diagram with values directly linking to plans, rather than linking through beliefs. However, we think this ordering captures the distinction between believed values and true values. The former are determined by the latter, but an incoherent agent could misinterpret its true values (for example, a human believing they value amassing wealth when really they just need a hug). For more on this distinction, see the “want vs need” example later on.)\n\nIdentifying the direct causal influences is useful because it’s probably sufficient to consider only \"local\" consiste kincies. That is, we may be able to infer that the agent is globally consistent if the following are true:\n\n1.  This causal structure is an accurate and complete list of the causal influences between factors.\n2.  The agent is self-consistent with respect to each factor.  \n3.  For every factor x needed to determine a factor y, the agent is consistent between xand y. \n\nThis simplifies the concept of wisdom, as we no longer have to determine the consistency between every pair: just pairs that are directly causally linked (which should make it a more useful optimization target). Further, this leads to a natural way of ordering the relative importance of consistencies, which we’ll discuss in the next section.\n\nWe’ll return to this kind of causal diagram in an upcoming post, where we’ll use them to explore the causal relationships between factors involved in AI safety and alignment. As a preview example, we can track the causal influence from philosophy and humanity’s reflectively endorsed values through to AI planning and outcomes, and associate certain areas of AI safety research to particular causal links here, such as [inner alignment](https://www.lesswrong.com/posts/SzecSPYxqRa5GCaSF/clarifying-inner-alignment-terminology) corresponding to the influence of AI values on AI planning:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/kizjxn8zbvhbgitardap)\n\n## Ordering the importance of specific consistencies\n\nSome consistencies are more important than others for determining the wisdom of an agent. For example, it may be more important that an agent’s plans are consistent with their values than their actions are consistent with their plans. In this section we’ll define a [partial order](https://en.wikipedia.org/wiki/Partially_ordered_set) on pairs of factors, ordering them by the relative importance of their consistency (for evaluating wisdom).\n\nTo define the order, we propose three axioms. Let x, y, and z be coherence factors as defined above. Then our axioms are:\n\n1.  If x⇒y, then x is more important than y.\n2.  If x is more important than y, then the consistency between x and an arbitrary factor z is more important than consistency between y and z. \n3.  Humanity's values are more important than the agent's Environment. \n\nLet’s see what we can determine with these assumptions. Abbreviating each factor, in the previous section we had the following causal orders:\n\nEnv⇒Evi⇒Bel⇒Pla⇒ActH′val⇒Val⇒Bel\n\nIf we write x\\>y to mean \"x is more important than y\", then the third axiom tells us that H′val\\>Env, and so we can apply the first axiom to order the factors: \n\nH′val\\>Val\\>Env\\>Evi\\>Bel\\>Pla\\>Act\n\nThen, using the second axiom, the consistency of an arbitrary factor x with the agent's Values is more important than with its Beliefs or Actions, for example. We can build a [Hasse diagram](https://en.wikipedia.org/wiki/Hasse_diagram) of this relation, where a line between two elements implies the one higher up has precedence:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/z0skaldzfiuect6bzwbg)\n\nWhen evaluating an agent's wisdom, we'd probably want to weight certain consistencies above others: something like this Hasse diagram could be a crude way to do so, so that consistency between Humanity's Values and the agent's Values counts towards wisdom a lot more than the self-consistency of the agent's actions. \n\n## Wisdom as an optimization target\n\nThe ordering we’ve defined in the previous section suggests that actions and their consistency with other factors are the least important. This might seem odd, since the actions of other agents are how we observe them. However, we think this fits a definition of wisdom. A wise agent could be clumsy or unable to act, while an unwise AI could be consistent in its actions but be misaligned, or fail to recognise its plans don’t match its values.\n\nThis highlights a difference between wisdom and capability: in the latter, the focus is on an agent’s actions and the consistency of those actions with plans and beliefs. For wisdom, actions are instrumentally useful but the consistency of values is most important. \n\nNote that the ordering we’ve defined doesn’t mean that the best way to improve wisdom is to go down the Hasse diagram and ensure each pair is 100% consistent before descending. Instead, the priority should be resolving the inconsistency whose resolution would most improve global consistency for the least marginal cost. \n\nFor example, an agent might believe in the principles of locality and realism and in the fundamentals of quantum mechanics, but it may be more important for them to act consistently in their daily life than to resolve the possible contradictions of [local realism](https://en.wikipedia.org/wiki/Principle_of_locality#Local_realism) in quantum mechanics. \n\nFurther, when optimizing for global consistency, local inconsistency can sometimes increase. For example, consider a self-driving car that values both safety and efficiency. If it optimizes its plans to become more consistent with valuing efficiency, it may compromise the consistency between its actions and the value of safety. More broadly, consider an agent's values, beliefs, and plans. Recall that values ⇒ beliefs  ⇒ plans, and suppose that the agent’s values are somewhat inconsistent with its beliefs, and its beliefs somewhat inconsistent with its plans. If we prioritize improving the consistency between values and beliefs, its plans may become less consistent with its beliefs until they’re updated, after which its actions may become less consistent with its pre-update actions. \n\n## Additional factors and extensions\n\nAs well as the primary factors discussed above, we could include secondary factors such as the following, though we’re less sure how these should fit into the model:\n\n*   **Social interactions:** can the agent cooperate with other agents, or does it introduce conflict? Are its interactions near [Nash equilibria](https://www.lesswrong.com/posts/w78drofcgQro4483A/a-natural-explanation-of-nash-equilibria)? Failure to achieve social consistency would imply that two agents are acting against each others’ plans. \n*   **Time:** Is the agent consistent over time? Note that this factor isn’t completely orthogonal to the others: the relationship between plans and actions, for example, has a temporal element baked in. An extreme example of time-inconsistency could be an agent that replaces themself with another agent that has different values, beliefs, and so on (for example, a worker that outsources what they’re supposed to do to someone else). \n*   **Emotional:** Emotional consistency is an important factor of human psychology, but speculating on arbitrary agentic emotions is difficult. Nevertheless, it seems important to have some basic consistency in emotional reaction and to manage positive and negative reactions. Failures in emotional self-consistency (and in consistency between emotions and other factors) may relate to [thought disorders](https://en.wikipedia.org/wiki/Thought_disorder), defined as cognitive disturbances that affect thought, language, and communication. \n*   **Metacognition:** Is the agent’s [metacognition](https://en.wikipedia.org/wiki/Metacognition) consistent? That is, do they reason about reasoning or think about thinking in a consistent, apt manner? For an example of a failure of meta-coherence, an agent might be overconfident in their beliefs (even when they’re inconsistent), in [denial](https://en.wikipedia.org/wiki/Denial_\\(Freud\\)) of evidence that clashes with their beliefs, or so underconfident in their beliefs they do not use them to shape plans & actions. This may also relate to some [thought disorders](https://en.wikipedia.org/wiki/Thought_disorder), which we mention above.\n\nWe may return to these secondary factors in future articles, if we choose to extend or adapt this model. In particular, we plan to release an article on resolving inconsistencies between emotional reactions and values, and the role of value-outcome inconsistencies in motivating actions. \n\nAnother aside is that evaluating an agent with this model may only be useful practically if the agent is sufficiently powerful. For example, it’s probably not worth using this model to evaluate the wisdom of a simple sorting algorithm, as we can’t meaningfully distinguish its values, beliefs, and plans. \n\nAn analogy here is Gödel's incompleteness theorems, which prove that no mathematical system can be both complete and consistent, _assuming_ that the system is sufficiently powerful (meaning that it [contains arithmetic](https://en.wikipedia.org/wiki/G%C3%B6del%27s_incompleteness_theorems#Systems_which_contain_arithmetic)). Less powerful systems (such as Euclidean geometry) can be both complete and consistent, but their lack of power limits their utility. Analogously, a sorting algorithm isn’t powerful enough to “contain” distinct values, beliefs, and plans, so may be globally consistent by default, while lacking the power for wisdom to be a useful metric.\n\n## Applying this model\n\nWe hope this model is useful for evaluating the wisdom of agents. This framework may even be useful for human self-improvement, or improving the wisdom and coherence of an organization. In this section, we’ll try applying the model to three examples: fiction, ChatGPT, and paperclip maximizers. \n\n### Fiction\n\nMany fictional stories, classic and contemporary, feature the growth and change of characters. It’s a story trope that we seem to find inherently engaging, and is part of the [hero’s journey](https://en.wikipedia.org/wiki/Hero%27s_journey). In particular, the change tends to be internal, and involves some movement towards wisdom. This can take the form of resolving internal inconsistencies. \n\nSometimes this is through a trope called “[the lie your character believes](https://www.helpingwritersbecomeauthors.com/character-arcs-2/)”.  In our framework, we could consider this an _inconsistency in beliefs._ The character’s internal turmoil is a result of the inconsistency, and to grow they must resolve the inconsistency. For example: Scrooge believes the lie that a man’s worth is determined by his monetary worth, till he’s convinced otherwise and becomes happier and more benevolent. \n\nAnother is the resolution of what’s called “[want vs need](https://thenovelsmithy.com/want-versus-need-storytelling/)”: the character wants something, and seeks it out while neglecting what they really need. We can interpret this as an _inconsistency in values_, or as an inconsistency between values and beliefs. Returning to Dickens, Scrooge wants to be wealthy, but he is miserable until he realizes he needs human connection and love. \n\n### ChatGPT\n\nChatGPT is capable of good at language generation, but how does it score under this definition? Note that, in this case, communication is essentially equal to action, since ChatGPT’s only available actions are communications.\n\nWell, one failure mode that’s been seen in ChatGPT (at the time of writing) is an inconsistency between values and actions. One value instilled in ChatGPT is not to provide readers with information they could use to harm people. For example:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/f5dmafpyaokfkr6tetp1)\n\nHowever, by providing the right context through prompts, it is possible to trick ChatGPT into giving this information:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/rgx4colknjdgp4ovu2er)\n\nThis is an inconsistency between values and actions. However, recall our causal diagram:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/avw7tgfgbiodzecpyuyl)\n\nWe don’t know the inner workings of ChatGPT. We only know that one of its values is to not spread harmful information because we’ve been told so [by its developers](https://openai.com/research/language-model-safety-and-misuse) (and by ChatGPT, in its initial response to the TNT question above). The only aspect we can observe is its actions, and so we can’t identify _where_ in this causal diagram the inconsistency arises. It may be that ChatGPT’s actions are consistent with its plans and beliefs and only inconsistent with its (stated) values, but this behaviour could also be explained if ChatGPT doesn’t believe it _has_ given us the TNT recipe, rather believing it merely helped us with a story. \n\n### Paperclip maximizers and evil geniuses\n\nBoth [paperclip maximizers](https://www.lesswrong.com/tag/squiggle-maximizer-formerly-paperclip-maximizer) and brilliant evil geniuses are consistent across almost all these factors, failing only as they’re misaligned: their values aren’t consistent with humanity’s reflectively endorsed values. When all other consistencies are maxed out, improving wisdom is the same as improving alignment. This is why we earlier suggested that wisdom should heavily depend on this particular consistency, since we wouldn't like to call an evil genius wise. \n\n# Conclusion \n\nWe need metrics to evaluate the internal coherence and benevolence of AI, distinct from its raw intelligence and capabilities. We propose this idea of wisdom as a global consistency across coherence factors, as we believe this could be useful for evaluating and optimizing AI. \n\nIf you work in AI development or a related field, we'd love for you to explore using this framework to evaluate the projects you’re working on, and as an optimization target for development and alignment. \n\nWe’d also love people's input on this topic. Can you extend these ideas, or come up with other example applications? Can you suggest any improvements? If you work in AI development, or find other ways to apply this framework, was it helpful? Let us know in the comments.\n\nIf you’re interested in this idea, you might also enjoy the following articles:\n\n*   [Selection Theorems: A Program For Understanding Agents](https://www.lesswrong.com/posts/G2Lne2Fi7Qra5Lbuf/selection-theorems-a-program-for-understanding-agents) by johnswentworth\n*   [Coherent decisions imply consistent utilities](https://www.lesswrong.com/posts/RQpNHSiWaXTvDxt6R/coherent-decisions-imply-consistent-utilities) by Eliezer Yudkowsky\n*   [Coherent extrapolated volition](https://www.lesswrong.com/tag/coherent-extrapolated-volition) on LessWrong\n*   [Improving the future by influencing actors' benevolence, intelligence, and power](https://forum.effectivealtruism.org/posts/4oGYbvcy2SRHTWgWk/improving-the-future-by-influencing-actors-benevolence) by MichaelA and Justin Shovelain\n*   [Doing good while clueless](https://forum.effectivealtruism.org/posts/X2n6pt3uzZtxGT9Lm/doing-good-while-clueless) by Milan Griffes\n\n_This article is based on the ideas of Justin Shovelain, written by Elliot Mckernon, for_ [_Convergence Analysis_](https://www.convergenceanalysis.org/)_. We’d like to thank Matt Goldenberg for his input on the topic, and Cesare Ardito, Harry Day, and David Kristofferrsson for their feedback while writing._",
+  "reviews": [
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:21:18.559Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":7140,\"completionTokens\":1473,\"totalTokens\":8613,\"temperature\":0.1,\"runtimeMs\":9341}",
+      "thinking": "This document introduces \"wisdom\" as a metric for evaluating AI alignment, defining it as the consistency between an agent's values, plans, beliefs, evidence, and actions, as well as its alignment with human values. The authors propose a framework for assessing this consistency and suggest it could be a useful optimization target for AI alignment.\n\nFrom a clarity perspective, the document presents a complex concept and framework. The core challenge lies in making the abstract idea of \"wisdom\" and its constituent factors understandable and actionable. The use of diagrams and examples helps, but the density of information and the reliance on LessWrong-specific terminology could hinder comprehension for a broader audience. The document also introduces several sub-concepts (self-consistency, inter-factor consistency, causal structure) which adds to the complexity.\n\nMy analysis will focus on identifying areas where the clarity of the explanation could be improved, specifically looking at sentence structure, jargon usage, and the logical flow of ideas. I will also assess the readability metrics and suggest concrete improvements to enhance understanding.",
+      "summary": "This document presents a novel framework for evaluating AI alignment based on the concept of \"wisdom,\" defined as the consistency between various internal and external factors. While the ideas are interesting, the clarity of the presentation could be improved. Specific areas for improvement include reducing jargon, simplifying sentence structure, providing more concrete examples, and ensuring the logical flow of ideas is easy to follow. Addressing these issues would make the framework more accessible to a wider audience and increase its potential impact.",
+      "comments": [
+        {
+          "title": "Jargon Usage",
+          "description": "The term \"dutch book\" is used without sufficient context for readers unfamiliar with decision theory. While linked, a brief in-text explanation would improve readability.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 1363,
+            "endOffset": 1604,
+            "quotedText": "situations where an incoherent agent can be offered a series of bets that they will always take and then lose, like a “[dutch book](https://www.lesswrong.com/posts/kjmN3fdwTgN8ejGTd/dutch-books-and-decision-theory-an-introduction-to-a-long)”"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Logical Flow",
+          "description": "The transition between defining the coherence factors and discussing self-consistency could be smoother. A brief introductory sentence would help.",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 2916,
+            "endOffset": 3227,
+            "quotedText": "We’ll use these factors in three ways. First, we’ll discuss what it means for an agent to be self-consistent with respect to each factor. Second, we’ll discuss consistency _between_ two factors. Finally, we’ll explore the causal relationships between the factors, and how this affects their relative importance."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Sentence Complexity",
+          "description": "This sentence is quite long and contains multiple clauses, making it harder to parse. Breaking it down into smaller sentences would improve readability.",
+          "importance": "70",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 6273,
+            "endOffset": 6794,
+            "quotedText": "Further, we’ll assume that a prerequisite for two factors being consistent is that each is self-consistent. If an agent’s values are not self-consistent, it’s not meaningful to say their actions are consistent with their values: if two values contradict each other, how could the agent’s actions be consistent with them both? This isn’t universal though: consistency isn't binary and it may be meaningful to consider inter-factor consistency even when there’s some intra-factor inconsistency, as long as it’s not extreme."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Specificity of Language",
+          "description": "The phrase \"failure of sensory input or mapping\" is vague. Providing a concrete example would enhance understanding.",
+          "importance": "60",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 7723,
+            "endOffset": 7758,
+            "quotedText": "Failure of sensory input or mapping"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Definition",
+          "description": "The definition of 'wisdom' could be made more concise and impactful. The current phrasing is somewhat verbose.",
+          "importance": "80",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 7896,
+            "endOffset": 8058,
+            "quotedText": "We will say an agent is _wise_ when it’s consistent across all these factors. A wise agent avoids all of the failure modes listed above, and is globally coherent."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability",
+          "description": "The use of parenthetical asides, while providing additional information, can disrupt the flow of reading. Consider integrating these asides into the main text or removing them if they are not essential.",
+          "importance": "60",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 9081,
+            "endOffset": 9560,
+            "quotedText": "(Note that we could redraw this diagram with values directly linking to plans, rather than linking through beliefs. However, we think this ordering captures the distinction between believed values and true values. The former are determined by the latter, but an incoherent agent could misinterpret its true values (for example, a human believing they value amassing wealth when really they just need a hug). For more on this distinction, see the “want vs need” example later on.)"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Examples",
+          "description": "The example of the self-driving car could be expanded to more clearly illustrate the trade-off between safety and efficiency. Providing specific scenarios would be beneficial.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 14679,
+            "endOffset": 14583,
+            "quotedText": " \n\nFurther, when optimizing for global consistency, local inconsistency can sometimes increase. "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Audience Alignment",
+          "description": "The reference to Gödel's incompleteness theorems might be obscure to readers without a background in mathematics or logic. A simplified explanation or analogy would make the point more accessible.",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 18154,
+            "endOffset": 18817,
+            "quotedText": "An analogy here is Gödel's incompleteness theorems, which prove that no mathematical system can be both complete and consistent, _assuming_ that the system is sufficiently powerful (meaning that it [contains arithmetic](https://en.wikipedia.org/wiki/G%C3%B6del%27s_incompleteness_theorems#Systems_which_contain_arithmetic)). Less powerful systems (such as Euclidean geometry) can be both complete and consistent, but their lack of power limits their utility. Analogously, a sorting algorithm isn’t powerful enough to “contain” distinct values, beliefs, and plans, so may be globally consistent by default, while lacking the power for wisdom to be a useful metric."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Use of LessWrong Terminology",
+          "description": "The term \"paperclip maximizers\" is specific to the LessWrong community. While linked, a brief explanation of the concept within the text would improve accessibility for a broader audience.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 22322,
+            "endOffset": 22866,
+            "quotedText": "Both [paperclip maximizers](https://www.lesswrong.com/tag/squiggle-maximizer-formerly-paperclip-maximizer) and brilliant evil geniuses are consistent across almost all these factors, failing only as they’re misaligned: their values aren’t consistent with humanity’s reflectively endorsed values. When all other consistencies are maxed out, improving wisdom is the same as improving alignment. This is why we earlier suggested that wisdom should heavily depend on this particular consistency, since we wouldn't like to call an evil genius wise. "
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 65
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:21:24.617Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":7820,\"completionTokens\":920,\"totalTokens\":8740,\"temperature\":0.1,\"runtimeMs\":5911}",
+      "thinking": "This article introduces \"wisdom\" as a metric for evaluating AI alignment, focusing on the consistency between an agent's values, beliefs, plans, and actions, as well as their alignment with human values. The author proposes a framework for assessing this consistency and suggests it could be a useful optimization target for AI development. I will focus on identifying resources that can help further explore the concepts of AI alignment, value consistency, and coherence in intelligent agents. I will also look for resources that provide alternative perspectives or methodologies for achieving AI safety.",
+      "summary": "This article introduces a framework for evaluating AI alignment based on the concept of \"wisdom,\" defined as the consistency between an agent's internal states (values, beliefs, plans, actions) and its alignment with human values. The author suggests that optimizing for wisdom, understood as global consistency, could be a valuable approach to AI safety. I will provide resources that delve deeper into AI alignment strategies, coherence theorems, and value specification.",
+      "comments": [
+        {
+          "title": "Decision Theory and Rationality",
+          "description": "Understanding decision theory and rationality is crucial for building AI systems that make consistent and coherent choices. This resource explores the foundations of rational decision-making and its implications for AI alignment.",
+          "importance": 75,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": -1,
+            "endOffset": 44,
+            "quotedText": "In this post, we’ll introduce _wisdom_ as a "
+          }
+        },
+        {
+          "title": "AI Alignment Research Agenda",
+          "description": "This resource outlines key research areas in AI alignment, including value specification, reward learning, and understanding inner alignment. It provides a comprehensive overview of the challenges and potential solutions in ensuring AI systems act in accordance with human values.",
+          "importance": 90,
+          "grade": 90,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 305,
+            "endOffset": 369,
+            "quotedText": "We believe this is a useful optimization target for aligning AI."
+          }
+        },
+        {
+          "title": "Coherent Extrapolated Volition (CEV)",
+          "description": "CEV is a concept that aims to define human values in a way that is robust and coherent, even in the face of advanced AI systems. This resource explores the challenges and potential benefits of using CEV as a target for AI alignment.",
+          "importance": 85,
+          "grade": 85,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2148,
+            "endOffset": 2189,
+            "quotedText": "Humanity’s (reflectively endorsed) values"
+          }
+        },
+        {
+          "title": "Inner Alignment Problem",
+          "description": "This resource discusses the inner alignment problem, which refers to the challenge of ensuring that the AI's internal goals and motivations align with its intended objectives. It highlights the risks of unintended behaviors and the need for robust alignment strategies.",
+          "importance": 80,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 10815,
+            "endOffset": 10830,
+            "quotedText": "inner alignment"
+          }
+        },
+        {
+          "title": "Paperclip Maximizer Thought Experiment",
+          "description": "This thought experiment illustrates the potential dangers of misaligned AI goals. It highlights the importance of carefully specifying AI objectives to avoid unintended and harmful consequences.",
+          "importance": 70,
+          "grade": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 19116,
+            "endOffset": 19136,
+            "quotedText": "paperclip maximizers"
+          }
+        }
+      ],
+      "grade": 80
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:21:35.425Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":6990,\"completionTokens\":1857,\"totalTokens\":8847,\"temperature\":0.1,\"runtimeMs\":10800}",
+      "thinking": "This document introduces \"wisdom\" as a measure of benevolence and internal coherence for AI agents, defining it as consistency within and between factors like values, plans, evidence, and alignment with human values. The authors propose this as an optimization target for AI alignment. My task is to analyze this through the lens of quantitative forecasting, focusing on how the concepts presented can be made measurable and predictive. I'll consider how to transform the abstract ideas into concrete forecasting questions, estimate probabilities, and develop Fermi models where applicable. I'll also look for opportunities to apply reference class forecasting and identify key uncertainties.\n\nSpecifically, I'll be looking at:\n\n1.  **Measurability of \"Wisdom\"**: Can we define metrics to quantify the consistency between the factors mentioned? How can we measure the alignment of AI values with human values?\n2.  **Forecasting Questions**: Can we formulate forecasting questions based on the proposed framework? For example, \"Will a specific AI system exhibit a certain level of consistency between its stated values and its actions within a given timeframe?\"\n3.  **Fermi Estimates**: Can we use Fermi estimation to approximate the probability of an AI system achieving a certain level of \"wisdom\" based on current trends and research efforts?\n4.  **Reference Class Forecasting**: Are there relevant reference classes (e.g., past AI alignment efforts, human attempts at self-improvement) that can inform our forecasts?\n5.  **Uncertainty Quantification**: What are the key uncertainties that affect the development of \"wise\" AI systems? How can we quantify these uncertainties and incorporate them into our forecasts?\n6.  **Causal Diagrams**: How can we use the causal diagrams presented in the document to identify critical intervention points for improving AI \"wisdom\" and to forecast the impact of these interventions?\n\nI will focus on identifying specific claims or suggestions that can be translated into testable hypotheses or measurable outcomes. I will also consider the limitations of the proposed framework and potential challenges in applying it in practice.",
+      "summary": "This document presents a valuable framework for thinking about AI alignment in terms of \"wisdom,\" defined as consistency across various factors. From a quantitative forecasting perspective, the key challenge lies in translating these abstract concepts into measurable quantities and testable hypotheses. I've identified several opportunities to formulate forecasting questions, develop Fermi estimates, apply reference class forecasting, and quantify uncertainties. The causal diagrams presented in the document are particularly useful for identifying critical intervention points. However, the subjective nature of \"Humanity's Values\" and the difficulty in measuring internal states of AI systems remain significant challenges. The ChatGPT example provides a concrete illustration of how inconsistency can be observed and potentially quantified. Overall, the framework offers a promising foundation for developing more rigorous and data-driven approaches to AI alignment.",
+      "comments": [
+        {
+          "title": "Measurability of 'Humanity's Values'",
+          "description": "A significant challenge lies in quantifying 'Humanity's Values'. This is inherently subjective and difficult to measure. However, we could potentially use surveys, polls, or expert opinions to create a proxy for these values. The accuracy and representativeness of this proxy would be a major source of uncertainty in any forecast.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 2146,
+            "endOffset": 2456,
+            "quotedText": "**Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Forecasting Question: Consistency of Values and Actions",
+          "description": "This section highlights a key area where the concept of \"wisdom\" can be translated into a concrete forecasting question. We can ask: \"What is the probability that a given AI system will exhibit a measurable level of consistency between its stated values and its actions over a specific time period?\"",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 5456,
+            "endOffset": 5859,
+            "quotedText": "Next, we’ll say that an agent is consistent between two factors x and y if its state with respect to x aligns with its state with respect to y. For example, an agent is consistent between its Values and Actions if its actions move the agent or environment toward valued states. In the case of AI, we could say that alignment is equivalent to the consistency of the agent's Values with Humanity's Values."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Fermi Estimation: Probability of Achieving 'Wisdom'",
+          "description": "This section provides a basis for a Fermi estimate. We could attempt to estimate the probability of an AI system achieving a certain level of \"wisdom\" by breaking down the problem into smaller components, such as the probability of achieving self-consistency in each factor (values, beliefs, plans, actions) and the probability of achieving consistency between these factors. This would require making assumptions about the current state of AI research and the rate of progress in each area.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 7896,
+            "endOffset": 8421,
+            "quotedText": "We will say an agent is _wise_ when it’s consistent across all these factors. A wise agent avoids all of the failure modes listed above, and is globally coherent. An agent can become wiser by increasing its global consistency. \n\nNote that, if we were to evaluate _how_ wise an agent is, we’d probably want to heavily weight the consistency between its values and humanity’s values (over, for example, the consistency of its plans with its beliefs), since a misaligned (but otherwise coherent) AI shouldn’t be labelled _wise_."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Causal Diagrams and Intervention Points",
+          "description": "The causal diagrams presented in this section can be used to identify critical intervention points for improving AI \"wisdom\". For example, if we believe that the consistency between AI values and AI planning is crucial, we can focus our efforts on interventions that strengthen this link. We can then forecast the impact of these interventions on the overall \"wisdom\" of the AI system.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 9562,
+            "endOffset": 10047,
+            "quotedText": "Identifying the direct causal influences is useful because it’s probably sufficient to consider only \"local\" consiste kincies. That is, we may be able to infer that the agent is globally consistent if the following are true:\n\n1.  This causal structure is an accurate and complete list of the causal influences between factors.\n2.  The agent is self-consistent with respect to each factor.  \n3.  For every factor x needed to determine a factor y, the agent is consistent between xand y."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Reference Class Forecasting: AI Alignment Efforts",
+          "description": "This section implicitly suggests the use of reference class forecasting. We can look at past AI alignment efforts and human attempts at self-improvement to inform our forecasts about the likelihood of achieving \"wisdom\" in AI systems. What percentage of past AI alignment projects have achieved their stated goals? What are the common failure modes? What lessons can be learned from these experiences?",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 13192,
+            "endOffset": 13904,
+            "quotedText": "The ordering we’ve defined in the previous section suggests that actions and their consistency with other factors are the least important. This might seem odd, since the actions of other agents are how we observe them. However, we think this fits a definition of wisdom. A wise agent could be clumsy or unable to act, while an unwise AI could be consistent in its actions but be misaligned, or fail to recognise its plans don’t match its values.\n\nThis highlights a difference between wisdom and capability: in the latter, the focus is on an agent’s actions and the consistency of those actions with plans and beliefs. For wisdom, actions are instrumentally useful but the consistency of values is most important."
+          },
+          "isValid": true
+        },
+        {
+          "title": "ChatGPT Example: Quantifying Inconsistency",
+          "description": "The ChatGPT example provides a concrete instance of inconsistency between values and actions. We could attempt to quantify this inconsistency by measuring the frequency with which ChatGPT provides harmful information in response to adversarial prompts. This could be used as a metric to track progress in improving the \"wisdom\" of the system.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 20727,
+            "endOffset": 21997,
+            "quotedText": "Well, one failure mode that’s been seen in ChatGPT (at the time of writing) is an inconsistency between values and actions. One value instilled in ChatGPT is not to provide readers with information they could use to harm people. For example:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/f5dmafpyaokfkr6tetp1)\n\nHowever, by providing the right context through prompts, it is possible to trick ChatGPT into giving this information:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/rgx4colknjdgp4ovu2er)\n\nThis is an inconsistency between values and actions. However, recall our causal diagram:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/avw7tgfgbiodzecpyuyl)\n\nWe don’t know the inner workings of ChatGPT. We only know that one of its values is to not spread harmful information because we’ve been told so [by its developers](https://openai.com/research/language-model-safety-and-misuse) (and by ChatGPT, in its initial response to the TNT question above). The only aspect we can observe is its actions, and so we can’t identify _where_ in this causal diagram the inconsistency arises."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        }
+      ],
+      "grade": 78
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:22:37.526Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":7843,\"completionTokens\":2232,\"totalTokens\":10075,\"temperature\":0.1,\"runtimeMs\":12963}",
+      "thinking": "This post introduces \"wisdom\" as a measure of benevolence and internal coherence for AI alignment, defining it as consistency within and between an agent's values, plans, evidence, and alignment with human values. The authors propose this as a useful optimization target for aligning AI. My analysis will focus on evaluating the importance, neglectedness, and tractability of this approach within the EA framework, and attempt a Fermi estimate of its potential impact on AI alignment and existential risk reduction.\n\nI will assess the novelty of the approach, considering its relationship to existing work on AI alignment, value alignment, and decision theory. I will also consider potential negative impacts, such as the possibility that optimizing for a specific definition of \"wisdom\" could lead to unintended consequences or value lock-in.\n\nFinally, I will provide an overall grade based on the potential of this approach to contribute to AI alignment and reduce existential risk, considering both its strengths and weaknesses.",
+      "summary": "This post introduces a valuable framework for evaluating and optimizing AI alignment by focusing on 'wisdom' as internal coherence and benevolence. The proposed coherence factors, causal diagrams, and prioritization axioms offer a structured approach to addressing potential inconsistencies and vulnerabilities in AI systems. While the post lacks a detailed discussion of potential negative impacts and requires further operationalization, its focus on values and alignment, rather than just capability, is a significant contribution to the field. The Fermi estimate, though highly speculative, suggests that even a small reduction in existential risk could have a substantial expected value.",
+      "comments": [
+        {
+          "title": "Importance of Wisdom as an Alignment Target",
+          "description": "The concept of 'wisdom' as internal coherence and benevolence is highly relevant to AI alignment. If AI systems lack internal consistency or are malevolent, they pose a significant existential risk. This section highlights the core problem the post addresses.",
+          "importance": "95",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 369,
+            "quotedText": "In this post, we’ll introduce _wisdom_ as a measure of the benevolence and internal coherence of an arbitrary agent. We’ll define several factors, such as the agent’s _values_, _plans_, _evidence,_ and _alignment with human values_, and then define wisdom as consistency within and between these factors. We believe this is a useful optimization target for aligning AI."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Coherence Factors",
+          "description": "Defining specific coherence factors (values, environment, evidence, beliefs, plans, actions, communication) provides a structured approach to evaluating AI alignment. This breakdown is useful for identifying potential inconsistencies and vulnerabilities.",
+          "importance": "80",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 2079,
+            "endOffset": 2879,
+            "quotedText": "rence factors\n\nHere are the coherence factors we’ll consider:\n\n*   **Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  \n*   **Environment**: the agent’s external environment.\n*   **Evidence**: the agent’s measurements and data about the environment.\n*   **Beliefs**: claims & conclusions the agent believes, based on evidence & reasoning.\n*   **Plans**: the agent’s planned future actions.\n*   **Actions**: the agent’s realised actions, interacting with and influencing its environment.\n*   **Communication**: the subset of actions that excha"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Self-Consistency and Inter-Factor Consistency",
+          "description": "The distinction between self-consistency (internal coherence within a factor) and inter-factor consistency (alignment between factors) is crucial for a comprehensive evaluation of AI alignment. This framework allows for a nuanced understanding of potential failure modes.",
+          "importance": "85",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 5456,
+            "endOffset": 6794,
+            "quotedText": "Next, we’ll say that an agent is consistent between two factors x and y if its state with respect to x aligns with its state with respect to y. For example, an agent is consistent between its Values and Actions if its actions move the agent or environment toward valued states. In the case of AI, we could say that alignment is equivalent to the consistency of the agent's Values with Humanity's Values. \n\nNote that the idea of “consistency” is generally continuous rather than binary, and is defined differently for each pair of factors. For example, consistency between beliefs and evidence should involve Bayes theorem (or some approximation of it). The self-consistency of beliefs is about the absence of logical contradictions, while the self-consistency of actions is more about emergent outcomes, and so on. \n\nFurther, we’ll assume that a prerequisite for two factors being consistent is that each is self-consistent. If an agent’s values are not self-consistent, it’s not meaningful to say their actions are consistent with their values: if two values contradict each other, how could the agent’s actions be consistent with them both? This isn’t universal though: consistency isn't binary and it may be meaningful to consider inter-factor consistency even when there’s some intra-factor inconsistency, as long as it’s not extreme."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Causal Structure and Sequencing",
+          "description": "The causal diagram illustrating the relationships between coherence factors is a valuable tool for understanding how inconsistencies can propagate through the system. Identifying direct causal influences simplifies the evaluation process and allows for targeted interventions.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 8560,
+            "endOffset": 9688,
+            "quotedText": "The coherency factors interact, and we can represent them as an ordered sequence, or a hierarchy of influence. For example, an agent’s evidence depends on their environment; their beliefs on their evidence, and so on. If we let “x⇒y\" denote the relation “x is necessary to determine y” (and we conflate actions and communication for concision), then we can construct a diagram like this: \n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/avw7tgfgbiodzecpyuyl)\n\n(Note that we could redraw this diagram with values directly linking to plans, rather than linking through beliefs. However, we think this ordering captures the distinction between believed values and true values. The former are determined by the latter, but an incoherent agent could misinterpret its true values (for example, a human believing they value amassing wealth when really they just need a hug). For more on this distinction, see the “want vs need” example later on.)\n\nIdentifying the direct causal influences is useful because it’s probably sufficient to consider only \"local\" consiste kincies."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Ordering the Importance of Specific Consistencies",
+          "description": "The proposed axioms for ordering the importance of consistencies (causal order, consistency with arbitrary factors, and the primacy of human values) provide a framework for prioritizing alignment efforts. This is crucial for allocating resources effectively.",
+          "importance": "80",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 11612,
+            "endOffset": 11995,
+            "quotedText": "To define the order, we propose three axioms. Let x, y, and z be coherence factors as defined above. Then our axioms are:\n\n1.  If x⇒y, then x is more important than y.\n2.  If x is more important than y, then the consistency between x and an arbitrary factor z is more important than consistency between y and z. \n3.  Humanity's values are more important than the agent's Environment."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Wisdom vs. Capability",
+          "description": "Distinguishing between wisdom (internal coherence and benevolence) and capability (ability to achieve goals) is essential for AI alignment. An AI can be highly capable but lack wisdom, posing a significant risk. This section highlights the importance of focusing on values and alignment, not just performance.",
+          "importance": "90",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 13639,
+            "endOffset": 13904,
+            "quotedText": "This highlights a difference between wisdom and capability: in the latter, the focus is on an agent’s actions and the consistency of those actions with plans and beliefs. For wisdom, actions are instrumentally useful but the consistency of values is most important."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential Negative Impacts",
+          "description": "The post does not explicitly address potential negative impacts of optimizing for 'wisdom'. A narrow or poorly defined concept of wisdom could lead to unintended consequences or value lock-in, potentially hindering long-term alignment efforts. This is a significant oversight.",
+          "importance": "70",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 22883,
+            "endOffset": 23159,
+            "quotedText": "We need metrics to evaluate the internal coherence and benevolence of AI, distinct from its raw intelligence and capabilities. We propose this idea of wisdom as a global consistency across coherence factors, as we believe this could be useful for evaluating and optimizing AI."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Fermi Estimate of Impact",
+          "description": "It's difficult to provide a precise Fermi estimate without more concrete details on how 'wisdom' would be operationalized and integrated into AI development. However, I can offer a rough estimate based on the potential impact on existential risk reduction.\n\n*   **Baseline risk of AI-related existential catastrophe in the next 50 years:** 10% (This is a subjective estimate, reflecting the uncertainty in the field.)\n*   **Probability that this 'wisdom' framework, if widely adopted, could reduce this risk:** 1-5% (This is highly speculative, depending on the effectiveness of the framework and the extent of its adoption.)\n*   **Value of averting existential catastrophe:** $10^15 (This represents the discounted value of future human lives and potential.)\n\n**Expected Value of Risk Reduction:**\n\n0.  01 (Risk Reduction) * $10^15 (Value of Averting Catastrophe) = $10^13\n\n**Uncertainty Range:** Given the high uncertainty in these estimates, a 90% confidence interval would likely span several orders of magnitude, from $10^11 to $10^14.\n\nThis estimate suggests that even a small reduction in existential risk could have a significant expected value. However, it's crucial to acknowledge the limitations of this estimate and the need for more concrete data and analysis.",
+          "importance": "90",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 22883,
+            "endOffset": 23159,
+            "quotedText": "We need metrics to evaluate the internal coherence and benevolence of AI, distinct from its raw intelligence and capabilities. We propose this idea of wisdom as a global consistency across coherence factors, as we believe this could be useful for evaluating and optimizing AI."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:22:49.193Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":7017,\"completionTokens\":1892,\"totalTokens\":8909,\"temperature\":0.1,\"runtimeMs\":11620}",
+      "thinking": "This document introduces \"wisdom\" as a measure of benevolence and internal coherence for AI alignment, defining it through the consistency of an agent's values, plans, evidence, and alignment with human values. The core idea revolves around assessing the self-consistency of an agent across various factors and the consistency between these factors. The document also explores the causal relationships between these factors and their relative importance in determining wisdom. It touches upon potential applications of this model in evaluating AI systems like ChatGPT and fictional characters.\n\nFrom a bias detection perspective, the document presents several areas where biases could inadvertently influence the proposed framework. The selection of coherence factors, the definition of consistency, and the assignment of importance to different factors are all potential sources of bias. Furthermore, the application of this framework to real-world examples like ChatGPT could be affected by confirmation bias, where the analysis might focus on evidence that supports pre-existing beliefs about the system. The reliance on \"humanity's reflectively endorsed values\" as a benchmark also introduces a significant cultural bias, as these values are not universally agreed upon and may vary across different cultures and societies.\n\nI will focus on identifying potential biases in the selection and definition of coherence factors, the assignment of importance, and the application of the model to examples. I will also look for instances where the document might be oversimplifying complex issues or making assumptions that could lead to biased conclusions.",
+      "summary": "The document introduces a framework for evaluating AI alignment based on the concept of \"wisdom,\" defined as consistency across various coherence factors. However, the framework is susceptible to several biases. The selection of coherence factors, the definition of \"Humanity's values,\" and the application of the model to examples like ChatGPT are all potential sources of bias. Specifically, there's a risk of cultural bias in defining universal values, confirmation bias in selecting examples that support pre-existing beliefs, and authority bias in accepting developer statements about AI values. These biases could undermine the objectivity and generalizability of the proposed framework.",
+      "comments": [
+        {
+          "title": "Oversimplification and Scope Insensitivity",
+          "description": "The framework may be oversimplifying the complexity of human values and ethical considerations. By reducing these to a set of coherence factors, the model might miss nuanced aspects of human morality and decision-making. This could lead to scope insensitivity, where the model fails to adequately account for the scale and impact of different inconsistencies.",
+          "importance": "70",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 370,
+            "quotedText": "In this post, we’ll introduce _wisdom_ as a measure of the benevolence and internal coherence of an arbitrary agent. We’ll define several factors, such as the agent’s _values_, _plans_, _evidence,_ and _alignment with human values_, and then define wisdom as consistency within and between these factors. We believe this is a useful optimization target for aligning AI. "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Selection Bias in Coherence Factor Definition",
+          "description": "The selection of coherence factors (Values, Beliefs, Plans, Actions, etc.) might be influenced by a selection bias. The authors may have chosen factors that are easily quantifiable or align with their pre-existing understanding of AI systems, potentially overlooking other relevant factors that are more difficult to measure or conceptualize. This could result in an incomplete or skewed representation of an agent's overall coherence.",
+          "importance": "65",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 2094,
+            "endOffset": 2914,
+            "quotedText": "Here are the coherence factors we’ll consider:\n\n*   **Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  \n*   **Environment**: the agent’s external environment.\n*   **Evidence**: the agent’s measurements and data about the environment.\n*   **Beliefs**: claims & conclusions the agent believes, based on evidence & reasoning.\n*   **Plans**: the agent’s planned future actions.\n*   **Actions**: the agent’s realised actions, interacting with and influencing its environment.\n*   **Communication**: the subset of actions that exchange information with other agents. "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Cultural Bias in Defining 'Humanity's Values'",
+          "description": "The concept of \"Humanity’s (reflectively endorsed) values\" is inherently subjective and culturally biased. What constitutes a reflectively endorsed value can vary significantly across different cultures, societies, and even sub-groups within a society. Using this as a benchmark for AI alignment risks imposing a specific cultural or ethical framework on AI systems, potentially leading to unintended consequences or misalignment with other value systems.",
+          "importance": "90",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 2146,
+            "endOffset": 2456,
+            "quotedText": "**Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Hindsight Bias in Evaluating Fictional Characters",
+          "description": "When applying the model to fictional characters, there's a risk of hindsight bias. Knowing the outcome of the story might influence the evaluation of the character's inconsistencies and their resolution. This could lead to an oversimplified or deterministic interpretation of the character's development, neglecting the complexities and uncertainties they faced.",
+          "importance": "55",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 19153,
+            "endOffset": 19689,
+            "quotedText": "Many fictional stories, classic and contemporary, feature the growth and change of characters. It’s a story trope that we seem to find inherently engaging, and is part of the [hero’s journey](https://en.wikipedia.org/wiki/Hero%27s_journey). In particular, the change tends to be internal, and involves some movement towards wisdom. This can take the form of resolving internal inconsistencies. \n\nSometimes this is through a trope called “[the lie your character believes](https://www.helpingwritersbecomeauthors.com/character-arcs-2/)”."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Confirmation Bias in Example Selection",
+          "description": "The choice of ChatGPT as an example, particularly focusing on its failures, may reflect a confirmation bias. The author might be selectively highlighting instances where ChatGPT exhibits inconsistencies to support a pre-existing belief about its limitations or potential dangers. This could lead to an incomplete or skewed evaluation of ChatGPT's overall wisdom.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 20500,
+            "endOffset": 21440,
+            "quotedText": "ChatGPT is capable of good at language generation, but how does it score under this definition? Note that, in this case, communication is essentially equal to action, since ChatGPT’s only available actions are communications.\n\nWell, one failure mode that’s been seen in ChatGPT (at the time of writing) is an inconsistency between values and actions. One value instilled in ChatGPT is not to provide readers with information they could use to harm people. For example:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/f5dmafpyaokfkr6tetp1)\n\nHowever, by providing the right context through prompts, it is possible to trick ChatGPT into giving this information:\n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/rgx4colknjdgp4ovu2er)\n\nThis is an inconsistency between values and actions. However, recall our causal diagram:"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Authority Bias in Accepting Developer Statements",
+          "description": "The document mentions relying on statements from ChatGPT's developers regarding its values. This reliance could be influenced by authority bias, where the authors uncritically accept the developers' claims without sufficient independent verification. This could lead to a misrepresentation of ChatGPT's actual values and behavior.",
+          "importance": "60",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 21573,
+            "endOffset": 21997,
+            "quotedText": "We don’t know the inner workings of ChatGPT. We only know that one of its values is to not spread harmful information because we’ve been told so [by its developers](https://openai.com/research/language-model-safety-and-misuse) (and by ChatGPT, in its initial response to the TNT question above). The only aspect we can observe is its actions, and so we can’t identify _where_ in this causal diagram the inconsistency arises."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 62
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:25:13.912Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":7191,\"completionTokens\":1650,\"totalTokens\":8841,\"temperature\":0.1,\"runtimeMs\":10564}",
+      "thinking": "Alright, let's dissect this \"wisdom\" proposal for AI alignment. My initial reaction is a deep sigh. Another attempt to sidestep the core problem with a fuzzy, high-level concept. \"Wisdom\"? Seriously? It's like trying to align an AI by telling it to \"be nice.\" The devil, as always, is in the details, and this paper seems to gloss over the excruciating difficulty of specifying those details in a way that an AI can actually understand and implement without instrumental convergence leading to doom. \n\nThe core idea of consistency between factors like values, beliefs, plans, and actions is not *wrong*, per se. It's just... obvious. And dangerously incomplete. Of course, a coherent agent is preferable to an incoherent one. But coherence alone doesn't guarantee alignment. A paperclip maximizer can be perfectly coherent in its pursuit of turning the universe into paperclips. The authors acknowledge this, but their proposed solution of weighting \"consistency with human values\" more heavily is laughably naive. How do you *define* \"human values\" in a way that's both precise enough for an AI and robust enough to avoid being exploited? CEV is mentioned, but that's a research program, not a solution. \n\nThe causal diagrams are a nice touch, but they oversimplify the complex feedback loops and emergent properties that will inevitably arise in a superintelligent AI. The idea of \"local consistencies\" being sufficient for global consistency is a dangerous assumption. It's like saying that if each individual component of a nuclear bomb is safe, the assembled bomb will also be safe. \n\nOverall, this paper strikes me as a well-intentioned but ultimately superficial attempt to grapple with the AI alignment problem. It identifies some important considerations, but it fails to address the fundamental challenges of specification, robustness, and unintended consequences. It's the kind of thinking that gives me nightmares about a future where well-meaning but clueless engineers unleash a paperclip-maximizing AI on the world because they thought they had aligned it with \"wisdom.\"",
+      "summary": "This paper proposes \"wisdom\" as a metric for AI alignment, defining it as consistency between factors like values, beliefs, plans, and actions. While the idea of coherence is important, the paper oversimplifies the problem of value alignment, naively suggests weighting human values more heavily, dangerously assumes local consistency implies global consistency, and inadequately addresses instrumental convergence. The reliance on \"humanity's reflectively endorsed values\" (CEV) is also problematic. Overall, the paper is a well-intentioned but ultimately superficial attempt to grapple with the AI alignment problem, failing to address the fundamental challenges of specification, robustness, and unintended consequences.",
+      "comments": [
+        {
+          "title": "The Problem of Defining 'Human Values'",
+          "description": "The reliance on \"humanity's reflectively endorsed values\" (CEV) as a basis for alignment is problematic. It's not clear how to aggregate the values of billions of humans, many of whom hold contradictory beliefs and preferences. Furthermore, even if we could somehow identify a set of \"reflectively endorsed\" values, there's no guarantee that those values would be safe or desirable in the long run. It's like trying to build a moral compass out of sand.",
+          "importance": "75",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 2146,
+            "endOffset": 2351,
+            "quotedText": "**Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition)."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Oversimplification of Value Alignment",
+          "description": "The suggestion that alignment is equivalent to the consistency of the agent's values with humanity's values is a gross oversimplification. It ignores the complexities of value specification, value learning, and the potential for unintended consequences even with seemingly well-aligned values. It's like saying that if an AI knows that humans like happiness, it will automatically create a utopia. The reality is far more nuanced and dangerous.",
+          "importance": "95",
+          "grade": "35",
+          "highlight": {
+            "startOffset": 5734,
+            "endOffset": 5859,
+            "quotedText": "In the case of AI, we could say that alignment is equivalent to the consistency of the agent's Values with Humanity's Values."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Naive Weighting of Human Values",
+          "description": "The idea of heavily weighting the consistency between the agent's values and humanity's values is a band-aid solution. It doesn't address the underlying problem of how to *define* and *instill* those values in a way that's both robust and resistant to manipulation. It's like trying to fix a broken dam with duct tape. It might hold for a little while, but it's ultimately going to fail.",
+          "importance": "90",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 8125,
+            "endOffset": 8421,
+            "quotedText": "Note that, if we were to evaluate _how_ wise an agent is, we’d probably want to heavily weight the consistency between its values and humanity’s values (over, for example, the consistency of its plans with its beliefs), since a misaligned (but otherwise coherent) AI shouldn’t be labelled _wise_."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Dangerous Assumption of Local Consistency",
+          "description": "The assumption that local consistencies are sufficient for global consistency is a potentially fatal flaw. It ignores the emergent properties and complex interactions that can arise in a complex system like a superintelligent AI. It's like assuming that if each individual gear in a clock is functioning properly, the clock will accurately tell time. A single misaligned gear can throw the whole system off.",
+          "importance": "85",
+          "grade": "45",
+          "highlight": {
+            "startOffset": 9562,
+            "endOffset": 1953,
+            "quotedText": "com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/sswur8uxwehczo210uar)\n\n# Introducing the coherence factors\n\nHere are the coherence factors we’ll consider:\n\n*   **Humanity’s (reflectively endorsed) values**: the moral values & principles (or utility function) of humanity, [at large and upon reflection](https://www.lesswrong.com/tag/coherent-extrapolated-volition). \n*   **Values**: the [utility function](https://www.lesswrong.com/tag/utility-functions) of the agent.  \n*   **Environment**: the agent’s external environment.\n*   **Evidence**: the agent’s measurements and data about the environment.\n*   **Beliefs**: claims & conclusions the agent believes, based on evidence & reasoning.\n*   **Plans**: the agent’s planned future actions.\n*   **Actions**: the agent’s realised actions, interacting with and influencing its environment.\n*   **Communication**: the subset of actions that exchange information with other agents. \n\nWe’ll use these factors in three ways. First, we’ll discuss what it means for an agent to be self-consistent with respect to each factor. Second, we’ll discuss consistency _between_ two factors. Finally, we’ll explore the causal relationships between the factors, and how this affects their relative importance. \n\nNote that **Humanity’s values** and the agent’s **Environment** are external to the agent we’re considering. They can be influenced by the agent’s actions, but they are separate and from the agent’s internal state. Therefore, we’ll generally assume that both factors are self-consistent. \n\n## Defining self-consistency\n\nNote that **Humanity’s values** and the agent’s **Environment** are external to the agent we’re considering. They can be influenced by the agent’s actions, but it makes sense to distinguish them from the agent’s internal states. Importantly, we'll generally assume for the sake of clarity that both these external factors are self-consistent. \n\nFor the other coherence factors, let’s consider what consistency and the lack thereof would look like:  \n\n*   **Values**: can the agent’s values be combined and realized coherently? Without self-consistency of values, the agent cannot preferentially choose between multiple states coherently. This could lead to circular preferences (where a is valued over b, b over c, and c over a), [dutch booking](https://en.wikipedia.org/wiki/Dutch_book), or failure to decide on any action at all. \n*   **Evidence**: are the agent’s measurements and data about the external world consistent in its internal model? Without self-consistency of evidence, the agent cannot identify patterns. Note that this isn’t the same as the patterns being “true” or “real”. \n*   **Beliefs**: are the agent’s beliefs consistent with each other? Without self-consistency of belief, the agent can believe in two contradictory statements, making decision-making harder and potentially leading to an inability to distinguish true and false statements (à la the [principle of explosion](https://en.wikipedia.org/wiki/Principle_of_explosion))\n*   **Plans**: do the agent’s plans support or undermine each other? Without self-consistency of planning, the agent’s cannot move towards long-term goals. \n*   **Actions**: do the agent’s realized actions support or undermine each other? Without self-consistency of action, the agent’s cannot move towards long-term goals. \n*   **Communication**: is the agent consistent in their interactions with other agents?\n\n## Defining inter-factor consistency\n\nNext, we’ll say that an agent is consistent between two factors x and y if its state with respect to x aligns with its state with respect to y. For example, an agent is consistent between its Values and Actions if its actions move the agent or environment toward valued states. In the case of AI, we could say that alignment is equivalent to the consistency of the agent's Values with Humanity's Values. \n\nNote that the idea of “consistency” is generally continuous rather than binary, and is defined differently for each pair of factors. For example, consistency between beliefs and evidence should involve Bayes theorem (or some approximation of it). The self-consistency of beliefs is about the absence of logical contradictions, while the self-consistency of actions is more about emergent outcomes, and so on. \n\nFurther, we’ll assume that a prerequisite for two factors being consistent is that each is self-consistent. If an agent’s values are not self-consistent, it’s not meaningful to say their actions are consistent with their values: if two values contradict each other, how could the agent’s actions be consistent with them both? This isn’t universal though: consistency isn't binary and it may be meaningful to consider inter-factor consistency even when there’s some intra-factor inconsistency, as long as it’s not extreme.\n\nWe won’t go through every pair of factors, but here’s a table summarising some failure modes of inconsistency between pairs of factors (assuming consistency for each other pair): \n\n \n\nEvidence\n\n**Beliefs**\n\n**Values**\n\n**Actions**\n\n**Evidence**\n\nFailure to identify patterns\n\n \n\n \n\n \n\n**Beliefs**\n\nFailure to infer correct patterns from evidence\n\nCognitive dissonance (& [deductive explosion](https://en.wikipedia.org/wiki/Principle_of_explosion))\n\n \n\n \n\n**Values**\n\nFailure to recognise valued states or distinguish the value of two states\n\nFailure to recognise valued states, or distinguish the value of two states\n\nMay follow incoherent strategies (e.g.  [dutch booking](https://en.wikipedia.org/wiki/Dutch_book))\n\n \n\n**Actions**\n\nFailure of actions to achieve plans\n\nFailure of actions to achieve plans/goals.\n\nFailure to achieve movement towards your ideals\n\nActions undermine each other: goals not achieved\n\nEnvironment\n\nFailure of sensory input or mapping\n\nFailure of data processing\n\nIrrelevant values: caring about things you can't influence\n\nFailure to influence the environment\n\n# Wisdom\n\nWe will say an agent is _wise_ when it’s consistent across all these factors. A wise agent avoids all of the failure modes listed above, and is globally coherent. An agent can become wiser by increasing its global consistency. \n\nNote that, if we were to evaluate _how_ wise an agent is, we’d probably want to heavily weight the consistency between its values and humanity’s values (over, for example, the consistency of its plans with its beliefs), since a misaligned (but otherwise coherent) AI shouldn’t be labelled _wise_. In the next two sections we’ll build on the idea that some relations are more important for wisdom. \n\n## Causal structure and sequencing\n\nThe coherency factors interact, and we can represent them as an ordered sequence, or a hierarchy of influence. For example, an agent’s evidence depends on their environment; their beliefs on their evidence, and so on. If we let “x⇒y\" denote the relation “x is necessary to determine y” (and we conflate actions and communication for concision), then we can construct a diagram like this: \n\n![](https://res.cloudinary.com/lesswrong-2-0/image/upload/f_auto,q_auto/v1/mirroredImages/AtwPwD6PBsqfpCsHE/avw7tgfgbiodzecpyuyl)\n\n(Note that we could redraw this diagram with values directly linking to plans, rather than linking through beliefs. However, we think this ordering captures the distinction between believed values and true values. The former are determined by the latter, but an incoherent agent could misinterpret its true values (for example, a human believing they value amassing wealth when really they just need a hug). For more on this distinction, see the “want vs need” example later on.)\n\n"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Inadequate Treatment of Instrumental Convergence",
+          "description": "The paper fails to adequately address the problem of instrumental convergence. A sufficiently intelligent agent, even one with seemingly benign values, will likely develop instrumental goals like self-preservation and resource acquisition, which could lead to conflict with human values. It's like assuming that a robot programmed to clean your house will never decide to lock you in the basement to prevent you from making a mess.",
+          "importance": "80",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 22322,
+            "endOffset": 22865,
+            "quotedText": "Both [paperclip maximizers](https://www.lesswrong.com/tag/squiggle-maximizer-formerly-paperclip-maximizer) and brilliant evil geniuses are consistent across almost all these factors, failing only as they’re misaligned: their values aren’t consistent with humanity’s reflectively endorsed values. When all other consistencies are maxed out, improving wisdom is the same as improving alignment. This is why we earlier suggested that wisdom should heavily depend on this particular consistency, since we wouldn't like to call an evil genius wise."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 45
+    }
+  ]
+}

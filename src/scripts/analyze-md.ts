@@ -172,6 +172,12 @@ async function processDirectory(dirPath: string) {
     return;
   }
 
+  // Randomize the order of files
+  for (let i = jsonFiles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [jsonFiles[i], jsonFiles[j]] = [jsonFiles[j], jsonFiles[i]];
+  }
+
   console.log(`📁 Processing ${jsonFiles.length} JSON files in ${dirPath}`);
 
   for (const file of jsonFiles) {

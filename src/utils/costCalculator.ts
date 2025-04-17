@@ -14,6 +14,13 @@ export const OPENROUTER_PRICING = {
     imageInput: 4.8, // $4.8 per thousand input images
     context: 200_000, // 200K context window
   },
+  // GPT-4.1
+  "openai/gpt-4.1": {
+    input: 2, // $2 per million input tokens
+    output: 8, // $8 per million output tokens
+    imageInput: 0, // No image input support
+    context: 1_050_000, // 1.05M context window
+  },
 } as const;
 
 export type ModelName = keyof typeof OPENROUTER_PRICING;

@@ -211,9 +211,12 @@ export async function analyzeDocument(
   try {
     // Load agent information
     const agentInfo = await loadAgentInfo(agentId);
-    const agentContext = agentInfo
-      ? `
-You are ${agentInfo.name} (${agentInfo.description}).
+    if (!agentInfo) {
+      throw new Error(`Agent "${agentId}" not found`);
+    }
+
+    const agentContext = `
+You are ${agentInfo.name}, ${agentInfo.description}.
 
 Your primary instructions are:
 ${agentInfo.genericInstructions}
@@ -232,8 +235,7 @@ ${agentInfo.summaryInstructions}
 
 Your comment instructions are:
 ${agentInfo.commentInstructions}
-`
-      : "";
+`;
 
     const targetWordCount = calculateTargetWordCount(document.content);
     const targetComments = calculateTargetComments(document.content);
