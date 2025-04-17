@@ -18,20 +18,31 @@ import {
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
-function getWordCountLevel(content: string): number {
+const WORD_COUNT_LEVELS = [
+  { threshold: 1000, color: "text-gray-400" },
+  { threshold: 5000, color: "text-gray-500" },
+  { threshold: 20000, color: "text-gray-600" },
+  { threshold: Infinity, color: "text-gray-700" },
+] as const;
+
+function getWordCountInfo(content: string) {
   const wordCount = content.split(/\s+/).length;
-  if (wordCount < 500) return 0;
-  if (wordCount < 2000) return 1;
-  if (wordCount < 10000) return 2;
-  return 3;
+  const level = WORD_COUNT_LEVELS.findIndex(
+    ({ threshold }) => wordCount < threshold
+  );
+  return {
+    level,
+    color: WORD_COUNT_LEVELS[level].color,
+    wordCount,
+  };
 }
 
 function WordCountIndicator({ content }: { content: string }) {
-  const level = getWordCountLevel(content);
-  const bars = Array.from({ length: 4 }, (_, i) => (
+  const { level } = getWordCountInfo(content);
+  const bars = Array.from({ length: level }, (_, i) => (
     <div
       key={i}
-      className={`w-0.5 ${i < level ? "bg-gray-500" : "bg-gray-100"}`}
+      className="w-0.5 bg-gray-500"
       style={{ height: `${(i + 1) * 3}px` }}
     />
   ));
@@ -174,14 +185,17 @@ export default function DocumentsPage() {
                         <div className="text-gray-300">•</div>
                         <div className="flex items-center gap-1">
                           <WordCountIndicator content={document.content} />
-                          <span>
+                          <span
+                            className={getWordCountInfo(document.content).color}
+                          >
                             {(() => {
-                              const words =
-                                document.content.split(/\s+/).length;
-                              if (words >= 1000) {
-                                return `${(words / 1000).toFixed(1)}k words`;
+                              const { wordCount } = getWordCountInfo(
+                                document.content
+                              );
+                              if (wordCount >= 1000) {
+                                return `${(wordCount / 1000).toFixed(1)}k words`;
                               }
-                              return `${words} words`;
+                              return `${wordCount} words`;
                             })()}
                           </span>
                         </div>
@@ -365,14 +379,17 @@ export default function DocumentsPage() {
                       <td className="w-32 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <WordCountIndicator content={document.content} />
-                          <span className="text-gray-500">
+                          <span
+                            className={getWordCountInfo(document.content).color}
+                          >
                             {(() => {
-                              const words =
-                                document.content.split(/\s+/).length;
-                              if (words >= 1000) {
-                                return `${(words / 1000).toFixed(1)}k`;
+                              const { wordCount } = getWordCountInfo(
+                                document.content
+                              );
+                              if (wordCount >= 1000) {
+                                return `${(wordCount / 1000).toFixed(1)}k`;
                               }
-                              return `${words}`;
+                              return `${wordCount}`;
                             })()}
                           </span>
                         </div>
