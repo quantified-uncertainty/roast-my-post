@@ -39,9 +39,9 @@ export default function DocumentsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+      {/* View Toggle - Keep in container */}
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* View Toggle */}
           <div className="mb-8 flex justify-center">
             <div className="inline-flex rounded-lg bg-gray-100 p-1">
               <button
@@ -68,9 +68,14 @@ export default function DocumentsPage() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Card View */}
-          {viewMode === "cards" && (
+      {/* Content Section */}
+      {viewMode === "cards" ? (
+        // Card View - Keep in container
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-0">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {documentsCollection.documents.map((document) => {
                 // Count reviews by agent
@@ -190,29 +195,33 @@ export default function DocumentsPage() {
                 );
               })}
             </div>
-          )}
-
-          {/* Table View */}
-          {viewMode === "table" && (
-            <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
+          </div>
+        </div>
+      ) : (
+        // Table View - Full width
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1200px] px-8">
+              {" "}
+              {/* Minimum width to prevent squishing */}
+              <table className="w-full divide-y divide-gray-200 rounded-lg border border-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th
                       scope="col"
-                      className="max-w-[300px] px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                      className="max-w-[300px] border-b border-gray-200 px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                     >
                       Title
                     </th>
                     <th
                       scope="col"
-                      className="w-32 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                      className="w-32 border-b border-gray-200 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                     >
                       Author
                     </th>
                     <th
                       scope="col"
-                      className="w-32 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                      className="w-32 border-b border-gray-200 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                     >
                       Date
                     </th>
@@ -220,7 +229,7 @@ export default function DocumentsPage() {
                       <th
                         key={evaluator}
                         scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                        className="border-b border-gray-200 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
                       >
                         {evaluator}
                       </th>
@@ -230,7 +239,7 @@ export default function DocumentsPage() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {documentsCollection.documents.map((document) => (
                     <tr key={document.id} className="hover:bg-gray-50">
-                      <td className="max-w-[300px] px-4 py-4 whitespace-nowrap">
+                      <td className="max-w-[300px] border-b border-gray-200 px-4 py-4 whitespace-nowrap">
                         <Link
                           href={`/docs/${document.slug}`}
                           className="block truncate text-blue-600 hover:text-blue-900"
@@ -238,10 +247,10 @@ export default function DocumentsPage() {
                           {document.title}
                         </Link>
                       </td>
-                      <td className="w-32 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                      <td className="w-32 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                         {document.author}
                       </td>
-                      <td className="w-32 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                      <td className="w-32 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                         {new Date(document.publishedDate).toLocaleDateString(
                           "en-US",
                           {
@@ -260,7 +269,7 @@ export default function DocumentsPage() {
                         return (
                           <td
                             key={evaluator}
-                            className="px-6 py-4 text-sm whitespace-nowrap"
+                            className="border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap"
                           >
                             {review?.grade !== undefined && (
                               <span
@@ -286,9 +295,9 @@ export default function DocumentsPage() {
                 </tbody>
               </table>
             </div>
-          )}
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
