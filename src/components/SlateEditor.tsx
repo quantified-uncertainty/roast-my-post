@@ -175,11 +175,11 @@ const renderLeaf = ({
         data-tag={leaf.tag}
         id={`highlight-${leaf.tag}`}
         style={{
-          backgroundColor: `rgba(${parseInt(leaf.color.slice(0, 2), 16)}, ${parseInt(leaf.color.slice(2, 4), 16)}, ${parseInt(leaf.color.slice(4, 6), 16)}, ${leaf.tag === activeTag ? 0.5 : 0.3})`,
+          backgroundColor: `rgba(${parseInt(leaf.color.slice(0, 2), 16)}, ${parseInt(leaf.color.slice(2, 4), 16)}, ${parseInt(leaf.color.slice(4, 6), 16)}, ${leaf.tag === activeTag ? 0.8 : 0.3})`,
           borderRadius: "2px",
           boxShadow:
             leaf.tag === activeTag
-              ? "0 0 0 1px rgba(59, 130, 246, 0.3)"
+              ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
               : "none",
           transform: leaf.tag === activeTag ? "scale(1.01)" : "scale(1)",
           transformOrigin: "center",

@@ -25,18 +25,13 @@ export const COMMENT_COLORS = [
 
 // Base colors for non-grade comments
 const NON_GRADE_BASE_COLORS = [
-  "#3b82f6", // blue
-  "#10b981", // emerald
-  "#8b5cf6", // violet
-  "#f59e0b", // amber
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#84cc16", // lime
-  "#f97316", // orange
-  "#6366f1", // indigo
-  "#14b8a6", // teal
-  "#d946ef", // fuchsia
-  "#ef4444", // red
+  "#3b82f6", // blue-500
+  "#22c55e", // green-500
+  "#f59e0b", // amber-500
+  "#ec4899", // pink-500
+  "#06b6d4", // cyan-500
+  "#f97316", // orange-500
+  "#6366f1", // indigo-500
 ];
 
 /**

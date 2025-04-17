@@ -33,13 +33,6 @@ import {
 
 import SlateEditor from "./SlateEditor";
 
-function getReviewsWithGrades(reviews: DocumentReview[]) {
-  return reviews.filter((review) => {
-    const agent = evaluationAgents.find((a) => a.id === review.agentId);
-    return agent?.gradeInstructions && review.grade !== undefined;
-  });
-}
-
 function getGradePhrase(grade: number): string {
   if (grade >= 80) return "Strongly positive";
   if (grade >= 60) return "Positive";
@@ -314,10 +307,17 @@ export function DocumentWithEvaluations({
             comment.grade,
             comment.importance,
             true,
-            allImportances
+            allImportances,
+            index
           );
         } else {
-          map[index] = getCommentColorByGrade(undefined, undefined, false);
+          map[index] = getCommentColorByGrade(
+            undefined,
+            comment.importance,
+            false,
+            allImportances,
+            index
+          );
         }
         return map;
       },
