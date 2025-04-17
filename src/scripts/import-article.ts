@@ -53,9 +53,70 @@ function transformEAForumUrl(url: string): string {
 
 async function fetchArticle(url: string) {
   try {
-    // Transform EA Forum URLs to use forum-bots
-    url = transformEAForumUrl(url);
+    // Check if this is a LessWrong URL
+    if (url.includes("lesswrong.com")) {
+      // Extract the post ID from the URL
+      const postId = url.split("/posts/")[1]?.split("/")[0];
+      if (!postId) {
+        throw new Error("Could not extract post ID from LessWrong URL");
+      }
 
+      console.log(`📥 Fetching post ${postId} from LessWrong API...`);
+
+      const query = `
+        query GetPost {
+          post(input: { selector: { _id: "${postId}" } }) {
+            result {
+              _id
+              title
+              contents {
+                html
+              }
+              user {
+                displayName
+                username
+              }
+              postedAt
+            }
+          }
+        }
+      `;
+
+      const response = await axios.post(
+        "https://www.lesswrong.com/graphql",
+        { query },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+          },
+        }
+      );
+
+      if (!response.data.data?.post?.result) {
+        console.error("API Response:", JSON.stringify(response.data, null, 2));
+        throw new Error("Post not found in LessWrong API response");
+      }
+
+      const post = response.data.data.post.result;
+      console.log("📝 Post metadata:", {
+        title: post.title,
+        author: post.user.displayName,
+        date: post.postedAt,
+      });
+
+      return {
+        html: post.contents.html,
+        title: post.title,
+        author: post.user.displayName || post.user.username,
+        date: post.postedAt,
+      };
+    }
+
+    // For non-LessWrong URLs, use the existing scraping logic
+    url = transformEAForumUrl(url);
     const response = await axios.get(url, {
       headers: {
         "User-Agent":
@@ -73,39 +134,12 @@ async function fetchArticle(url: string) {
         "Cache-Control": "max-age=0",
       },
     });
-    const html = response.data;
-
-    // Check if this is a linkpost by looking for the linkpost text and URL
-    const dom = new JSDOM(html);
-    const linkpostText = dom.window.document.querySelector("p")?.textContent;
-    if (linkpostText?.startsWith("This is a linkpost for")) {
-      // Extract the original URL from the linkpost text
-      const linkMatch = linkpostText.match(/\[([^\]]+)\]/);
-      if (linkMatch) {
-        const originalUrl = linkMatch[1];
-        console.log(`📎 Found linkpost, original URL: ${originalUrl}`);
-
-        // If the URL is a forum-bots redirect URL, extract the actual URL from the query parameter
-        if (originalUrl.includes("forum-bots.effectivealtruism.org/out")) {
-          const redirectUrl = new URL(originalUrl);
-          const actualUrl = decodeURIComponent(
-            redirectUrl.searchParams.get("url") || ""
-          );
-          if (actualUrl) {
-            console.log(`🔄 Following redirect to: ${actualUrl}`);
-            const originalResponse = await axios.get(actualUrl);
-            return originalResponse.data;
-          }
-        }
-
-        // If not a redirect URL, fetch directly
-        console.log(`📥 Fetching from original URL...`);
-        const originalResponse = await axios.get(originalUrl);
-        return originalResponse.data;
-      }
-    }
-
-    return html;
+    return {
+      html: response.data,
+      title: null,
+      author: null,
+      date: null,
+    };
   } catch (error) {
     console.error("Error fetching article:", error);
     process.exit(1);
@@ -440,28 +474,40 @@ async function cleanContentWithLLM(
   try {
     console.log("🤖 Cleaning content with LLM...");
 
-    const prompt = `Clean up and format this content to be more readable and remove any platform-specific formatting. 
+    // Split content into chunks of roughly 2000 words
+    const chunks = markdownContent.match(/[^]{1,8000}/g) || [];
+    console.log(`🔄 Processing ${chunks.length} chunks...`);
+
+    const cleanedChunks = await Promise.all(
+      chunks.map(async (chunk, index) => {
+        const prompt = `Clean up and format this content (part ${index + 1} of ${chunks.length}) to be more readable and remove any platform-specific formatting. 
 Keep the core message intact but remove any UI elements, comments, reactions, or other platform-specific content.
 The content is from a post titled "${title}".
 
 Content to clean:
-${markdownContent}
+${chunk}
 
 Return ONLY the cleaned content, nothing else.`;
 
-    const response = await openai.chat.completions.create({
-      model: SEARCH_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.1,
-      max_tokens: 1000,
-    });
+        const response = await openai.chat.completions.create({
+          model: SEARCH_MODEL,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.1,
+          max_tokens: 4000,
+        });
 
-    const cleanedContent = response.choices[0]?.message?.content?.trim();
-    if (!cleanedContent) {
-      throw new Error("Empty LLM response");
-    }
+        const cleanedChunk = response.choices[0]?.message?.content?.trim();
+        if (!cleanedChunk) {
+          throw new Error(`Empty LLM response for chunk ${index + 1}`);
+        }
 
-    return cleanedContent;
+        console.log(`✅ Processed chunk ${index + 1} of ${chunks.length}`);
+        return cleanedChunk;
+      })
+    );
+
+    // Combine the cleaned chunks
+    return cleanedChunks.join("\n\n");
   } catch (error) {
     console.error("❌ Error cleaning content with LLM:", error);
     return markdownContent; // Fallback to original content
@@ -480,7 +526,7 @@ async function saveArticle(data: any) {
 async function main() {
   try {
     console.log(`📥 Fetching article from ${url}...`);
-    const html = await fetchArticle(url);
+    const { html, title, author, date } = await fetchArticle(url);
 
     console.log("🔍 Parsing HTML...");
     const dom = new JSDOM(html, {
@@ -490,7 +536,12 @@ async function main() {
     });
 
     console.log("📝 Extracting metadata...");
-    const { title, author, date, platforms } = await extractMetadata(dom);
+    const {
+      title: extractedTitle,
+      author: extractedAuthor,
+      date: extractedDate,
+      platforms,
+    } = await extractMetadata(dom);
 
     console.log("📄 Extracting content...");
     const contentHtml = extractContent(dom);
@@ -499,40 +550,52 @@ async function main() {
     const markdownContent = convertToMarkdown(contentHtml);
 
     console.log("🧹 Cleaning content with LLM...");
-    const cleanedContent = await cleanContentWithLLM(markdownContent, title);
+    const cleanedContent = await cleanContentWithLLM(
+      markdownContent,
+      title || extractedTitle || "Untitled Article"
+    );
 
-    // Extract a better title from the content if needed
-    let finalTitle = title;
-    const contentLines = cleanedContent
-      .split("\n")
-      .filter((line) => line.trim());
+    // First try to get title from API or metadata
+    let finalTitle = title || extractedTitle;
 
-    // Skip any lines that look like generic titles (e.g., "Name's Post", dates, etc.)
-    let startIndex = 0;
-    while (
-      startIndex < contentLines.length &&
-      (contentLines[startIndex].match(/^[A-Z][a-z]+(?: [A-Z][a-z]+)*'s Post/) ||
-        contentLines[startIndex].match(/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/) ||
-        contentLines[startIndex].match(
-          /^(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?$/
+    // If no title is available, try to extract from content
+    if (!finalTitle) {
+      const contentLines = cleanedContent
+        .split("\n")
+        .filter((line) => line.trim());
+
+      // Skip any lines that look like generic titles
+      let startIndex = 0;
+      while (
+        startIndex < contentLines.length &&
+        (contentLines[startIndex].match(
+          /^[A-Z][a-z]+(?: [A-Z][a-z]+)*'s Post/
         ) ||
-        contentLines[startIndex].trim().length < 10)
-    ) {
-      startIndex++;
-    }
+          contentLines[startIndex].match(/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/) ||
+          contentLines[startIndex].match(
+            /^(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?$/
+          ) ||
+          contentLines[startIndex].trim().length < 10)
+      ) {
+        startIndex++;
+      }
 
-    // Get the first real content line
-    if (startIndex < contentLines.length) {
-      finalTitle = contentLines[startIndex]
-        .split(/[.!?]/) // Split on sentence endings
-        .filter((s) => s.trim().length > 0)[0] // Take first non-empty sentence
-        .trim();
+      // Get the first real content line
+      if (startIndex < contentLines.length) {
+        finalTitle = contentLines[startIndex]
+          .split(/[.!?]/) // Split on sentence endings
+          .filter((s) => s.trim().length > 0)[0] // Take first non-empty sentence
+          .trim();
 
-      // If title is too long, truncate it
-      if (finalTitle.length > 100) {
-        finalTitle = finalTitle.substring(0, 97) + "...";
+        // If title is too long, truncate it
+        if (finalTitle.length > 100) {
+          finalTitle = finalTitle.substring(0, 97) + "...";
+        }
       }
     }
+
+    // If we still don't have a title, use a default
+    finalTitle = finalTitle || "Untitled Article";
 
     // Generate a unique ID based on the title
     let id = finalTitle
@@ -546,7 +609,8 @@ async function main() {
     }
 
     // Extract author from Facebook URL if it's a Facebook post
-    let finalAuthor = options.author || author;
+    let finalAuthor =
+      options.author || author || extractedAuthor || "Unknown Author";
     if (url.includes("facebook.com") && url.includes("/posts/")) {
       try {
         const urlObj = new URL(url);
@@ -569,7 +633,8 @@ async function main() {
       slug: id,
       title: finalTitle,
       author: finalAuthor,
-      publishedDate: date,
+      publishedDate:
+        extractedDate || date || new Date().toISOString().split("T")[0],
       url,
       platforms,
       intendedAgents: options.intendedAgents || [

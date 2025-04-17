@@ -69,15 +69,8 @@ export default function AgentsList({ agents }: AgentsListProps) {
                     href={`/agents/${agent.id}-${agent.version.replace(".", "-")}`}
                     className="group block"
                   >
-                    <div className="h-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
-                      <div className="mb-4 flex items-center gap-3">
-                        <div
-                          className={`rounded-lg bg-${typeInfo.color}-100 p-2`}
-                        >
-                          <AgentIconComponent
-                            className={`h-6 w-6 text-${typeInfo.color}-600`}
-                          />
-                        </div>
+                    <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                      <div className="mb-2 flex items-center gap-3">
                         <div>
                           <h3 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
                             {agent.name}
@@ -89,36 +82,9 @@ export default function AgentsList({ agents }: AgentsListProps) {
                         </div>
                       </div>
 
-                      <p className="mb-4 line-clamp-2 text-gray-700">
+                      <p className="line-clamp-2 text-gray-700">
                         {agent.description}
                       </p>
-
-                      <div className="mt-4">
-                        <p className="mb-1 text-sm font-medium text-gray-700">
-                          Capabilities:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {agent.capabilities
-                            .slice(0, 2)
-                            .map((capability: string, index: number) => (
-                              <span
-                                key={index}
-                                className="inline-block rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800"
-                              >
-                                {capability}
-                              </span>
-                            ))}
-                          {agent.capabilities.length > 2 && (
-                            <span className="inline-block px-2 py-1 text-xs text-gray-500">
-                              +{agent.capabilities.length - 2} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 text-sm font-medium text-blue-600 group-hover:text-blue-800">
-                        View agent details →
-                      </div>
                     </div>
                   </Link>
                 );

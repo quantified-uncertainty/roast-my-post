@@ -16,7 +16,7 @@
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
     "test": "jest",
-    "import-article": "tsx src/scripts/import-article.ts https://www.facebook.com/ozzie.gooen/posts/pfbid06RCVM8KFn722YtJ6yJGstWDb5dZmM4S2UQSLJvx47ZGMUBG5tcKdMMrHytWpZB5bl && npm run generate-docs",
+    "import-article": "tsx src/scripts/import-article.ts https://www.lesswrong.com/posts/njAZwT8nkHnjipJku/alignment-faking-in-large-language-models && npm run generate-docs",
     "verify-highlights": "tsx src/scripts/verify-highlights.ts --dir ./src/data/docs"
   },
   "dependencies": {
