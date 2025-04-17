@@ -30,6 +30,12 @@ export default function RootLayout({
               <Link href="/agents" className="text-white hover:text-gray-200">
                 Agents
               </Link>
+              <Link
+                href="/self-ranking"
+                className="text-white hover:text-gray-200"
+              >
+                Self-Ranking
+              </Link>
             </nav>
           </div>
         </header>
