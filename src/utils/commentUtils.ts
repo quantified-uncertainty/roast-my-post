@@ -157,30 +157,33 @@ export function getCommentColorByGrade(
   return getColorStyle(baseColor, importance, allImportances);
 }
 
-export function getGradeColor(grade: number): {
-  background: string;
-  color: string;
-} {
-  const colorScale = chroma
-    .scale([
-      "#e74c3c", // Red (0)
-      "#f39c12", // Orange (30)
-      "#f1c40f", // Yellow (45)
-      "#7f8c9d", // Blue-gray (55)
-      "#16a085", // Blue-green (70)
-      "#2ecc71", // Bright green (90+)
-    ])
-    .domain([0, 30, 45, 55, 70, 90])
-    .mode("lch");
-
-  const bgColor = colorScale(grade);
-  // Use white text for darker backgrounds, black for lighter ones
-  const textColor = bgColor.luminance() < 0.5 ? "#ffffff" : "#000000";
-
-  return {
-    background: bgColor.hex(),
-    color: textColor,
-  };
+export function getGradeColor(grade: number) {
+  if (grade >= 80) {
+    return {
+      backgroundColor: "rgba(34, 197, 94, 0.1)",
+      color: "rgb(21, 128, 61)",
+    };
+  } else if (grade >= 60) {
+    return {
+      backgroundColor: "rgba(34, 197, 94, 0.05)",
+      color: "rgb(22, 163, 74)",
+    };
+  } else if (grade >= 40) {
+    return {
+      backgroundColor: "rgba(234, 179, 8, 0.1)",
+      color: "rgb(113, 113, 122)",
+    };
+  } else if (grade >= 20) {
+    return {
+      backgroundColor: "rgba(249, 115, 22, 0.05)",
+      color: "rgb(194, 65, 12)",
+    };
+  } else {
+    return {
+      backgroundColor: "rgba(239, 68, 68, 0.1)",
+      color: "rgb(185, 28, 28)",
+    };
+  }
 }
 
 const GRADE_SCALE = [

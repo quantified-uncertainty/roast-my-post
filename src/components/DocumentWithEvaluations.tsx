@@ -39,6 +39,14 @@ function getReviewsWithGrades(reviews: DocumentReview[]) {
   });
 }
 
+function getGradePhrase(grade: number): string {
+  if (grade >= 80) return "Strongly positive";
+  if (grade >= 60) return "Positive";
+  if (grade >= 40) return "Neutral";
+  if (grade >= 20) return "Negative";
+  return "Strongly negative";
+}
+
 interface CommentsSidebarProps {
   comments: Comment[];
   activeTag: string | null;
@@ -76,15 +84,19 @@ function CommentsSidebar({
           return (
             <div
               key={tag}
-              className="cursor-pointer hover:bg-gray-50"
+              className={`transition-all duration-200 ${
+                expandedTag === tag ? "shadow-sm" : "hover:bg-gray-50"
+              }`}
               onMouseEnter={() => onTagHover(tag)}
               onMouseLeave={() => onTagHover(null)}
               onClick={() => onTagClick(tag)}
             >
-              <div className="px-4 py-3">
+              <div
+                className={`px-4 py-3 ${expandedTag === tag ? "border-l-2 border-blue-400" : ""}`}
+              >
                 <div className="flex items-start gap-3">
                   <div
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium select-none"
+                    className={`} flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium transition-all duration-200 select-none`}
                     style={{
                       backgroundColor: commentColorMap[index].background,
                       color: commentColorMap[index].color,
@@ -94,7 +106,9 @@ function CommentsSidebar({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-medium text-gray-900">
+                      <h3
+                        className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
+                      >
                         {comment.title}
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
@@ -120,25 +134,35 @@ function CommentsSidebar({
                             <StarIcon className="h-4 w-4 text-gray-300" />
                           )}
                         <ChevronLeftIcon
-                          className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            expandedTag === tag
+                              ? "-rotate-90 text-gray-400"
+                              : "text-gray-300"
+                          }`}
                         />
                       </div>
                     </div>
                     {comment.description && (
                       <div
-                        className={`mt-1 text-gray-600 ${isExpanded ? "" : "line-clamp-1"}`}
+                        className={`mt-1 ${
+                          expandedTag === tag
+                            ? "text-gray-800"
+                            : "line-clamp-1 text-gray-600"
+                        }`}
                       >
                         {comment.description}
-                        {isExpanded && (
+                        {expandedTag === tag && (
                           <div className="mt-2 text-xs text-gray-400">
                             {comment.grade !== undefined && (
                               <span className="mr-4">
                                 Grade:{" "}
                                 <span className="font-medium">
-                                  <span style={getGradeColor(comment.grade)}>
-                                    {comment.grade}
+                                  <span
+                                    className="rounded-full px-2 py-0.5 text-sm"
+                                    style={getGradeColor(comment.grade)}
+                                  >
+                                    {getGradePhrase(comment.grade)}
                                   </span>
-                                  <span className="text-gray-400">/100</span>
                                 </span>
                               </span>
                             )}
