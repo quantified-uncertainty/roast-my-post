@@ -198,40 +198,39 @@ export function getGradeColorWeak(grade: number) {
   }
 }
 
-export function getGradeColorStrong(grade: number): string {
-  if (grade >= 80) {
-    return "bg-green-600 text-white";
-  } else if (grade >= 60) {
-    return "bg-green-500 text-white";
-  } else if (grade >= 40) {
-    return "bg-gray-500 text-white";
-  } else if (grade >= 20) {
-    return "bg-orange-600 text-white";
-  } else {
-    return "bg-red-600 text-white";
-  }
-}
-
-const GRADE_SCALE = [
-  { threshold: 95, letter: "A+" },
-  { threshold: 87, letter: "A" },
-  { threshold: 80, letter: "A-" },
-  { threshold: 77, letter: "B+" },
-  { threshold: 73, letter: "B" },
-  { threshold: 70, letter: "B-" },
-  { threshold: 67, letter: "C+" },
-  { threshold: 63, letter: "C" },
-  { threshold: 60, letter: "C-" },
-  { threshold: 50, letter: "E" },
-  { threshold: 40, letter: "E-" },
-  { threshold: 30, letter: "F" },
-  { threshold: 20, letter: "F-" },
-  { threshold: 10, letter: "F-" },
-  { threshold: 0, letter: "F--" },
+const GRADES = [
+  { threshold: 95, letter: "A+", bg: "#22c55e" }, // Vibrant green
+  { threshold: 87, letter: "A", bg: "#16a34a" }, // Strong green
+  { threshold: 80, letter: "A-", bg: "#15803d" }, // Deep green
+  { threshold: 77, letter: "B+", bg: "#65a30d" }, // Lime green
+  { threshold: 73, letter: "B", bg: "#5b8c1a" }, // Olive green
+  { threshold: 70, letter: "B-", bg: "#4d7c0f" }, // Dark olive
+  { threshold: 67, letter: "C+", bg: "#f59e0b" }, // Amber
+  { threshold: 63, letter: "C", bg: "#ea580c" }, // Orange
+  { threshold: 60, letter: "C-", bg: "#c2410c" }, // Dark orange
+  { threshold: 50, letter: "E", bg: "#b45309" }, // Brown orange
+  { threshold: 40, letter: "E-", bg: "#9a3412" }, // Red brown
+  { threshold: 30, letter: "F", bg: "#dc2626" }, // Bright red
+  { threshold: 20, letter: "F-", bg: "#b91c1c" }, // Strong red
+  { threshold: 10, letter: "F-", bg: "#991b1b" }, // Deep red
+  { threshold: 0, letter: "F--", bg: "#7f1d1d" }, // Dark red
 ] as const;
 
+export interface GradeStyle {
+  style: { backgroundColor: string };
+  className: string;
+}
+
 export function getLetterGrade(grade: number): string {
-  return (
-    GRADE_SCALE.find(({ threshold }) => grade >= threshold)?.letter || "F--"
-  );
+  return GRADES.find(({ threshold }) => grade >= threshold)?.letter || "F--";
+}
+
+export function getGradeColorStrong(grade: number): GradeStyle {
+  const gradeInfo =
+    GRADES.find(({ threshold }) => grade >= threshold) ||
+    GRADES[GRADES.length - 1];
+  return {
+    style: { backgroundColor: gradeInfo.bg },
+    className: "text-white",
+  };
 }

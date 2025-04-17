@@ -246,7 +246,8 @@ function ReviewSelector({
                     <div className="flex items-center gap-3">
                       {hasGradeInstructions && grade !== undefined && (
                         <span
-                          className={`rounded-sm px-1.5 text-xs font-medium ${getGradeColorStrong(grade)}`}
+                          className={`rounded-sm px-1.5 text-xs font-medium ${getGradeColorStrong(grade).className}`}
+                          style={getGradeColorStrong(grade).style}
                         >
                           {getLetterGrade(grade)}
                         </span>
@@ -444,7 +445,10 @@ export function DocumentWithEvaluations({
                           <div className="ml-4 flex items-center gap-1 text-sm">
                             <span className="text-gray-500">Grade:</span>
                             <span
-                              className={`rounded-sm px-2 text-sm ${getGradeColorStrong(activeReview.grade)}`}
+                              className={`rounded-sm px-2 text-sm ${getGradeColorStrong(activeReview.grade).className}`}
+                              style={
+                                getGradeColorStrong(activeReview.grade).style
+                              }
                             >
                               {getLetterGrade(activeReview.grade)}
                             </span>

@@ -110,7 +110,8 @@ export default function DocumentsPage() {
                               {agent?.name}
                               {hasGradeInstructions && grade !== undefined && (
                                 <span
-                                  className={`ml-1 rounded-sm px-1.5 ${getGradeColorStrong(grade)}`}
+                                  className={`ml-1 rounded-sm px-1.5 ${getGradeColorStrong(grade).className}`}
+                                  style={getGradeColorStrong(grade).style}
                                 >
                                   {getLetterGrade(grade)}
                                 </span>
