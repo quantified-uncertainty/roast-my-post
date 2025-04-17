@@ -124,9 +124,16 @@ const renderElement = ({ attributes, children, element }: any) => {
   }
 };
 
-const renderLeaf = ({ attributes, children, leaf }: any) => {
+const renderLeaf = ({
+  attributes,
+  children,
+  leaf,
+  activeTag,
+  onHighlightClick,
+  onHighlightHover,
+}: any) => {
   // Create a new set of attributes to avoid modifying the original
-  const leafAttributes = { ...attributes };
+  const leafAttributes = { ...attributes, onHighlightClick, onHighlightHover };
 
   let el = children;
 
@@ -150,12 +157,21 @@ const renderLeaf = ({ attributes, children, leaf }: any) => {
     el = (
       <span
         data-tag={leaf.tag}
+        id={leaf.isFirstSpan ? `highlight-${leaf.tag}` : undefined}
         style={{
           backgroundColor: `#${leaf.color}`,
           borderRadius: "0.25rem",
+          boxShadow:
+            leaf.tag === activeTag
+              ? "0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+              : "0 0 0 1px rgba(0, 0, 0, 0.05)",
+          transform: leaf.tag === activeTag ? "scale(1.02)" : "scale(1)",
+          transformOrigin: "center",
         }}
         className={
-          leaf.tag === leafAttributes.activeTag ? "ring-2 ring-blue-500" : ""
+          leaf.tag === activeTag
+            ? "cursor-pointer transition-all duration-200 ease-out"
+            : "cursor-pointer transition-all duration-200 ease-out hover:shadow-sm"
         }
         onClick={(e) => {
           e.preventDefault();
@@ -358,6 +374,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const ranges: any[] = [];
       const pathKey = path.join(".");
       const nodeInfo = nodeOffsets.get(pathKey);
+      const firstSpanMap = new Map<string, boolean>();
 
       if (!nodeInfo) return [];
 
@@ -427,7 +444,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               tag: highlight.tag || "",
               color: highlight.color || "yellow-200",
               isActive: highlight.tag === activeTag,
+              isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
             });
+            firstSpanMap.set(highlight.tag || "", true);
           }
 
           // 2. Try without markdown formatting (if not found)
@@ -457,7 +476,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 tag: highlight.tag || "",
                 color: highlight.color || "yellow-200",
                 isActive: highlight.tag === activeTag,
+                isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
               });
+              firstSpanMap.set(highlight.tag || "", true);
             }
           }
 
@@ -481,7 +502,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 tag: highlight.tag || "",
                 color: highlight.color || "yellow-200",
                 isActive: highlight.tag === activeTag,
+                isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
               });
+              firstSpanMap.set(highlight.tag || "", true);
               found = true;
             }
           }
@@ -515,7 +538,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               tag: highlight.tag || "",
               color: highlight.color || "yellow-200",
               isActive: highlight.tag === activeTag,
+              isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
             });
+            firstSpanMap.set(highlight.tag || "", true);
           }
         }
       }
