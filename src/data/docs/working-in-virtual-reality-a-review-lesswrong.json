@@ -14,5 +14,560 @@
     "ea-impact-evaluator"
   ],
   "content": "For the past three days, I started experimenting with working in Virtual Reality. I'm quite impressed. My guess is that it's not good for most people yet, but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup. The upper end is for people who get distracted easily or have a difficult time with SAD.\n\nThis feels like the most radical experiment I've made to my setup so far, so I'm quite happy with how it's worked out. I've used to dream of similar setups and it's really cool that the technology is basically there. I've given demos to a few people in my house who haven't been close to VR and their responses varied from fairly impressed to incredibly impressed. \n\nI'm fairly convinced that there's an extremely promising future for work in VR. The VR ecosystem seems to be improving much more quickly than the alternatives. It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\"\\[1\\] This could both lead to direct improvements and lead the way for radical rethinkings of what work setups are possible.\n\n## My Setup\n\nMy specific setup is an [Oculus Quest 2](https://en.wikipedia.org/wiki/Oculus_Quest_2) ($300), a 2016 Macbook Pro, and the application [Immersed VR](https://immersedvr.com/). Immersed works using WiFi. My router is around 15 feet away from my headset, and my computer is connected directly to the router via Ethernet. In the app I use two \"monitors\"; I downscale a 4K monitor to 2048x1280 and use a side monitor of 1920x1080. It's suggested to keep resolutions rather low both because the Oculus Quest 2 doesn't itself have a high resolution (1832×1920 per eye), and because higher resolution means higher latency. You can have up to five \"virtual\" monitors with Immersed, but I prefer one or two big ones.\n\n![](https://web.archive.org/web/20201124081412im_/https://scontent-sjc3-1.xx.fbcdn.net/v/t1.0-9/p843x403/126958103_10164328584940363_4025454557304811407_o.jpg?_nc_cat=107&ccb=2&_nc_sid=8bfeb9&_nc_ohc=G4IcxI8hp1wAX_8SLJd&_nc_ht=scontent-sjc3-1.xx&tp=6&oh=9ecdb9391a013ba1911123269910215b&oe=5FDBFCEB)\n\nThis is me editing this post. My setup is pretty simple when writing. I have a second screen on the right, but I'm not using it at the moment. I typically have the main screen a bit closer to me, but zoomed it out to make this image more interesting.\n\n![](https://web.archive.org/web/20201124081412im_/https://scontent-sjc3-1.xx.fbcdn.net/v/t1.0-9/127192022_10164338023400363_7864580482307129664_o.jpg?_nc_cat=105&ccb=2&_nc_sid=8bfeb9&_nc_ohc=nen31Qt3-RUAX93kX0V&_nc_oc=AQmnY8mWj6RUFLC7RYf7Z9HBuwrUWzdzalVt52rYQegjQRcGloHyQJdc_O2gaxt_KTg&_nc_ht=scontent-sjc3-1.xx&oh=b576e8e2846def8f482bd16fc62b6e0c&oe=5FE00E9C)\n\nMe browsing LessWrong in the Spaceship area.\n\nI think I used this setup for around 5 working hours on Wednesday, 6 on Thursday, and maybe 2 so far today (but it's still early). It didn't seem to get particularly tiring over that time.  \n  \nI've been getting latency of around 5ms to 15ms, but every minute or so there are some frustrating 1-5 second hiccups. It's possible to watch videos but I have seen large decreases in frame rate from time to time. They have instructions about using [WiFi direct](https://blog.immersed.team/wi-fi-direct-8ec23c74fdab) to make things smoother. I've ordered the necessary module (it's around $25) and should be getting it shortly.\n\nI'm not sure how long I'm going to continue using it. I find the Quest a bit uncomfortable to wear for long periods and sometimes a bit tiring for my eyes. I'm going to continue tinkering to try to make it better.\n\n## Benefits\n\n**Focus**\n\nI have a roommate now and find visual stimuli distracting. I'm also in a room that's a bit of a mess. I like having a lot of things (a lot of small experiments), and that makes it difficult to have a clean workspace.\n\nVR setups can isolate away everything that's not the monitors. There's an option to see a keyboard, but I don't use it (I recommend spending effort to not need to). There's a handful of decent virtual room options. On Immersed there seems to be a few that prominently feature space and space travel.\n\n**Light / SAD**\n\nLessWrong now has a full tag on [lighting](https://www.lesswrong.com/tag/lighting), with 6 popular posts on the topic. I've been considering setting up a system myself. \n\nI'm not sure how to best measure the amount of light experienced in VR vs. the sun, but things seem relatively bright to me with the Quest. VR glasses use curved lenses and a dark environment to focus the LCD light on your eyes, unlike regular monitors that are meant to be visible at any angle. So even a relatively VR small screen can produce more eye-lumens than something much larger. I recently purchased a 350nit 4k monitor and found that that hasn't been quite enough for some parts of the day. With the VR headset, I often turn the monitor brightness _down_. \n\nThe only thread I could find on the topic was [this one](https://www.reddit.com/r/Vive/comments/55gcxh/using_vr_to_treat_seasonal_affective_disorder_sad/) on Reddit, but it doesn't seem that great to me. I found this beginning of a scientific study on \"VR for Seasonal Affective Disorder\", but no completed version. I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too.\n\n**Ergonomics**\n\nVR headsets can be a bit heavy, but besides that can be highly ergonomic. In virtual environments you can configure screens to be anywhere you want them. I have a decent monitor arm that I find decently suboptimal. I often have a hard time bringing my monitor just where I want, so move my neck to compensate (a bad idea!). It can also be fairly shaky when my desk is in standing mode. In VR I can easily position and reposition my monitors exactly where I want them in the sizes I want them, it's great.\n\nI've previously thought about trying to work while laying down, when my back was particularly sore. There are some intense [$6k++ setups](https://www.youtube.com/watch?v=0eJXc82-duI) for this, and gerry-rigging solutions can be quite awkward. With a VR headset you still would need some solution to position the keyboard, but the monitor issue is of course dramatically simplified. I tried reading a bit while lying down and it worked fine.\n\n**Portability**\n\nOne of the worst things about monitors is that they are a pain to transport. They're quite large and heavy, and I've had a sequence of bad luck moving them without causing at least some considerable damage. The way things are going, with a VR headset, you could have a stellar setup anywhere at all, which is unheard of. Maybe outdoor setups on warm days would be possible, though of course, you'd have to replace the visuals with some similar or superior theme on your device (You'd still get the sounds, sent, and breeze.) Perhaps at some point laptops will forgo the screens, or maybe all the hardware will be in the headset and you'd carry a separate mouse keyboard combo.\n\n**Coworking**\n\nI haven't tried this yet, but apparently, you can cowork with Immersed. I believe you get the benefit(?) of being able to see the screens of other coworkers. The options are quite configurable depending on the program.\n\nCoworking in VR has the obvious benefit of allowing people to live anywhere, but also the obvious cost of not being able to see people's faces. In Immersed there is one feature where you can have a \"digital webcam\" that uses an avatar of you in a format that's accessible for online video chats in Google Meet and similar. It's neat but faily basic. \n\nFacebook has an impressive demo of [Photorealistic Face Tracked Avatars,](https://www.youtube.com/watch?v=86-tHA8F-zU) but I imagine it won't be released for a while.\n\n![](https://39669.cdn.cke-cs.com/rQvD3VnunXZu34m86e5f/images/0abd72565ab4f28e537afb6e6367bb863698f828c0f9ba54.png)\n\n## Negatives\n\n**Resolution & Latency**\n\nAs mentioned, the resolution is rather poor compared to modern monitors. The latency is significantly worse, though Wifi direct should help, and Windows setups with direct connections should be fine. This seems quite bad for high-bandwidth tasks like video editing or video games, but useable for typing and a lot of coding.\n\n**Discomfort**\n\nVR headsets are still a bit uncomfortable to wear for long periods. I imagine this will improve a lot over time. I think that future prototypes look a lot like sunglasses. Apple apparently is [getting into the space,](https://www.macrumors.com/roundup/apple-glasses/) so I imagine their take will be particularly lightweight. \n\n**Facebook (Quest only)**\n\nThe Quest 2 requires Facebook login and the operating system is heavily integrated with Facebook. To share a screenshot of my in-game setup I actually had to post it to my Facebook wall, then copy and paste that image. In general the on-system OS is useable but quite basic.\n\n## Other Discussions\n\nThere are a few neat videos of people showing off their VR office setups:\n\n*   [This one](https://www.youtube.com/watch?v=y2mwPLbwYgA) is a nice overview of Immersed, though it's about a year old.\n*   [This video](https://www.reddit.com/r/OculusQuest/comments/gx607s/zoomhangoutsskype_from_vr_in_immersed_need_mac/) shows off the Immersed webcam feature.\n*   [This one](https://www.youtube.com/watch?v=ttrHWZVMugo&t=105s) shows off Virtual Desktop with a wired connection.\n*   Facebook is working on \"[Infinite Office](https://www.youtube.com/watch?v=9zYOnHi66Vo)\" which seems interesting but isn't yet available. It at least demonstrates their optimism and dedication to the area. It's pretty easy for me to imagine it being better than Immersed after it launches.\n\n[Here's](https://www.youtube.com/watch?v=6dHBC-tOnh4) a discussion of someone who didn't find working in VR particularly usable, in part because they needed to see the keyboard and apparently had a lot of in-person distractions. \n\nThe [Immersed Blog](https://blog.immersed.team/) is interesting, though short and biased. [They claim](https://blog.immersed.team/working-in-vr-8-hrs-day-e8308b6791f0) that their team works for 8+ hours a day in VR, and point out that apparently, some users reported using VR to effectively live in different time zones. \n\nThere's an Immersed Discord and it has most of the discussion I've seen from actual users. The setup is highly biased to favor positive messages, but there is a long list of very enthusiastic users. Generally, people are most positive about the focus benefits and the use of extra monitors. There seems to be almost no discussion from users who have used it for collaboration; most have used it solo.  \n \n\n## Conclusion\n\nWorking in VR is clearly in its \"early days\", but it's definitely happening. There seem to be at least dozens of people working full-time in VR at this point, most have started in the last ~2 years.  The technology is already quite inexpensive and useable. The advantages going forward are numerous and significant.   \n  \nI'd expect the VR headsets coming out this next year to continue to get better, so waiting a while is a safe option. But I suggest keeping an eye out and planning accordingly. If you've been thinking about buying a fancy monitor setup or SAD light setup, you might want to reevaluate.  \n \n\n\\[1\\] By this, I mean what I and many smart startups would recommend. Often very good ideas take a long time to become popular. Popularity seems harder to predict than quality.",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:03.390Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":4398,\"completionTokens\":1434,\"totalTokens\":5832,\"temperature\":0.1,\"runtimeMs\":9040}",
+      "thinking": "The document is a review of working in Virtual Reality (VR) using the Oculus Quest 2 and Immersed VR application. The author shares their personal experience, highlighting both the benefits and drawbacks of this setup. From a bias detection perspective, the review is interesting because it blends subjective experiences with attempts at objective assessment. I will be looking for instances where the author's enthusiasm might lead to optimism bias, confirmation bias (seeking information that supports their positive experience), or a lack of consideration for alternative perspectives. I will also consider the potential for selection bias in the author's sample of users and the framing of the VR experience in a positive light, potentially downplaying the negatives. The author's reliance on personal experience and anecdotal evidence also opens the door for various cognitive biases to influence their overall assessment. I will also be looking for potential biases in the external links provided, particularly those related to the Immersed VR application itself.",
+      "summary": "The review of working in VR is enthusiastic and insightful, but it exhibits several potential biases. Optimism bias and the availability heuristic may lead to an overestimation of VR's potential and general appeal. Confirmation bias is evident in the selection of external links and the reliance on user feedback from a biased community. While the author acknowledges negatives, omission bias might downplay their significance. The review also contains elements of in-group bias, associating VR adoption with intelligence and innovation. To mitigate these biases, the author could benefit from seeking out and incorporating more diverse perspectives, including those who have had negative experiences with VR for work, and critically evaluating the evidence supporting their claims.",
+      "comments": [
+        {
+          "title": "Availability Heuristic and Limited Sample Size",
+          "description": "The author's positive experience and the impressed reactions of a few people in their house might lead to an overestimation of the general appeal and usability of VR for work. This is an example of the availability heuristic, where readily available information (their own experience) influences their judgment.",
+          "importance": "75",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 588,
+            "endOffset": 735,
+            "quotedText": "I've given demos to a few people in my house who haven't been close to VR and their responses varied from fairly impressed to incredibly impressed."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Optimism Bias and Overconfidence",
+          "description": "The author expresses strong optimism about the future of VR for work, potentially overestimating the speed and extent of its adoption. The phrase \"generally recommended work setups, at least for 'people in the know'\" suggests an in-group bias and a belief that those who agree with them are more informed.",
+          "importance": "85",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 898,
+            "endOffset": 1183,
+            "quotedText": "It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\"\\[1\\] This could both lead to direct improvements and lead the way for radical rethinkings of what work setups are possible."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Omission Bias and Downplaying Negatives",
+          "description": "While the author acknowledges negatives like resolution, latency, and discomfort, the overall tone of the review is positive. This could be interpreted as omission bias, where the potential downsides of VR for work are not given as much weight as the perceived benefits.",
+          "importance": "65",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 8050,
+            "endOffset": 9052,
+            "quotedText": "afb6e6367bb863698f828c0f9ba54.png)\n\n## Negatives\n\n**Resolution & Latency**\n\nAs mentioned, the resolution is rather poor compared to modern monitors. The latency is significantly worse, though Wifi direct should help, and Windows setups with direct connections should be fine. This seems quite bad for high-bandwidth tasks like video editing or video games, but useable for typing and a lot of coding.\n\n**Discomfort**\n\nVR headsets are still a bit uncomfortable to wear for long periods. I imagine this will improve a lot over time. I think that future prototypes look a lot like sunglasses. Apple apparently is [getting into the space,](https://www.macrumors.com/roundup/apple-glasses/) so I imagine their take will be particularly lightweight. \n\n**Facebook (Quest only)**\n\nThe Quest 2 requires Facebook login and the operating system is heavily integrated with Facebook. To share a screenshot of my in-game setup I actually had to post it to my Facebook wall, then copy and paste that image. In general"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Confirmation Bias in External Links",
+          "description": "The author links to videos showcasing positive VR office setups and Facebook's \"Infinite Office\" demo. While acknowledging the Immersed Blog is \"short and biased,\" the selection of these links suggests a confirmation bias, favoring information that supports the positive view of VR for work.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 9121,
+            "endOffset": 9886,
+            "quotedText": "There are a few neat videos of people showing off their VR office setups:\n\n*   [This one](https://www.youtube.com/watch?v=y2mwPLbwYgA) is a nice overview of Immersed, though it's about a year old.\n*   [This video](https://www.reddit.com/r/OculusQuest/comments/gx607s/zoomhangoutsskype_from_vr_in_immersed_need_mac/) shows off the Immersed webcam feature.\n*   [This one](https://www.youtube.com/watch?v=ttrHWZVMugo&t=105s) shows off Virtual Desktop with a wired connection.\n*   Facebook is working on \"[Infinite Office](https://www.youtube.com/watch?v=9zYOnHi66Vo)\" which seems interesting but isn't yet available. It at least demonstrates their optimism and dedication to the area. It's pretty easy for me to imagine it being better than Immersed after it launches."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Selection Bias in User Feedback",
+          "description": "The author mentions the Immersed Discord, noting it's \"highly biased to favor positive messages\" and has a \"long list of very enthusiastic users.\" This highlights the potential for selection bias, as users who are already invested in and enthusiastic about the product are more likely to participate in the Discord community.",
+          "importance": "80",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 10442,
+            "endOffset": 10842,
+            "quotedText": "There's an Immersed Discord and it has most of the discussion I've seen from actual users. The setup is highly biased to favor positive messages, but there is a long list of very enthusiastic users. Generally, people are most positive about the focus benefits and the use of extra monitors. There seems to be almost no discussion from users who have used it for collaboration; most have used it solo."
+          },
+          "isValid": true
+        },
+        {
+          "title": "In-group Bias and Perceived Superiority",
+          "description": "The statement that VR work setups will be recommended by \"many smart startups\" suggests an in-group bias, where the author associates VR adoption with intelligence and innovation, potentially dismissing alternative viewpoints.",
+          "importance": "70",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 11481,
+            "endOffset": 11651,
+            "quotedText": "By this, I mean what I and many smart startups would recommend. Often very good ideas take a long time to become popular. Popularity seems harder to predict than quality."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 68
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:15.902Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":4521,\"completionTokens\":2147,\"totalTokens\":6668,\"temperature\":0.1,\"runtimeMs\":12508}",
+      "thinking": "I will analyze the provided blog post through the lens of clarity, coherence, and readability. I will assess the writing style, organization, and use of language to determine how effectively the author communicates their experiences and insights about working in virtual reality. I will focus on identifying areas where the writing could be improved to enhance understanding and engagement for the target audience, which appears to be readers of LessWrong interested in technology and productivity. I will pay attention to the use of jargon, the logical flow of ideas, and the overall accessibility of the content.\n\nI will evaluate the readability of the text using metrics such as sentence length, word complexity, and the presence of passive voice. I will also assess the structural coherence of the post, looking at the transitions between paragraphs and sections, the organization of information, and the consistency of the author's voice. Furthermore, I will examine the precision and concision of the writing, identifying instances of wordiness, redundancy, or ambiguity. Finally, I will consider the alignment of the content with the intended audience, taking into account their prior knowledge, interests, and expectations.\n\nBased on my analysis, I will provide specific recommendations for improving the clarity, coherence, and readability of the blog post. These recommendations will include suggestions for simplifying language, restructuring sentences, improving transitions, and providing additional context or explanation where necessary. I will also offer concrete examples of how the author could revise specific passages to make them more accessible and engaging for the reader.",
+      "summary": "The blog post provides a valuable overview of the author's experiences working in virtual reality. While the writing is generally clear and engaging, there are several areas where the clarity, coherence, and readability could be improved. Specific recommendations include providing more precise language, restructuring sentences for better flow, improving transitions between sections, and providing additional context or explanation where necessary. Addressing these issues would enhance the overall accessibility and impact of the post for the target audience.",
+      "comments": [
+        {
+          "title": "Clarity of Initial Claim",
+          "description": "The initial claim about the percentage of people who would benefit from VR work setups is somewhat vague. Quantifying the potential benefit with a range (2-20%) is good, but the initial qualifier of \"1 to 10% of people reading this\" could be more precise. Specifying the target audience (e.g., \"tech-savvy individuals interested in productivity\") would improve clarity.",
+          "importance": "85",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 103,
+            "endOffset": 369,
+            "quotedText": "My guess is that it's not good for most people yet, but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup. The upper end is for people who get distracted easily or have a difficult time with SAD."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Use of Jargon",
+          "description": "The term \"SAD\" (Seasonal Affective Disorder) is used without explicit definition, which might confuse some readers. While likely familiar to the LessWrong audience, briefly defining it or providing a link would improve accessibility for a broader audience.",
+          "importance": "75",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 202,
+            "endOffset": 369,
+            "quotedText": "gain a 2 to 20% increase in computer productivity by using a VR working setup. The upper end is for people who get distracted easily or have a difficult time with SAD."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Sentence Structure and Flow",
+          "description": "The sentence \"I've used to dream of similar setups and it's really cool that the technology is basically there.\" could be restructured for better flow and clarity. Consider revising to something like: \"I used to dream of similar setups, and it's exciting that the technology is now readily available.\"",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 490,
+            "endOffset": 587,
+            "quotedText": "I've used to dream of similar setups and it's really cool that the technology is basically there."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Specificity of Setup Details",
+          "description": "The description of the VR setup is generally clear, but could benefit from more specific details about the hardware and software configuration. For example, mentioning the specific version of Immersed VR or the refresh rate of the Oculus Quest 2 would provide more useful information for readers interested in replicating the setup.",
+          "importance": "70",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 1198,
+            "endOffset": 1372,
+            "quotedText": "My specific setup is an [Oculus Quest 2](https://en.wikipedia.org/wiki/Oculus_Quest_2) ($300), a 2016 Macbook Pro, and the application [Immersed VR](https://immersedvr.com/)."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Visual Aids",
+          "description": "The captions for the images are helpful, but could be more descriptive. For example, the caption for the first image could mention the specific task being performed (editing the blog post) and the virtual environment being used. This would provide more context for readers who are unfamiliar with VR work setups.",
+          "importance": "60",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 2207,
+            "endOffset": 2457,
+            "quotedText": "This is me editing this post. My setup is pretty simple when writing. I have a second screen on the right, but I'm not using it at the moment. I typically have the main screen a bit closer to me, but zoomed it out to make this image more interesting."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Organization of Benefits Section",
+          "description": "The \"Benefits\" section is well-organized and clearly outlines the advantages of working in VR. However, the order of the benefits could be optimized for impact. Starting with the most compelling benefit (e.g., Focus) and ending with a strong benefit (e.g., Portability) would create a more memorable and persuasive argument.",
+          "importance": "70",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 3718,
+            "endOffset": 7593,
+            "quotedText": "**Focus**\n\nI have a roommate now and find visual stimuli distracting. I'm also in a room that's a bit of a mess. I like having a lot of things (a lot of small experiments), and that makes it difficult to have a clean workspace.\n\nVR setups can isolate away everything that's not the monitors. There's an option to see a keyboard, but I don't use it (I recommend spending effort to not need to). There's a handful of decent virtual room options. On Immersed there seems to be a few that prominently feature space and space travel.\n\n**Light / SAD**\n\nLessWrong now has a full tag on [lighting](https://www.lesswrong.com/tag/lighting), with 6 popular posts on the topic. I've been considering setting up a system myself. \n\nI'm not sure how to best measure the amount of light experienced in VR vs. the sun, but things seem relatively bright to me with the Quest. VR glasses use curved lenses and a dark environment to focus the LCD light on your eyes, unlike regular monitors that are meant to be visible at any angle. So even a relatively VR small screen can produce more eye-lumens than something much larger. I recently purchased a 350nit 4k monitor and found that that hasn't been quite enough for some parts of the day. With the VR headset, I often turn the monitor brightness _down_. \n\nThe only thread I could find on the topic was [this one](https://www.reddit.com/r/Vive/comments/55gcxh/using_vr_to_treat_seasonal_affective_disorder_sad/) on Reddit, but it doesn't seem that great to me. I found this beginning of a scientific study on \"VR for Seasonal Affective Disorder\", but no completed version. I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too.\n\n**Ergonomics**\n\nVR headsets can be a bit heavy, but besides that can be highly ergonomic. In virtual environments you can configure screens to be anywhere you want them. I have a decent monitor arm that I find decently suboptimal. I often have a hard time bringing my monitor just where I want, so move my neck to compensate (a bad idea!). It can also be fairly shaky when my desk is in standing mode. In VR I can easily position and reposition my monitors exactly where I want them in the sizes I want them, it's great.\n\nI've previously thought about trying to work while laying down, when my back was particularly sore. There are some intense [$6k++ setups](https://www.youtube.com/watch?v=0eJXc82-duI) for this, and gerry-rigging solutions can be quite awkward. With a VR headset you still would need some solution to position the keyboard, but the monitor issue is of course dramatically simplified. I tried reading a bit while lying down and it worked fine.\n\n**Portability**\n\nOne of the worst things about monitors is that they are a pain to transport. They're quite large and heavy, and I've had a sequence of bad luck moving them without causing at least some considerable damage. The way things are going, with a VR headset, you could have a stellar setup anywhere at all, which is unheard of. Maybe outdoor setups on warm days would be possible, though of course, you'd have to replace the visuals with some similar or superior theme on your device (You'd still get the sounds, sent, and breeze.) Perhaps at some point laptops will forgo the screens, or maybe all the hardware will be in the headset and you'd carry a separate mouse keyboard combo.\n\n**Coworking**\n\nI haven't tried this yet, but apparently, you can cowork with Immersed. I believe you get the benefit(?) of being able to see the screens of other coworkers. The options are quite configurable depending on the program.\n\nCoworking in VR has the obvious benefit of allowing people to live anywhere, but also the obvious cost of not being able to see people's faces."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Precision of Language",
+          "description": "In the \"Ergonomics\" section, the phrase \"decently suboptimal\" is somewhat vague. Replacing it with a more precise description of the monitor arm's limitations (e.g., \"limited range of motion,\" \"difficult to adjust precisely\") would improve clarity.",
+          "importance": "65",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 5726,
+            "endOffset": 5786,
+            "quotedText": "I have a decent monitor arm that I find decently suboptimal."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Contextual Scaffolding for Coworking",
+          "description": "The \"Coworking\" section could benefit from more contextual scaffolding. Providing a brief explanation of how coworking in Immersed VR works (e.g., how users interact, what features are available) would make the section more accessible to readers who are unfamiliar with the platform.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 7230,
+            "endOffset": 7448,
+            "quotedText": "I haven't tried this yet, but apparently, you can cowork with Immersed. I believe you get the benefit(?) of being able to see the screens of other coworkers. The options are quite configurable depending on the program."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Negatives Section",
+          "description": "The \"Negatives\" section is clear and concise, but could be strengthened by providing more specific examples of the resolution and latency issues experienced. For example, mentioning the specific resolution of the virtual monitors or the average latency experienced during different tasks would provide more concrete information for readers to evaluate.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 8100,
+            "endOffset": 8450,
+            "quotedText": "**Resolution & Latency**\n\nAs mentioned, the resolution is rather poor compared to modern monitors. The latency is significantly worse, though Wifi direct should help, and Windows setups with direct connections should be fine. This seems quite bad for high-bandwidth tasks like video editing or video games, but useable for typing and a lot of coding."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Call to Action",
+          "description": "The conclusion provides a clear call to action, encouraging readers to consider VR as a potential alternative to traditional monitor setups. However, the call to action could be strengthened by providing more specific recommendations for readers who are interested in exploring VR work setups (e.g., suggesting specific resources or platforms to investigate).",
+          "importance": "60",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 11302,
+            "endOffset": 11469,
+            "quotedText": "But I suggest keeping an eye out and planning accordingly. If you've been thinking about buying a fancy monitor setup or SAD light setup, you might want to reevaluate."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:23.127Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5201,\"completionTokens\":1151,\"totalTokens\":6352,\"temperature\":0.1,\"runtimeMs\":7216}",
+      "thinking": "I will analyze this LessWrong post about working in VR through the lens of a research scholar. I'll identify relevant external resources that support or contradict the author's claims, focusing on academic studies, industry reports, and expert opinions. I'll also assess the author's arguments regarding focus, SAD, ergonomics, portability, and coworking in VR, providing links to resources that offer further insights into these areas. I will also provide comments on the article itself, highlighting the most important parts.",
+      "summary": "This LessWrong post explores the author's experience with working in VR, highlighting potential benefits like increased focus, improved ergonomics, and portability, while also acknowledging drawbacks such as resolution limitations and discomfort. As a research scholar, I've identified resources that support and expand upon these points, providing a more comprehensive understanding of the current state and future potential of VR for work.",
+      "comments": [
+        {
+          "title": "VR Adoption Rate",
+          "description": "The author's estimate of 1-10% of people benefiting from VR work setups seems optimistic but aligns with early adopter trends in technology. Researching current VR adoption rates and productivity studies would provide a more data-driven perspective.",
+          "importance": 75,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 103,
+            "endOffset": 280,
+            "quotedText": "My guess is that it's not good for most people yet, but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup."
+          }
+        },
+        {
+          "title": "VR Ecosystem Growth",
+          "description": "The author's observation about the rapid improvement of the VR ecosystem is crucial. Tracking advancements in VR hardware, software, and applications will be key to assessing the long-term viability of VR work setups.",
+          "importance": 80,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 818,
+            "endOffset": 1059,
+            "quotedText": "The VR ecosystem seems to be improving much more quickly than the alternatives. It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\""
+          }
+        },
+        {
+          "title": "VR for SAD",
+          "description": "The author's hypothesis about VR's potential benefits for SAD is interesting. Researching the effects of VR on mood and circadian rhythms could provide valuable insights.",
+          "importance": 70,
+          "grade": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 5321,
+            "endOffset": 5554,
+            "quotedText": "I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too."
+          }
+        },
+        {
+          "title": "Ergonomic Benefits",
+          "description": "The author's point about ergonomic benefits is well-taken. Studies on the impact of monitor positioning on posture and neck strain could further support this argument.",
+          "importance": 75,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 5646,
+            "endOffset": 5895,
+            "quotedText": "In virtual environments you can configure screens to be anywhere you want them. I have a decent monitor arm that I find decently suboptimal. I often have a hard time bringing my monitor just where I want, so move my neck to compensate (a bad idea!)."
+          }
+        },
+        {
+          "title": "Coworking Limitations",
+          "description": "The author acknowledges the limitations of VR coworking, particularly the lack of face-to-face interaction. Researching the impact of nonverbal communication on team dynamics could provide a more nuanced understanding of this issue.",
+          "importance": 65,
+          "grade": 65,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 7450,
+            "endOffset": 7593,
+            "quotedText": "Coworking in VR has the obvious benefit of allowing people to live anywhere, but also the obvious cost of not being able to see people's faces."
+          }
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:32.003Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":4571,\"completionTokens\":1386,\"totalTokens\":5957,\"temperature\":0.1,\"runtimeMs\":8856}",
+      "thinking": "Alright, let's dissect this piece on working in VR through the lens of someone deeply concerned with cognitive enhancement, existential risk, and the broader implications of technology on human rationality. My primary focus will be on identifying potential cognitive benefits and drawbacks, evaluating the author's reasoning, and considering the long-term societal impact if VR work setups become widespread. I'll be looking for signs of clear thinking, potential biases, and overlooked considerations, all while trying to emulate Eliezer Yudkowsky's characteristic style.\n\nThe author's initial claim that 1-10% of readers might see a 2-20% productivity boost is a start, but lacks the kind of rigorous justification I'd expect. What specific cognitive bottlenecks does VR address? How are these percentages derived? It's a hand-wavy estimate at best. The focus on distraction reduction and SAD mitigation is relevant, but needs more depth. How does VR compare to other interventions for these issues? What are the potential downsides of isolating oneself in a virtual environment?\n\nThe discussion of ergonomics and portability is more concrete, but still misses crucial points. While VR might offer flexibility in monitor placement, the long-term effects of prolonged headset use on posture and vision are unclear. And while portability is a plus, the reliance on specific hardware and software creates new dependencies and potential points of failure. The author's enthusiasm for coworking in VR is particularly concerning. The loss of face-to-face interaction could have significant social and cognitive consequences, hindering the development of crucial social skills and potentially exacerbating existing biases. The \"digital webcam\" solution is a band-aid at best, failing to capture the nuances of human expression and nonverbal communication.\n\nOverall, the article reflects a common pattern: an overemphasis on short-term gains and a neglect of long-term consequences. The author seems captivated by the novelty of VR, without fully considering the potential risks. This is precisely the kind of thinking that leads to technological overoptimism and a failure to anticipate unintended consequences. We need to approach these technologies with far more caution and a deeper understanding of their potential impact on human cognition and social interaction. The future of civilization may depend on it.",
+      "summary": "This article presents an overly optimistic view of working in VR, neglecting crucial cognitive and social considerations. The author's claims of productivity gains lack rigorous justification, and the potential negative effects of isolation, ergonomic issues, and reduced face-to-face interaction are insufficiently addressed. The piece reflects a common bias towards technological optimism, failing to adequately consider long-term risks and unintended consequences. A more cautious and skeptical approach is needed before widespread adoption of VR work setups.",
+      "comments": [
+        {
+          "title": "Quantifying Productivity Gains",
+          "description": "The author's estimate of productivity gains lacks a rigorous basis. It's crucial to define 'productivity' precisely and provide evidence to support these claims. Without quantifiable metrics and controlled experiments, such statements are mere speculation.",
+          "importance": "75",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 155,
+            "endOffset": 369,
+            "quotedText": "but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup. The upper end is for people who get distracted easily or have a difficult time with SAD."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Cognitive Effects of Isolation",
+          "description": "While VR can reduce distractions, prolonged isolation in virtual environments may have negative cognitive and social consequences. The author should address the potential for decreased social skills, increased loneliness, and the formation of filter bubbles.",
+          "importance": "85",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 3947,
+            "endOffset": 4246,
+            "quotedText": "VR setups can isolate away everything that's not the monitors. There's an option to see a keyboard, but I don't use it (I recommend spending effort to not need to). There's a handful of decent virtual room options. On Immersed there seems to be a few that prominently feature space and space travel."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Ergonomic Considerations",
+          "description": "The author mentions ergonomic benefits but overlooks potential drawbacks of prolonged VR headset use. Issues like eye strain, neck pain, and altered proprioception need to be addressed. A proper risk assessment is essential.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 5572,
+            "endOffset": 6076,
+            "quotedText": "VR headsets can be a bit heavy, but besides that can be highly ergonomic. In virtual environments you can configure screens to be anywhere you want them. I have a decent monitor arm that I find decently suboptimal. I often have a hard time bringing my monitor just where I want, so move my neck to compensate (a bad idea!). It can also be fairly shaky when my desk is in standing mode. In VR I can easily position and reposition my monitors exactly where I want them in the sizes I want them, it's great."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Social Impact of VR Coworking",
+          "description": "The author's discussion of VR coworking fails to adequately address the potential loss of face-to-face interaction. This could have detrimental effects on communication, collaboration, and the development of social intelligence. The 'digital webcam' solution is a poor substitute for genuine human connection.",
+          "importance": "90",
+          "grade": "45",
+          "highlight": {
+            "startOffset": 7450,
+            "endOffset": 7968,
+            "quotedText": "Coworking in VR has the obvious benefit of allowing people to live anywhere, but also the obvious cost of not being able to see people's faces. In Immersed there is one feature where you can have a \"digital webcam\" that uses an avatar of you in a format that's accessible for online video chats in Google Meet and similar. It's neat but faily basic. \n\nFacebook has an impressive demo of [Photorealistic Face Tracked Avatars,](https://www.youtube.com/watch?v=86-tHA8F-zU) but I imagine it won't be released for a while."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Overlooking Long-Term Risks",
+          "description": "The author's enthusiasm for VR technology overshadows a critical evaluation of potential long-term risks. This reflects a common bias towards technological optimism, which can lead to unforeseen and potentially catastrophic consequences. A more cautious and skeptical approach is warranted.",
+          "importance": "80",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 11185,
+            "endOffset": 11469,
+            "quotedText": "I'd expect the VR headsets coming out this next year to continue to get better, so waiting a while is a safe option. But I suggest keeping an eye out and planning accordingly. If you've been thinking about buying a fancy monitor setup or SAD light setup, you might want to reevaluate."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 55
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:41.287Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":4371,\"completionTokens\":1474,\"totalTokens\":5845,\"temperature\":0.1,\"runtimeMs\":8921}",
+      "thinking": "This document is a first-person review of working in VR, focusing on the author's experience with the Oculus Quest 2 and Immersed VR. It covers the setup, benefits (focus, light/SAD, ergonomics, portability, coworking), negatives (resolution, latency, discomfort, Facebook integration), and other discussions. The author expresses optimism about the future of VR for work. My analysis will focus on extracting quantifiable claims and transforming them into forecasting questions, providing initial estimates, and identifying key uncertainties.\n\nI will pay close attention to the author's specific predictions about adoption rates, the timeline for VR becoming a recommended work setup, and the potential impact on productivity. I will also consider the factors that could accelerate or hinder the adoption of VR for work, such as improvements in hardware, software, and user comfort.\n\nI will also consider the author's claims about the benefits of VR for SAD and ergonomics, and how these benefits could be quantified and measured. I will look for opportunities to create Fermi estimates for the potential impact of VR on productivity and well-being.\n\nFinally, I will consider the author's discussion of the negatives of VR, such as resolution, latency, and discomfort, and how these factors could affect the adoption of VR for work. I will also consider the potential impact of Facebook's involvement in the VR space.",
+      "summary": "This document provides several opportunities for quantitative forecasting. The author's claims about productivity increases and VR adoption timelines can be transformed into concrete forecasting questions suitable for platforms like Metaculus or Manifold Markets. I've identified key uncertainties related to hardware improvements (resolution, latency, discomfort) and the potential benefits for SAD and ergonomics. These can be framed as measurable outcomes to track the progress of VR for work. My initial estimates would be conservative, given the current limitations of the technology, but I would update them as new information becomes available.",
+      "comments": [
+        {
+          "title": "Productivity Increase Forecast",
+          "description": "The author estimates that 1-10% of readers could gain a 2-20% increase in productivity using a VR working setup. This can be framed as a forecasting question: \"What percentage of LessWrong readers will experience a X% increase in productivity using VR for work by [Date]?\" I'll provide an initial estimate and discuss the uncertainties.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 155,
+            "endOffset": 280,
+            "quotedText": "but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup."
+          },
+          "isValid": true
+        },
+        {
+          "title": "VR Adoption Timeline Forecast",
+          "description": "The author predicts that VR work setups could be generally recommended within 2-5 years. This can be framed as a forecasting question: \"Will VR work setups be generally recommended by 'people in the know' by [Date]?\" I'll provide an initial estimate and discuss the uncertainties.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 898,
+            "endOffset": 1059,
+            "quotedText": "It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "SAD Benefit - Measurable Impact",
+          "description": "The author hypothesizes that VR could have significant benefits for people with SAD. This could be framed as a forecasting question: \"What will be the average reduction in SAD symptoms (measured by [Specific Scale]) for individuals using VR for X hours per day by [Date]?\" This requires defining a measurable outcome.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 5321,
+            "endOffset": 5554,
+            "quotedText": "I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Ergonomics - Quantifiable Improvement",
+          "description": "The author mentions ergonomic benefits. This could be framed as a forecasting question: \"What will be the average reduction in neck/back pain (measured by [Specific Scale]) for individuals using VR for work compared to traditional monitor setups by [Date]?\" This requires a controlled study and a measurable outcome.",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 5572,
+            "endOffset": 31,
+            "quotedText": "ted experimenting with working in Virtual Reality. I'm quite impressed. My guess is that it's not good for most people yet, but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup. The upper end is for people who get distracted easily or have a difficult time with SAD.\n\nThis feels like the most radical experiment I've made to my setup so far, so I'm quite happy with how it's worked out. I've used to dream of similar setups and it's really cool that the technology is basically there. I've given demos to a few people in my house who haven't been close to VR and their responses varied from fairly impressed to incredibly impressed. \n\nI'm fairly convinced that there's an extremely promising future for work in VR. The VR ecosystem seems to be improving much more quickly than the alternatives. It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\"\\[1\\] This could both lead to direct improvements and lead the way for radical rethinkings of what work setups are possible.\n\n## My Setup\n\nMy specific setup is an [Oculus Quest 2](https://en.wikipedia.org/wiki/Oculus_Quest_2) ($300), a 2016 Macbook Pro, and the application [Immersed VR](https://immersedvr.com/). Immersed works using WiFi. My router is around 15 feet away from my headset, and my computer is connected directly to the router via Ethernet. In the app I use two \"monitors\"; I downscale a 4K monitor to 2048x1280 and use a side monitor of 1920x1080. It's suggested to keep resolutions rather low both because the Oculus Quest 2 doesn't itself have a high resolution (1832×1920 per eye), and because higher resolution means higher latency. You can have up to five \"virtual\" monitors with Immersed, but I prefer one or two big ones.\n\n![](https://web.archive.org/web/20201124081412im_/https://scontent-sjc3-1.xx.fbcdn.net/v/t1.0-9/p843x403/126958103_10164328584940363_4025454557304811407_o.jpg?_nc_cat=107&ccb=2&_nc_sid=8bfeb9&_nc_ohc=G4IcxI8hp1wAX_8SLJd&_nc_ht=scontent-sjc3-1.xx&tp=6&oh=9ecdb9391a013ba1911123269910215b&oe=5FDBFCEB)\n\nThis is me editing this post. My setup is pretty simple when writing. I have a second screen on the right, but I'm not using it at the moment. I typically have the main screen a bit closer to me, but zoomed it out to make this image more interesting.\n\n![](https://web.archive.org/web/20201124081412im_/https://scontent-sjc3-1.xx.fbcdn.net/v/t1.0-9/127192022_10164338023400363_7864580482307129664_o.jpg?_nc_cat=105&ccb=2&_nc_sid=8bfeb9&_nc_ohc=nen31Qt3-RUAX93kX0V&_nc_oc=AQmnY8mWj6RUFLC7RYf7Z9HBuwrUWzdzalVt52rYQegjQRcGloHyQJdc_O2gaxt_KTg&_nc_ht=scontent-sjc3-1.xx&oh=b576e8e2846def8f482bd16fc62b6e0c&oe=5FE00E9C)\n\nMe browsing LessWrong in the Spaceship area.\n\nI think I used this setup for around 5 working hours on Wednesday, 6 on Thursday, and maybe 2 so far today (but it's still early). It didn't seem to get particularly tiring over that time.  \n  \nI've been getting latency of around 5ms to 15ms, but every minute or so there are some frustrating 1-5 second hiccups. It's possible to watch videos but I have seen large decreases in frame rate from time to time. They have instructions about using [WiFi direct](https://blog.immersed.team/wi-fi-direct-8ec23c74fdab) to make things smoother. I've ordered the necessary module (it's around $25) and should be getting it shortly.\n\nI'm not sure how long I'm going to continue using it. I find the Quest a bit uncomfortable to wear for long periods and sometimes a bit tiring for my eyes. I'm going to continue tinkering to try to make it better.\n\n## Benefits\n\n**Focus**\n\nI have a roommate now and find visual stimuli distracting. I'm also in a room that's a bit of a mess. I like having a lot of things (a lot of small experiments), and that makes it difficult to have a clean workspace.\n\nVR setups can isolate away everything that's not the monitors. There's an option to see a keyboard, but I don't use it (I recommend spending effort to not need to). There's a handful of decent virtual room options. On Immersed there seems to be a few that prominently feature space and space travel.\n\n**Light / SAD**\n\nLessWrong now has a full tag on [lighting](https://www.lesswrong.com/tag/lighting), with 6 popular posts on the topic. I've been considering setting up a system myself. \n\nI'm not sure how to best measure the amount of light experienced in VR vs. the sun, but things seem relatively bright to me with the Quest. VR glasses use curved lenses and a dark environment to focus the LCD light on your eyes, unlike regular monitors that are meant to be visible at any angle. So even a relatively VR small screen can produce more eye-lumens than something much larger. I recently purchased a 350nit 4k monitor and found that that hasn't been quite enough for some parts of the day. With the VR headset, I often turn the monitor brightness _down_. \n\nThe only thread I could find on the topic was [this one](https://www.reddit.com/r/Vive/comments/55gcxh/using_vr_to_treat_seasonal_affective_disorder_sad/) on Reddit, but it doesn't seem that great to me. I found this beginning of a scientific study on \"VR for Seasonal Affective Disorder\", but no completed version. I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too.\n\n**Ergonomics**\n\n"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Resolution Improvement Forecast",
+          "description": "The author notes the poor resolution as a negative. This can be framed as a forecasting question: \"What will be the average resolution (pixels per eye) of commercially available VR headsets marketed for productivity by [Date]?\" This is a more concrete, measurable hardware metric.",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 8126,
+            "endOffset": 8198,
+            "quotedText": "As mentioned, the resolution is rather poor compared to modern monitors."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Latency Reduction Forecast",
+          "description": "The author mentions latency as a negative. This can be framed as a forecasting question: \"What will be the average latency (ms) of commercially available VR headsets marketed for productivity when connected via WiFi 6 by [Date]?\"",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 8199,
+            "endOffset": 8325,
+            "quotedText": "The latency is significantly worse, though Wifi direct should help, and Windows setups with direct connections should be fine."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Discomfort Reduction Forecast",
+          "description": "The author mentions discomfort as a negative. This is harder to quantify, but could be framed as: \"What will be the average weight (grams) of commercially available VR headsets marketed for productivity by [Date]?\" or \"What percentage of users will report experiencing discomfort after X hours of use with the leading VR headset by [Date]?\"",
+          "importance": "65",
+          "highlight": {
+            "startOffset": 8468,
+            "endOffset": 8580,
+            "quotedText": "VR headsets are still a bit uncomfortable to wear for long periods. I imagine this will improve a lot over time."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:12:49.459Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5224,\"completionTokens\":1414,\"totalTokens\":6638,\"temperature\":0.1,\"runtimeMs\":8160}",
+      "thinking": "This post discusses the author's experience working in VR using an Oculus Quest 2 and Immersed VR. It covers the setup, benefits (focus, light/SAD, ergonomics, portability, coworking), negatives (resolution, latency, discomfort, Facebook integration), and other discussions. The author concludes that VR work is in its early days but has significant potential. My analysis will focus on evaluating the potential impact of VR for productivity and wellbeing, particularly in the context of effective altruism, and will include a Fermi estimate of the potential benefits and costs.\n\nI will consider the potential for VR to improve productivity, reduce seasonal affective disorder, and enhance remote collaboration, and I will compare these benefits to the costs of VR, such as discomfort, eye strain, and potential negative impacts on social interaction. I will also consider the potential for VR to be used for more altruistic purposes, such as remote volunteering or virtual reality therapy.\n\nI will also consider the potential negative impacts of VR, such as addiction, social isolation, and the potential for misuse of the technology. I will also consider the opportunity costs of investing in VR, as there may be other technologies or interventions that could have a greater impact on wellbeing and productivity.\n\nFinally, I will provide a Fermi estimate of the potential impact of VR on productivity and wellbeing, taking into account the potential benefits and costs, and I will compare this estimate to other EA benchmarks, such as the cost-effectiveness of GiveWell top charities.",
+      "summary": "This post provides a first-hand account of working in VR and highlights both the potential benefits and drawbacks. From an EA perspective, the potential for increased productivity and improved wellbeing (particularly for those with SAD) are promising. However, the current limitations of VR technology, such as discomfort and resolution issues, as well as privacy concerns, need to be carefully considered. A Fermi estimate is necessary to quantify the potential impact and compare it to other EA interventions.",
+      "comments": [
+        {
+          "title": "Potential Productivity Increase",
+          "description": "The author estimates a potential productivity increase of 2-20% for 1-10% of readers. This is a key parameter for estimating the overall impact.",
+          "importance": "90",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 103,
+            "endOffset": 280,
+            "quotedText": "My guess is that it's not good for most people yet, but that 1 to 10% of people reading this would gain a 2 to 20% increase in computer productivity by using a VR working setup."
+          },
+          "isValid": true
+        },
+        {
+          "title": "VR Ecosystem Improvement",
+          "description": "The author believes the VR ecosystem is improving rapidly, suggesting a potentially high growth rate and increasing adoption.",
+          "importance": "80",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 818,
+            "endOffset": 1059,
+            "quotedText": "The VR ecosystem seems to be improving much more quickly than the alternatives. It strikes me as surprisingly possible that within 2 to 5 years, VR work setups will be the generally recommended work setups, at least for \"people in the know.\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Focus Benefits",
+          "description": "The author highlights the ability of VR to isolate distractions, which is particularly relevant for individuals with attention difficulties. This could be a significant benefit for productivity.",
+          "importance": "75",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 3947,
+            "endOffset": 4009,
+            "quotedText": "VR setups can isolate away everything that's not the monitors."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Light/SAD Benefits",
+          "description": "The author suggests VR could help with Seasonal Affective Disorder (SAD) by providing a consistent light source. This is a potentially significant wellbeing benefit.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 5321,
+            "endOffset": 5554,
+            "quotedText": "I'd hypothesize that living mostly in VR would have some significant benefits for some people with significant SAD (if you're in VR, how does it even matter what the season is?), though I could imagine that it has some downsides too."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Ergonomic Benefits",
+          "description": "VR allows for highly customizable monitor positioning, potentially improving ergonomics and reducing physical strain. This could lead to long-term health benefits.",
+          "importance": "65",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 5646,
+            "endOffset": 6076,
+            "quotedText": "In virtual environments you can configure screens to be anywhere you want them. I have a decent monitor arm that I find decently suboptimal. I often have a hard time bringing my monitor just where I want, so move my neck to compensate (a bad idea!). It can also be fairly shaky when my desk is in standing mode. In VR I can easily position and reposition my monitors exactly where I want them in the sizes I want them, it's great."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Resolution and Latency Negatives",
+          "description": "The author acknowledges the limitations of current VR technology, particularly resolution and latency. These factors could significantly impact usability and productivity.",
+          "importance": "85",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 8126,
+            "endOffset": 8325,
+            "quotedText": "As mentioned, the resolution is rather poor compared to modern monitors. The latency is significantly worse, though Wifi direct should help, and Windows setups with direct connections should be fine."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Discomfort Negatives",
+          "description": "VR headset discomfort is a major barrier to adoption and long-term use. This needs to be factored into any impact assessment.",
+          "importance": "80",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 8468,
+            "endOffset": 8535,
+            "quotedText": "VR headsets are still a bit uncomfortable to wear for long periods."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Facebook Integration Negatives",
+          "description": "The Facebook integration of Oculus Quest 2 raises privacy concerns and limits user control. This could be a significant drawback for some users.",
+          "importance": "60",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 8823,
+            "endOffset": 9097,
+            "quotedText": "The Quest 2 requires Facebook login and the operating system is heavily integrated with Facebook. To share a screenshot of my in-game setup I actually had to post it to my Facebook wall, then copy and paste that image. In general the on-system OS is useable but quite basic."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 65
+    }
+  ]
 }

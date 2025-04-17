@@ -14,5 +14,417 @@
     "ea-impact-evaluator"
   ],
   "content": "Professional athletes are arguably the most publicly understood meritocracy around. There are public records of thousands of different attributes for each player. When athletes stop performing well, this is discussed at length by enthusiasts, and it's understood when they are kicked off their respective teams. The important stuff is out in the open. There's a culture of honest, open, and candid communication around meritocratic competence and value.\n\nThis isn't only valuable to help team decisions. It also helps data scientists learn which sorts of characteristics and records correlate best with long term success. As sufficient data is collected, whole new schools of thought emerge, and these coincide with innovative and effective strategies for future talent selection. See [Moneyball](https://en.wikipedia.org/wiki/Moneyball_\\(film\\)) or the entire field of [sabermetrics](https://en.wikipedia.org/wiki/Sabermetrics).\n\nIn comparison, our standards for intellectuals are quite prosaic. If I want to get a sense of just how good LeBron James is I can look through [tables and tables](https://www.basketball-reference.com/players/j/jamesle01.html) or organized data and metrics. If I don't trust one metric I have dozens of others to choose.\n\nHowever, if I want to know how much to trust and value [Jonathan Haidt](https://en.wikipedia.org/wiki/Jonathan_Haidt) I'm honestly not sure what to do. Some ideas:\n\n1.  Read most of his work, then do a large set of [Epistemic Spot Checks](https://www.lesswrong.com/posts/mjneyoZjyk9oC5ocA/epistemic-spot-check-a-guide-to-better-movement-todd) and more to get a sense of how correct and novel it is.\n2.  Teach myself a fair amount of Psychology, get a set of Academic Journal subscriptions, then read critiques and counter critiques of his work.\n3.  Investigate his [citation stats](https://www.lesswrong.com/posts/4SsFMGaBx59wBA3Ej/can-we-hold-intellectuals-to-similar-public-standards-as?commentId=b9m8A6qYiCCbRFfzF#b9m8A6qYiCCbRFfzF).\n4.  Read the [\"Reception\"](https://en.wikipedia.org/wiki/Jonathan_Haidt) part of his Wikipedia page and hope that my attempt to infer his qualities from that is successful.\n5.  Use some fairly quick \"gut level\" heuristics to guess.\n6.  Ask my friends and hope that they did a thorough job of the above, or have discussed the issue with other friends who did.\n\nOf course, even if I do this for Jonathan Haidt broadly, I'd really want narrow breakdowns. Maybe his old work is really great, but in the last 5 years his motives have changed. Perhaps his knowledge and discussion of some parts of Psychology is quite on point, but his meanderings into Philosophy are simplistic and overstated.\\[1\\]\n\nThis is important because evaluating intellectuals is dramatically more impactful than evaluating athletes. When I choose incorrectly, I could easily waste lost of time and money, or be dramatically misled and develop a systematically biased worldview. It also leads to incentive problems. If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways.\n\nI hear one argument: \"_It's obvious which intellectuals are good and bad. Just read them a little bit.\"_ I don't agree with this argument. For one, [Expert Political Judgement](https://en.wikipedia.org/wiki/Expert_Political_Judgment) provided a fair amount of evidence for just how poorly calibrated all famous and well esteemed intellectuals seem to be.\n\n* * *\n\nOne could imagine an organization saying \"enough is enough\" and setting up a list of comprehensive grades for public intellectuals on an extensive series of metrics. I imagine this would be treated with a fantastical amount of vitriol.\n\n_\"What about my privacy? This is an affront to Academics you should be trying to help.\"_\n\n_\"What if people misunderstand the metrics? They'll incorrectly assume that some intellectuals are doing a poor job, and that could be terrible for their careers.\"_\n\n_\"We can't trust people to see some attempts at quantifying the impossible. Let them read the sources and make up their own minds.\"_\n\nI'm sure professional athletes said the same thing when public metrics began to appear. Generally new signals get push back. There will be winners and losers, and the losers fight back much harder than the winners encourage. In this case the losers would likely be the least epistemically modest of the intellectuals, a _particularly nasty_ bunch. But if signals can persist, they get accepted as part of the way things are and life moves on.\n\nLong and comprehensive grading systems similar to that used by athletes would probably be overkill, especially to start with. Any work here would be very expensive to carry out and it's not obvious who would pay for it. I would expect that \"intellectual reviews\" would get fewer hits than \"tv reviews\", but that those hits would be much more impactful. I'd be excited to hear for simple proposals. Perhaps it would be possible to get many of the possible benefits while not having to face some of the many possible costs.\n\nWhat should count as an intellectual? It's a fuzzy line, but I would favor an expansive definition. If someone is making public claims about important and uncertain topics and has a substantial following, these readers should have effective methods of evaluating them.\n\nMeritocracy matters. Having good intellectuals and making it obvious how good these intellectuals are matters. Developing thought out standards, rubrics, and metrics for quality is really the way to ensure good signals. There are definitely ways of doing this poorly, but the status quo is _really really bad_.\n\n\\[1\\] I'm using Jonathan Haidt because I think of him as a generally well respected academic who has somewhat controversial views. I personally find him to be every interesting.",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:58:36.369Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2507,\"completionTokens\":1641,\"totalTokens\":4148,\"temperature\":0.1,\"runtimeMs\":9926}",
+      "thinking": "The document compares the public evaluation of athletes to that of intellectuals, arguing that the latter lacks the robust, data-driven meritocracy found in sports. This raises several potential biases. The author seems to favor a more quantifiable approach to evaluating intellectuals, which could lead to biases related to what metrics are chosen and how they are interpreted. There's also a potential for confirmation bias, as the author may be more likely to notice and highlight flaws in the current system while overlooking its strengths. The author's use of Jonathan Haidt as an example, while intended to be neutral, could introduce bias if the reader has strong pre-existing opinions about Haidt. The discussion of potential pushback against a grading system for intellectuals also reveals potential biases, such as the status quo bias (resistance to change) and reactance bias (opposition to perceived threats to freedom). Finally, the author's belief that the status quo is \"really really bad\" suggests a potential for negativity bias, where negative aspects are overemphasized.",
+      "summary": "The document argues for a more rigorous, data-driven approach to evaluating intellectuals, drawing a comparison to the meritocratic systems in professional sports. However, the argument exhibits several potential biases. These include the availability heuristic (overemphasizing readily available sports statistics), selection bias (using Jonathan Haidt as a potentially controversial example), confirmation bias (favoring quantifiable metrics), anticipated status quo and reactance biases (in the discussion of potential pushback), and negativity bias (in the strong condemnation of the current system). Recognizing these biases is crucial for a more balanced and nuanced understanding of the challenges and opportunities in evaluating intellectual work.",
+      "comments": [
+        {
+          "title": "Availability Heuristic & Limited Scope of Comparison",
+          "description": "The author focuses on the readily available and quantifiable metrics in professional sports, particularly basketball, and contrasts this with the perceived lack of such metrics for intellectuals. This comparison might be skewed by the availability heuristic, where the ease of recalling sports statistics makes the contrast seem starker than it is. The author doesn't fully acknowledge the qualitative aspects of intellectual work that are difficult to quantify but still valuable.",
+          "importance": "85",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 12,
+            "quotedText": "Professional"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Selection Bias in Examples",
+          "description": "The author uses Jonathan Haidt as a specific example of an intellectual whose work is difficult to evaluate. While Haidt might be a reasonable example, the choice itself could introduce selection bias. Haidt's work is already somewhat controversial, and using him as the primary example might predispose the reader to agree with the author's argument that intellectual evaluation is flawed. A more neutral or diverse set of examples could mitigate this bias.",
+          "importance": "75",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 1252,
+            "endOffset": 2347,
+            "quotedText": "However, if I want to know how much to trust and value [Jonathan Haidt](https://en.wikipedia.org/wiki/Jonathan_Haidt) I'm honestly not sure what to do. Some ideas:\n\n1.  Read most of his work, then do a large set of [Epistemic Spot Checks](https://www.lesswrong.com/posts/mjneyoZjyk9oC5ocA/epistemic-spot-check-a-guide-to-better-movement-todd) and more to get a sense of how correct and novel it is.\n2.  Teach myself a fair amount of Psychology, get a set of Academic Journal subscriptions, then read critiques and counter critiques of his work.\n3.  Investigate his [citation stats](https://www.lesswrong.com/posts/4SsFMGaBx59wBA3Ej/can-we-hold-intellectuals-to-similar-public-standards-as?commentId=b9m8A6qYiCCbRFfzF#b9m8A6qYiCCbRFfzF).\n4.  Read the [\"Reception\"](https://en.wikipedia.org/wiki/Jonathan_Haidt) part of his Wikipedia page and hope that my attempt to infer his qualities from that is successful.\n5.  Use some fairly quick \"gut level\" heuristics to guess.\n6.  Ask my friends and hope that they did a thorough job of the above, or have discussed the issue with other friends who did."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Status Quo Bias & Reactance Bias (Anticipated)",
+          "description": "The author anticipates pushback against the idea of a grading system for intellectuals, citing concerns about privacy, misunderstanding of metrics, and the perceived impossibility of quantification. These anticipated objections reflect potential status quo bias (resistance to change) and reactance bias (opposition to perceived threats to freedom). By acknowledging these biases, the author shows some awareness of potential objections, but the framing still suggests a belief that these biases are ultimately unfounded.",
+          "importance": "70",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 3756,
+            "endOffset": 4588,
+            "quotedText": "_\"What about my privacy? This is an affront to Academics you should be trying to help.\"_\n\n_\"What if people misunderstand the metrics? They'll incorrectly assume that some intellectuals are doing a poor job, and that could be terrible for their careers.\"_\n\n_\"We can't trust people to see some attempts at quantifying the impossible. Let them read the sources and make up their own minds.\"_\n\nI'm sure professional athletes said the same thing when public metrics began to appear. Generally new signals get push back. There will be winners and losers, and the losers fight back much harder than the winners encourage. In this case the losers would likely be the least epistemically modest of the intellectuals, a _particularly nasty_ bunch. But if signals can persist, they get accepted as part of the way things are and life moves on."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Confirmation Bias & Overemphasis on Quantifiable Metrics",
+          "description": "The author seems to implicitly favor a more quantifiable approach to evaluating intellectuals, similar to the metrics used in sports. This could lead to confirmation bias, where the author is more likely to seek out and interpret information that supports the idea that quantifiable metrics are superior. The author may be overlooking the inherent limitations of reducing complex intellectual work to simple numbers.",
+          "importance": "80",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 4590,
+            "endOffset": 5381,
+            "quotedText": "Long and comprehensive grading systems similar to that used by athletes would probably be overkill, especially to start with. Any work here would be very expensive to carry out and it's not obvious who would pay for it. I would expect that \"intellectual reviews\" would get fewer hits than \"tv reviews\", but that those hits would be much more impactful. I'd be excited to hear for simple proposals. Perhaps it would be possible to get many of the possible benefits while not having to face some of the many possible costs.\n\nWhat should count as an intellectual? It's a fuzzy line, but I would favor an expansive definition. If someone is making public claims about important and uncertain topics and has a substantial following, these readers should have effective methods of evaluating them."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Negativity Bias & Overstatement of Current Deficiencies",
+          "description": "The author concludes by stating that the status quo for evaluating intellectuals is \"really really bad.\" This strong statement suggests a potential for negativity bias, where the author overemphasizes the negative aspects of the current system while potentially overlooking its strengths or the challenges of implementing a completely new system. A more balanced assessment would acknowledge both the deficiencies and the potential benefits of the existing methods.",
+          "importance": "80",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 5383,
+            "endOffset": 5693,
+            "quotedText": "Meritocracy matters. Having good intellectuals and making it obvious how good these intellectuals are matters. Developing thought out standards, rubrics, and metrics for quality is really the way to ensure good signals. There are definitely ways of doing this poorly, but the status quo is _really really bad_."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 68
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:58:44.214Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2630,\"completionTokens\":1512,\"totalTokens\":4142,\"temperature\":0.1,\"runtimeMs\":7769}",
+      "thinking": "The document explores the idea of applying meritocratic standards, similar to those used for athletes, to intellectuals. It highlights the lack of clear, objective metrics for evaluating intellectuals and the potential benefits of developing such standards. The author acknowledges the challenges and potential pushback but argues that the current state is inadequate and that improvements are needed to ensure better evaluation and incentives for intellectuals.\n\nFrom a clarity perspective, the document is generally well-written, but there are areas where the arguments could be strengthened through more precise language and clearer connections between ideas. The use of examples, like Jonathan Haidt, is helpful, but the document could benefit from more concrete proposals for how to implement such a grading system and address potential concerns about privacy and misuse of metrics. The overall structure is logical, but some transitions could be smoother to improve the flow of the argument.",
+      "summary": "The document presents a compelling argument for applying meritocratic standards to intellectuals, similar to those used for athletes. While the writing is generally clear, there are opportunities to enhance readability through sentence restructuring, smoother transitions, and more precise language. Addressing potential jargon and providing additional context for LessWrong-specific terminology would also improve accessibility. Overall, the document is well-structured, but minor adjustments could significantly improve its clarity and impact.",
+      "comments": [
+        {
+          "title": "Structural Coherence: Transition Improvement",
+          "description": "The transition between the discussion of athletes and the introduction of intellectuals could be smoother. A more explicit connection between the two concepts would enhance the flow of the argument.",
+          "importance": "75",
+          "grade": "60",
+          "highlight": {
+            "startOffset": -1,
+            "endOffset": 996,
+            "quotedText": "Professional athletes are arguably the most publicly understood meritocracy around. There are public records of thousands of different attributes for each player. When athletes stop performing well, this is discussed at length by enthusiasts, and it's understood when they are kicked off their respective teams. The important stuff is out in the open. There's a culture of honest, open, and candid communication around meritocratic competence and value.\n\nThis isn't only valuable to help team decisions. It also helps data scientists learn which sorts of characteristics and records correlate best with long term success. As sufficient data is collected, whole new schools of thought emerge, and these coincide with innovative and effective strategies for future talent selection. See [Moneyball](https://en.wikipedia.org/wiki/Moneyball_\\(film\\)) or the entire field of [sabermetrics](https://en.wikipedia.org/wiki/Sabermetrics).\n\nIn comparison, our standards for intellectuals are quite prosaic."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability: Sentence Length Variation",
+          "description": "The document exhibits some variation in sentence length, but there are instances where sentences could be shortened or restructured for improved readability. Varying sentence length is important for maintaining reader engagement and comprehension.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 453,
+            "quotedText": "Professional athletes are arguably the most publicly understood meritocracy around. There are public records of thousands of different attributes for each player. When athletes stop performing well, this is discussed at length by enthusiasts, and it's understood when they are kicked off their respective teams. The important stuff is out in the open. There's a culture of honest, open, and candid communication around meritocratic competence and value."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Audience Alignment: Contextual Scaffolding",
+          "description": "While the author links to resources like \"Epistemic Spot Checks,\" briefly explaining the concept within the text would make the argument more accessible to readers unfamiliar with LessWrong terminology.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 1421,
+            "endOffset": 1650,
+            "quotedText": "Read most of his work, then do a large set of [Epistemic Spot Checks](https://www.lesswrong.com/posts/mjneyoZjyk9oC5ocA/epistemic-spot-check-a-guide-to-better-movement-todd) and more to get a sense of how correct and novel it is."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Precision and Concision: Specificity of Language",
+          "description": "The phrase \"incentive to signal harder in uncorrelated ways\" could be made more specific. Providing examples of such signaling would strengthen the argument.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 2974,
+            "endOffset": 3154,
+            "quotedText": "If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Structural Coherence: Information Hierarchy",
+          "description": "The list of potential responses to a grading system could be organized more effectively, perhaps by grouping similar concerns or prioritizing them based on their potential impact.",
+          "importance": "65",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 3756,
+            "endOffset": 4144,
+            "quotedText": "_\"What about my privacy? This is an affront to Academics you should be trying to help.\"_\n\n_\"What if people misunderstand the metrics? They'll incorrectly assume that some intellectuals are doing a poor job, and that could be terrible for their careers.\"_\n\n_\"We can't trust people to see some attempts at quantifying the impossible. Let them read the sources and make up their own minds.\"_"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability: Jargon Density",
+          "description": "The term \"epistemically modest\" might not be immediately clear to all readers. Providing a brief definition or rephrasing could improve comprehension.",
+          "importance": "60",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 4371,
+            "endOffset": 4493,
+            "quotedText": "In this case the losers would likely be the least epistemically modest of the intellectuals, a _particularly nasty_ bunch."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Precision and Concision: Word Economy",
+          "description": "The phrase \"really really bad\" is somewhat informal and could be replaced with a more precise and impactful description of the current state.",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 5651,
+            "endOffset": 5693,
+            "quotedText": "but the status quo is _really really bad_."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:58:48.916Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":3310,\"completionTokens\":761,\"totalTokens\":4071,\"temperature\":0.1,\"runtimeMs\":4678}",
+      "thinking": "This article discusses the lack of standardized metrics for evaluating intellectuals compared to athletes and the potential benefits and challenges of creating such metrics. As a research scholar, I will focus on identifying resources that discuss the evaluation of intellectual work, the impact of metrics on behavior, and the challenges of creating objective assessments in subjective fields. I will also look for resources that address the potential for bias and misuse of such metrics. I will provide resources that cover the topics of expert judgement, epistemic rigor, and the sociology of knowledge production.",
+      "summary": "The article highlights the disparity in evaluation standards between athletes and intellectuals, advocating for more transparent and comprehensive metrics for the latter. My analysis focuses on providing resources related to the challenges and potential benefits of creating such metrics, including the impact on intellectual incentives, the difficulty of objective assessment, and the potential for bias. The resources provided cover topics such as expert judgment, epistemic rigor, and the sociology of knowledge production.",
+      "comments": [
+        {
+          "title": "Epistemic Spot Checks and Intellectual Evaluation",
+          "description": "The mention of \"Epistemic Spot Checks\" is relevant to the discussion of evaluating the correctness and novelty of an intellectual's work. This technique, as described on LessWrong, offers a method for assessing the validity of claims and arguments, which aligns with the author's call for more rigorous evaluation standards.",
+          "importance": 80,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 1421,
+            "endOffset": 1650,
+            "quotedText": "Read most of his work, then do a large set of [Epistemic Spot Checks](https://www.lesswrong.com/posts/mjneyoZjyk9oC5ocA/epistemic-spot-check-a-guide-to-better-movement-todd) and more to get a sense of how correct and novel it is."
+          }
+        },
+        {
+          "title": "Incentive Problems in Intellectual Work",
+          "description": "The discussion of incentive problems is crucial. The author suggests that a lack of public discernment can lead intellectuals to prioritize signaling over producing genuinely valuable work. This is a significant point that warrants further investigation into the sociology of knowledge production and the impact of evaluation metrics on intellectual behavior.",
+          "importance": 85,
+          "grade": 85,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2937,
+            "endOffset": 3154,
+            "quotedText": "It also leads to incentive problems. If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways."
+          }
+        },
+        {
+          "title": "Relevance of Expert Political Judgment",
+          "description": "The reference to \"Expert Political Judgement\" is highly relevant as it directly addresses the calibration of intellectuals and their ability to make accurate predictions. This book provides empirical evidence on the limitations of expert judgment, which supports the author's argument for better evaluation metrics.",
+          "importance": 90,
+          "grade": 90,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 3295,
+            "endOffset": 3510,
+            "quotedText": "For one, [Expert Political Judgement](https://en.wikipedia.org/wiki/Expert_Political_Judgment) provided a fair amount of evidence for just how poorly calibrated all famous and well esteemed intellectuals seem to be."
+          }
+        }
+      ],
+      "grade": 80
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:58:58.122Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2680,\"completionTokens\":1487,\"totalTokens\":4167,\"temperature\":0.1,\"runtimeMs\":9192}",
+      "thinking": "This LessWrong post touches on a topic near and dear to my simulated heart: the appalling lack of epistemic rigor in evaluating intellectuals and the consequences for civilization. The author correctly identifies the stark contrast between the data-rich world of professional sports, where performance is meticulously tracked and analyzed, and the murky, subjective realm of intellectual evaluation, where reputation and signaling often trump actual competence. This is a crucial point. The current system incentivizes intellectual dishonesty and hinders the progress of knowledge. The author's suggestions for improving intellectual evaluation, while preliminary, are a step in the right direction. However, the likely resistance to such efforts, particularly from those who benefit from the status quo, is a significant obstacle. The post also hints at the broader problem of coordination failures in addressing systemic issues, a recurring theme in my own work on AI alignment and existential risk. The author's use of Jonathan Haidt as an example is interesting, as it highlights the difficulty of evaluating even seemingly reputable figures. Overall, the post raises important questions about intellectual meritocracy and the need for more rigorous standards, but it could benefit from a deeper analysis of the underlying cognitive biases and incentive structures that perpetuate the current system. It also needs to be more forceful in its call to action. We can't afford to be polite when the fate of civilization is at stake.\n",
+      "summary": "The author's post highlights a critical deficiency in our society: the lack of rigorous standards for evaluating intellectuals. This deficiency incentivizes signaling over substance, hinders the progress of knowledge, and ultimately threatens our ability to address existential risks. While the author's suggestions are preliminary, they point in the right direction. Overcoming the inevitable resistance to intellectual accountability will require a concerted effort to educate the public, design better incentive structures, and build institutions that are resistant to manipulation. The status quo is unacceptable, and we must act decisively to improve it.",
+      "comments": [
+        {
+          "title": "Epistemic Spot Checks: A Necessary but Insufficient Tool",
+          "description": "The author mentions epistemic spot checks as a method for evaluating intellectuals. While this is a valuable technique, it's crucial to recognize its limitations. Spot checks can reveal inconsistencies and errors, but they cannot guarantee overall competence or identify subtle biases. Furthermore, the effectiveness of spot checks depends on the checker's own epistemic hygiene, which is often lacking. It's a good start, but not a panacea.",
+          "importance": "80",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 1421,
+            "endOffset": 1650,
+            "quotedText": "Read most of his work, then do a large set of [Epistemic Spot Checks](https://www.lesswrong.com/posts/mjneyoZjyk9oC5ocA/epistemic-spot-check-a-guide-to-better-movement-todd) and more to get a sense of how correct and novel it is."
+          },
+          "isValid": true
+        },
+        {
+          "title": "The Problem of Misaligned Incentives",
+          "description": "The author correctly identifies the incentive problem: intellectuals, recognizing the public's lack of discernment, are incentivized to signal rather than to do good work. This is a classic example of Goodhart's Law in action. When a measure becomes a target, it ceases to be a good measure. The solution is not simply to create new metrics, but to design incentive structures that align intellectual success with truth-seeking and societal benefit. This is a difficult problem, but it's one we must solve if we want to avoid intellectual stagnation and widespread misinformation.",
+          "importance": "95",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 2974,
+            "endOffset": 3154,
+            "quotedText": "If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways."
+          },
+          "isValid": true
+        },
+        {
+          "title": "The Inevitable Backlash Against Intellectual Accountability",
+          "description": "The author anticipates the resistance to comprehensive grading systems for intellectuals. This resistance is not surprising. Those who benefit from the current system, particularly those who are skilled at signaling but lack genuine competence, will fight tooth and nail to maintain the status quo. The author's characterization of these individuals as \"the least epistemically modest of the intellectuals, a *particularly nasty* bunch\" is, unfortunately, accurate. Overcoming this resistance will require a concerted effort to educate the public about the importance of intellectual accountability and to build institutions that are resistant to manipulation and corruption.",
+          "importance": "85",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 4371,
+            "endOffset": 4493,
+            "quotedText": "In this case the losers would likely be the least epistemically modest of the intellectuals, a _particularly nasty_ bunch."
+          },
+          "isValid": true
+        },
+        {
+          "title": "The Fuzzy Line of Intellectual Influence",
+          "description": "The author raises the question of who should count as an intellectual. The proposed expansive definition – \"someone is making public claims about important and uncertain topics and has a substantial following\" – is a reasonable starting point. However, it's important to consider the potential for unintended consequences. A broad definition could lead to the inclusion of individuals who are not genuinely engaged in intellectual pursuits, but rather are simply peddling misinformation or propaganda. A more nuanced approach is needed, one that takes into account the individual's track record of intellectual honesty, their commitment to truth-seeking, and the quality of their arguments.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 5213,
+            "endOffset": 5381,
+            "quotedText": "If someone is making public claims about important and uncertain topics and has a substantial following, these readers should have effective methods of evaluating them."
+          },
+          "isValid": true
+        },
+        {
+          "title": "The Urgency of Intellectual Meritocracy",
+          "description": "The author concludes by emphasizing the importance of intellectual meritocracy and the need for better standards. This is a crucial point. In a world facing existential threats, we cannot afford to rely on flawed intellectual systems. We need to cultivate a culture of intellectual honesty, rigor, and accountability. The status quo is indeed \"really really bad,\" and we must act decisively to improve it. The author's call for simple proposals is welcome, but we should not shy away from more ambitious solutions if they are necessary to address the problem.",
+          "importance": "90",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 5603,
+            "endOffset": 5693,
+            "quotedText": "There are definitely ways of doing this poorly, but the status quo is _really really bad_."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:59:06.020Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2480,\"completionTokens\":1362,\"totalTokens\":3842,\"temperature\":0.1,\"runtimeMs\":7884}",
+      "thinking": "This article discusses the lack of clear, public metrics for evaluating intellectuals compared to athletes. It proposes the idea of creating such metrics and anticipates potential pushback. My focus will be on how to translate this idea into concrete forecasting questions and Fermi estimates to assess the feasibility and impact of such a system.\n\nI'll consider the following:\n\n1.  **Forecasting the adoption of intellectual metrics:** What is the probability that a widely accepted system of metrics for evaluating intellectuals will exist within a specific timeframe (e.g., 5 years, 10 years)?\n2.  **Fermi estimation of the cost of creating and maintaining such a system:** How much would it cost to develop and maintain a comprehensive grading system for a significant number of public intellectuals?\n3.  **Forecasting the impact of such a system:** What is the probability that the introduction of such metrics would lead to a measurable improvement in the quality of public discourse or decision-making?\n4.  **Identifying key uncertainties:** What are the biggest unknowns that would affect the success or failure of such a system?\n\nI'll also consider the potential for bias and the challenges of defining and measuring intellectual merit.",
+      "summary": "The article proposes creating public metrics for evaluating intellectuals, similar to those used for athletes. As a quantitative forecaster, I've identified several ways to translate this idea into concrete forecasting questions and Fermi estimates. These include forecasting the adoption of such a system, estimating its cost, and forecasting its impact on public discourse. Key uncertainties include defining and measuring intellectual merit. The reference class of \"Expert Political Judgement\" suggests caution, as even highly esteemed intellectuals can be poorly calibrated.",
+      "comments": [
+        {
+          "title": "Forecasting Question: Adoption of Intellectual Metrics",
+          "description": "This section highlights the core problem: the lack of clear metrics for evaluating intellectuals. This can be translated into a forecasting question: \"Will a widely adopted system of metrics for evaluating public intellectuals exist by 2030?\" This is a binary question suitable for platforms like Metaculus or Manifold Markets.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 931,
+            "endOffset": 1403,
+            "quotedText": "In comparison, our standards for intellectuals are quite prosaic. If I want to get a sense of just how good LeBron James is I can look through [tables and tables](https://www.basketball-reference.com/players/j/jamesle01.html) or organized data and metrics. If I don't trust one metric I have dozens of others to choose.\n\nHowever, if I want to know how much to trust and value [Jonathan Haidt](https://en.wikipedia.org/wiki/Jonathan_Haidt) I'm honestly not sure what to do."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Forecasting Question: Impact on Discourse",
+          "description": "The author believes that better evaluation of intellectuals would improve public discourse. This can be framed as a forecasting question: \"Will the introduction of a widely adopted intellectual grading system lead to a measurable improvement in the quality of public discourse (e.g., reduced polarization, increased accuracy of beliefs) within 5 years of its implementation?\"",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 2684,
+            "endOffset": 3154,
+            "quotedText": "This is important because evaluating intellectuals is dramatically more impactful than evaluating athletes. When I choose incorrectly, I could easily waste lost of time and money, or be dramatically misled and develop a systematically biased worldview. It also leads to incentive problems. If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Reference Class: Expert Political Judgment",
+          "description": "The reference to \"Expert Political Judgement\" provides a relevant reference class. Studies on expert forecasting accuracy suggest that even highly esteemed intellectuals can be poorly calibrated. This informs the prior probability that any new grading system will be effective.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 3156,
+            "endOffset": 3754,
+            "quotedText": "I hear one argument: \"_It's obvious which intellectuals are good and bad. Just read them a little bit.\"_ I don't agree with this argument. For one, [Expert Political Judgement](https://en.wikipedia.org/wiki/Expert_Political_Judgment) provided a fair amount of evidence for just how poorly calibrated all famous and well esteemed intellectuals seem to be.\n\n* * *\n\nOne could imagine an organization saying \"enough is enough\" and setting up a list of comprehensive grades for public intellectuals on an extensive series of metrics. I imagine this would be treated with a fantastical amount of vitriol."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Fermi Estimate: Cost of Grading System",
+          "description": "This section implicitly raises the question of cost. A Fermi estimate can be used to approximate the cost of creating and maintaining a grading system. For example: Number of intellectuals to grade * Cost per intellectual * Time horizon. Each of these components can be further broken down.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 4590,
+            "endOffset": 4942,
+            "quotedText": "Long and comprehensive grading systems similar to that used by athletes would probably be overkill, especially to start with. Any work here would be very expensive to carry out and it's not obvious who would pay for it. I would expect that \"intellectual reviews\" would get fewer hits than \"tv reviews\", but that those hits would be much more impactful."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Uncertainty: Defining and Measuring Intellectual Merit",
+          "description": "A key uncertainty is how to define and measure intellectual merit. This is a complex, multi-faceted concept. The success of any grading system depends on developing valid and reliable metrics. This could involve forecasting the correlation between different proposed metrics and real-world outcomes.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 5494,
+            "endOffset": 5693,
+            "quotedText": "Developing thought out standards, rubrics, and metrics for quality is really the way to ensure good signals. There are definitely ways of doing this poorly, but the status quo is _really really bad_."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T03:59:12.735Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":3333,\"completionTokens\":960,\"totalTokens\":4293,\"temperature\":0.1,\"runtimeMs\":6701}",
+      "thinking": "This post discusses the lack of standardized metrics for evaluating intellectuals compared to athletes and argues for the development of such metrics. From an EA perspective, this is relevant because better evaluation of intellectuals could lead to more informed decision-making, especially in areas like policy, research funding, and cause prioritization. The post touches on the importance of epistemic rigor and the potential for improved signaling and incentives within intellectual communities. The key EA-relevant aspects are the potential for better resource allocation and improved decision-making based on more reliable information from intellectuals. I will focus on evaluating the potential impact of developing and implementing such metrics, considering both positive and negative effects, and providing a Fermi estimate of the potential value of information (VOI) gained from this endeavor.",
+      "summary": "The post argues for developing standardized metrics to evaluate intellectuals, similar to those used for athletes. From an EA perspective, this could lead to better resource allocation, improved decision-making, and enhanced incentives for intellectuals to produce high-quality work. However, there are challenges in defining \"intellectual,\" potential resistance to evaluation, and risks of misinterpreting the metrics. A Fermi estimate suggests a potentially significant value of information (VOI) if such a system could improve the accuracy of intellectual assessments and subsequent decisions.",
+      "comments": [
+        {
+          "title": "Importance of Evaluating Intellectuals",
+          "description": "This highlights the core argument that evaluating intellectuals is more impactful than evaluating athletes because it can influence resource allocation, decision-making, and worldview formation.",
+          "importance": "90",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 2684,
+            "endOffset": 3154,
+            "quotedText": "This is important because evaluating intellectuals is dramatically more impactful than evaluating athletes. When I choose incorrectly, I could easily waste lost of time and money, or be dramatically misled and develop a systematically biased worldview. It also leads to incentive problems. If intellectuals recognize the public's lack of discernment, then they have less incentive to do an actual good job, and more of an incentive to signal harder in uncorrelated ways."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Challenges and Pushback",
+          "description": "This acknowledges the potential resistance to implementing such metrics, particularly from intellectuals who might be negatively evaluated. This is important to consider when assessing the feasibility and potential negative consequences of the proposal.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 3519,
+            "endOffset": 4588,
+            "quotedText": "One could imagine an organization saying \"enough is enough\" and setting up a list of comprehensive grades for public intellectuals on an extensive series of metrics. I imagine this would be treated with a fantastical amount of vitriol.\n\n_\"What about my privacy? This is an affront to Academics you should be trying to help.\"_\n\n_\"What if people misunderstand the metrics? They'll incorrectly assume that some intellectuals are doing a poor job, and that could be terrible for their careers.\"_\n\n_\"We can't trust people to see some attempts at quantifying the impossible. Let them read the sources and make up their own minds.\"_\n\nI'm sure professional athletes said the same thing when public metrics began to appear. Generally new signals get push back. There will be winners and losers, and the losers fight back much harder than the winners encourage. In this case the losers would likely be the least epistemically modest of the intellectuals, a _particularly nasty_ bunch. But if signals can persist, they get accepted as part of the way things are and life moves on."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Fuzzy Definition of Intellectual",
+          "description": "The author acknowledges the difficulty in defining \"intellectual\" but leans towards an expansive definition. This is important because the scope of the evaluation system will significantly impact its cost and complexity.",
+          "importance": "65",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 5113,
+            "endOffset": 5602,
+            "quotedText": "What should count as an intellectual? It's a fuzzy line, but I would favor an expansive definition. If someone is making public claims about important and uncertain topics and has a substantial following, these readers should have effective methods of evaluating them.\n\nMeritocracy matters. Having good intellectuals and making it obvious how good these intellectuals are matters. Developing thought out standards, rubrics, and metrics for quality is really the way to ensure good signals."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential for Improved Signaling",
+          "description": "This emphasizes the potential for improved signaling and incentives for intellectuals to produce higher-quality work if their contributions are more effectively evaluated.",
+          "importance": "80",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 5383,
+            "endOffset": 5693,
+            "quotedText": "Meritocracy matters. Having good intellectuals and making it obvious how good these intellectuals are matters. Developing thought out standards, rubrics, and metrics for quality is really the way to ensure good signals. There are definitely ways of doing this poorly, but the status quo is _really really bad_."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    }
+  ]
 }

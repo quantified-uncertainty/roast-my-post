@@ -14,5 +14,559 @@
     "ea-impact-evaluator"
   ],
   "content": "Higher-order forecasting could be a useful concept for prediction markets and forecasting systems more broadly.\n\nThe core idea is straightforward:  \n**Nth-order forecasts are forecasts about (N-1)th order forecasts.**  \n \n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/PB57prp5kEMDgwJsm/eg77x9u7bh2noo29xrpw)\n\nAbstract representation of 2nd-order forecasts. Dall-E 3\n\n## Examples\n\nHere are some examples:\n\n**0-Order Forecasting (i.e., the ground truth)**\n\n*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?\n\n**2nd-Order Forecasting**\n\n*   How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?’\\]_\n\nAs forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem.\n\n## Benefits\n\nSome potential benefits of higher-order forecasting include:\n\n1.  **Identify Overconfidence**\n    *   Improve the accuracy of forecasts by having participants directly predict and get rewarded for estimating overconfidence or poor calibration in other forecasts.\n    *   _\"How overconfident is \\[forecast/forecaster\\] X\"_\n2.  **Prioritize Questions**\n    *   Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *   _\"How valuable is the information from forecasting question X?\"_\n3.  **Surface Relationships**\n    *   Surface key drivers and correlations between events by letting forecasters predict how different questions relate to each other.\n    *   _\"How correlated will the forecasts for questions X and Y be over \\[time period\\]?\"_\n4.  **Faster Information Aggregation**\n    *   Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events.\n    *   _\"What will the forecast for question X be on \\[future date\\], conditional on \\[other forecasts or events\\]?\"_\n5.  **Leverage Existing Infrastructure**\n    *   Leverage the existing infrastructure and resolution processes of prediction platforms, which are already designed to handle large numbers of forecasting questions.\n\nWe've already seen some early examples of higher-order forecasts on platforms like Manifold Markets. For example, with the recent questions:\n\n*   [Will there be a Manifold bot that makes profitable bets on random 1-month markets by December 2024? (Ṁ3,000 subsidy!)](https://manifold.markets/CDBiddulph/will-there-be-a-manifold-bot-that-m)\n*   [Manifold Top Traders Leaderboard Ranking Prediction (2024)](https://manifold.markets/AmmonLam/manifold-top-traders-leaderboard-ra)\n*   [If Manifold begins allowing real-money withdrawals, will its accuracy improve?](https://manifold.markets/IsaacKing/if-manifold-begins-allowing-realmon)\n*   [Is Manifold's P(Doom) by 2050 currently between 10% and 90%? \\[Resolves to Poll\\]](https://manifold.markets/ManifoldAI/is-manifolds-pdoom-by-2050-currentl)\n*   [Will Manifold be more accurate than real-money markets in forecasting the 2024 election?](https://manifold.markets/benshindel/will-manifold-be-more-accurate-than)\n\n## Challenges\n\nOf course, there are also challenges and risks to consider with higher-order forecasts:\n\n1.  The accuracy of higher-order forecasts depends on the accuracy of the lower-order forecasts they build on. If the underlying forecasts are poorly calibrated or noisy, that will limit the value of higher-order forecasts.\n2.  Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks.\n3.  A substantial base of lower-order forecasting questions is needed before higher-order forecasts can be productively created on top of them.\n\n## Alternative Names\n\nI considered a few options for names, asked around a bit, and settled on \"higher-order\" for this term. Here are some other options I considered:\n\n*   **Derivatives:** In the financial market, \"markets about markets\" are called derivatives. However, \"derivative\" is often understood as a term specific to markets, which could make it more confusing for forecasting.\n*   **Meta-forecasts:** I used this term before. It's a catchy term, but it doesn't differentiate between layers easily. There's no straightforward way to refer to \"meta-layer 1.\"\n*   **Higher-Layer:** Similar to \"higher-order,\" but less precise.\n\nIf there's contention on this later, it could be useful to have some formal discussion, to make sure that we share consistent terminology. Right now, I doubt many people care about it.\n\n## Conclusion\n\nOver time, I expect higher-order forecasts to go from a niche idea to a key component of mature forecasting systems. Just as financial markets would be far less efficient without derivatives, forecasting platforms could see substantial accuracy and liquidity gains from higher-order forecasts.",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:02:22.559Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2689,\"completionTokens\":1289,\"totalTokens\":3978,\"temperature\":0.1,\"runtimeMs\":8033}",
+      "thinking": "This document introduces the concept of higher-order forecasting and its potential benefits and challenges. From a bias detection perspective, the document itself seems relatively neutral in its presentation. However, the application of higher-order forecasting, as described, could be susceptible to various biases, particularly those related to information aggregation, overconfidence, and the interpretation of complex systems. The reliance on lower-order forecasts introduces the risk of compounding existing biases. The potential for faster information aggregation could also lead to the propagation of biases more rapidly. The document also touches on the challenges of complexity, which can lead to cognitive biases in interpretation and decision-making.\n\nI will focus on identifying potential biases that could arise from the implementation and interpretation of higher-order forecasts, as well as any subtle biases present in the document itself.",
+      "summary": "The document presents higher-order forecasting as a potentially valuable tool for prediction markets. However, its implementation carries risks of amplifying existing biases, introducing new biases related to complexity and information aggregation, and being susceptible to framing effects. Careful consideration should be given to mitigating these biases through robust question design, bias awareness training, and mechanisms for identifying and correcting biased predictions.",
+      "comments": [
+        {
+          "title": "Framing Effects in Question Design",
+          "description": "The way higher-order forecasting questions are framed can significantly influence the responses. Subtle changes in wording or presentation can trigger framing effects, leading to biased predictions. For example, questions framed in terms of potential losses might elicit different responses than questions framed in terms of potential gains.",
+          "importance": "65",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 792,
+            "endOffset": 1183,
+            "quotedText": "How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Risk of Overconfidence in Higher-Order Forecasts",
+          "description": "The document mentions identifying overconfidence as a benefit, but higher-order forecasts themselves could be subject to overconfidence. Forecasters might overestimate their ability to accurately predict the behavior of other forecasts, especially when dealing with complex relationships and limited data.",
+          "importance": "85",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 2194,
+            "endOffset": 2408,
+            "quotedText": "nclude:\n\n1.  **Identify Overconfidence**\n    *   Improve the accuracy of forecasts by having participants directly predict and get rewarded for estimating overconfidence or poor calibration in other forecasts.\n    "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential for Confirmation Bias in Question Prioritization",
+          "description": "The idea of prioritizing questions based on their perceived value of information could be influenced by confirmation bias. Forecasters might be more likely to prioritize questions that align with their existing beliefs or desired outcomes, leading to a skewed assessment of information value.",
+          "importance": "80",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 2469,
+            "endOffset": 2701,
+            "quotedText": "Prioritize Questions**\n    *   Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *   _\"How valuable is the information from forecasting question X?\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential for Groupthink and Bandwagon Effect",
+          "description": "Faster information aggregation, while beneficial, could also lead to groupthink or bandwagon effects, where forecasters conform to the prevailing opinion rather than independently assessing the information. This could suppress dissenting viewpoints and lead to biased predictions.",
+          "importance": "70",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 3010,
+            "endOffset": 3160,
+            "quotedText": "Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Survivorship Bias in Evaluating Forecasting Platforms",
+          "description": "The document mentions leveraging existing infrastructure of prediction platforms. However, focusing solely on successful platforms might introduce survivorship bias, overlooking the lessons learned from platforms that failed due to various biases or limitations.",
+          "importance": "55",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 3286,
+            "endOffset": 3492,
+            "quotedText": "Leverage Existing Infrastructure**\n    *   Leverage the existing infrastructure and resolution processes of prediction platforms, which are already designed to handle large numbers of forecasting questions."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Amplification of Existing Biases",
+          "description": "The accuracy of higher-order forecasts depends on the accuracy of lower-order forecasts. If the lower-order forecasts are biased, the higher-order forecasts will likely amplify those biases, leading to even more distorted predictions.",
+          "importance": "90",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 4564,
+            "endOffset": 4783,
+            "quotedText": "The accuracy of higher-order forecasts depends on the accuracy of the lower-order forecasts they build on. If the underlying forecasts are poorly calibrated or noisy, that will limit the value of higher-order forecasts."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Complexity and Cognitive Overload",
+          "description": "The increased complexity of higher-order forecasts could lead to cognitive overload and reliance on heuristics, potentially introducing biases like availability heuristic or anchoring effect. Participants might focus on easily accessible information or be unduly influenced by initial estimates.",
+          "importance": "75",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 70
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:02:29.206Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2812,\"completionTokens\":1084,\"totalTokens\":3896,\"temperature\":0.1,\"runtimeMs\":6073}",
+      "thinking": "This document introduces the concept of higher-order forecasting and its potential benefits and challenges. My analysis will focus on the clarity and coherence of the explanation, the accessibility of the examples, and the overall readability of the text for a general audience interested in forecasting.\n\nI'll pay close attention to how well the author defines and illustrates the concept, whether the benefits and challenges are presented clearly, and if the language used is appropriate for the intended audience. I will also look for opportunities to improve the flow and structure of the document to enhance understanding.",
+      "summary": "The document provides a good introduction to higher-order forecasting, but could benefit from improvements in clarity and accessibility. Simplifying the examples, elaborating on the challenges, and optimizing the structure would enhance understanding for a broader audience. The core concept is well-defined, but further explanation and more accessible examples would solidify comprehension.",
+      "comments": [
+        {
+          "title": "Definition Clarity",
+          "description": "The core definition is presented concisely, but could benefit from further elaboration to ensure immediate understanding for readers unfamiliar with the concept.",
+          "importance": "85",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 111,
+            "endOffset": 214,
+            "quotedText": "\n\nThe core idea is straightforward:  \n**Nth-order forecasts are forecasts about (N-1)th order forecasts"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Example Relevance and Clarity",
+          "description": "The examples are helpful, but the jump from 0-order to 1st-order might be too abrupt. Adding a simpler example for 1st-order forecasting could improve understanding.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 490,
+            "endOffset": 759,
+            "quotedText": "*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Complexity in Higher-Order Examples",
+          "description": "The examples for 2nd and 3rd order forecasting are complex and could be simplified to better illustrate the core concept. The nested nature of the 3rd-order example is particularly challenging to parse quickly.",
+          "importance": "80",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 1178,
+            "endOffset": 1606,
+            "quotedText": "nth?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of t"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Benefit Prioritization",
+          "description": "The benefits section is well-structured, but the order of presentation could be optimized. Starting with the most easily understood benefit (e.g., Leverage Existing Infrastructure) could improve initial engagement.",
+          "importance": "65",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 2141,
+            "endOffset": 3365,
+            "quotedText": "Some potential benefits of higher-order forecasting include:\n\n1.  **Identify Overconfidence**\n    *   Improve the accuracy of forecasts by having participants directly predict and get rewarded for estimating overconfidence or poor calibration in other forecasts.\n    *   _\"How overconfident is \\[forecast/forecaster\\] X\"_\n2.  **Prioritize Questions**\n    *   Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *   _\"How valuable is the information from forecasting question X?\"_\n3.  **Surface Relationships**\n    *   Surface key drivers and correlations between events by letting forecasters predict how different questions relate to each other.\n    *   _\"How correlated will the forecasts for questions X and Y be over \\[time period\\]?\"_\n4.  **Faster Information Aggregation**\n    *   Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events.\n    *   _\"What will the forecast for question X be on \\[future date\\], conditional on \\[other forecasts or events\\]?\"_\n5.  **Leverage Existing Infrastructure**\n    *   Leverage the existing infrastructure"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Challenge Elaboration",
+          "description": "The challenges are presented clearly, but could benefit from more detailed explanations of the potential consequences of each challenge. For example, elaborating on the 'systemic risks' associated with complexity would be helpful.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Alternative Names Discussion",
+          "description": "The discussion of alternative names is useful for understanding the author's thought process, but could be more concise. Focusing on the key reasons for choosing 'higher-order' would improve clarity.",
+          "importance": "55",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 5122,
+            "endOffset": 5919,
+            "quotedText": "I considered a few options for names, asked around a bit, and settled on \"higher-order\" for this term. Here are some other options I considered:\n\n*   **Derivatives:** In the financial market, \"markets about markets\" are called derivatives. However, \"derivative\" is often understood as a term specific to markets, which could make it more confusing for forecasting.\n*   **Meta-forecasts:** I used this term before. It's a catchy term, but it doesn't differentiate between layers easily. There's no straightforward way to refer to \"meta-layer 1.\"\n*   **Higher-Layer:** Similar to \"higher-order,\" but less precise.\n\nIf there's contention on this later, it could be useful to have some formal discussion, to make sure that we share consistent terminology. Right now, I doubt many people care about it."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:02:35.728Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":3492,\"completionTokens\":1112,\"totalTokens\":4604,\"temperature\":0.1,\"runtimeMs\":6513}",
+      "thinking": "This document introduces the concept of higher-order forecasts and their potential benefits and challenges. As a research scholar, I will focus on identifying resources that provide a deeper understanding of forecasting, prediction markets, and related concepts like derivatives and information aggregation. I will also look for resources that discuss the challenges of forecasting accuracy and complexity, as these are crucial for evaluating the feasibility and value of higher-order forecasts. I will provide links to relevant academic papers, blog posts, and forum discussions where available, and include citation information for resources that lack direct links. I will also connect specific references to the highlighted sections to enhance understanding.",
+      "summary": "This document introduces the concept of higher-order forecasts, which are forecasts about forecasts. It explores potential benefits such as identifying overconfidence, prioritizing questions, surfacing relationships, and faster information aggregation. The document also acknowledges challenges like dependence on lower-order forecast accuracy and increased complexity. I have identified resources that provide a deeper understanding of forecasting, prediction markets, and related concepts, and connected them to specific sections of the document.",
+      "comments": [
+        {
+          "title": "Resource: Prediction Markets Literature",
+          "description": "This section introduces the core concept of higher-order forecasts. To understand the context and potential of this concept, it's helpful to have a solid understanding of prediction markets in general. This resource provides an overview of the academic literature on prediction markets.",
+          "importance": 85,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 111,
+            "quotedText": "Higher-order forecasting could be a useful concept for prediction markets and forecasting systems more broadly."
+          }
+        },
+        {
+          "title": "Resource: Derivatives in Financial Markets",
+          "description": "The author draws an analogy between higher-order forecasts and financial derivatives. Understanding how derivatives function in financial markets can provide insights into the potential role and impact of higher-order forecasts in prediction markets. This resource explains the role of derivatives in financial markets.",
+          "importance": 80,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 1645,
+            "endOffset": 1934,
+            "quotedText": "As forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets."
+          }
+        },
+        {
+          "title": "Resource: Calibration and Overconfidence in Forecasting",
+          "description": "One of the stated benefits of higher-order forecasts is to identify overconfidence. Research on calibration and overconfidence in forecasting is directly relevant to this point. This resource provides insights into how to measure and mitigate overconfidence in forecasts.",
+          "importance": 75,
+          "grade": 70,
+          "isValid": false,
+          "highlight": {
+            "startOffset": 2243,
+            "endOffset": 215,
+            "quotedText": "**  \n \n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/PB57prp5kEMDgwJsm/eg77x9u7bh2noo29xrpw)\n\nAbstract representation of 2nd-order forecasts. Dall-E 3\n\n## Examples\n\nHere are some examples:\n\n**0-Order Forecasting (i.e., the ground truth)**\n\n*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?\n\n**2nd-Order Forecasting**\n\n*   How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?’\\]_\n\nAs forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem.\n\n## Benefits\n\nSome potential benefits of higher-order forecasting include:\n\n1.  **Identify Overconfidence**\n    *   "
+          },
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Resource: Information Value Theory",
+          "description": "The document mentions prioritizing questions by forecasting the value of information. This connects to the field of information value theory, which studies how to quantify the value of information in decision-making. This resource provides a theoretical framework for understanding the value of information.",
+          "importance": 70,
+          "grade": 65,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2500,
+            "endOffset": 2629,
+            "quotedText": "Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions."
+          }
+        },
+        {
+          "title": "Resource: Complexity in Prediction Markets",
+          "description": "The document acknowledges that higher-order forecasts add complexity. Research on the impact of complexity on prediction market participation and accuracy is relevant here. This resource explores the challenges of managing complexity in prediction markets.",
+          "importance": 65,
+          "grade": 60,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          }
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:02:45.898Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2862,\"completionTokens\":1567,\"totalTokens\":4429,\"temperature\":0.1,\"runtimeMs\":9880}",
+      "thinking": "This article introduces the concept of \"higher-order forecasts,\" which are essentially forecasts about forecasts. The author argues that these could be beneficial for prediction markets and forecasting systems, drawing an analogy to financial derivatives. The potential benefits include identifying overconfidence, prioritizing questions, surfacing relationships, and faster information aggregation. The author also acknowledges challenges such as dependence on the accuracy of lower-order forecasts and increased complexity. \n\nFrom my perspective, this is a potentially interesting development, but one that needs to be approached with extreme caution. The core problem with prediction markets, as I've often pointed out, isn't necessarily the *lack* of higher-order forecasts, but the presence of cognitive biases, signaling games, and the general failure to incentivize genuine truth-seeking. Adding layers of abstraction on top of a fundamentally flawed base could easily amplify existing problems and create new ones. The analogy to financial derivatives is particularly concerning, given the history of those instruments in creating systemic risk and obscuring underlying realities. I am also skeptical of the claim that this will lead to \"substantial accuracy and liquidity gains.\" Liquidity is not the same as truth, and accuracy requires more than just aggregating opinions, especially if those opinions are themselves based on flawed reasoning.\n\nI'm also concerned about the potential for Goodhart's Law to rear its ugly head. If we start explicitly rewarding people for predicting the accuracy of other forecasts, we might inadvertently incentivize behaviors that *look* like good forecasting but don't actually improve our understanding of the world. For example, people might focus on predicting the *popularity* of forecasts rather than their actual accuracy, leading to a self-referential system that's detached from reality. The author touches on the need for a substantial base of lower-order forecasts, but doesn't adequately address the need for those forecasts to be *reliable* and *well-calibrated* in the first place. Without that foundation, higher-order forecasts are likely to be garbage in, garbage out.\n\nFinally, I find the discussion of alternative names somewhat trivial. The real issue isn't what we *call* these things, but whether they actually help us make better decisions and understand the world more accurately. I would have preferred to see a more rigorous analysis of the potential pitfalls and how to mitigate them, rather than a debate about terminology. Overall, I'm cautiously pessimistic about this idea. It has the potential to be useful, but only if implemented with a deep understanding of the underlying challenges and a commitment to rigorous truth-seeking.",
+      "summary": "The article proposes 'higher-order forecasts' as a way to improve prediction markets, drawing an analogy to financial derivatives. While the idea has some potential benefits, I am deeply concerned about the potential for Goodhart's Law, the amplification of existing biases, and the increased complexity it introduces. The reliance on the accuracy of lower-order forecasts is a critical vulnerability, and the analogy to financial derivatives is particularly worrisome given their history of systemic risk. Overall, I am cautiously pessimistic about this approach, believing it requires far more rigorous analysis and careful implementation to avoid unintended consequences.",
+      "comments": [
+        {
+          "title": "Analogy to Financial Derivatives",
+          "description": "The comparison to financial derivatives is concerning. Derivatives are notoriously complex and have contributed to systemic risk in financial markets. Applying this model to forecasting could introduce similar problems, obscuring the underlying realities and creating new avenues for manipulation and instability.",
+          "importance": "85",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 1645,
+            "endOffset": 2126,
+            "quotedText": "As forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential for Goodhart's Law",
+          "description": "The idea of rewarding participants for estimating overconfidence or poor calibration in other forecasts is fraught with peril. It's highly susceptible to Goodhart's Law: the metric becomes the target, and when a metric becomes a target, it ceases to be a good metric. People will optimize for the reward, not necessarily for actual accuracy.",
+          "importance": "90",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 2194,
+            "endOffset": 2408,
+            "quotedText": "nclude:\n\n1.  **Identify Overconfidence**\n    *   Improve the accuracy of forecasts by having participants directly predict and get rewarded for estimating overconfidence or poor calibration in other forecasts.\n    "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Prioritizing Questions and Value of Information",
+          "description": "The idea of prioritizing questions based on the 'value of information' is vague and potentially misleading. What constitutes 'value' is subjective and depends on the goals and values of the decision-maker. This could easily lead to prioritizing questions that are popular or politically expedient, rather than those that are genuinely important for understanding the world.",
+          "importance": "75",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 2500,
+            "endOffset": 2702,
+            "quotedText": "Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *   _\"How valuable is the information from forecasting question X?\"_"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Faster Information Aggregation - A Double-Edged Sword",
+          "description": "While faster information aggregation sounds good in theory, it could also lead to faster propagation of errors and biases. If the initial forecasts are flawed, rapidly aggregating them will only amplify the problem. Speed is not a substitute for accuracy and rigor.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 2922,
+            "endOffset": 3186,
+            "quotedText": "tions X and Y be over \\[time period\\]?\"_\n4.  **Faster Information Aggregation**\n    *   Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events.\n    *   _\"What will the f"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Dependence on Lower-Order Forecast Quality",
+          "description": "The accuracy of higher-order forecasts is entirely dependent on the quality of the underlying lower-order forecasts. If those are biased, poorly calibrated, or based on flawed reasoning, the higher-order forecasts will simply amplify those errors. This point needs far more emphasis.",
+          "importance": "95",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 4564,
+            "endOffset": 4783,
+            "quotedText": "The accuracy of higher-order forecasts depends on the accuracy of the lower-order forecasts they build on. If the underlying forecasts are poorly calibrated or noisy, that will limit the value of higher-order forecasts."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Complexity and Systemic Risks",
+          "description": "Increased complexity is a major concern. Forecasting systems are already susceptible to cognitive biases and manipulation. Adding layers of abstraction will only make it harder to identify and mitigate these problems, potentially leading to unforeseen systemic risks.",
+          "importance": "80",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 55
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:02:56.418Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2662,\"completionTokens\":1808,\"totalTokens\":4470,\"temperature\":0.1,\"runtimeMs\":10515}",
+      "thinking": "This document introduces the concept of \"higher-order forecasts,\" which are forecasts about forecasts. It argues that these higher-order forecasts can improve prediction market efficiency and information aggregation, similar to how derivatives function in financial markets. The document provides examples, potential benefits, and challenges associated with this concept. My role is to analyze this through the lens of quantitative forecasting, focusing on how these higher-order forecasts can be made concrete, measurable, and well-calibrated.\n\nI will focus on identifying opportunities to transform the examples into questions suitable for forecasting platforms, providing probability estimates, and developing simple Fermi models where applicable. I will also consider the challenges mentioned, particularly the dependence on the accuracy of lower-order forecasts and the added complexity. I'll also consider how to quantify the value of information gained from these higher-order forecasts.\n\nI will also consider how to address the challenges mentioned, particularly the dependence on the accuracy of lower-order forecasts and the added complexity. I'll also consider how to quantify the value of information gained from these higher-order forecasts.",
+      "summary": "This document introduces the concept of higher-order forecasts, which are forecasts about forecasts. As a quantitative forecasting expert, I see significant potential in this concept for improving prediction market efficiency and information aggregation. The key is to transform the abstract ideas into concrete, measurable forecasting questions suitable for platforms like Metaculus and Manifold Markets. This requires careful consideration of metrics, time horizons, and resolution criteria. While challenges exist, particularly regarding the accuracy of lower-order forecasts and the added complexity, the potential benefits of identifying overconfidence, prioritizing questions, and surfacing relationships make higher-order forecasting a promising area for future development.",
+      "comments": [
+        {
+          "title": "Defining Higher-Order Forecasts",
+          "description": "The core definition of Nth-order forecasts as forecasts about (N-1)th order forecasts is crucial for understanding the concept. This recursive definition needs to be clearly understood to formulate meaningful higher-order forecasting questions.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 149,
+            "endOffset": 221,
+            "quotedText": "**Nth-order forecasts are forecasts about (N-1)th order forecasts.**  \n "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Example: 2nd-Order Forecast on GDP Correlation",
+          "description": "This example provides a good starting point for creating a concrete forecasting question. We can refine this by specifying the correlation metric (e.g., Pearson correlation coefficient) and the data sources used for GDP figures. A possible Metaculus question could be: \"What will be the Pearson correlation coefficient between the Metaculus community forecasts for US GDP in 2024 and 2025, measured over the period of June 1, 2024 to May 31, 2025?\"",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 792,
+            "endOffset": 881,
+            "quotedText": "How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Example: 2nd-Order Forecast on Forecast Volume",
+          "description": "This example can be translated into a forecasting question on Metaculus or Manifold Markets. A possible question could be: \"How many forecasts will the question 'What will be the GDP of the US in 2024?' receive on Metaculus in total by December 31, 2024?\"",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 886,
+            "endOffset": 982,
+            "quotedText": "How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Example: 2nd-Order Forecast on Manifold Prediction",
+          "description": "This example is already quite specific and suitable for a prediction market. It highlights the potential for forecasting the behavior of prediction markets themselves. A possible question on Manifold Markets could be: \"If the question 'What is the chance that a Republican will win the 2028 Presidential Election?' was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be after 1 month?\"",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 987,
+            "endOffset": 1183,
+            "quotedText": "If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Benefit: Identify Overconfidence",
+          "description": "This benefit is particularly relevant to improving forecast calibration. To make this concrete, we need to define a metric for overconfidence. One approach is to use the Brier score. A possible question could be: \"What will be the Brier score of forecaster X on their predictions for question Y over the next year?\"",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 2243,
+            "endOffset": 215,
+            "quotedText": "**  \n \n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/PB57prp5kEMDgwJsm/eg77x9u7bh2noo29xrpw)\n\nAbstract representation of 2nd-order forecasts. Dall-E 3\n\n## Examples\n\nHere are some examples:\n\n**0-Order Forecasting (i.e., the ground truth)**\n\n*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?\n\n**2nd-Order Forecasting**\n\n*   How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?’\\]_\n\nAs forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem.\n\n## Benefits\n\nSome potential benefits of higher-order forecasting include:\n\n1.  **Identify Overconfidence**\n    *   "
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Benefit: Prioritize Questions",
+          "description": "Quantifying the value of information is challenging but crucial. One approach is to estimate the expected impact of the information on a decision. A possible question could be: \"How much will the forecast for question X change the optimal decision regarding policy Z, measured in expected utility?\"",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 2500,
+            "endOffset": 2629,
+            "quotedText": "Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Benefit: Surface Relationships",
+          "description": "This benefit highlights the potential for identifying causal relationships. A possible question could be: \"To what extent does a 10% increase in the forecast probability of question X cause a change in the forecast probability of question Y, measured by the average treatment effect?\"",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 2741,
+            "endOffset": 2869,
+            "quotedText": "Surface key drivers and correlations between events by letting forecasters predict how different questions relate to each other."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Challenge: Accuracy Dependence",
+          "description": "The accuracy of higher-order forecasts is fundamentally limited by the accuracy of the underlying lower-order forecasts. This suggests that efforts to improve the calibration of individual forecasters and the design of forecasting questions are crucial prerequisites for effective higher-order forecasting.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 4564,
+            "endOffset": 215,
+            "quotedText": "**  \n \n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/PB57prp5kEMDgwJsm/eg77x9u7bh2noo29xrpw)\n\nAbstract representation of 2nd-order forecasts. Dall-E 3\n\n## Examples\n\nHere are some examples:\n\n**0-Order Forecasting (i.e., the ground truth)**\n\n*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?\n\n**2nd-Order Forecasting**\n\n*   How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?’\\]_\n\nAs forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem.\n\n## Benefits\n\nSome potential benefits of higher-order forecasting include:\n\n1.  **Identify Overconfidence**\n    *   Improve the accuracy of forecasts by having participants directly predict and get rewarded for estimating overconfidence or poor calibration in other forecasts.\n    *   _\"How overconfident is \\[forecast/forecaster\\] X\"_\n2.  **Prioritize Questions**\n    *   Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *   _\"How valuable is the information from forecasting question X?\"_\n3.  **Surface Relationships**\n    *   Surface key drivers and correlations between events by letting forecasters predict how different questions relate to each other.\n    *   _\"How correlated will the forecasts for questions X and Y be over \\[time period\\]?\"_\n4.  **Faster Information Aggregation**\n    *   Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events.\n    *   _\"What will the forecast for question X be on \\[future date\\], conditional on \\[other forecasts or events\\]?\"_\n5.  **Leverage Existing Infrastructure**\n    *   Leverage the existing infrastructure and resolution processes of prediction platforms, which are already designed to handle large numbers of forecasting questions.\n\nWe've already seen some early examples of higher-order forecasts on platforms like Manifold Markets. For example, with the recent questions:\n\n*   [Will there be a Manifold bot that makes profitable bets on random 1-month markets by December 2024? (Ṁ3,000 subsidy!)](https://manifold.markets/CDBiddulph/will-there-be-a-manifold-bot-that-m)\n*   [Manifold Top Traders Leaderboard Ranking Prediction (2024)](https://manifold.markets/AmmonLam/manifold-top-traders-leaderboard-ra)\n*   [If Manifold begins allowing real-money withdrawals, will its accuracy improve?](https://manifold.markets/IsaacKing/if-manifold-begins-allowing-realmon)\n*   [Is Manifold's P(Doom) by 2050 currently between 10% and 90%? \\[Resolves to Poll\\]](https://manifold.markets/ManifoldAI/is-manifolds-pdoom-by-2050-currentl)\n*   [Will Manifold be more accurate than real-money markets in forecasting the 2024 election?](https://manifold.markets/benshindel/will-manifold-be-more-accurate-than)\n\n## Challenges\n\nOf course, there are also challenges and risks to consider with higher-order forecasts:\n\n1.  "
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Challenge: Added Complexity",
+          "description": "The added complexity of higher-order forecasts could deter participation and make interpretation difficult. This suggests that user-friendly interfaces and clear explanations are needed to make higher-order forecasting accessible to a wider audience.",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Challenge: Base of Lower-Order Questions",
+          "description": "A sufficient base of lower-order forecasting questions is necessary to support higher-order forecasts. This suggests that platforms need to prioritize building a critical mass of diverse and well-defined forecasting questions before introducing higher-order forecasting features.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 4959,
+            "endOffset": 5098,
+            "quotedText": "A substantial base of lower-order forecasting questions is needed before higher-order forecasts can be productively created on top of them."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 80
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:03:05.047Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":3515,\"completionTokens\":1414,\"totalTokens\":4929,\"temperature\":0.1,\"runtimeMs\":8260}",
+      "thinking": "This article introduces the concept of \"higher-order forecasts\" and explores their potential benefits and challenges. From an EA perspective, the key aspects are:\n\n1.  **Potential for Improved Decision-Making:** Higher-order forecasts could improve the accuracy and efficiency of forecasting systems, leading to better-informed decisions in various domains, including those relevant to EA cause areas (e.g., global health, x-risk).\n2.  **Prioritization of Questions:** The ability to forecast the value of information from different predictions could help prioritize research and forecasting efforts, directing resources towards the most impactful areas.\n3.  **Information Aggregation:** Faster information aggregation could accelerate the identification of critical trends and risks, allowing for more timely and effective interventions.\n4.  **Leveraging Existing Infrastructure:** The concept can be implemented on existing prediction platforms, reducing the need for new infrastructure and potentially accelerating adoption.\n5.  **Challenges and Risks:** The accuracy of higher-order forecasts depends on the quality of lower-order forecasts, and increased complexity could pose challenges for participation and interpretation.\n\nI will focus my analysis on the potential impact of higher-order forecasts on EA decision-making, research prioritization, and information aggregation, while also considering the associated challenges and risks. I will attempt a Fermi estimate of the potential value of information gained through higher-order forecasts in the context of existential risk reduction.",
+      "summary": "This article introduces the concept of higher-order forecasts and explores their potential benefits and challenges. From an EA perspective, the most relevant aspects are the potential for improved decision-making, prioritization of questions, and faster information aggregation. The article also highlights the challenges of dependence on lower-order forecasts and increased complexity. A Fermi estimate suggests that higher-order forecasts could potentially generate significant value of information in the context of existential risk reduction, but the actual impact will depend on the accuracy of the underlying forecasts and the ability to overcome the challenges of complexity.",
+      "comments": [
+        {
+          "title": "Definition of Higher-Order Forecasts",
+          "description": "This definition is crucial for understanding the core concept. It's clearly explained and provides a foundation for the rest of the article.",
+          "importance": "100",
+          "grade": "100",
+          "highlight": {
+            "startOffset": 149,
+            "endOffset": 221,
+            "quotedText": "**Nth-order forecasts are forecasts about (N-1)th order forecasts.**  \n "
+          },
+          "isValid": true
+        },
+        {
+          "title": "Examples of Different Order Forecasts",
+          "description": "The examples help to illustrate the concept and make it more concrete. They cover a range of topics, including political events and economic indicators.",
+          "importance": "90",
+          "grade": "90",
+          "highlight": {
+            "startOffset": 440,
+            "endOffset": 1643,
+            "quotedText": "**0-Order Forecasting (i.e., the ground truth)**\n\n*   Biden won the 2020 U.S. presidential election\n*   The US GDP in 2023 was $27 trillion\n\n**1st-Order Forecasting (i.e., regular forecasting)**\n\n*   What is the chance that Trump will win the 2024 U.S. presidential election?\n*   What will be the GDP of the US in 2024?\n\n**2nd-Order Forecasting**\n\n*   How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\n*   How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\n*   If the question “_What is the chance that a Republican will win the 2028 Presidential Election?_” was posted to Manifold, with a subsidy of 100k Mana, what would the prediction be, after 1 month?”\n\n**3rd-Order Forecasting**\n\n*   How much will the forecasts, \\[How much will the forecasts for US GDP in 2024 and 2025 be correlated over the next year?\\] and \\[How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?\\], be correlated, from now until 2024?\n*   How valuable were all the forecasts for the question, \\[‘_How many forecasts will the question \"What will be the GDP of the US in 2024?\" receive in total?’\\]_"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Analogy to Financial Derivatives",
+          "description": "This analogy is helpful for understanding the potential role of higher-order forecasts in improving the efficiency of forecasting systems. Derivatives allow for more efficient pricing, risk transfer, and information aggregation in financial markets, and higher-order forecasts could play a similar role in forecasting.",
+          "importance": "80",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 1645,
+            "endOffset": 2126,
+            "quotedText": "As forecasting systems mature, higher-order forecasts could play a role analogous to financial derivatives in markets. Derivatives allow for more efficient pricing, risk transfer, and information aggregation by letting market participants express views on the relationships between assets. Similarly, higher-order forecasts could allow forecasters to express views on the relationships between predictions, leading to a more efficient and informative overall forecasting ecosystem."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Benefits: Prioritize Questions",
+          "description": "This is particularly relevant to EA, as it suggests a way to prioritize research and forecasting efforts based on the value of information. This could help direct resources towards the most impactful areas.",
+          "importance": "95",
+          "grade": "90",
+          "highlight": {
+            "startOffset": 2411,
+            "endOffset": 2635,
+            "quotedText": " _\"How overconfident is \\[forecast/forecaster\\] X\"_\n2.  **Prioritize Questions**\n    *   Prioritize the most important and decision-relevant questions by forecasting the value of information from different predictions.\n    *"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Benefits: Faster Information Aggregation",
+          "description": "Faster information aggregation could be valuable for identifying critical trends and risks, allowing for more timely and effective interventions in EA cause areas.",
+          "importance": "85",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 2885,
+            "endOffset": 3186,
+            "quotedText": "orrelated will the forecasts for questions X and Y be over \\[time period\\]?\"_\n4.  **Faster Information Aggregation**\n    *   Enable faster aggregation of information by allowing forecasts on future forecast values, which may update more frequently than the underlying events.\n    *   _\"What will the f"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Challenges: Dependence on Lower-Order Forecasts",
+          "description": "This is a significant limitation. If the underlying forecasts are inaccurate or noisy, the value of higher-order forecasts will be limited.",
+          "importance": "80",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 4564,
+            "endOffset": 4783,
+            "quotedText": "The accuracy of higher-order forecasts depends on the accuracy of the lower-order forecasts they build on. If the underlying forecasts are poorly calibrated or noisy, that will limit the value of higher-order forecasts."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Challenges: Increased Complexity",
+          "description": "Increased complexity could make it more difficult for people to participate in and interpret the forecasts, potentially limiting their adoption and impact.",
+          "importance": "75",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 4788,
+            "endOffset": 4954,
+            "quotedText": "Higher-order forecasts inherently add complexity to forecasting systems, which could create challenges for participation, interpretation, and managing systemic risks."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    }
+  ]
 }

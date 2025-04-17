@@ -14,5 +14,286 @@
     "ea-impact-evaluator"
   ],
   "content": "This is a linkpost for [https://forum.effectivealtruism.org/posts/qWJyPiws7B4XyQGJR/](https://www.lesswrong.com/out?url=https%3A%2F%2Fforum.effectivealtruism.org%2Fposts%2FqWJyPiws7B4XyQGJR%2F)\n\nThis article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies.\n\nIt's arguably a more obvious fit for LW than the EA Forum, but I posted it there for reasons explained in the comments. I think people here might also find it interesting though.",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:09:39.063Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":1357,\"completionTokens\":1145,\"totalTokens\":2502,\"temperature\":0.1,\"runtimeMs\":7096}",
+      "thinking": "This document is a linkpost to an article discussing the dangers of public online communication, particularly concerning \"malicious supporters.\" My analysis will focus on identifying potential biases in the framing of the problem, the proposed solutions, and the overall argument. I will be looking for biases that might skew the perception of the threat, influence the evaluation of potential remedies, or affect the objectivity of the analysis. I will also consider how the author's choice to post the article on both LessWrong and the EA Forum might reflect or mitigate certain biases.\n\nSpecifically, I'll be looking for:\n\n*   **Confirmation bias:** Does the author selectively highlight evidence that supports the existence and severity of the \"malicious supporter\" problem, while downplaying counter-evidence?\n*   **Availability heuristic:** Is the author overestimating the prevalence or impact of malicious actors due to recent or memorable examples?\n*   **In-group bias/Out-group homogeneity bias:** Does the author portray the \"in-group\" (e.g., LessWrong/EA community) favorably and the \"out-group\" (malicious actors) negatively, potentially exaggerating the differences between them?\n*   **System justification bias:** Does the author implicitly defend the existing communication norms or power structures within the online communities, even if they contribute to the problem?\n*   **Reactance bias:** Could the proposed remedies inadvertently trigger reactance in the target audience, leading to unintended consequences?\n*   **Optimism/Pessimism bias:** Is the author overly optimistic or pessimistic about the feasibility and effectiveness of the proposed solutions?\n\nI will also consider the potential for the author's own motivations and values to influence their analysis (motivated reasoning). Finally, I will assess whether the author acknowledges any limitations or uncertainties in their argument, which would help to mitigate potential biases.",
+      "summary": "This linkpost introduces an article about the dangers of online communication and \"malicious supporters.\" My analysis identifies potential biases in the framing of the problem, including confirmation bias, in-group/out-group bias, and reliance on the availability heuristic. The author's choice to post the article on specific online communities (LessWrong and EA Forum) also raises the possibility of community-specific biases. A more balanced analysis would benefit from acknowledging alternative perspectives, providing concrete examples, and addressing the limitations of the proposed solutions.",
+      "comments": [
+        {
+          "title": "Potential for Confirmation Bias",
+          "description": "The article's focus on \"dangers of public online communication\" and \"malicious supporters\" suggests a pre-existing belief in the prevalence and severity of this problem. This could lead to confirmation bias, where the author selectively focuses on evidence that supports this belief while downplaying counter-evidence or alternative explanations.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 195,
+            "endOffset": 365,
+            "quotedText": "This article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Lack of Specific Examples - Availability Heuristic",
+          "description": "Without specific examples of \"malicious supporters\" and their actions, the reader might rely on the availability heuristic, drawing on readily available (but potentially unrepresentative) examples from their own experience or media reports. This could lead to an overestimation of the problem's prevalence and impact.",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 195,
+            "endOffset": 365,
+            "quotedText": "This article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "In-group/Out-group Bias Potential",
+          "description": "The framing of the issue as a conflict between the online community and \"malicious supporters\" creates an in-group/out-group dynamic. This could lead to in-group bias (favoring the community) and out-group homogeneity bias (perceiving the \"malicious supporters\" as a monolithic and uniformly negative group).",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 286,
+            "endOffset": 365,
+            "quotedText": "then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Community Specificity and Bias",
+          "description": "The author's decision to post the article on both LessWrong and the EA Forum suggests an awareness of the specific norms and values of these communities. However, it also raises the possibility of bias towards these communities, potentially overlooking the perspectives or experiences of individuals from other online spaces.",
+          "importance": "60",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 367,
+            "endOffset": 545,
+            "quotedText": "It's arguably a more obvious fit for LW than the EA Forum, but I posted it there for reasons explained in the comments. I think people here might also find it interesting though."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 62
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:09:43.692Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":1480,\"completionTokens\":816,\"totalTokens\":2296,\"temperature\":0.1,\"runtimeMs\":4618}",
+      "thinking": "The document is a linkpost to an article discussing the dangers of public online communication, particularly concerning \"malicious supporters.\" My analysis will focus on the clarity and accessibility of the description provided in the linkpost, evaluating how effectively it conveys the article's core message and encourages engagement. I will assess the conciseness, precision, and overall readability of the summary, considering whether it adequately prepares the reader for the content they will encounter in the linked article. I will also consider whether the explanation for posting on the EA forum is clear and understandable to the LessWrong audience.\n\nI will pay close attention to the use of jargon (e.g., \"ontology\") and assess whether it is appropriately introduced or explained for the intended audience. I will also evaluate the logical flow and coherence of the description, ensuring that the key ideas are presented in a clear and easily digestible manner. Finally, I will consider whether the linkpost effectively motivates readers to click through and engage with the linked article.",
+      "summary": "The linkpost provides a reasonably clear and concise summary of the linked article. However, the use of the term \"ontology\" without explanation and the vague justification for posting on the EA Forum could be improved to enhance clarity and encourage engagement. Overall, the linkpost effectively conveys the core message of the article, but some minor adjustments could make it more accessible and impactful.",
+      "comments": [
+        {
+          "title": "Conciseness and Clarity of Summary",
+          "description": "The summary effectively captures the essence of the linked article in a concise manner. It highlights the thought experiment, the concept of \"malicious supporters,\" and potential remedies. However, the term \"ontology\" might be unfamiliar to some readers and could benefit from a brief explanation or rephrasing.",
+          "importance": "85",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 195,
+            "endOffset": 365,
+            "quotedText": "This article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability and Accessibility",
+          "description": "The overall readability of the linkpost is good. The sentences are relatively short and straightforward. However, the use of the word \"ontology\" without further explanation could pose a barrier to understanding for some readers. Consider replacing it with a more accessible term or providing a brief definition.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 286,
+            "endOffset": 342,
+            "quotedText": "then describes an ontology around “malicious supporters”"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Justification for Posting Location",
+          "description": "The explanation for posting on the EA Forum is somewhat vague. While it acknowledges that the article might be a better fit for LessWrong, the reasons for posting on the EA Forum are only \"explained in the comments.\" This could be improved by providing a brief summary of those reasons directly in the linkpost to enhance clarity and encourage engagement.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 367,
+            "endOffset": 486,
+            "quotedText": "It's arguably a more obvious fit for LW than the EA Forum, but I posted it there for reasons explained in the comments."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:09:47.736Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2160,\"completionTokens\":633,\"totalTokens\":2793,\"temperature\":0.1,\"runtimeMs\":4026}",
+      "thinking": "This document discusses the dangers of open communication in the presence of malicious online actors, proposing an ontology around \"malicious supporters\" and potential remedies. As a research scholar, my focus is on identifying relevant academic and community resources that address these issues, including strategies for mitigating online harms, understanding malicious behavior, and promoting constructive online discourse. I will search for papers, articles, and forum discussions that provide theoretical frameworks, empirical evidence, or practical guidance related to the topics raised in the document. I will also assess the relevance and importance of each resource based on its authority, direct relevance, quality, and potential impact.",
+      "summary": "This document highlights the risks associated with open online communication, particularly concerning \"malicious supporters.\" My analysis focuses on providing relevant resources that explore these risks, including academic research on online manipulation, strategies for mitigating harmful online behavior, and frameworks for promoting constructive online discourse. The resources are presented in a markdown table with links and relevance descriptions.",
+      "comments": [
+        {
+          "title": "Resource: Promoting Constructive Online Discourse",
+          "description": "This resource examines frameworks for promoting constructive online discourse, such as establishing community guidelines, fostering empathy, and encouraging critical thinking. It is relevant to the document's overall concern with maintaining a healthy online environment.",
+          "importance": 75,
+          "grade": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": -1,
+            "endOffset": 13,
+            "quotedText": "This is a lin"
+          }
+        },
+        {
+          "title": "Resource: Understanding Online Manipulation",
+          "description": "This resource provides a framework for understanding how malicious actors can manipulate online discussions and influence public opinion. It is relevant to the document's discussion of \"malicious supporters\" and the dangers of open communication.",
+          "importance": 85,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 246,
+            "endOffset": 38,
+            "quotedText": "effectivealtruism.org/posts/qWJyPiws7B4XyQGJR/](https://www.lesswrong.com/out?url=https%3A%2F%2Fforum.effectivealtruism.org%2Fposts%2FqWJyPiws7B4XyQGJR%2F)\n\nThis article uses a thought experiment to probe at "
+          }
+        },
+        {
+          "title": "Resource: Strategies for Mitigating Online Harms",
+          "description": "This resource explores various strategies for mitigating online harms, such as misinformation, harassment, and hate speech. It is relevant to the document's discussion of potential remedies for the dangers of open communication.",
+          "importance": 80,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 347,
+            "endOffset": 38,
+            "quotedText": "effectivealtruism.org/posts/qWJyPiws7B4XyQGJR/](https://www.lesswrong.com/out?url=https%3A%2F%2Fforum.effectivealtruism.org%2Fposts%2FqWJyPiws7B4XyQGJR%2F)\n\nThis article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and "
+          }
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:09:53.915Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":1530,\"completionTokens\":1029,\"totalTokens\":2559,\"temperature\":0.1,\"runtimeMs\":6157}",
+      "thinking": "Alright, let's dissect this linkpost about the dangers of open communication in the age of malicious online actors. My primary concern, as always, is how this relates to the broader problem of AI alignment and the potential for civilization-level catastrophe. The core issue seems to be the vulnerability of open discourse to manipulation and the spread of misinformation, which, if left unchecked, could have disastrous consequences, especially when considering the development and deployment of advanced AI systems. \n\nThe author's focus on \"malicious supporters\" is interesting. It highlights the potential for bad actors to exploit existing social dynamics and belief systems to further their own agendas. This is particularly relevant to AI alignment because it suggests that even well-intentioned efforts to promote safe AI development could be subverted by those who seek to weaponize the technology or simply sow chaos. The remedies proposed in the original article likely involve some form of information control or censorship, which raises its own set of problems. How do we balance the need to protect against malicious actors with the imperative to maintain open and transparent communication? This is a crucial question that needs to be addressed if we hope to navigate the challenges of the coming decades. \n\nI'm also concerned about the potential for Goodhart's Law to come into play. Any attempt to measure or regulate online discourse is likely to be gamed by those who seek to manipulate the system. This could lead to a situation where the very measures designed to protect against misinformation actually end up exacerbating the problem. We need to be extremely careful about how we approach this issue, and we need to be constantly vigilant for unintended consequences. The fact that the author posted this on the EA Forum and then cross-posted it to LessWrong suggests that they recognize the importance of reaching a broad audience. This is a good sign, but it's not enough. We need to engage in a much more widespread and sustained effort to educate the public about the dangers of online manipulation and the importance of critical thinking. The stakes are simply too high to ignore.",
+      "summary": "This linkpost touches on a critical issue: the vulnerability of open online communication to manipulation, particularly by \"malicious supporters.\" This has profound implications for AI alignment, as misinformation and subversion could derail efforts to ensure safe AI development. The tension between information control and open discourse, along with the potential for Goodhart's Law to undermine regulatory efforts, demands careful consideration. The fact that this was posted on both the EA Forum and LessWrong suggests a recognition of the broad relevance of this problem, but a much more widespread effort is needed to educate the public and develop effective countermeasures.",
+      "comments": [
+        {
+          "title": "Vulnerability of Open Discourse",
+          "description": "The core issue of the post, the vulnerability of open discourse to manipulation, is directly relevant to AI alignment. Misinformation and manipulation can derail efforts to promote safe AI development and deployment.",
+          "importance": "95",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 237,
+            "endOffset": 364,
+            "quotedText": "probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Information Control vs. Open Communication",
+          "description": "The post implicitly raises the tension between the need to protect against malicious actors and the imperative to maintain open and transparent communication. This is a fundamental dilemma in the age of AI and online manipulation.",
+          "importance": "85",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 246,
+            "endOffset": 364,
+            "quotedText": "dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Goodhart's Law and Online Discourse",
+          "description": "Any attempt to measure or regulate online discourse is likely to be gamed, potentially exacerbating the problem of misinformation. This is a classic example of Goodhart's Law in action.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 246,
+            "endOffset": 364,
+            "quotedText": "dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Malicious Supporters and AI Weaponization",
+          "description": "The concept of \"malicious supporters\" highlights the risk of even well-intentioned AI safety efforts being subverted by those seeking to weaponize AI or sow chaos. This is a critical consideration for AI alignment strategies.",
+          "importance": "90",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 291,
+            "endOffset": 364,
+            "quotedText": "describes an ontology around “malicious supporters” and possible remedies"
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 78
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:09:58.123Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":1330,\"completionTokens\":624,\"totalTokens\":1954,\"temperature\":0.1,\"runtimeMs\":4195}",
+      "thinking": "The article discusses the dangers of open online communication, particularly concerning \"malicious supporters.\" As a quantitative forecaster, I'll focus on how to translate these concerns into measurable predictions and assess the likelihood and impact of such malicious activities. I'll consider how to quantify the potential harm caused by malicious actors and how to forecast the effectiveness of proposed remedies. I'll also think about how to frame these questions for forecasting platforms to gather diverse perspectives and improve calibration.\n\nSpecifically, I'll consider the following questions:\n\n1.  What is the probability that a specific online community (e.g., LessWrong, EA Forum) will experience a significant disruption or reputational damage due to malicious supporters within the next year?\n2.  How can we quantify \"significant disruption or reputational damage\"?\n3.  What is the expected impact (e.g., in terms of user engagement, content quality, or community growth) of such an event?\n4.  How effective are the proposed remedies in mitigating the risk of malicious supporter activity?\n5.  What are the key indicators that would suggest an increased risk of malicious supporter activity?\n\nI will use Fermi estimation to approximate the potential impact and probability of these events, considering factors such as the size of the community, the level of public attention, and the sophistication of potential attackers. I will also look for relevant reference classes, such as past incidents of online harassment or manipulation, to inform my estimates.",
+      "summary": "This article raises concerns about the risks of open online communication, particularly from \"malicious supporters.\" As a quantitative forecaster, I translate these concerns into concrete, measurable forecasting questions, such as the probability of significant disruption to online communities. I propose using Fermi estimation and reference class forecasting to assess the likelihood and impact of such events and suggest framing these questions for forecasting platforms to gather diverse perspectives and improve calibration.",
+      "comments": [
+        {
+          "title": "Forecasting Question: Probability of Disruption",
+          "description": "This highlights the core concern of the article and frames it as a concrete forecasting question. We can use this to track the perceived risk over time.",
+          "importance": 90,
+          "highlight": {
+            "startOffset": 246,
+            "endOffset": 365,
+            "quotedText": "dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Framing for Forecasting Platforms",
+          "description": "This comment suggests framing the article's concerns as a question suitable for platforms like Metaculus or Manifold Markets. This allows for community forecasting and aggregation of diverse perspectives.",
+          "importance": 75,
+          "highlight": {
+            "startOffset": 367,
+            "endOffset": 545,
+            "quotedText": "It's arguably a more obvious fit for LW than the EA Forum, but I posted it there for reasons explained in the comments. I think people here might also find it interesting though."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:05.929Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":2183,\"completionTokens\":1260,\"totalTokens\":3443,\"temperature\":0.1,\"runtimeMs\":7773}",
+      "thinking": "This post discusses the dangers of open online communication in the context of malicious actors, which is relevant to effective altruism because online spaces are increasingly used for coordination, information sharing, and advocacy within the EA community. Understanding and mitigating the risks posed by malicious actors is crucial for ensuring the integrity and effectiveness of EA efforts. The post's focus on identifying and addressing these risks aligns with EA's goal of maximizing positive impact. I will evaluate the post based on its importance, neglectedness, tractability, and novelty, and I will attempt to estimate the potential impact of implementing the proposed remedies, considering both positive and negative effects.\n\nImportance: The issue of malicious actors in online communication is highly relevant to EA, as it can affect the spread of accurate information, the coordination of projects, and the overall reputation of the movement. The scale of potential impact is significant, as online platforms are used by a large number of people and organizations involved in EA. The severity of the problem is also considerable, as malicious actors can spread misinformation, disrupt discussions, and even incite violence. The long-term effects of unchecked malicious activity could be detrimental to the EA community and its goals.\n\nNeglectedness: While there is some awareness of the issue of online harassment and misinformation, the specific focus on \"malicious supporters\" and the development of an ontology around this concept seems relatively neglected. The funding landscape for research and interventions in this area is unclear, but it is likely that more attention and resources are needed to address the problem effectively. The author may have a comparative advantage in contributing to this area, given their experience and insights.\n\nTractability: The proposed remedies, such as identifying and mitigating the influence of malicious supporters, may be challenging to implement in practice. The evidence base for the effectiveness of these remedies is limited, and the feasibility of scaling them is uncertain. However, the post's focus on developing a better understanding of the problem and identifying potential solutions is a positive step.\n\nNovelty: The post's ontology of \"malicious supporters\" and its analysis of the dangers of open online communication offer a novel perspective on the issue. The post also differentiates itself from existing approaches by focusing on the specific tactics and motivations of malicious actors. The intellectual contribution of the post lies in its attempt to develop a more nuanced understanding of the problem and identify potential solutions.\n\nFermi Estimation of Expected Impact:\n\nParameter 1: Probability that the proposed remedies will be implemented effectively: 20% (0.2)\nParameter 2: Reduction in negative impact from malicious actors if remedies are implemented: 10% (0.1)\nParameter 3: Estimated annual cost of malicious activity to the EA community (in terms of wasted time, reputational damage, and project disruption): $1,000,000\nParameter 4: Number of years the remedies will be effective: 5\nParameter 5: Probability of negative unintended consequences (e.g., censorship, chilling effect on free speech): 5% (0.05)\nParameter 6: Estimated annual cost of negative unintended consequences: $200,000\n\nCalculation:\nExpected benefit = (0.2 * 0.1 * $1,000,000 * 5) = $100,000\nExpected cost = (0.05 * $200,000 * 5) = $50,000\nNet expected impact = $100,000 - $50,000 = $50,000\n\nUncertainty range: Given the uncertainty in the parameters, a 90% confidence interval for the net expected impact would be -$50,000 to $150,000.\n\nPotential Negative Impacts: The proposed remedies could have negative unintended consequences, such as censorship or a chilling effect on free speech. It is important to carefully consider these potential negative impacts and take steps to mitigate them.\n",
+      "summary": "This post addresses a critical issue for the EA community: the dangers of malicious actors in online communication. It proposes an ontology of \"malicious supporters\" and suggests potential remedies. While the tractability of these remedies is uncertain, the post's focus on understanding and mitigating the risks posed by malicious actors is valuable. A Fermi estimate suggests a potential net positive impact of $50,000, but with a wide uncertainty range (-$50,000 to $150,000) due to the difficulty in quantifying the impact of online interventions and the potential for negative unintended consequences.",
+      "comments": [
+        {
+          "title": "Importance of Addressing Malicious Actors",
+          "description": "This highlights the core issue the post addresses, which is highly relevant to EA's online presence and coordination.",
+          "importance": "90",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 195,
+            "endOffset": 365,
+            "quotedText": "This article uses a thought experiment to probe at dangers of public online communication, then describes an ontology around “malicious supporters” and possible remedies."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Relevance to LessWrong and EA",
+          "description": "This acknowledges the post's relevance to both LessWrong and the EA Forum, suggesting a broad applicability of the topic.",
+          "importance": "70",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 367,
+            "endOffset": 545,
+            "quotedText": "It's arguably a more obvious fit for LW than the EA Forum, but I posted it there for reasons explained in the comments. I think people here might also find it interesting though."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 70
+    }
+  ]
 }

@@ -581,7 +581,9 @@ ${document.content}`;
       thinking: parsedLLMReview.thinking,
       summary: parsedLLMReview.summary,
       comments: processedComments,
-      grade: parsedLLMReview.grade ? Number(parsedLLMReview.grade) : undefined,
+      grade: parsedLLMReview.grade
+        ? Number(Number(parsedLLMReview.grade).toFixed(2))
+        : undefined,
     };
 
     // --- Sort comments by startOffset before saving ---

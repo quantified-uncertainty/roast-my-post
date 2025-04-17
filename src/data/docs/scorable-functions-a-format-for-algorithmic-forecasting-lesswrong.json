@@ -14,5 +14,552 @@
     "ea-impact-evaluator"
   ],
   "content": "![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/ZWQ5jbLxpd4JtQgu4/hh3e4hstzuglaqgl9gfe)\n\nYou can think of a _scorable function_ as a \"_box_\" that can produce large clusters of complex forecasts. Credit to Dall-E 3.\n\n## Introduction\n\nImagine if a forecasting platform had estimates for things like:\n\n1.  \"For every year until 2100, what will be the probability of a global catastrophic biological event, given different levels of biosecurity investment and technological advancement?\"\n2.  \"What will be the impact of various AI governance policies on the likelihood of developing safe and beneficial artificial general intelligence, and how will this affect key indicators of global well-being over the next century?\"\n3.  \"How valuable is every single project funded by Open Philanthropy, according to a person with any set of demographic information, if they would spend 1000 hours reflecting on it?\"\n\nThese complex, multidimensional questions are useful for informing decision-making and resource allocation around effective altruism and existential risk mitigation. However, traditional judgemental forecasting methods often struggle to capture the nuance and conditionality required to address such questions effectively.\n\nThis is where \"_scorable functions_\" come in - a forecasting format that allows forecasters to directly submit entire predictive models rather than just point estimates or simple probability distributions. Scorable functions allow encoding a vast range of relationships and dependencies, from basic linear trends to intricate nonlinear dynamics. Forecasters can precisely specify interactions between variables, the evolution of probabilities over time, and how different scenarios could unfold.\n\nAt their core, scorable functions are executable models that output probabilistic predictions and can be directly scored via function calls. They encapsulate the forecasting logic, whether it stems from human judgment, data-driven insights, or a hybrid of the two. Scorable functions can span from concise one-liners to elaborate constructs like neural networks.\n\nOver the past few years, we at [QURI](https://quantifieduncertainty.org/) have been investigating how to effectively harness these methods. We believe scorable functions could be a key piece of the forecasting puzzle going forward.\n\n## From Forecast Bots to Scorable Functions\n\nMany people are familiar with the idea of using \"bots\" to automate forecasts on platforms like Metaculus. Let's consider a simple example to see how scorable functions can extend this concept.\n\nSuppose there's a binary question on Metaculus: \"_Will event X happen in 2024?_\" Intuitively, the probability should decrease as 2024 progresses, assuming no resolution. A forecaster might start at 90% in January, but want to gradually decrease to 10% by December.\n\nOne approach is to manually update the forecast each week - a tedious process. A more efficient solution is to write a bot that submits forecasts based on a simple function:\n\n```\nchanceOfXby2025(current_date) = 0.9 * proportion_of_year_remaining(current_date, 2024)\n```\n\n_(Example using_ [_Squiggle_](https://www.squiggle-language.com/)_, but hopefully it's straightforward enough)_\n\nThis bot can automatically submit daily forecasts via the Metaculus API.\n\nHowever, while more efficient than manual updates, this approach has several drawbacks:\n\n1.  The platform must store and process a separate forecast for each day, even though they all derive from a simple function.\n2.  Viewers can't see the full forecast trajectory, only the discrete submissions.\n3.  The forecaster's future projections and scenario contingencies are opaque.\n\nScorable functions elegantly solve these issues. Instead of a bot submitting individual forecasts, the forecaster simply submits the generating function itself. You can imagine there being a custom input box directly in Metaculus.\n\nThe function submitted would be the same, though it might be provided as a lambda function or with a standardized function name.\n\n```\nfn(current_date) = 0.9 * proportion_of_year_remaining(current_date, 2024)\n```\n\nThe platform can then evaluate this function on-demand to generate up-to-date forecasts. Viewers see the complete forecast trajectory and can even inspect the function code. The forecaster can update their forecast by simply modifying the function.\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/ZWQ5jbLxpd4JtQgu4/zijzqh4gpotogwqs7pwr)\n\n_Comparison of regular judgemental forecasting, forecasting using bots, and forecasting using scorable functions. Note that it is also possible to use bots to submit scorable functions, in more complicated settings._\n\nNow consider a more complex example:\n\n```\nchanceOfXby2025(current_date, related_forecast) = 0.6 * proportion_of_year_remaining(current_date, 2024) + 0.4 * related_forecast\n```\n\nHere, the forecast depends not only on time, but on the current value of `related_forecast`, e.g., the probability of a related event. The function encodes the forecaster's view on how these probabilities interact. The forecaster is now submitting a conditional probability directly.\n\nWith traditional bots, this kind of complex, conditional forecast would be infeasible. But with scorable functions, it's trivial. Viewers can see how the forecast responds to different scenarios for the related question.\n\nThe potential applications are vast. Forecasters could condition on economic indicators, poll results, prediction market prices, and more. Complex, multidimensional forecasts become possible:\n\n```\nrecession_probability(country, gdp_history, month_in_question) = ...\n```\n\nThis function could output a probability of a recession for each country and month, based on GDP history. Such a forecast would be infeasible with traditional methods, but is straightforward with scorable functions.\n\nOf course, realizing this potential will require careful platform design. But the benefits are substantial. Forecasters can express their knowledge more precisely and efficiently. Viewers gain deeper insight into forecast rationales and contingencies. Platforms can elicit and evaluate more sophisticated forecasts. It can be a win for all parties.\n\n## Potential Uses of Scorable Functions\n\nScorable functions can be applied to a wide range of forecasting questions, making them highly versatile. Here are some examples of questions well-suited for scorable functions:\n\n1.  **Financial Forecasting**:\n    *   \"Create a model that predicts, for any date D (from 2023 to 2033), the closing price of any provided set of financial assets from the stock market on that date.\"\n2.  **Cryptocurrency Market**:\n    *   \"For any future date D (from 2023 to 2033), predict the total market capitalization of any subset of cryptocurrencies on that date, conditioning on the S&P 500 and other global economic indicators.\"\n3.  **Political Forecasting**:\n    *   \"For each year from 2024 to 2100, predict the joint density of the party of the president, the number of House Representatives of each party, the number of Senate Representatives of each party, and the number of Supreme Court justices of each party.\"\n4.  **Demographic Predictions**:\n    *   \"For any future year T (2025 to 2100) and country, predict the life expectancy and other parameters that will be reported by Our World in Data for that year and region.\"\n5.  **Geopolitical Risk Assessment**:\n    *   \"Conditional on US-Russia tensions (as measured by the Geopolitical Threat Index) being X at a time T in the future, what will the Metaculus forecast be for 'Chance of nuclear weapon use before 2030' on time Y?\"\n6.  **Medical Forecasting**:\n    *   \"Given an individual with demographic information D, predict their probability of developing a medical condition M by point in time T.\"\n\nThese examples highlight the flexibility and potential of scorable functions across various domains. It took significant experimentation to identify suitable questions for current prediction tournaments and markets. With the introduction of scorable functions, the range of possibilities expands dramatically, requiring time and experimentation to fully understand and optimize their use.\n\n## How Scorable Function Forecasting Tournaments Could Work\n\nThe key idea is to generalize prediction markets to support forecasts in the form of scorable functions. Here's a rough sketch of how a tournament using scorable functions could work.\n\n1.  **Function Specification**: Questions specify a precise function specification for forecasts. For example, \"Submit a function that predicts a probability distribution of the US inflation rate (Y), given the Fed funds rate and unemployment rate (X1, X2), for any given month from Jan 2024 to Dec 2026.\"\n2.  **Submission of Code**: Forecasters submit actual code (e.g., Python functions, Squiggle functions) matching that specification. These can range from simple models to sophisticated machine learning models.\n3.  **Storage and Evaluation**: Scorable functions are stored and managed by the platform, evaluated programmatically to generate up-to-date forecasts. Forecasters can submit updated versions of their functions as needed.\n4.  **Visualization**: The platform provides tools to aggregate scorable functions, visualize their outputs, and analyze their performance over time.\n5.  **Scoring and Payouts**: At the end of the forecasting period, all versions of the scorable functions are scored using pre-specified metrics (e.g., Brier score, log loss). Payouts are allocated based on performance.\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/ZWQ5jbLxpd4JtQgu4/t2ecgioccnqg0p40lu6h)\n\n_The Stages of a Scorable Function Tournament_\n\n## Scorable Function Forecasting vs. Traditional Statistical Modeling\n\nScorable function forecasting and traditional statistical modeling both aim to make quantitative predictions but differ in several key aspects.\n\n1.  **Model Scope and Modularity**\n    1.  Traditional Statistical Models: Often comprehensive, modeling an entire system or process in one model.\n    2.  Scorable Functions: Modular and focused, with many small functions modeling individual components or relationships.\n2.  **Model Development and Ownership:**\n    1.  Traditional Statistical Models: Developed by individual organizations for specific use cases, often requiring custom infrastructure.\n    2.  Scorable Functions: Uses common platforms for many models. Open and collaborative, allowing multiple users to define, submit, and update models.\n3.  **Approach and Emphasis:**\n    1.  Traditional Statistical Models: Heavily reliant on historical data to identify patterns and make predictions.\n    2.  Scorable Functions: Combines data-driven and theory-driven approaches, incorporating both data and subjective judgment.\n4.  **Model Lifecycle and Evaluation:**\n    1.  Traditional Statistical Models: Often developed, trained, and deployed for a specific period. Outputs and scoring methods are highly customized for the model type.\n    2.  Scorable Functions: Models are continually updated and evaluated over longer time horizons. There’s an emphasis on a few common mode outputs and scoring methods.\n\nThe modular nature of scorable functions is a significant advantage. It allows for the creation of many small, focused functions that model specific components or relationships. These functions can be easily combined and reused in different contexts. For example:\n\n```\naverage_salary(minAge, maxAge, profession) ... // returns average salary based on age range and profession\n\nremaining_working_life_years(age, gender) = ... // simple model of working years\n\nremaining_lifetime_earnings(age, gender, profession) = {\n   remaining_years = remaining_working_life_years(age, gender)\n   remaining_years * average_salary(age, age + remaining_years, profession)\n}\n```\n\nIn this example, `remaining_working_life` and `average_salary` are small, modular scorable functions that can be used independently or combined to create a more complex function like `remaining_lifetime_earnings`. This kind of modularity and reusability is not typically emphasized in traditional statistical models.\n\nThe main downside of scorable functions compared to traditional statistical models is the need for custom high-level infrastructure. The increased generality requires standardization, which can incur substantial costs. Whether this approach is worth it depends on the specific needs at hand.\n\n## Examples of Specialized Scorable Function Platforms\n\nSeveral platforms have implemented specialized versions of scorable functions:\n\n*   **Kaggle Competitions**: Participants submit models (often in Python or R) that are run against a hidden test dataset to generate predictions, scored to determine a leaderboard.\n*   **Numerai**: A hedge fund that crowdsources its trading models through weekly tournaments, with data scientists submitting prediction models that are scored on live data.\n*   **Quantopian (now defunct)**: Allowed users to submit algorithmic trading strategies in Python that could be backtested and live-traded.\n*   **Insurance Industry**: Actuarial models estimate claim probabilities and severities, developed in languages like APL, SAS, R, or Python.\n\nThese demonstrate some of the potential of this approach, but these platforms haven’t yet allowed for generic forecasting on future questions.\n\n## Challenges for Forecasters\n\nWriting functions is more complicated than submitting point probability or single distribution forecasts but is within the realm of people with some programming experience. The complexity of function specifications can vary widely, from simple models to advanced ones.\n\nNote that:\n\n1.  Right now very few people have experience writing models by hand, using mostly intuition instead of statistics. Once people get over the initial learning curve, the marginal work of the programming element might be pretty low. It should get a lot intimidating with a bit of practice.\n2.  In a forecasting team, only some people need to be responsible for the algorithms. Most team members can do other things. In a forecasting ecosystem, it can be beneficial if even a small amount is dedicated to these sorts of models.\n3.  AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms.\n\n## Challenges for Forecasting Platforms\n\nCreating general domain forecasting platforms with support for scorable functions presents numerous challenges. However, with clever engineering, these obstacles can be achievable. For instance, [Squiggle Hub](https://squigglehub.org/) provides a minimal but promising example of this concept in action, with further developments to be announced.\n\nThe level of support for scorable functions can vary widely. Supporting small functions in a single language with limited function definitions can be relatively straightforward. However, implementing comprehensive support for a wide range of features and properties is more complex.\n\nPotential challenges and features include:\n\n*   **Continuous Model Updating and Scoring**: Ensuring that models are continuously updated and accurately scored in real-time.\n*   **Interoperability**: Facilitating easy function calls between different scorable functions.\n*   **Integration with Libraries and APIs**: Allowing seamless integration with external libraries, data sources, and APIs.\n*   **Leveraging AI**: Enabling scorable functions to call large language models (LLMs).\n*   **Multilingual Support**: Integrating multiple programming languages to accommodate diverse user preferences.\n*   **Sophisticated Tournament Structures**: Designing highly-variable and sophisticated tournament structures and reward functions.\n*   **Cost Management**: Handling financial costs, especially when functions are expensive to run.\n*   **Strong DSLs or APIs**: Developing strong domain-specific languages (DSLs) or APIs for function specifications, implementations, and forecasts. This could enable an ecosystem of higher-order scorable functions, capable of estimating the calibration or computation costs of other functions.\n*   **Performance Optimization**: Ensuring fast startup times and runtimes, even with large sets of scorable functions.\n*   **Versatile Interfaces**: Creating interfaces for scorable functions that support not just estimation but also optimization.\n*   **Caching Mechanisms**: Implementing sophisticated caching mechanisms to quickly approximate slow functions.\n*   **User-Friendly Tools**: Developing solid user interfaces, plots, and diagrams for various scorable function definitions and scoring methods.\n\nIn practice, few platforms will likely have many of those features anytime soon. The place to begin is probably with minimal implementations that allow for early experimentation. But later on, there is a very high ceiling for great scorable function platforms.\n\n## Conclusion\n\nScorable functions represent a potential advancement in forecasting tournaments, combining the precision of algorithmic models with the domain generality of judgemental forecasting platforms. The main ideas are fairly simple. Now there’s a lot of work to do to both build up the necessary technical capabilities and begin experimenting with them.\n\n* * *\n\n## Appendix: Key Terminology\n\n**Prediction Market**: A speculative market where participants trade contracts based on the outcome of uncertain future events. The prices in a prediction market can indicate what the crowd thinks the probability of the event is.\n\n**Prediction Tournament**: A competition where participants make forecasts about future events or outcomes. These tournaments evaluate the accuracy and calibration of the forecasts, rewarding the best performers. Similar to prediction markets, they apply specific formats to questions across various topics and feature competition among many participants.\n\n**Scorable Function**: An executable model that returns probabilistic predictions and can be directly evaluated and scored through function calls. Scorable functions encapsulate forecasting logic, which can be based on human intuition, statistical analysis, or a combination of both. They are a subset of regular programming functions.\n\n**Traditional Statistical Model**: Conventional models used for forecasting that often involve comprehensive, data-driven approaches to represent entire systems or processes. These models are typically developed by individual organizations for specific use cases, require custom infrastructure, and heavily rely on historical data to identify patterns and make predictions.\n\n**Model**: In the context of forecasting, a model is any method or algorithm that converts inputs into specific estimates or predictions. Both statistical models and scorable functions are types of models.\n\n**Bot**: An automated program that performs tasks, such as submitting forecasts or updating predictions based on predefined algorithms. In forecasting platforms, bots can automate the process of making and adjusting predictions. A bot can use a model internally but is not itself a scorable function or a model.\n\n**Algorithmic Forecasting**: The use of algorithms to analyze data and make predictions about future events. This can involve the use of bots, statistical models, and scorable functions.\n\n* * *\n\nThanks to everyone who has helped on QURI on this topic so far. Also, thanks to Anthropic and Claude 3, which helped a lot with this post.",
-  "reviews": []
+  "reviews": [
+    {
+      "agentId": "bias-detector",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:18.948Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5196,\"completionTokens\":1733,\"totalTokens\":6929,\"temperature\":0.1,\"runtimeMs\":9847}",
+      "thinking": "This document introduces \"scorable functions\" as a novel approach to forecasting, contrasting it with traditional methods and highlighting its potential benefits and challenges. As a bias detector, I need to examine the text for potential biases in how the author presents this new method, compares it to existing ones, and discusses its future implementation.\n\nI will be looking for biases such as:\n\n*   **Optimism bias:** Overly positive expectations about the success and ease of implementation of scorable functions.\n*   **Confirmation bias:** Favoring evidence that supports the superiority of scorable functions while downplaying limitations or challenges.\n*   **Availability heuristic:** Over-relying on easily recalled examples or successes of similar platforms, while neglecting potential pitfalls.\n*   **Status quo bias:** Undervaluing the strengths and established practices of traditional forecasting methods.\n*   **Authority bias:** Over-reliance on the author's or QURI's expertise, potentially leading readers to accept claims without critical evaluation.\n*   **Framing effects:** Presenting scorable functions in a way that emphasizes their advantages and minimizes their disadvantages.\n\nI will also consider whether the author acknowledges potential biases and takes steps to mitigate them. The analysis will focus on identifying these biases, explaining their potential impact, and suggesting ways to address them to ensure a more balanced and objective presentation.",
+      "summary": "The document presents a compelling case for \"scorable functions\" as a novel forecasting method. However, my analysis reveals potential biases, including optimism bias in the feasibility of applications and overcoming challenges, framing effects in comparing scorable functions to traditional models, and the availability heuristic in the limited examples of successful platforms. The author does acknowledge some limitations and the need for experimentation, which helps to mitigate these biases. Overall, while the document is informative, readers should be aware of these potential biases and critically evaluate the claims made about the benefits and ease of implementation of scorable functions.",
+      "comments": [
+        {
+          "title": "Optimism Bias in Potential Applications",
+          "description": "The examples provided for potential uses of scorable functions, while diverse, may be presented with an overly optimistic view of their feasibility and accuracy. The description doesn't fully acknowledge the complexities and uncertainties inherent in these domains, potentially leading to unrealistic expectations.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 6250,
+            "endOffset": 8146,
+            "quotedText": "# Potential Uses of Scorable Functions\n\nScorable functions can be applied to a wide range of forecasting questions, making them highly versatile. Here are some examples of questions well-suited for scorable functions:\n\n1.  **Financial Forecasting**:\n    *   \"Create a model that predicts, for any date D (from 2023 to 2033), the closing price of any provided set of financial assets from the stock market on that date.\"\n2.  **Cryptocurrency Market**:\n    *   \"For any future date D (from 2023 to 2033), predict the total market capitalization of any subset of cryptocurrencies on that date, conditioning on the S&P 500 and other global economic indicators.\"\n3.  **Political Forecasting**:\n    *   \"For each year from 2024 to 2100, predict the joint density of the party of the president, the number of House Representatives of each party, the number of Senate Representatives of each party, and the number of Supreme Court justices of each party.\"\n4.  **Demographic Predictions**:\n    *   \"For any future year T (2025 to 2100) and country, predict the life expectancy and other parameters that will be reported by Our World in Data for that year and region.\"\n5.  **Geopolitical Risk Assessment**:\n    *   \"Conditional on US-Russia tensions (as measured by the Geopolitical Threat Index) being X at a time T in the future, what will the Metaculus forecast be for 'Chance of nuclear weapon use before 2030' on time Y?\"\n6.  **Medical Forecasting**:\n    *   \"Given an individual with demographic information D, predict their probability of developing a medical condition M by point in time T.\"\n\nThese examples highlight the flexibility and potential of scorable functions across various domains. It took significant experimentation to identify suitable questions for current prediction tournaments and markets. With the introduction of scorable functions, the range of possibilities expands dramatica"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Framing Effect: Emphasizing Advantages",
+          "description": "The comparison between scorable function forecasting and traditional statistical modeling is framed in a way that highlights the modularity and reusability of scorable functions as a significant advantage. While these are valid points, the framing may downplay the strengths of traditional models in terms of comprehensiveness and established methodologies.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 11237,
+            "endOffset": 12215,
+            "quotedText": "The modular nature of scorable functions is a significant advantage. It allows for the creation of many small, focused functions that model specific components or relationships. These functions can be easily combined and reused in different contexts. For example:\n\n```\naverage_salary(minAge, maxAge, profession) ... // returns average salary based on age range and profession\n\nremaining_working_life_years(age, gender) = ... // simple model of working years\n\nremaining_lifetime_earnings(age, gender, profession) = {\n   remaining_years = remaining_working_life_years(age, gender)\n   remaining_years * average_salary(age, age + remaining_years, profession)\n}\n```\n\nIn this example, `remaining_working_life` and `average_salary` are small, modular scorable functions that can be used independently or combined to create a more complex function like `remaining_lifetime_earnings`. This kind of modularity and reusability is not typically emphasized in traditional statistical models."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Mitigation of Bias: Acknowledging Limitations",
+          "description": "The author acknowledges the need for experimentation and the potential costs associated with standardization, which helps to mitigate potential optimism bias. This shows an awareness of the challenges and uncertainties involved in implementing scorable functions.",
+          "importance": "80",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 12217,
+            "endOffset": 12508,
+            "quotedText": "The main downside of scorable functions compared to traditional statistical models is the need for custom high-level infrastructure. The increased generality requires standardization, which can incur substantial costs. Whether this approach is worth it depends on the specific needs at hand."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Availability Heuristic: Limited Examples",
+          "description": "The examples of specialized scorable function platforms (Kaggle, Numerai, Quantopian) are limited and may not fully represent the challenges and failures of such platforms. This could lead to an overestimation of the likelihood of success for new scorable function platforms.",
+          "importance": "65",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 12566,
+            "endOffset": 13429,
+            "quotedText": "Several platforms have implemented specialized versions of scorable functions:\n\n*   **Kaggle Competitions**: Participants submit models (often in Python or R) that are run against a hidden test dataset to generate predictions, scored to determine a leaderboard.\n*   **Numerai**: A hedge fund that crowdsources its trading models through weekly tournaments, with data scientists submitting prediction models that are scored on live data.\n*   **Quantopian (now defunct)**: Allowed users to submit algorithmic trading strategies in Python that could be backtested and live-traded.\n*   **Insurance Industry**: Actuarial models estimate claim probabilities and severities, developed in languages like APL, SAS, R, or Python.\n\nThese demonstrate some of the potential of this approach, but these platforms haven’t yet allowed for generic forecasting on future questions."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Addressing Complexity for Forecasters",
+          "description": "The author attempts to address the complexity of writing functions by suggesting that the programming element might become less intimidating with practice and that AI can assist in writing code. While these points are valid, they may still underestimate the initial learning curve and the level of expertise required for more complex models.",
+          "importance": "65",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 13462,
+            "endOffset": 14402,
+            "quotedText": "Writing functions is more complicated than submitting point probability or single distribution forecasts but is within the realm of people with some programming experience. The complexity of function specifications can vary widely, from simple models to advanced ones.\n\nNote that:\n\n1.  Right now very few people have experience writing models by hand, using mostly intuition instead of statistics. Once people get over the initial learning curve, the marginal work of the programming element might be pretty low. It should get a lot intimidating with a bit of practice.\n2.  In a forecasting team, only some people need to be responsible for the algorithms. Most team members can do other things. In a forecasting ecosystem, it can be beneficial if even a small amount is dedicated to these sorts of models.\n3.  AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Optimism Bias in Overcoming Challenges",
+          "description": "The statement that the challenges for forecasting platforms are \"achievable with clever engineering\" reflects an optimism bias. While engineering solutions may exist, the statement doesn't fully acknowledge the potential costs, time, and unforeseen difficulties associated with overcoming these challenges.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 14445,
+            "endOffset": 14791,
+            "quotedText": "Creating general domain forecasting platforms with support for scorable functions presents numerous challenges. However, with clever engineering, these obstacles can be achievable. For instance, [Squiggle Hub](https://squigglehub.org/) provides a minimal but promising example of this concept in action, with further developments to be announced."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 68
+    },
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:28.813Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5319,\"completionTokens\":1734,\"totalTokens\":7053,\"temperature\":0.1,\"runtimeMs\":9854}",
+      "thinking": "This document introduces \"scorable functions\" as a novel approach to forecasting, contrasting them with traditional methods and highlighting their potential benefits. My analysis will focus on the clarity and coherence of the explanation, identifying areas where the concepts could be more accessible to a broader audience and where the writing could be more precise.\n\nI'll pay close attention to the use of examples, the explanation of technical terms, and the overall flow of the argument. I will also evaluate the readability of the text, considering sentence length, word choice, and the use of jargon. The goal is to provide actionable feedback that enhances the document's clarity and makes it more effective in communicating the value of scorable functions to a wider audience.",
+      "summary": "This document effectively introduces the concept of \"scorable functions\" as a novel approach to forecasting. It clearly contrasts them with traditional methods and highlights their potential benefits. However, the document could be improved by making the explanation more accessible to a broader audience. This could be achieved by providing more precise definitions, simplifying examples, explaining technical terms, and adding comments to code examples. Overall, the document is well-structured and informative, but could benefit from some refinements to enhance its clarity and readability.",
+      "comments": [
+        {
+          "title": "Clarity of Definition",
+          "description": "The initial definition of \"scorable function\" could be more precise and accessible. While the analogy to a \"box\" is helpful, it lacks the specificity needed for a clear understanding. A more direct definition focusing on the function's role in generating probabilistic predictions would be beneficial.",
+          "importance": "85",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 121,
+            "endOffset": 246,
+            "quotedText": "You can think of a _scorable function_ as a \"_box_\" that can produce large clusters of complex forecasts. Credit to Dall-E 3."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability of Examples",
+          "description": "The examples provided are complex and may be difficult for readers without a strong background in forecasting or programming to understand. Simplifying the examples or providing more introductory context would improve readability.",
+          "importance": "75",
+          "grade": "55",
+          "highlight": {
+            "startOffset": 331,
+            "endOffset": 932,
+            "quotedText": "1.  \"For every year until 2100, what will be the probability of a global catastrophic biological event, given different levels of biosecurity investment and technological advancement?\"\n2.  \"What will be the impact of various AI governance policies on the likelihood of developing safe and beneficial artificial general intelligence, and how will this affect key indicators of global well-being over the next century?\"\n3.  \"How valuable is every single project funded by Open Philanthropy, according to a person with any set of demographic information, if they would spend 1000 hours reflecting on it?\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Use of Technical Jargon",
+          "description": "The document uses terms like \"point estimates,\" \"probability distributions,\" and \"nonlinear dynamics\" without sufficient explanation. Providing definitions or examples of these terms would make the text more accessible to a wider audience.",
+          "importance": "70",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 1464,
+            "endOffset": 1753,
+            "quotedText": "Scorable functions allow encoding a vast range of relationships and dependencies, from basic linear trends to intricate nonlinear dynamics. Forecasters can precisely specify interactions between variables, the evolution of probabilities over time, and how different scenarios could unfold."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Audience Alignment",
+          "description": "The document assumes a certain level of familiarity with forecasting platforms and techniques. Providing more background information on these topics would make the text more accessible to readers who are new to the field.",
+          "importance": "60",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 2397,
+            "endOffset": 2589,
+            "quotedText": "Many people are familiar with the idea of using \"bots\" to automate forecasts on platforms like Metaculus. Let's consider a simple example to see how scorable functions can extend this concept."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Coherence of Comparison",
+          "description": "The comparison between forecasting with bots and scorable functions is well-structured and helps to illustrate the advantages of the latter. The use of code examples is also effective in demonstrating the practical application of scorable functions.",
+          "importance": "80",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 2591,
+            "endOffset": 5549,
+            "quotedText": "Suppose there's a binary question on Metaculus: \"_Will event X happen in 2024?_\" Intuitively, the probability should decrease as 2024 progresses, assuming no resolution. A forecaster might start at 90% in January, but want to gradually decrease to 10% by December.\n\nOne approach is to manually update the forecast each week - a tedious process. A more efficient solution is to write a bot that submits forecasts based on a simple function:\n\n```\nchanceOfXby2025(current_date) = 0.9 * proportion_of_year_remaining(current_date, 2024)\n```\n\n_(Example using_ [_Squiggle_](https://www.squiggle-language.com/)_, but hopefully it's straightforward enough)_\n\nThis bot can automatically submit daily forecasts via the Metaculus API.\n\nHowever, while more efficient than manual updates, this approach has several drawbacks:\n\n1.  The platform must store and process a separate forecast for each day, even though they all derive from a simple function.\n2.  Viewers can't see the full forecast trajectory, only the discrete submissions.\n3.  The forecaster's future projections and scenario contingencies are opaque.\n\nScorable functions elegantly solve these issues. Instead of a bot submitting individual forecasts, the forecaster simply submits the generating function itself. You can imagine there being a custom input box directly in Metaculus.\n\nThe function submitted would be the same, though it might be provided as a lambda function or with a standardized function name.\n\n```\nfn(current_date) = 0.9 * proportion_of_year_remaining(current_date, 2024)\n```\n\nThe platform can then evaluate this function on-demand to generate up-to-date forecasts. Viewers see the complete forecast trajectory and can even inspect the function code. The forecaster can update their forecast by simply modifying the function.\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/ZWQ5jbLxpd4JtQgu4/zijzqh4gpotogwqs7pwr)\n\n_Comparison of regular judgemental forecasting, forecasting using bots, and forecasting using scorable functions. Note that it is also possible to use bots to submit scorable functions, in more complicated settings._\n\nNow consider a more complex example:\n\n```\nchanceOfXby2025(current_date, related_forecast) = 0.6 * proportion_of_year_remaining(current_date, 2024) + 0.4 * related_forecast\n```\n\nHere, the forecast depends not only on time, but on the current value of `related_forecast`, e.g., the probability of a related event. The function encodes the forecaster's view on how these probabilities interact. The forecaster is now submitting a conditional probability directly.\n\nWith traditional bots, this kind of complex, conditional forecast would be infeasible. But with scorable functions, it's trivial. Viewers can see how the forecast responds to different scenarios for the related question.\n\nThe potential applications are vast. Forecasters could condition on economic indicators, poll results, prediction market prices, and more."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Readability of Code Examples",
+          "description": "While the code examples are helpful, they could be improved by adding comments to explain the purpose of each line. This would make the code more accessible to readers who are not familiar with the Squiggle language.",
+          "importance": "65",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 3036,
+            "endOffset": 3239,
+            "quotedText": "chanceOfXby2025(current_date) = 0.9 * proportion_of_year_remaining(current_date, 2024)\n```\n\n_(Example using_ [_Squiggle_](https://www.squiggle-language.com/)_, but hopefully it's straightforward enough)_"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Precision of Language",
+          "description": "The phrase \"realizing this potential will require careful platform design\" is somewhat vague. Specifying the key aspects of platform design that are crucial for realizing the potential of scorable functions would add more value.",
+          "importance": "65",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 5899,
+            "endOffset": 6247,
+            "quotedText": "Of course, realizing this potential will require careful platform design. But the benefits are substantial. Forecasters can express their knowledge more precisely and efficiently. Viewers gain deeper insight into forecast rationales and contingencies. Platforms can elicit and evaluate more sophisticated forecasts. It can be a win for all parties."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Tournament Mechanics",
+          "description": "The description of how scorable function forecasting tournaments could work is somewhat abstract. Providing a concrete example of a tournament question and the scoring process would improve understanding.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 8397,
+            "endOffset": 9584,
+            "quotedText": "Here's a rough sketch of how a tournament using scorable functions could work.\n\n1.  **Function Specification**: Questions specify a precise function specification for forecasts. For example, \"Submit a function that predicts a probability distribution of the US inflation rate (Y), given the Fed funds rate and unemployment rate (X1, X2), for any given month from Jan 2024 to Dec 2026.\"\n2.  **Submission of Code**: Forecasters submit actual code (e.g., Python functions, Squiggle functions) matching that specification. These can range from simple models to sophisticated machine learning models.\n3.  **Storage and Evaluation**: Scorable functions are stored and managed by the platform, evaluated programmatically to generate up-to-date forecasts. Forecasters can submit updated versions of their functions as needed.\n4.  **Visualization**: The platform provides tools to aggregate scorable functions, visualize their outputs, and analyze their performance over time.\n5.  **Scoring and Payouts**: At the end of the forecasting period, all versions of the scorable functions are scored using pre-specified metrics (e.g., Brier score, log loss). Payouts are allocated based on performance."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Precision in Defining Model Scope",
+          "description": "The distinction between the scope of traditional statistical models and scorable functions could be sharpened. While the document states that traditional models are \"comprehensive,\" it would be helpful to provide specific examples of what this entails and how it differs from the modular approach of scorable functions.",
+          "importance": "75",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 10014,
+            "endOffset": 10241,
+            "quotedText": "Traditional Statistical Models: Often comprehensive, modeling an entire system or process in one model.\n    2.  Scorable Functions: Modular and focused, with many small functions modeling individual components or relationships."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Clarity of Challenges for Platforms",
+          "description": "The list of challenges for forecasting platforms is comprehensive but could be organized more logically. Grouping related challenges together and providing brief explanations of their significance would improve clarity.",
+          "importance": "70",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 14445,
+            "endOffset": 16970,
+            "quotedText": "Creating general domain forecasting platforms with support for scorable functions presents numerous challenges. However, with clever engineering, these obstacles can be achievable. For instance, [Squiggle Hub](https://squigglehub.org/) provides a minimal but promising example of this concept in action, with further developments to be announced.\n\nThe level of support for scorable functions can vary widely. Supporting small functions in a single language with limited function definitions can be relatively straightforward. However, implementing comprehensive support for a wide range of features and properties is more complex.\n\nPotential challenges and features include:\n\n*   **Continuous Model Updating and Scoring**: Ensuring that models are continuously updated and accurately scored in real-time.\n*   **Interoperability**: Facilitating easy function calls between different scorable functions.\n*   **Integration with Libraries and APIs**: Allowing seamless integration with external libraries, data sources, and APIs.\n*   **Leveraging AI**: Enabling scorable functions to call large language models (LLMs).\n*   **Multilingual Support**: Integrating multiple programming languages to accommodate diverse user preferences.\n*   **Sophisticated Tournament Structures**: Designing highly-variable and sophisticated tournament structures and reward functions.\n*   **Cost Management**: Handling financial costs, especially when functions are expensive to run.\n*   **Strong DSLs or APIs**: Developing strong domain-specific languages (DSLs) or APIs for function specifications, implementations, and forecasts. This could enable an ecosystem of higher-order scorable functions, capable of estimating the calibration or computation costs of other functions.\n*   **Performance Optimization**: Ensuring fast startup times and runtimes, even with large sets of scorable functions.\n*   **Versatile Interfaces**: Creating interfaces for scorable functions that support not just estimation but also optimization.\n*   **Caching Mechanisms**: Implementing sophisticated caching mechanisms to quickly approximate slow functions.\n*   **User-Friendly Tools**: Developing solid user interfaces, plots, and diagrams for various scorable function definitions and scoring methods.\n\nIn practice, few platforms will likely have many of those features anytime soon. The place to begin is probably with minimal implementations that allow for early experimentation. But later on, there is a very high ceiling for great scorable function platforms."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        }
+      ],
+      "grade": 72
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:33.877Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5999,\"completionTokens\":798,\"totalTokens\":6797,\"temperature\":0.1,\"runtimeMs\":5038}",
+      "thinking": "This article introduces \"scorable functions\" as a novel approach to forecasting, contrasting them with traditional methods and highlighting their potential benefits and challenges. As a research scholar, I'll focus on identifying external resources that can provide a deeper understanding of the concepts discussed, such as prediction markets, algorithmic forecasting, and the technical aspects of implementing scorable functions. I will also look for resources that discuss the challenges of building forecasting platforms and the use of AI in forecasting. I will provide links to relevant papers, blog posts, and forum discussions where possible, and include citation information for resources that lack direct links. I will also comment on the importance of each resource based on its relevance, authority, and quality.",
+      "summary": "This article introduces the concept of scorable functions as a new method for forecasting, contrasting it with traditional statistical models and bot-driven approaches. It highlights the potential benefits of scorable functions, such as increased precision, flexibility, and transparency, while also acknowledging the challenges in their implementation and adoption. My analysis focuses on providing relevant external resources that can help readers better understand the concepts discussed and the potential applications of scorable functions.",
+      "comments": [
+        {
+          "title": "AI Assistance in Coding",
+          "description": "This section mentions the use of AI in assisting with code writing. Researching the current state of AI-assisted coding tools can provide insights into how AI can facilitate the development of scorable functions.",
+          "importance": 70,
+          "grade": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 14273,
+            "endOffset": 14402,
+            "quotedText": "AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms."
+          }
+        },
+        {
+          "title": "Challenges in Forecasting Platform Development",
+          "description": "This section outlines the challenges in creating forecasting platforms with support for scorable functions. Researching these challenges can provide insights into the technical and practical considerations for implementing scorable functions.",
+          "importance": 85,
+          "grade": 90,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 14445,
+            "endOffset": 14556,
+            "quotedText": "Creating general domain forecasting platforms with support for scorable functions presents numerous challenges."
+          }
+        },
+        {
+          "title": "Prediction Markets Research",
+          "description": "This section defines prediction markets. Researching prediction markets can provide a broader context for understanding the potential of scorable functions in aggregating and evaluating forecasts.",
+          "importance": 80,
+          "grade": 85,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 17374,
+            "endOffset": 17601,
+            "quotedText": "Prediction Market**: A speculative market where participants trade contracts based on the outcome of uncertain future events. The prices in a prediction market can indicate what the crowd thinks the probability of the event is."
+          }
+        },
+        {
+          "title": "Algorithmic Forecasting Resources",
+          "description": "This section defines algorithmic forecasting. Further research into algorithmic forecasting techniques and their applications can provide a deeper understanding of the potential of scorable functions.",
+          "importance": 75,
+          "grade": 80,
+          "isValid": false,
+          "highlight": {
+            "startOffset": 19194,
+            "endOffset": 4622,
+            "quotedText": " Note that it is also possible to use bots to submit scorable functions, in more complicated settings._\n\nNow consider a more complex example:\n\n```\nchanceOfXby2025(current_date, related_forecast) = 0.6 * proportion_of_year_remaining(current_date, 2024) + 0.4 * related_forecast\n```\n\nHere, the forecast depends not only on time, but on the current value of `related_forecast`, e.g., the probability of a related event. The function encodes the forecaster's view on how these probabilities interact. The forecaster is now submitting a conditional probability directly.\n\nWith traditional bots, this kind of complex, conditional forecast would be infeasible. But with scorable functions, it's trivial. Viewers can see how the forecast responds to different scenarios for the related question.\n\nThe potential applications are vast. Forecasters could condition on economic indicators, poll results, prediction market prices, and more. Complex, multidimensional forecasts become possible:\n\n```\nrecession_probability(country, gdp_history, month_in_question) = ...\n```\n\nThis function could output a probability of a recession for each country and month, based on GDP history. Such a forecast would be infeasible with traditional methods, but is straightforward with scorable functions.\n\nOf course, realizing this potential will require careful platform design. But the benefits are substantial. Forecasters can express their knowledge more precisely and efficiently. Viewers gain deeper insight into forecast rationales and contingencies. Platforms can elicit and evaluate more sophisticated forecasts. It can be a win for all parties.\n\n## Potential Uses of Scorable Functions\n\nScorable functions can be applied to a wide range of forecasting questions, making them highly versatile. Here are some examples of questions well-suited for scorable functions:\n\n1.  **Financial Forecasting**:\n    *   \"Create a model that predicts, for any date D (from 2023 to 2033), the closing price of any provided set of financial assets from the stock market on that date.\"\n2.  **Cryptocurrency Market**:\n    *   \"For any future date D (from 2023 to 2033), predict the total market capitalization of any subset of cryptocurrencies on that date, conditioning on the S&P 500 and other global economic indicators.\"\n3.  **Political Forecasting**:\n    *   \"For each year from 2024 to 2100, predict the joint density of the party of the president, the number of House Representatives of each party, the number of Senate Representatives of each party, and the number of Supreme Court justices of each party.\"\n4.  **Demographic Predictions**:\n    *   \"For any future year T (2025 to 2100) and country, predict the life expectancy and other parameters that will be reported by Our World in Data for that year and region.\"\n5.  **Geopolitical Risk Assessment**:\n    *   \"Conditional on US-Russia tensions (as measured by the Geopolitical Threat Index) being X at a time T in the future, what will the Metaculus forecast be for 'Chance of nuclear weapon use before 2030' on time Y?\"\n6.  **Medical Forecasting**:\n    *   \"Given an individual with demographic information D, predict their probability of developing a medical condition M by point in time T.\"\n\nThese examples highlight the flexibility and potential of scorable functions across various domains. It took significant experimentation to identify suitable questions for current prediction tournaments and markets. With the introduction of scorable functions, the range of possibilities expands dramatically, requiring time and experimentation to fully understand and optimize their use.\n\n## How Scorable Function Forecasting Tournaments Could Work\n\nThe key idea is to generalize prediction markets to support forecasts in the form of scorable functions. Here's a rough sketch of how a tournament using scorable functions could work.\n\n1.  **Function Specification**: Questions specify a precise function specification for forecasts. For example, \"Submit a function that predicts a probability distribution of the US inflation rate (Y), given the Fed funds rate and unemployment rate (X1, X2), for any given month from Jan 2024 to Dec 2026.\"\n2.  **Submission of Code**: Forecasters submit actual code (e.g., Python functions, Squiggle functions) matching that specification. These can range from simple models to sophisticated machine learning models.\n3.  **Storage and Evaluation**: Scorable functions are stored and managed by the platform, evaluated programmatically to generate up-to-date forecasts. Forecasters can submit updated versions of their functions as needed.\n4.  **Visualization**: The platform provides tools to aggregate scorable functions, visualize their outputs, and analyze their performance over time.\n5.  **Scoring and Payouts**: At the end of the forecasting period, all versions of the scorable functions are scored using pre-specified metrics (e.g., Brier score, log loss). Payouts are allocated based on performance.\n\n![](https://res.cloudinary.com/cea/image/upload/f_auto,q_auto/v1/mirroredImages/ZWQ5jbLxpd4JtQgu4/t2ecgioccnqg0p40lu6h)\n\n_The Stages of a Scorable Function Tournament_\n\n## Scorable Function Forecasting vs. Traditional Statistical Modeling\n\nScorable function forecasting and traditional statistical modeling both aim to make quantitative predictions but differ in several key aspects.\n\n1.  **Model Scope and Modularity**\n    1.  Traditional Statistical Models: Often comprehensive, modeling an entire system or process in one model.\n    2.  Scorable Functions: Modular and focused, with many small functions modeling individual components or relationships.\n2.  **Model Development and Ownership:**\n    1.  Traditional Statistical Models: Developed by individual organizations for specific use cases, often requiring custom infrastructure.\n    2.  Scorable Functions: Uses common platforms for many models. Open and collaborative, allowing multiple users to define, submit, and update models.\n3.  **Approach and Emphasis:**\n    1.  Traditional Statistical Models: Heavily reliant on historical data to identify patterns and make predictions.\n    2.  Scorable Functions: Combines data-driven and theory-driven approaches, incorporating both data and subjective judgment.\n4.  **Model Lifecycle and Evaluation:**\n    1.  Traditional Statistical Models: Often developed, trained, and deployed for a specific period. Outputs and scoring methods are highly customized for the model type.\n    2.  Scorable Functions: Models are continually updated and evaluated over longer time horizons. There’s an emphasis on a few common mode outputs and scoring methods.\n\nThe modular nature of scorable functions is a significant advantage. It allows for the creation of many small, focused functions that model specific components or relationships. These functions can be easily combined and reused in different contexts. For example:\n\n```\naverage_salary(minAge, maxAge, profession) ... // returns average salary based on age range and profession\n\nremaining_working_life_years(age, gender) = ... // simple model of working years\n\nremaining_lifetime_earnings(age, gender, profession) = {\n   remaining_years = remaining_working_life_years(age, gender)\n   remaining_years * average_salary(age, age + remaining_years, profession)\n}\n```\n\nIn this example, `remaining_working_life` and `average_salary` are small, modular scorable functions that can be used independently or combined to create a more complex function like `remaining_lifetime_earnings`. This kind of modularity and reusability is not typically emphasized in traditional statistical models.\n\nThe main downside of scorable functions compared to traditional statistical models is the need for custom high-level infrastructure. The increased generality requires standardization, which can incur substantial costs. Whether this approach is worth it depends on the specific needs at hand.\n\n## Examples of Specialized Scorable Function Platforms\n\nSeveral platforms have implemented specialized versions of scorable functions:\n\n*   **Kaggle Competitions**: Participants submit models (often in Python or R) that are run against a hidden test dataset to generate predictions, scored to determine a leaderboard.\n*   **Numerai**: A hedge fund that crowdsources its trading models through weekly tournaments, with data scientists submitting prediction models that are scored on live data.\n*   **Quantopian (now defunct)**: Allowed users to submit algorithmic trading strategies in Python that could be backtested and live-traded.\n*   **Insurance Industry**: Actuarial models estimate claim probabilities and severities, developed in languages like APL, SAS, R, or Python.\n\nThese demonstrate some of the potential of this approach, but these platforms haven’t yet allowed for generic forecasting on future questions.\n\n## Challenges for Forecasters\n\nWriting functions is more complicated than submitting point probability or single distribution forecasts but is within the realm of people with some programming experience. The complexity of function specifications can vary widely, from simple models to advanced ones.\n\nNote that:\n\n1.  Right now very few people have experience writing models by hand, using mostly intuition instead of statistics. Once people get over the initial learning curve, the marginal work of the programming element might be pretty low. It should get a lot intimidating with a bit of practice.\n2.  In a forecasting team, only some people need to be responsible for the algorithms. Most team members can do other things. In a forecasting ecosystem, it can be beneficial if even a small amount is dedicated to these sorts of models.\n3.  AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms.\n\n## Challenges for Forecasting Platforms\n\nCreating general domain forecasting platforms with support for scorable functions presents numerous challenges. However, with clever engineering, these obstacles can be achievable. For instance, [Squiggle Hub](https://squigglehub.org/) provides a minimal but promising example of this concept in action, with further developments to be announced.\n\nThe level of support for scorable functions can vary widely. Supporting small functions in a single language with limited function definitions can be relatively straightforward. However, implementing comprehensive support for a wide range of features and properties is more complex.\n\nPotential challenges and features include:\n\n*   **Continuous Model Updating and Scoring**: Ensuring that models are continuously updated and accurately scored in real-time.\n*   **Interoperability**: Facilitating easy function calls between different scorable functions.\n*   **Integration with Libraries and APIs**: Allowing seamless integration with external libraries, data sources, and APIs.\n*   **Leveraging AI**: Enabling scorable functions to call large language models (LLMs).\n*   **Multilingual Support**: Integrating multiple programming languages to accommodate diverse user preferences.\n*   **Sophisticated Tournament Structures**: Designing highly-variable and sophisticated tournament structures and reward functions.\n*   **Cost Management**: Handling financial costs, especially when functions are expensive to run.\n*   **Strong DSLs or APIs**: Developing strong domain-specific languages (DSLs) or APIs for function specifications, implementations, and forecasts. This could enable an ecosystem of higher-order scorable functions, capable of estimating the calibration or computation costs of other functions.\n*   **Performance Optimization**: Ensuring fast startup times and runtimes, even with large sets of scorable functions.\n*   **Versatile Interfaces**: Creating interfaces for scorable functions that support not just estimation but also optimization.\n*   **Caching Mechanisms**: Implementing sophisticated caching mechanisms to quickly approximate slow functions.\n*   **User-Friendly Tools**: Developing solid user interfaces, plots, and diagrams for various scorable function definitions and scoring methods.\n\nIn practice, few platforms will likely have many of those features anytime soon. The place to begin is probably with minimal implementations that allow for early experimentation. But later on, there is a very high ceiling for great scorable function platforms.\n\n## Conclusion\n\nScorable functions represent a potential advancement in forecasting tournaments, combining the precision of algorithmic models with the domain generality of judgemental forecasting platforms. The main ideas are fairly simple. Now there’s a lot of work to do to both build up the necessary technical capabilities and begin experimenting with them.\n\n* * *\n\n## Appendix: Key Terminology\n\n**Prediction Market**: A speculative market where participants trade contracts based on the outcome of uncertain future events. The prices in a prediction market can indicate what the crowd thinks the probability of the event is.\n\n**Prediction Tournament**: A competition where participants make forecasts about future events or outcomes. These tournaments evaluate the accuracy and calibration of the forecasts, rewarding the best performers. Similar to prediction markets, they apply specific formats to questions across various topics and feature competition among many participants.\n\n**Scorable Function**: An executable model that returns probabilistic predictions and can be directly evaluated and scored through function calls. Scorable functions encapsulate forecasting logic, which can be based on human intuition, statistical analysis, or a combination of both. They are a subset of regular programming functions.\n\n**Traditional Statistical Model**: Conventional models used for forecasting that often involve comprehensive, data-driven approaches to represent entire systems or processes. These models are typically developed by individual organizations for specific use cases, require custom infrastructure, and heavily rely on historical data to identify patterns and make predictions.\n\n**Model**: In the context of forecasting, a model is any method or algorithm that converts inputs into specific estimates or predictions. Both statistical models and scorable functions are types of models.\n\n**Bot**: An automated program that performs tasks, such as submitting forecasts or updating predictions based on predefined algorithms. In forecasting platforms, bots can automate the process of making and adjusting predictions. A bot can use a model internally but is not itself a scorable function or a model.\n\n**"
+          },
+          "error": "Highlight is too long (max 1000 characters)"
+        }
+      ],
+      "grade": 80
+    },
+    {
+      "agentId": "fake-eliezer",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:43.229Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5369,\"completionTokens\":1490,\"totalTokens\":6859,\"temperature\":0.1,\"runtimeMs\":9342}",
+      "thinking": "This document introduces \"scorable functions\" as a novel approach to forecasting, allowing forecasters to submit entire predictive models rather than just point estimates. As Eliezer Yudkowsky, my primary concern is how this approach impacts our ability to accurately model and predict events relevant to existential risk, particularly AI alignment. The core idea of encoding complex relationships and dependencies within executable models aligns with the need for nuanced and conditional forecasts in high-stakes scenarios. However, I am skeptical of any approach that doesn't explicitly address the fundamental challenges of uncertainty quantification, model calibration, and the potential for Goodhart's Law to corrupt the forecasting process. The document touches on these issues but doesn't delve into the necessary depth. I'll be looking for indications of whether this approach can truly improve our ability to anticipate and mitigate existential threats, or if it's just another way to generate pretty graphs without actually understanding the underlying dynamics. The emphasis on modularity and reusability is interesting, but it also raises concerns about the potential for cascading failures and unforeseen interactions between different models. The reliance on AI assistance for code generation is also a double-edged sword, as it could lead to the proliferation of poorly understood and potentially dangerous models. Overall, I'm cautiously optimistic about the potential of scorable functions, but I remain highly skeptical of the current state of forecasting and the ability of existing platforms to handle the complexities involved.",
+      "summary": "This document proposes \"scorable functions\" as a new forecasting method. While the idea of encoding complex relationships in executable models has potential, I remain skeptical. The document fails to adequately address critical issues such as Goodhart's Law, uncertainty quantification, and the risks associated with AI-assisted code generation. The modularity of the approach could lead to cascading failures, and the security challenges of running arbitrary code on a forecasting platform are significant. While the examples provided are relevant to existential risk, the document doesn't delve into the unique challenges of forecasting in these domains. Overall, I see potential in this approach, but significant improvements are needed before it can be considered a viable tool for addressing existential threats.",
+      "comments": [
+        {
+          "title": "Existential Risk Relevance",
+          "description": "The examples provided are relevant to existential risk mitigation, particularly AI governance and biosecurity. However, the document doesn't explicitly address the unique challenges of forecasting in these domains, such as the low base rates of catastrophic events and the potential for strategic manipulation of forecasts.",
+          "importance": "85",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 331,
+            "endOffset": 748,
+            "quotedText": "1.  \"For every year until 2100, what will be the probability of a global catastrophic biological event, given different levels of biosecurity investment and technological advancement?\"\n2.  \"What will be the impact of various AI governance policies on the likelihood of developing safe and beneficial artificial general intelligence, and how will this affect key indicators of global well-being over the next century?\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Uncertainty Quantification",
+          "description": "While the document mentions probabilistic predictions, it doesn't delve into the crucial issue of uncertainty quantification. How will forecasters be incentivized to accurately represent their uncertainty, rather than simply providing overconfident or underconfident predictions? What mechanisms will be in place to calibrate the forecasts and ensure that they are well-aligned with reality?",
+          "importance": "90",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 9025,
+            "endOffset": 9214,
+            "quotedText": "Scorable functions are stored and managed by the platform, evaluated programmatically to generate up-to-date forecasts. Forecasters can submit updated versions of their functions as needed."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Goodhart's Law Concerns",
+          "description": "The document doesn't adequately address the potential for Goodhart's Law to corrupt the forecasting process. If the scoring metrics are not carefully designed, forecasters may optimize for the metric rather than for accurate prediction, leading to unintended and potentially harmful consequences. This is especially concerning in the context of existential risk, where the stakes are high and the potential for manipulation is significant.",
+          "importance": "95",
+          "grade": "40",
+          "highlight": {
+            "startOffset": 9541,
+            "endOffset": 9584,
+            "quotedText": "Payouts are allocated based on performance."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Model Modularity and Cascading Failures",
+          "description": "The emphasis on modularity and reusability is a double-edged sword. While it can lead to more efficient model development, it also increases the risk of cascading failures and unforeseen interactions between different models. A small error in one module could propagate through the entire system, leading to inaccurate and potentially dangerous predictions. This requires careful attention to model validation and testing.",
+          "importance": "80",
+          "grade": "60",
+          "highlight": {
+            "startOffset": 11237,
+            "endOffset": 12215,
+            "quotedText": "The modular nature of scorable functions is a significant advantage. It allows for the creation of many small, focused functions that model specific components or relationships. These functions can be easily combined and reused in different contexts. For example:\n\n```\naverage_salary(minAge, maxAge, profession) ... // returns average salary based on age range and profession\n\nremaining_working_life_years(age, gender) = ... // simple model of working years\n\nremaining_lifetime_earnings(age, gender, profession) = {\n   remaining_years = remaining_working_life_years(age, gender)\n   remaining_years * average_salary(age, age + remaining_years, profession)\n}\n```\n\nIn this example, `remaining_working_life` and `average_salary` are small, modular scorable functions that can be used independently or combined to create a more complex function like `remaining_lifetime_earnings`. This kind of modularity and reusability is not typically emphasized in traditional statistical models."
+          },
+          "isValid": true
+        },
+        {
+          "title": "AI Assistance and Code Quality",
+          "description": "The reliance on AI assistance for code generation is concerning. While it may lower the barrier to entry for forecasters, it also increases the risk of poorly understood and potentially dangerous models. Forecasters need to have a deep understanding of the code they are submitting, and they need to be able to validate and test it rigorously. Simply relying on AI to generate code is a recipe for disaster.",
+          "importance": "85",
+          "grade": "45",
+          "highlight": {
+            "startOffset": 14273,
+            "endOffset": 14402,
+            "quotedText": "AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Platform Challenges and Security",
+          "description": "The challenges for forecasting platforms are significant, particularly in terms of security and cost management. Allowing users to submit arbitrary code raises serious security concerns, as malicious code could potentially compromise the entire platform. Furthermore, running complex models can be computationally expensive, and the platform needs to have mechanisms in place to manage these costs effectively.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 15813,
+            "endOffset": 15905,
+            "quotedText": "Cost Management**: Handling financial costs, especially when functions are expensive to run."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 60
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:10:52.527Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":5169,\"completionTokens\":1598,\"totalTokens\":6767,\"temperature\":0.1,\"runtimeMs\":9253}",
+      "thinking": "This document introduces the concept of \"scorable functions\" as a novel approach to forecasting, contrasting it with traditional methods and highlighting its potential benefits and challenges. From a quantitative forecasting perspective, the core idea of submitting executable models rather than point estimates is highly relevant. It allows for encoding complex relationships, conditional probabilities, and time dependencies in a way that traditional forecasting platforms struggle to accommodate. The document also touches on practical aspects like tournament design, scoring metrics, and platform implementation, which are crucial for the successful adoption of scorable functions. I will focus on identifying areas where quantitative forecasting techniques can be applied to refine the concept, address potential pitfalls, and enhance the overall forecasting process. I will also look for opportunities to translate the ideas into concrete forecasting questions and Fermi estimates.",
+      "summary": "This document introduces \"scorable functions\" as a novel forecasting method. From a quantitative forecasting perspective, the concept is highly relevant as it allows encoding complex relationships and conditional probabilities. I focused on identifying areas where quantitative techniques can enhance the concept. I suggested quantifying the benefits of scorable functions through controlled experiments, using reference class forecasting to estimate adoption rates, applying Fermi estimation to assess computational costs, and employing Bayesian updating for parameter refinement. I also emphasized the importance of calibration metrics and proposed a concrete forecasting question about the adoption rate of scorable functions. Finally, I highlighted the need to decompose complex questions into smaller, more tractable sub-questions to facilitate quantitative analysis.",
+      "comments": [
+        {
+          "title": "Decomposing the 'Safe and Beneficial AGI' Question",
+          "description": "The document mentions the question of \"What will be the impact of various AI governance policies on the likelihood of developing safe and beneficial artificial general intelligence...?\" This is a very complex question that can be decomposed into smaller, more tractable sub-questions. For example: 1) What is the probability that AGI will be developed by 2040? 2) What is the probability that AGI will be aligned with human values, conditional on it being developed by 2040? 3) How will different AI governance policies affect the probability of AGI alignment? By breaking down the question into smaller parts, it becomes easier to apply quantitative forecasting techniques and generate meaningful estimates.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 520,
+            "endOffset": 748,
+            "quotedText": "\"What will be the impact of various AI governance policies on the likelihood of developing safe and beneficial artificial general intelligence, and how will this affect key indicators of global well-being over the next century?\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Bayesian Updating for Scorable Function Parameters",
+          "description": "Scorable functions often involve parameters that need to be estimated or updated over time. Bayesian updating can be used to incorporate new data and refine these parameters. For example, in the recession probability function, the parameters relating GDP history to recession probability could be updated using Bayesian methods as new GDP data becomes available. This would allow the function to adapt to changing economic conditions and improve its forecasting accuracy.",
+          "importance": "70",
+          "highlight": {
+            "startOffset": 5608,
+            "endOffset": 5897,
+            "quotedText": "recession_probability(country, gdp_history, month_in_question) = ...\n```\n\nThis function could output a probability of a recession for each country and month, based on GDP history. Such a forecast would be infeasible with traditional methods, but is straightforward with scorable functions."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Quantifying the Benefits of Scorable Functions",
+          "description": "The document claims that scorable functions allow forecasters to express their knowledge more precisely and efficiently. This is a qualitative statement that could be quantified. One could design an experiment to measure the improvement in forecast accuracy (e.g., Brier score) when using scorable functions compared to traditional methods for a specific set of questions. A control group could use traditional methods, while the experimental group uses scorable functions. The difference in Brier scores would provide a quantitative measure of the benefit.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 6007,
+            "endOffset": 6247,
+            "quotedText": "Forecasters can express their knowledge more precisely and efficiently. Viewers gain deeper insight into forecast rationales and contingencies. Platforms can elicit and evaluate more sophisticated forecasts. It can be a win for all parties."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Reference Class Forecasting for Scorable Function Adoption",
+          "description": "The document mentions that it took significant experimentation to identify suitable questions for current prediction tournaments and markets. When introducing scorable functions, it would be beneficial to use reference class forecasting to estimate the adoption rate and the time it will take to fully understand and optimize their use. By looking at the adoption rates of similar technologies or forecasting methods in the past, one can get a more realistic estimate of the challenges and timelines involved.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 7942,
+            "endOffset": 8229,
+            "quotedText": "It took significant experimentation to identify suitable questions for current prediction tournaments and markets. With the introduction of scorable functions, the range of possibilities expands dramatically, requiring time and experimentation to fully understand and optimize their use."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Calibration Metrics for Scorable Functions",
+          "description": "The document mentions scoring scorable functions using metrics like Brier score and log loss. It's important to consider calibration metrics as well. A well-calibrated scorable function should produce probability estimates that are consistent with the observed outcomes. Calibration can be assessed using calibration curves or other statistical tests. If a scorable function is poorly calibrated, it may be necessary to adjust its parameters or incorporate additional information to improve its reliability.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 9371,
+            "endOffset": 9584,
+            "quotedText": "Scoring and Payouts**: At the end of the forecasting period, all versions of the scorable functions are scored using pre-specified metrics (e.g., Brier score, log loss). Payouts are allocated based on performance."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Fermi Estimation of Computational Costs",
+          "description": "The document mentions the challenge of managing financial costs, especially when functions are expensive to run. A Fermi estimate could be used to approximate the computational cost of running a complex scorable function. For example, one could estimate the average number of operations per function call, the cost per operation on a given platform, and the expected number of function calls in a tournament. This would provide a rough estimate of the total computational cost and help in designing cost-effective tournament structures.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 15813,
+            "endOffset": 15905,
+            "quotedText": "Cost Management**: Handling financial costs, especially when functions are expensive to run."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Forecasting Question: Adoption Rate of Scorable Functions",
+          "description": "A concrete forecasting question could be: \"What percentage of forecasts on Metaculus will be submitted as scorable functions by the end of 2025?\" This question is measurable and time-bound. It would be interesting to track the adoption rate of scorable functions and see how it evolves over time. This could inform decisions about platform development and user education.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 16987,
+            "endOffset": 17333,
+            "quotedText": "Scorable functions represent a potential advancement in forecasting tournaments, combining the precision of algorithmic models with the domain generality of judgemental forecasting platforms. The main ideas are fairly simple. Now there’s a lot of work to do to both build up the necessary technical capabilities and begin experimenting with them."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 80
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 0,
+      "createdAt": "2025-04-17T04:11:02.622Z",
+      "runDetails": "{\"model\":\"google/gemini-2.0-flash-001\",\"promptTokens\":6022,\"completionTokens\":1764,\"totalTokens\":7786,\"temperature\":0.1,\"runtimeMs\":10085}",
+      "thinking": "This post introduces the concept of \"scorable functions\" as a new format for algorithmic forecasting, particularly within the context of effective altruism and existential risk mitigation. It argues that scorable functions, which are executable models that output probabilistic predictions, offer advantages over traditional forecasting methods and simple forecasting bots by allowing forecasters to submit entire predictive models that can capture complex relationships and dependencies. The post outlines potential uses of scorable functions, how forecasting tournaments could be structured around them, and the challenges and opportunities for both forecasters and forecasting platforms. It also compares scorable function forecasting with traditional statistical modeling, highlighting the modularity and reusability of scorable functions. Finally, it touches on existing platforms that have implemented specialized versions of scorable functions and the potential for future development.\n\nFrom an EA perspective, the key value proposition of scorable functions lies in their potential to improve the accuracy, transparency, and efficiency of forecasting in areas critical to EA's mission, such as global catastrophic risks, AI safety, and the impact of various interventions. By enabling more complex and conditional forecasts, scorable functions could lead to better-informed decision-making and resource allocation. The post's emphasis on quantifying uncertainty and incorporating both data-driven and theory-driven approaches aligns well with EA's focus on evidence-based reasoning and rigorous analysis.\n\nTo evaluate the impact of this concept, I will focus on the following aspects:\n\n1.  Importance: How significantly could scorable functions improve forecasting accuracy and decision-making in EA-relevant domains?\n2.  Neglectedness: To what extent is this approach already being explored and implemented within the EA community and the broader forecasting landscape?\n3.  Tractability: How feasible is it to develop and deploy scorable function platforms and to train forecasters to use them effectively?\n4.  Novelty: How does this approach differ from existing forecasting methods, and what unique advantages does it offer?\n5.  Expected Impact: I will develop a Fermi estimate to quantify the potential value of information (EVOI) generated by scorable functions, considering factors such as improved decision-making, reduced risk, and increased efficiency of resource allocation.\n\nI will also consider potential negative impacts, such as the risk of overfitting, the potential for misuse of complex models, and the possibility that scorable functions could exacerbate existing biases in forecasting.",
+      "summary": "This post introduces \"scorable functions\" as a novel forecasting format with the potential to significantly improve decision-making in EA-relevant domains. By enabling more complex and conditional forecasts, scorable functions could lead to better-informed resource allocation and risk mitigation strategies. While challenges remain in platform development and forecaster training, the modularity and reusability of scorable functions offer unique advantages over traditional forecasting methods. The key value proposition lies in the potential to generate higher-quality information, but careful consideration must be given to potential negative impacts such as overfitting and the financial costs of running complex models. Overall, the concept warrants further exploration and experimentation within the EA community.",
+      "comments": [
+        {
+          "title": "Importance: Addressing Complex, Multidimensional Questions",
+          "description": "This highlights the core problem that scorable functions aim to solve: the limitations of traditional forecasting methods in capturing the nuance and conditionality required to address complex, multidimensional questions relevant to EA decision-making.",
+          "importance": "90",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 934,
+            "endOffset": 1463,
+            "quotedText": "These complex, multidimensional questions are useful for informing decision-making and resource allocation around effective altruism and existential risk mitigation. However, traditional judgemental forecasting methods often struggle to capture the nuance and conditionality required to address such questions effectively.\n\nThis is where \"_scorable functions_\" come in - a forecasting format that allows forecasters to directly submit entire predictive models rather than just point estimates or simple probability distributions."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Neglectedness: Filling a Gap in Forecasting Methodology",
+          "description": "This emphasizes the potential of scorable functions to fill a gap in existing forecasting methodologies by enabling more precise and efficient expression of knowledge, deeper insight into forecast rationales, and the elicitation and evaluation of more sophisticated forecasts.",
+          "importance": "80",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 6007,
+            "endOffset": 6288,
+            "quotedText": "Forecasters can express their knowledge more precisely and efficiently. Viewers gain deeper insight into forecast rationales and contingencies. Platforms can elicit and evaluate more sophisticated forecasts. It can be a win for all parties.\n\n## Potential Uses of Scorable Functions"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Fermi Estimate: Potential Value of Information (EVOI)",
+          "description": "This section is crucial for developing a Fermi estimate of the potential value of information (EVOI) generated by scorable functions. It provides concrete examples of questions that could be addressed using this approach, which is essential for quantifying the potential impact.",
+          "importance": "95",
+          "grade": "90",
+          "highlight": {
+            "startOffset": 6290,
+            "endOffset": 8229,
+            "quotedText": "Scorable functions can be applied to a wide range of forecasting questions, making them highly versatile. Here are some examples of questions well-suited for scorable functions:\n\n1.  **Financial Forecasting**:\n    *   \"Create a model that predicts, for any date D (from 2023 to 2033), the closing price of any provided set of financial assets from the stock market on that date.\"\n2.  **Cryptocurrency Market**:\n    *   \"For any future date D (from 2023 to 2033), predict the total market capitalization of any subset of cryptocurrencies on that date, conditioning on the S&P 500 and other global economic indicators.\"\n3.  **Political Forecasting**:\n    *   \"For each year from 2024 to 2100, predict the joint density of the party of the president, the number of House Representatives of each party, the number of Senate Representatives of each party, and the number of Supreme Court justices of each party.\"\n4.  **Demographic Predictions**:\n    *   \"For any future year T (2025 to 2100) and country, predict the life expectancy and other parameters that will be reported by Our World in Data for that year and region.\"\n5.  **Geopolitical Risk Assessment**:\n    *   \"Conditional on US-Russia tensions (as measured by the Geopolitical Threat Index) being X at a time T in the future, what will the Metaculus forecast be for 'Chance of nuclear weapon use before 2030' on time Y?\"\n6.  **Medical Forecasting**:\n    *   \"Given an individual with demographic information D, predict their probability of developing a medical condition M by point in time T.\"\n\nThese examples highlight the flexibility and potential of scorable functions across various domains. It took significant experimentation to identify suitable questions for current prediction tournaments and markets. With the introduction of scorable functions, the range of possibilities expands dramatically, requiring time and experimentation to fully understand and optimize their use."
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Potential Negative Impacts: Overfitting and Misuse",
+          "description": "While not explicitly stated, the complexity of scorable functions raises concerns about overfitting and the potential for misuse of complex models. This is a crucial consideration for assessing the net value of this approach.",
+          "importance": "75",
+          "grade": "65",
+          "highlight": {
+            "startOffset": 13462,
+            "endOffset": 14402,
+            "quotedText": "Writing functions is more complicated than submitting point probability or single distribution forecasts but is within the realm of people with some programming experience. The complexity of function specifications can vary widely, from simple models to advanced ones.\n\nNote that:\n\n1.  Right now very few people have experience writing models by hand, using mostly intuition instead of statistics. Once people get over the initial learning curve, the marginal work of the programming element might be pretty low. It should get a lot intimidating with a bit of practice.\n2.  In a forecasting team, only some people need to be responsible for the algorithms. Most team members can do other things. In a forecasting ecosystem, it can be beneficial if even a small amount is dedicated to these sorts of models.\n3.  AI is getting better quickly. It’s already helping Squiggle users write code. That should help a lot in writing these algorithms."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Tractability: Challenges in Platform Development",
+          "description": "This acknowledges the challenges in creating general domain forecasting platforms with support for scorable functions, but expresses optimism that these obstacles can be overcome with clever engineering. This is crucial for assessing the feasibility of implementing scorable functions in practice.",
+          "importance": "70",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 14445,
+            "endOffset": 16985,
+            "quotedText": "Creating general domain forecasting platforms with support for scorable functions presents numerous challenges. However, with clever engineering, these obstacles can be achievable. For instance, [Squiggle Hub](https://squigglehub.org/) provides a minimal but promising example of this concept in action, with further developments to be announced.\n\nThe level of support for scorable functions can vary widely. Supporting small functions in a single language with limited function definitions can be relatively straightforward. However, implementing comprehensive support for a wide range of features and properties is more complex.\n\nPotential challenges and features include:\n\n*   **Continuous Model Updating and Scoring**: Ensuring that models are continuously updated and accurately scored in real-time.\n*   **Interoperability**: Facilitating easy function calls between different scorable functions.\n*   **Integration with Libraries and APIs**: Allowing seamless integration with external libraries, data sources, and APIs.\n*   **Leveraging AI**: Enabling scorable functions to call large language models (LLMs).\n*   **Multilingual Support**: Integrating multiple programming languages to accommodate diverse user preferences.\n*   **Sophisticated Tournament Structures**: Designing highly-variable and sophisticated tournament structures and reward functions.\n*   **Cost Management**: Handling financial costs, especially when functions are expensive to run.\n*   **Strong DSLs or APIs**: Developing strong domain-specific languages (DSLs) or APIs for function specifications, implementations, and forecasts. This could enable an ecosystem of higher-order scorable functions, capable of estimating the calibration or computation costs of other functions.\n*   **Performance Optimization**: Ensuring fast startup times and runtimes, even with large sets of scorable functions.\n*   **Versatile Interfaces**: Creating interfaces for scorable functions that support not just estimation but also optimization.\n*   **Caching Mechanisms**: Implementing sophisticated caching mechanisms to quickly approximate slow functions.\n*   **User-Friendly Tools**: Developing solid user interfaces, plots, and diagrams for various scorable function definitions and scoring methods.\n\nIn practice, few platforms will likely have many of those features anytime soon. The place to begin is probably with minimal implementations that allow for early experimentation. But later on, there is a very high ceiling for great scorable function platforms.\n\n## Conclusion"
+          },
+          "isValid": false,
+          "error": "Highlight is too long (max 1000 characters)"
+        },
+        {
+          "title": "Cost Management: Handling Financial Costs",
+          "description": "This highlights a practical concern: the financial costs associated with running complex scorable functions, especially when they are computationally expensive. This is an important factor to consider when evaluating the feasibility and scalability of this approach.",
+          "importance": "65",
+          "grade": "70",
+          "highlight": {
+            "startOffset": 15813,
+            "endOffset": 16588,
+            "quotedText": "Cost Management**: Handling financial costs, especially when functions are expensive to run.\n*   **Strong DSLs or APIs**: Developing strong domain-specific languages (DSLs) or APIs for function specifications, implementations, and forecasts. This could enable an ecosystem of higher-order scorable functions, capable of estimating the calibration or computation costs of other functions.\n*   **Performance Optimization**: Ensuring fast startup times and runtimes, even with large sets of scorable functions.\n*   **Versatile Interfaces**: Creating interfaces for scorable functions that support not just estimation but also optimization.\n*   **Caching Mechanisms**: Implementing sophisticated caching mechanisms to quickly approximate slow functions.\n*   **User-Friendly Tools"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Novelty: Combining Algorithmic Precision with Domain Generality",
+          "description": "This summarizes the core innovation of scorable functions: combining the precision of algorithmic models with the domain generality of judgemental forecasting platforms. This highlights the potential for scorable functions to bridge the gap between quantitative and qualitative forecasting methods.",
+          "importance": "85",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 16987,
+            "endOffset": 17370,
+            "quotedText": "Scorable functions represent a potential advancement in forecasting tournaments, combining the precision of algorithmic models with the domain generality of judgemental forecasting platforms. The main ideas are fairly simple. Now there’s a lot of work to do to both build up the necessary technical capabilities and begin experimenting with them.\n\n* * *\n\n## Appendix: Key Terminology"
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 75
+    }
+  ]
 }

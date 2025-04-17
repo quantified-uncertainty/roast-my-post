@@ -115,9 +115,9 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
 - Total Tokens: ${usage?.total_tokens || 0}
   * Prompt Tokens: ${usage?.prompt_tokens || 0}
   * Completion Tokens: ${usage?.completion_tokens || 0}
-- Estimated Cost: $${(documentReview.costInCents / 100).toFixed(4)}
-  * Prompt Cost: $${((usage?.prompt_tokens || 0) * 0.00003).toFixed(4)}
-  * Completion Cost: $${((usage?.completion_tokens || 0) * 0.00006).toFixed(4)}
+- Estimated Cost: $${(documentReview.costInCents / 100).toFixed(6)}
+  * Prompt Cost: $${((usage?.prompt_tokens || 0) * 0.00003).toFixed(6)}
+  * Completion Cost: $${((usage?.completion_tokens || 0) * 0.00006).toFixed(6)}
 - Runtime: ${JSON.parse(documentReview.runDetails || "{}").runtimeMs || 0}ms
 - Status: Success
 
