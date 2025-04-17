@@ -6,9 +6,11 @@
   "publishedDate": "2025-04-16",
   "url": "https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp=sharing",
   "intendedAgents": [
-    "bias-detector",
+    "ea-impact-evaluator",
     "clarity-coach",
-    "research-scholar"
+    "research-scholar",
+    "quantitative-forecaster",
+    "bias-detector"
   ],
   "content": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload.\n\n  \n\nThis browser version is no longer supported. Please upgrade to a supported browser.\n\n[\n\n](https://docs.google.com/document/?usp=docs_web \"Docs home\")\n\nQURI-recommended AI Epistemics Projects\n\n Share\n\n[Sign in](https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&followup=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&ltmpl=docs&ec=GAZAGQ)\n\nFile\n\nEdit\n\nView\n\nInsert\n\nFormat\n\nTools\n\nExtensions\n\nHelp\n\nAccessibility\n\nDebug\n\nUnsaved changes to Drive\n\nImage options\n\nImage options\n\nReplace image\n\nTable options\n\nAccessibility",
   "reviews": [
@@ -126,6 +128,95 @@
             "startOffset": 289,
             "endOffset": 620,
             "quotedText": "Share\n\n[Sign in](https://accounts.google.com/ServiceLogin?service=wise&passive=1209600&osid=1&continue=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&followup=https://docs.google.com/document/d/1VTcU1jrxZjmgva22ormTGD7hKBavUbcOwo3xwNcAdOM/edit?usp%3Dsharing&ltmpl=docs&ec=GAZAGQ)"
+          },
+          "isValid": true
+        }
+      ]
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 2,
+      "createdAt": "2025-04-17T00:59:21.192Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":2398,\"completionTokens\":799,\"totalTokens\":3197,\"temperature\":0.1,\"runtimeMs\":15340}",
+      "thinking": "I'm evaluating a document titled \"QURI-recommended AI Epistemics Projects\" through an EA impact evaluation lens. QURI likely refers to the Quantified Uncertainty Research Institute, which focuses on improving forecasting and epistemics. The document appears to outline recommended projects related to AI epistemics.\n\nFirst, I need to understand what AI epistemics projects entail. These would likely be research or practical initiatives aimed at improving how we understand, evaluate, and reason about AI systems and their capabilities, especially as they become more advanced. This connects to existential risk reduction and longtermism within the EA framework.\n\nHowever, I notice that the actual content of the document isn't fully visible in what was provided. The message indicates \"JavaScript isn't enabled in your browser, so this file can't be opened.\" This means I don't have access to the specific projects being recommended.\n\nWithout the actual content, I cannot perform a proper evaluation using the ITN framework (Importance, Tractability, Neglectedness) or provide Fermi estimates of impact. I cannot assess the novelty of the proposed projects or calculate their expected value.\n\nWhat I can say generally is that AI epistemics projects would likely fall under the existential risk reduction or longtermism cause areas within EA. Improving our understanding of AI systems and our ability to reason about them could be crucial for AI alignment and safety, which many EAs consider among the most important cause areas due to the potential scale of impact on the long-term future.\n\nGiven the lack of specific content to evaluate, I'll need to note this limitation in my analysis and explain that I cannot provide the detailed quantitative assessment that would normally be expected.",
+      "summary": "I cannot provide a proper EA impact evaluation of the document \"QURI-recommended AI Epistemics Projects\" because the actual content is not accessible in the provided information. The document appears to be a Google Doc that requires JavaScript to be enabled. While AI epistemics projects would generally be relevant to EA priorities like existential risk reduction and improving the long-term future, I cannot assess the specific importance, neglectedness, tractability, or expected impact of the recommended projects without access to their details. A complete evaluation would require the full content of the document.",
+      "comments": [
+        {
+          "title": "Limited Document Access",
+          "description": "I cannot access the actual content of the document due to technical limitations indicated in the provided text. The document appears to be a Google Doc that requires JavaScript to be enabled, but the content itself is not visible in the provided information.",
+          "importance": "95",
+          "grade": "50",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 90,
+            "quotedText": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential EA Relevance of AI Epistemics",
+          "description": "While I cannot evaluate the specific projects, AI epistemics work generally has high relevance to EA priorities, particularly in existential risk reduction. Improved understanding and reasoning about AI capabilities and risks could be crucial for AI alignment efforts and reducing potential catastrophic or existential risks from advanced AI systems.",
+          "importance": "85",
+          "grade": "75",
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 286,
+            "quotedText": "QURI-recommended AI Epistemics Projects"
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 30
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 2,
+      "createdAt": "2025-04-17T00:59:47.782Z",
+      "runDetails": "{\"model\":\"anthropic/claude-3.7-sonnet\",\"promptTokens\":1519,\"completionTokens\":1195,\"totalTokens\":2714,\"temperature\":0.1,\"runtimeMs\":26577}",
+      "thinking": "As a Quantitative Forecaster, I need to analyze this document about QURI-recommended AI Epistemics Projects through the lens of forecasting and quantitative estimation. \n\nFirst, I notice that the document appears to be incomplete or not properly loaded in the provided text. I only see browser messages indicating JavaScript isn't enabled and some navigation elements, but not the actual content of the document. This significantly limits my ability to provide a thorough analysis.\n\nHowever, based on the title \"QURI-recommended AI Epistemics Projects\" and my understanding of QURI (Quantified Uncertainty Research Institute), I can infer this document likely contains recommendations for projects related to improving epistemics in AI research and development. QURI typically focuses on forecasting, quantification of uncertainty, and improving decision-making through better epistemics.\n\nIf I had access to the full document, I would look for:\n\n1. Specific project proposals that could benefit from quantitative forecasting\n2. Research questions that could be transformed into concrete, measurable forecasting questions\n3. Areas where Fermi estimation could help quantify uncertain parameters\n4. Opportunities to apply reference class forecasting to AI development timelines or capabilities\n5. Places where probability estimates would clarify thinking about AI risks or benefits\n6. Potential metrics and resolution criteria for evaluating AI progress\n7. Opportunities to decompose complex AI questions into more tractable components\n\nWithout the actual content, I'll have to base my analysis on the limited information available and my understanding of QURI's work in AI epistemics. I'll focus on how quantitative forecasting could be applied to AI epistemics projects in general, while acknowledging the limitations of not having the full document.\n\nI'll structure my comments around general themes in AI epistemics where forecasting would be valuable, such as AI timeline predictions, capability forecasting, safety research prioritization, and governance effectiveness estimation.",
+      "summary": "Due to limited access to the document content, I cannot provide a comprehensive forecasting analysis of the QURI-recommended AI Epistemics Projects. However, such projects would typically benefit from quantitative forecasting approaches including: (1) transforming abstract AI research questions into concrete, measurable predictions, (2) applying reference class forecasting to AI timelines, (3) using Fermi estimation to quantify uncertain parameters in AI capabilities, (4) providing calibrated probability distributions for key uncertainties, and (5) decomposing complex AI safety and governance questions into more tractable components with explicit resolution criteria. These approaches would help improve decision-making by clarifying thinking about AI risks, benefits, and development trajectories.",
+      "comments": [
+        {
+          "title": "Limited Document Access Constrains Forecasting Analysis",
+          "description": "As a Quantitative Forecaster, I cannot provide specific forecasting insights on the document content since it appears to be unavailable or not properly loaded. The document titled 'QURI-recommended AI Epistemics Projects' would likely benefit from quantitative forecasting approaches to transform abstract AI research questions into concrete, measurable predictions with well-calibrated probability estimates.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 179,
+            "quotedText": "JavaScript isn't enabled in your browser, so this file can't be opened. Enable and reload.\n\n  \n\nThis browser version is no longer supported. Please upgrade to a supported browser."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Potential for AI Timeline Forecasting",
+          "description": "QURI's work often involves forecasting AI development timelines. Without seeing the specific projects, I would typically analyze such content by identifying key milestones that could be formulated as concrete forecasting questions with explicit resolution criteria, applying reference class forecasting from previous technological developments, and providing calibrated probability distributions rather than point estimates.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 286,
+            "quotedText": "QURI-recommended AI Epistemics Projects"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Opportunity for Fermi Estimation in AI Capabilities",
+          "description": "AI capabilities assessment would benefit from Fermi estimation techniques to quantify uncertain parameters. I would typically decompose complex capability questions into tractable components, make explicit assumptions at each step, and provide plausible ranges rather than point estimates to reflect genuine uncertainty.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 286,
+            "quotedText": "QURI-recommended AI Epistemics Projects"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Need for Probabilistic Framing of AI Safety Questions",
+          "description": "AI safety research prioritization could be enhanced through explicit probability estimates. Without seeing the specific projects, I would typically recommend transforming abstract safety concerns into concrete, measurable forecasting questions suitable for platforms like Metaculus or Manifold Markets, with clear resolution criteria and time horizons.",
+          "importance": "75",
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 286,
+            "quotedText": "QURI-recommended AI Epistemics Projects"
           },
           "isValid": true
         }

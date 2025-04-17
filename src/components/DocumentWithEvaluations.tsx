@@ -176,9 +176,6 @@ function ReviewSelector({
 }: ReviewSelectorProps) {
   return (
     <div className="mb-6">
-      <h3 className="mb-3 text-sm font-medium text-gray-700">
-        Document Evaluations
-      </h3>
       <div className="grid grid-cols-4 gap-3 md:grid-cols-4">
         {document.reviews.map((review, index) => {
           const agent = evaluationAgents.find((a) => a.id === review.agentId);
@@ -200,10 +197,10 @@ function ReviewSelector({
             >
               <div className="flex h-full items-center p-1.5">
                 <div
-                  className={`mr-2 flex items-center justify-center rounded-full p-1 ${isActive ? "bg-blue-100" : "bg-gray-100"} `}
+                  className={`mr-3 flex items-center justify-center rounded-full p-1 ${isActive ? "bg-blue-100" : "bg-gray-100"} `}
                 >
                   <Icon
-                    className={`h-4 w-4 ${
+                    className={`h-5 w-5 ${
                       isActive ? "text-blue-600" : "text-gray-500"
                     }`}
                   />
@@ -219,22 +216,23 @@ function ReviewSelector({
                   )}
 
                   {agent && (
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-3">
+                      {hasGradeInstructions && grade !== undefined && (
+                        <span
+                          className="rounded-sm px-1.5 text-xs font-medium"
+                          style={getGradeColor(grade)}
+                        >
+                          {getLetterGrade(grade)}
+                        </span>
+                      )}
                       <span
                         className={`flex items-center gap-1 rounded-full px-1 text-xs ${
-                          isActive
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-600"
+                          isActive ? "text-blue-700" : "text-gray-600"
                         } `}
                       >
                         <ChatBubbleLeftIcon className="h-3 w-3" />
                         {commentCount}
                       </span>
-                      {hasGradeInstructions && grade !== undefined && (
-                        <span className="ml-2 text-xs font-medium">
-                          {grade}/100
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
@@ -391,50 +389,6 @@ export function DocumentWithEvaluations({
 
           {activeReview && (
             <>
-              {/* About section */}
-              <div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="px-2 py-1 text-xs text-gray-500">
-                      Run cost: ${(activeReview.costInCents / 100).toFixed(2)} •
-                      Run Date: {activeReview.createdAt.toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center p-1">
-                        {activeReview.agentId &&
-                          (() => {
-                            const agent = evaluationAgents.find(
-                              (a) => a.id === activeReview.agentId
-                            );
-                            const Icon = agent ? getIcon(agent.iconName) : null;
-                            return Icon ? (
-                              <Icon className="h-4 w-4 text-gray-500" />
-                            ) : null;
-                          })()}
-                      </div>
-                      <a
-                        href={`/agents/${activeReview.agentId}`}
-                        className="text-xs text-blue-500"
-                      >
-                        {activeReview.agentId
-                          ? evaluationAgents.find(
-                              (a) => a.id === activeReview.agentId
-                            )?.name || "Unknown Agent"
-                          : "Unknown Agent"}
-                        {activeReview.agentId && (
-                          <span className="ml-1 text-gray-500">
-                            •{" "}
-                            {evaluationAgents.find(
-                              (a) => a.id === activeReview.agentId
-                            )?.purpose || "Unknown Purpose"}
-                          </span>
-                        )}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Analysis section */}
               {activeReview.summary && (
                 <div className="rounded-lg bg-white shadow-sm">
@@ -481,13 +435,34 @@ export function DocumentWithEvaluations({
                           {activeReview.summary}
                         </ReactMarkdown>
                         {activeReview.thinking && (
-                          <div className="mt-4 text-sm text-gray-400">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[rehypeRaw]}
-                            >
-                              {activeReview.thinking}
-                            </ReactMarkdown>
+                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                            <h4 className="mb-2 font-semibold text-gray-700">
+                              Thinking:
+                            </h4>
+                            <div className="text-gray-400">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                              >
+                                {activeReview.thinking}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+                        {activeReview.runDetails && (
+                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+                            <h4 className="mb-2 font-semibold text-gray-700">
+                              Run Details:
+                            </h4>
+                            <pre className="mt-2 overflow-x-auto rounded-md bg-gray-50 p-3 font-mono text-xs text-gray-600">
+                              {typeof activeReview.runDetails === "string"
+                                ? activeReview.runDetails
+                                : JSON.stringify(
+                                    activeReview.runDetails,
+                                    null,
+                                    2
+                                  )}
+                            </pre>
                           </div>
                         )}
                       </>
@@ -514,46 +489,8 @@ export function DocumentWithEvaluations({
                 review={activeReview}
                 commentColorMap={commentColorMap}
               />
-
-              {activeReview.grade !== undefined && (
-                <div className="mt-2 text-sm text-gray-500">
-                  <div className="mb-2">
-                    <div className="font-medium">
-                      Grade: {activeReview.grade}/100
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Document Reviews</h2>
-            {getReviewsWithGrades(document.reviews).length > 0 && (
-              <div className="flex space-x-2">
-                {getReviewsWithGrades(document.reviews).map((review) => {
-                  const agent = evaluationAgents.find(
-                    (a) => a.id === review.agentId
-                  );
-                  if (!agent) return null;
-                  return (
-                    <div
-                      key={review.agentId}
-                      className="flex items-center space-x-1"
-                    >
-                      <span className="text-sm font-medium">{agent.name}:</span>
-                      {review.grade !== undefined && (
-                        <span className="text-sm font-medium">
-                          {review.grade}
-                          /100
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

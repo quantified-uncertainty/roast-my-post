@@ -63,7 +63,7 @@ export function calculateTargetComments(content: string): number {
   // Roughly 1 comment per 100 words
   // Assuming ~5 chars per word
   const additionalComments = Math.floor(contentLength / 500);
-  return Math.max(baseComments, Math.min(additionalComments, 5)); // Cap at 100 comments
+  return Math.max(baseComments, Math.min(additionalComments, 30)); // Cap at 100 comments
 }
 
 // Add this function before repairComplexJson
