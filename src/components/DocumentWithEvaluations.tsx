@@ -49,10 +49,11 @@ function getGradePhrase(grade: number): string {
 }
 
 function getImportancePhrase(importance: number): string {
-  if (importance >= 90) return "Very High";
-  if (importance >= 70) return "High";
-  if (importance >= 40) return "Medium";
-  return "Low";
+  if (importance >= 96) return "Very High";
+  if (importance >= 90) return "High";
+  if (importance >= 80) return "Medium";
+  if (importance >= 45) return "Low";
+  return "Very Low";
 }
 
 interface CommentsSidebarProps {
@@ -84,7 +85,6 @@ function CommentsSidebar({
       <div className="divide-y divide-gray-100">
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
-          const isExpanded = expandedTag === tag;
           const hasGradeInstructions = evaluationAgents.find(
             (a) => a.id === review.agentId
           )?.gradeInstructions;

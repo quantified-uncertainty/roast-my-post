@@ -23,6 +23,22 @@ export const COMMENT_COLORS = [
   "bg-red-100 text-red-800",
 ];
 
+// Base colors for non-grade comments
+const NON_GRADE_BASE_COLORS = [
+  "#3b82f6", // blue
+  "#10b981", // emerald
+  "#8b5cf6", // violet
+  "#f59e0b", // amber
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#6366f1", // indigo
+  "#14b8a6", // teal
+  "#d946ef", // fuchsia
+  "#ef4444", // red
+];
+
 /**
  * Get the color class for a comment based on its index
  */
@@ -144,13 +160,14 @@ export function getCommentColorByGrade(
   grade: number | undefined,
   importance: number | undefined,
   hasGrade: boolean,
-  allImportances: number[] = []
+  allImportances: number[] = [],
+  index: number = 0
 ): { background: string; color: string } {
   if (!hasGrade || grade === undefined) {
-    return {
-      background: "#f1f5f9", // Light gray background
-      color: "#334155", // Dark gray text
-    };
+    // For non-grade cases, use a sequence of distinct colors
+    const baseColor =
+      NON_GRADE_BASE_COLORS[index % NON_GRADE_BASE_COLORS.length];
+    return getColorStyle(baseColor, importance, allImportances);
   }
 
   const baseColor = getBaseColor(grade);
