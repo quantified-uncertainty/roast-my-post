@@ -14,7 +14,8 @@ import type { Comment, DocumentReview } from "@/types/documentReview";
 import type { Document } from "@/types/documents";
 import {
   getCommentColorByGrade,
-  getGradeColor,
+  getGradeColorStrong,
+  getGradeColorWeak,
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
@@ -45,6 +46,13 @@ function getGradePhrase(grade: number): string {
   if (grade >= 40) return "Neutral";
   if (grade >= 20) return "Negative";
   return "Strongly negative";
+}
+
+function getImportancePhrase(importance: number): string {
+  if (importance >= 90) return "Very High";
+  if (importance >= 70) return "High";
+  if (importance >= 40) return "Medium";
+  return "Low";
 }
 
 interface CommentsSidebarProps {
@@ -159,7 +167,7 @@ function CommentsSidebar({
                                 <span className="font-medium">
                                   <span
                                     className="rounded-full px-2 py-0.5 text-sm"
-                                    style={getGradeColor(comment.grade)}
+                                    style={getGradeColorWeak(comment.grade)}
                                   >
                                     {getGradePhrase(comment.grade)}
                                   </span>
@@ -168,8 +176,10 @@ function CommentsSidebar({
                             )}
                             {comment.importance !== undefined && (
                               <span>
-                                Importance: <span>{comment.importance}</span>
-                                <span className="text-gray-400">/100</span>
+                                Importance:{" "}
+                                <span>
+                                  {getImportancePhrase(comment.importance)}
+                                </span>
                               </span>
                             )}
                           </div>
@@ -243,8 +253,7 @@ function ReviewSelector({
                     <div className="flex items-center gap-3">
                       {hasGradeInstructions && grade !== undefined && (
                         <span
-                          className="rounded-sm px-1.5 text-xs font-medium"
-                          style={getGradeColor(grade)}
+                          className={`rounded-sm px-1.5 text-xs font-medium ${getGradeColorStrong(grade)}`}
                         >
                           {getLetterGrade(grade)}
                         </span>
@@ -435,8 +444,7 @@ export function DocumentWithEvaluations({
                           <div className="ml-4 flex items-center gap-1 text-sm">
                             <span className="text-gray-500">Grade:</span>
                             <span
-                              className="rounded-sm px-2 text-sm"
-                              style={getGradeColor(activeReview.grade)}
+                              className={`rounded-sm px-2 text-sm ${getGradeColorStrong(activeReview.grade)}`}
                             >
                               {getLetterGrade(activeReview.grade)}
                             </span>

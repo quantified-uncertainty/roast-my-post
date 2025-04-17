@@ -157,7 +157,7 @@ export function getCommentColorByGrade(
   return getColorStyle(baseColor, importance, allImportances);
 }
 
-export function getGradeColor(grade: number) {
+export function getGradeColorWeak(grade: number) {
   if (grade >= 80) {
     return {
       backgroundColor: "rgba(34, 197, 94, 0.1)",
@@ -183,6 +183,20 @@ export function getGradeColor(grade: number) {
       backgroundColor: "rgba(239, 68, 68, 0.1)",
       color: "rgb(185, 28, 28)",
     };
+  }
+}
+
+export function getGradeColorStrong(grade: number): string {
+  if (grade >= 80) {
+    return "bg-green-600 text-white";
+  } else if (grade >= 60) {
+    return "bg-green-500 text-white";
+  } else if (grade >= 40) {
+    return "bg-gray-500 text-white";
+  } else if (grade >= 20) {
+    return "bg-orange-600 text-white";
+  } else {
+    return "bg-red-600 text-white";
   }
 }
 

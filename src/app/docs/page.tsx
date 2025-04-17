@@ -5,7 +5,7 @@ import Link from "next/link";
 import { evaluationAgents } from "@/data/agents";
 import { documentsCollection } from "@/data/docs";
 import {
-  getGradeColor,
+  getGradeColorStrong,
   getLetterGrade,
   getValidCommentCount,
 } from "@/utils/commentUtils";
@@ -110,8 +110,7 @@ export default function DocumentsPage() {
                               {agent?.name}
                               {hasGradeInstructions && grade !== undefined && (
                                 <span
-                                  className="ml-1 rounded-sm px-1.5"
-                                  style={getGradeColor(grade)}
+                                  className={`ml-1 rounded-sm px-1.5 ${getGradeColorStrong(grade)}`}
                                 >
                                   {getLetterGrade(grade)}
                                 </span>
