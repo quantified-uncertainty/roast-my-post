@@ -15,11 +15,8 @@ import informationTheoreticBoxingOfSuperintelligencesLesswrong from "./informati
 import integrityForConsequentialistsEaForum from "./integrity-for-consequentialists-ea-forum.json";
 import myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots from "./my-current-claims-and-cruxes-on-llm-forecasting-epistemics-ea-forum-bots.json";
 import myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsLesswrong from "./my-current-claims-and-cruxes-on-llm-forecasting-epistemics-lesswrong.json";
-import openCommunicationInTheDaysOfMaliciousOnlineActorsLesswrong from "./open-communication-in-the-days-of-malicious-online-actors-lesswrong.json";
 import policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum from "./policy-advocacy-for-eradicating-screwworm-looks-remarkably-cost-effective-ea-forum.json";
-import quriRecommendedAiEpistemicsProjects from "./quri-recommended-ai-epistemics-projects.json";
 import scorableFunctionsAFormatForAlgorithmicForecastingLesswrong from "./scorable-functions-a-format-for-algorithmic-forecasting-lesswrong.json";
-import shortExample from "./short-example.json";
 import sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots from "./six-potential-misconceptions-about-ai-intellectuals-ea-forum-bots.json";
 import slopworld2035TheDangersOfMediocreAiEaForumBots from "./slopworld-2035-the-dangers-of-mediocre-ai-ea-forum-bots.json";
 import stronglyBoundedAgents from "./strongly-bounded-agents.json";
@@ -46,11 +43,8 @@ export const documentsCollection = transformDocumentsCollection({
     integrityForConsequentialistsEaForum,
     myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots,
     myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsLesswrong,
-    openCommunicationInTheDaysOfMaliciousOnlineActorsLesswrong,
     policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum,
-    quriRecommendedAiEpistemicsProjects,
     scorableFunctionsAFormatForAlgorithmicForecastingLesswrong,
-    shortExample,
     sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots,
     slopworld2035TheDangersOfMediocreAiEaForumBots,
     stronglyBoundedAgents,
