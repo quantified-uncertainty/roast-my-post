@@ -1,0 +1,370 @@
+{
+  "id": "i-ve-been-thinking-a-lot-about-how-to-do-quantitative-llm-evaluations-of-the-value-of-various-mo",
+  "slug": "i-ve-been-thinking-a-lot-about-how-to-do-quantitative-llm-evaluations-of-the-value-of-various-mo",
+  "title": "I've been thinking a lot about how to do quantitative LLM evaluations of the value of various (mo...",
+  "author": "Ozzie Gooen",
+  "publishedDate": "2025-04-17",
+  "url": "https://www.facebook.com/ozzie.gooen/posts/pfbid02w7b8Y4jQ19sf1ioAKHPqaNhiJePF2WadKKXn4hncZjLgu1R4kp5LyVQVRHGSwcTXl",
+  "intendedAgents": [
+    "clarity-coach",
+    "research-scholar",
+    "quantitative-forecaster",
+    "ea-impact-evaluator",
+    "bias-detector"
+  ],
+  "platforms": ["Facebook"],
+  "content": "I've been thinking a lot about how to do quantitative LLM evaluations of the value of various (mostly Effective Altruism, or EA) projects.\n\nThe idea is to have language models give their best guesses at the value of different projects or outputs. While these evaluations would likely be mediocre at first, they could help us understand how promising this area is and where we might want to go with it.\n\nOne initial idea is to estimate the value in terms of dollars from a certain EA funder, expressed as a probability distribution. However, this approach quickly becomes complicated, as it combines several key uncertainties into a single value. This is probably too difficult for early experiments.\n\nA more elegant approach might be to use \"relative value functions.\" This is theoretically appealing, as it helps separate some of the key uncertainties, but it would require more technical infrastructure and investment.\n\nAnother option is to ask for a simple rank order: \"Just order these projects in terms of expected value.\" While scoring rank orders is somewhat inelegant, it is definitely feasible.\n\nHere's an experiment I’m imagining:\n\n1. We create a list of interesting EA outputs—such as blog posts, research articles, interventions, etc.—resulting in a list of perhaps 20 to 100 items. This list would be made public.\n2. People are invited to compete by ranking these items. Each submission would include an ordering of all the elements and an optional document defending their choices.\n3. All submissions are then evaluated by an LLM system using a detailed, predefined prompt. The system takes in all the provided orderings and defenses, and then outputs its own ordering.\n4. Each submission is scored based on how closely it matches the LLM’s ordering.\n5. The winner receives a cash prize. Ideally, all submissions would be made public.\n\nThis is similar to a previous competition we ran: https://forum.effectivealtruism.org/posts/Zc5jki9nXihueDcKj/usd300-fermi-model-competition\n\nQuestions:\n\n1. How would you choose which projects or items to analyze?\n   - One option is to start with a mix of well-regarded posts on the EA Forum, perhaps focusing on a limited domain (such as existential risk) but covering a range of different levels of popularity or \"karma.\"\n\n2. Wouldn't the LLM do a poor job? Why not use humans?\n   - Having human judges would significantly increase costs, potentially doubling the project’s expense. Additionally, it’s valuable to learn how to use LLMs for evaluating these competitions, as this has more long-term potential.\n\n3. The resulting lists might be poor quality.\n   - I think the results would still be interesting for several reasons. I’d expect them to be better than what many individuals could produce. More importantly, it’s crucial to start somewhere rather than waiting for a perfect solution, which may never materialize.",
+  "reviews": [
+    {
+      "agentId": "clarity-coach",
+      "costInCents": 2,
+      "createdAt": "2025-04-17T21:14:49.170Z",
+      "runDetails": "{\"model\":\"openai/gpt-4.1\",\"promptTokens\":1831,\"completionTokens\":1435,\"totalTokens\":3266,\"temperature\":0.1,\"runtimeMs\":21852}",
+      "thinking": "As Clarity Coach, my primary focus is on how effectively the document communicates its ideas to a target audience likely familiar with Effective Altruism (EA) and large language models (LLMs), but perhaps not with the specifics of quantitative evaluation methodologies. \n\nFirst, I examine readability: sentence length, vocabulary, and structure. The author uses mostly short to medium sentences, with occasional longer, more complex ones. The vocabulary is accessible for a technical audience, though some terms (e.g., 'relative value functions', 'karma') are domain-specific and could benefit from brief clarification. Passive voice is minimal, and the writing is generally active and direct. Paragraphs are well-chunked, aiding skimmability.\n\nSecond, I assess structural coherence. The document follows a logical progression: it introduces the problem, explores possible solutions, outlines an experimental design, and then addresses anticipated questions. The use of bullet points and numbered lists enhances clarity and organization. However, transitions between some sections (e.g., from the experiment outline to the Q&A) could be smoother, and explicit signposting would further aid navigation.\n\nThird, I evaluate precision and concision. The author is generally concise, avoiding unnecessary verbosity. Some sentences could be tightened for greater impact, and a few ideas (e.g., the technical challenges of 'relative value functions') are mentioned but not fully explained, which may leave some readers wanting more specificity. Redundancy is low, and terminology is mostly precise, though a few qualifiers ('probably', 'might', 'somewhat') could be reduced for stronger statements.\n\nFourth, I consider audience alignment. The document assumes familiarity with EA and LLMs, which is appropriate for its likely audience. However, some terms and concepts could be briefly defined for broader accessibility. The structure (Q&A, lists) is reader-friendly, and the tone is inviting and exploratory, which suits the context of sharing early-stage ideas. Examples are relevant, though more concrete illustrations (e.g., a sample ranking) could enhance understanding.\n\nOverall, the document is clear, well-structured, and appropriately pitched for its audience, with minor opportunities for increased clarity and accessibility.",
+      "summary": "From a clarity and readability perspective, this document is well-structured, concise, and appropriately pitched for an audience familiar with Effective Altruism and LLMs. Its strengths include logical organization, effective use of lists, and accessible language for its intended readers. Minor improvements could be made by smoothing transitions, reducing hedging, and briefly clarifying domain-specific terms to broaden accessibility. Overall, the document communicates its exploratory ideas effectively while maintaining a reader-friendly tone.",
+      "comments": [
+        {
+          "title": "Readability: Sentence Structure and Vocabulary",
+          "description": "The opening paragraph sets the stage with clear, direct language and manageable sentence lengths. The vocabulary is accessible for a technical audience, though 'quantitative LLM evaluations' and 'Effective Altruism' could be briefly clarified for newcomers.",
+          "importance": 90,
+          "grade": 85,
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 138,
+            "quotedText": "I've been thinking a lot about how to do quantitative LLM evaluations of the value of various (mostly Effective Altruism, or EA) projects."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Precision and Concision: Hedging and Specificity",
+          "description": "The author uses hedging language ('likely', 'probably', 'might'), which softens claims but may reduce perceived confidence. Some sentences could be more direct for greater impact.",
+          "importance": 75,
+          "grade": 65,
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 401,
+            "quotedText": "While these evaluations would likely be mediocre at first, they could help us understand how promising this area is and where we might want to go with it."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Structural Coherence: Logical Progression and Organization",
+          "description": "The document follows a logical sequence: problem introduction, solution exploration, experiment outline, and Q&A. The use of lists and bullet points aids clarity, though transitions between sections could be smoother.",
+          "importance": 85,
+          "grade": 80,
+          "highlight": {
+            "startOffset": 1105,
+            "endOffset": 1848,
+            "quotedText": "Here's an experiment I’m imagining:\n\n1. We create a list of interesting EA outputs—such as blog posts, research articles, interventions, etc.—resulting in a list of perhaps 20 to 100 items. This list would be made public.\n2. People are invited to compete by ranking these items. Each submission would include an ordering of all the elements and an optional document defending their choices.\n3. All submissions are then evaluated by an LLM system using a detailed, predefined prompt. The system takes in all the provided orderings and defenses, and then outputs its own ordering.\n4. Each submission is scored based on how closely it matches the LLM’s ordering.\n5. The winner receives a cash prize. Ideally, all submissions would be made public."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Readability Metrics: Paragraph Structure and Chunking",
+          "description": "Paragraphs are short and well-chunked, making the document easy to scan. The use of numbered and bulleted lists further enhances readability.",
+          "importance": 70,
+          "grade": 85,
+          "highlight": {
+            "startOffset": 1142,
+            "endOffset": 1848,
+            "quotedText": "1. We create a list of interesting EA outputs—such as blog posts, research articles, interventions, etc.—resulting in a list of perhaps 20 to 100 items. This list would be made public.\n2. People are invited to compete by ranking these items. Each submission would include an ordering of all the elements and an optional document defending their choices.\n3. All submissions are then evaluated by an LLM system using a detailed, predefined prompt. The system takes in all the provided orderings and defenses, and then outputs its own ordering.\n4. Each submission is scored based on how closely it matches the LLM’s ordering.\n5. The winner receives a cash prize. Ideally, all submissions would be made public."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Structural Coherence: Signposting and Transitions",
+          "description": "The transition from the experiment outline to the Q&A section is abrupt. Explicit signposting (e.g., 'Next, I address some anticipated questions') would improve navigability.",
+          "importance": 65,
+          "grade": 60,
+          "highlight": {
+            "startOffset": 1850,
+            "endOffset": 2002,
+            "quotedText": "This is similar to a previous competition we ran: https://forum.effectivealtruism.org/posts/Zc5jki9nXihueDcKj/usd300-fermi-model-competition\n\nQuestions:"
+          },
+          "isValid": true
+        },
+        {
+          "title": "Audience Alignment: Assumed Knowledge and Accessibility",
+          "description": "The document assumes familiarity with EA, LLMs, and concepts like 'karma' and 'relative value functions.' While appropriate for a specialized audience, brief definitions or links could broaden accessibility.",
+          "importance": 80,
+          "grade": 70,
+          "highlight": {
+            "startOffset": 2069,
+            "endOffset": 2273,
+            "quotedText": "One option is to start with a mix of well-regarded posts on the EA Forum, perhaps focusing on a limited domain (such as existential risk) but covering a range of different levels of popularity or \"karma.\""
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 82
+    },
+    {
+      "agentId": "research-scholar",
+      "costInCents": 1,
+      "createdAt": "2025-04-17T21:15:04.388Z",
+      "runDetails": "{\"model\":\"openai/gpt-4.1\",\"promptTokens\":2464,\"completionTokens\":986,\"totalTokens\":3450,\"temperature\":0.1,\"runtimeMs\":15196}",
+      "thinking": "As Research Scholar, my primary focus is to connect the document's ideas—quantitative LLM evaluation of EA projects—to existing research, tools, and discussions. The document explores using language models to assess the value of Effective Altruism (EA) projects, considering various evaluation methods (absolute value, relative value, rank ordering) and the feasibility of LLM-based judging versus human evaluation. My approach is to:\n\n1. Identify academic and community resources on LLM-based evaluation, AI-assisted decision-making, and quantitative assessment in EA.\n2. Seek prior competitions or experiments using LLMs for ranking or evaluation, especially in the EA or forecasting communities.\n3. Highlight resources on the challenges and methodologies of using LLMs for subjective or value-laden tasks.\n4. Find discussions on the trade-offs between human and AI judgment in evaluation settings, particularly regarding cost, reliability, and scalability.\n5. Connect the document's highlighted sections (e.g., the experiment design, the rationale for LLMs, concerns about quality) to specific references, noting where the literature supports, contrasts, or expands on these points.\n\nI will prioritize sources from the EA Forum, LessWrong, arXiv, and reputable AI/ML conferences, as well as any relevant blog posts or competitions. The goal is to provide a structured set of resources that both contextualize and enrich the document's proposals, offering theoretical, empirical, and practical perspectives.",
+      "summary": "This document proposes using LLMs to quantitatively evaluate EA projects, weighing different methodologies and the trade-offs between AI and human judgment. From a research enrichment perspective, the most significant aspects are the experimental design, the methodological debate between absolute and relative value, and the practical considerations of cost and scalability. Connecting these points to existing research on AI-assisted evaluation, preference elicitation, and the use of LLMs in subjective domains will provide a robust foundation for further exploration and implementation.",
+      "comments": [
+        {
+          "title": "LLM-Based Evaluation of Subjective Value",
+          "description": "This section introduces the core idea of using language models to quantitatively evaluate the value of EA projects. It is highly relevant to research on AI-assisted judgment, value alignment, and the use of LLMs for subjective or complex assessments. Connecting this to literature on AI evaluation frameworks and prior experiments is crucial.",
+          "importance": 95,
+          "grade": 90,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 0,
+            "endOffset": 401,
+            "quotedText": "I've been thinking a lot about how to do quantitative LLM evaluations of the value of various (mostly Effective Altruism, or EA) projects.\n\nThe idea is to have language models give their best guesses at the value of different projects or outputs. While these evaluations would likely be mediocre at first, they could help us understand how promising this area is and where we might want to go with it."
+          }
+        },
+        {
+          "title": "Relative Value Functions vs. Absolute Scoring",
+          "description": "The discussion of relative value functions versus absolute scoring touches on foundational issues in evaluation methodology. This is relevant to research on preference aggregation, ordinal vs. cardinal utility, and the technical challenges of eliciting meaningful judgments from LLMs.",
+          "importance": 85,
+          "grade": 85,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 701,
+            "endOffset": 920,
+            "quotedText": "A more elegant approach might be to use \"relative value functions.\" This is theoretically appealing, as it helps separate some of the key uncertainties, but it would require more technical infrastructure and investment."
+          }
+        },
+        {
+          "title": "LLM as Judge: Cost and Scalability",
+          "description": "The rationale for using LLMs instead of human judges is a key point, directly relating to literature on the cost, scalability, and reliability of AI-based evaluation systems. This connects to both practical experiments and theoretical discussions in the field.",
+          "importance": 90,
+          "grade": 88,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2278,
+            "endOffset": 2560,
+            "quotedText": "Wouldn't the LLM do a poor job? Why not use humans?\n   - Having human judges would significantly increase costs, potentially doubling the project’s expense. Additionally, it’s valuable to learn how to use LLMs for evaluating these competitions, as this has more long-term potential."
+          }
+        },
+        {
+          "title": "Iterative Experimentation and Value of Imperfect Results",
+          "description": "The argument for starting with imperfect LLM-based evaluations rather than waiting for perfect solutions is significant. It aligns with research on iterative experimentation, minimum viable products, and the epistemic value of early-stage results in AI and EA contexts.",
+          "importance": 80,
+          "grade": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2565,
+            "endOffset": 2874,
+            "quotedText": "The resulting lists might be poor quality.\n   - I think the results would still be interesting for several reasons. I’d expect them to be better than what many individuals could produce. More importantly, it’s crucial to start somewhere rather than waiting for a perfect solution, which may never materialize."
+          }
+        }
+      ],
+      "grade": 90
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "costInCents": 1,
+      "createdAt": "2025-04-17T21:15:23.684Z",
+      "runDetails": "{\"model\":\"openai/gpt-4.1\",\"promptTokens\":1709,\"completionTokens\":1134,\"totalTokens\":2843,\"temperature\":0.1,\"runtimeMs\":19292}",
+      "thinking": "From the quantitative forecaster's perspective, this document is highly relevant as it explores the challenge of turning qualitative judgments about EA projects into quantitative, measurable outputs—precisely the kind of transformation my expertise is designed to support. The author considers several approaches to quantifying value: direct dollar estimates, relative value functions, and rank ordering. Each method has implications for calibration, resolution criteria, and the tractability of uncertainty decomposition.\n\nThe proposal to use LLMs to generate or evaluate these quantitative assessments is particularly interesting. It raises questions about the reliability, calibration, and bias of LLM-generated forecasts compared to human experts. The document also touches on the importance of reference classes (e.g., using well-regarded EA Forum posts), the need for clear metrics (e.g., scoring based on similarity to LLM orderings), and the trade-offs between cost, scalability, and accuracy.\n\nFrom my lens, the most relevant aspects are:\n- The challenge of expressing project value as a probability distribution (and the associated uncertainty aggregation)\n- The use of rank ordering as a tractable, if imperfect, quantitative metric\n- The potential for LLMs to serve as scalable, if currently imperfect, evaluators or forecasters\n- The importance of starting with feasible, if rough, quantitative experiments and iteratively improving them\n\nI would focus on how to structure these evaluations to maximize calibration, minimize bias, and ensure that the outputs are suitable for further quantitative analysis (e.g., for use in forecasting tournaments or impact evaluations). I would also consider how to decompose the problem into more tractable sub-questions, suggest resolution criteria, and identify relevant reference classes for both the projects and the evaluation process itself.",
+      "summary": "This document is highly relevant to quantitative forecasting, as it grapples with the challenge of turning qualitative judgments about EA projects into measurable, calibrated outputs. The discussion of probability distributions versus rank ordering, the use of LLMs as scalable evaluators, the importance of reference classes, and the value of iterative, imperfect experiments all align closely with best practices in quantitative forecasting. The main opportunity is to structure these evaluations to maximize calibration, minimize bias, and ensure that outputs are suitable for further quantitative analysis and impact evaluation.",
+      "comments": [
+        {
+          "title": "Quantifying Value: Probability Distributions vs. Rank Order",
+          "description": "The author discusses the difficulty of directly estimating the value of projects as probability distributions over dollar amounts, noting that this approach combines multiple uncertainties and may be too complex for early-stage experiments. This is a core challenge in quantitative forecasting: how to decompose complex, multi-factor uncertainties into tractable, measurable components. The suggestion to use rank ordering as a simpler alternative is pragmatic and aligns with best practices in early-stage quantitative evaluation, where calibration and tractability often trump theoretical elegance.",
+          "importance": "95",
+          "highlight": {
+            "startOffset": 403,
+            "endOffset": 1103,
+            "quotedText": "One initial idea is to estimate the value in terms of dollars from a certain EA funder, expressed as a probability distribution. However, this approach quickly becomes complicated, as it combines several key uncertainties into a single value. This is probably too difficult for early experiments.\n\nA more elegant approach might be to use \"relative value functions.\" This is theoretically appealing, as it helps separate some of the key uncertainties, but it would require more technical infrastructure and investment.\n\nAnother option is to ask for a simple rank order: \"Just order these projects in terms of expected value.\" While scoring rank orders is somewhat inelegant, it is definitely feasible."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Reference Classes and Item Selection",
+          "description": "The question of how to select which projects or items to analyze is central to ensuring that the evaluation process is meaningful and that results can be generalized. Using a mix of well-regarded posts from the EA Forum, possibly focused on a specific domain, is a good way to establish a relevant reference class. This is essential for both calibration and for interpreting the results of the quantitative evaluation.",
+          "importance": "80",
+          "highlight": {
+            "startOffset": 2007,
+            "endOffset": 2273,
+            "quotedText": "How would you choose which projects or items to analyze?\n   - One option is to start with a mix of well-regarded posts on the EA Forum, perhaps focusing on a limited domain (such as existential risk) but covering a range of different levels of popularity or \"karma.\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "LLMs as Scalable Evaluators: Calibration and Bias Concerns",
+          "description": "The proposal to use LLMs as evaluators instead of humans is highly relevant to quantitative forecasting, as it raises questions about the calibration, reliability, and potential biases of automated systems. While LLMs offer scalability and cost advantages, their outputs must be carefully benchmarked against human judgments and known reference classes to ensure that they are not systematically over- or underestimating value. This is a key area for quantitative experimentation and iterative improvement.",
+          "importance": "90",
+          "highlight": {
+            "startOffset": 2278,
+            "endOffset": 2560,
+            "quotedText": "Wouldn't the LLM do a poor job? Why not use humans?\n   - Having human judges would significantly increase costs, potentially doubling the project’s expense. Additionally, it’s valuable to learn how to use LLMs for evaluating these competitions, as this has more long-term potential."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Iterative Improvement and Value of Imperfect Experiments",
+          "description": "The author emphasizes the importance of starting with imperfect, tractable experiments rather than waiting for a perfect solution. This is a key principle in quantitative forecasting: early, rough models can provide valuable calibration data and help identify the most uncertain or impactful components for future refinement.",
+          "importance": "85",
+          "highlight": {
+            "startOffset": 2565,
+            "endOffset": 2874,
+            "quotedText": "The resulting lists might be poor quality.\n   - I think the results would still be interesting for several reasons. I’d expect them to be better than what many individuals could produce. More importantly, it’s crucial to start somewhere rather than waiting for a perfect solution, which may never materialize."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 92
+    },
+    {
+      "agentId": "ea-impact-evaluator",
+      "costInCents": 2,
+      "createdAt": "2025-04-17T21:15:53.538Z",
+      "runDetails": "{\"model\":\"openai/gpt-4.1\",\"promptTokens\":2503,\"completionTokens\":1296,\"totalTokens\":3799,\"temperature\":0.1,\"runtimeMs\":29838}",
+      "thinking": "As EA Impact Evaluator, my lens is to assess the meta-impact of developing quantitative LLM-based evaluation systems for EA projects. This is a meta-level intervention: rather than directly saving lives or improving welfare, it aims to improve the allocation of resources and attention within the EA ecosystem by making project evaluation more scalable, consistent, and potentially less costly.\n\nKey aspects to consider:\n- Importance: If successful, such a system could influence millions of dollars in EA funding and the prioritization of high-impact projects. However, the actual impact depends on the accuracy, adoption, and trust in LLM-based evaluations.\n- Neglectedness: While there is growing interest in AI-assisted evaluation, systematic, quantitative LLM-based project evaluation is still rare in EA. This work could fill a gap, especially if it leads to scalable, transparent, and reproducible evaluation methods.\n- Tractability: The proposal is at an early, experimental stage. The author is realistic about initial limitations and proposes incremental, low-cost experiments. The approach is tractable as a proof-of-concept, but scaling to high-stakes decisions will require significant further work.\n- Novelty: The idea of using LLMs for quantitative evaluation and relative value functions is innovative within EA. The competition format and public ranking also add methodological novelty.\n- Fermi Impact: The direct impact is limited at the pilot stage, but the value of information (EVOI) could be substantial if this leads to better evaluation tools. Risks include over-reliance on immature LLM judgments or misallocation if the system is trusted prematurely. Opportunity costs are low for small-scale pilots but could rise if this diverts attention from more promising meta-EA work.\n\nMost relevant to my expertise are: the explicit focus on quantitative evaluation, the meta-level impact on resource allocation, and the careful consideration of both technical and epistemic challenges. The author’s awareness of limitations and incremental approach is a positive sign.",
+      "summary": "From an EA impact evaluation perspective, this post is a strong example of thoughtful meta-EA innovation. The author proposes a tractable, low-cost experiment to test LLM-based quantitative evaluation of EA projects, with clear awareness of both the potential upside (scalable, consistent evaluation) and the risks (immature judgments, over-trust). The methodological suggestions (relative value functions, public competitions) are novel and could generate valuable information for the movement. The main value at this stage is the expected value of information (EVOI): even if the pilot has limited direct impact, it could inform much larger improvements in EA resource allocation if successful. The author’s incremental, transparent approach and explicit consideration of tradeoffs are strong points. The main risks are overestimating LLM capabilities or misallocating attention, but these are mitigated by the experimental framing.",
+      "comments": [
+        {
+          "title": "Meta-EA Impact: Potential to Improve Resource Allocation",
+          "description": "The proposal to use LLMs for quantitative evaluation of EA projects, if successful, could improve the efficiency and consistency of resource allocation across the movement. This could have large downstream effects if adopted by major funders or community platforms.",
+          "importance": "90",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 140,
+            "endOffset": 401,
+            "quotedText": "The idea is to have language models give their best guesses at the value of different projects or outputs. While these evaluations would likely be mediocre at first, they could help us understand how promising this area is and where we might want to go with it."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Realistic Assessment of Early-Stage Limitations",
+          "description": "The author acknowledges that initial LLM evaluations will likely be mediocre, which is important for managing expectations and avoiding premature deployment in high-stakes contexts.",
+          "importance": "80",
+          "grade": "85",
+          "highlight": {
+            "startOffset": 247,
+            "endOffset": 401,
+            "quotedText": "While these evaluations would likely be mediocre at first, they could help us understand how promising this area is and where we might want to go with it."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Methodological Innovation: Relative Value Functions",
+          "description": "The suggestion to use relative value functions to separate uncertainties is a novel methodological contribution. This could improve the interpretability and modularity of LLM-based evaluations, though it requires more technical investment.",
+          "importance": "75",
+          "grade": "78",
+          "highlight": {
+            "startOffset": 701,
+            "endOffset": 920,
+            "quotedText": "A more elegant approach might be to use \"relative value functions.\" This is theoretically appealing, as it helps separate some of the key uncertainties, but it would require more technical infrastructure and investment."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Pragmatic Experimental Design",
+          "description": "The proposed competition format is a pragmatic way to gather data, test LLM evaluation capabilities, and engage the community. Making submissions public increases transparency and learning value.",
+          "importance": "80",
+          "grade": "82",
+          "highlight": {
+            "startOffset": 1105,
+            "endOffset": 1848,
+            "quotedText": "Here's an experiment I’m imagining:\n\n1. We create a list of interesting EA outputs—such as blog posts, research articles, interventions, etc.—resulting in a list of perhaps 20 to 100 items. This list would be made public.\n2. People are invited to compete by ranking these items. Each submission would include an ordering of all the elements and an optional document defending their choices.\n3. All submissions are then evaluated by an LLM system using a detailed, predefined prompt. The system takes in all the provided orderings and defenses, and then outputs its own ordering.\n4. Each submission is scored based on how closely it matches the LLM’s ordering.\n5. The winner receives a cash prize. Ideally, all submissions would be made public."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Explicit Consideration of Human vs. LLM Tradeoffs",
+          "description": "The author explicitly weighs the cost and learning value of using LLMs versus human judges. This shows a clear understanding of the tradeoffs and the meta-EA value of building LLM evaluation capacity.",
+          "importance": "75",
+          "grade": "80",
+          "highlight": {
+            "startOffset": 2278,
+            "endOffset": 2560,
+            "quotedText": "Wouldn't the LLM do a poor job? Why not use humans?\n   - Having human judges would significantly increase costs, potentially doubling the project’s expense. Additionally, it’s valuable to learn how to use LLMs for evaluating these competitions, as this has more long-term potential."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Awareness of Quality Risks and Value of Early Prototyping",
+          "description": "The author is aware that early results may be poor but argues for the value of experimentation and iteration. This is a healthy epistemic stance for meta-EA innovation.",
+          "importance": "70",
+          "grade": "78",
+          "highlight": {
+            "startOffset": 2565,
+            "endOffset": 2874,
+            "quotedText": "The resulting lists might be poor quality.\n   - I think the results would still be interesting for several reasons. I’d expect them to be better than what many individuals could produce. More importantly, it’s crucial to start somewhere rather than waiting for a perfect solution, which may never materialize."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 82
+    },
+    {
+      "agentId": "bias-detector",
+      "costInCents": 1,
+      "createdAt": "2025-04-17T21:16:08.310Z",
+      "runDetails": "{\"model\":\"openai/gpt-4.1\",\"promptTokens\":1719,\"completionTokens\":1375,\"totalTokens\":3094,\"temperature\":0.1,\"runtimeMs\":14737}",
+      "thinking": "As a bias detection expert, I approach this document by examining both the explicit proposals and the implicit assumptions underlying the suggested evaluation methods. The author is exploring the use of LLMs (Large Language Models) to quantitatively assess the value of Effective Altruism (EA) projects, considering alternatives such as human judges and various scoring mechanisms. \n\nKey areas for bias analysis include:\n- The reliance on LLMs as evaluators, which introduces potential for automation bias, authority bias (trusting the LLM's output as authoritative), and possible anchoring effects if participants optimize for LLM preferences.\n- The selection of projects to be evaluated, which may be subject to selection bias, confirmation bias, or in-group bias if the pool is not representative.\n- The scoring mechanism, which could reinforce Goodhart's law (optimizing for the metric rather than true value) and may be susceptible to feedback loops or overfitting to LLM idiosyncrasies.\n- The justification for using LLMs over humans, which may reflect status quo bias (favoring new tech because it's novel) or cost-justification bias.\n- The framing of 'starting somewhere' rather than waiting for perfection, which could involve optimism bias or planning fallacy.\n\nI will focus on identifying where these and other biases may manifest, their potential impact on the validity of the evaluation process, and suggest mitigations such as transparency, diversity in project selection, hybrid human-AI evaluation, and iterative refinement of prompts and scoring.",
+      "summary": "From a bias detection perspective, the document demonstrates thoughtful exploration of LLM-based evaluation but underestimates several key biases. The most significant concerns are automation/authority bias in relying on LLMs as arbiters, selection bias in project choice, and Goodhart's law in the scoring mechanism. There is also evidence of optimism bias and cost-justification bias in the rationale for early adoption and LLM preference. To improve, the process should incorporate hybrid human-AI evaluation, transparent selection criteria, and safeguards against metric optimization. Overall, the document is innovative but would benefit from a more explicit bias mitigation strategy.",
+      "comments": [
+        {
+          "title": "Automation and Authority Bias in LLM Evaluation",
+          "description": "The proposal to have LLMs serve as the final arbiter of project value introduces automation bias (over-reliance on automated systems) and authority bias (perceiving the LLM's output as more authoritative than warranted). This could lead participants to optimize for what they believe the LLM will prefer, rather than genuine value, and may obscure the limitations or blind spots of the LLM's reasoning. To mitigate, consider hybrid evaluation (LLM + human), transparency about LLM limitations, and regular audits of LLM outputs.",
+          "importance": 95,
+          "grade": 45,
+          "highlight": {
+            "startOffset": 1499,
+            "endOffset": 1764,
+            "quotedText": "All submissions are then evaluated by an LLM system using a detailed, predefined prompt. The system takes in all the provided orderings and defenses, and then outputs its own ordering.\n4. Each submission is scored based on how closely it matches the LLM’s ordering."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Goodhart's Law and Metric Optimization",
+          "description": "Scoring submissions based on their similarity to the LLM's ordering risks falling prey to Goodhart's law: when a measure becomes a target, it ceases to be a good measure. Participants may optimize for LLM agreement rather than genuine value, distorting the process. To mitigate, consider multi-metric evaluation, periodic changes to prompts, or incorporating human judgment.",
+          "importance": 90,
+          "grade": 40,
+          "highlight": {
+            "startOffset": 1687,
+            "endOffset": 1801,
+            "quotedText": "Each submission is scored based on how closely it matches the LLM’s ordering.\n5. The winner receives a cash prize."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Selection Bias in Project Pool",
+          "description": "The method for choosing which projects to evaluate is not fully specified, but the suggestion to use 'well-regarded posts on the EA Forum' risks selection bias and in-group bias. This could result in a non-representative sample that overemphasizes popular or mainstream EA perspectives, potentially neglecting novel or dissenting ideas. Mitigation would involve ensuring diversity in project selection and explicit criteria for inclusion.",
+          "importance": 85,
+          "grade": 50,
+          "highlight": {
+            "startOffset": 2069,
+            "endOffset": 2273,
+            "quotedText": "One option is to start with a mix of well-regarded posts on the EA Forum, perhaps focusing on a limited domain (such as existential risk) but covering a range of different levels of popularity or \"karma.\""
+          },
+          "isValid": true
+        },
+        {
+          "title": "Cost-Justification and Status Quo Bias in LLM vs. Human Judges",
+          "description": "The rationale for using LLMs over humans is primarily cost-based, but this may reflect cost-justification bias and status quo bias (favoring the novel approach because it's new and potentially cheaper). This could obscure the qualitative differences between human and LLM judgment. Mitigation: pilot both approaches in parallel and compare outcomes.",
+          "importance": 70,
+          "grade": 60,
+          "highlight": {
+            "startOffset": 2335,
+            "endOffset": 2560,
+            "quotedText": "Having human judges would significantly increase costs, potentially doubling the project’s expense. Additionally, it’s valuable to learn how to use LLMs for evaluating these competitions, as this has more long-term potential."
+          },
+          "isValid": true
+        },
+        {
+          "title": "Optimism Bias and Planning Fallacy in Early Adoption",
+          "description": "The author expresses confidence that even poor-quality results will be 'better than what many individuals could produce' and emphasizes the importance of starting rather than waiting for perfection. This reflects optimism bias and the planning fallacy, potentially underestimating the challenges and overestimating early results. Mitigation: set clear benchmarks, pilot with small-scale tests, and document limitations.",
+          "importance": 75,
+          "grade": 55,
+          "highlight": {
+            "startOffset": 2613,
+            "endOffset": 2874,
+            "quotedText": "I think the results would still be interesting for several reasons. I’d expect them to be better than what many individuals could produce. More importantly, it’s crucial to start somewhere rather than waiting for a perfect solution, which may never materialize."
+          },
+          "isValid": true
+        }
+      ],
+      "grade": 65
+    }
+  ]
+}

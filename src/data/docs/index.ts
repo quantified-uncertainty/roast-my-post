@@ -11,19 +11,22 @@ import boundedAiMightBeViableLesswrong from "./bounded-ai-might-be-viable-lesswr
 import canWeHoldIntellectualsToSimilarPublicStandardsAsAthletesLesswrong from "./can-we-hold-intellectuals-to-similar-public-standards-as-athletes-lesswrong.json";
 import goodhartTypologyViaStructureFunctionAndRandomnessDistributionsLesswrong from "./goodhart-typology-via-structure-function-and-randomness-distributions-lesswrong.json";
 import higherOrderForecastsLesswrong from "./higher-order-forecasts-lesswrong.json";
+import iThinkThatImageModelsSuchAsChatgptAreProbablyAGreatFitForCustomZoomBackgrounds from "./i-think-that-image-models-such-as-chatgpt-are-probably-a-great-fit-for-custom-zoom-backgrounds.json";
+import iVeBeenThinkingALotAboutHowToDoQuantitativeLlmEvaluationsOfTheValueOfVariousMo from "./i-ve-been-thinking-a-lot-about-how-to-do-quantitative-llm-evaluations-of-the-value-of-various-mo.json";
 import informationTheoreticBoxingOfSuperintelligencesLesswrong from "./information-theoretic-boxing-of-superintelligences-lesswrong.json";
 import integrityForConsequentialistsEaForum from "./integrity-for-consequentialists-ea-forum.json";
 import myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots from "./my-current-claims-and-cruxes-on-llm-forecasting-epistemics-ea-forum-bots.json";
-import myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsLesswrong from "./my-current-claims-and-cruxes-on-llm-forecasting-epistemics-lesswrong.json";
 import policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum from "./policy-advocacy-for-eradicating-screwworm-looks-remarkably-cost-effective-ea-forum.json";
 import scorableFunctionsAFormatForAlgorithmicForecastingLesswrong from "./scorable-functions-a-format-for-algorithmic-forecasting-lesswrong.json";
 import sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots from "./six-potential-misconceptions-about-ai-intellectuals-ea-forum-bots.json";
 import slopworld2035TheDangersOfMediocreAiEaForumBots from "./slopworld-2035-the-dangers-of-mediocre-ai-ea-forum-bots.json";
 import stronglyBoundedAgents from "./strongly-bounded-agents.json";
 import theRiskRewardTradeoffOfInterpretabilityResearchLesswrong from "./the-risk-reward-tradeoff-of-interpretability-research-lesswrong.json";
+import thereSAMajorTensionBetweenTheAccumulationOfGenerationalWealthAndAltruism from "./there-s-a-major-tension-between-the-accumulation-of-generational-wealth-and-altruism.json";
 import threeObservations from "./three-observations.json";
 import updatingUtilityFunctionsLesswrong from "./updating-utility-functions-lesswrong.json";
 import whatSGoingOnWithOpenaiSMessagingLesswrong from "./what-s-going-on-with-openai-s-messaging-lesswrong.json";
+import whileLargeLanguageModelsLlmsHaveImportantEpistemicIssuesIGenerallyFindThemBroadly from "./while-large-language-models-llms-have-important-epistemic-issues-i-generally-find-them-broadly.json";
 import whyISignedUpToThe10PledgeInTheWakeOfForeignAidCutsAndWhereYouCanDonateEaForumBots from "./why-i-signed-up-to-the-10-pledge-in-the-wake-of-foreign-aid-cuts-and-where-you-can-donate-ea-forum-bots.json";
 import workingInVirtualRealityAReviewLesswrong from "./working-in-virtual-reality-a-review-lesswrong.json";
 
@@ -39,19 +42,22 @@ export const documentsCollection = transformDocumentsCollection({
     canWeHoldIntellectualsToSimilarPublicStandardsAsAthletesLesswrong,
     goodhartTypologyViaStructureFunctionAndRandomnessDistributionsLesswrong,
     higherOrderForecastsLesswrong,
+    iThinkThatImageModelsSuchAsChatgptAreProbablyAGreatFitForCustomZoomBackgrounds,
+    iVeBeenThinkingALotAboutHowToDoQuantitativeLlmEvaluationsOfTheValueOfVariousMo,
     informationTheoreticBoxingOfSuperintelligencesLesswrong,
     integrityForConsequentialistsEaForum,
     myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots,
-    myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsLesswrong,
     policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum,
     scorableFunctionsAFormatForAlgorithmicForecastingLesswrong,
     sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots,
     slopworld2035TheDangersOfMediocreAiEaForumBots,
     stronglyBoundedAgents,
     theRiskRewardTradeoffOfInterpretabilityResearchLesswrong,
+    thereSAMajorTensionBetweenTheAccumulationOfGenerationalWealthAndAltruism,
     threeObservations,
     updatingUtilityFunctionsLesswrong,
     whatSGoingOnWithOpenaiSMessagingLesswrong,
+    whileLargeLanguageModelsLlmsHaveImportantEpistemicIssuesIGenerallyFindThemBroadly,
     whyISignedUpToThe10PledgeInTheWakeOfForeignAidCutsAndWhereYouCanDonateEaForumBots,
     workingInVirtualRealityAReviewLesswrong,
   ],

@@ -18,6 +18,7 @@ export interface RawDocument {
   author: string;
   publishedDate: string;
   url?: string;
+  platforms?: string[];
   reviews: RawDocumentReview[];
   intendedAgents: string[];
 }
@@ -35,6 +36,7 @@ export interface Document {
   author: string;
   publishedDate: string;
   url?: string;
+  platforms?: string[];
   reviews: DocumentReview[];
   intendedAgents: string[];
 }

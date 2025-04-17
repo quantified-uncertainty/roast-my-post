@@ -157,9 +157,18 @@ async function extractMetadataWithLLM(
         .slice(0, 3)
         .map((el) => el.textContent)
         .filter(Boolean),
+
+      // First few paragraphs for context
+      ...Array.from(document.querySelectorAll("p"))
+        .slice(0, 3)
+        .map((el) => el.textContent)
+        .filter(Boolean),
     ].filter(Boolean);
 
-    const prompt = `Extract the title, author name, and publication date from these text sections. Return ONLY a JSON object with these three fields, nothing else. If any field cannot be found, use "Unknown" for author, "Untitled Article" for title, or today's date for date.
+    const prompt = `Extract the title, author name, and publication date from these text sections. 
+Pay special attention to finding the actual author - look for patterns like "[Name]'s Post" or a name followed by a colon in comments.
+Return ONLY a JSON object with these three fields, nothing else. 
+If any field cannot be found, use "Unknown" for author, "Untitled Article" for title, or today's date for date.
 
 The date should be in YYYY-MM-DD format.
 
@@ -241,6 +250,30 @@ async function extractMetadata(dom: JSDOM) {
     // Use metascraper to extract metadata
     const metadata = await scraper({ html, url });
 
+    // Detect platform from URL
+    const platforms: string[] = [];
+    if (url.includes("facebook.com")) {
+      platforms.push("Facebook");
+    }
+    if (url.includes("twitter.com") || url.includes("x.com")) {
+      platforms.push("Twitter");
+    }
+    if (url.includes("linkedin.com")) {
+      platforms.push("LinkedIn");
+    }
+    if (url.includes("medium.com")) {
+      platforms.push("Medium");
+    }
+    if (url.includes("substack.com")) {
+      platforms.push("Substack");
+    }
+    if (url.includes("forum.effectivealtruism.org")) {
+      platforms.push("EA Forum");
+    }
+    if (url.includes("lesswrong.com")) {
+      platforms.push("LessWrong");
+    }
+
     // Return the extracted metadata, falling back to options if available
     return {
       title: options.title || metadata.title || "Untitled Article",
@@ -251,6 +284,7 @@ async function extractMetadata(dom: JSDOM) {
       description: metadata.description,
       image: metadata.image,
       logo: metadata.logo,
+      platforms,
     };
   } catch (error) {
     console.error("Error extracting metadata with metascraper:", error);
@@ -262,6 +296,30 @@ async function extractMetadata(dom: JSDOM) {
       doc.querySelector('meta[name="author"]')?.getAttribute("content");
     const metaDate = options.date || new Date().toISOString().split("T")[0];
 
+    // Detect platform from URL for fallback case
+    const platforms: string[] = [];
+    if (url.includes("facebook.com")) {
+      platforms.push("Facebook");
+    }
+    if (url.includes("twitter.com") || url.includes("x.com")) {
+      platforms.push("Twitter");
+    }
+    if (url.includes("linkedin.com")) {
+      platforms.push("LinkedIn");
+    }
+    if (url.includes("medium.com")) {
+      platforms.push("Medium");
+    }
+    if (url.includes("substack.com")) {
+      platforms.push("Substack");
+    }
+    if (url.includes("forum.effectivealtruism.org")) {
+      platforms.push("EA Forum");
+    }
+    if (url.includes("lesswrong.com")) {
+      platforms.push("LessWrong");
+    }
+
     return {
       title: metaTitle || "Untitled Article",
       author: metaAuthor || "Unknown Author",
@@ -270,6 +328,7 @@ async function extractMetadata(dom: JSDOM) {
       description: undefined,
       image: undefined,
       logo: undefined,
+      platforms,
     };
   }
 }
@@ -328,7 +387,85 @@ function convertToMarkdown(html: string) {
     codeBlockStyle: "fenced",
   });
 
+  // Add custom rules for Facebook posts
+  turndownService.addRule("facebookPost", {
+    filter: (node) => {
+      return (
+        node.nodeName === "DIV" &&
+        (node.className?.includes("userContent") ||
+          node.className?.includes("story_body_container"))
+      );
+    },
+    replacement: (content) => {
+      // Clean up the content
+      return content
+        .replace(/\[.*?\]/g, "") // Remove Facebook links
+        .replace(/See more/g, "") // Remove "See more" text
+        .replace(/All reactions:.*/g, "") // Remove reactions
+        .replace(/Like.*Comment.*Most relevant/g, "") // Remove Facebook UI elements
+        .replace(/\[.*?\]/g, "") // Remove any remaining square brackets
+        .trim();
+    },
+  });
+
+  // Add rule to remove Facebook-specific elements
+  turndownService.addRule("removeFacebookElements", {
+    filter: (node) => {
+      return (
+        node.nodeName === "DIV" &&
+        (node.className?.includes("_3x-2") ||
+          node.className?.includes("_4-u2") ||
+          node.className?.includes("_4-u8"))
+      );
+    },
+    replacement: () => "",
+  });
+
+  // Add rule to clean up images
+  turndownService.addRule("cleanImages", {
+    filter: "img",
+    replacement: (content, node) => {
+      const alt = (node as Element).getAttribute("alt") || "";
+      return alt ? `\n\n![${alt}]` : "";
+    },
+  });
+
   return turndownService.turndown(html);
+}
+
+async function cleanContentWithLLM(
+  markdownContent: string,
+  title: string
+): Promise<string> {
+  try {
+    console.log("🤖 Cleaning content with LLM...");
+
+    const prompt = `Clean up and format this content to be more readable and remove any platform-specific formatting. 
+Keep the core message intact but remove any UI elements, comments, reactions, or other platform-specific content.
+The content is from a post titled "${title}".
+
+Content to clean:
+${markdownContent}
+
+Return ONLY the cleaned content, nothing else.`;
+
+    const response = await openai.chat.completions.create({
+      model: SEARCH_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1,
+      max_tokens: 1000,
+    });
+
+    const cleanedContent = response.choices[0]?.message?.content?.trim();
+    if (!cleanedContent) {
+      throw new Error("Empty LLM response");
+    }
+
+    return cleanedContent;
+  } catch (error) {
+    console.error("❌ Error cleaning content with LLM:", error);
+    return markdownContent; // Fallback to original content
+  }
 }
 
 async function saveArticle(data: any) {
@@ -347,14 +484,13 @@ async function main() {
 
     console.log("🔍 Parsing HTML...");
     const dom = new JSDOM(html, {
-      // Suppress noisy CSS parsing errors
       virtualConsole: new (require("jsdom").VirtualConsole)().sendTo(console, {
         omitJSDOMErrors: true,
       }),
     });
 
     console.log("📝 Extracting metadata...");
-    const { title, author, date } = await extractMetadata(dom);
+    const { title, author, date, platforms } = await extractMetadata(dom);
 
     console.log("📄 Extracting content...");
     const contentHtml = extractContent(dom);
@@ -362,19 +498,80 @@ async function main() {
     console.log("🔄 Converting to Markdown...");
     const markdownContent = convertToMarkdown(contentHtml);
 
+    console.log("🧹 Cleaning content with LLM...");
+    const cleanedContent = await cleanContentWithLLM(markdownContent, title);
+
+    // Extract a better title from the content if needed
+    let finalTitle = title;
+    const contentLines = cleanedContent
+      .split("\n")
+      .filter((line) => line.trim());
+
+    // Skip any lines that look like generic titles (e.g., "Name's Post", dates, etc.)
+    let startIndex = 0;
+    while (
+      startIndex < contentLines.length &&
+      (contentLines[startIndex].match(/^[A-Z][a-z]+(?: [A-Z][a-z]+)*'s Post/) ||
+        contentLines[startIndex].match(/^[A-Z][a-z]+(?: [A-Z][a-z]+)*$/) ||
+        contentLines[startIndex].match(
+          /^(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,\s+\d{4})?$/
+        ) ||
+        contentLines[startIndex].trim().length < 10)
+    ) {
+      startIndex++;
+    }
+
+    // Get the first real content line
+    if (startIndex < contentLines.length) {
+      finalTitle = contentLines[startIndex]
+        .split(/[.!?]/) // Split on sentence endings
+        .filter((s) => s.trim().length > 0)[0] // Take first non-empty sentence
+        .trim();
+
+      // If title is too long, truncate it
+      if (finalTitle.length > 100) {
+        finalTitle = finalTitle.substring(0, 97) + "...";
+      }
+    }
+
     // Generate a unique ID based on the title
-    const id = title
+    let id = finalTitle
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
+    // Ensure ID doesn't start with a number
+    if (/^[0-9]/.test(id)) {
+      id = `article-${id}`;
+    }
+
+    // Extract author from Facebook URL if it's a Facebook post
+    let finalAuthor = options.author || author;
+    if (url.includes("facebook.com") && url.includes("/posts/")) {
+      try {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split("/");
+        const fbUsername = pathParts[1]; // The username is the first part after the domain
+        if (fbUsername) {
+          // Convert username to proper name format (e.g., "ozzie.gooen" -> "Ozzie Gooen")
+          finalAuthor = fbUsername
+            .split(".")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        }
+      } catch (e) {
+        console.warn("Failed to extract author from Facebook URL:", e);
+      }
+    }
+
     const articleData = {
       id,
       slug: id,
-      title,
-      author,
+      title: finalTitle,
+      author: finalAuthor,
       publishedDate: date,
       url,
+      platforms,
       intendedAgents: options.intendedAgents || [
         "clarity-coach",
         "research-scholar",
@@ -382,7 +579,7 @@ async function main() {
         "ea-impact-evaluator",
         "bias-detector",
       ],
-      content: markdownContent,
+      content: cleanedContent,
       reviews: [],
     };
 

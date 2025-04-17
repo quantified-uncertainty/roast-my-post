@@ -12,10 +12,11 @@
     "review-agent": "npx tsx src/scripts/analyze-md.ts --file ./src/data/docs/short-example.json -a bias-detector",
     "review-all-agents": "npx tsx src/scripts/analyze-md.ts --file ./src/data/docs/strongly-bounded-agents.json --all-agents",
     "review-all-agents-missing": "npx tsx src/scripts/analyze-md.ts --dir ./src/data/docs --all-agents --only-missing",
+    "review-parallel": "npx tsx src/scripts/analyze-md-parallel.ts --dir ./src/data/docs --all-agents --only-missing",
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
     "test": "jest",
-    "import-article": "tsx src/scripts/import-article.ts https://www.lesswrong.com/posts/AtwPwD6PBsqfpCsHE/aligning-ai-by-optimizing-for-wisdom && npm run generate-docs",
+    "import-article": "tsx src/scripts/import-article.ts https://www.facebook.com/ozzie.gooen/posts/pfbid06RCVM8KFn722YtJ6yJGstWDb5dZmM4S2UQSLJvx47ZGMUBG5tcKdMMrHytWpZB5bl && npm run generate-docs",
     "verify-highlights": "tsx src/scripts/verify-highlights.ts --dir ./src/data/docs"
   },
   "dependencies": {

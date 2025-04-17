@@ -5,6 +5,7 @@
   "author": "ozziegooen",
   "publishedDate": "2024-06-07T00:10:10.902Z",
   "url": "https://www.lesswrong.com/posts/cJv8rBSshrR82NRET/a-case-for-superhuman-governance-using-ais",
+  "platforms": ["Lesswrong"],
   "intendedAgents": [
     "bias-detector",
     "clarity-coach",

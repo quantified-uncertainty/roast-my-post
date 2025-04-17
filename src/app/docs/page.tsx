@@ -44,10 +44,13 @@ export default function DocumentsPage() {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
 
-    // Check title and author
+    // Check title, author, and platforms
     if (
       document.title.toLowerCase().includes(query) ||
-      document.author.toLowerCase().includes(query)
+      document.author.toLowerCase().includes(query) ||
+      document.platforms?.some((platform) =>
+        platform.toLowerCase().includes(query)
+      )
     ) {
       return true;
     }
@@ -73,7 +76,7 @@ export default function DocumentsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, author, or agent name..."
+                placeholder="Search by title, author, platform, or agent name..."
                 className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-blue-600 focus:ring-inset sm:text-sm sm:leading-6"
               />
             </div>
@@ -158,6 +161,18 @@ export default function DocumentsPage() {
                           })()}
                         </div>
                       </div>
+                      {document.platforms && document.platforms.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {document.platforms.map((platform) => (
+                            <span
+                              key={platform}
+                              className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {document.url && (
                         <div className="mt-1 truncate text-xs">
                           <span
@@ -259,6 +274,12 @@ export default function DocumentsPage() {
                     >
                       Date
                     </th>
+                    <th
+                      scope="col"
+                      className="w-48 border-b border-gray-200 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+                    >
+                      Platforms
+                    </th>
                     {evaluators.map((evaluator) => (
                       <th
                         key={evaluator}
@@ -293,6 +314,18 @@ export default function DocumentsPage() {
                             year: "numeric",
                           }
                         )}
+                      </td>
+                      <td className="w-48 border-b border-gray-200 px-6 py-4 text-sm whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {document.platforms?.map((platform) => (
+                            <span
+                              key={platform}
+                              className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       {evaluators.map((evaluator) => {
                         const review = document.reviews?.find(
