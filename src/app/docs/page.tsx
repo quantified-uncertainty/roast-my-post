@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 
+import { evaluationAgents } from "@/data/agents";
 import { documentsCollection } from "@/data/docs";
-import { getValidCommentCount } from "@/utils/commentUtils";
+import {
+  getGradeColor,
+  getLetterGrade,
+  getValidCommentCount,
+} from "@/utils/commentUtils";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 export default function DocumentsPage() {
@@ -42,15 +47,34 @@ export default function DocumentsPage() {
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {Object.entries(agentReviews).map(
-                        ([agentId, commentCount]) => (
-                          <span
-                            key={agentId}
-                            className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-                          >
-                            {agentId} <ChatBubbleLeftIcon className="h-3 w-3" />{" "}
-                            {commentCount}
-                          </span>
-                        )
+                        ([agentId, commentCount]) => {
+                          const agent = evaluationAgents.find(
+                            (a) => a.id === agentId
+                          );
+                          const hasGradeInstructions = agent?.gradeInstructions;
+                          const grade = document.reviews.find(
+                            (r) => r.agentId === agentId
+                          )?.grade;
+
+                          return (
+                            <span
+                              key={agentId}
+                              className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                            >
+                              {agentId}
+                              {hasGradeInstructions && grade !== undefined && (
+                                <span
+                                  className="ml-1 rounded-sm px-1.5"
+                                  style={getGradeColor(grade)}
+                                >
+                                  {getLetterGrade(grade)}
+                                </span>
+                              )}
+                              <ChatBubbleLeftIcon className="h-3 w-3" />{" "}
+                              {commentCount}
+                            </span>
+                          );
+                        }
                       )}
                       {document.reviews?.length === 0 && (
                         <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
