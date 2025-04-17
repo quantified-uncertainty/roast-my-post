@@ -13,12 +13,14 @@ import {
 } from "@/utils/commentUtils";
 import {
   ChatBubbleLeftIcon,
+  MagnifyingGlassIcon,
   Squares2X2Icon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
 export default function DocumentsPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Get unique evaluator names from all documents
   const evaluators = Array.from(
@@ -37,12 +39,44 @@ export default function DocumentsPage() {
     )
   );
 
+  // Filter documents based on search query
+  const filteredDocuments = documentsCollection.documents.filter((document) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+
+    // Check title and author
+    if (
+      document.title.toLowerCase().includes(query) ||
+      document.author.toLowerCase().includes(query)
+    ) {
+      return true;
+    }
+
+    // Check if any agent name matches
+    return document.reviews?.some((review) => {
+      const agent = evaluationAgents.find((a) => a.id === review.agentId);
+      return agent?.name.toLowerCase().includes(query);
+    });
+  });
+
   return (
     <div className="min-h-screen bg-white">
-      {/* View Toggle - Keep in container */}
+      {/* Search and View Toggle - Keep in container */}
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="mb-8 flex justify-center">
+          <div className="mb-8 flex flex-col items-center gap-4">
+            <div className="relative w-full max-w-md">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by title, author, or agent name..."
+                className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-blue-600 focus:ring-inset sm:text-sm sm:leading-6"
+              />
+            </div>
             <div className="inline-flex rounded-lg bg-gray-100 p-1">
               <button
                 onClick={() => setViewMode("cards")}
@@ -77,7 +111,7 @@ export default function DocumentsPage() {
         <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="px-4 sm:px-0">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {documentsCollection.documents.map((document) => {
+              {filteredDocuments.map((document) => {
                 // Count reviews by agent
                 const agentReviews =
                   document.reviews?.reduce(
@@ -237,7 +271,7 @@ export default function DocumentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {documentsCollection.documents.map((document) => (
+                  {filteredDocuments.map((document) => (
                     <tr key={document.id} className="hover:bg-gray-50">
                       <td className="max-w-[300px] border-b border-gray-200 px-4 py-4 whitespace-nowrap">
                         <Link
