@@ -6,17 +6,32 @@ import React, {
   useState,
 } from "react";
 
+// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
+// @ts-ignore - ESM modules are handled by Next.js
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
 import { createEditor, Descendant, Element, Node, Text } from "slate";
 import { withHistory } from "slate-history";
 import { Editable, Slate, withReact } from "slate-react";
+// @ts-ignore - ESM modules are handled by Next.js
 import { unified } from "unified";
 
 // Import our improved hooks for Phase 2
-import { useHighlightMapper } from "../hooks/useHighlightMapper";
-import { usePlainTextOffsets } from "../hooks/usePlainTextOffsets";
+import { useHighlightMapper } from "@/hooks/useHighlightMapper";
+import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
+
+// Helper function to normalize text by removing markdown formatting
+const normalizeText = (text: string): string => {
+  return text
+    .replace(/\*\*/g, "") // Remove bold markers
+    .replace(/\*/g, "") // Remove single asterisk italic markers
+    .replace(/\_/g, "") // Remove underscore italic markers
+    .replace(/\\\\/g, "\\") // Handle escaped backslashes
+    .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
+    .trim();
+};
 
 interface Highlight {
   startOffset: number;
@@ -133,7 +148,7 @@ const renderLeaf = ({
   onHighlightHover,
 }: any) => {
   // Create a new set of attributes to avoid modifying the original
-  const leafAttributes = { ...attributes, onHighlightClick, onHighlightHover };
+  const leafAttributes = { ...attributes };
 
   let el = children;
 
@@ -156,39 +171,42 @@ const renderLeaf = ({
   if (leaf.highlight) {
     el = (
       <span
+        {...leafAttributes}
         data-tag={leaf.tag}
-        id={leaf.isFirstSpan ? `highlight-${leaf.tag}` : undefined}
+        id={`highlight-${leaf.tag}`}
         style={{
-          backgroundColor: `#${leaf.color}`,
-          borderRadius: "0.25rem",
+          backgroundColor: `rgba(${parseInt(leaf.color.slice(0, 2), 16)}, ${parseInt(leaf.color.slice(2, 4), 16)}, ${parseInt(leaf.color.slice(4, 6), 16)}, ${leaf.tag === activeTag ? 0.5 : 0.3})`,
+          borderRadius: "2px",
           boxShadow:
             leaf.tag === activeTag
-              ? "0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-              : "0 0 0 1px rgba(0, 0, 0, 0.05)",
-          transform: leaf.tag === activeTag ? "scale(1.02)" : "scale(1)",
+              ? "0 0 0 1px rgba(59, 130, 246, 0.3)"
+              : "none",
+          transform: leaf.tag === activeTag ? "scale(1.01)" : "scale(1)",
           transformOrigin: "center",
+          padding: "0 1px",
+          margin: "0 -1px",
+          scrollMarginTop: "100px", // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={
-          leaf.tag === activeTag
-            ? "cursor-pointer transition-all duration-200 ease-out"
-            : "cursor-pointer transition-all duration-200 ease-out hover:shadow-sm"
-        }
+        className={`group hover:bg-opacity-60 cursor-pointer transition-all duration-150 ease-out ${
+          leaf.tag === activeTag ? "relative z-10" : ""
+        }`}
         onClick={(e) => {
           e.preventDefault();
-          leafAttributes.onHighlightClick?.(leaf.tag);
+          onHighlightClick?.(leaf.tag);
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
-          leafAttributes.onHighlightHover?.(leaf.tag);
+          onHighlightHover?.(leaf.tag);
         }}
         onMouseLeave={(e) => {
           e.preventDefault();
-          leafAttributes.onHighlightHover?.(null);
+          onHighlightHover?.(null);
         }}
       >
         {el}
       </span>
     );
+    return el;
   }
 
   return <span {...leafAttributes}>{el}</span>;
@@ -210,6 +228,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
   const [slateText, setSlateText] = useState("");
+  const renderedHighlightsRef = useRef(new Set<string>());
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
@@ -374,7 +393,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const ranges: any[] = [];
       const pathKey = path.join(".");
       const nodeInfo = nodeOffsets.get(pathKey);
-      const firstSpanMap = new Map<string, boolean>();
 
       if (!nodeInfo) return [];
 
@@ -387,6 +405,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         ) {
           continue; // Skip invalid highlights
         }
+
+        const tag = highlight.tag || "";
 
         // Map markdown offsets to slate offsets using diff-match-patch
         let slateStartOffset = mdToSlateOffset.get(highlight.startOffset);
@@ -423,8 +443,6 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
         if (slateStartOffset === undefined || slateEndOffset === undefined) {
           // Fall back to original approach if mapping doesn't exist
-          // Check if the current text node contains text from the highlight
-          // Since we can't rely on precise mapping, we'll use a more basic approach
           const nodeText = node.text;
           let highlightText = highlight.quotedText || "";
 
@@ -441,25 +459,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               anchor: { path, offset: start },
               focus: { path, offset: end },
               highlight: true,
-              tag: highlight.tag || "",
+              tag,
               color: highlight.color || "yellow-200",
-              isActive: highlight.tag === activeTag,
-              isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
+              isActive: tag === activeTag,
             });
-            firstSpanMap.set(highlight.tag || "", true);
           }
 
           // 2. Try without markdown formatting (if not found)
           if (!found) {
-            // Remove markdown formatting
-            const normalizedHighlightText = highlightText
-              .replace(/\*\*/g, "") // Remove bold markers
-              .replace(/\*/g, "") // Remove single asterisk italic markers
-              .replace(/\_/g, "") // Remove underscore italic markers
-              .replace(/\\\\/g, "\\") // Handle escaped backslashes
-              .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
-              .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
-              .trim();
+            const normalizedHighlightText = normalizeText(highlightText);
 
             if (
               nodeText &&
@@ -473,18 +481,16 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 anchor: { path, offset: start },
                 focus: { path, offset: end },
                 highlight: true,
-                tag: highlight.tag || "",
+                tag,
                 color: highlight.color || "yellow-200",
-                isActive: highlight.tag === activeTag,
-                isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
+                isActive: tag === activeTag,
               });
-              firstSpanMap.set(highlight.tag || "", true);
+              found = true;
             }
           }
 
           // 3. Try with partial text matching (if still not found)
           if (!found && highlightText && nodeText) {
-            // Extract the first sentence or chunk to try matching part of it
             const firstChunk = normalizeText(highlightText.split("\n")[0]);
 
             if (
@@ -499,12 +505,10 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                 anchor: { path, offset: start },
                 focus: { path, offset: end },
                 highlight: true,
-                tag: highlight.tag || "",
+                tag,
                 color: highlight.color || "yellow-200",
-                isActive: highlight.tag === activeTag,
-                isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
+                isActive: tag === activeTag,
               });
-              firstSpanMap.set(highlight.tag || "", true);
               found = true;
             }
           }
@@ -535,32 +539,18 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               anchor: { path, offset: highlightStart },
               focus: { path, offset: highlightEnd },
               highlight: true,
-              tag: highlight.tag || "",
+              tag,
               color: highlight.color || "yellow-200",
-              isActive: highlight.tag === activeTag,
-              isFirstSpan: !firstSpanMap.has(highlight.tag || ""),
+              isActive: tag === activeTag,
             });
-            firstSpanMap.set(highlight.tag || "", true);
           }
         }
       }
 
       return ranges;
     },
-    [highlights, activeTag, initialized, editor, nodeOffsets, mdToSlateOffset]
+    [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
   );
-
-  // Helper function to normalize text by removing markdown formatting
-  const normalizeText = (text: string): string => {
-    return text
-      .replace(/\*\*/g, "") // Remove bold markers
-      .replace(/\*/g, "") // Remove single asterisk italic markers
-      .replace(/\_/g, "") // Remove underscore italic markers
-      .replace(/\\\\/g, "\\") // Handle escaped backslashes
-      .replace(/\\([^\\])/g, "$1") // Handle other escaped characters
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with just their text
-      .trim();
-  };
 
   if (!initialized) {
     return <div>Loading...</div>;
