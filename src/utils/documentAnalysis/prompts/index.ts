@@ -5,12 +5,12 @@ const documentInformationSection = (
   document: Document
 ) => `## DOCUMENT INFORMATION
 Title: ${document.title || "Untitled"}
-Author: ${document.author || "Unknown"}
-Published: ${document.publishedDate || "Unknown"}
+Author: ${document.author || "Not provided"}
+Published: ${document.publishedDate || "Not provided"}
 URL: ${document.url || "Not provided"}
 `;
 
-function useGrade(agentInfo: EvaluationAgent): boolean {
+function shouldIncludeGrade(agentInfo: EvaluationAgent): boolean {
   return !!agentInfo.gradeInstructions;
 }
 
@@ -51,14 +51,14 @@ Your task is to analyze this document and provide your thinking process and summ
 Format your response in JSON like this:
 {
   "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes.",
-  "summary": "Your specific perspective and key insights. This should be approximately ${targetWordCount} words long."${useGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
+  "summary": "Your specific perspective and key insights. This should be approximately ${targetWordCount} words long."${shouldIncludeGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
 }
 
 Thinking: A detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes. Brainstorm about any key points and insights you find interesting and relevant. Use this as a scratchpad to help you come up with your final summary.
 
 Summary: Provide a high-level analysis, given your specific agent instructions. This should be approximately ${targetWordCount} words long. Make heavy use of Markdown formatting to make the summary more readable. Do not simply summarize the document, but provide a high-level analysis.
 
-${useGrade(agentInfo) ? "Grade: A number from 0-100. This is a subjective grade based on your assessment of the document, using your specific agent instructions." : ""}
+${shouldIncludeGrade(agentInfo) ? "Grade: A number from 0-100. This is a subjective grade based on your assessment of the document, using your specific agent instructions." : ""}
 
 Here's the document to analyze:
 
@@ -92,7 +92,7 @@ Format your response in JSON like this:
         "start": "exact text snippet from document where highlight begins",
         "end": "exact text snippet from document where highlight ends"
       },
-      "importance": "0-100"${useGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
+      "importance": "0-100"${shouldIncludeGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
     }
   ]
 }
@@ -100,7 +100,7 @@ Format your response in JSON like this:
 Title: A short string, with optional emojis, bold, or italic formatting.
 Description: A short string with Markdown formatting. Make sure to make good use of Markdown formatting to make the comment more readable. Aim for 2-10 sentences.
 Importance: A number from 0-100 that represents how important the comment is to the document. Aim to average at around 50.
-${useGrade(agentInfo) ? "grade: A number from 0-100 that represents if the highlighted section was negative or positive." : ""}
+${shouldIncludeGrade(agentInfo) ? "grade: A number from 0-100 that represents if the highlighted section was negative or positive." : ""}
 
 # DOCUMENT CONTENT
 ${document.content}`;

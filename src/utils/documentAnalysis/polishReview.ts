@@ -1,8 +1,10 @@
-import { ANALYSIS_MODEL, openai } from "@/types/openai";
+import {
+  ANALYSIS_MODEL,
+  openai,
+} from "@/types/openai";
 
 //TODO: This is not functional yet.
-import type { DocumentReview } from "../types/documentReview";
-import { analyzeDocument } from "./documentAnalysis";
+import type { DocumentReview } from "../../types/documentReview";
 
 interface StyleGuideViolation {
   type: "title" | "description" | "grade" | "importance" | "highlight" | "json";
@@ -119,10 +121,13 @@ export async function polishReviewWithLLM(
   agentInfo: any
 ): Promise<DocumentReview> {
   // Reuse the exact same prompt from analyzeDocument
-  const { finalPrompt } = await analyzeDocument(
-    { content: documentContent },
-    agentInfo.id
-  );
+  // const { finalPrompt } = await analyzeDocument(
+  //   { content: documentContent }, // This is incorrect, analyzeDocument expects a full Document object
+  //   agentInfo.id
+  // ); // analyzeDocument returns DocumentReview, not { finalPrompt }
+
+  // TODO: Need to reconstruct or retrieve the original prompt used for the review
+  const finalPrompt = ""; // Placeholder - this needs to be fixed
 
   // Just change the task description at the top
   const polishPrompt = finalPrompt.replace(

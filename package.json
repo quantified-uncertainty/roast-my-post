@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run build:agents && next build",
+    "build": "npm run build:agents && npm run build:docs && next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
