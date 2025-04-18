@@ -46,8 +46,20 @@ export async function generateThinkingAndSummary(
     ],
   });
 
+  if (!response.choices || response.choices.length === 0) {
+    console.error(
+      "OpenAI response missing choices:",
+      JSON.stringify(response, null, 2)
+    );
+    throw new Error("No choices received from LLM for thinking/summary/grade");
+  }
+
   const rawContent = response.choices[0]?.message?.content;
   if (!rawContent) {
+    console.error(
+      "OpenAI choice missing content:",
+      JSON.stringify(response.choices[0], null, 2)
+    );
     throw new Error("No content received from LLM for thinking/summary/grade");
   }
 
