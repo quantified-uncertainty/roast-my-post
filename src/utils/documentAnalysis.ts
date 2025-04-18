@@ -6,7 +6,7 @@ import path from "path";
 import type { Comment, DocumentReview } from "../types/documentReview";
 import { ANALYSIS_MODEL, DEFAULT_TEMPERATURE, openai } from "../types/openai";
 import { calculateCost, type ModelName } from "./costCalculator";
-import { processRawComments, type RawLLMHighlight } from "./highlightUtils";
+import type { RawLLMHighlight } from "./highlightUtils";
 
 // Type for the raw LLM response before transformation
 interface LLMReview {
@@ -58,6 +58,7 @@ export function calculateTargetWordCount(content: string): number {
 }
 
 export function calculateTargetComments(content: string): number {
+  return 5;
   const baseComments = 3;
   const contentLength = content.length;
   // Roughly 1 comment per 100 words
@@ -244,18 +245,18 @@ ${agentInfo.commentInstructions}
 
     const commentStructure = agentInfo?.gradeInstructions
       ? `{
-        "title": "string",
-        "description": "string",
+        "title": "string (use **bold** selectively for emphasis on key terms only, not for the entire title)",
+        "description": "string (supports full markdown: **bold**, *italics*, [links](url), lists, > quotes, etc)",
         "highlight": {
           "start": "exact text snippet from document where highlight begins",
           "end": "exact text snippet from document where highlight ends"
         },
         "importance": "0-100",
-        "grade": "0-100"
+        "grade": "0-10"
       }`
       : `{
-        "title": "string",
-        "description": "string",
+        "title": "string (use **bold** selectively for emphasis on key terms only, not for the entire title)",
+        "description": "string (supports full markdown: **bold**, *italics*, [links](url), lists, > quotes, etc)",
         "highlight": {
           "start": "exact text snippet from document where highlight begins",
           "end": "exact text snippet from document where highlight ends"
@@ -305,42 +306,81 @@ Your analysis should follow this structure:
 2. Comments. Each comment should be in this format:
 ${commentStructure}
 
+   Target number of comments: ${targetComments}
    For each comment:
-   - Title should reflect your expertise
-   - Description should explain through your lens
-   - Highlight should specify exact text snippets
+   - Title should be specific and reflect your expertise
+   - Description should be detailed (at least 3 sentences) and use markdown formatting:
+     * Use **bold** for key terms
+     * Use *italics* for emphasis
+     * Use > for blockquotes when referencing other work
+     * Include relevant links to external sources when possible
+   - Highlight should be precise and focused:
+     * Maximum length: 500 characters
+     * Should capture the exact relevant passage
+     * Avoid highlighting entire paragraphs
    - Importance (0-100) indicates significance from your perspective:
-     * 90-100: Exceptionally relevant to your expertise
-     * 80-89: Very significant
-     * 70-79: Interesting and relevant
-     * 60-69: Somewhat relevant
-     * 50-59: Some relevance
-     * 40-49: Mostly tangential
-     * 30-39: Little value
-     * 0-29: Not relevant
-    ${agentInfo?.gradeInstructions ? "\n   - **Grade (0-100)** - The strength of the quoted section:\n     * **0-30**: The section is lacking or problematic\n     * **31-49**: The section has significant issues\n     * **50**: The section is neutral/balanced\n     * **51-70**: The section has some positive aspects\n     * **71-100**: The section is very strong" : ""}
+     * 90-100: Critical issues that could lead to existential risk
+     * 80-89: Major concerns that could cause significant harm
+     * 70-79: Important issues that need attention
+     * 60-69: Notable concerns worth addressing
+     * 50-59: Minor issues that could be improved
+     * 40-49: Mostly tangential concerns
+     * 30-39: Minor points of interest
+     * 0-29: Not particularly relevant
+   - Grade (0-100) reflects the merit of the highlighted section itself:
+     * 90-100: Exceptionally strong/positive content
+     * 80-89: Very strong/positive content
+     * 70-79: Good/positive content
+     * 60-69: Somewhat positive content
+     * 50-59: Neutral/mixed content
+     * 40-49: Somewhat negative/problematic content
+     * 30-39: Poor/problematic content
+     * 20-29: Very poor/problematic content
+     * 0-1: Unacceptable/problematic content
+
+   Examples:
+   - A grade of 80 would be appropriate for a section that makes a strong, well-supported argument
+   - A grade of 30 would be appropriate for a section that contains significant errors or problematic assumptions
+   - A grade of 50 would be appropriate for a section that is neutral or has balanced pros and cons
+   - A grade of 90 would be appropriate for a section that provides exceptional insight or value
+
+   Note: The grade is about the highlighted section itself, not your analysis of it. If you're pointing out a problem in the text, use a low grade. If you're highlighting something positive, use a high grade.
+
+   Example of a high-quality comment:
+   {
+     "title": "Misleading Economic Growth Narrative",
+     "description": "The document's focus on economic growth and curing diseases (**Section 3**) *fundamentally misses* the central issue of existential risk. As argued in [Bostrom's Superintelligence](https://www.amazon.com/Superintelligence-Dangers-Strategies-Nick-Bostrom/dp/0198739834), the primary concern with AGI is not its potential benefits but the risk of permanent disempowerment or extinction. > \"The first ultraintelligent machine is the last invention that man need ever make.\" This perspective is entirely absent from the document's analysis.",
+     "highlight": {
+       "start": "the economic growth in front of us looks astonishing",
+       "end": "and can fully realize our creative potential"
+     },
+     "importance": 95,
+     "grade": 85
+   }
 
 3. Summary
    - Concise overview of your specialized analysis
    - Focus on your unique insights
    - Get straight to your expert perspective
 
-4. Grade (0-100)
+4. Grade (0-10)
    - Based on your specialized grading criteria
-   - 90-100: Exceptional
-   - 80-89: Very strong
-   - 70-79: Good
-   - 60-69: Decent
-   - 50-59: Mediocre
-   - 40-49: Poor
-   - 30-39: Very poor
-   - 0-29: Unacceptable
+   - Meant to capture your sentiment regarding the highlighted section. For example, if you are pointing out that the section is good or bad, use high or low scores. If you are pointing out something different from the quality of the section, respond with a 5. Most scores should be between 3 to 7. Use Decimals, like 6.5.
+   - 9-10: Exceptional
+   - 8: Very strong
+   - 7: Good
+   - 6: Decent
+   - 5: Neutral 
+   - 4: Mediocre
+   - 3: Poor
+   - 2: Very poor
+   - 0-2: Unacceptable
 
 Format your response in JSON like this:
 {
   "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes.",
   "comments": [${commentStructure}],
-  "summary": "Your specific perspective and key insights"${agentInfo?.gradeInstructions ? ',\n  "grade": "number from 0-100"' : ""}
+  "summary": "Your specific perspective and key insights"${agentInfo?.gradeInstructions ? ',\n  "grade": "number from 0-10"' : ""}
 }
 
 Here's the document to analyze:
@@ -533,6 +573,69 @@ ${document.content}`;
       parsedLLMReview.comments
     );
 
+    // Check if we have enough valid comments
+    const validComments = processedComments.filter(
+      (comment) => comment.isValid
+    );
+    if (validComments.length < targetComments) {
+      console.log(
+        `⚠️ Only got ${validComments.length} valid comments, requesting more...`
+      );
+
+      // Create a new prompt requesting additional comments
+      const additionalPrompt = `# ADDITIONAL COMMENTS REQUESTED
+We need ${targetComments - validComments.length} more valid comments. Please provide additional comments following the same format as before.
+
+Previous comments (do not repeat these):
+${validComments.map((comment) => `- ${comment.title}: ${comment.description}`).join("\n")}
+
+Please provide new comments that:
+1. Do not overlap with the previous comments
+2. Focus on different sections of the document
+3. Follow the same format and quality standards
+
+Format your response in JSON like this:
+{
+  "comments": [${commentStructure}]
+}`;
+
+      // Make another API call
+      const additionalCompletion = await openai.chat.completions.create(
+        {
+          model: ANALYSIS_MODEL,
+          messages: [{ role: "user", content: additionalPrompt }],
+          temperature: DEFAULT_TEMPERATURE,
+        },
+        {
+          timeout: 120000,
+        }
+      );
+
+      if (additionalCompletion.choices?.[0]?.message?.content) {
+        const additionalResponse =
+          additionalCompletion.choices[0].message.content;
+        const additionalParsed = JSON.parse(additionalResponse);
+
+        if (additionalParsed.comments) {
+          // Process the additional comments
+          const additionalProcessedComments = await processRawComments(
+            document.content,
+            additionalParsed.comments
+          );
+
+          // Add only valid new comments
+          const newValidComments = additionalProcessedComments.filter(
+            (comment) => comment.isValid
+          );
+          processedComments.push(...newValidComments);
+
+          console.log(
+            `✅ Added ${newValidComments.length} more valid comments`
+          );
+        }
+      }
+    }
+
     // Validate comment schema
     processedComments.forEach((comment, index) => {
       if (comment.isValid === undefined) {
@@ -608,4 +711,55 @@ ${document.content}`;
     // Re-throw the error to prevent saving
     throw error;
   }
+}
+
+export async function processRawComments(
+  document: string,
+  comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>
+): Promise<Comment[]> {
+  const processedComments: Comment[] = [];
+  const usedRanges: Array<{ start: number; end: number }> = [];
+
+  for (const comment of comments) {
+    const startOffset = document.indexOf(comment.highlight.start);
+    const endOffset =
+      document.indexOf(comment.highlight.end) + comment.highlight.end.length;
+
+    // Validate highlight length (max 500 characters)
+    const highlightLength = endOffset - startOffset;
+    if (highlightLength > 500) {
+      console.warn(
+        `⚠️ Highlight too long (${highlightLength} chars) for comment: ${comment.title}`
+      );
+      continue;
+    }
+
+    // Check for overlap with existing comments
+    const hasOverlap = usedRanges.some(
+      (range) =>
+        (startOffset >= range.start && startOffset <= range.end) ||
+        (endOffset >= range.start && endOffset <= range.end)
+    );
+
+    if (hasOverlap) {
+      console.warn(
+        `⚠️ Highlight overlaps with previous comment: ${comment.title}`
+      );
+      continue;
+    }
+
+    usedRanges.push({ start: startOffset, end: endOffset });
+
+    processedComments.push({
+      ...comment,
+      highlight: {
+        startOffset,
+        endOffset,
+        quotedText: document.substring(startOffset, endOffset),
+      },
+      isValid: true,
+    });
+  }
+
+  return processedComments;
 }

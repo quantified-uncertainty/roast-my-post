@@ -9,15 +9,14 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "review-agent": "npx tsx src/scripts/analyze-md.ts --file ./src/data/docs/short-example.json -a bias-detector",
-    "review-all-agents": "npx tsx src/scripts/analyze-md.ts --file ./src/data/docs/strongly-bounded-agents.json --all-agents",
-    "review-all-agents-missing": "npx tsx src/scripts/analyze-md.ts --dir ./src/data/docs --all-agents --only-missing",
-    "review-parallel": "npx tsx src/scripts/analyze-md-parallel.ts --dir ./src/data/docs --all-agents --only-missing",
+    "cli": "npx tsx src/scripts/cli.ts",
+    "review": "npm run cli -- review",
+    "delete-reviews": "npm run cli -- delete-reviews",
+    "import": "npm run cli -- import",
+    "verify": "npm run cli -- verify",
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
-    "test": "jest",
-    "import-article": "tsx src/scripts/import-article.ts https://www.lesswrong.com/posts/njAZwT8nkHnjipJku/alignment-faking-in-large-language-models && npm run generate-docs",
-    "verify-highlights": "tsx src/scripts/verify-highlights.ts --dir ./src/data/docs"
+    "test": "jest"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

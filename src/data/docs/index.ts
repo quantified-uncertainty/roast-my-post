@@ -13,6 +13,7 @@ import boundedAiMightBeViableLesswrong from './bounded-ai-might-be-viable-lesswr
 import canWeHoldIntellectualsToSimilarPublicStandardsAsAthletesLesswrong from './can-we-hold-intellectuals-to-similar-public-standards-as-athletes-lesswrong.json';
 import goodhartTypologyViaStructureFunctionAndRandomnessDistributionsLesswrong from './goodhart-typology-via-structure-function-and-randomness-distributions-lesswrong.json';
 import higherOrderForecastsLesswrong from './higher-order-forecasts-lesswrong.json';
+import iEkIsWrongAgain from './i-ek-is-wrong-again.json';
 import iThinkThatImageModelsSuchAsChatgptAreProbablyAGreatFitForCustomZoomBackgrounds from './i-think-that-image-models-such-as-chatgpt-are-probably-a-great-fit-for-custom-zoom-backgrounds.json';
 import iVeBeenThinkingALotAboutHowToDoQuantitativeLlmEvaluationsOfTheValueOfVariousMo from './i-ve-been-thinking-a-lot-about-how-to-do-quantitative-llm-evaluations-of-the-value-of-various-mo.json';
 import informationTheoreticBoxingOfSuperintelligencesLesswrong from './information-theoretic-boxing-of-superintelligences-lesswrong.json';
@@ -46,6 +47,7 @@ export const documentsCollection = transformDocumentsCollection({
     canWeHoldIntellectualsToSimilarPublicStandardsAsAthletesLesswrong,
     goodhartTypologyViaStructureFunctionAndRandomnessDistributionsLesswrong,
     higherOrderForecastsLesswrong,
+    iEkIsWrongAgain,
     iThinkThatImageModelsSuchAsChatgptAreProbablyAGreatFitForCustomZoomBackgrounds,
     iVeBeenThinkingALotAboutHowToDoQuantitativeLlmEvaluationsOfTheValueOfVariousMo,
     informationTheoreticBoxingOfSuperintelligencesLesswrong,

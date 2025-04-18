@@ -33,6 +33,37 @@ import {
 
 import SlateEditor from "./SlateEditor";
 
+function MarkdownRenderer({
+  children,
+  className = "",
+}: {
+  children: string;
+  className?: string;
+}) {
+  const isInline = className.includes("inline");
+  return (
+    <div className={`${className} ${isInline ? "[&_p]:m-0 [&_p]:inline" : ""}`}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          a: ({ node, ...props }) => (
+            <a
+              {...props}
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          ),
+          p: ({ children }) => (isInline ? <>{children}</> : <p>{children}</p>),
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
 function getGradePhrase(grade: number): string {
   if (grade >= 80) return "Strongly positive";
   if (grade >= 60) return "Positive";
@@ -110,7 +141,9 @@ function CommentsSidebar({
                       <h3
                         className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
                       >
-                        {comment.title}
+                        <MarkdownRenderer className="inline">
+                          {comment.title}
+                        </MarkdownRenderer>
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
                         {hasGradeInstructions && (
@@ -151,7 +184,9 @@ function CommentsSidebar({
                             : "line-clamp-1 text-gray-600"
                         }`}
                       >
-                        {comment.description}
+                        <MarkdownRenderer>
+                          {comment.description}
+                        </MarkdownRenderer>
                         {expandedTag === tag && (
                           <div className="mt-2 text-xs text-gray-400">
                             {comment.grade !== undefined && (
@@ -464,24 +499,18 @@ export function DocumentWithEvaluations({
                   <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
                     {expandedTag === "analysis" ? (
                       <>
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
+                        <MarkdownRenderer>
                           {activeReview.summary}
-                        </ReactMarkdown>
+                        </MarkdownRenderer>
                         {activeReview.thinking && (
                           <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
                             <h4 className="mb-2 font-semibold text-gray-700">
                               Thinking:
                             </h4>
                             <div className="text-gray-400">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeRaw]}
-                              >
+                              <MarkdownRenderer>
                                 {activeReview.thinking}
-                              </ReactMarkdown>
+                              </MarkdownRenderer>
                             </div>
                           </div>
                         )}
@@ -504,12 +533,9 @@ export function DocumentWithEvaluations({
                       </>
                     ) : (
                       <div className="line-clamp-3">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
+                        <MarkdownRenderer>
                           {activeReview.summary}
-                        </ReactMarkdown>
+                        </MarkdownRenderer>
                       </div>
                     )}
                   </div>
