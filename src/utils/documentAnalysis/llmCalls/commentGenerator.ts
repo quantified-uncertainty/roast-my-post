@@ -22,6 +22,13 @@ export async function getCommentData(
     attempts++;
     console.log(`💬 Attempt ${attempts}/${maxAttempts} to get comments...`);
 
+    const prompt = getCommentPrompt(
+      document,
+      agentInfo,
+      targetComments - comments.length
+    );
+    console.log(`Comment Prompt: ${prompt}`);
+
     const response = await openai.chat.completions.create({
       model: ANALYSIS_MODEL,
       temperature: DEFAULT_TEMPERATURE,
@@ -33,11 +40,7 @@ export async function getCommentData(
         },
         {
           role: "user",
-          content: getCommentPrompt(
-            document,
-            agentInfo,
-            targetComments - comments.length
-          ),
+          content: prompt,
         },
       ],
     });
@@ -46,7 +49,13 @@ export async function getCommentData(
       throw new Error("No response from LLM for comments");
     }
 
-    const result = JSON.parse(response.choices[0].message.content);
+    console.log(`Response: ${response.choices[0]?.message?.content}`);
+
+    // Strip potential markdown fences before parsing
+    const rawResponse = response.choices[0].message.content;
+    const jsonString = rawResponse.replace(/^```json\n?|\n?```$/g, "");
+
+    const result = JSON.parse(jsonString); // Parse the cleaned string
     let newComments = result.comments || [];
 
     // Pre-process comments: Ensure 'importance' is a number
@@ -61,6 +70,11 @@ export async function getCommentData(
         comment.importance = isNaN(parsedImportance)
           ? comment.importance
           : parsedImportance;
+      }
+      // Pre-process grade as well
+      if (comment.grade !== undefined && typeof comment.grade === "string") {
+        const parsedGrade = parseInt(comment.grade, 10);
+        comment.grade = isNaN(parsedGrade) ? comment.grade : parsedGrade;
       }
       return comment;
     });

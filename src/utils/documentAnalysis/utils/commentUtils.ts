@@ -37,11 +37,22 @@ export async function validateComments(
       throw new Error(`Comment ${index} missing or invalid importance`);
     }
 
+    // Validate optional grade field
+    if (
+      comment.grade !== undefined &&
+      (typeof comment.grade !== "number" ||
+        comment.grade < 0 ||
+        comment.grade > 100)
+    ) {
+      throw new Error(`Comment ${index} invalid grade`);
+    }
+
     return {
       title: comment.title,
       description: comment.description,
       highlight: comment.highlight as RawLLMHighlight,
       importance: comment.importance,
+      grade: comment.grade,
       isValid: true,
     };
   });

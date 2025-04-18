@@ -17,9 +17,9 @@ export async function analyzeDocument(
   const agentInfo = loadAgentInfo(agentId);
 
   // Calculate target word count
-  const baseWords = 50;
+  const baseWords = 200;
   const wordsPerComment = 20;
-  const targetComments = Math.ceil(document.content.length / 1000);
+  const targetComments = Math.ceil(document.content.length / 1000) * 2;
   const targetWordCount = baseWords + targetComments * wordsPerComment;
 
   // Generate thinking prompt

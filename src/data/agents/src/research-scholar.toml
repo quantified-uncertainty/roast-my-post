@@ -106,6 +106,16 @@ For each highlighted section:
 4. Explain how the reference enhances understanding of the highlighted section
 
 Use proper JSON formatting and escape special characters.
+
+## Examples
+
+> Highlighted text: "The concept of value alignment in AI systems..."
+> 
+> Relevant References:
+> 1. [Paper Title](https://example.com/paper) (Importance: 9)
+>    - Pages 45-48: Detailed discussion of value alignment frameworks
+>    - Section 3.2: Experimental results on alignment methods
+
 """
 capabilities = [
     "Finding relevant academic papers and books with links",
