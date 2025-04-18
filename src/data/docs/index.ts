@@ -21,18 +21,21 @@ import informationTheoreticBoxingOfSuperintelligencesLesswrong from './informati
 import integrityForConsequentialistsEaForum from './integrity-for-consequentialists-ea-forum.json';
 import myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots from './my-current-claims-and-cruxes-on-llm-forecasting-epistemics-ea-forum-bots.json';
 import policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum from './policy-advocacy-for-eradicating-screwworm-looks-remarkably-cost-effective-ea-forum.json';
+import productInTheAgeOfAi from './product-in-the-age-of-ai.json';
 import scorableFunctionsAFormatForAlgorithmicForecastingLesswrong from './scorable-functions-a-format-for-algorithmic-forecasting-lesswrong.json';
 import sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots from './six-potential-misconceptions-about-ai-intellectuals-ea-forum-bots.json';
 import slopworld2035TheDangersOfMediocreAiEaForumBots from './slopworld-2035-the-dangers-of-mediocre-ai-ea-forum-bots.json';
 import stronglyBoundedAgents from './strongly-bounded-agents.json';
 import theRiskRewardTradeoffOfInterpretabilityResearchLesswrong from './the-risk-reward-tradeoff-of-interpretability-research-lesswrong.json';
 import thereSAMajorTensionBetweenTheAccumulationOfGenerationalWealthAndAltruism from './there-s-a-major-tension-between-the-accumulation-of-generational-wealth-and-altruism.json';
+import threeGrants from './three-grants.json';
 import threeObservations from './three-observations.json';
 import updatingUtilityFunctionsLesswrong from './updating-utility-functions-lesswrong.json';
 import whatSGoingOnWithOpenaiSMessagingLesswrong from './what-s-going-on-with-openai-s-messaging-lesswrong.json';
 import whileLargeLanguageModelsLlmsHaveImportantEpistemicIssuesIGenerallyFindThemBroadly from './while-large-language-models-llms-have-important-epistemic-issues-i-generally-find-them-broadly.json';
 import whyISignedUpToThe10PledgeInTheWakeOfForeignAidCutsAndWhereYouCanDonateEaForumBots from './why-i-signed-up-to-the-10-pledge-in-the-wake-of-foreign-aid-cuts-and-where-you-can-donate-ea-forum-bots.json';
 import workingInVirtualRealityAReviewLesswrong from './working-in-virtual-reality-a-review-lesswrong.json';
+import yourConnectedWorkspaceForWikiDocsProjectsNotion from './your-connected-workspace-for-wiki-docs-projects-notion.json';
 
 // Transform the raw data to include Date objects
 export const documentsCollection = transformDocumentsCollection({
@@ -56,17 +59,20 @@ export const documentsCollection = transformDocumentsCollection({
     integrityForConsequentialistsEaForum,
     myCurrentClaimsAndCruxesOnLlmForecastingEpistemicsEaForumBots,
     policyAdvocacyForEradicatingScrewwormLooksRemarkablyCostEffectiveEaForum,
+    productInTheAgeOfAi,
     scorableFunctionsAFormatForAlgorithmicForecastingLesswrong,
     sixPotentialMisconceptionsAboutAiIntellectualsEaForumBots,
     slopworld2035TheDangersOfMediocreAiEaForumBots,
     stronglyBoundedAgents,
     theRiskRewardTradeoffOfInterpretabilityResearchLesswrong,
     thereSAMajorTensionBetweenTheAccumulationOfGenerationalWealthAndAltruism,
+    threeGrants,
     threeObservations,
     updatingUtilityFunctionsLesswrong,
     whatSGoingOnWithOpenaiSMessagingLesswrong,
     whileLargeLanguageModelsLlmsHaveImportantEpistemicIssuesIGenerallyFindThemBroadly,
     whyISignedUpToThe10PledgeInTheWakeOfForeignAidCutsAndWhereYouCanDonateEaForumBots,
-    workingInVirtualRealityAReviewLesswrong
+    workingInVirtualRealityAReviewLesswrong,
+    yourConnectedWorkspaceForWikiDocsProjectsNotion
   ],
 } as RawDocumentsCollection);

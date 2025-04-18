@@ -1,9 +1,9 @@
 export function calculateTargetWordCount(
   content: string,
-  baseWords: number = 50
+  baseWords: number = 200
 ): number {
   const wordCount = content.split(/\s+/).length;
-  return Math.max(baseWords, Math.floor(wordCount / 100));
+  return Math.max(baseWords, Math.floor(wordCount / 50));
 }
 
 export function calculateTargetComments(
@@ -11,7 +11,7 @@ export function calculateTargetComments(
   baseComments: number = 3
 ): number {
   const wordCount = content.split(/\s+/).length;
-  return Math.max(baseComments, Math.floor(wordCount / 1000)) * 5;
+  return Math.max(baseComments, Math.floor(wordCount / 1000)) * 3;
 }
 
 export function calculateCost(
