@@ -2,8 +2,8 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 
-import { Document } from "../types/documents";
-import { analyzeDocument } from "../utils/documentAnalysis";
+import { Document, RawDocument, RawDocumentReview } from "../types/documents";
+import { analyzeDocument } from "../utils/documentAnalysis/analyzeDocument";
 import { loadAgentInfo } from "../utils/documentAnalysis/utils/agentUtils";
 
 const program = new Command();
@@ -33,10 +33,8 @@ async function resolveDocumentPath(input: string): Promise<string> {
   return path.resolve(process.cwd(), input);
 }
 
-// Helper function to save document with reviews (typed as Document)
-async function saveDocument(filePath: string, document: Document) {
-  // Basic validation could be added here if needed
-  // For now, we rely on TypeScript type checking at call sites
+// Helper function to save document with reviews (typed as RawDocument)
+async function saveDocument(filePath: string, document: RawDocument) {
   await fs.promises.writeFile(filePath, JSON.stringify(document, null, 2));
 }
 
@@ -52,12 +50,12 @@ program
     try {
       const filePath = await resolveDocumentPath(options.input);
       const fileContent = await fs.promises.readFile(filePath, "utf-8");
-      // Parse and cast to Document type
-      const document: Document = JSON.parse(fileContent);
+      // Parse into RawDocument type
+      const rawDocument: RawDocument = JSON.parse(fileContent);
 
       // Initialize reviews array if it doesn't exist
-      if (!document.reviews) {
-        document.reviews = [];
+      if (!rawDocument.reviews) {
+        rawDocument.reviews = [];
       }
 
       if (options.agent) {
@@ -67,43 +65,98 @@ program
           console.error(`Agent "${options.agent}" not found`);
           process.exit(1);
         }
-        const result = await analyzeDocument(document, options.agent); // result is DocumentAnalysis
-
-        // Remove any existing review by this agent
-        // Ensure reviews array exists before filtering
-        document.reviews = (document.reviews || []).filter(
-          (review) => review.agentId !== options.agent
+        // analyzeDocument might need the *transformed* Document type, handle conversion if necessary
+        // Or, if analyzeDocument can accept RawDocument, simplify this.
+        // For now, assuming analyzeDocument needs Document - this is a potential issue
+        const documentForAnalysis: Document = JSON.parse(fileContent); // Re-parse or transform
+        const result = await analyzeDocument(
+          documentForAnalysis,
+          options.agent
         );
 
-        // Add the new review (push the whole result)
-        document.reviews.push(result);
-        await saveDocument(filePath, document); // Pass the typed document
-        console.log(`Review completed and saved for agent ${options.agent}`);
+        // --- Operate on rawDocument for saving ---
+        // Remove any existing review by this agent
+        rawDocument.reviews = (rawDocument.reviews || []).filter(
+          (review) => review && review.agentId !== options.agent
+        );
+
+        // Check if analyzeDocument returned a valid result
+        if (result) {
+          // Transform DocumentReview (result) to RawDocumentReview (for saving)
+          const reviewToSave: RawDocumentReview = {
+            agentId: result.agentId,
+            createdAt: result.createdAt.toISOString(),
+            costInCents: result.costInCents || 0,
+            comments: result.comments || [],
+            thinking: result.thinking,
+            summary: result.summary,
+            grade: result.grade,
+          };
+          rawDocument.reviews.push(reviewToSave);
+
+          // Log the state of reviews just before saving
+          console.log(
+            `Attempting to save ${rawDocument.reviews.length} reviews for agent ${options.agent}. Last review agentId: ${rawDocument.reviews[rawDocument.reviews.length - 1]?.agentId}`
+          );
+          // Save the modified RawDocument
+          await saveDocument(filePath, rawDocument);
+          console.log(`Review completed and saved for agent ${options.agent}`);
+        } else {
+          // This else might be unnecessary if analyzeDocument throws on error
+          console.error(
+            `analyzeDocument did not return a valid result for agent ${options.agent}. Skipping save.`
+          );
+        }
       } else if (options.allAgents) {
         // Review with all intended agents
-        // Ensure intendedAgents exists
-        const intendedAgentsList = document.intendedAgents || [];
+        const intendedAgentsList = rawDocument.intendedAgents || [];
+        const documentForAnalysis: Document = JSON.parse(fileContent); // Re-parse or transform
+
         const agents = options.onlyMissing
           ? intendedAgentsList.filter(
               (agentId: string) =>
-                !(document.reviews || []).some((r) => r.agentId === agentId)
+                !(rawDocument.reviews || []).some(
+                  (r) => r && r.agentId === agentId
+                )
             )
           : intendedAgentsList;
 
         for (const agentId of agents) {
           console.log(`Reviewing with agent ${agentId}...`);
-          const result = await analyzeDocument(document, agentId); // result is DocumentAnalysis
+          const result = await analyzeDocument(documentForAnalysis, agentId);
 
-          // Remove any existing review by this agent
-          // Ensure reviews array exists before filtering
-          document.reviews = (document.reviews || []).filter(
-            (review) => review.agentId !== agentId
+          // --- Operate on rawDocument for saving ---
+          rawDocument.reviews = (rawDocument.reviews || []).filter(
+            (review) => review && review.agentId !== agentId
           );
 
-          // Add the new review (push the whole result)
-          document.reviews.push(result);
-          await saveDocument(filePath, document); // Pass the typed document
-          console.log(`Review completed and saved for agent ${agentId}`);
+          // Check if analyzeDocument returned a valid result
+          if (result) {
+            // Transform DocumentReview (result) to RawDocumentReview (for saving)
+            const reviewToSaveInLoop: RawDocumentReview = {
+              agentId: result.agentId,
+              createdAt: result.createdAt.toISOString(),
+              costInCents: result.costInCents || 0,
+              comments: result.comments || [],
+              thinking: result.thinking,
+              summary: result.summary,
+              grade: result.grade,
+            };
+            rawDocument.reviews.push(reviewToSaveInLoop);
+
+            // Log the state of reviews just before saving
+            console.log(
+              `Attempting to save ${rawDocument.reviews.length} reviews in loop for agent ${agentId}. Last review agentId: ${rawDocument.reviews[rawDocument.reviews.length - 1]?.agentId}`
+            );
+            // Save the modified RawDocument
+            await saveDocument(filePath, rawDocument);
+            console.log(`Review completed and saved for agent ${agentId}`);
+          } else {
+            // This else might be unnecessary if analyzeDocument throws on error
+            console.error(
+              `analyzeDocument did not return a valid result for agent ${agentId} in loop. Skipping save.`
+            );
+          }
         }
       } else {
         console.error("Please specify either --agent or --all-agents");

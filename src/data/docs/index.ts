@@ -6,6 +6,7 @@ import aCaseForSuperhumanGovernanceUsingAiLesswrong from './a-case-for-superhuma
 import aNoteOfCautionAboutRecentAiRiskCoverageEaForum from './a-note-of-caution-about-recent-ai-risk-coverage-ea-forum.json';
 import aSketchOfAiDrivenEpistemicLockInEaForumBots from './a-sketch-of-ai-driven-epistemic-lock-in-ea-forum-bots.json';
 import ai2027WhatSuperintelligenceLooksLike from './ai-2027-what-superintelligence-looks-like.json';
+import aiEpistemicsSummaryMeeting from './ai-epistemics-summary-meeting.json';
 import aiForResolvingForecastingQuestionsAnEarlyExplorationEaForumBots from './ai-for-resolving-forecasting-questions-an-early-exploration-ea-forum-bots.json';
 import aligningAiByOptimizingForWisdomLesswrong from './aligning-ai-by-optimizing-for-wisdom-lesswrong.json';
 import alignmentFakingInLargeLanguageModels from './alignment-faking-in-large-language-models.json';
@@ -40,6 +41,7 @@ export const documentsCollection = transformDocumentsCollection({
     aNoteOfCautionAboutRecentAiRiskCoverageEaForum,
     aSketchOfAiDrivenEpistemicLockInEaForumBots,
     ai2027WhatSuperintelligenceLooksLike,
+    aiEpistemicsSummaryMeeting,
     aiForResolvingForecastingQuestionsAnEarlyExplorationEaForumBots,
     aligningAiByOptimizingForWisdomLesswrong,
     alignmentFakingInLargeLanguageModels,

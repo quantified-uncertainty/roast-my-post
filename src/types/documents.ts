@@ -3,11 +3,14 @@ import type { Comment, DocumentReview } from "./documentReview";
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {
-  comments: Comment[];
   agentId: string;
-  analysis?: string;
+  comments: Comment[];
   costInCents: number;
   createdAt: string;
+  runDetails?: string;
+  thinking?: string;
+  summary?: string;
+  grade?: number; // 0-100: 0=unacceptable, 50=mediocre, 100=exceptional
 }
 
 export interface RawDocument {

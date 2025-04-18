@@ -32,7 +32,7 @@ ${type === "thinking" && agentInfo.gradeInstructions ? `Your instructions for gr
 `;
 }
 
-export function getThinkingPrompt(
+export function getThinkingAndSummaryPrompt(
   agentInfo: EvaluationAgent,
   targetWordCount: number,
   document: Document

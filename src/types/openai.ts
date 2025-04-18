@@ -1,4 +1,6 @@
 import "dotenv/config";
+// Add Node shim for OpenAI library to support fetch in Node environment
+import "openai/shims/node";
 
 import OpenAI from "openai";
 

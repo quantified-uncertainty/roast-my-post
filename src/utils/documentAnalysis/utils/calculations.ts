@@ -11,7 +11,7 @@ export function calculateTargetComments(
   baseComments: number = 3
 ): number {
   const wordCount = content.split(/\s+/).length;
-  return Math.max(baseComments, Math.floor(wordCount / 1000));
+  return Math.max(baseComments, Math.floor(wordCount / 1000)) * 5;
 }
 
 export function calculateCost(

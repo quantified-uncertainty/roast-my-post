@@ -1,0 +1,446 @@
+id = "ai-epistemics"
+title = "AI Epistemics"
+slug = "ai-epistemics"
+author = "Owen Cotton-Barratt"
+publishedDate = "2025-04-18"
+intendedAgents = ["bias-detector", "clarity-coach", "research-scholar"]
+content = """
+# Writing Session
+
+Preamble/framing from Owen:
+
+* Negative: "we just want to free-form vibe about what cool things we could do"  
+* Positive: step back & ask "wait, why are we doing this again?"  
+* What stuff does this actually help?  
+* Epistemics isn't a goal in-an-of itself; figuring out what combination of things are possible, achievable, etc.  
+* Why do we care about (AI for) epistemics?
+
+Writing prompts from Owen:
+
+* What are use cases for AI for Epistemics that you most care about?  
+* What decisions may go badly by default, but could go better if we have the right tech?  
+* What do the later stages of the path to impact look like?  
+* "As a result of better AI for epistemics tech, we get: […]"
+
+Template:
+
+## Name: 
+
+Entry
+
+## Dan Schwarz:
+
+* What are use cases for AI for Epistemics that you most care about?
+
+Going from "Realized" to "Accessible" knowledge, e.g. getting good information using the web. Agentic web agents like Deep Research.
+
+* What decisions may go badly by default, but could go better if we have the right tech?
+
+Many billions of small decisions.
+
+* What do the later stages of the path to impact look like?
+
+Superhuman forecasting at scale.
+
+* "As a result of better AI for epistemics tech, we get: […]"
+
+Reasonable judgment on tricky questions that's too cheap to meter, better than if you asked a respected colleague to spend many minutes on it.
+
+## Aviv
+
+* Better government governance  
+* Better democratic functioning  
+* Reduced dangerous concentration of power  
+    
+* Healthy polarization / pluralism  
+    
+* More peace, less likelihood of war  
+* Better geopolitics  
+* Better economic incentives  
+    
+* Better AI org governance  
+* Better AI coordination (re. distribution, escalation, etc.)  
+* Better compute allocation (toward what matters for good outcomes)  
+    
+* Better allocation of resources overall  
+* Better lives for people  
+* More effective organizations, getting things done with fewer resources, more focused on the things that benefit everyone  
+    
+* Identification of common ground directions / equilibria / game theoretic strategies that create/incentivize new positive gradients (and not surfacing the bad versions of those…)  
+    
+* Understanding our own goals and values
+
+*Note how it is the intersection of better epistemics / world models + the right power structures / incentives needed for all of these.*
+
+## Ben Goldhaber:
+
+* Forecasting how I should live my life in a period of intense technological change  
+* Guiding decision makers to avoid war with china/ai/everyone  
+* Providing the background context for me to sensemake way more sanely.  
+* Pushing forward the extant knowledge of AI safety agendas  
+* Planning for multi-stage projects that could achieve big impact  
+* Roadmapping to build larger more complex things
+
+## Chi
+
+There are a few different things I care about:
+
+* I care a lot about humanity and AI, including **super-late-stage AI, getting decision theory** right.  
+  * Consequently but also separately, this relates to the general question of what to do about areas where there is not necessarily a ground truth but that are nonetheless very important to get right, cf**. [metaphilosophy](https://www.alignmentforum.org/posts/EByDsY9S3EDhhfFzC/some-thoughts-on-metaphilosophy)** (but also a bunch of other things.)  
+  * This also feels very similar to making **AIs helpful for AI safety research, cf. [automating alignment research](https://joecarlsmith.com/2025/03/14/ai-for-ai-safety#2-what-is-ai-for-ai-safety).**
+
+  → This is more about raising the **top of the epistemic landscape**
+
+* Other things I care about:  
+  * Vague sense that better **society-wide epistemics** would help reduce the risk of an **AI-empowered coup, authoritarianism** generally  
+    * Information management seems important for gaining/keeping control over countries  
+    * This is broadly about: Even if we **got intent-alignment right, is the world afterwards gonna be good**? And that potentially depends on pre-ASI societal epistemics.  
+  * Vague sense that better **epistemics in a geopolitical context** would help with **AI race dynamics.**  
+    * This is broadly about **getting intent alignment** in the first place.  
+  * Vague sense that better **societal epistemics** would help with increasing the **sanity of conversations about AI safety, polarisation around the issue etc.**  
+    * This is broadly about **getting intent alignment** in the first place.
+
+→ These are all more about raising the **bottom of the epistemic landscape**
+
+## Deger Turan:
+
+* Social trust erosion, collective coordination mechanisms are built on a weak assumption  
+* Capacity to entertain truthfulness when it is not instrumental to one's incentive gradient & differing norms upon 'truth will make my sense of security weaker'   
+* Creating contexts where world model divergence can be agreed by both parties enabling a safe disagreement  
+* Improving model reasoning / safer AI by reducing slop, by creating accountability mechanisms through consistency checks & other specifications for healthy epistemics  
+* Decoupling virality with magnitude while living in a short attention span world, curation   
+* I have some confusion re: raising the floor when not all parties are necessarily operating in good faith. I think I need some help think through the ways in which epistemics in the context of incentive misalignment can be used or have defensibility. 
+
+## Nathan Young: 
+
+What would we have got:
+
+* Biden not running, perhaps an open dem primary  
+* No FTX crisis  
+* Less zero sum OpenAI board drama  
+* Many smaller, better choices 
+
+What decisions might go badly:
+
+* Trump tariffs/ global trade  
+* Taiwan/ US-China conflict  
+* US-China competition  
+* US authoritarianism  
+* AI regulation  
+* EU-China realignment  
+* Automated robots  
+* OpenAI strategy  
+* Anthropic strategy  
+* Google strategy  
+* xAI strategy  
+* AI workforce automation  
+* China strategy  
+* Russia strategy  
+* Moskovitz strategy  
+* Must strategy  
+* Bezos Strategy  
+* Zuckerberg strategy  
+* Tallinn strategy  
+* Altman strategy  
+* Drone warfare  
+* Climate change destabilisation  
+* Democratic trust
+
+## Lincoln Quirk:
+
+Why do we care about (AI for) epistemics?  
+\- making the public better informed:  
+	\- better able to deal with and process the wealth of information  
+	\- better able to express their own interests in government (via voting)  
+	\- helping cut through social media distraction / intentional misinformation  
+\- getting governments to implement better policy  
+	\- coming up with good policy ideas  
+	\- objectively doing cost-benefit analysis  
+	\- objectively explaining tradeoffs (vs having to rely on biased humans to explain them)  
+	\- flagging bad ideas as bad  
+	\- convincing policymakers with compelling writeups  
+\- success and flourishing for individuals and orgs using these tools  
+	\- via helping them think through decisions  
+	\- via clearheaded analysis of trade-offs and cost/benefits  
+	\- flagging bad ideas as bad
+
+## Jay
+
+* What are use cases for AI for Epistemics that you most care about?  
+  * How can we build something like the positive version of Community Notes: which statements/posts are agreed on by people who often disagree?  
+  * How can we better understand/summarize what others think, e.g. on social media platforms? E.g. if you see a post recommended to you, is this because it's the most extreme take that went viral and isn't representative, or is this a commonly held view? Between different viewpoints, what are the concrete points of actual disagreement (on facts or values) and what are the things widely agreed upon? Let's build viewpoint/debate maps or a similar sensemaking tool that gets adopted/understood by the masses/raises the knowledge floor (in my experience, things like pol.is are hard for regular users to grok)  
+  * How can we improve Community Notes (or more general knowledge) creation with AI assistants? An AI agent proposing community notes and humans still checking/rating them?  
+  * How can we have something like Community Notes that applies to claims or statements about the future, or which are not concretely knowable?  
+  * 
+
+## Ben Wilson (Metaculus)
+
+Overall I believe the most important value of epistemics (and AI epistemics) in general is informing what actions allow us to achieve our goals (i.e. make the world better). If we had perfect AI epistemics I would be excited by the ability for us to take a goal, and get a list of possible actions we could take and the forecasted outcomes of each of those actions (plus background information and forecasts for the 'current lay of the land' for context). This can then inform, not just the risk of AI doing good/bad things (as with current forecasting), but what we can do to raise the chances of 'great' AI outcomes, and lower the changes of 'worse' AI outcomes
+
+## Andreas
+
+* **What are use cases for AI for Epistemics that you most care about?**  
+  * AI policy, broadly construed, must go better  
+    * Avoid gradual disempowerment  
+    * Thoughtful regulation  
+  * Organizational planning & decision-making is weak  
+    * Given an informal long-term goal like improve decision-making for strategic users in government & large orgs, make a plan for a 20-people org that helps them accomplish the goal  
+    * Mapping dependencies, uncertainties, and potential futures  
+    * Understand complex domains with non-trivial feedback loops  
+      * Economic shifts  
+* **What decisions may go badly by default, but could go better if we have the right tech?**  
+  * Resource allocation within orgs  
+    * Investment  
+    * Grant making  
+    * Government budgets  
+  * Policy  
+    * How should AI be deployed in the world?  
+* **What do the later stages of the path to impact look like?**  
+  * AI for epistemics tools are deeply integrated into the workflows of strategically important organizations (e.g., government agencies, major labs, influential industry players)  
+  * These tools are trusted and regularly used to guide high-stakes actions and policies through demonstrably high-quality reasoning  
+  * The technology helps organizations maintain coherence and make sound judgments even as the pace of change accelerates  
+  * Assumption: People are generally well-intentioned \- no one wants catastrophe \- and as a result of better tooling things go better in the world overall
+
+## Owen optimistic brainstorm:
+
+World peace without world government — sufficiently good tech to help countries understand each others' interests, find mutually desirable bargains, and make sufficient credible commitments, could help us get up towards the Pareto frontier where we avoid (virtually) all costly conflicts
+
+Going slowly and carefully on AI development — rather than having AI progress accelerate at increasingly breakneck speed, helping actors to understand the basic situation and the desirability of different options could be crucial for facilitating meaningful and robust agreements which restrict AI development to the stuff which we have good reasons for being confident are safe // otherwise beneficial.
+
+Bettering democracy — helping people to access key information about what decisions their country might make would actually mean for longer term implications, and having this in turn feed into incentives for decision-makers that better align them with the common good
+
+Building safe / aligned AI — better tools for anticipating when systems are actually robustly safe, vs when stronger cases for expectation of safety seem required
+
+## Josh Rosenberg (FRI)
+
+I'm massively confused about important problems, e.g. how to orient to AI risk and what to do about it. Some reasonable people think there's a high probability we effectively lose everything we care about in 2027\. Some reasonable people think it'll be decades till we have "AGI" and it'd be good if it arrived sooner. Which actions are good to take in each of these worlds is very different, and I'd like to figure out what world we're in.
+
+This also applies to many other problem areas.
+
+E.g., Trump's effect on US democracy. How much of a crisis is it? What are the most effective actions to take in response to ensure that the country and communities we care about are as well off as they can be? How can we preserve high-quality institutions to lead the world in positive directions?
+
+Or, on the positive vision side: the "Abundance" agenda seems promising. Is it actually a good idea? What do we do about it?
+
+AI for Epistemics could help us get a lot more clarity on how to think about these problems and what actions to take. I'd like much better information and forecasts on the likely effects of Trump, AI timelines, and the pro's and con's of different Abundance policies, for example. If I had a bunch of time and good resources to dig into these problems, I could get a much better sense for myself. I'm hoping AI will help all of us do this sort of thing collectively.
+
+## Katja Grace
+
+* What are use cases for AI for Epistemics that you most care about?  
+  * Put lots of cognitive effort into very clear and good and compelling case for AI risk  
+  * Automate talking to people about AI risk compellingly, possibly using above case as input  
+  * Good game theoretic thinking re arms races, coordination, what is possible. I.e. People are making dumb assumptions about things, e.g. "can't slow down tech". Could automate noting errors. So e.g. when someone says that on Twitter, can highlight it and send in response. \-\> good thinking via better weapons for debate (similar to Nathan project)  
+  * Specific idea: very quantified and competitive debate site, that can be cited re which views are winning, where AI does a lot of the cognitive labor in places no people are paying attention, but as a part of it gets cruxy, people pay attention and vote/bet  
+* What decisions may go badly by default, but could go better if we have the right tech?  
+  * Poor decision making around AI: e.g. 'racing' because of vague heuristics instead of ever doing calc on costs and benefits given specific risks  
+  * Failure to coordinate on AI: building AI systems that are dangerous, due to expecting others to do so
+
+## Joel Lehman
+
+* What are use cases for AI for Epistemics that you most care about?  
+  * Raising the bottom (i.e. helping improve societal epistemics) – in particular that in theory political decisions (at least political decision-makers) are somewhat downstream of societal epistemics  
+* What decisions may go badly by default, but could go better if we have the right tech?  
+  * Having weird political leaders and awful public epistemics at critical junctures seems to unnecessarily spike catastrophic/existential risk probabilities. In theory, helping uplevel or at least maintain current public epistemic health (especially as it relates to civic sensemaking) might help influence the quality of decision-makers and concrete decisions made at high-stakes moments  
+  * The shape of the tech is not clear, or probably requires multiple flavors of interventions. E.g. if LLM assistants by default help cultivate civic virtues and on the margin support critical thinking or whatever underlying skills and knowledge help a person up-level their epistemic habits / health (or at least if LLM assistants don't contribute to atrophy/harm); or somehow convincing social media networks to care about this (e.g. community notes but things that go beyond); similarly somehow help w/ important social goods like 'societal trust' and 'trust in your neighbors'  
+* What do the later stages of the path to impact look like?  
+  * \[didn't get to this\]  
+* "As a result of better AI for epistemics tech, we get: […]"  
+  * Healthier democratic society, better agreement on consensus reality, higher trust in society, better politicians, better concrete decisions in high-stakes moments 
+
+## Austin Chen
+
+* "As a result of better AI for epistemics tech, we get: […]"  
+  * **Evaluator**: More agreement (or understanding of disagreement) of what orgs & people are doing good work (eg for making grants in AI safety)  
+  * **Oracle**: Instant trustworthy forecasts on any question you ask  
+  * **Planner**: Guidance on "what are the 3 most important things I should do this day/week/month"  
+  * **Representative**: Simulate the responses of other parties (people, orgs/corps, governments, LLM agents), for discussions, contracts, trade
+
+## Janna
+
+* Why do we care about (AI for) epistemics?  
+  * Noise to signal ratio could be much higher  
+  * AI (mis)information churned out at the price of almost zero  
+* What are use cases for AI for Epistemics that you most care about?  
+  * Solving prediction markets--is there a way to scale up the bots, even if they are wrong and lossy, to improve prediction market accuracy?  
+* What decisions may go badly by default, but could go better if we have the right tech?  
+  * US-China relations  
+  * Trump tariffs maybe  
+  * Immigration rules in the US  
+* What do the later stages of the path to impact look like?  
+* "As a result of better AI for epistemics tech, we get: […]"  
+  * More accurate predictions to…  
+    * Reduce business uncertainty  
+    * Make it easier to evaluate life decisions  
+  * Forestalling bad decisions made on imperfect information
+
+## Owain
+
+1. Maybe having humans understanding the world better is good in itself. Lots of people read popular science for this reason. Maybe it's good for AIs as well  
+2. Very broadly, it seems that better world understanding and decision making enables people to make their lives better in myriad ways. (To substantiate this, one could try to separate out the effects of better world understanding from the effects of better realized technology. E.g. Looking at capital-poor countries that can still benefit from scientific knowledge, economics, etc.)  
+3. More specifically, if AI progress is fast, there will be lots of important decisions to be made in quick calendar time. Exploiting AI to improve those decisions seems valuable. Current decision making institutions do not seem well set up to adapt really quickly. (A specific concern is dangers from AI takeover).   
+4. Why now? Why this group of people? We haven't really had tech that could do most epistemic tasks until recently. Now we have AI that can do an increasing proportion of the sub-tasks of epistemic processes. This will allow us to delegate epistemic tasks to AI.  
+   1. It's likely that people do this delegation, even if it's somewhat misguided and potentially bad in the long-term. Can we make this go well?  
+   2. This potentially massively expands our epistemic capacities. How can we use this well?  
+   3. Epistemic tech/institutions/advances can be hard to fund via for-profit companies. This is in part due to public goods issues, and issues around markets for ideas.
+
+## Rafe
+
+As ever, I hope this will stop advanced artificial intelligence destroying the world, killing all its people \&c.
+
+So I think there are a few paths for impact here. I think there is a world where we can make the most productive thinkers about how to do things go further and better; I'm not so excited about a single-player version of this, as I think there's a pretty narrow window when top-level centaur mode works out\[1\]
+
+Everyone is already thinking about AI, and, I suspect, this will only get more acute. I think it's pretty hard for people to confront this and think about it carefully and well. It's scary\! And there are a bunch of entrenched interests and memeplexes that preserve their status better (myopically) if people only have shallow slogans to think about AI with.
+
+Given that, I suspect that the global sensemaking machine isn't up for the task of thinking about AI well. I hope we can help the global sensemaking machine upgrade itself. I have some hope that we as a society can come up with good ideas for dealing with AI, and also come to see how they make sense, so we can choose them in a robust way.
+
+One other path to impact: I think a society that understands things better, including itself and its impacts, is one that is more robust in a bunch of ways. A more epistemically-grounded society is also probably a bit richer, and I think a bigger pie creates more slack for arranging things in sanity-promoting ways. I have more hope in a robust society navigating this stuff well.
+
+\[1\]:  Yeah, maybe you can do something with shaving off subskills, but I don't think that's really that doable.
+
+## Dave
+
+* With my consequentialist hat, better epistemics being worth it has to route through improved decisions somewhere down the line. The decisions I particularly care about are those by powerful people wrt AI development and implementation and the effects this has on how the future goes  
+  * But I do feel a bit icky when I have this hat on. There seems to be something very intuitively appealing about (a) pursuing better epistemics for its own sake and (b) democratising epistemic tools for the use and benefit of everyone. I think this basically caches out in more 'raising the floor' type work  
+  * I don't feel like I have a very good way of resolving this tension yet, but am excited to see things pushing on both frontiers  
+* I think forecasting has the potential to be a pretty powerful tool and there's currently a massive undersupply of good forecasts. I'm excited for us to use the wave of increased AI labor to make better quantitative forecasts to inform key decisions. I probably care more about quantitative forecasts than most decision makers and am open to being persuaded that the other, fuzzier parts of epistemics are more valuable to work on. 
+
+## Julian
+
+What are use cases for AI for Epistemics that you most care about?  
+**Raising the ceiling:** can we use AI to organize information and credibly resolve the most challenging and important questions on which experts still seem to disagree? For example:
+
+* COVID origins  
+* Urban planning and public policy  
+* Lots of advancements in basic science: routing around current disagreements and policy challenges with slam-dunk science might be a pretty strong way forward.
+
+**Raising the floor:** can we use AI to build extremely legibly trustworthy/reliable epistemic infrastructure that actually makes its way into people's lives?
+
+* Making truth more palatable (in a way which doesn't translate into making falsehoods more palatable)  
+* Collective epistemics: connecting people to the others with whom they would have the most productive/enlightening conversations
+
+What decisions may go badly by default, but could go better if we have the right tech?
+
+* Lots of stuff in public policy: downstream both of better experts (technocrats), better public (voters/interest groups), and better coordination (collective epistemics)
+
+What do the later stages of the path to impact look like?
+
+* I want us to live in a world where everyone is more rational, empathetic, considered in their decision making, conscientious about impact, and interested in coordinating. I feel like that's one of the biggest blockers to all kinds of *long term* progress.
+
+What tools do we actually maybe want to build?
+
+* Easily accessible fact checkers / claim refuters  
+  * Powerful AI debaters  
+* Forecasting with explanations: superhuman and at scale  
+* Scientific meta-analysis, systematic review  
+* Ad-hoc / bespoke probabilistic models for individual problems  
+* Bespoke *simulators* / simulation environments  
+* Consistency checking and inconsistency identification  
+  * Arbitrage / market makers in prediction markets?  
+* Using AI to accelerate development of non-AI epistemic tools:  
+  * ?
+
+## Lawrence
+
+There are already key questions/strategic problems where the truth is murky and we seem to proceed on the basis of limited and biased views. There might well be many more of these in the future. A central example is US-China competition over AI. Some have vibes of "China is so bad that it's worth risking an existential catastrophe to stop it from capturing a portion of the lightcone". Others have vibes of "Cooperation is feasible and desirable, and is our only path to a good outcome". But how bad is China, really? How much "realised K" on this question do those who are making the relevant decisions actually have? Similarly, how feasible is cooperation? How valid is this frame of "capturing the lightcone"? One reason that we don't have a better hold on these questions is that they are frighteningly complicated and difficult  – I think we could benefit massively from throwing much more cognitive labour at them, and presenting the findings in a way that is hard to disagree with or for any individual to improve upon, other than at a normative/values level. Maybe AI can get us there.
+
+## Lukas Finnveden
+
+why is AI for epistemics important/helpful?
+
+* better epistemics generally very good for making all kinds of decisions  
+* I'm specifically concerned about AI potentially causing an intelligence explosion, and us needing better epistemics to handle that. Specifically:  
+  * I'm worried about AI-driven tech R\&D leading to catastrophes. To help address this, I want AI capabilities to not only be applied to tech R\&D, but also to be applied to "reasoning well from limited evidence" about a number of questions, including how to deal with risks.  
+  * I'm worried about misaligned AI — so I want techniques for eliciting AI capabilities on all kinds of questions, so that AIs don't have better capabilities than we can elicit from them. (Basically: I want good alignment techniques even on hard-to-evaluate questions.)  
+  * Seems great to me if AI-driven improvements in general knowledge and decision-making are more broadly distributed among humans. (I think this leads to better decision-making without significantly accelerating the dangers from new tech or misaligned AI. Also reduces concentration of power.)
+
+## Abram Demski
+
+\- Why are we doing this? \-- impact theory brainstorming exercize  
+	\- There's the general claim that epistemics has degraded horribly due to social media and the internet, at least in a lot of ways, although epistemics has also gotten better in some specific ways. It seems very plausible that AI is, and will continue to, make this much much worse (due to deepfakes and super-persuasive writing, to give two examples). We wish to reverse this trend, or at least slow the acceleration.  
+	\- The high-level reason why epistemics is important is because epistemics is how we make good decisions. So effectively, this is AI for decision-making. However, if we just set out to make tools for decision-making, I have a sense that this would be worse.  
+		\- One super important aspect of decision-making is that you have to orient towards the right problem. People do much better when they understand the problem before proposing solutions.  
+			\- I have a sense that producing a better shared understanding of the world JUST WOULD result in better things. The connection between epistemics and better decisionmaking is that strong.  
+				\- However, there's an element of coordination to this. You have to have common knowledge, not just knowledge. AI for coordination is yet another thing. AI for group epistemics is close to that, though, and again, I have a sense that making "AI for coordination" would produce worse effects on the world than "AI for group epistemics".  
+		\- What specific decisions are we hoping to influence?  
+			\- Decisions around existential risk seem super super important. If AI were generally better at epistemics (as a relative, comparative thing \-- ie we differentially accelerate epistemics) then key decisionmakers (in the government and at AI companies) would see much more clearly what's coming. Everyone wants a better future, so a better future would have a better chance of happening if we could see and navigate.
+
+I don't think I got any further than the supporting documentation for this workshop in articulating reasons and stuff, so I predict that the LLM summary won't be better than what we already know, although I hope it is. 
+
+## Brendan
+
+For us to live together in a caring and just way, we must make decisions about what is important to us together. Is it okay to tell my neighbour to turn their music down? Do we spend money on roads or trains or libraries? Do we regulate AI development and, if so, how? Do we want to spend public money on PEPFAR, or other avenues for reducing global poverty? To make these decisions in a way that is inclusive and democratic, that fosters buy-in and trust, we must begin with a shared sense of how the world is. This shared sense must be grounded in the physical, economic, and social reality we live in.
+
+As we live together over wider and wider contexts, maintaining a shared sense of the world becomes more difficult and subtle. These wider contexts are facilitated by new technologies, both physical (eg. global manufacturing bases and supply chains) and informational (eg. social media). New technologies, such as AI for epistemics, and help maintain epistemic coherence across these contexts.
+
+Moreover, such technologies allow new avenues for cooperation at larger scales of human involvement. This unlocks new potential for coherence in global politics, scientific discovery, social and technological innovation, and cultural expression, and ultimately the deep joy of being alive and human in the world. 
+
+## Isabel: 
+
+The kinds of being right in the past that are most relevant for decision making aren't just about making straightforward predictions about what will happen, but are more nuanced about what kinds of actions one should take to cause those things to happen, and these seem like somewhat different skills. These are harder to evaluate (e.g. because they're counterfactual: either we listened to person a and then we have to evaluate whether things went better or worse than if we didn't, but hard to say what the counterfactual would have been; or we didn't listen to person a and then we have to guess what things would have been like if we did) 
+
+A bit adjacent to Neel Nanda's [recent piece](https://www.lesswrong.com/posts/P5zWiPF5cPJZSkiAK/good-research-takes-are-not-sufficient-for-good-strategic) on how "good research takes aren't sufficient for good strategic takes" \- "good forecasting takes aren't sufficient for good strategic takes", but maybe some of this is maybe resolvable on the forecasting tech side \- can we get better at creating and evaluating results from fuzzier questions? Can AI help? (Also can AI help with the whole problem, but this feels small and concrete enough to maybe get some traction on.) Also, some risk of actors building up good track records in order to be listened to, but then choosing to burn that track record to get power or things like that, something something trust \- a concern for both human actors and e.g. scheming AIs \- what things look good until they abruptly aren't? 
+
+On a different note, also interested in takes on what to do about and how to engage with actors who have epistemic processes that don't seem to be truth seeking in a comprehensible-to-me way. 
+
+## Adam Marblestone:
+
+What do we get out of AI for epistemics?
+
+Trust, is one thing. Our current society seems to be fraught with distrust and motivated reasoning. Can we get a more objectively trustable source of truth? Not only accuracy but with a provenance that gives it an ability to be trusted by humans who are otherwise adversarial. Trust is needed to coordinate. Truthfulness is maybe somewhat necessary but seemingly not sufficient for a source being trusted. As a practical matter, on hot political topics I've been going to OpenAI Deep Research.
+
+But at a certain level I wonder if AI for epistemics and some form of beneficial AGI could be basically the same thing. I asked Eric Drexler what he wanted for d/acc and he said something that sounds a bit like that…
+
+"  
+Here's my unsurprising take on directed research for "defensive acceleration":  
+Development and steering of epistemic tooling, aka [Large Knowledge Models](https://aiprospects.substack.com/p/large-knowledge-models), offers the highest leverage.
+
+Potential actions:  
+  • Identify and influence entities that could develop and scale necessary foundations.  
+  • Leverage the growing ease of development to take pre-scaling steps.  
+  • Within the scope of "foundations", accelerate productive directions for development.  
+  • To support science, ensure grounding of content in cited sources.  
+  • Pursue or promote assembly of appropriate knowledge inputs (beyond what is now used for training data).  
+  • Identify, promote, or implement epistemic tools supported by LKM resources.  
+  • Other kinds of exploration, promotion, preparation, and implementation.  
+  • Ensure that my advice is thoroughly understood.
+
+LKMs can accelerate pretty much everything that one might want, and perhaps tip the balance of applications toward *defensive* acceleration by promoting understanding of the *what and why* of defensive applications.
+
+Addendum:
+
+In the email I sent a few minutes ago, the basic proposal becomes stronger if one reads "LKM" as something like "large knowledge model functionality", regardless of implementation.
+
+The knowledge-model concept (whatever one prefers to call it) should not be tied to my specific technical suggestions. What I've said can be framed as something like "a discussion of the value, feasibility, and potential scope of a rich epistemic resource". Bundles of embeddings, etc., are at a level of specificity that may be distracting in the broader context of the meeting.  
+"
+
+So that's a strategy assistant AI – which helps humans at large see ways they could act and coordinate especially around big technological or geopolitical strategy issues I guess – but also a certain embodiment of an AGI oracle type system. Maybe the idea then is, how to make a AGI that helps with navigating civilizational strategy, and what is the right form of or interface to that to make it epistemically most useful. 
+
+I'd like to also see democratic mechanisms that are simply maximally utilizing the tech we have. 
+
+## Elizabeth
+
+* What are use cases for AI for Epistemics that you most care about?  
+  * Allowing people to be better informed about experimental medical stuff for themselves.   
+* What decisions may go badly by default, but could go better if we have the right tech?  
+  * Bargaining? Even just salary negotiations feels like the results are often more the consequence of "human bargaining skill" and not the pareto optimal result.    
+  
+
+
+## Saul
+
+* What are use cases for AI for Epistemics that you most care about?  
+  * making better decisions  
+  * in service of that: more useful forecasts, particularly understanding better which things are most relevant to forecast  
+    * in service of that: better group decisionmaking (e.g. unblocking things from vetopower type  
+    * in service of that: more aptly/calibratedly handling waves of information  
+    * In service of that: societal- and individual-scale asymmetric truth-tracking  
+* What decisions may go badly by default, but could go better if we have the right tech?  
+  * which groups of people have political power  
+  * who's building powerful new tech  
+  * who's regulating powerful new tech  
+  * (etc, other "decisions" along these lines — some might not end up getting shaped like decisions, though)  
+* What do the later stages of the path to impact look like?  
+* "As a result of better AI for epistemics tech, we get: […]"  
+  * better decisions across the board  
+    * better *outcomes* from those decisions; or, like, we can track "better decisions" as better-in-expectation outcomes from the decision processes
+
+"""

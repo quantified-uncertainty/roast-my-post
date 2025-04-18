@@ -1,13 +1,12 @@
 import { DocumentReview } from "../../types/documentReview";
 import { Document } from "../../types/documents";
-import {
-  ANALYSIS_MODEL,
-  DEFAULT_TEMPERATURE,
-  openai,
-} from "../../types/openai";
 import { getCommentData } from "./llmCalls/commentGenerator";
-import { getThinkingPrompt } from "./prompts";
+import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
 import { loadAgentInfo } from "./utils/agentUtils";
+import {
+  calculateTargetComments,
+  calculateTargetWordCount,
+} from "./utils/calculations";
 
 export async function analyzeDocument(
   document: Document,
@@ -17,39 +16,19 @@ export async function analyzeDocument(
   const agentInfo = loadAgentInfo(agentId);
 
   // Calculate target word count
-  const baseWords = 200;
-  const wordsPerComment = 20;
-  const targetComments = Math.ceil(document.content.length / 1000) * 2;
-  const targetWordCount = baseWords + targetComments * wordsPerComment;
+  const targetComments = calculateTargetComments(document.content);
+  const targetWordCount = calculateTargetWordCount(document.content);
 
-  // Generate thinking prompt
-  const thinkingPrompt = getThinkingPrompt(
-    agentInfo,
+  const thinkingResult = await generateThinkingAndSummary(
+    document,
     targetWordCount,
-    document
-  );
-
-  // Get thinking response
-  const thinkingResponse = await openai.chat.completions.create({
-    model: ANALYSIS_MODEL,
-    messages: [{ role: "user", content: thinkingPrompt }],
-    temperature: DEFAULT_TEMPERATURE,
-  });
-
-  if (!thinkingResponse.choices[0]?.message?.content) {
-    throw new Error("No response from LLM for thinking");
-  }
-
-  // Parse the thinking response (expecting { thinking: string, summary: string, grade?: number })
-  const thinkingResult = JSON.parse(
-    thinkingResponse.choices[0].message.content
+    agentInfo
   );
 
   // Get comments
   const comments = await getCommentData(document, agentInfo, targetComments);
 
-  // Construct and return DocumentReview object
-  return {
+  const documentReview: DocumentReview = {
     agentId,
     createdAt: new Date(),
     costInCents: 0,
@@ -58,4 +37,6 @@ export async function analyzeDocument(
     grade: thinkingResult.grade,
     comments,
   };
+
+  return documentReview;
 }
