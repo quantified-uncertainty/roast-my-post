@@ -2,8 +2,9 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 
-import { importArticle } from "../utils/articleImporter";
-import { analyzeDocument, loadAgentInfo } from "../utils/documentAnalysis";
+import { Document } from "../types/documents";
+import { analyzeDocument } from "../utils/documentAnalysis";
+import { loadAgentInfo } from "../utils/documentAnalysis/utils/agentUtils";
 
 const program = new Command();
 
@@ -32,8 +33,10 @@ async function resolveDocumentPath(input: string): Promise<string> {
   return path.resolve(process.cwd(), input);
 }
 
-// Helper function to save document with reviews
-async function saveDocument(filePath: string, document: any) {
+// Helper function to save document with reviews (typed as Document)
+async function saveDocument(filePath: string, document: Document) {
+  // Basic validation could be added here if needed
+  // For now, we rely on TypeScript type checking at call sites
   await fs.promises.writeFile(filePath, JSON.stringify(document, null, 2));
 }
 
@@ -49,7 +52,8 @@ program
     try {
       const filePath = await resolveDocumentPath(options.input);
       const fileContent = await fs.promises.readFile(filePath, "utf-8");
-      const document = JSON.parse(fileContent);
+      // Parse and cast to Document type
+      const document: Document = JSON.parse(fileContent);
 
       // Initialize reviews array if it doesn't exist
       if (!document.reviews) {
@@ -58,43 +62,47 @@ program
 
       if (options.agent) {
         // Single agent review
-        const agentInfo = await loadAgentInfo(options.agent);
+        const agentInfo = loadAgentInfo(options.agent);
         if (!agentInfo) {
           console.error(`Agent "${options.agent}" not found`);
           process.exit(1);
         }
-        const result = await analyzeDocument(document, options.agent);
+        const result = await analyzeDocument(document, options.agent); // result is DocumentAnalysis
 
         // Remove any existing review by this agent
-        document.reviews = document.reviews.filter(
-          (review: any) => review.agentId !== options.agent
+        // Ensure reviews array exists before filtering
+        document.reviews = (document.reviews || []).filter(
+          (review) => review.agentId !== options.agent
         );
 
-        // Add the new review
-        document.reviews.push(result.review);
-        await saveDocument(filePath, document);
+        // Add the new review (push the whole result)
+        document.reviews.push(result);
+        await saveDocument(filePath, document); // Pass the typed document
         console.log(`Review completed and saved for agent ${options.agent}`);
       } else if (options.allAgents) {
         // Review with all intended agents
+        // Ensure intendedAgents exists
+        const intendedAgentsList = document.intendedAgents || [];
         const agents = options.onlyMissing
-          ? document.intendedAgents.filter(
+          ? intendedAgentsList.filter(
               (agentId: string) =>
-                !document.reviews?.some((r: any) => r.agentId === agentId)
+                !(document.reviews || []).some((r) => r.agentId === agentId)
             )
-          : document.intendedAgents;
+          : intendedAgentsList;
 
         for (const agentId of agents) {
           console.log(`Reviewing with agent ${agentId}...`);
-          const result = await analyzeDocument(document, agentId);
+          const result = await analyzeDocument(document, agentId); // result is DocumentAnalysis
 
           // Remove any existing review by this agent
-          document.reviews = document.reviews.filter(
-            (review: any) => review.agentId !== agentId
+          // Ensure reviews array exists before filtering
+          document.reviews = (document.reviews || []).filter(
+            (review) => review.agentId !== agentId
           );
 
-          // Add the new review
-          document.reviews.push(result.review);
-          await saveDocument(filePath, document);
+          // Add the new review (push the whole result)
+          document.reviews.push(result);
+          await saveDocument(filePath, document); // Pass the typed document
           console.log(`Review completed and saved for agent ${agentId}`);
         }
       } else {
@@ -151,38 +159,42 @@ program
   .description("Import an article from a URL or local file")
   .requiredOption("-i, --input <input>", "URL or path to the article file")
   .action(async (options) => {
+    // Note: This action doesn't directly call an imported 'importArticle' function.
+    // It seems the intention might have been different, or this part needs rework
+    // if it was supposed to call a shared function.
+    // For now, the command structure is defined, but the action logic
+    // needs review if it was meant to call a shared import function.
     try {
       if (
         options.input.startsWith("http://") ||
         options.input.startsWith("https://")
       ) {
-        // Import from URL
-        const result = await importArticle(options.input);
-        console.log(`Imported article from ${options.input}`);
-        console.log(`Saved to: ${result.filePath}`);
+        // Import from URL - Logic likely needs adjustment
+        // Assuming the standalone script `import-article.ts` handles the actual import
+        // The CLI command here might just be a placeholder or needs different logic
+        console.log(
+          `Run 'npx tsx src/scripts/import-article.ts ${options.input}' to import from URL.`
+        );
+        // Original code attempting to call non-existent import:
+        // const result = await importArticle(options.input);
+        // console.log(`Imported article from ${options.input}`);
+        // console.log(`Saved to: ${result.filePath}`);
       } else {
-        // Import from local file
-        const filePath = path.resolve(process.cwd(), options.input);
-        const content = await fs.promises.readFile(filePath, "utf-8");
-        const result = await importArticle(filePath, content);
-        console.log(`Imported article from local file: ${options.input}`);
-        console.log(`Saved to: ${result.filePath}`);
+        // Import from local file - Logic likely needs adjustment
+        console.log(
+          `Run 'npx tsx src/scripts/import-article.ts ${options.input}' to import from file.`
+        );
+        // Original code attempting to call non-existent import:
+        // const filePath = path.resolve(process.cwd(), options.input);
+        // const content = await fs.promises.readFile(filePath, "utf-8");
+        // const result = await importArticle(filePath, content);
+        // console.log(`Imported article from local file: ${options.input}`);
+        // console.log(`Saved to: ${result.filePath}`);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error in import command setup:", error);
       process.exit(1);
     }
-  });
-
-// Verify highlights command
-program
-  .command("verify")
-  .description("Verify highlights in documents")
-  .option("-i, --input <input>", "URL or path to the document file")
-  .option("-d, --dir <dir>", "Verify all files in a directory")
-  .action(async (options) => {
-    // TODO: Implement verify functionality
-    console.log("Verifying highlights...");
   });
 
 program.parse(process.argv);
