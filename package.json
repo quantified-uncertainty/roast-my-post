@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run build:agents && npm run build:agents && next build",
+    "build": "npm run build:agents && next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
@@ -16,7 +16,7 @@
     "verify": "npm run cli -- verify",
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
-    "build:docs": "tsx src/scripts/build-docs.ts",
+    "build:destructively-build-docs": "tsx src/scripts/build-docs.ts",
     "test": "jest"
   },
   "dependencies": {
