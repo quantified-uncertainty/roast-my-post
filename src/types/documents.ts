@@ -49,10 +49,26 @@ export interface DocumentsCollection {
 export function transformDocument(raw: RawDocument): Document {
   return {
     ...raw,
-    reviews: raw.reviews.map((review) => ({
-      ...review,
-      createdAt: new Date(review.createdAt),
-    })),
+    // Filter out nullish reviews and safely parse createdAt
+    reviews: (raw.reviews || []) // Handle cases where raw.reviews might be null/undefined
+      .filter((review): review is RawDocumentReview => !!review) // Filter out null/undefined reviews
+      .map((review) => {
+        const createdAt = review.createdAt
+          ? new Date(review.createdAt)
+          : new Date(0); // Fallback to epoch if missing
+        if (!review.createdAt) {
+          // Log a warning instead of error if createdAt is missing
+          console.warn(
+            `Review for agent ${review.agentId} in document ${raw.id} is missing createdAt. Using epoch as fallback.`
+          );
+        }
+        // Ensure the mapped object conforms to DocumentReview if it differs from RawDocumentReview
+        // Assuming DocumentReview is the same as RawDocumentReview except createdAt is Date type
+        return {
+          ...review,
+          createdAt: createdAt, // Assign the parsed or fallback date
+        };
+      }),
   };
 }
 
