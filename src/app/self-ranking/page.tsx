@@ -292,10 +292,10 @@ function PlannedFeaturesTable() {
 export default function SelfRankingPage() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Open Annotate Self-Ranking</h1>
+      <h1 className="mb-6 text-3xl font-bold">Roast My Post Self-Ranking</h1>
       <p className="mb-8 text-gray-600">
-        This page provides a short assessment of various aspects of the Open
-        Annotate platform, organized by category. Much of this was written by an
+        This page provides a short assessment of various aspects of the Roast My
+        Post platform, organized by category. Much of this was written by an
         LLM.
       </p>
 

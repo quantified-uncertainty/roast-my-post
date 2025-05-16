@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Open Annotate",
+  title: "Roast My Post",
   description: "AI document review and analysis platform",
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
         {/* Header (always visible at the top) */}
         <header className="border-b border-gray-200 bg-blue-500 px-6 py-3">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <h1 className="text-2xl font-bold text-white">Open Annotate</h1>
+            <h1 className="text-2xl font-bold text-white">Roast My Post</h1>
             <nav className="flex items-center space-x-6">
               <Link href="/" className="text-white hover:text-gray-200">
                 Home
