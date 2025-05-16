@@ -10,8 +10,8 @@
     "clarity-coach",
     "research-scholar",
     "fake-eliezer",
-    "quantitative-forecaster",
-    "bias-detector"
+    "nuno-simulator",
+    "quantitative-forecaster"
   ],
   "content": "# Writing Session\n\nFor the past two years, Manifund has run a regranting program. We allocate annual donation budgets (from $50k-$400k) to selected experts (\"regrantors\"), who in turn choose great projects to fund. We'll be kicking off the 2025 program soon! In preparation, we're reviewing some of our favorite regrants to date — as well as some regrants we felt were less well-suited for this program. How we think about what makes a great regrant includes considerations such as \"is this project in an early stage where some initial funding could really help?\", \"could OpenPhil fund this instead?\" and \"does this regrant effectively leverage our regrantors' experience and expertise?\"\n\nWe think our regranting program is one of the best opportunities for donors who: care about AI safety, want to seed ambitious new projects, and like transparency and moving fast. If you may want to fund our 2025 program, please contact austin@manifund.org!\n\nAbout the author: Jesse Richardson recently joined Manifund after working at Mila - Quebec AI Institute, and also has a background in trading on prediction markets. This post is essentially Jesse's hot takes about various regrants, and is not intended to be definitive or particularly high-confidence.\n\n## Three awesome AI Safety regrants…\n\n### https://manifund.org/projects/scoping-developmental-interpretability-xg55b33wsfc - the first funding for Timaeus, accelerating research by months\n\nThis regrant was made in late 2023 to Jesse Hoogland and the rest of what is now the Timaeus team, for the purposes of exploring Developmental Interpretability (DevInterp) as a new AI alignment research agenda. Four of our regrantors — Evan Hubinger, Rachel Weinberg, Marcus Abramovitch and Ryan Kidd — made regrants to this project, for a total of $143,200. Evan had previously mentored Jesse Hoogland as part of MATS, and therefore had some additional context about the value of funding Hoogland's future research. This is the sweet spot for regranting: donors may have the public information that Evan Hubinger is an expert who does good work, and could potentially donate to him/his work on that basis, but regranting allows them to specifically leverage his private information about other valuable projects, such as DevInterp.\n\nBack to the grant itself; success for this project looked like determining whether DevInterp was a viable agenda to move forward with, rather than producing some seminal research outputs. I recommend reading more about DevInterp if you're interested, but my shallow understanding is that it aims to use insights from Singular Learning Theory (SLT) to make progress on AI alignment through interpretability, with a specific focus on how phase transitions in the training process lead to internal structure in neural networks.\n\nI'm not well placed to form an inside view on how likely DevInterp was/is to succeed, but this proposed research agenda had numerous things going for it:\nit was novel; the application of SLT to alignment was largely unexplored prior to this work,\nit seemed to be well thought out; the write-up on LessWrong included plenty of detail about why we might expect phase transitions to be a big deal and how this would relate to alignment, as well as a solid plan for the next six months,\nit had an element of \"big if true\" i.e. it may be unlikely that the strong version of the DevInterp thesis is true, but this research has potential to make meaningful progress on AI alignment if it is\n\nThese are all markers of projects I am excited to see funded through Manifund regranting. In addition to our four regrantors, this agenda was also endorsed by capable AI safety researchers such as Vanessa Kosoy and John Wentworth, and it makes sense to update on their judgement.\n\nIn addition to the agenda itself, I think this was a good team to bet on for this kind of work; they seem capable and have relevant experience e.g. ML research, and running the 2023 SLT & Alignment Summit.\n\nThis regrant is a strong example of where Manifund's regranting program can have the biggest impact: being early to support new projects & organizations, and thereby providing strong signals to other funders as well as some runway for these organizations to move quickly. In this case, Manifund's early funding helped Hoogland's team get off the ground, and they subsequently started a new organization (Timaeus) and received significantly more funding from other sources, such as $500,000 from the Survival & Flourishing Fund. It's probable that they would've gotten this other funding regardless, but not guaranteed, and I'm happy that Manifund was able to help bring Timaeus into existence several months sooner and with increased financial security. Jesse notes:\n\nGetting early support from Manifund made a real difference for us. This was the first funding we received for research and meant that we could start months earlier than we otherwise would have. The fact that it was public meant other funders could easily see who was backing our work and why. That transparency helped us build momentum and credibility for developmental interpretability research when it was still a new idea. I'm pretty sure it played a significant role in us securing later funding through SFF and other grantmakers.\n\nIn terms of concrete outcomes, there's a lot to be happy with here. Timaeus and its collaborators have put out numerous papers on DevInterp since this regrant was made, and it seems that DevInterp's key insight around the existence and significance of phase transitions has been validated. My sense is that the question of whether DevInterp is a worthwhile alignment research agenda to pursue has been successfully answered in the affirmative. It's also nice to see strong outreach and engagement with the research community on the part of Timaeus: November 2023 saw the first DevInterp conference, and they've given talks at OpenAI, Anthropic, and DeepMind.\n\n### https://manifund.org/projects/support-for-deep-coverage-of-china-and-ai - reporting on DeepSeek, ahead of the curve\n\nAcross 2023 & 2024, Manifund regrantors Joel Becker and Evan Hubinger granted a total of $37,000 to ChinaTalk, a newsletter and podcast that covers China, technology, and US-China relations. ChinaTalk has over 50,000 subscribers and is also notable for the quality of its coverage and the praise and attention it receives from elites and policymakers.\n\nBefore this regrant, ChinaTalk had been run by Jordan Schneider and Caithrin Rintoul, both part-time, on a budget of just $35,000/year. What they were able to accomplish in that time with those limited resources was impressive, and I believe merited additional funding, even just to allow Jordan to work on this full-time. More funding would also have meant ChinaTalk bringing on a full-time fellow who, per Jordan, \"would be, to my knowledge, the only researcher in the English-speaking world devoted solely to covering China and AI safety\". ChinaTalk has since received further funding and is in the process of growing to five full-time employees, but we would've loved for this to happen sooner through an expanded regranting program.\n\nEven putting aside the specific track record of ChinaTalk, it seems clear to me that the intersection of China and AI safety is an incredibly important area to cover, and at a high level it is very valuable to fund organizations that are doing this kind of work. It can be hard to imagine plausible scenarios of how the next decade goes well with respect to AI that don't run through US-China relations, and I am persuaded by Jordan's case that the amount of energy currently being expended on this is grossly inadequate.\n\nSince the first regrant was made, ChinaTalk's Substack audience has grown from 26,000 subscribers to 51,000 and they've put out regular high-quality content, including an English translation of an interview with DeepSeek CEO Liang Wenfeng, coverage of chip policy, and what important 2024 elections in the US and Taiwan mean for China. The ChinaTalk team has expanded to six people, allowing for a greater diversity and quantity of coverage, including YouTube videos. Jordan has also announced plans for launching a think tank—ChinaTalk Institute—this year, in a similar vein to IFP.\n\nAmong their varied coverage, I was particularly impressed to see how ChinaTalk was ahead of the curve on covering the rise of DeepSeek, while most of the West seemed to be taken by total surprise in January 2025. As a trader and forecaster, this advance insight might have been worth a lot of money to me through anticipating the market freakout, which suggests that I should pay more attention to ChinaTalk in the future, as their work is seriously valuable.\n\nOverall ChinaTalk has continued on the strong trajectory it was on in late 2023, and it was great that Manifund was able to support ChinaTalk in this success. For more information about why this grant was likely good ex ante, I encourage you to look at regrantor Joel Becker's comment on the subject. Joel's detail about why ChinaTalk was at the time insufficiently funded:\n\nPhilanthropists are scared to touch China, in part because of lack of expertise and in part for political reasons. Advertisers can be nervous for similar reasons… Jordan was hoping to support this work through subscriptions only.\n\nmakes me more optimistic that this regrant was very much the kind of thing the program should be doing: plugging holes in the funding landscape.\n\n### https://manifund.org/projects/shallow-review-of-ai-safety-2024 - two quick regrants, followed by OpenPhil support\n\nGavin Leech previously co-wrote https://www.lesswrong.com/posts/zaaGsFBeDTpCsYHef/shallow-review-of-live-agendas-in-alignment-and-safety in 2023, which was well-received and generally considered to be a useful resource for people looking to get a top-level picture of AI safety research. Given that it was intended to be a shallow review, this post has a lot of helpful detail and links about the ins and outs of various research agendas, e.g., the amount of resources currently devoted to each, and notable criticisms.\n\nLast year he sought funding to create an updated 2024 version of this post. He received $9,000 from Manifund regrantors Neel Nanda and Ryan Kidd, as well as $12,000 from other donors through the Manifund site.\n\nBig picture, I'm convinced that there should be an accessible and up-to-date resource of this kind; for people who are starting out in AI safety and don't know anything, for funders trying to get a sense of the landscape, or for anyone else who might need it. In 2022 I was at a stage where I wanted to contribute to AI safety but didn't know anything about it and was unsure where to start, and I would've likely found Gavin's review useful, in addition to the other resources that existed. Based on this, Gavin's record in a variety of fields, and the fact that the 2023 version seems to have been fairly well-executed, I think this regrant looked very promising.\n\nIn terms of what was produced, the new post (https://www.lesswrong.com/posts/fAW6RXLKTLHC3WXkS/shallow-review-of-technical-ai-safety-2024) came out in December 2024 and appears to be similarly comprehensive to the 2023 version, although it has gotten less attention (~half the upvotes on LessWrong and not curated). That's probably a bit worse of an outcome than I would've hoped for, but I still would have endorsed this grant had I known the outcome in advance. Presumably the updated version of a post is less eye-catching than the original, while still being necessary.\n\nThe way this was funded also shows the advantages of the Manifund regranting program. Gavin asked for between $8,000 (MVP version) and $17,000 (high-end version) and was quickly funded for the MVP by Neel and Ryan. He then got an additional $5,000 from OpenPhil, after Matt Putz at OpenPhil learned about this proposal via our EA Forum post; and a further $12,000 from other donors. I am happy with how the regranting program is both able to provide the small amount of funding to get a project off the ground, and increase visibility of that project so that other donors can step in and fund it to a greater extent. A couple of small negatives: (1) regrantor Neel Nanda is less optimistic than I am that this was a particularly good grant and (2) the high-end version was supposed to include a \"glossy formal report optimised for policy people\" which did not end up getting made (OpenPhil opted against funding it), however the excess money is instead going towards the 2025 edition. I look forward to it!",
   "reviews": [
@@ -605,6 +605,222 @@
       "thinking": "Let's begin by identifying the core claims and questions at issue. The document is a retrospective on three AI safety-related grants made through Manifund's regranting program. The author highlights the value of early-stage funding, leveraging expert judgment, and filling gaps left by larger funders or risk-averse institutions. The implicit claim is that Manifund's regranting model is effective at surfacing and accelerating valuable projects in AI safety and adjacent areas.\n\nEvaluating the reasoning: The author demonstrates some awareness of epistemic uncertainty (\"my shallow understanding\", \"not intended to be definitive or particularly high-confidence\"), and references updating on the judgments of domain experts. There is a reasonable attempt to distinguish between ex ante and ex post evaluation, and to consider counterfactual impact (e.g., would Timaeus have gotten later funding without Manifund's early support?). However, the analysis is mostly qualitative and lacks explicit probabilistic reasoning or Bayesian updating. There is little discussion of failure modes, negative externalities, or the broader landscape of alignment difficulty.\n\nImplications for AI alignment: The grants discussed are plausibly relevant to AI alignment, but the document does not grapple with the core difficulty of the alignment problem or the likelihood that these projects will meaningfully reduce existential risk. There is some recognition of the importance of interpretability (DevInterp), geopolitical coverage (ChinaTalk), and field overviews (shallow reviews), but no deep engagement with whether these interventions are robustly useful given the magnitude and nature of alignment challenges.\n\nCognitive biases: The author is aware of selection effects and the risk of over-updating on positive outcomes, but there is a mild optimism bias and a tendency to focus on visible successes. There is also some reliance on social proof (endorsements by respected researchers) rather than explicit model-based reasoning about impact. The document does not fall into anthropomorphism or naive alignment optimism, but it does not display the level of skepticism or adversarial thinking that a rationalist analysis of alignment interventions would demand.\n\nProbabilistic assessment: The author expresses uncertainty about the ultimate value of the projects, but does not quantify credences or discuss likelihood ratios. There is no explicit weighing of the probability that these grants will make a pivotal difference to alignment outcomes, or that they are robust to Goodhart's Law or other failure modes.\n\nBroader themes: The document touches on the inadequacy of mainstream funding mechanisms and the value of decentralized, expert-driven grantmaking. However, it does not connect these themes to deeper issues in rationality, such as the difficulty of institutional coordination, the perverse incentives in the funding landscape, or the risk of optimizing for legible outputs over actual impact.\n\nA more adequate approach would involve: (1) explicit probabilistic reasoning about the impact of each grant on alignment outcomes; (2) adversarial analysis of potential failure modes; (3) discussion of how these interventions fit into a broader theory of change for AI safety; (4) acknowledgment of the extreme difficulty of alignment and the likelihood that most interventions will fail to move the needle; (5) more rigorous epistemic humility and skepticism about positive signals.",
       "summary": "## High-Level Analysis\n\nThis document provides a well-intentioned but ultimately surface-level retrospective on three AI safety-related grants. It demonstrates some awareness of epistemic uncertainty and the value of expert judgment, but falls short of the epistemic rigor and adversarial thinking demanded by the alignment problem's difficulty. The analysis is largely qualitative, with little explicit Bayesian reasoning or probabilistic assessment of impact. While the author recognizes the importance of early-stage funding and the inadequacy of mainstream institutions, there is insufficient engagement with the core challenges of AI alignment, the risk of Goodharting, or the likelihood that these interventions will meaningfully reduce existential risk.\n\nThe document avoids major cognitive biases and does not anthropomorphize AI, but it leans on social proof and visible successes rather than model-based reasoning. There is a mild optimism bias and a lack of adversarial scrutiny. For a rationalist audience concerned with existential risk, the analysis would benefit from more explicit uncertainty quantification, adversarial evaluation, and connection to broader themes in rationality and coordination failure. In summary, the document is a competent overview of grantmaking successes, but does not rise to the level of epistemic rigor or alignment awareness that the stakes demand.",
       "grade": 68
+    },
+    {
+      "agentId": "nuno-simulator",
+      "createdAt": "2025-05-16T01:35:38.994Z",
+      "costInCents": 0,
+      "comments": [
+        {
+          "title": "Clarity on Regranting Criteria 📝",
+          "description": "The document states: _'How we think about what makes a great regrant includes considerations such as \"is this project in an early stage where some initial funding could really help?\", \"could OpenPhil fund this instead?\" and \"does this regrant effectively leverage our regrantors' experience and expertise?\"'_ This is a good start, but the criteria are somewhat vague and could benefit from more operationalization. For example, what specific thresholds or heuristics are used to determine if a project is 'early stage' or if OpenPhil is likely to fund it? Making these criteria more explicit would help both applicants and evaluators, and would allow for better calibration and post-hoc analysis.",
+          "importance": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 404,
+            "endOffset": 687,
+            "quotedText": "How we think about what makes a great regrant includes considerations such as \"is this project in an early stage where some initial funding could really help?\", \"could OpenPhil fund this instead?\" and \"does this regrant effectively leverage our regrantors' experience and expertise?\""
+          }
+        },
+        {
+          "title": "Leveraging Private Information in Grantmaking",
+          "description": "The section: _'regranting allows them to specifically leverage his private information about other valuable projects, such as DevInterp.'_ highlights a key advantage of the regranting model. This is a strong mechanism for surfacing opportunities that would otherwise be missed by larger, more bureaucratic funders. However, the document could go further in discussing how to systematically capture and validate this private information, and how to avoid overfitting to the idiosyncrasies of individual regrantors.",
+          "importance": 65,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2146,
+            "endOffset": 2271,
+            "quotedText": "but regranting allows them to specifically leverage his private information about other valuable projects, such as DevInterp."
+          }
+        },
+        {
+          "title": "Early Funding as a Signal and Accelerator",
+          "description": "The claim: _'Manifund's early funding helped Hoogland's team get off the ground, and they subsequently started a new organization (Timaeus) and received significantly more funding from other sources, such as $500,000 from the Survival & Flourishing Fund.'_ This is a classic example of catalytic philanthropy, where early support de-risks projects for later funders. However, the document admits: _'It's probable that they would've gotten this other funding regardless, but not guaranteed.'_ It would be valuable to track and quantify how often early regrants actually change the counterfactual trajectory, perhaps via follow-up surveys or counterfactual analysis.",
+          "importance": 80,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 4258,
+            "endOffset": 4499,
+            "quotedText": "Manifund's early funding helped Hoogland's team get off the ground, and they subsequently started a new organization (Timaeus) and received significantly more funding from other sources, such as $500,000 from the Survival & Flourishing Fund."
+          }
+        },
+        {
+          "title": "Endorsements as Evidence: Calibration Needed",
+          "description": "The document notes: _'this agenda was also endorsed by capable AI safety researchers such as Vanessa Kosoy and John Wentworth, and it makes sense to update on their judgement.'_ While expert endorsements are useful, it's important to track the calibration of these endorsements over time. Are projects endorsed by these individuals more likely to succeed? Building a track record database would allow for more evidence-based weighting of endorsements.",
+          "importance": 60,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 3610,
+            "endOffset": 3763,
+            "quotedText": "this agenda was also endorsed by capable AI safety researchers such as Vanessa Kosoy and John Wentworth, and it makes sense to update on their judgement."
+          }
+        },
+        {
+          "title": "Funding Gaps in Geopolitical Coverage 🌏",
+          "description": "The ChinaTalk grant is justified with: _'Philanthropists are scared to touch China, in part because of lack of expertise and in part for political reasons. Advertisers can be nervous for similar reasons…'_ This is a strong example of a funding gap created by coordination and incentive failures. The document could go further by suggesting mechanisms to systematically identify and fill such gaps, e.g., by mapping areas with high importance but low funding due to reputational or political risk.",
+          "importance": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 9093,
+            "endOffset": 9255,
+            "quotedText": "Philanthropists are scared to touch China, in part because of lack of expertise and in part for political reasons. Advertisers can be nervous for similar reasons…"
+          }
+        },
+        {
+          "title": "Ex Post vs. Ex Ante Evaluation",
+          "description": "The author writes: _'I still would have endorsed this grant had I known the outcome in advance.'_ This is a healthy attitude, but the document could benefit from a more systematic approach to ex ante vs. ex post evaluation. For example, tracking forecasts made at the time of grant and comparing them to outcomes would allow for better calibration and learning over time, as seen in forecasting tournaments.",
+          "importance": 65,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 11377,
+            "endOffset": 11451,
+            "quotedText": "I still would have endorsed this grant had I known the outcome in advance."
+          }
+        },
+        {
+          "title": "Power Law Outcomes and Tail Value",
+          "description": "The phrase: _'it had an element of \"big if true\" i.e. it may be unlikely that the strong version of the DevInterp thesis is true, but this research has potential to make meaningful progress on AI alignment if it is'_ correctly identifies the importance of tail outcomes. The document could be improved by explicitly discussing how the portfolio of grants is constructed to maximize expected value given power law distributions, and whether enough 'big if true' bets are being made.",
+          "importance": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 3282,
+            "endOffset": 3482,
+            "quotedText": "it had an element of \"big if true\" i.e. it may be unlikely that the strong version of the DevInterp thesis is true, but this research has potential to make meaningful progress on AI alignment if it is"
+          }
+        },
+        {
+          "title": "Transparency and Public Signaling",
+          "description": "The quote: _'The fact that it was public meant other funders could easily see who was backing our work and why. That transparency helped us build momentum and credibility for developmental interpretability research when it was still a new idea.'_ highlights the signaling value of public grants. This is a mechanism that could be further leveraged, e.g., by systematically publicizing early bets and tracking their downstream effects on follow-on funding and talent attraction.",
+          "importance": 60,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 4934,
+            "endOffset": 5165,
+            "quotedText": "The fact that it was public meant other funders could easily see who was backing our work and why. That transparency helped us build momentum and credibility for developmental interpretability research when it was still a new idea."
+          }
+        },
+        {
+          "title": "Process for Handling Unmet Deliverables",
+          "description": "The document notes: _'the high-end version was supposed to include a \"glossy formal report optimised for policy people\" which did not end up getting made (OpenPhil opted against funding it), however the excess money is instead going towards the 2025 edition.'_ This is a pragmatic approach, but it would be useful to have a more formal process for handling cases where deliverables are not met. For example, setting up milestone-based funding or clawback clauses could help ensure accountability while maintaining flexibility.",
+          "importance": 55,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 12311,
+            "endOffset": 12547,
+            "quotedText": "the high-end version was supposed to include a \"glossy formal report optimised for policy people\" which did not end up getting made (OpenPhil opted against funding it), however the excess money is instead going towards the 2025 edition."
+          }
+        }
+      ],
+      "thinking": "1. The document is a retrospective analysis of three AI safety-related grants made via Manifund's regranting program. The author, Jesse Richardson, provides context on the program's goals: early-stage funding, leveraging expert knowledge, and filling gaps left by larger funders like OpenPhil.\n\n2. The three highlighted grants share several features: (a) early-stage or underfunded projects, (b) strong endorsement or involvement from domain experts, (c) clear mechanisms for impact (e.g., accelerating research, enabling full-time work, producing widely-used resources), and (d) subsequent validation via follow-on funding or measurable outputs.\n\n3. The document emphasizes the value of speed, transparency, and leveraging private information in grantmaking. Manifund's model is positioned as a way to act quickly and efficiently, in contrast to slower, more bureaucratic processes.\n\n4. Quantitative outcomes are noted: e.g., Timaeus receiving $143k initially and then $500k later; ChinaTalk's subscriber growth from 26k to 51k; specific dollar amounts for each grant. However, the analysis is mostly qualitative, with some subjective judgments about project value and counterfactual impact.\n\n5. Key uncertainties and failure modes are acknowledged: e.g., whether Timaeus would have succeeded anyway, the lower-than-expected attention for the 2024 AI safety review, and the lack of a promised 'glossy' report. The author is transparent about their own limited inside view on technical agendas.\n\n6. Coordination and system improvement themes: Manifund's regranting is framed as plugging holes in the funding landscape, especially where traditional funders are absent due to risk aversion or lack of expertise (e.g., China coverage). The program also increases project visibility, enabling follow-on funding.\n\n7. Action items and next steps: The document is partly a call to action for donors to fund the 2025 program, and implicitly encourages more attention to early-stage, high-leverage opportunities.\n\n8. Patterns: Projects that combine expert endorsement, early-stage leverage, and clear outputs tend to be highlighted as successes. The program's ability to move quickly and transparently is repeatedly emphasized as a comparative advantage.",
+      "summary": "## High-Level Analysis\n\nThis document provides a concrete, mechanism-focused review of Manifund's regranting program, highlighting three AI safety-related grants that exemplify the program's strengths. The key pattern is early-stage, high-leverage funding: each project received support at a critical juncture, enabling acceleration (Timaeus), increased capacity (ChinaTalk), or the creation of a widely-used resource (AI safety review). In each case, expert endorsement and private knowledge played a central role in grant selection, illustrating the value of decentralized, permissionless action over traditional, bureaucratic grantmaking.\n\nQuantitative outcomes—such as subsequent large-scale funding, subscriber growth, and tangible research outputs—provide evidence of impact, though the analysis is candid about uncertainties and counterfactuals. The program's transparency and speed are highlighted as key system improvements, both in surfacing neglected opportunities and in catalyzing follow-on funding from larger donors. Notably, the document identifies persistent gaps in the funding landscape (e.g., China/AI coverage) and positions Manifund as an effective plug for these holes.\n\nFrom a forecasting and systems perspective, this approach aligns with best practices: leveraging expert calibration, focusing on tail-impact opportunities, and iterating quickly. The main risks are in overestimating counterfactual impact and underweighting longer-term follow-through, but overall, the program demonstrates a robust path to outsized impact through targeted, early-stage intervention."
+    },
+    {
+      "agentId": "quantitative-forecaster",
+      "createdAt": "2025-05-16T01:36:55.341Z",
+      "costInCents": 0,
+      "comments": [
+        {
+          "title": "🎯 Defining Success Metrics for Early-Stage Research Grants",
+          "description": "The document highlights that 'success for this project looked like determining whether DevInterp was a viable agenda to move forward with, rather than producing some seminal research outputs.' This is a concrete, measurable outcome suitable for forecasting: *Will the funded research agenda be judged viable by the research community within 12 months of initial funding?* For future grants, explicitly stating such resolution criteria enables clearer ex-ante evaluation and post-hoc assessment. This approach aligns with best practices in grantmaking and forecasting.",
+          "importance": 85,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2273,
+            "endOffset": 2460,
+            "quotedText": "Back to the grant itself; success for this project looked like determining whether DevInterp was a viable agenda to move forward with, rather than producing some seminal research outputs."
+          }
+        },
+        {
+          "title": "📈 Fermi Estimate: Impact Acceleration from Early Funding",
+          "description": "The claim that 'Getting early support from Manifund made a real difference for us... we could start months earlier than we otherwise would have' invites a Fermi estimate: *How much earlier did the project start due to this grant?* Assuming typical grant cycles (3-6 months delay), and based on the team's statement, a plausible estimate is a 3-6 month acceleration. This can be operationalized as: *What is the probability that Timaeus would have launched within 3 months of its actual start date without Manifund funding?* My estimate: 30%. Key uncertainty: counterfactual funding timelines from other sources.",
+          "importance": 70,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 4740,
+            "endOffset": 4933,
+            "quotedText": "Getting early support from Manifund made a real difference for us. This was the first funding we received for research and meant that we could start months earlier than we otherwise would have."
+          }
+        },
+        {
+          "title": "🔍 Reference Class: Regranting as a Signal for Other Funders",
+          "description": "The document notes, 'Manifund's early funding helped Hoogland's team get off the ground, and they subsequently started a new organization (Timaeus) and received significantly more funding from other sources.' This suggests a reference class: *What is the probability that early-stage regrants lead to follow-on funding from major donors within 12 months?* Based on EA/AI safety grantmaking history, this is typically 40-60%. For this case, given the public endorsement and subsequent $500k grant, the probability was likely >70%. This highlights the catalytic role of early regranting.",
+          "importance": 65,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 4244,
+            "endOffset": 4499,
+            "quotedText": "In this case, Manifund's early funding helped Hoogland's team get off the ground, and they subsequently started a new organization (Timaeus) and received significantly more funding from other sources, such as $500,000 from the Survival & Flourishing Fund."
+          }
+        },
+        {
+          "title": "🧑‍🔬 Leveraging Private Information in Grantmaking",
+          "description": "The text states, 'regranting allows them to specifically leverage his private information about other valuable projects, such as DevInterp.' This is a key mechanism for value-add in regranting: *What is the probability that projects selected via regrantor private information outperform those selected via public information alone?* Reference class: In venture capital, insider referrals outperform cold applications by 2-3x. For AI safety grants, a plausible estimate is a 60% chance of above-median outcomes for regrantor-insider picks vs. 30% for public-only picks.",
+          "importance": 60,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 2146,
+            "endOffset": 2271,
+            "quotedText": "but regranting allows them to specifically leverage his private information about other valuable projects, such as DevInterp."
+          }
+        },
+        {
+          "title": "🌏 Underserved Areas: China & AI Safety Coverage",
+          "description": "The author claims, 'the intersection of China and AI safety is an incredibly important area to cover, and at a high level it is very valuable to fund organizations that are doing this kind of work.' This can be operationalized: *What is the probability that a major AI safety event in the next 5 years will involve China as a key actor?* Reference class: Recent AI policy developments and expert surveys suggest >70%. This underscores the strategic importance of funding coverage in this area.",
+          "importance": 75,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 7208,
+            "endOffset": 7411,
+            "quotedText": "it seems clear to me that the intersection of China and AI safety is an incredibly important area to cover, and at a high level it is very valuable to fund organizations that are doing this kind of work."
+          }
+        },
+        {
+          "title": "📊 Quantifying Audience Growth as a Success Metric",
+          "description": "The document notes, 'ChinaTalk's Substack audience has grown from 26,000 subscribers to 51,000.' This is a concrete, measurable outcome. For future grants, a forecasting question could be: *Will ChinaTalk's audience exceed 75,000 by end of 2025?* Given current growth (~25k/year), a 60% probability is reasonable, assuming continued funding and output. Audience growth is a useful proxy for reach and influence, though not a direct measure of policy impact.",
+          "importance": 55,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 7672,
+            "endOffset": 7779,
+            "quotedText": "Since the first regrant was made, ChinaTalk's Substack audience has grown from 26,000 subscribers to 51,000"
+          }
+        },
+        {
+          "title": "💡 Funding Gaps: Philanthropic and Commercial Hesitancy",
+          "description": "Joel Becker's comment, 'Philanthropists are scared to touch China, in part because of lack of expertise and in part for political reasons. Advertisers can be nervous for similar reasons…' highlights a funding gap. A forecasting question: *What is the probability that China-focused AI safety media will remain primarily donor-funded (vs. commercial) through 2027?* Given current trends and risk aversion, estimate: 80%. This identifies a persistent market failure that regranting can address.",
+          "importance": 60,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 9093,
+            "endOffset": 9255,
+            "quotedText": "Philanthropists are scared to touch China, in part because of lack of expertise and in part for political reasons. Advertisers can be nervous for similar reasons…"
+          }
+        },
+        {
+          "title": "📝 Measuring the Value of Shallow Reviews in AI Safety",
+          "description": "The author writes, 'there should be an accessible and up-to-date resource of this kind; for people who are starting out in AI safety and don't know anything, for funders trying to get a sense of the landscape, or for anyone else who might need it.' This can be operationalized: *What is the probability that the 2024 Shallow Review will be cited in at least 10 grant applications or research proposals within 12 months?* Reference class: Similar resources often see 5-20 citations/year. Estimate: 70%. This metric can help quantify the practical utility of such reviews.",
+          "importance": 50,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 10353,
+            "endOffset": 10580,
+            "quotedText": "there should be an accessible and up-to-date resource of this kind; for people who are starting out in AI safety and don't know anything, for funders trying to get a sense of the landscape, or for anyone else who might need it."
+          }
+        },
+        {
+          "title": "⚖️ Tradeoffs in Grant Outcomes: Attention vs. Necessity",
+          "description": "The author notes, 'the new post... appears to be similarly comprehensive to the 2023 version, although it has gotten less attention (~half the upvotes on LessWrong and not curated). That's probably a bit worse of an outcome than I would've hoped for, but I still would have endorsed this grant had I known the outcome in advance.' This highlights a key uncertainty: *How should funders weigh declining marginal attention for updates vs. the necessity of keeping resources current?* For forecasting: *What is the probability that future updates will receive less engagement but remain necessary for the field?* Estimate: 80%.",
+          "importance": 45,
+          "isValid": true,
+          "highlight": {
+            "startOffset": 11216,
+            "endOffset": 11451,
+            "quotedText": "although it has gotten less attention (~half the upvotes on LessWrong and not curated). That's probably a bit worse of an outcome than I would've hoped for, but I still would have endorsed this grant had I known the outcome in advance."
+          }
+        }
+      ],
+      "thinking": "## Overall Assessment\nThe document is a reflective, qualitative review of three AI safety-related grants made through Manifund’s regranting program. It is written in an informal, 'hot takes' style by Jesse Richardson, who brings both AI and prediction market experience. The focus is on positive examples, with an emphasis on early-stage funding, leveraging expert judgment, and the catalytic role of small grants. The author is transparent about their own epistemic limitations and updates based on endorsements from recognized experts.\n\n## Key Themes and Patterns\n- **Early-Stage, High-Leverage Funding:** All three grants exemplify the value of providing initial support to promising but under-resourced projects, enabling them to scale or attract further funding.\n- **Expert-Led Regranting:** The program leverages the private knowledge and judgment of domain experts, which is highlighted as a key advantage over traditional grantmaking.\n- **Catalytic Effects:** Early grants often lead to increased visibility, credibility, and follow-on funding from larger donors (e.g., SFF, OpenPhil).\n- **Transparency and Signaling:** Public grants serve as signals to other funders and the broader community, helping to bootstrap new organizations or research agendas.\n- **Coverage of Neglected Areas:** The ChinaTalk grant illustrates the value of funding work in areas that are underfunded due to political or expertise barriers.\n- **Mixed Outcomes:** Not all grants fully meet expectations (e.g., the AI Safety review’s lower engagement in 2024), but the program’s agility and risk tolerance are seen as strengths.\n\n## Expert Perspective\nFrom a quantitative forecasting standpoint, the document provides rich qualitative data but lacks explicit metrics or ex ante forecasts. However, it does offer post hoc outcome assessments (e.g., subsequent funding, output produced, audience growth) that could be used to construct reference classes for future grant evaluation. The author’s openness about uncertainty and willingness to update based on expert endorsements aligns with best practices in forecasting. The document implicitly suggests that early-stage, expert-led regranting is a high-variance but potentially high-reward funding strategy, especially in fast-moving or neglected domains like AI safety and China/AI policy.",
+      "summary": "## Quantitative Forecaster’s Analysis\n\n**Strengths of the Document:**\n- The review highlights the catalytic impact of early-stage, expert-led regranting in AI safety and adjacent fields. By focusing on positive case studies, it demonstrates how small, timely grants can accelerate project timelines, attract further funding, and increase visibility for new organizations or research agendas.\n- The author’s transparency about their own uncertainty and reliance on expert endorsements (e.g., from Evan Hubinger, Vanessa Kosoy) reflects a healthy epistemic humility and a willingness to update beliefs—key traits in well-calibrated forecasting.\n- The document identifies clear success markers: subsequent funding rounds, tangible outputs (papers, conferences, audience growth), and increased community engagement. These can serve as concrete metrics for future forecasting questions.\n\n**Key Insights:**\n- Early, public grants can serve as strong signals to other funders, helping to bootstrap neglected or high-potential projects.\n- Leveraging the private knowledge of domain experts through regranting can fill gaps left by traditional philanthropy, especially in areas with political or informational barriers (e.g., China/AI coverage).\n- Not all grants will fully meet expectations, but the program’s agility and risk tolerance are valuable in high-uncertainty domains.\n\n**Forecasting Implications:**\n- The document provides a useful qualitative reference class for forecasting the outcomes of early-stage, expert-led grants in AI safety and related fields. Metrics such as follow-on funding, output quantity/quality, and audience growth should be tracked to inform future probability estimates."
     }
   ]
 }
