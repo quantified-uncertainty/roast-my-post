@@ -10,8 +10,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { evaluationAgents } from "@/data/agents/index";
-import type { Comment, DocumentReview } from "@/types/documentReview";
-import type { Document } from "@/types/documents";
+import type { Comment, Document, Evaluation } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
   getGradeColorStrong,
@@ -19,12 +18,7 @@ import {
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
-import { getIcon } from "@/utils/iconMap";
-import {
-  ChatBubbleLeftIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -86,7 +80,7 @@ interface CommentsSidebarProps {
   expandedTag: string | null;
   onTagHover: (tag: string | null) => void;
   onTagClick: (tag: string | null) => void;
-  review: DocumentReview;
+  review: Evaluation;
   commentColorMap: Record<number, { background: string; color: string }>;
 }
 
@@ -97,7 +91,7 @@ function CommentsSidebar({
   onTagClick,
   review,
   commentColorMap,
-}: CommentsSidebarProps & { review: DocumentReview }) {
+}: CommentsSidebarProps & { review: Evaluation }) {
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
 
@@ -128,7 +122,7 @@ function CommentsSidebar({
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`} flex h-6 w-6 items-center justify-center rounded-full text-sm font-medium transition-all duration-200 select-none`}
+                    className={`} flex h-6 w-6 select-none items-center justify-center rounded-full text-sm font-medium transition-all duration-200`}
                     style={{
                       backgroundColor: commentColorMap[index].background,
                       color: commentColorMap[index].color,
@@ -237,72 +231,41 @@ function ReviewSelector({
   onReviewSelect,
 }: ReviewSelectorProps) {
   return (
-    <div className="mb-6">
-      <div className="grid grid-cols-4 gap-3 md:grid-cols-4">
-        {document.reviews.map((review, index) => {
-          const agent = evaluationAgents.find((a) => a.id === review.agentId);
-          const Icon = agent ? getIcon(agent.iconName) : ChatBubbleLeftIcon;
-          const isActive = activeReviewIndex === index;
-          const commentCount = Object.keys(review.comments).length;
-          const hasGradeInstructions = agent?.gradeInstructions;
-          const grade = review.grade;
+    <div className="flex flex-col gap-2">
+      {document.reviews.map((review, index) => {
+        const agent = evaluationAgents.find((a) => a.id === review.agentId);
+        const isActive = index === activeReviewIndex;
+        const grade = review.grade || 0;
+        const gradeStyle = getGradeColorStrong(grade);
+        const letterGrade = getLetterGrade(grade);
 
-          return (
+        return (
+          <button
+            key={review.agentId}
+            onClick={() => onReviewSelect(index)}
+            className={`flex items-center gap-2 rounded-lg border p-2 transition-all duration-200 ${
+              isActive
+                ? "border-blue-400 bg-blue-50"
+                : "border-gray-200 hover:border-gray-300"
+            }`}
+          >
             <div
-              key={index}
-              className={`cursor-pointer rounded-lg border transition-all duration-150 ${
-                isActive
-                  ? "border-blue-300 bg-blue-50 shadow-sm"
-                  : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
-              } `}
-              onClick={() => onReviewSelect(index)}
+              className="flex h-8 w-8 items-center justify-center rounded-full"
+              style={gradeStyle.style}
             >
-              <div className="flex h-full items-center p-1.5">
-                <div
-                  className={`mr-3 flex items-center justify-center rounded-full p-1 ${isActive ? "bg-blue-100" : "bg-gray-100"} `}
-                >
-                  <Icon
-                    className={`h-5 w-5 ${
-                      isActive ? "text-blue-600" : "text-gray-500"
-                    }`}
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col justify-between">
-                  {agent && (
-                    <span
-                      className={`mb-1 truncate text-sm font-medium ${isActive ? "text-blue-700" : "text-gray-700"} `}
-                    >
-                      {agent.name}
-                    </span>
-                  )}
-
-                  {agent && (
-                    <div className="flex items-center gap-3">
-                      {hasGradeInstructions && grade !== undefined && (
-                        <span
-                          className={`rounded-sm px-1.5 text-xs font-medium ${getGradeColorStrong(grade).className}`}
-                          style={getGradeColorStrong(grade).style}
-                        >
-                          {getLetterGrade(grade)}
-                        </span>
-                      )}
-                      <span
-                        className={`flex items-center gap-1 rounded-full px-1 text-xs ${
-                          isActive ? "text-blue-700" : "text-gray-600"
-                        } `}
-                      >
-                        <ChatBubbleLeftIcon className="h-3 w-3" />
-                        {commentCount}
-                      </span>
-                    </div>
-                  )}
-                </div>
+              <span className="text-sm font-medium text-white">
+                {letterGrade}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <div className="font-medium text-gray-900">{agent?.name}</div>
+              <div className="text-sm text-gray-500">
+                {review.comments.length} highlights
               </div>
             </div>
-          );
-        })}
-      </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -423,7 +386,7 @@ export function DocumentWithEvaluations({
             </div>
           </div>
 
-          <article className="prose prose-slate prose-lg max-w-none">
+          <article className="prose prose-lg prose-slate max-w-none">
             <SlateEditor
               content={document.content}
               onHighlightHover={(tag) => setActiveTag(tag)}
@@ -462,7 +425,7 @@ export function DocumentWithEvaluations({
               {activeReview.summary && (
                 <div className="rounded-lg bg-white shadow-sm">
                   <div
-                    className="flex cursor-pointer items-center justify-between px-4 py-1.5 select-none hover:bg-gray-50"
+                    className="flex cursor-pointer select-none items-center justify-between px-4 py-1.5 hover:bg-gray-50"
                     onClick={() =>
                       setExpandedTag(
                         expandedTag === "analysis" ? null : "analysis"
@@ -496,7 +459,7 @@ export function DocumentWithEvaluations({
                       <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
                     )}
                   </div>
-                  <div className="prose prose-md max-w-none border-t border-gray-100 px-4 py-1.5">
+                  <div className="prose-md prose max-w-none border-t border-gray-100 px-4 py-1.5">
                     {expandedTag === "analysis" ? (
                       <>
                         <MarkdownRenderer>
@@ -512,22 +475,6 @@ export function DocumentWithEvaluations({
                                 {activeReview.thinking}
                               </MarkdownRenderer>
                             </div>
-                          </div>
-                        )}
-                        {activeReview.runDetails && (
-                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
-                            <h4 className="mb-2 font-semibold text-gray-700">
-                              Run Details:
-                            </h4>
-                            <pre className="mt-2 overflow-x-auto rounded-md bg-gray-50 p-3 font-mono text-xs text-gray-600">
-                              {typeof activeReview.runDetails === "string"
-                                ? activeReview.runDetails
-                                : JSON.stringify(
-                                    activeReview.runDetails,
-                                    null,
-                                    2
-                                  )}
-                            </pre>
                           </div>
                         )}
                       </>

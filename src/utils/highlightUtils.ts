@@ -4,7 +4,7 @@ import type {
   Comment,
   DocumentReview,
   Highlight,
-} from "../types/documentReview";
+} from "../types/oldDocumentReview";
 import { DEFAULT_TEMPERATURE, openai, SEARCH_MODEL } from "../types/openai";
 
 // Raw highlight structure expected from LLM response

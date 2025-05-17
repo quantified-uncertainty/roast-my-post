@@ -1,4 +1,4 @@
-import type { EvaluationAgentReview } from "@/types/evaluationAgentReview";
+import type { EvaluationAgentReview } from "@/types/oldEvaluationAgentReview";
 
 export const agentReviews: EvaluationAgentReview[] = [
   {

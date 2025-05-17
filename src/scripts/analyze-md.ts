@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import type { DocumentReview } from "../types/documentReview";
+import type { DocumentReview } from "../types/oldDocumentReview";
 import { sortCommentsByOffset } from "../utils/commentUtils";
 
 const { Command } = require("commander");

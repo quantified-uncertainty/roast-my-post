@@ -1,5 +1,5 @@
 // Document type definitions
-import type { Comment, DocumentReview } from "./documentReview";
+import type { Comment, DocumentReview } from "./oldDocumentReview";
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {

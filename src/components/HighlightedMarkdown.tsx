@@ -9,7 +9,7 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { Comment } from "@/types/documentReview";
+import { Comment } from "@/types/oldDocumentReview";
 import {
   applyHighlightsToContainer,
   resetContainer,
@@ -191,7 +191,7 @@ export function HighlightedMarkdown({
     <div
       key={contentKey}
       ref={containerRef}
-      className="prose prose-slate prose-md max-w-none"
+      className="prose-md prose prose-slate max-w-none"
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset["tag"]) {

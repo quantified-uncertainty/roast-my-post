@@ -77,24 +77,13 @@ export default function NewDocumentPage() {
   const onSubmit = async (data: DocumentInput) => {
     try {
       const result = documentSchema.parse(data);
-      const createResult = await createDocument(result);
-
-      if (!createResult) {
-        setError("root", { message: "Failed to create document" });
+      await createDocument(result);
+    } catch (error) {
+      // Ignore Next.js redirect errors
+      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
         return;
       }
 
-      if (createResult.data?.success && createResult.data?.document) {
-        router.push(`/docs/${createResult.data.document.id}`);
-      } else {
-        const errorMessage =
-          createResult.data?.error ||
-          (typeof createResult.validationErrors === "string"
-            ? createResult.validationErrors
-            : "Failed to create document");
-        setError("root", { message: errorMessage });
-      }
-    } catch (error) {
       if (error instanceof z.ZodError) {
         error.errors.forEach((err) => {
           if (err.path[0]) {

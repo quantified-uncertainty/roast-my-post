@@ -1,6 +1,6 @@
-import type { Comment } from "../../../types/documentReview";
 import { Document } from "../../../types/documents";
 import { EvaluationAgent } from "../../../types/evaluationAgents";
+import type { Comment } from "../../../types/oldDocumentReview";
 import {
   ANALYSIS_MODEL,
   DEFAULT_TEMPERATURE,

@@ -1,4 +1,4 @@
-import type { EvaluationAgentReview } from "@/types/evaluationAgentReview";
+import type { EvaluationAgentReview } from "@/types/oldEvaluationAgentReview";
 import { StarIcon } from "@heroicons/react/24/solid";
 
 interface AgentRatingsProps {

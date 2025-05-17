@@ -1,42 +1,136 @@
+import { nanoid } from "nanoid";
+
+import { Document, DocumentSchema } from "@/types/documentSchema";
 import { PrismaClient } from "@prisma/client";
 
-export class Document {
-  private prisma: PrismaClient;
+export class DocumentModel {
+  private static prisma = new PrismaClient();
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
+  static async getDocumentWithEvaluations(
+    docId: string
+  ): Promise<Document | null> {
+    const dbDoc = await this.prisma.document.findUnique({
+      where: { id: docId },
+      include: {
+        versions: true,
+        evaluations: {
+          include: {
+            agent: {
+              include: {
+                versions: {
+                  orderBy: {
+                    version: "desc",
+                  },
+                  take: 1,
+                },
+              },
+            },
+            versions: {
+              include: {
+                comments: {
+                  include: {
+                    highlight: true,
+                  },
+                },
+                job: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    if (!dbDoc || !dbDoc.versions.length) {
+      return null;
+    }
+
+    const latestVersion = dbDoc.versions[0];
+
+    // Transform database document to frontend Document shape
+    const document: Document = {
+      id: dbDoc.id,
+      slug: dbDoc.id,
+      title: latestVersion.title,
+      content: latestVersion.content,
+      author: latestVersion.authors.join(", "),
+      publishedDate: dbDoc.publishedDate.toISOString(),
+      url: latestVersion.urls[0] || "", // Provide empty string as fallback
+      platforms: latestVersion.platforms,
+      intendedAgents: latestVersion.intendedAgents,
+      reviews: dbDoc.evaluations.map((evaluation) => ({
+        agentId: evaluation.agent.id,
+        createdAt: new Date(
+          evaluation.versions[0]?.createdAt || evaluation.createdAt
+        ),
+        costInCents: evaluation.versions[0]?.job?.costInCents || 0,
+        comments:
+          evaluation.versions[0]?.comments.map((comment) => ({
+            title: comment.title,
+            description: comment.description,
+            importance: comment.importance || undefined,
+            grade: comment.grade || undefined,
+            highlight: {
+              startOffset: comment.highlight.startOffset,
+              endOffset: comment.highlight.endOffset,
+              quotedText: comment.highlight.quotedText,
+              isValid: comment.highlight.isValid,
+            },
+            isValid: comment.highlight.isValid,
+            error: comment.highlight.isValid ? undefined : "Invalid highlight",
+          })) || [],
+        thinking: evaluation.versions[0]?.job?.llmThinking || "",
+        summary: evaluation.versions[0]?.summary || "",
+        grade: evaluation.versions[0]?.grade || 0,
+      })),
+    };
+
+    // Validate the transformed document against the schema
+    return DocumentSchema.parse(document);
   }
 
-  async create(data: {
-    id: string;
-    publishedDate: Date;
-    submittedById: string;
+  static async create(data: {
     title: string;
-    authors: string[];
-    urls: string[];
-    platforms: string[];
-    intendedAgents: string[];
+    authors: string;
+    urls?: string;
+    platforms?: string;
+    intendedAgents?: string;
     content: string;
+    submittedById: string;
   }) {
-    return this.prisma.document.create({
+    // Generate a nanoid for the document id
+    const id = nanoid(16);
+
+    // Create the document
+    const document = await this.prisma.document.create({
       data: {
-        id: data.id,
-        publishedDate: data.publishedDate,
+        id,
+        publishedDate: new Date(),
         submittedById: data.submittedById,
         versions: {
           create: {
             version: 1,
             title: data.title,
-            authors: data.authors,
-            urls: data.urls,
-            platforms: data.platforms,
-            intendedAgents: data.intendedAgents,
+            authors: data.authors.split(",").map((a) => a.trim()),
+            urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
+            platforms: data.platforms
+              ? data.platforms.split(",").map((p) => p.trim())
+              : [],
+            intendedAgents: data.intendedAgents
+              ? data.intendedAgents.split(",").map((a) => a.trim())
+              : [],
             content: data.content,
           },
         },
         // Create evaluations for each intended agent
         evaluations: {
-          create: data.intendedAgents.map((agentId) => ({
+          create: (data.intendedAgents
+            ? data.intendedAgents.split(",").map((a) => a.trim())
+            : []
+          ).map((agentId) => ({
             agentId,
             // Create a pending job for each evaluation
             jobs: {
@@ -61,5 +155,7 @@ export class Document {
         },
       },
     });
+
+    return document;
   }
 }

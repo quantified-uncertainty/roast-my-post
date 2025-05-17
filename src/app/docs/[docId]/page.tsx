@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
-import { PrismaClient } from "@prisma/client";
+import { DocumentModel } from "@/models/Document";
 
 export default async function DocumentPage({
   params,
@@ -17,43 +17,9 @@ export default async function DocumentPage({
     notFound();
   }
 
-  const prisma = new PrismaClient();
-  const dbDoc = await prisma.document.findUnique({
-    where: { id: docId },
-    include: {
-      versions: true,
-      evaluations: {
-        include: {
-          agent: {
-            include: {
-              versions: {
-                orderBy: {
-                  version: "desc",
-                },
-                take: 1,
-              },
-            },
-          },
-          versions: {
-            include: {
-              comments: {
-                include: {
-                  highlight: true,
-                },
-              },
-              job: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 1,
-          },
-        },
-      },
-    },
-  });
+  const document = await DocumentModel.getDocumentWithEvaluations(docId);
 
-  if (!dbDoc) {
+  if (!document) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
         <h1 className="mb-4 text-2xl font-bold text-gray-900">
@@ -71,42 +37,6 @@ export default async function DocumentPage({
       </div>
     );
   }
-
-  // Convert dbDoc to frontend Document shape
-  const document = {
-    id: dbDoc.id,
-    slug: dbDoc.id,
-    title: dbDoc.versions[0].title,
-    content: dbDoc.versions[0].content,
-    author: dbDoc.versions[0].authors.join(", "),
-    publishedDate: dbDoc.publishedDate.toISOString(),
-    url: dbDoc.versions[0].urls[0],
-    platforms: dbDoc.versions[0].platforms,
-    intendedAgents: dbDoc.versions[0].intendedAgents,
-    reviews: dbDoc.evaluations.map((evaluation) => ({
-      agentId: evaluation.agent.id,
-      createdAt: new Date(
-        evaluation.versions[0]?.createdAt || evaluation.createdAt
-      ),
-      costInCents: evaluation.versions[0]?.job?.costInCents || 0,
-      comments:
-        evaluation.versions[0]?.comments.map((comment) => ({
-          title: comment.title,
-          description: comment.description,
-          importance: comment.importance || undefined,
-          grade: comment.grade || undefined,
-          highlight: {
-            startOffset: comment.highlight.startOffset,
-            endOffset: comment.highlight.endOffset,
-            quotedText: comment.highlight.quotedText,
-          },
-          isValid: comment.highlight.isValid,
-        })) || [],
-      thinking: evaluation.versions[0]?.job?.llmThinking || "",
-      summary: evaluation.versions[0]?.summary || "",
-      grade: evaluation.versions[0]?.grade || 0,
-    })),
-  };
 
   return (
     <div className="min-h-screen">

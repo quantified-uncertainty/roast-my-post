@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
-import type { Comment } from "../../types/documentReview";
+import type { Comment } from "../../types/oldDocumentReview";
 import type { RawLLMHighlight } from "../highlightUtils";
 
 export async function writeLogFile(content: string, filename: string) {

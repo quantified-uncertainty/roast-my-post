@@ -51,7 +51,7 @@ Your task is to analyze this document and provide your thinking process and summ
 Format your response in JSON like this:
 {
   "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes.",
-  "summary": "Your specific perspective and key insights. This should be approximately ${targetWordCount} words long."${shouldIncludeGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
+  "summary": "Your specific perspective and key insights. This should be approximately ${targetWordCount} words long."${shouldIncludeGrade(agentInfo) ? ',\n  "grade": 85' : ""}
 }
 
 Thinking: A detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes. Brainstorm about any key points and insights you find interesting and relevant. Use this as a scratchpad to help you come up with your final summary.

@@ -1,6 +1,6 @@
-import { DocumentReview } from "../../types/documentReview";
 import { Document } from "../../types/documents";
 import { EvaluationAgent } from "../../types/evaluationAgents";
+import { DocumentReview } from "../../types/oldDocumentReview";
 import { getCommentData } from "./llmCalls/commentGenerator";
 import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
 import {
