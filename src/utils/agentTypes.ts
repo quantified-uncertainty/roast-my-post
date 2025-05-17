@@ -1,7 +1,18 @@
 import { BookOpen, Lightbulb, Scale, Search } from "lucide-react";
 
-export const AGENT_TYPE_INFO = {
-  assessor: {
+import type { AgentPurpose } from "@/types/agentSchema";
+
+export const AGENT_TYPE_INFO: Record<
+  AgentPurpose,
+  {
+    title: string;
+    individualTitle: string;
+    description: string;
+    icon: typeof Scale;
+    color: string;
+  }
+> = {
+  ASSESSOR: {
     title: "Assessment Agents",
     individualTitle: "Assessor",
     description:
@@ -9,7 +20,7 @@ export const AGENT_TYPE_INFO = {
     icon: Scale,
     color: "orange",
   },
-  advisor: {
+  ADVISOR: {
     title: "Advisory Agents",
     individualTitle: "Advisor",
     description:
@@ -17,7 +28,7 @@ export const AGENT_TYPE_INFO = {
     icon: Lightbulb,
     color: "blue",
   },
-  enricher: {
+  ENRICHER: {
     title: "Enrichment Agents",
     individualTitle: "Enricher",
     description:
@@ -25,7 +36,7 @@ export const AGENT_TYPE_INFO = {
     icon: Search,
     color: "green",
   },
-  explainer: {
+  EXPLAINER: {
     title: "Explanation Agents",
     individualTitle: "Explainer",
     description:

@@ -1,32 +1,14 @@
 import { nanoid } from "nanoid";
-import { z } from "zod";
 
-import type { AgentPurpose } from "@/types/evaluationAgents";
+import type { Agent, AgentInput } from "@/types/agentSchema";
+import { AgentInputSchema, AgentSchema } from "@/types/agentSchema";
 import { PrismaClient } from "@prisma/client";
 
-// Schema for form validation
-export const agentSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  purpose: z.enum(["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"]),
-  description: z.string().min(30, "Description must be at least 30 characters"),
-  iconName: z.string().min(1, "Icon name is required"),
-  genericInstructions: z
-    .string()
-    .min(30, "Generic instructions must be at least 30 characters"),
-  summaryInstructions: z
-    .string()
-    .min(30, "Summary instructions must be at least 30 characters"),
-  commentInstructions: z
-    .string()
-    .min(30, "Comment instructions must be at least 30 characters"),
-  gradeInstructions: z.string().optional(),
-  agentId: z.string().optional(),
-});
-
-export type AgentInput = z.infer<typeof agentSchema>;
+export { AgentInputSchema as agentSchema };
+export type { AgentInput };
 
 export class AgentModel {
-  static async createAgent(data: any, userId: string) {
+  static async createAgent(data: AgentInput, userId: string): Promise<Agent> {
     const prisma = new PrismaClient();
     try {
       const id = nanoid(16);
@@ -52,15 +34,43 @@ export class AgentModel {
             orderBy: { version: "desc" },
             take: 1,
           },
+          submittedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       });
-      return agent;
+
+      return AgentSchema.parse({
+        id: agent.id,
+        name: agent.versions[0].name,
+        purpose: agent.versions[0].agentType,
+        version: agent.versions[0].version.toString(),
+        description: agent.versions[0].description,
+        iconName: "robot",
+        genericInstructions: agent.versions[0].genericInstructions,
+        summaryInstructions: agent.versions[0].summaryInstructions,
+        commentInstructions: agent.versions[0].commentInstructions,
+        gradeInstructions: agent.versions[0].gradeInstructions,
+        owner: {
+          id: agent.submittedById,
+          name: agent.submittedBy.name || "Unknown",
+          email: agent.submittedBy.email || "unknown@example.com",
+        },
+      });
     } finally {
       await prisma.$disconnect();
     }
   }
 
-  static async updateAgent(agentId: string, data: any, userId: string) {
+  static async updateAgent(
+    agentId: string,
+    data: AgentInput,
+    userId: string
+  ): Promise<Agent> {
     const prisma = new PrismaClient();
     try {
       const existingAgent = await prisma.agent.findUnique({
@@ -93,15 +103,42 @@ export class AgentModel {
         },
         include: {
           versions: { orderBy: { version: "desc" }, take: 1 },
+          submittedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
       });
-      return agent;
+
+      return AgentSchema.parse({
+        id: agent.id,
+        name: agent.versions[0].name,
+        purpose: agent.versions[0].agentType,
+        version: agent.versions[0].version.toString(),
+        description: agent.versions[0].description,
+        iconName: "robot",
+        genericInstructions: agent.versions[0].genericInstructions,
+        summaryInstructions: agent.versions[0].summaryInstructions,
+        commentInstructions: agent.versions[0].commentInstructions,
+        gradeInstructions: agent.versions[0].gradeInstructions,
+        owner: {
+          id: agent.submittedById,
+          name: agent.submittedBy.name || "Unknown",
+          email: agent.submittedBy.email || "unknown@example.com",
+        },
+      });
     } finally {
       await prisma.$disconnect();
     }
   }
 
-  static async getAgentWithOwner(agentId: string, currentUserId?: string) {
+  static async getAgentWithOwner(
+    agentId: string,
+    currentUserId?: string
+  ): Promise<Agent | null> {
     const prisma = new PrismaClient();
     try {
       const dbAgent = await prisma.agent.findUnique({
@@ -125,24 +162,24 @@ export class AgentModel {
 
       const isOwner = currentUserId === dbAgent.submittedById;
 
-      return {
+      return AgentSchema.parse({
         id: dbAgent.id,
         name: dbAgent.versions[0].name,
-        purpose: dbAgent.versions[0].agentType.toLowerCase() as AgentPurpose,
+        purpose: dbAgent.versions[0].agentType,
         version: dbAgent.versions[0].version.toString(),
         description: dbAgent.versions[0].description,
         iconName: "robot",
         genericInstructions: dbAgent.versions[0].genericInstructions,
         summaryInstructions: dbAgent.versions[0].summaryInstructions,
         commentInstructions: dbAgent.versions[0].commentInstructions,
-        gradeInstructions: dbAgent.versions[0].gradeInstructions || undefined,
+        gradeInstructions: dbAgent.versions[0].gradeInstructions,
         owner: {
           id: dbAgent.submittedById,
           name: dbAgent.submittedBy.name || "Unknown",
           email: dbAgent.submittedBy.email || "unknown@example.com",
         },
         isOwner,
-      };
+      });
     } finally {
       await prisma.$disconnect();
     }

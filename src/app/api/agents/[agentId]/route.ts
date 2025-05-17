@@ -5,11 +5,10 @@ import { AgentModel } from "@/models/Agent";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { agentId: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const params = await context.params;
-    const { agentId } = params;
+    const agentId = params.agentId;
     const session = await auth();
     const agent = await AgentModel.getAgentWithOwner(
       agentId,

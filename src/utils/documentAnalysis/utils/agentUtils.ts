@@ -1,8 +1,8 @@
+import type { Agent } from "@/types/agentSchema";
+import { AgentSchema } from "@/types/agentSchema";
 import { PrismaClient } from "@prisma/client";
 
-import { EvaluationAgent } from "../../../types/evaluationAgents";
-
-export async function loadAgentInfo(agentId: string): Promise<EvaluationAgent> {
+export async function loadAgentInfo(agentId: string): Promise<Agent> {
   const prisma = new PrismaClient();
   try {
     const dbAgent = await prisma.agent.findUnique({
@@ -23,18 +23,18 @@ export async function loadAgentInfo(agentId: string): Promise<EvaluationAgent> {
 
     const latestVersion = dbAgent.versions[0];
 
-    return {
+    return AgentSchema.parse({
       id: dbAgent.id,
       name: latestVersion.name,
-      purpose: latestVersion.agentType.toLowerCase() as any, // TODO: Fix type
+      purpose: latestVersion.agentType,
       version: latestVersion.version.toString(),
       description: latestVersion.description,
       iconName: "robot", // Default icon
       genericInstructions: latestVersion.genericInstructions,
       summaryInstructions: latestVersion.summaryInstructions,
       commentInstructions: latestVersion.commentInstructions,
-      gradeInstructions: latestVersion.gradeInstructions || undefined,
-    };
+      gradeInstructions: latestVersion.gradeInstructions,
+    });
   } finally {
     await prisma.$disconnect();
   }

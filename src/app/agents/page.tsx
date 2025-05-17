@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import AgentsList from "@/components/AgentsList";
-import type { AgentPurpose } from "@/types/evaluationAgents";
 import { PrismaClient } from "@prisma/client";
 
 export default async function AgentsPage() {
@@ -21,7 +20,7 @@ export default async function AgentsPage() {
   const agents = dbAgents.map((dbAgent) => ({
     id: dbAgent.id,
     name: dbAgent.versions[0].name,
-    purpose: dbAgent.versions[0].agentType.toLowerCase() as AgentPurpose,
+    purpose: dbAgent.versions[0].agentType,
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
     iconName: "robot", // Default icon

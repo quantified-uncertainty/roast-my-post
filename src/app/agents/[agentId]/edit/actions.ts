@@ -4,6 +4,7 @@ import { createSafeActionClient } from "next-safe-action";
 
 import { auth } from "@/lib/auth";
 import { AgentModel, agentSchema } from "@/models/Agent";
+import type { AgentResponse } from "@/types/agentSchema";
 
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
@@ -11,7 +12,7 @@ const actionClient = createSafeActionClient();
 // Server action for updating an agent
 export const updateAgent = actionClient
   .schema(agentSchema)
-  .action(async (data) => {
+  .action(async (data): Promise<AgentResponse> => {
     try {
       const agentId = data.parsedInput.agentId;
 

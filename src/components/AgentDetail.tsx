@@ -1,21 +1,24 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
 import { agentReviews } from "@/data/agentReviews";
-import type { EvaluationAgent } from "@/types/evaluationAgents";
+import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/utils/agentTypes";
 import { getGradeColorStrong, getLetterGrade } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
-import { Pencil } from "lucide-react";
 
 interface AgentDetailProps {
-  agent: EvaluationAgent;
+  agent: Agent;
   isOwner?: boolean;
 }
 
-export default function AgentDetail({ agent, isOwner = false }: AgentDetailProps) {
+export default function AgentDetail({
+  agent,
+  isOwner = false,
+}: AgentDetailProps) {
   const IconComponent = getIcon(agent.iconName);
   const review = agentReviews.find((r) => r.evaluatedAgentId === agent.id);
 
@@ -39,7 +42,7 @@ export default function AgentDetail({ agent, isOwner = false }: AgentDetailProps
             </p>
           </div>
         </div>
-        
+
         {isOwner && (
           <Link href={`/agents/${agent.id}/edit`}>
             <Button variant="secondary" className="flex items-center gap-2">
@@ -96,7 +99,7 @@ export default function AgentDetail({ agent, isOwner = false }: AgentDetailProps
           {agent.commentInstructions}
         </div>
       </div>
-      
+
       {agent.gradeInstructions && (
         <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Grade Instructions</h2>
