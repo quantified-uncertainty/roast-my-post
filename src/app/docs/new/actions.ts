@@ -24,7 +24,7 @@ export const createDocument = actionClient
       }
 
       // Generate a nanoid for the document id
-      const id = nanoid();
+      const id = nanoid(16);
 
       // Create the document
       const document = await prisma.document.create({

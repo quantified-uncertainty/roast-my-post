@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import type { AgentPurpose, EvaluationAgent } from "@/types/evaluationAgents";
 import { AGENT_TYPE_INFO } from "@/utils/agentTypes";
-import { getIcon } from "@/utils/iconMap";
 
 interface AgentsListProps {
   agents: EvaluationAgent[];
@@ -62,11 +61,10 @@ export default function AgentsList({ agents }: AgentsListProps) {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {typeAgents.map((agent: EvaluationAgent) => {
-                const AgentIconComponent = getIcon(agent.iconName);
                 return (
                   <Link
                     key={agent.id}
-                    href={`/agents/${agent.id}-${agent.version.replace(".", "-")}`}
+                    href={`/agents/${agent.id}}`}
                     className="group block"
                   >
                     <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">

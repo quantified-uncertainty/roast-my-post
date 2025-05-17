@@ -60,44 +60,6 @@ export default function AgentDetail({ agent }: AgentDetailProps) {
         </div>
       )}
 
-      <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Use Cases</h2>
-        <ul className="space-y-2">
-          {agent.use_cases.map((useCase, index) => (
-            <li key={index} className="flex items-start">
-              <span className="mr-2 text-blue-500">•</span>
-              <span>{useCase}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Capabilities</h2>
-          <ul className="space-y-2">
-            {agent.capabilities.map((capability, index) => (
-              <li key={index} className="flex items-start">
-                <span className="mr-2 text-green-500">✓</span>
-                <span>{capability}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Limitations</h2>
-          <ul className="space-y-2">
-            {agent.limitations.map((limitation, index) => (
-              <li key={index} className="flex items-start">
-                <span className="mr-2 text-amber-500">!</span>
-                <span>{limitation}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
       <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
         <div className="mb-8 whitespace-pre-wrap">

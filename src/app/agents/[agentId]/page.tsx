@@ -1,62 +1,70 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
+import Link from "next/link";
 
 import AgentDetail from "@/components/AgentDetail";
-import { evaluationAgents } from "@/data/agents/index";
+import type { AgentPurpose } from "@/types/evaluationAgents";
+import { PrismaClient } from "@prisma/client";
 
-export default function AgentPage() {
-  const params = useParams();
-  const agentId = params["agentId"] as string;
+export default async function AgentPage({
+  params,
+}: {
+  params: { agentId: string };
+}) {
+  const resolvedParams = await Promise.resolve(params);
+  const prisma = new PrismaClient();
+  const dbAgent = await prisma.agent.findUnique({
+    where: { id: resolvedParams.agentId },
+    include: {
+      versions: {
+        orderBy: {
+          version: "desc",
+        },
+        take: 1,
+      },
+    },
+  });
 
-  // Parse the agentId from the URL (format: id-version where version has - instead of . )
-  // For example: "emotional-analyzer-2-4" for emotional-analyzer v2.4
-  const agentIdParts = agentId.split("-");
-
-  // Get the base id by removing the version part
-  // For versions with multiple decimals (like 2.4.1), we need to handle accordingly
-  let baseId: string;
-  const versionParts: string[] = [];
-
-  if (agentIdParts.length >= 2) {
-    // The last one or two parts are likely the version
-    // Try to determine if the last parts are numeric
-    const potentialVersionParts = agentIdParts.slice(-2);
-
-    if (!isNaN(Number(potentialVersionParts[0]))) {
-      // We have at least one version part
-      versionParts.push(potentialVersionParts[0]);
-      baseId = agentIdParts.slice(0, -1).join("-");
-
-      if (
-        potentialVersionParts.length > 1 &&
-        !isNaN(Number(potentialVersionParts[1]))
-      ) {
-        // We have a second version part
-        versionParts.push(potentialVersionParts[1]);
-        baseId = agentIdParts.slice(0, -2).join("-");
-      }
-    } else {
-      // No version in the URL
-      baseId = agentId;
-    }
-  } else {
-    baseId = agentId;
+  if (!dbAgent) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          Agent not found
+        </h1>
+        <p className="mb-8 text-gray-600">
+          The agent you're looking for doesn't exist or has been moved.
+        </p>
+        <Link
+          href="/agents"
+          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Back to Agents
+        </Link>
+      </div>
+    );
   }
 
-  // Reconstruct the version string with dots
-  const versionString = versionParts.join(".");
+  // Convert dbAgent to frontend Agent shape
+  const agent = {
+    id: dbAgent.id,
+    name: dbAgent.versions[0].name,
+    purpose: dbAgent.versions[0].agentType.toLowerCase() as AgentPurpose,
+    version: dbAgent.versions[0].version.toString(),
+    description: dbAgent.versions[0].description,
+    iconName: "robot", // Default icon
+    genericInstructions: dbAgent.versions[0].genericInstructions,
+    summaryInstructions: dbAgent.versions[0].summaryInstructions,
+    commentInstructions: dbAgent.versions[0].commentInstructions,
+    gradeInstructions: dbAgent.versions[0].gradeInstructions || undefined,
+  };
 
-  // Find the agent by base ID and version
-  const agent = evaluationAgents.find(
-    (agent) =>
-      agent.id === baseId &&
-      (versionString ? agent.version === versionString : true)
+  return (
+    <div className="min-h-screen">
+      <main>
+        <div className="mx-auto max-w-full">
+          <AgentDetail agent={agent} />
+        </div>
+      </main>
+    </div>
   );
-
-  if (!agent) {
-    return notFound();
-  }
-
-  return <AgentDetail agent={agent} />;
 }

@@ -29,6 +29,17 @@ function buildAuthConfig(): NextAuthConfig {
   const config: NextAuthConfig = {
     adapter: PrismaAdapter(prisma),
     providers,
+    session: {
+      strategy: "database",
+    },
+    callbacks: {
+      session: async ({ session, user }) => {
+        if (session?.user) {
+          session.user.id = user.id;
+        }
+        return session;
+      },
+    },
   };
 
   return config;

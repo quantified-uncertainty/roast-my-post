@@ -52,7 +52,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  submittedDocuments     Document[]
+  documents     Document[]
+  agents        Agent[]
 }
 
 model VerificationToken {
@@ -166,6 +167,8 @@ model Agent {
   updatedAt   DateTime @updatedAt
   versions    AgentVersion[]
   evaluations Evaluation[]
+  submittedBy   User      @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  submittedById String
 }
 
 model AgentVersion {

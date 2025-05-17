@@ -5,8 +5,54 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Button } from "@/components/Button";
+import { FormField } from "@/components/FormField";
+
 import { createDocument } from "./actions";
 import { type DocumentInput, documentSchema } from "./schema";
+
+interface FormFieldConfig {
+  name: keyof DocumentInput;
+  label: string;
+  required?: boolean;
+  type: "text" | "textarea";
+  placeholder: string;
+}
+
+const formFields: FormFieldConfig[] = [
+  {
+    name: "title",
+    label: "Title",
+    required: true,
+    type: "text",
+    placeholder: "Document title",
+  },
+  {
+    name: "authors",
+    label: "Authors",
+    required: true,
+    type: "text",
+    placeholder: "Author names (comma separated)",
+  },
+  {
+    name: "urls",
+    label: "URLs",
+    type: "text",
+    placeholder: "Related URLs (comma separated)",
+  },
+  {
+    name: "platforms",
+    label: "Platforms",
+    type: "text",
+    placeholder: "Platforms (e.g., LessWrong, EA Forum)",
+  },
+  {
+    name: "intendedAgents",
+    label: "Intended Agents",
+    type: "text",
+    placeholder: "Agent IDs (comma separated)",
+  },
+];
 
 export default function NewDocumentPage() {
   const router = useRouter();
@@ -28,7 +74,6 @@ export default function NewDocumentPage() {
 
   const onSubmit = async (data: DocumentInput) => {
     try {
-      // Validate with zod
       const result = documentSchema.parse(data);
       const createResult = await createDocument(result);
 
@@ -77,109 +122,30 @@ export default function NewDocumentPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Title */}
-            <div>
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-700"
+            {formFields.map((field) => (
+              <FormField
+                key={field.name}
+                name={field.name}
+                label={field.label}
+                required={field.required}
+                error={errors[field.name]}
               >
-                Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register("title")}
-                type="text"
-                id="title"
-                className={`form-input ${errors.title ? "border-red-500" : ""}`}
-                placeholder="Document title"
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.title.message}
-                </p>
-              )}
-            </div>
+                <input
+                  {...register(field.name)}
+                  type={field.type}
+                  id={field.name}
+                  className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
+                  placeholder={field.placeholder}
+                />
+              </FormField>
+            ))}
 
-            {/* Authors */}
-            <div>
-              <label
-                htmlFor="authors"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Authors <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register("authors")}
-                type="text"
-                id="authors"
-                className={`form-input ${errors.authors ? "border-red-500" : ""}`}
-                placeholder="Author names (comma separated)"
-              />
-              {errors.authors && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.authors.message}
-                </p>
-              )}
-            </div>
-
-            {/* URLs */}
-            <div>
-              <label
-                htmlFor="urls"
-                className="block text-sm font-medium text-gray-700"
-              >
-                URLs
-              </label>
-              <input
-                {...register("urls")}
-                type="text"
-                id="urls"
-                className={`form-input ${errors.urls ? "border-red-500" : ""}`}
-                placeholder="Related URLs (comma separated)"
-              />
-            </div>
-
-            {/* Platforms */}
-            <div>
-              <label
-                htmlFor="platforms"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Platforms
-              </label>
-              <input
-                {...register("platforms")}
-                type="text"
-                id="platforms"
-                className={`form-input ${errors.platforms ? "border-red-500" : ""}`}
-                placeholder="Platforms (e.g., LessWrong, EA Forum)"
-              />
-            </div>
-
-            {/* Intended Agents */}
-            <div>
-              <label
-                htmlFor="intendedAgents"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Intended Agents
-              </label>
-              <input
-                {...register("intendedAgents")}
-                type="text"
-                id="intendedAgents"
-                className={`form-input ${errors.intendedAgents ? "border-red-500" : ""}`}
-                placeholder="Agent IDs (comma separated)"
-              />
-            </div>
-
-            {/* Content */}
-            <div>
-              <label
-                htmlFor="content"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Content <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              name="content"
+              label="Content"
+              required
+              error={errors.content}
+            >
               <textarea
                 {...register("content")}
                 id="content"
@@ -187,14 +153,8 @@ export default function NewDocumentPage() {
                 className={`form-input ${errors.content ? "border-red-500" : ""}`}
                 placeholder="Document content in Markdown format"
               />
-              {errors.content && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.content.message}
-                </p>
-              )}
-            </div>
+            </FormField>
 
-            {/* Form Error */}
             {errors.root && (
               <div className="rounded-md bg-red-50 p-4">
                 <div className="flex">
@@ -208,21 +168,13 @@ export default function NewDocumentPage() {
               </div>
             )}
 
-            {/* Buttons */}
             <div className="flex justify-end gap-3">
-              <Link
-                href="/docs"
-                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                Cancel
+              <Link href="/docs">
+                <Button variant="secondary">Cancel</Button>
               </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
-              >
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save Document"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

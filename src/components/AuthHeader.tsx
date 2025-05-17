@@ -13,6 +13,9 @@ export default function AuthHeader() {
         <span className="text-white opacity-70">Loading...</span>
       ) : session ? (
         <>
+          <span className="mr-4 text-white opacity-70">
+            {session.user?.name || session.user?.email}
+          </span>
           <Link
             href="/api/auth/signout"
             className="text-white hover:text-gray-200"
