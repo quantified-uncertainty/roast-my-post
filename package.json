@@ -24,6 +24,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.9.1",
     "@heroicons/react": "^2.2.0",
     "@iarna/toml": "^2.2.5",
     "@prisma/client": "^6.8.2",
@@ -53,6 +54,8 @@
     "metascraper-url": "^5.46.11",
     "micromark": "^4.0.2",
     "next": "15.3.0",
+    "next-auth": "5.0.0-beta.28",
+    "nodemailer": "^6.10.1",
     "openai": "^4.93.0",
     "prisma": "^6.8.2",
     "prismjs": "^1.30.0",
