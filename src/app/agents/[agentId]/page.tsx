@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import AgentDetail from "@/components/AgentDetail";
+import { auth } from "@/lib/auth";
 import type { AgentPurpose } from "@/types/evaluationAgents";
 import { PrismaClient } from "@prisma/client";
 
@@ -19,12 +20,23 @@ export default async function AgentPage({
         },
         take: 1,
       },
+      submittedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
     },
   });
 
   if (!dbAgent) {
     notFound();
   }
+
+  // Check if current user is the owner
+  const session = await auth();
+  const isOwner = session?.user?.id === dbAgent.submittedById;
 
   // Convert dbAgent to frontend Agent shape
   const agent = {
@@ -38,13 +50,18 @@ export default async function AgentPage({
     summaryInstructions: dbAgent.versions[0].summaryInstructions,
     commentInstructions: dbAgent.versions[0].commentInstructions,
     gradeInstructions: dbAgent.versions[0].gradeInstructions || undefined,
+    owner: {
+      id: dbAgent.submittedById,
+      name: dbAgent.submittedBy.name || "Unknown",
+      email: dbAgent.submittedBy.email || "unknown@example.com",
+    },
   };
 
   return (
     <div className="min-h-screen">
       <main>
         <div className="mx-auto max-w-full">
-          <AgentDetail agent={agent} />
+          <AgentDetail agent={agent} isOwner={isOwner} />
         </div>
       </main>
     </div>

@@ -16,6 +16,12 @@ Explainer:
 - Provides a summary of the document
 */
 
+export interface AgentOwner {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface EvaluationAgent {
   id: string;
   name: string;
@@ -23,11 +29,9 @@ export interface EvaluationAgent {
   version: string;
   description: string;
   iconName: string;
-  capabilities?: string[];
-  use_cases?: string[];
-  limitations?: string[];
   genericInstructions: string;
   summaryInstructions: string;
   commentInstructions: string;
   gradeInstructions?: string;
+  owner?: AgentOwner;
 }

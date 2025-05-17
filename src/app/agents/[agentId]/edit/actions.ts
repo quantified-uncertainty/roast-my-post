@@ -8,32 +8,35 @@ import { AgentModel, agentSchema } from "@/models/Agent";
 // Setup next-safe-action
 const actionClient = createSafeActionClient();
 
-// Server action for creating an agent
-export const createAgent = actionClient
+// Server action for updating an agent
+export const updateAgent = actionClient
   .schema(agentSchema)
-  .action(async ({ parsedInput, rawInput }) => {
+  .action(async (data) => {
     try {
+      const agentId = (data as any).rawInput?.agentId;
+
+      if (!agentId) {
+        throw new Error("Agent ID is required");
+      }
+
       const session = await auth();
+
       if (!session?.user?.id) {
-        throw new Error("User must be logged in to create an agent");
+        throw new Error("User must be logged in to update an agent");
       }
-      let agent;
-      if (rawInput.agentId) {
-        agent = await AgentModel.updateAgent(
-          rawInput.agentId,
-          parsedInput,
-          session.user.id
-        );
-      } else {
-        agent = await AgentModel.createAgent(parsedInput, session.user.id);
-      }
+
+      const updatedAgent = await AgentModel.updateAgent(
+        agentId,
+        data.parsedInput,
+        session.user.id
+      );
+
       return {
         success: true,
-        agent,
-        id: agent.id,
+        agent: updatedAgent,
       };
     } catch (error) {
-      console.error("Error handling agent:", error);
+      console.error("Error updating agent:", error);
       if (error instanceof Error) {
         console.error("Error details:", {
           name: error.name,
@@ -44,7 +47,7 @@ export const createAgent = actionClient
       return {
         success: false,
         error:
-          error instanceof Error ? error.message : "Failed to handle agent",
+          error instanceof Error ? error.message : "Failed to update agent",
       };
     }
   });
