@@ -89,9 +89,7 @@ export default function NewDocumentPage() {
                 {...register("title")}
                 type="text"
                 id="title"
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                  errors.title ? "border-red-500" : ""
-                }`}
+                className={`form-input ${errors.title ? "border-red-500" : ""}`}
                 placeholder="Document title"
               />
               {errors.title && (
@@ -113,9 +111,7 @@ export default function NewDocumentPage() {
                 {...register("authors")}
                 type="text"
                 id="authors"
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                  errors.authors ? "border-red-500" : ""
-                }`}
+                className={`form-input ${errors.authors ? "border-red-500" : ""}`}
                 placeholder="Author names (comma separated)"
               />
               {errors.authors && (
@@ -137,7 +133,7 @@ export default function NewDocumentPage() {
                 {...register("urls")}
                 type="text"
                 id="urls"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={`form-input ${errors.urls ? "border-red-500" : ""}`}
                 placeholder="Related URLs (comma separated)"
               />
             </div>
@@ -154,7 +150,7 @@ export default function NewDocumentPage() {
                 {...register("platforms")}
                 type="text"
                 id="platforms"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={`form-input ${errors.platforms ? "border-red-500" : ""}`}
                 placeholder="Platforms (e.g., LessWrong, EA Forum)"
               />
             </div>
@@ -171,7 +167,7 @@ export default function NewDocumentPage() {
                 {...register("intendedAgents")}
                 type="text"
                 id="intendedAgents"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className={`form-input ${errors.intendedAgents ? "border-red-500" : ""}`}
                 placeholder="Agent IDs (comma separated)"
               />
             </div>
@@ -188,9 +184,7 @@ export default function NewDocumentPage() {
                 {...register("content")}
                 id="content"
                 rows={15}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                  errors.content ? "border-red-500" : ""
-                }`}
+                className={`form-input ${errors.content ? "border-red-500" : ""}`}
                 placeholder="Document content in Markdown format"
               />
               {errors.content && (
