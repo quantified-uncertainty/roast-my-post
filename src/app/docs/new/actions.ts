@@ -4,6 +4,7 @@ import { createSafeActionClient } from "next-safe-action";
 
 import { PrismaClient } from "@prisma/client";
 
+import { auth } from "@/lib/auth";
 import { type DocumentInput, documentSchema } from "./schema";
 
 // Setup next-safe-action
@@ -15,11 +16,17 @@ export const createDocument = actionClient
   .action(async ({ parsedInput: data }: { parsedInput: DocumentInput }) => {
     try {
       const prisma = new PrismaClient();
+      const session = await auth();
+      
+      if (!session?.user?.id) {
+        throw new Error("User must be logged in to create a document");
+      }
 
       // Create the document
       const document = await prisma.document.create({
         data: {
           publishedDate: new Date(),
+          submittedById: session.user.id,
           versions: {
             create: {
               version: 1,
