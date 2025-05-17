@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { createSafeActionClient } from "next-safe-action";
 
 import { auth } from "@/lib/auth";
+import { Document } from "@/models/Document";
 import { PrismaClient } from "@prisma/client";
 
 import { type DocumentInput, documentSchema } from "./schema";
@@ -26,38 +27,23 @@ export const createDocument = actionClient
       // Generate a nanoid for the document id
       const id = nanoid(16);
 
-      // Create the document
-      const document = await prisma.document.create({
-        data: {
-          id, // use nanoid as the id
-          publishedDate: new Date(),
-          submittedById: session.user.id,
-          versions: {
-            create: {
-              version: 1,
-              title: data.title,
-              authors: data.authors.split(",").map((a: string) => a.trim()),
-              urls: data.urls
-                ? data.urls.split(",").map((u: string) => u.trim())
-                : [],
-              platforms: data.platforms
-                ? data.platforms.split(",").map((p: string) => p.trim())
-                : [],
-              intendedAgents: data.intendedAgents
-                ? data.intendedAgents.split(",").map((a: string) => a.trim())
-                : [],
-              content: data.content,
-            },
-          },
-        },
-        include: {
-          versions: {
-            orderBy: {
-              version: "desc",
-            },
-            take: 1,
-          },
-        },
+      // Create the document using the Document model
+      const document = await new Document(prisma).create({
+        id,
+        publishedDate: new Date(),
+        submittedById: session.user.id,
+        title: data.title,
+        authors: data.authors.split(",").map((a: string) => a.trim()),
+        urls: data.urls
+          ? data.urls.split(",").map((u: string) => u.trim())
+          : [],
+        platforms: data.platforms
+          ? data.platforms.split(",").map((p: string) => p.trim())
+          : [],
+        intendedAgents: data.intendedAgents
+          ? data.intendedAgents.split(",").map((a: string) => a.trim())
+          : [],
+        content: data.content,
       });
 
       await prisma.$disconnect();

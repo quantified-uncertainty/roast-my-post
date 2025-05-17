@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import AgentCheckboxList from "@/components/AgentCheckboxList";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 
@@ -15,7 +16,7 @@ interface FormFieldConfig {
   name: keyof DocumentInput;
   label: string;
   required?: boolean;
-  type: "text" | "textarea";
+  type: "text" | "textarea" | "agentCheckboxList";
   placeholder: string;
 }
 
@@ -49,19 +50,14 @@ const formFields: FormFieldConfig[] = [
   {
     name: "intendedAgents",
     label: "Intended Agents",
-    type: "text",
-    placeholder: "Agent IDs (comma separated)",
+    type: "agentCheckboxList",
+    placeholder: "Select agents",
   },
 ];
 
 export default function NewDocumentPage() {
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<DocumentInput>({
+  const methods = useForm<DocumentInput>({
     defaultValues: {
       title: "",
       authors: "",
@@ -71,6 +67,12 @@ export default function NewDocumentPage() {
       intendedAgents: "",
     },
   });
+
+  const {
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = methods;
 
   const onSubmit = async (data: DocumentInput) => {
     try {
@@ -83,7 +85,7 @@ export default function NewDocumentPage() {
       }
 
       if (createResult.data?.success && createResult.data?.document) {
-        router.push(`/docs/${createResult.data.slug}`);
+        router.push(`/docs/${createResult.data.document.id}`);
       } else {
         const errorMessage =
           createResult.data?.error ||
@@ -121,62 +123,75 @@ export default function NewDocumentPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {formFields.map((field) => (
+          <FormProvider {...methods}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {formFields.map((field) => (
+                <FormField
+                  key={field.name}
+                  name={field.name}
+                  label={field.label}
+                  required={field.required}
+                  error={errors[field.name]}
+                >
+                  {field.type === "agentCheckboxList" ? (
+                    <AgentCheckboxList
+                      name={field.name}
+                      label={field.label}
+                      required={field.required}
+                      error={errors[field.name]}
+                    />
+                  ) : (
+                    <input
+                      {...methods.register(field.name)}
+                      type={field.type}
+                      id={field.name}
+                      className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
+                      placeholder={field.placeholder}
+                    />
+                  )}
+                </FormField>
+              ))}
+
               <FormField
-                key={field.name}
-                name={field.name}
-                label={field.label}
-                required={field.required}
-                error={errors[field.name]}
+                name="content"
+                label="Content"
+                required
+                error={errors.content}
               >
-                <input
-                  {...register(field.name)}
-                  type={field.type}
-                  id={field.name}
-                  className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
-                  placeholder={field.placeholder}
+                <textarea
+                  {...methods.register("content")}
+                  id="content"
+                  rows={15}
+                  className={`form-input ${errors.content ? "border-red-500" : ""}`}
+                  placeholder="Document content in Markdown format"
                 />
               </FormField>
-            ))}
 
-            <FormField
-              name="content"
-              label="Content"
-              required
-              error={errors.content}
-            >
-              <textarea
-                {...register("content")}
-                id="content"
-                rows={15}
-                className={`form-input ${errors.content ? "border-red-500" : ""}`}
-                placeholder="Document content in Markdown format"
-              />
-            </FormField>
-
-            {errors.root && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Error</h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      {errors.root.message}
+              {errors.root && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">
+                        Error
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        {errors.root.message}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div className="flex justify-end gap-3">
-              <Link href="/docs">
-                <Button variant="secondary">Cancel</Button>
-              </Link>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Document"}
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end gap-3">
+                <Link href="/docs">
+                  <Button variant="secondary">Cancel</Button>
+                </Link>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : "Save Document"}
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
         </div>
       </div>
     </div>
