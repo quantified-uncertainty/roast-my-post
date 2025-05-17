@@ -1,5 +1,5 @@
+import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
-import type { EvaluationAgent } from "../../../types/evaluationAgents";
 
 const documentInformationSection = (
   document: Document
@@ -10,12 +10,12 @@ Published: ${document.publishedDate || "Not provided"}
 URL: ${document.url || "Not provided"}
 `;
 
-function shouldIncludeGrade(agentInfo: EvaluationAgent): boolean {
+function shouldIncludeGrade(agentInfo: Agent): boolean {
   return !!agentInfo.gradeInstructions;
 }
 
 export function agentContextSection(
-  agentInfo: EvaluationAgent,
+  agentInfo: Agent,
   type: "comment" | "thinking"
 ): string {
   return `
@@ -33,7 +33,7 @@ ${type === "thinking" && agentInfo.gradeInstructions ? `Your instructions for gr
 }
 
 export function getThinkingAndSummaryPrompt(
-  agentInfo: EvaluationAgent,
+  agentInfo: Agent,
   targetWordCount: number,
   document: Document
 ): string {
@@ -67,7 +67,7 @@ ${document.content}`;
 
 export function getCommentPrompt(
   document: Document,
-  agentInfo: EvaluationAgent,
+  agentInfo: Agent,
   remainingComments: number
 ): string {
   return `
