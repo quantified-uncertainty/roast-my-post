@@ -26,6 +26,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",
     "@heroicons/react": "^2.2.0",
+    "@hookform/resolvers": "^5.0.1",
     "@iarna/toml": "^2.2.5",
     "@prisma/client": "^6.8.2",
     "@types/chroma-js": "^3.1.1",
@@ -55,6 +56,7 @@
     "micromark": "^4.0.2",
     "next": "15.3.0",
     "next-auth": "5.0.0-beta.28",
+    "next-safe-action": "^7.10.8",
     "nodemailer": "^6.10.1",
     "openai": "^4.93.0",
     "prisma": "^6.8.2",
@@ -62,6 +64,7 @@
     "raw-loader": "^4.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.4",
     "react-markdown": "^10.1.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
@@ -78,7 +81,7 @@
     "turndown": "^7.1.2",
     "unified": "^11.0.5",
     "uuid": "^9.0.1",
-    "zod": "^3.24.3"
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.26.3",
