@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentType {
+  ASSESSOR
+  ADVISOR
+  ENRICHER
+  EXPLAINER
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Document {
+  id            String    @id @default(uuid())
+  publishedDate DateTime
+  versions      DocumentVersion[]
+  evaluations   Evaluation[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model DocumentVersion {
+  id          String    @id @default(uuid())
+  version     Int
+  title       String
+  authors     String[]
+  urls        String[]
+  platforms   String[]
+  intendedAgents String[]
+  content     String
+  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+model Evaluation {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  versions    EvaluationVersion[]
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId  String
+  agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId     String
+  jobs        Job[]
+
+  @@index([documentId])
+  @@index([agentId])
+}
+
+model EvaluationVersion {
+  id          String   @id @default(uuid())
+  agentId     String
+  createdAt   DateTime @default(now())
+  summary     String?
+  grade       Int?
+  agentVersion AgentVersion @relation(fields: [agentVersionId], references: [id])
+  agentVersionId String
+  evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
+  evaluationId  String
+  comments    EvaluationComment[]
+  job        Job?
+
+  @@index([evaluationId])
+  @@index([agentVersionId])
+}
+
+model EvaluationComment {
+  id           String    @id @default(uuid())
+  title        String
+  description  String
+  importance   Int?
+  grade        Int?
+  evaluationVersion   EvaluationVersion    @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  evaluationVersionId     String
+  highlight    EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  highlightId  String    @unique
+}
+
+model EvaluationHighlight {
+  id          String   @id @default(uuid())
+  startOffset Int
+  endOffset   Int
+  prefix      String?
+  quotedText  String
+  isValid     Boolean   @default(true)
+  error       String?
+  comment     EvaluationComment?
+}
+
+model Agent {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  versions    AgentVersion[]
+  evaluations Evaluation[]
+}
+
+model AgentVersion {
+  id          String   @id @default(uuid())
+  version     Int
+  name        String
+  agentType   AgentType
+  description String
+  genericInstructions String
+  summaryInstructions String
+  commentInstructions String
+  gradeInstructions String?
+  agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  evaluations EvaluationVersion[]
+
+  @@unique([agentId, version])
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  status      JobStatus @default(PENDING)
+  attempts    Int      @default(0)
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  llmThinking String?
+  costInCents Int?
+  durationInSeconds Int?
+  logs String?
+  
+  evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
+  evaluationId  String
+  
+  evaluationVersion    EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
+  evaluationVersionId  String?  @unique
+
+  @@index([evaluationId])
+}

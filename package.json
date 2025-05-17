@@ -17,11 +17,16 @@
     "generate-docs": "tsx src/scripts/generate-docs-index.ts",
     "build:agents": "tsx src/scripts/build-agents.ts",
     "build:destructively-build-docs": "tsx src/scripts/build-docs.ts",
-    "test": "jest"
+    "test": "jest",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@iarna/toml": "^2.2.5",
+    "@prisma/client": "^6.8.2",
     "@types/chroma-js": "^3.1.1",
     "@types/iarna__toml": "^2.0.5",
     "axios": "^1.6.7",
@@ -49,6 +54,7 @@
     "micromark": "^4.0.2",
     "next": "15.3.0",
     "openai": "^4.93.0",
+    "prisma": "^6.8.2",
     "prismjs": "^1.30.0",
     "raw-loader": "^4.0.2",
     "react": "^19.0.0",
