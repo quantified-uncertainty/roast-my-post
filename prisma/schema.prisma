@@ -45,7 +45,7 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
@@ -78,7 +78,7 @@ enum JobStatus {
 }
 
 model Document {
-  id            String    @id @default(uuid())
+  id            String    @id
   publishedDate DateTime
   versions      DocumentVersion[]
   evaluations   Evaluation[]
@@ -161,7 +161,7 @@ model EvaluationHighlight {
 }
 
 model Agent {
-  id          String   @id @default(uuid())
+  id          String   @id
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   versions    AgentVersion[]

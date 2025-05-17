@@ -1,10 +1,11 @@
 "use server";
 
+import { nanoid } from "nanoid";
 import { createSafeActionClient } from "next-safe-action";
 
+import { auth } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 
-import { auth } from "@/lib/auth";
 import { type DocumentInput, documentSchema } from "./schema";
 
 // Setup next-safe-action
@@ -17,14 +18,18 @@ export const createDocument = actionClient
     try {
       const prisma = new PrismaClient();
       const session = await auth();
-      
+
       if (!session?.user?.id) {
         throw new Error("User must be logged in to create a document");
       }
 
+      // Generate a nanoid for the document id
+      const id = nanoid();
+
       // Create the document
       const document = await prisma.document.create({
         data: {
+          id, // use nanoid as the id
           publishedDate: new Date(),
           submittedById: session.user.id,
           versions: {
@@ -57,7 +62,7 @@ export const createDocument = actionClient
 
       await prisma.$disconnect();
 
-      // Create slug from title
+      // Create slug from title (optional, or you can use nanoid for slug too)
       const slug = data.title
         .toLowerCase()
         .replace(/[^\w\s]/gi, "")

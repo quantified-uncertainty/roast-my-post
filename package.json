@@ -55,6 +55,7 @@
     "metascraper-title": "^5.46.11",
     "metascraper-url": "^5.46.11",
     "micromark": "^4.0.2",
+    "nanoid": "^5.1.5",
     "next": "15.3.2",
     "next-auth": "5.0.0-beta.28",
     "next-safe-action": "^7.10.8",
