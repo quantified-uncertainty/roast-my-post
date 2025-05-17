@@ -60,7 +60,7 @@ program
 
       if (options.agent) {
         // Single agent review
-        const agentInfo = loadAgentInfo(options.agent);
+        const agentInfo = await loadAgentInfo(options.agent);
         if (!agentInfo) {
           console.error(`Agent "${options.agent}" not found`);
           process.exit(1);
@@ -69,10 +69,7 @@ program
         // Or, if analyzeDocument can accept RawDocument, simplify this.
         // For now, assuming analyzeDocument needs Document - this is a potential issue
         const documentForAnalysis: Document = JSON.parse(fileContent); // Re-parse or transform
-        const result = await analyzeDocument(
-          documentForAnalysis,
-          options.agent
-        );
+        const result = await analyzeDocument(documentForAnalysis, agentInfo);
 
         // --- Operate on rawDocument for saving ---
         // Remove any existing review by this agent
@@ -84,13 +81,13 @@ program
         if (result) {
           // Transform DocumentReview (result) to RawDocumentReview (for saving)
           const reviewToSave: RawDocumentReview = {
-            agentId: result.agentId,
-            createdAt: result.createdAt.toISOString(),
-            costInCents: result.costInCents || 0,
-            comments: result.comments || [],
-            thinking: result.thinking,
-            summary: result.summary,
-            grade: result.grade,
+            agentId: result.review.agentId,
+            createdAt: result.review.createdAt.toISOString(),
+            costInCents: result.review.costInCents || 0,
+            comments: result.review.comments || [],
+            thinking: result.review.thinking,
+            summary: result.review.summary,
+            grade: result.review.grade,
           };
           rawDocument.reviews.push(reviewToSave);
 
@@ -123,7 +120,8 @@ program
 
         for (const agentId of agents) {
           console.log(`Reviewing with agent ${agentId}...`);
-          const result = await analyzeDocument(documentForAnalysis, agentId);
+          const agentInfo = await loadAgentInfo(agentId);
+          const result = await analyzeDocument(documentForAnalysis, agentInfo);
 
           // --- Operate on rawDocument for saving ---
           rawDocument.reviews = (rawDocument.reviews || []).filter(
@@ -134,13 +132,13 @@ program
           if (result) {
             // Transform DocumentReview (result) to RawDocumentReview (for saving)
             const reviewToSaveInLoop: RawDocumentReview = {
-              agentId: result.agentId,
-              createdAt: result.createdAt.toISOString(),
-              costInCents: result.costInCents || 0,
-              comments: result.comments || [],
-              thinking: result.thinking,
-              summary: result.summary,
-              grade: result.grade,
+              agentId: result.review.agentId,
+              createdAt: result.review.createdAt.toISOString(),
+              costInCents: result.review.costInCents || 0,
+              comments: result.review.comments || [],
+              thinking: result.review.thinking,
+              summary: result.review.summary,
+              grade: result.review.grade,
             };
             rawDocument.reviews.push(reviewToSaveInLoop);
 

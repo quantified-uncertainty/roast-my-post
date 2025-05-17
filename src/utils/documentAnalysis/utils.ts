@@ -1,26 +1,8 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
 import type { Comment } from "../../types/documentReview";
 import type { RawLLMHighlight } from "../highlightUtils";
-
-export async function loadAgentInfo(agentId: string) {
-  try {
-    const agentPath = path.join(
-      process.cwd(),
-      "src",
-      "data",
-      "agents",
-      "dist",
-      `${agentId}.json`
-    );
-    const agentContent = await readFile(agentPath, "utf-8");
-    return JSON.parse(agentContent);
-  } catch (error) {
-    console.warn(`⚠️ Could not load agent info for ${agentId}:`, error);
-    return null;
-  }
-}
 
 export async function writeLogFile(content: string, filename: string) {
   const logsDir = path.join(process.cwd(), "logs");

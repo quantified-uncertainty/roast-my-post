@@ -1,20 +1,29 @@
 import { DocumentReview } from "../../types/documentReview";
 import { Document } from "../../types/documents";
+import { EvaluationAgent } from "../../types/evaluationAgents";
 import { getCommentData } from "./llmCalls/commentGenerator";
 import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
-import { loadAgentInfo } from "./utils/agentUtils";
 import {
   calculateTargetComments,
   calculateTargetWordCount,
 } from "./utils/calculations";
 
+interface AnalyzeDocumentResult {
+  review: DocumentReview;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  llmResponse?: string;
+  finalPrompt?: string;
+  agentContext?: string;
+}
+
 export async function analyzeDocument(
   document: Document,
-  agentId: string
-): Promise<DocumentReview> {
-  // Load agent info
-  const agentInfo = loadAgentInfo(agentId);
-
+  agent: EvaluationAgent
+): Promise<AnalyzeDocumentResult> {
   // Calculate target word count
   const targetComments = calculateTargetComments(document.content);
   const targetWordCount = calculateTargetWordCount(document.content);
@@ -22,14 +31,14 @@ export async function analyzeDocument(
   const thinkingResult = await generateThinkingAndSummary(
     document,
     targetWordCount,
-    agentInfo
+    agent
   );
 
   // Get comments
-  const comments = await getCommentData(document, agentInfo, targetComments);
+  const comments = await getCommentData(document, agent, targetComments);
 
   const documentReview: DocumentReview = {
-    agentId,
+    agentId: agent.id,
     createdAt: new Date(),
     costInCents: 0,
     thinking: thinkingResult.thinking,
@@ -38,5 +47,19 @@ export async function analyzeDocument(
     comments,
   };
 
-  return documentReview;
+  // Usage information would come from thinkingResult and comments generation
+  // For now, we'll mock it up with approximate values
+  const usage = {
+    prompt_tokens: 0, // Would be filled from API responses
+    completion_tokens: 0, // Would be filled from API responses
+    total_tokens: 0, // Would be filled from API responses
+  };
+
+  return {
+    review: documentReview,
+    usage,
+    llmResponse: JSON.stringify(documentReview), // This is a simplification
+    finalPrompt: "Prompt used to generate the review", // This is a placeholder
+    agentContext: JSON.stringify(agent), // This is a simplification
+  };
 }
