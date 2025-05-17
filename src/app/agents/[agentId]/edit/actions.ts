@@ -13,7 +13,7 @@ export const updateAgent = actionClient
   .schema(agentSchema)
   .action(async (data) => {
     try {
-      const agentId = (data as any).rawInput?.agentId;
+      const agentId = data.parsedInput.agentId;
 
       if (!agentId) {
         throw new Error("Agent ID is required");

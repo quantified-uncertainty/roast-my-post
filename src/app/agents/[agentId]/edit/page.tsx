@@ -20,7 +20,7 @@ export default function EditAgentPage({
   params: { agentId: string };
 }) {
   const router = useRouter();
-  const agentId = params.agentId;
+  const [agentId] = useState(params.agentId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,8 +74,8 @@ export default function EditAgentPage({
       const result = agentSchema.parse(data);
       // Use updateAgent for editing, passing both parsedInput and rawInput
       const updateResult = await updateAgent({
-        parsedInput: result,
-        rawInput: { agentId },
+        ...result,
+        agentId,
       });
 
       if (!updateResult?.data) {

@@ -11,21 +11,21 @@ const actionClient = createSafeActionClient();
 // Server action for creating an agent
 export const createAgent = actionClient
   .schema(agentSchema)
-  .action(async ({ parsedInput, rawInput }) => {
+  .action(async (data) => {
     try {
       const session = await auth();
       if (!session?.user?.id) {
         throw new Error("User must be logged in to create an agent");
       }
       let agent;
-      if (rawInput.agentId) {
+      if (data.parsedInput.agentId) {
         agent = await AgentModel.updateAgent(
-          rawInput.agentId,
-          parsedInput,
+          data.parsedInput.agentId,
+          data.parsedInput,
           session.user.id
         );
       } else {
-        agent = await AgentModel.createAgent(parsedInput, session.user.id);
+        agent = await AgentModel.createAgent(data.parsedInput, session.user.id);
       }
       return {
         success: true,

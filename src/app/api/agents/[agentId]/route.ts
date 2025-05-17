@@ -8,7 +8,8 @@ export async function GET(
   context: { params: { agentId: string } }
 ) {
   try {
-    const { agentId } = context.params;
+    const params = await context.params;
+    const { agentId } = params;
     const session = await auth();
     const agent = await AgentModel.getAgentWithOwner(
       agentId,
