@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
 import { PrismaClient } from "@prisma/client";
@@ -6,11 +7,19 @@ import { PrismaClient } from "@prisma/client";
 export default async function DocumentPage({
   params,
 }: {
-  params: { docId: string };
+  params: Promise<{ docId: string }>;
 }) {
+  const resolvedParams = await params;
+  const docId = resolvedParams.docId;
+
+  // Validate docId
+  if (!docId) {
+    notFound();
+  }
+
   const prisma = new PrismaClient();
   const dbDoc = await prisma.document.findUnique({
-    where: { id: params.docId },
+    where: { id: docId },
     include: { versions: true },
   });
 

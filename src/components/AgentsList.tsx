@@ -64,7 +64,7 @@ export default function AgentsList({ agents }: AgentsListProps) {
                 return (
                   <Link
                     key={agent.id}
-                    href={`/agents/${agent.id}}`}
+                    href={`/agents/${agent.id}`}
                     className="group block"
                   >
                     <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
