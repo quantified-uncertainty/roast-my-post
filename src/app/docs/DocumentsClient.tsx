@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { evaluationAgents } from "@/data/agents";
+import { Document, Evaluation } from "@/types/documentSchema";
 import {
   getGradeColorStrong,
   getLetterGrade,
@@ -48,7 +48,11 @@ function WordCountIndicator({ content }: { content: string }) {
   return <div className="flex items-end gap-0.5">{bars}</div>;
 }
 
-export default function DocumentsClient({ documents }: { documents: any[] }) {
+export default function DocumentsClient({
+  documents,
+}: {
+  documents: Document[];
+}) {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -58,12 +62,7 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
       documents
         .flatMap(
           (doc) =>
-            doc.reviews?.map((review: any) => {
-              const agent = evaluationAgents.find(
-                (a) => a.id === review.agentId
-              );
-              return agent?.name;
-            }) || []
+            doc.reviews?.map((review: Evaluation) => review.agent.name) || []
         )
         .filter(Boolean)
     )
@@ -86,10 +85,9 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
     }
 
     // Check if any agent name matches
-    return document.reviews?.some((review: any) => {
-      const agent = evaluationAgents.find((a) => a.id === review.agentId);
-      return agent?.name.toLowerCase().includes(query);
-    });
+    return document.reviews?.some((review: Evaluation) =>
+      review.agent.name.toLowerCase().includes(query)
+    );
   });
 
   return (
@@ -156,7 +154,7 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
                 // Count reviews by agent
                 const agentReviews =
                   document.reviews?.reduce(
-                    (acc: any, review: any) => {
+                    (acc: Record<string, number>, review: Evaluation) => {
                       acc[review.agentId] =
                         (acc[review.agentId] || 0) +
                         getValidCommentCount(review.comments || []);
@@ -252,21 +250,19 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
                       <div className="mt-4 flex flex-wrap gap-2">
                         {Object.entries(agentReviews).map(
                           ([agentId, commentCount]) => {
-                            const agent = evaluationAgents.find(
-                              (a) => a.id === agentId
+                            const review = document.reviews.find(
+                              (r: Evaluation) => r.agentId === agentId
                             );
                             const hasGradeInstructions =
-                              agent?.gradeInstructions;
-                            const grade = document.reviews.find(
-                              (r: any) => r.agentId === agentId
-                            )?.grade;
+                              review?.agent.gradeInstructions;
+                            const grade = review?.grade;
 
                             return (
                               <div
                                 key={agentId}
                                 className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                               >
-                                {agent?.name}
+                                {review?.agent.name}
                                 {hasGradeInstructions &&
                                   grade !== undefined && (
                                     <span
@@ -278,7 +274,7 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
                                   )}
                                 <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
                                 <span className="text-gray-500">
-                                  {commentCount as number}
+                                  {commentCount}
                                 </span>
                               </div>
                             );
@@ -403,9 +399,7 @@ export default function DocumentsClient({ documents }: { documents: any[] }) {
                       </td>
                       {evaluators.map((evaluator) => {
                         const review = document.reviews?.find(
-                          (r: any) =>
-                            evaluationAgents.find((a) => a.id === r.agentId)
-                              ?.name === evaluator
+                          (r: Evaluation) => r.agent.name === evaluator
                         );
                         return (
                           <td

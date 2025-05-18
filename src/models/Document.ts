@@ -63,6 +63,19 @@ export class DocumentModel {
       intendedAgents: latestVersion.intendedAgents,
       reviews: dbDoc.evaluations.map((evaluation) => ({
         agentId: evaluation.agent.id,
+        agent: {
+          id: evaluation.agent.id,
+          name: evaluation.agent.versions[0].name,
+          version: evaluation.agent.versions[0].version.toString(),
+          description: evaluation.agent.versions[0].description,
+          iconName: "robot", // TODO: Fix this
+          purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
+          genericInstructions: evaluation.agent.versions[0].genericInstructions,
+          summaryInstructions: evaluation.agent.versions[0].summaryInstructions,
+          commentInstructions: evaluation.agent.versions[0].commentInstructions,
+          gradeInstructions:
+            evaluation.agent.versions[0].gradeInstructions || undefined,
+        },
         createdAt: new Date(
           evaluation.versions[0]?.createdAt || evaluation.createdAt
         ),
@@ -148,6 +161,22 @@ export class DocumentModel {
         intendedAgents: latestVersion.intendedAgents,
         reviews: dbDoc.evaluations.map((evaluation) => ({
           agentId: evaluation.agent.id,
+          agent: {
+            id: evaluation.agent.id,
+            name: evaluation.agent.versions[0].name,
+            version: evaluation.agent.versions[0].version.toString(),
+            description: evaluation.agent.versions[0].description,
+            iconName: "robot", // TODO: Fix this
+            purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
+            genericInstructions:
+              evaluation.agent.versions[0].genericInstructions,
+            summaryInstructions:
+              evaluation.agent.versions[0].summaryInstructions,
+            commentInstructions:
+              evaluation.agent.versions[0].commentInstructions,
+            gradeInstructions:
+              evaluation.agent.versions[0].gradeInstructions || undefined,
+          },
           createdAt: new Date(
             evaluation.versions[0]?.createdAt || evaluation.createdAt
           ),

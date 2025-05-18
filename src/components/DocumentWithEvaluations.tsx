@@ -9,7 +9,6 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { evaluationAgents } from "@/data/agents/index";
 import type { Comment, Document, Evaluation } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
@@ -103,9 +102,7 @@ function CommentsSidebar({
       <div className="divide-y divide-gray-100">
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
-          const hasGradeInstructions = evaluationAgents.find(
-            (a) => a.id === review.agentId
-          )?.gradeInstructions;
+          const hasGradeInstructions = review.agent.gradeInstructions;
 
           return (
             <div
@@ -233,7 +230,6 @@ function ReviewSelector({
   return (
     <div className="flex flex-col gap-2">
       {document.reviews.map((review, index) => {
-        const agent = evaluationAgents.find((a) => a.id === review.agentId);
         const isActive = index === activeReviewIndex;
         const grade = review.grade || 0;
         const gradeStyle = getGradeColorStrong(grade);
@@ -258,7 +254,9 @@ function ReviewSelector({
               </span>
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <div className="font-medium text-gray-900">{agent?.name}</div>
+              <div className="font-medium text-gray-900">
+                {review.agent.name}
+              </div>
               <div className="text-sm text-gray-500">
                 {review.comments.length} highlights
               </div>
@@ -290,9 +288,7 @@ export function DocumentWithEvaluations({
   const commentColorMap = useMemo(() => {
     if (!activeReview) return {};
     const sortedComments = getValidAndSortedComments(activeReview.comments);
-    const hasGradeInstructions = evaluationAgents.find(
-      (a) => a.id === activeReview.agentId
-    )?.gradeInstructions;
+    const hasGradeInstructions = activeReview.agent.gradeInstructions;
 
     // Get all importance values for percentile calculation
     const allImportances = sortedComments
@@ -322,7 +318,7 @@ export function DocumentWithEvaluations({
       },
       {} as Record<number, { background: string; color: string }>
     );
-  }, [activeReview, evaluationAgents]);
+  }, [activeReview]);
 
   const scrollToHighlight = (tag: string) => {
     const element = window.document.getElementById(`highlight-${tag}`);
@@ -437,9 +433,7 @@ export function DocumentWithEvaluations({
                         Analysis
                       </h3>
                       {activeReview.grade &&
-                        evaluationAgents.find(
-                          (a) => a.id === activeReview.agentId
-                        )?.gradeInstructions && (
+                        activeReview.agent.gradeInstructions && (
                           <div className="ml-4 flex items-center gap-1 text-sm">
                             <span className="text-gray-500">Grade:</span>
                             <span
