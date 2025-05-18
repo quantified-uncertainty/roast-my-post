@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 # About This App
 
-OpenAnnotate is a document annotation application built with Next.js. It allows users to upload, analyze, and add annotations to documents. The app features AI-powered document analysis tools and a clean, responsive interface for working with Markdown documents.
+RoastMyPost is a document annotation application built with Next.js. It allows users to upload, analyze, and add annotations to documents. The app features AI-powered document analysis tools and a clean, responsive interface for working with Markdown documents.
 
 ## Getting Started
 

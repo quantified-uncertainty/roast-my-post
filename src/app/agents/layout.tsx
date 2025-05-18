@@ -10,7 +10,7 @@ export default function AgentsLayout({
       <footer className="mt-12 border-t border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
-            Evaluation Oracle — AI-powered document review tools
+            Roast My Post — AI-powered document review tools
           </p>
         </div>
       </footer>
