@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "danger";
 }
 
 export function Button({
@@ -18,6 +18,8 @@ export function Button({
       "border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
     secondary:
       "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+    danger:
+      "border border-transparent bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
   };
 
   return (

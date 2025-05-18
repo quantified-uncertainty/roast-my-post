@@ -88,6 +88,7 @@ export const DocumentSchema = z.object({
   platforms: z.array(z.string()),
   intendedAgents: z.array(z.string()),
   reviews: z.array(EvaluationSchema),
+  submittedById: z.string().optional(),
 });
 
 export type Document = z.infer<typeof DocumentSchema>;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
 // @ts-ignore - ESM modules are handled by Next.js
@@ -9,6 +10,8 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
+import { deleteDocument } from "@/app/docs/[docId]/actions";
+import { Button } from "@/components/Button";
 import type { Comment, Document, Evaluation } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
@@ -17,7 +20,7 @@ import {
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
-import { ChevronDownIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -270,14 +273,18 @@ function ReviewSelector({
 
 interface DocumentWithReviewsProps {
   document: Document;
+  isOwner?: boolean;
 }
 
 export function DocumentWithEvaluations({
   document,
+  isOwner,
 }: DocumentWithReviewsProps) {
+  const router = useRouter();
   const [activeReviewIndex, setActiveReviewIndex] = useState<number>(0);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
   // Handle case when there are no reviews
@@ -359,7 +366,7 @@ export function DocumentWithEvaluations({
     <div className="flex h-screen bg-white">
       <div ref={documentRef} className="flex-1 overflow-y-auto p-8">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 flex items-center gap-4">
+          <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">{document.title}</h1>
               <div className="text-sm text-gray-500">
@@ -380,6 +387,35 @@ export function DocumentWithEvaluations({
                 )}
               </div>
             </div>
+            {isOwner && (
+              <>
+                <form 
+                  action={async () => {
+                    if (confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+                      const result = await deleteDocument(document.id);
+                      
+                      if (result.success) {
+                        // Navigate to the documents list
+                        router.push(result.redirectTo);
+                      } else {
+                        // Show error
+                        setDeleteError(result.error || "Failed to delete document");
+                      }
+                    }
+                  }}
+                >
+                  <Button variant="danger" type="submit" className="flex items-center gap-2">
+                    <TrashIcon className="h-4 w-4" />
+                    Delete Document
+                  </Button>
+                </form>
+                {deleteError && (
+                  <div className="mt-2 text-red-600 text-sm">
+                    {deleteError}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <article className="prose prose-lg prose-slate max-w-none">

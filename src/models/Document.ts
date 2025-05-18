@@ -61,6 +61,7 @@ export class DocumentModel {
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
       platforms: latestVersion.platforms,
       intendedAgents: latestVersion.intendedAgents,
+      submittedById: dbDoc.submittedById,
       reviews: dbDoc.evaluations.map((evaluation) => ({
         agentId: evaluation.agent.id,
         agent: {
@@ -159,6 +160,7 @@ export class DocumentModel {
         url: latestVersion.urls[0] || "", // Provide empty string as fallback
         platforms: latestVersion.platforms,
         intendedAgents: latestVersion.intendedAgents,
+        submittedById: dbDoc.submittedById,
         reviews: dbDoc.evaluations.map((evaluation) => ({
           agentId: evaluation.agent.id,
           agent: {
@@ -274,5 +276,22 @@ export class DocumentModel {
     });
 
     return document;
+  }
+
+  static async delete(docId: string) {
+    // Delete the document which will cascade delete all related records
+    // per the Prisma schema relationships with onDelete: Cascade
+    return this.prisma.document.delete({
+      where: { id: docId },
+    });
+  }
+
+  static async checkOwnership(docId: string, userId: string): Promise<boolean> {
+    const document = await this.prisma.document.findUnique({
+      where: { id: docId },
+      select: { submittedById: true },
+    });
+
+    return document?.submittedById === userId;
   }
 }

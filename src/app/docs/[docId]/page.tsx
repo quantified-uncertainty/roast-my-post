@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
+import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 
 export default async function DocumentPage({
@@ -11,6 +12,8 @@ export default async function DocumentPage({
 }) {
   const resolvedParams = await params;
   const docId = resolvedParams.docId;
+  const session = await auth();
+  const currentUserId = session?.user?.id;
 
   // Validate docId
   if (!docId) {
@@ -38,11 +41,17 @@ export default async function DocumentPage({
     );
   }
 
+  // Check if current user is the owner
+  const isOwner = currentUserId ? document.submittedById === currentUserId : false;
+
   return (
     <div className="min-h-screen">
       <main>
         <div className="mx-auto max-w-full">
-          <DocumentWithEvaluations document={document} />
+          <DocumentWithEvaluations 
+            document={document} 
+            isOwner={isOwner}
+          />
         </div>
       </main>
     </div>
