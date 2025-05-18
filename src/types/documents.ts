@@ -1,5 +1,5 @@
 // Document type definitions
-import type { Comment, DocumentReview } from "./oldDocumentReview";
+import type { Comment, Evaluation } from "./documentSchema";
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {
@@ -7,10 +7,9 @@ export interface RawDocumentReview {
   comments: Comment[];
   costInCents: number;
   createdAt: string;
-  runDetails?: string;
-  thinking?: string;
-  summary?: string;
-  grade?: number; // 0-100: 0=unacceptable, 50=mediocre, 100=exceptional
+  thinking: string;
+  summary: string;
+  grade: number;
 }
 
 export interface RawDocument {
@@ -40,7 +39,7 @@ export interface Document {
   publishedDate: string;
   url?: string;
   platforms?: string[];
-  reviews: DocumentReview[];
+  reviews: Evaluation[];
   intendedAgents: string[];
 }
 
@@ -65,8 +64,8 @@ export function transformDocument(raw: RawDocument): Document {
             `Review for agent ${review.agentId} in document ${raw.id} is missing createdAt. Using epoch as fallback.`
           );
         }
-        // Ensure the mapped object conforms to DocumentReview if it differs from RawDocumentReview
-        // Assuming DocumentReview is the same as RawDocumentReview except createdAt is Date type
+        // Ensure the mapped object conforms to Evaluation if it differs from RawDocumentReview
+        // Assuming Evaluation is the same as RawDocumentReview except createdAt is Date type
         return {
           ...review,
           createdAt: createdAt, // Assign the parsed or fallback date

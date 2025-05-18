@@ -4,10 +4,10 @@ import { AgentModel } from "@/models/Agent";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { agentId: string } }
 ) {
   try {
-    const review = await AgentModel.getAgentReview(params.id);
+    const review = await AgentModel.getAgentReview(params.agentId);
     return NextResponse.json({ review });
   } catch (error) {
     console.error("Error fetching agent review:", error);
