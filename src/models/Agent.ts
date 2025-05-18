@@ -2,6 +2,8 @@ import { nanoid } from "nanoid";
 
 import type { Agent, AgentInput } from "@/types/agentSchema";
 import { AgentInputSchema, AgentSchema } from "@/types/agentSchema";
+import type { AgentReview } from "@/types/evaluationSchema";
+import { AgentReviewSchema } from "@/types/evaluationSchema";
 import { PrismaClient } from "@prisma/client";
 
 export { AgentInputSchema as agentSchema };
@@ -179,6 +181,46 @@ export class AgentModel {
           email: dbAgent.submittedBy.email || "unknown@example.com",
         },
         isOwner,
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  static async getAgentReview(agentId: string): Promise<AgentReview | null> {
+    const prisma = new PrismaClient();
+    try {
+      const evaluationVersion = await prisma.evaluationVersion.findFirst({
+        where: {
+          agentId: agentId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          evaluation: {
+            include: {
+              document: {
+                include: {
+                  submittedBy: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!evaluationVersion) {
+        return null;
+      }
+
+      return AgentReviewSchema.parse({
+        evaluatedAgentId: agentId,
+        grade: evaluationVersion.grade,
+        summary: evaluationVersion.summary,
+        author:
+          evaluationVersion.evaluation.document.submittedBy.name || "Unknown",
+        createdAt: evaluationVersion.createdAt,
       });
     } finally {
       await prisma.$disconnect();

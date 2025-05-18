@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
-import { agentReviews } from "@/data/agentReviews";
 import type { Agent } from "@/types/agentSchema";
+import type { AgentReview } from "@/types/evaluationSchema";
 import { AGENT_TYPE_INFO } from "@/utils/agentTypes";
 import { getGradeColorStrong, getLetterGrade } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
@@ -20,7 +22,29 @@ export default function AgentDetail({
   isOwner = false,
 }: AgentDetailProps) {
   const IconComponent = getIcon(agent.iconName);
-  const review = agentReviews.find((r) => r.evaluatedAgentId === agent.id);
+  const [review, setReview] = useState<AgentReview | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchReview() {
+      try {
+        const response = await fetch(`/api/agents/${agent.id}/review`);
+        const data = await response.json();
+        if (data.review) {
+          setReview({
+            ...data.review,
+            createdAt: new Date(data.review.createdAt),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching agent review:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchReview();
+  }, [agent.id]);
 
   return (
     <div className="mx-auto max-w-4xl p-8">
@@ -57,7 +81,11 @@ export default function AgentDetail({
         <p className="text-lg text-gray-700">{agent.description}</p>
       </div>
 
-      {review && (
+      {loading ? (
+        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-gray-500">Loading review...</p>
+        </div>
+      ) : review ? (
         <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Assessments</h2>
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -77,7 +105,7 @@ export default function AgentDetail({
             </span>
           </div>
         </div>
-      )}
+      ) : null}
 
       <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
