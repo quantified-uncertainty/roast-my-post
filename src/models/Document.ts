@@ -12,7 +12,11 @@ export class DocumentModel {
     const dbDoc = await this.prisma.document.findUnique({
       where: { id: docId },
       include: {
-        versions: true,
+        versions: {
+          orderBy: {
+            version: "desc",
+          },
+        },
         evaluations: {
           include: {
             agent: {
@@ -293,5 +297,76 @@ export class DocumentModel {
     });
 
     return document?.submittedById === userId;
+  }
+
+  static async update(
+    docId: string,
+    data: {
+      title: string;
+      authors: string;
+      urls?: string;
+      platforms?: string;
+      intendedAgents?: string;
+      content: string;
+    },
+    userId: string
+  ) {
+    // First get current document and its latest version
+    const document = await this.prisma.document.findUnique({
+      where: { id: docId },
+      include: {
+        versions: {
+          orderBy: {
+            version: "desc",
+          },
+          take: 1,
+        },
+      },
+    });
+
+    if (!document) {
+      throw new Error("Document not found");
+    }
+
+    // Verify ownership
+    if (document.submittedById !== userId) {
+      throw new Error("You don't have permission to update this document");
+    }
+
+    // Get current version number
+    const currentVersion = document.versions[0]?.version || 0;
+    const newVersion = currentVersion + 1;
+
+    // Update the document by creating a new version
+    const updatedDocument = await this.prisma.document.update({
+      where: { id: docId },
+      data: {
+        versions: {
+          create: {
+            version: newVersion,
+            title: data.title,
+            authors: data.authors.split(",").map((a) => a.trim()),
+            urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
+            platforms: data.platforms
+              ? data.platforms.split(",").map((p) => p.trim())
+              : [],
+            intendedAgents: data.intendedAgents
+              ? data.intendedAgents.split(",").map((a) => a.trim())
+              : [],
+            content: data.content,
+          },
+        },
+      },
+      include: {
+        versions: {
+          orderBy: {
+            version: "desc",
+          },
+          take: 1,
+        },
+      },
+    });
+
+    return updatedDocument;
   }
 }

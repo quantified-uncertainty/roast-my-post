@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -20,7 +21,12 @@ import {
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
-import { ChevronDownIcon, ChevronLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
   StarIcon,
@@ -388,33 +394,47 @@ export function DocumentWithEvaluations({
               </div>
             </div>
             {isOwner && (
-              <>
-                <form 
+              <div className="flex items-center gap-2">
+                <Link href={`/docs/${document.id}/edit`}>
+                  <Button className="flex items-center gap-2">
+                    <PencilIcon className="h-4 w-4" />
+                    Edit Document
+                  </Button>
+                </Link>
+                <form
                   action={async () => {
-                    if (confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+                    if (
+                      confirm(
+                        "Are you sure you want to delete this document? This action cannot be undone."
+                      )
+                    ) {
                       const result = await deleteDocument(document.id);
-                      
+
                       if (result.success) {
                         // Navigate to the documents list
-                        router.push(result.redirectTo);
+                        router.push(result.redirectTo || "/docs");
                       } else {
                         // Show error
-                        setDeleteError(result.error || "Failed to delete document");
+                        setDeleteError(
+                          result.error || "Failed to delete document"
+                        );
                       }
                     }
                   }}
                 >
-                  <Button variant="danger" type="submit" className="flex items-center gap-2">
+                  <Button
+                    variant="danger"
+                    type="submit"
+                    className="flex items-center gap-2"
+                  >
                     <TrashIcon className="h-4 w-4" />
                     Delete Document
                   </Button>
                 </form>
                 {deleteError && (
-                  <div className="mt-2 text-red-600 text-sm">
-                    {deleteError}
-                  </div>
+                  <div className="mt-2 text-sm text-red-600">{deleteError}</div>
                 )}
-              </>
+              </div>
             )}
           </div>
 

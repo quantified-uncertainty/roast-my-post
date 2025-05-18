@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { DocumentModel } from "@/models/Document";
 
 export async function GET(
   req: NextRequest,
@@ -10,15 +8,20 @@ export async function GET(
 ) {
   const { slugOrId: id } = params;
 
-  // Only try to find by ID
-  const document = await prisma.document.findUnique({
-    where: { id },
-    include: { versions: true },
-  });
+  try {
+    // Use the DocumentModel to get a formatted document
+    const document = await DocumentModel.getDocumentWithEvaluations(id);
 
-  if (!document) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    if (!document) {
+      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(document);
+  } catch (error) {
+    console.error("Error fetching document:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch document" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(document);
 }

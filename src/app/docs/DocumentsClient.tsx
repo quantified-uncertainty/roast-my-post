@@ -12,6 +12,7 @@ import {
 import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,
+  PencilIcon,
   Squares2X2Icon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
@@ -50,8 +51,10 @@ function WordCountIndicator({ content }: { content: string }) {
 
 export default function DocumentsClient({
   documents,
+  currentUserId
 }: {
   documents: Document[];
+  currentUserId?: string;
 }) {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [searchQuery, setSearchQuery] = useState("");
