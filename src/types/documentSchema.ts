@@ -31,6 +31,8 @@ export const EvaluationVersionSchema = z.object({
     .object({
       costInCents: z.number(),
       llmThinking: z.string(),
+      durationInSeconds: z.number().optional(),
+      logs: z.string().optional(),
     })
     .optional(),
   comments: z.array(CommentSchema),

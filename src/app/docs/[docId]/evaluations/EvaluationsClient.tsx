@@ -36,7 +36,7 @@ export default function EvaluationsClient({
     number | null
   >(null);
   const [activeTab, setActiveTab] = useState<
-    "summary" | "comments" | "thinking"
+    "summary" | "comments" | "thinking" | "logs"
   >("summary");
 
   const formatDate = (dateString: Date) => {
@@ -61,7 +61,7 @@ export default function EvaluationsClient({
   const selectedVersion = selectedReview?.versions?.[selectedVersionIndex ?? 0];
 
   return (
-    <div className="container mx-auto max-w-[2000px] py-8">
+    <div className="w-full py-8">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href={`/docs/${document.id}`}>
@@ -94,36 +94,35 @@ export default function EvaluationsClient({
       ) : (
         <div className="grid grid-cols-12 gap-6">
           {/* Left column - Evaluations list (2 columns) */}
-          <div className="col-span-2 overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <div className="col-span-2">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
               <h2 className="text-lg font-medium">
                 Evaluations ({reviews.length})
               </h2>
             </div>
-            <div className="divide-y divide-gray-200">
-              {reviews.map((review: Evaluation) => (
+            <div>
+              {reviews.map((review: Evaluation, idx) => (
                 <div
                   key={review.agentId}
-                  className={`cursor-pointer p-6 hover:bg-gray-50 ${
-                    selectedReviewId === review.agentId ? "bg-gray-50" : ""
-                  }`}
+                  className={`cursor-pointer px-3 py-2 text-sm ${
+                    selectedReviewId === review.agentId
+                      ? "bg-blue-50"
+                      : "bg-transparent"
+                  } ${idx !== reviews.length - 1 ? "border-b border-gray-200" : ""}`}
                   onClick={() => {
                     setSelectedReviewId(review.agentId);
                     setSelectedVersionIndex(0);
                   }}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900">
-                        {review.agent.name} {`v${review.agent.version}`}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {formatDate(review.createdAt)}
-                      </p>
+                      <div className="font-medium text-gray-900">
+                        {review.agent.name}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {review.versions && review.versions.length > 0 && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500">
                           {review.versions.length} versions
                         </div>
                       )}
@@ -148,40 +147,58 @@ export default function EvaluationsClient({
           </div>
 
           {/* Middle column - Version history (3 columns) */}
-          <div className="col-span-3 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="col-span-3">
             {selectedReview ? (
               <div>
-                <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+                  <div className="mb-1">
+                    <Link
+                      href={`/agents/${selectedReview.agentId}`}
+                      className="font-semibold text-blue-700 hover:underline"
+                    >
+                      {selectedReview.agent.name}
+                    </Link>
+                    <span className="ml-2 text-xs text-gray-500">
+                      v{selectedReview.agent.version}
+                    </span>
+                    <span className="ml-4 text-xs text-gray-400">
+                      Created: {formatDate(selectedReview.createdAt)}
+                    </span>
+                  </div>
                   <h2 className="text-lg font-medium">
                     Version History - {selectedReview.agent.name}
                   </h2>
                 </div>
-                <div className="p-6">
+                <div>
                   {selectedReview.versions &&
                   selectedReview.versions.length > 0 ? (
-                    <div className="space-y-4">
+                    <div>
                       {selectedReview.versions.map((version, index) => (
                         <div
                           key={index}
-                          className={`cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50 ${
+                          className={`cursor-pointer px-3 py-2 text-sm transition-colors ${
                             selectedVersionIndex === index
-                              ? "border-blue-500 bg-blue-50"
+                              ? "bg-blue-50"
+                              : "bg-transparent"
+                          } ${
+                            index !== (selectedReview.versions?.length ?? 0) - 1
+                              ? "border-b border-gray-200"
                               : ""
                           }`}
                           onClick={() => setSelectedVersionIndex(index)}
                         >
                           <div className="flex items-start justify-between">
                             <div>
-                              <h5 className="font-medium text-gray-800">
+                              <div className="font-medium text-gray-800">
                                 Version{" "}
                                 {selectedReview.versions?.length
                                   ? selectedReview.versions.length - index
                                   : 0}
                                 {index === 0 && " (Latest)"}
-                              </h5>
-                              <p className="mt-1 text-xs text-gray-500">
+                              </div>
+                              <div className="mt-1 text-xs text-gray-500">
                                 Created: {formatDate(version.createdAt)}
-                              </p>
+                              </div>
                             </div>
                             <div
                               className="flex h-8 w-8 items-center justify-center rounded-full"
@@ -194,14 +211,12 @@ export default function EvaluationsClient({
                               </span>
                             </div>
                           </div>
-
-                          <div className="mt-2">
-                            <p className="line-clamp-2 text-sm text-gray-600">
+                          <div className="mt-1">
+                            <p className="line-clamp-2 text-xs text-gray-600">
                               {version.summary}
                             </p>
                           </div>
-
-                          <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                          <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
                             <span>
                               {version.comments?.length || 0} comments
                             </span>
@@ -212,12 +227,18 @@ export default function EvaluationsClient({
                                   {(version.job.costInCents / 100).toFixed(2)}
                                 </span>
                               )}
+                            {version.job?.durationInSeconds !== undefined && (
+                              <span>
+                                Runtime:{" "}
+                                {version.job.durationInSeconds.toFixed(1)}s
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center text-gray-500">
+                    <div className="py-4 text-center text-gray-500">
                       No versions available for this evaluation
                     </div>
                   )}
@@ -288,6 +309,17 @@ export default function EvaluationsClient({
                     >
                       <SparklesIcon className="h-4 w-4" />
                       Thinking
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("logs")}
+                      className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
+                        activeTab === "logs"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                      }`}
+                    >
+                      <DocumentTextIcon className="h-4 w-4" />
+                      Logs
                     </button>
                   </div>
                 </div>
@@ -409,6 +441,26 @@ export default function EvaluationsClient({
                             {(selectedVersion.job.costInCents / 100).toFixed(2)}
                           </div>
                         )}
+                    </div>
+                  )}
+
+                  {/* Logs Tab */}
+                  {activeTab === "logs" && (
+                    <div className="space-y-6">
+                      {selectedVersion.job?.logs ? (
+                        <div className="prose max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                          >
+                            {selectedVersion.job.logs}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500">
+                          No logs available for this version
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

@@ -76,6 +76,8 @@ export class DocumentModel {
             ? {
                 costInCents: version.job.costInCents || 0,
                 llmThinking: version.job.llmThinking || "",
+                durationInSeconds: version.job.durationInSeconds || undefined,
+                logs: version.job.logs || undefined,
               }
             : undefined,
           comments: version.comments.map((comment) => ({
