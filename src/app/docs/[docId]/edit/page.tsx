@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -57,13 +57,16 @@ const formFields: FormFieldConfig[] = [
   },
 ];
 
-export default function EditDocumentPage({
-  params,
-}: {
-  params: { docId: string };
-}) {
+type Props = {
+  params: Promise<{
+    docId: string;
+  }>;
+};
+
+export default function EditDocumentPage({ params }: Props) {
   const router = useRouter();
-  const docId = params.docId; // Use the docId directly from params, don't put it in state
+  const resolvedParams = use(params);
+  const docId = resolvedParams.docId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,7 +135,7 @@ export default function EditDocumentPage({
       // Use updateDocument for editing with the docId explicitly included
       const updateResult = await updateDocument({
         ...result,
-        docId: params.docId, // Use params.docId to ensure the correct ID
+        docId: docId, // Use the resolved docId
       });
 
       if (!updateResult.success) {

@@ -112,3 +112,16 @@ export const DocumentResponseSchema = z.object({
 });
 
 export type DocumentResponse = z.infer<typeof DocumentResponseSchema>;
+
+// Schema for analysis result (used during document analysis)
+export const AnalysisResultSchema = z.object({
+  agentId: z.string(),
+  createdAt: z.date(),
+  costInCents: z.number(),
+  comments: z.array(CommentSchema),
+  thinking: z.string(),
+  summary: z.string(),
+  grade: z.number(),
+});
+
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;

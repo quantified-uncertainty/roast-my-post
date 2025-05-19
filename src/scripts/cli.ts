@@ -82,6 +82,18 @@ program
           // Transform DocumentReview (result) to RawDocumentReview (for saving)
           const reviewToSave: RawDocumentReview = {
             agentId: result.review.agentId,
+            agent: {
+              id: agentInfo.id,
+              name: agentInfo.name,
+              version: agentInfo.version,
+              description: agentInfo.description,
+              iconName: agentInfo.iconName,
+              purpose: agentInfo.purpose,
+              genericInstructions: agentInfo.genericInstructions,
+              summaryInstructions: agentInfo.summaryInstructions,
+              commentInstructions: agentInfo.commentInstructions,
+              gradeInstructions: agentInfo.gradeInstructions,
+            },
             createdAt: result.review.createdAt.toISOString(),
             costInCents: result.review.costInCents || 0,
             comments: result.review.comments || [],
@@ -133,6 +145,18 @@ program
             // Transform DocumentReview (result) to RawDocumentReview (for saving)
             const reviewToSaveInLoop: RawDocumentReview = {
               agentId: result.review.agentId,
+              agent: {
+                id: agentInfo.id,
+                name: agentInfo.name,
+                version: agentInfo.version,
+                description: agentInfo.description,
+                iconName: agentInfo.iconName,
+                purpose: agentInfo.purpose,
+                genericInstructions: agentInfo.genericInstructions,
+                summaryInstructions: agentInfo.summaryInstructions,
+                commentInstructions: agentInfo.commentInstructions,
+                gradeInstructions: agentInfo.gradeInstructions,
+              },
               createdAt: result.review.createdAt.toISOString(),
               costInCents: result.review.costInCents || 0,
               comments: result.review.comments || [],

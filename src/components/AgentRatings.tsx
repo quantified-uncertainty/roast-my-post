@@ -1,8 +1,8 @@
-import type { EvaluationAgentReview } from "@/types/oldEvaluationAgentReview";
+import type { AgentReview } from "@/types/evaluationSchema";
 import { StarIcon } from "@heroicons/react/24/solid";
 
 interface AgentRatingsProps {
-  reviews: EvaluationAgentReview[];
+  reviews: AgentReview[];
 }
 
 export default function AgentRatings({ reviews }: AgentRatingsProps) {

@@ -1,12 +1,6 @@
 import Link from "next/link";
 
-import { evaluationAgents } from "@/data/agents/index";
-import { getIcon } from "@/utils/iconMap";
-
 export default function Home() {
-  // Get a few featured agents
-  const featuredAgents = evaluationAgents.slice(0, 3);
-
   return (
     <div className="min-h-screen bg-white">
       <header className="bg-white shadow">
@@ -27,36 +21,6 @@ export default function Home() {
               <h2 className="mb-4 text-2xl font-bold text-gray-900">
                 Featured Evaluation Agents
               </h2>
-
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-                {featuredAgents.map((agent) => {
-                  const IconComponent = getIcon(agent.iconName);
-                  return (
-                    <Link
-                      key={agent.id}
-                      href={`/agents/${agent.id}-${agent.version.replace(
-                        ".",
-                        "-"
-                      )}`}
-                      className="group block"
-                    >
-                      <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-                        <div className="mb-2 flex items-center gap-3">
-                          <div className={`rounded-lg bg-blue-100 p-2`}>
-                            <IconComponent className="h-5 w-5" />
-                          </div>
-                          <h3 className="text-lg font-semibold transition-colors group-hover:text-blue-600">
-                            {agent.name}
-                          </h3>
-                        </div>
-                        <p className="line-clamp-2 text-sm text-gray-600">
-                          {agent.description}
-                        </p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
 
               <div className="text-center">
                 <Link

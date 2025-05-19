@@ -1,7 +1,7 @@
 import { z } from "zod";
 
+import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
-import type { EvaluationAgent } from "../../../types/evaluationAgents";
 import {
   ANALYSIS_MODEL,
   DEFAULT_TEMPERATURE,
@@ -18,7 +18,7 @@ const ThinkingGeneratorResultSchema = z.object({
 export async function generateThinkingAndSummary(
   document: Document,
   targetWordCount: number,
-  agentInfo: EvaluationAgent
+  agentInfo: Agent
 ): Promise<{
   thinking: string;
   summary: string;

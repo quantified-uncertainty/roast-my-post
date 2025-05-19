@@ -1,6 +1,6 @@
 import { Agent } from "../../types/agentSchema";
 import { Document } from "../../types/documents";
-import { Evaluation } from "../../types/documentSchema";
+import { AnalysisResult } from "../../types/documentSchema";
 import { getCommentData } from "./llmCalls/commentGenerator";
 import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
 import {
@@ -9,7 +9,7 @@ import {
 } from "./utils/calculations";
 
 interface AnalyzeDocumentResult {
-  review: Evaluation;
+  review: AnalysisResult;
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -37,7 +37,7 @@ export async function analyzeDocument(
   // Get comments
   const comments = await getCommentData(document, agent, targetComments);
 
-  const documentReview: Evaluation = {
+  const documentReview: AnalysisResult = {
     agentId: agent.id,
     createdAt: new Date(),
     costInCents: 0,
