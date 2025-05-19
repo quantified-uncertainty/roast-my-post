@@ -2,9 +2,10 @@ import { nanoid } from "nanoid";
 
 import { prisma } from "@/lib/prisma";
 import type { Agent, AgentInput } from "@/types/agentSchema";
-import { AgentInputSchema, AgentSchema } from "@/types/agentSchema";
+import { AgentInputSchema, AgentSchema, AgentVersionSchema } from "@/types/agentSchema";
 import type { AgentReview } from "@/types/evaluationSchema";
 import { AgentReviewSchema } from "@/types/evaluationSchema";
+import type { AgentVersion } from "@/types/agentSchema";
 
 export { AgentInputSchema as agentSchema };
 export type { AgentInput };
@@ -179,6 +180,33 @@ export class AgentModel {
         },
         isOwner,
       });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+
+  static async getAgentVersions(agentId: string): Promise<AgentVersion[]> {
+    try {
+      const versions = await prisma.agentVersion.findMany({
+        where: { agentId },
+        orderBy: { version: "desc" },
+      });
+
+      return versions.map((version) => 
+        AgentVersionSchema.parse({
+          id: version.id,
+          version: version.version,
+          name: version.name,
+          agentType: version.agentType,
+          description: version.description,
+          genericInstructions: version.genericInstructions,
+          summaryInstructions: version.summaryInstructions,
+          commentInstructions: version.commentInstructions,
+          gradeInstructions: version.gradeInstructions,
+          createdAt: version.createdAt,
+          updatedAt: version.updatedAt,
+        })
+      );
     } finally {
       await prisma.$disconnect();
     }

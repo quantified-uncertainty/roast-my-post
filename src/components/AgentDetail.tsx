@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Pencil } from "lucide-react";
+import { Clock, Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
@@ -67,14 +67,22 @@ export default function AgentDetail({
           </div>
         </div>
 
-        {isOwner && (
-          <Link href={`/agents/${agent.id}/edit`}>
+        <div className="flex items-center gap-2">
+          <Link href={`/agents/${agent.id}/versions`}>
             <Button variant="secondary" className="flex items-center gap-2">
-              <Pencil className="h-4 w-4" />
-              Edit Agent
+              <Clock className="h-4 w-4" />
+              Version History
             </Button>
           </Link>
-        )}
+          {isOwner && (
+            <Link href={`/agents/${agent.id}/edit`}>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Pencil className="h-4 w-4" />
+                Edit Agent
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="mb-8">
