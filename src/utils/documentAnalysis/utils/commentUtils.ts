@@ -1,4 +1,4 @@
-import type { Comment } from "../../../types/oldDocumentReview";
+import type { Comment } from "../../../types/documentSchema";
 import type { RawLLMHighlight } from "../../highlightUtils";
 import { processRawComments } from "../../highlightUtils";
 

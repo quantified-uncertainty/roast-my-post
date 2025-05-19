@@ -4,20 +4,19 @@ import AgentDetail from "@/components/AgentDetail";
 import { auth } from "@/lib/auth";
 import { AgentModel } from "@/models/Agent";
 
-interface AgentPageProps {
-  params: {
-    agentId: string;
-  };
-}
-
-export default async function AgentPage({ params }: AgentPageProps) {
+export default async function AgentPage({
+  params,
+}: {
+  params: Promise<{ agentId: string }>;
+}) {
+  const resolvedParams = await params;
   const session = await auth();
   if (!session?.user) {
     return notFound();
   }
 
   const agent = await AgentModel.getAgentWithOwner(
-    params.agentId,
+    resolvedParams.agentId,
     session.user.id
   );
   if (!agent) {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run build:agents && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
@@ -14,9 +14,6 @@
     "delete-reviews": "npm run cli -- delete-reviews",
     "import": "npm run cli -- import",
     "verify": "npm run cli -- verify",
-    "generate-docs": "tsx src/scripts/generate-docs-index.ts",
-    "build:agents": "tsx src/scripts/build-agents.ts",
-    "build:destructively-build-docs": "tsx src/scripts/build-docs.ts",
     "test": "jest",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

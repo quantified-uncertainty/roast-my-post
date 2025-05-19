@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { DocumentModel } from "@/models/Document";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { slugOrId: string } }
-) {
+export async function GET(req: NextRequest, context: any) {
+  const { params } = context;
   const { slugOrId: id } = params;
 
   try {
@@ -13,7 +11,10 @@ export async function GET(
     const document = await DocumentModel.getDocumentWithEvaluations(id);
 
     if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(document);

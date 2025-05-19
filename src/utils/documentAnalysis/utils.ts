@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
-import type { Comment } from "../../types/oldDocumentReview";
+import type { Comment } from "../../types/documentSchema";
 import type { RawLLMHighlight } from "../highlightUtils";
 
 export async function writeLogFile(content: string, filename: string) {
@@ -77,8 +77,8 @@ export async function processRawComments(
         startOffset,
         endOffset,
         quotedText: document.substring(startOffset, endOffset),
+        isValid: true,
       },
-      isValid: true,
     });
   }
 

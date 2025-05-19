@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import type { DocumentReview } from "../types/oldDocumentReview";
+import type { Evaluation } from "../types/documentSchema";
 import { sortCommentsByOffset } from "../utils/commentUtils";
 
 const { Command } = require("commander");
@@ -71,7 +71,7 @@ async function analyzeWithAgent(filePath: string, agentId: string) {
   if (data.reviews) {
     const initialLength = data.reviews.length;
     data.reviews = data.reviews.filter(
-      (review: DocumentReview) => review.agentId !== agentId
+      (review: Evaluation) => review.agentId !== agentId
     );
     if (initialLength !== data.reviews.length) {
       console.log(
@@ -200,7 +200,7 @@ async function processDirectory(dirPath: string) {
 
       // Get list of agents that have already reviewed this document
       const reviewedAgentIds = new Set(
-        (data.reviews || []).map((review: DocumentReview) => review.agentId)
+        (data.reviews || []).map((review: Evaluation) => review.agentId)
       );
 
       // Filter agents based on --only-missing option
@@ -248,7 +248,7 @@ async function main() {
         }
         // Get list of agents that have already reviewed this document
         const reviewedAgentIds = new Set(
-          (data.reviews || []).map((review: DocumentReview) => review.agentId)
+          (data.reviews || []).map((review: Evaluation) => review.agentId)
         );
 
         // Filter agents based on --only-missing option

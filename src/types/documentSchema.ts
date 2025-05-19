@@ -6,6 +6,7 @@ export const HighlightSchema = z.object({
   endOffset: z.number(),
   quotedText: z.string(),
   isValid: z.boolean(),
+  prefix: z.string().optional(),
 });
 
 export type Highlight = z.infer<typeof HighlightSchema>;

@@ -3,10 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { AgentModel } from "@/models/Agent";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { agentId: string } }
-) {
+export async function GET(request: NextRequest, context: any) {
+  const { params } = context;
   try {
     const agentId = params.agentId;
     const session = await auth();

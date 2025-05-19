@@ -1,6 +1,6 @@
+import type { Agent } from "../../../types/agentSchema";
 import { Document } from "../../../types/documents";
-import { EvaluationAgent } from "../../../types/evaluationAgents";
-import type { Comment } from "../../../types/oldDocumentReview";
+import type { Comment } from "../../../types/documentSchema";
 import {
   ANALYSIS_MODEL,
   DEFAULT_TEMPERATURE,
@@ -8,11 +8,10 @@ import {
 } from "../../../types/openai";
 import { getCommentPrompt } from "../prompts";
 import { validateComments } from "../utils/commentUtils";
-import { getCommentData } from "./commentGenerator";
 
 export async function getCommentData(
   document: Document,
-  agentInfo: EvaluationAgent,
+  agentInfo: Agent,
   targetComments: number,
   maxAttempts = 3
 ): Promise<Comment[]> {

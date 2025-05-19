@@ -1,12 +1,12 @@
-import type { DocumentReview } from "../../types/oldDocumentReview";
+import type { Evaluation } from "../../types/documentSchema";
 import { sortCommentsByOffset } from "../commentUtils";
 
 export async function polishReview(
-  review: DocumentReview,
+  review: Evaluation,
   documentContent: string
-): Promise<DocumentReview> {
+): Promise<Evaluation> {
   // Deep clone the review
-  const polishedReview = JSON.parse(JSON.stringify(review)) as DocumentReview;
+  const polishedReview = JSON.parse(JSON.stringify(review)) as Evaluation;
 
   // Process comments
   if (polishedReview.comments) {

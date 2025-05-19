@@ -4,6 +4,18 @@ import type { Comment, Evaluation } from "./documentSchema";
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {
   agentId: string;
+  agent: {
+    id: string;
+    name: string;
+    version: string;
+    description: string;
+    iconName: string;
+    purpose: string;
+    genericInstructions?: string;
+    summaryInstructions?: string;
+    commentInstructions?: string;
+    gradeInstructions?: string;
+  };
   comments: Comment[];
   costInCents: number;
   createdAt: string;

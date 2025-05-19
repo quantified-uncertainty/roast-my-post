@@ -1,10 +1,6 @@
 // --- src/utils/highlightUtils.ts ---
 
-import type {
-  Comment,
-  DocumentReview,
-  Highlight,
-} from "../types/oldDocumentReview";
+import type { Comment, Evaluation, Highlight } from "../types/documentSchema";
 import { DEFAULT_TEMPERATURE, openai, SEARCH_MODEL } from "../types/openai";
 
 // Raw highlight structure expected from LLM response
@@ -451,7 +447,7 @@ export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
   return [...comments]; // Simplified implementation
 }
 
-export function validateHighlights(review: DocumentReview): {
+export function validateHighlights(review: Evaluation): {
   valid: boolean;
   errors: string[];
 } {
@@ -478,9 +474,7 @@ export function validateHighlights(review: DocumentReview): {
   };
 }
 
-export function validateAndFixDocumentReview(
-  review: DocumentReview
-): DocumentReview {
+export function validateAndFixDocumentReview(review: Evaluation): Evaluation {
   return { ...review }; // Simplified implementation
 }
 
@@ -577,6 +571,7 @@ export async function processRawComments(
               startOffset: exactMatch,
               endOffset: exactMatch + start.length,
               quotedText,
+              isValid: true,
             },
             isValid,
             error: isValid
@@ -639,6 +634,7 @@ export async function processRawComments(
               startOffset,
               endOffset,
               quotedText,
+              isValid: true,
             },
             isValid,
             error: isValid
@@ -657,6 +653,7 @@ export async function processRawComments(
           startOffset: startIndex,
           endOffset: endIndex + end.length,
           quotedText,
+          isValid: true,
         },
         isValid,
         error: isValid
@@ -671,6 +668,7 @@ export async function processRawComments(
           startOffset: 0,
           endOffset: 0,
           quotedText: "",
+          isValid: false,
         },
         isValid: false,
         error: "Could not find valid highlight text",
