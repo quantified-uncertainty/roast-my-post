@@ -65,12 +65,14 @@ export class DocumentModel {
       submittedById: dbDoc.submittedById,
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map(version => ({
+        const evaluationVersions = evaluation.versions.map((version) => ({
           createdAt: new Date(version.createdAt),
-          job: version.job ? {
-            costInCents: version.job.costInCents,
-            llmThinking: version.job.llmThinking || "",
-          } : undefined,
+          job: version.job
+            ? {
+                costInCents: version.job.costInCents || 0,
+                llmThinking: version.job.llmThinking || "",
+              }
+            : undefined,
           comments: version.comments.map((comment) => ({
             title: comment.title,
             description: comment.description,
@@ -85,8 +87,8 @@ export class DocumentModel {
             isValid: comment.highlight.isValid,
             error: comment.highlight.isValid ? undefined : "Invalid highlight",
           })),
-          summary: version.summary,
-          grade: version.grade,
+          summary: version.summary || "",
+          grade: version.grade || 0,
         }));
 
         return {
@@ -98,9 +100,12 @@ export class DocumentModel {
             description: evaluation.agent.versions[0].description,
             iconName: "robot", // TODO: Fix this
             purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
-            genericInstructions: evaluation.agent.versions[0].genericInstructions,
-            summaryInstructions: evaluation.agent.versions[0].summaryInstructions,
-            commentInstructions: evaluation.agent.versions[0].commentInstructions,
+            genericInstructions:
+              evaluation.agent.versions[0].genericInstructions,
+            summaryInstructions:
+              evaluation.agent.versions[0].summaryInstructions,
+            commentInstructions:
+              evaluation.agent.versions[0].commentInstructions,
             gradeInstructions:
               evaluation.agent.versions[0].gradeInstructions || undefined,
           },
@@ -121,7 +126,9 @@ export class DocumentModel {
                 isValid: comment.highlight.isValid,
               },
               isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid ? undefined : "Invalid highlight",
+              error: comment.highlight.isValid
+                ? undefined
+                : "Invalid highlight",
             })) || [],
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
@@ -191,12 +198,14 @@ export class DocumentModel {
         submittedById: dbDoc.submittedById,
         reviews: dbDoc.evaluations.map((evaluation) => {
           // Map all evaluation versions
-          const evaluationVersions = evaluation.versions.map(version => ({
+          const evaluationVersions = evaluation.versions.map((version) => ({
             createdAt: new Date(version.createdAt),
-            job: version.job ? {
-              costInCents: version.job.costInCents,
-              llmThinking: version.job.llmThinking || "",
-            } : undefined,
+            job: version.job
+              ? {
+                  costInCents: version.job.costInCents || 0,
+                  llmThinking: version.job.llmThinking || "",
+                }
+              : undefined,
             comments: version.comments.map((comment) => ({
               title: comment.title,
               description: comment.description,
@@ -209,10 +218,12 @@ export class DocumentModel {
                 isValid: comment.highlight.isValid,
               },
               isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid ? undefined : "Invalid highlight",
+              error: comment.highlight.isValid
+                ? undefined
+                : "Invalid highlight",
             })),
-            summary: version.summary,
-            grade: version.grade,
+            summary: version.summary || "",
+            grade: version.grade || 0,
           }));
 
           return {
@@ -232,33 +243,34 @@ export class DocumentModel {
                 evaluation.agent.versions[0].commentInstructions,
               gradeInstructions:
                 evaluation.agent.versions[0].gradeInstructions || undefined,
-          },
-          createdAt: new Date(
-            evaluation.versions[0]?.createdAt || evaluation.createdAt
-          ),
-          costInCents: evaluation.versions[0]?.job?.costInCents || 0,
-          comments:
-            evaluation.versions[0]?.comments.map((comment) => ({
-              title: comment.title,
-              description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
-              highlight: {
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
+            },
+            createdAt: new Date(
+              evaluation.versions[0]?.createdAt || evaluation.createdAt
+            ),
+            costInCents: evaluation.versions[0]?.job?.costInCents || 0,
+            comments:
+              evaluation.versions[0]?.comments.map((comment) => ({
+                title: comment.title,
+                description: comment.description,
+                importance: comment.importance || undefined,
+                grade: comment.grade || undefined,
+                highlight: {
+                  startOffset: comment.highlight.startOffset,
+                  endOffset: comment.highlight.endOffset,
+                  quotedText: comment.highlight.quotedText,
+                  isValid: comment.highlight.isValid,
+                },
                 isValid: comment.highlight.isValid,
-              },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid
-                ? undefined
-                : "Invalid highlight",
-            })) || [],
-          thinking: evaluation.versions[0]?.job?.llmThinking || "",
-          summary: evaluation.versions[0]?.summary || "",
-          grade: evaluation.versions[0]?.grade || 0,
-          versions: evaluationVersions,
-        };}),
+                error: comment.highlight.isValid
+                  ? undefined
+                  : "Invalid highlight",
+              })) || [],
+            thinking: evaluation.versions[0]?.job?.llmThinking || "",
+            summary: evaluation.versions[0]?.summary || "",
+            grade: evaluation.versions[0]?.grade || 0,
+            versions: evaluationVersions,
+          };
+        }),
       };
 
       // Validate the transformed document against the schema
@@ -348,6 +360,46 @@ export class DocumentModel {
     });
 
     return document?.submittedById === userId;
+  }
+
+  static async rerunEvaluation(
+    evaluationId: string,
+    documentId: string,
+    userId: string
+  ) {
+    // Check if the current user is the document owner
+    const isOwner = await this.checkOwnership(documentId, userId);
+    if (!isOwner) {
+      throw new Error(
+        "You don't have permission to rerun evaluations for this document"
+      );
+    }
+
+    // Find the evaluation record
+    const evaluation = await prisma.evaluation.findFirst({
+      where: {
+        documentId,
+        agentId: evaluationId,
+      },
+    });
+
+    if (!evaluation) {
+      throw new Error("Evaluation not found");
+    }
+
+    // Create a new job for this evaluation
+    await prisma.job.create({
+      data: {
+        status: "PENDING",
+        evaluation: {
+          connect: {
+            id: evaluation.id,
+          },
+        },
+      },
+    });
+
+    return { success: true };
   }
 
   static async update(

@@ -19,7 +19,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "process-jobs": "tsx src/scripts/process-job.ts"
+    "process-jobs": "tsx src/scripts/process-job.ts",
+    "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",

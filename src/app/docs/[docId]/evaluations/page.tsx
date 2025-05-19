@@ -7,15 +7,16 @@ import { DocumentModel } from "@/models/Document";
 import EvaluationsClient from "./EvaluationsClient";
 
 interface EvaluationsPageProps {
-  params: {
+  params: Promise<{
     docId: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({
   params,
 }: EvaluationsPageProps): Promise<Metadata> {
-  const { docId } = params;
+  const resolvedParams = await params;
+  const docId = resolvedParams.docId;
   const document = await DocumentModel.getDocumentWithEvaluations(docId);
 
   if (!document) {
@@ -33,7 +34,8 @@ export async function generateMetadata({
 export default async function EvaluationsPage({
   params,
 }: EvaluationsPageProps) {
-  const { docId } = params;
+  const resolvedParams = await params;
+  const docId = resolvedParams.docId;
   const session = await auth();
 
   // Fetch the document
