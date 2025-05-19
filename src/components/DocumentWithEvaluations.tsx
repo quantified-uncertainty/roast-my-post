@@ -26,6 +26,7 @@ import {
   ChevronLeftIcon,
   PencilIcon,
   TrashIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
@@ -395,6 +396,12 @@ export function DocumentWithEvaluations({
             </div>
             {isOwner && (
               <div className="flex items-center gap-2">
+                <Link href={`/docs/${document.id}/evaluations`}>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <ListBulletIcon className="h-4 w-4" />
+                    All Evaluations
+                  </Button>
+                </Link>
                 <Link href={`/docs/${document.id}/edit`}>
                   <Button className="flex items-center gap-2">
                     <PencilIcon className="h-4 w-4" />

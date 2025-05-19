@@ -61,6 +61,7 @@ export const EvaluationSchema = z.object({
   thinking: z.string(),
   summary: z.string(),
   grade: z.number(),
+  versions: z.array(EvaluationVersionSchema).optional(),
 });
 
 export type Evaluation = z.infer<typeof EvaluationSchema>;
