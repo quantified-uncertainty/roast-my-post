@@ -107,16 +107,18 @@ export function compareModelCosts(
  * @param usage Token usage object containing prompt_tokens and completion_tokens
  * @returns Cost in cents
  */
-export function calculateApiCost(usage: { prompt_tokens: number; completion_tokens: number } | undefined): number {
+export function calculateApiCost(
+  usage: { prompt_tokens: number; completion_tokens: number } | undefined
+): number {
   if (!usage) return 0;
-  
+
   // Default to Claude 3.7 Sonnet rates
   const promptCostPerToken = 3 / 1_000_000; // $3 per million tokens in dollars
   const completionCostPerToken = 15 / 1_000_000; // $15 per million tokens in dollars
-  
+
   const promptCost = usage.prompt_tokens * promptCostPerToken;
   const completionCost = usage.completion_tokens * completionCostPerToken;
-  
+
   // Convert to cents (multiply by 100)
   return Math.round((promptCost + completionCost) * 100);
 }

@@ -7,6 +7,8 @@ export default async function DocumentsPage() {
   const documents = await DocumentModel.getAllDocumentsWithEvaluations();
   const session = await auth();
   const currentUserId = session?.user?.id;
-  
-  return <DocumentsClient documents={documents} currentUserId={currentUserId} />;
+
+  return (
+    <DocumentsClient documents={documents} currentUserId={currentUserId} />
+  );
 }

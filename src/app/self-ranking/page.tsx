@@ -205,16 +205,16 @@ function AspectTable({ title, description, aspects }: AspectTableProps) {
         <table className="min-w-full rounded-lg border border-gray-200 bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Aspect
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Grade
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Details
               </th>
             </tr>
@@ -222,11 +222,11 @@ function AspectTable({ title, description, aspects }: AspectTableProps) {
           <tbody className="divide-y divide-gray-200">
             {aspects.map((aspect: Aspect, index: number) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4 font-medium">
                   {aspect.name}
                 </td>
                 <td className="px-6 py-4">{aspect.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4">
                   <span
                     className={`rounded-full px-2 py-1 text-sm font-medium ${
                       aspect.grade === "N/A"
@@ -263,10 +263,10 @@ function PlannedFeaturesTable() {
         <table className="min-w-full rounded-lg border border-gray-200 bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Feature
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Description
               </th>
             </tr>
@@ -274,7 +274,7 @@ function PlannedFeaturesTable() {
           <tbody className="divide-y divide-gray-200">
             {plannedFeatures.map((feature: PlannedFeature, index: number) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4 font-medium">
                   {feature.name}
                 </td>
                 <td className="px-6 py-4 text-gray-600">

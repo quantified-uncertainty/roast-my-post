@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run review-agent:*)",
+      "Bash(npm run build:*)"
+    ],
+    "deny": []
+  }
+}

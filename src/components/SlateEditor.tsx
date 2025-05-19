@@ -187,7 +187,7 @@ const renderLeaf = ({
           margin: "0 -1px",
           scrollMarginTop: "100px", // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={`group hover:bg-opacity-60 cursor-pointer transition-all duration-150 ease-out ${
+        className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
           leaf.tag === activeTag ? "relative z-10" : ""
         }`}
         onClick={(e) => {
@@ -571,7 +571,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           })
         }
         readOnly
-        className="prose prose-slate prose-lg max-w-none [&_em]:italic [&_strong]:font-bold"
+        className="prose prose-lg prose-slate max-w-none [&_em]:italic [&_strong]:font-bold"
       />
     </Slate>
   );

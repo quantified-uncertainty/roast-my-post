@@ -36,7 +36,7 @@ Test 123
 
   return (
     <div className="container mx-auto p-4">
-      <article className="prose prose-slate prose-lg max-w-none">
+      <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
           content={content}
           highlights={highlights}

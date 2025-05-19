@@ -397,7 +397,7 @@ export function DocumentWithEvaluations({
             {isOwner && (
               <div className="flex items-center gap-2">
                 <Link href={`/docs/${document.id}/evaluations`}>
-                  <Button variant="outline" className="flex items-center gap-2">
+                  <Button variant="secondary" className="flex items-center gap-2">
                     <ListBulletIcon className="h-4 w-4" />
                     All Evaluations
                   </Button>

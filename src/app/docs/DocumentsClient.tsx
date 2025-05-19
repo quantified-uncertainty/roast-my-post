@@ -51,7 +51,7 @@ function WordCountIndicator({ content }: { content: string }) {
 
 export default function DocumentsClient({
   documents,
-  currentUserId
+  currentUserId,
 }: {
   documents: Document[];
   currentUserId?: string;

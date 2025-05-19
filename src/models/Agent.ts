@@ -2,7 +2,11 @@ import { nanoid } from "nanoid";
 
 import { prisma } from "@/lib/prisma";
 import type { Agent, AgentInput } from "@/types/agentSchema";
-import { AgentInputSchema, AgentSchema, AgentVersionSchema } from "@/types/agentSchema";
+import {
+  AgentInputSchema,
+  AgentSchema,
+  AgentVersionSchema,
+} from "@/types/agentSchema";
 import type { AgentReview } from "@/types/evaluationSchema";
 import { AgentReviewSchema } from "@/types/evaluationSchema";
 import type { AgentVersion } from "@/types/agentSchema";
@@ -192,7 +196,7 @@ export class AgentModel {
         orderBy: { version: "desc" },
       });
 
-      return versions.map((version) => 
+      return versions.map((version) =>
         AgentVersionSchema.parse({
           id: version.id,
           version: version.version,

@@ -26,7 +26,7 @@ export default function TestDocsClient({
       <h1 className="mb-4 text-2xl font-bold">
         Test Document with Formatting Highlights
       </h1>
-      <article className="prose prose-slate prose-lg max-w-none">
+      <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
           content={content}
           highlights={highlights}

@@ -42,16 +42,15 @@ export default async function DocumentPage({
   }
 
   // Check if current user is the owner
-  const isOwner = currentUserId ? document.submittedById === currentUserId : false;
+  const isOwner = currentUserId
+    ? document.submittedById === currentUserId
+    : false;
 
   return (
     <div className="min-h-screen">
       <main>
         <div className="mx-auto max-w-full">
-          <DocumentWithEvaluations 
-            document={document} 
-            isOwner={isOwner}
-          />
+          <DocumentWithEvaluations document={document} isOwner={isOwner} />
         </div>
       </main>
     </div>

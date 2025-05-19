@@ -4,7 +4,7 @@ import { JobModel } from "../models/Job";
 
 async function main() {
   const jobProcessor = new JobModel();
-  
+
   try {
     await jobProcessor.run();
   } catch (error) {

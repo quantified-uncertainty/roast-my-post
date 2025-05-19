@@ -10,9 +10,7 @@ import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/Button";
 import type { Agent, AgentVersion } from "@/types/agentSchema";
-import {
-  ArrowLeftIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 interface AgentVersionsClientProps {
   agent: Agent;
@@ -28,12 +26,12 @@ export default function AgentVersionsClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const versionParam = searchParams.get("version");
-  
+
   // Find the version that matches the URL param, or use the first version
-  const initialVersion = versionParam 
-    ? versions.find(v => v.version.toString() === versionParam) || versions[0]
+  const initialVersion = versionParam
+    ? versions.find((v) => v.version.toString() === versionParam) || versions[0]
     : versions[0];
-  
+
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
     versions.length > 0 ? initialVersion?.id || versions[0].id : null
   );
@@ -41,10 +39,10 @@ export default function AgentVersionsClient({
   // Update the URL when the selected version changes
   const updateQueryParam = (versionId: string | null) => {
     if (!versionId) return;
-    
-    const selectedVersion = versions.find(v => v.id === versionId);
+
+    const selectedVersion = versions.find((v) => v.id === versionId);
     if (!selectedVersion) return;
-    
+
     const newUrl = `/agents/${agent.id}/versions?version=${selectedVersion.version}`;
     router.push(newUrl, { scroll: false });
   };
@@ -58,7 +56,9 @@ export default function AgentVersionsClient({
   // If URL param changes, update the selected version
   useEffect(() => {
     if (versionParam && versions.length > 0) {
-      const version = versions.find(v => v.version.toString() === versionParam);
+      const version = versions.find(
+        (v) => v.version.toString() === versionParam
+      );
       if (version && version.id !== selectedVersionId) {
         setSelectedVersionId(version.id);
       }
@@ -90,9 +90,7 @@ export default function AgentVersionsClient({
               Back to Agent
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">
-            Version History: {agent.name}
-          </h1>
+          <h1 className="text-2xl font-bold">Version History: {agent.name}</h1>
         </div>
       </div>
 

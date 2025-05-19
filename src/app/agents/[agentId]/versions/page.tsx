@@ -28,5 +28,11 @@ export default async function AgentVersionsPage({
   // Get agent versions
   const versions = await AgentModel.getAgentVersions(resolvedParams.agentId);
 
-  return <AgentVersionsClient agent={agent} versions={versions} isOwner={agent.isOwner} />;
+  return (
+    <AgentVersionsClient
+      agent={agent}
+      versions={versions}
+      isOwner={agent.isOwner}
+    />
+  );
 }

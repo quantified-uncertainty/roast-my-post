@@ -95,7 +95,7 @@ Let's see if this works better.`;
 
       <div className="mb-10">
         <h2 className="mb-4 text-xl font-bold">SlateEditor Component</h2>
-        <article className="prose prose-slate prose-lg max-w-none">
+        <article className="prose prose-lg prose-slate max-w-none">
           <SlateEditor
             content={content}
             highlights={highlights}
@@ -110,7 +110,7 @@ Let's see if this works better.`;
         <h2 className="mb-4 text-xl font-bold">
           ReactMarkdown Component (Reference)
         </h2>
-        <article className="prose prose-slate prose-lg max-w-none">
+        <article className="prose prose-lg prose-slate max-w-none">
           <SimpleMarkdownComponent content={content} />
         </article>
       </div>
