@@ -1,23 +1,18 @@
-import { EvaluationAgent } from "@/types/evaluationAgents";
-import { Job as PrismaJob, JobStatus, PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { Job as PrismaJob, JobStatus } from "@prisma/client";
 
+import { Agent } from "../types/agentSchema";
 import { calculateApiCost } from "../utils/costCalculator";
 import { analyzeDocument } from "../utils/documentAnalysis";
 import { polishReview } from "../utils/documentAnalysis/polishReview";
 import { writeLogFile } from "../utils/documentAnalysis/utils";
 
 export class JobModel {
-  private prisma: PrismaClient;
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
-
   /**
    * Find the oldest pending job
    */
   async findNextPendingJob() {
-    const job = await this.prisma.job.findFirst({
+    const job = await prisma.job.findFirst({
       where: {
         status: JobStatus.PENDING,
       },
@@ -59,7 +54,7 @@ export class JobModel {
    * Update job status to running
    */
   async markJobAsRunning(jobId: string) {
-    return this.prisma.job.update({
+    return prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.RUNNING,
@@ -81,7 +76,7 @@ export class JobModel {
       logs: string;
     }
   ) {
-    return this.prisma.job.update({
+    return prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.COMPLETED,
@@ -95,7 +90,7 @@ export class JobModel {
    * Update job as failed
    */
   async markJobAsFailed(jobId: string, error: unknown) {
-    return this.prisma.job.update({
+    return prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.FAILED,
@@ -155,7 +150,7 @@ export class JobModel {
       };
 
       // Prepare agent info
-      const agent: EvaluationAgent = {
+      const agent: Agent = {
         id: job.evaluation.agent.id,
         name: agentVersion.name,
         iconName: "robot", // TODO: Fix this
@@ -180,7 +175,7 @@ export class JobModel {
       );
 
       // Create evaluation version
-      const evaluationVersion = await this.prisma.evaluationVersion.create({
+      const evaluationVersion = await prisma.evaluationVersion.create({
         data: {
           agentId: agent.id,
           summary: polishedReview.summary,
@@ -199,7 +194,7 @@ export class JobModel {
       if (polishedReview.comments && polishedReview.comments.length > 0) {
         for (const comment of polishedReview.comments) {
           // Create highlight
-          const highlight = await this.prisma.evaluationHighlight.create({
+          const highlight = await prisma.evaluationHighlight.create({
             data: {
               startOffset: comment.highlight.startOffset,
               endOffset: comment.highlight.endOffset,
@@ -209,7 +204,7 @@ export class JobModel {
           });
 
           // Create comment linked to highlight
-          await this.prisma.evaluationComment.create({
+          await prisma.evaluationComment.create({
             data: {
               title: comment.title,
               description: comment.description,
@@ -306,7 +301,7 @@ ${llmResponse}
       await this.processJob(job);
       return true;
     } finally {
-      await this.prisma.$disconnect();
+      await prisma.$disconnect();
     }
   }
 
@@ -314,6 +309,6 @@ ${llmResponse}
    * Disconnect the Prisma client
    */
   async disconnect() {
-    await this.prisma.$disconnect();
+    await prisma.$disconnect();
   }
 }

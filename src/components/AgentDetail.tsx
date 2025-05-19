@@ -7,8 +7,8 @@ import Link from "next/link";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
+import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import type { AgentReview } from "@/types/evaluationSchema";
-import { AGENT_TYPE_INFO } from "@/utils/agentTypes";
 import { getGradeColorStrong, getLetterGrade } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
 

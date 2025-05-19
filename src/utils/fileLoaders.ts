@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import type { EvaluationAgent } from "../types/evaluationAgents";
+
+import type { Agent } from "../types/agentSchema";
 
 // Load JSON5 file
 // This is a simplified version that uses JSON.parse instead of json5.parse
@@ -27,10 +28,10 @@ export const loadJson5 = (filePath: string) => {
   }
 };
 
-// Load an agent from a JSON5 file and return it as an EvaluationAgent
-export const loadAgentFromJson5 = (filePath: string): EvaluationAgent => {
+// Load an agent from a JSON5 file and return it as an Agent
+export const loadAgentFromJson5 = (filePath: string): Agent => {
   const data = loadJson5(filePath);
-  return data as EvaluationAgent;
+  return data as Agent;
 };
 
 // Get all JSON5 files from a directory

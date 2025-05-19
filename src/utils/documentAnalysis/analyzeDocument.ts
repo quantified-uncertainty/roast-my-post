@@ -1,6 +1,6 @@
+import { Agent } from "../../types/agentSchema";
 import { Document } from "../../types/documents";
-import { EvaluationAgent } from "../../types/evaluationAgents";
-import { DocumentReview } from "../../types/oldDocumentReview";
+import { Evaluation } from "../../types/documentSchema";
 import { getCommentData } from "./llmCalls/commentGenerator";
 import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
 import {
@@ -9,7 +9,7 @@ import {
 } from "./utils/calculations";
 
 interface AnalyzeDocumentResult {
-  review: DocumentReview;
+  review: Evaluation;
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -22,7 +22,7 @@ interface AnalyzeDocumentResult {
 
 export async function analyzeDocument(
   document: Document,
-  agent: EvaluationAgent
+  agent: Agent
 ): Promise<AnalyzeDocumentResult> {
   // Calculate target word count
   const targetComments = calculateTargetComments(document.content);
@@ -37,13 +37,13 @@ export async function analyzeDocument(
   // Get comments
   const comments = await getCommentData(document, agent, targetComments);
 
-  const documentReview: DocumentReview = {
+  const documentReview: Evaluation = {
     agentId: agent.id,
     createdAt: new Date(),
     costInCents: 0,
     thinking: thinkingResult.thinking,
     summary: thinkingResult.summary,
-    grade: thinkingResult.grade,
+    grade: thinkingResult.grade || 0,
     comments,
   };
 

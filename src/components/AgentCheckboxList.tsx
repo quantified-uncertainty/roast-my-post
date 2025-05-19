@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { useFormContext } from "react-hook-form";
 
-import type { EvaluationAgent } from "@/types/evaluationAgents";
+import type { Agent } from "@/types/agentSchema";
 
 interface AgentCheckboxListProps {
   name: string;
@@ -19,7 +19,7 @@ export default function AgentCheckboxList({
   required,
   error,
 }: AgentCheckboxListProps) {
-  const [agents, setAgents] = useState<EvaluationAgent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const { register, setValue, watch } = useFormContext();
   const selectedAgents = watch(name) || "";

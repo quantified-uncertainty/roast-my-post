@@ -1,15 +1,13 @@
 import { nanoid } from "nanoid";
 
+import { prisma } from "@/lib/prisma";
 import { Document, DocumentSchema } from "@/types/documentSchema";
-import { PrismaClient } from "@prisma/client";
 
 export class DocumentModel {
-  private static prisma = new PrismaClient();
-
   static async getDocumentWithEvaluations(
     docId: string
   ): Promise<Document | null> {
-    const dbDoc = await this.prisma.document.findUnique({
+    const dbDoc = await prisma.document.findUnique({
       where: { id: docId },
       include: {
         versions: {
@@ -111,7 +109,7 @@ export class DocumentModel {
   }
 
   static async getAllDocumentsWithEvaluations(): Promise<Document[]> {
-    const dbDocs = await this.prisma.document.findMany({
+    const dbDocs = await prisma.document.findMany({
       include: {
         versions: true,
         evaluations: {
@@ -228,7 +226,7 @@ export class DocumentModel {
     const id = nanoid(16);
 
     // Create the document
-    const document = await this.prisma.document.create({
+    const document = await prisma.document.create({
       data: {
         id,
         publishedDate: new Date(),
@@ -285,13 +283,13 @@ export class DocumentModel {
   static async delete(docId: string) {
     // Delete the document which will cascade delete all related records
     // per the Prisma schema relationships with onDelete: Cascade
-    return this.prisma.document.delete({
+    return prisma.document.delete({
       where: { id: docId },
     });
   }
 
   static async checkOwnership(docId: string, userId: string): Promise<boolean> {
-    const document = await this.prisma.document.findUnique({
+    const document = await prisma.document.findUnique({
       where: { id: docId },
       select: { submittedById: true },
     });
@@ -312,7 +310,7 @@ export class DocumentModel {
     userId: string
   ) {
     // First get current document and its latest version
-    const document = await this.prisma.document.findUnique({
+    const document = await prisma.document.findUnique({
       where: { id: docId },
       include: {
         versions: {
@@ -338,7 +336,7 @@ export class DocumentModel {
     const newVersion = currentVersion + 1;
 
     // Update the document by creating a new version
-    const updatedDocument = await this.prisma.document.update({
+    const updatedDocument = await prisma.document.update({
       where: { id: docId },
       data: {
         versions: {

@@ -8,6 +8,7 @@ import {
 } from "../../../types/openai";
 import { getCommentPrompt } from "../prompts";
 import { validateComments } from "../utils/commentUtils";
+import { getCommentData } from "./commentGenerator";
 
 export async function getCommentData(
   document: Document,

@@ -1,17 +1,16 @@
 import { nanoid } from "nanoid";
 
+import { prisma } from "@/lib/prisma";
 import type { Agent, AgentInput } from "@/types/agentSchema";
 import { AgentInputSchema, AgentSchema } from "@/types/agentSchema";
 import type { AgentReview } from "@/types/evaluationSchema";
 import { AgentReviewSchema } from "@/types/evaluationSchema";
-import { PrismaClient } from "@prisma/client";
 
 export { AgentInputSchema as agentSchema };
 export type { AgentInput };
 
 export class AgentModel {
   static async createAgent(data: AgentInput, userId: string): Promise<Agent> {
-    const prisma = new PrismaClient();
     try {
       const id = nanoid(16);
       const agent = await prisma.agent.create({
@@ -73,7 +72,6 @@ export class AgentModel {
     data: AgentInput,
     userId: string
   ): Promise<Agent> {
-    const prisma = new PrismaClient();
     try {
       const existingAgent = await prisma.agent.findUnique({
         where: { id: agentId },
@@ -141,7 +139,6 @@ export class AgentModel {
     agentId: string,
     currentUserId?: string
   ): Promise<Agent | null> {
-    const prisma = new PrismaClient();
     try {
       const dbAgent = await prisma.agent.findUnique({
         where: { id: agentId },
@@ -188,7 +185,6 @@ export class AgentModel {
   }
 
   static async getAgentReview(agentId: string): Promise<AgentReview | null> {
-    const prisma = new PrismaClient();
     try {
       const evaluationVersion = await prisma.evaluationVersion.findFirst({
         where: {
