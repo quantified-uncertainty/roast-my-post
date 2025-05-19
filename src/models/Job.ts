@@ -182,6 +182,7 @@ export class JobModel {
           grade: polishedReview.grade,
           agentVersionId: agentVersion.id,
           evaluationId: job.evaluation.id,
+          documentVersionId: documentVersion.id,
           job: {
             connect: {
               id: job.id,

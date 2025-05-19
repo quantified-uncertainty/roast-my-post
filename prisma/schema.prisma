@@ -102,6 +102,7 @@ model DocumentVersion {
   documentId  String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  evaluationVersions EvaluationVersion[]
 
   @@unique([documentId, version])
   @@index([documentId])
@@ -131,11 +132,14 @@ model EvaluationVersion {
   agentVersionId String
   evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
   evaluationId  String
+  documentVersion DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  documentVersionId String
   comments    EvaluationComment[]
   job        Job?
 
   @@index([evaluationId])
   @@index([agentVersionId])
+  @@index([documentVersionId])
 }
 
 model EvaluationComment {

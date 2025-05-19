@@ -35,6 +35,11 @@ export class DocumentModel {
                   },
                 },
                 job: true,
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
               },
               orderBy: {
                 createdAt: "desc",
@@ -89,6 +94,9 @@ export class DocumentModel {
           })),
           summary: version.summary || "",
           grade: version.grade || 0,
+          documentVersion: {
+            version: version.documentVersion.version,
+          },
         }));
 
         return {
@@ -166,6 +174,11 @@ export class DocumentModel {
                   },
                 },
                 job: true,
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
               },
               orderBy: {
                 createdAt: "desc",
@@ -224,6 +237,9 @@ export class DocumentModel {
             })),
             summary: version.summary || "",
             grade: version.grade || 0,
+            documentVersion: {
+              version: version.documentVersion.version,
+            },
           }));
 
           return {

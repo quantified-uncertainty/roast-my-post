@@ -36,6 +36,9 @@ export const EvaluationVersionSchema = z.object({
   comments: z.array(CommentSchema),
   summary: z.string(),
   grade: z.number(),
+  documentVersion: z.object({
+    version: z.number(),
+  }),
 });
 
 export type EvaluationVersion = z.infer<typeof EvaluationVersionSchema>;
@@ -91,6 +94,7 @@ export const DocumentSchema = z.object({
   intendedAgents: z.array(z.string()),
   reviews: z.array(EvaluationSchema),
   submittedById: z.string().optional(),
+  versions: z.array(DocumentVersionSchema).optional(),
 });
 
 export type Document = z.infer<typeof DocumentSchema>;
