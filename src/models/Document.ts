@@ -15,6 +15,13 @@ export class DocumentModel {
             version: "desc",
           },
         },
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         evaluations: {
           include: {
             agent: {
@@ -68,6 +75,7 @@ export class DocumentModel {
       platforms: latestVersion.platforms,
       intendedAgents: latestVersion.intendedAgents,
       submittedById: dbDoc.submittedById,
+      submittedBy: dbDoc.submittedBy,
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => ({
@@ -211,6 +219,7 @@ export class DocumentModel {
         platforms: latestVersion.platforms,
         intendedAgents: latestVersion.intendedAgents,
         submittedById: dbDoc.submittedById,
+        submittedBy: dbDoc.submittedBy,
         reviews: dbDoc.evaluations.map((evaluation) => {
           // Map all evaluation versions
           const evaluationVersions = evaluation.versions.map((version) => ({

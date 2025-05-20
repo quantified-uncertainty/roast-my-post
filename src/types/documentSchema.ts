@@ -96,6 +96,13 @@ export const DocumentSchema = z.object({
   intendedAgents: z.array(z.string()),
   reviews: z.array(EvaluationSchema),
   submittedById: z.string().optional(),
+  submittedBy: z
+    .object({
+      id: z.string(),
+      name: z.string().nullable(),
+      email: z.string().nullable(),
+    })
+    .optional(),
   versions: z.array(DocumentVersionSchema).optional(),
 });
 

@@ -24,9 +24,9 @@ import {
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
+  ListBulletIcon,
   PencilIcon,
   TrashIcon,
-  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
@@ -392,12 +392,26 @@ export function DocumentWithEvaluations({
                     </a>
                   </>
                 )}
+                {document.submittedById && (
+                  <>
+                    {" • "}
+                    <Link
+                      href={`/users/${document.submittedById}`}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      {document.submittedBy?.name || "View Owner"}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             {isOwner && (
               <div className="flex items-center gap-2">
                 <Link href={`/docs/${document.id}/evaluations`}>
-                  <Button variant="secondary" className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    className="flex items-center gap-2"
+                  >
                     <ListBulletIcon className="h-4 w-4" />
                     All Evaluations
                   </Button>

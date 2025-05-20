@@ -63,6 +63,17 @@ export default function AgentDetail({
             </h2>
             <p className="text-sm text-gray-500">
               {AGENT_TYPE_INFO[agent.purpose].individualTitle} v{agent.version}
+              {agent.owner && (
+                <>
+                  {" • "}
+                  <Link
+                    href={`/users/${agent.owner.id}`}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    {agent.owner.name || "View Owner"}
+                  </Link>
+                </>
+              )}
             </p>
           </div>
         </div>
