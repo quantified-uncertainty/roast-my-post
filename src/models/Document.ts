@@ -77,6 +77,11 @@ type DocumentWithRelations = {
         version: number;
       };
     }>;
+    jobs: Array<{
+      id: string;
+      status: string;
+      createdAt: Date;
+    }>;
   }>;
 };
 
@@ -102,6 +107,7 @@ export class DocumentModel {
         },
         evaluations: {
           include: {
+            jobs: true,
             agent: {
               include: {
                 versions: {
@@ -194,6 +200,13 @@ export class DocumentModel {
           },
         }));
 
+        // Map jobs for this evaluation
+        const jobs = (evaluation.jobs || []).map((job) => ({
+          id: job.id,
+          status: job.status,
+          createdAt: job.createdAt,
+        }));
+
         return {
           agentId: evaluation.agent.id,
           agent: {
@@ -237,6 +250,7 @@ export class DocumentModel {
           summary: evaluation.versions[0]?.summary || "",
           grade: evaluation.versions[0]?.grade || 0,
           versions: evaluationVersions,
+          jobs,
         };
       }),
     };
@@ -259,6 +273,7 @@ export class DocumentModel {
         },
         evaluations: {
           include: {
+            jobs: true,
             agent: {
               include: {
                 versions: {
@@ -353,6 +368,13 @@ export class DocumentModel {
             },
           }));
 
+          // Map jobs for this evaluation
+          const jobs = (evaluation.jobs || []).map((job) => ({
+            id: job.id,
+            status: job.status,
+            createdAt: job.createdAt,
+          }));
+
           return {
             agentId: evaluation.agent.id,
             agent: {
@@ -396,6 +418,7 @@ export class DocumentModel {
             summary: evaluation.versions[0]?.summary || "",
             grade: evaluation.versions[0]?.grade || 0,
             versions: evaluationVersions,
+            jobs,
           };
         }),
       };

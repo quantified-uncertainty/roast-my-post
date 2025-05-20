@@ -67,6 +67,15 @@ export const EvaluationSchema = z.object({
   summary: z.string(),
   grade: z.number(),
   versions: z.array(EvaluationVersionSchema).optional(),
+  jobs: z
+    .array(
+      z.object({
+        id: z.string(),
+        status: z.string(),
+        createdAt: z.date(),
+      })
+    )
+    .optional(),
 });
 
 export type Evaluation = z.infer<typeof EvaluationSchema>;

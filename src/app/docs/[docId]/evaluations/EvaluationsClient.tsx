@@ -148,77 +148,90 @@ export default function EvaluationsClient({
           <div className="col-span-3">
             {selectedReview ? (
               <div>
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-                  <h2 className="text-lg font-medium">Version History</h2>
-                </div>
                 <div>
-                  {selectedReview.versions &&
-                  selectedReview.versions.length > 0 ? (
-                    <div>
-                      {selectedReview.versions.map((version, index) => (
-                        <div
-                          key={index}
-                          className={`cursor-pointer px-3 py-2 text-sm transition-colors ${
-                            selectedVersionIndex === index
-                              ? "bg-blue-50"
-                              : "bg-transparent"
-                          } ${
-                            index !== (selectedReview.versions?.length ?? 0) - 1
-                              ? "border-b border-gray-200"
-                              : ""
-                          }`}
-                          onClick={() => setSelectedVersionIndex(index)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="font-medium text-gray-800">
-                                Version{" "}
-                                {selectedReview.versions?.length
-                                  ? selectedReview.versions.length - index
-                                  : 0}
-                                {index === 0 && " (Latest)"}
+                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+                    <h2 className="text-lg font-medium">Version History</h2>
+                  </div>
+                  <div>
+                    {selectedReview.versions &&
+                    selectedReview.versions.length > 0 ? (
+                      <div>
+                        {selectedReview.versions.map((version, index) => (
+                          <div
+                            key={index}
+                            className={`cursor-pointer px-3 py-2 text-sm transition-colors ${
+                              selectedVersionIndex === index
+                                ? "bg-blue-50"
+                                : "bg-transparent"
+                            } ${
+                              index !==
+                              (selectedReview.versions?.length ?? 0) - 1
+                                ? "border-b border-gray-200"
+                                : ""
+                            }`}
+                            onClick={() => setSelectedVersionIndex(index)}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <div className="font-medium text-gray-800">
+                                  Version{" "}
+                                  {selectedReview.versions?.length
+                                    ? selectedReview.versions.length - index
+                                    : 0}
+                                  {index === 0 && " (Latest)"}
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500">
+                                  {formatDate(version.createdAt)}
+                                </div>
                               </div>
-                              <div className="mt-1 text-xs text-gray-500">
-                                Created: {formatDate(version.createdAt)}
+                              <div
+                                className="flex h-4 w-4 items-center justify-center rounded-full"
+                                style={
+                                  getGradeColorStrong(version.grade || 0).style
+                                }
+                              >
+                                <span className="text-xs font-medium text-white">
+                                  {getLetterGrade(version.grade || 0)}
+                                </span>
                               </div>
-                            </div>
-                            <div
-                              className="flex h-4 w-4 items-center justify-center rounded-full"
-                              style={
-                                getGradeColorStrong(version.grade || 0).style
-                              }
-                            >
-                              <span className="text-xs font-medium text-white">
-                                {getLetterGrade(version.grade || 0)}
-                              </span>
                             </div>
                           </div>
-                          <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
-                            <span>
-                              {version.comments?.length || 0} comments
-                            </span>
-                            {version.job?.costInCents &&
-                              version.job.costInCents > 0 && (
-                                <span>
-                                  Cost: $
-                                  {(version.job.costInCents / 100).toFixed(2)}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-4 text-center text-gray-500">
+                        No versions available for this evaluation
+                      </div>
+                    )}
+
+                    {selectedReview?.jobs && (
+                      <div className="mt-4">
+                        <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+                          <h2 className="text-lg font-medium">Recent Jobs</h2>
+                        </div>
+                        <ul className="space-y-1 px-4 py-2 text-sm">
+                          {selectedReview.jobs.map((job) => (
+                            <li
+                              key={job.id}
+                              className="flex items-center gap-4"
+                            >
+                              <span className="font-mono text-xs">
+                                {job.id.slice(0, 8)}...
+                              </span>
+                              <span className="rounded bg-gray-200 px-2 py-0.5 text-gray-700">
+                                {job.status}
+                              </span>
+                              {job.createdAt && (
+                                <span className="text-gray-500">
+                                  {new Date(job.createdAt).toLocaleString()}
                                 </span>
                               )}
-                            {version.job?.durationInSeconds !== undefined && (
-                              <span>
-                                Runtime:{" "}
-                                {version.job.durationInSeconds.toFixed(1)}s
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-4 text-center text-gray-500">
-                      No versions available for this evaluation
-                    </div>
-                  )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
