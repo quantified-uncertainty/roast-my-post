@@ -16,6 +16,7 @@ import {
   ChatBubbleLeftIcon,
   DocumentTextIcon,
   DocumentTextIcon as DocumentTextIcon2,
+  RectangleStackIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
@@ -160,7 +161,13 @@ export default function EvaluationsClient({
                       }`}
                       onClick={() => setMiddleTab("versions")}
                     >
+                      <RectangleStackIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
                       Versions
+                      {selectedReview?.versions && (
+                        <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                          {selectedReview.versions.length}
+                        </span>
+                      )}
                     </button>
                     <button
                       className={`ml-4 px-4 py-2 text-sm font-medium ${
@@ -170,7 +177,13 @@ export default function EvaluationsClient({
                       }`}
                       onClick={() => setMiddleTab("jobs")}
                     >
-                      Recent Jobs
+                      <SparklesIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
+                      Jobs
+                      {selectedReview?.jobs && (
+                        <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                          {selectedReview.jobs.length}
+                        </span>
+                      )}
                     </button>
                   </div>
                   {/* Tab Content */}

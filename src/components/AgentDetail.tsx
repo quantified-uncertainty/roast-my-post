@@ -9,7 +9,6 @@ import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import type { AgentReview } from "@/types/evaluationSchema";
-import { getGradeColorStrong, getLetterGrade } from "@/utils/commentUtils";
 import { getIcon } from "@/utils/iconMap";
 
 interface AgentDetailProps {
@@ -96,35 +95,10 @@ export default function AgentDetail({
         </div>
       </div>
 
-      <div className="mb-8">
-        <p className="text-lg text-gray-700">{agent.description}</p>
+      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-xl font-semibold">Description</h2>
+        <div className="mb-8 whitespace-pre-wrap">{agent.description}</div>
       </div>
-
-      {loading ? (
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-gray-500">Loading review...</p>
-        </div>
-      ) : review ? (
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Assessments</h2>
-          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-            <div>
-              <p className="text-gray-600">{review.summary}</p>
-              <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                <span>{review.author}</span>
-                <span>•</span>
-                <span>{review.createdAt.toLocaleDateString()}</span>
-              </div>
-            </div>
-            <span
-              className={`rounded-sm px-2 text-sm font-medium ${getGradeColorStrong(review.grade).className}`}
-              style={getGradeColorStrong(review.grade).style}
-            >
-              {getLetterGrade(review.grade)}
-            </span>
-          </div>
-        </div>
-      ) : null}
 
       <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>

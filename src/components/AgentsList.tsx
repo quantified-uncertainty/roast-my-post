@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen } from "lucide-react";
+import { BookOpen, Bot } from "lucide-react";
 import Link from "next/link";
 
 import type { Agent, AgentPurpose } from "@/types/agentSchema";
@@ -33,7 +33,10 @@ export default function AgentsList({ agents }: AgentsListProps) {
 
   return (
     <div className="mx-auto max-w-6xl p-8">
-      <h1 className="mb-2 text-3xl font-bold">Evaluation Agents</h1>
+      <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold">
+        <Bot className="inline-block h-7 w-7 align-text-bottom text-gray-500" />
+        Evaluation Agents
+      </h1>
       <p className="mb-8 text-gray-600">
         Select an agent to explore its capabilities and usage details.
       </p>
