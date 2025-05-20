@@ -413,13 +413,13 @@ export function DocumentWithEvaluations({
                     className="flex items-center gap-2"
                   >
                     <ListBulletIcon className="h-4 w-4" />
-                    All Evaluations
+                    Details
                   </Button>
                 </Link>
                 <Link href={`/docs/${document.id}/edit`}>
                   <Button className="flex items-center gap-2">
                     <PencilIcon className="h-4 w-4" />
-                    Edit Document
+                    Edit
                   </Button>
                 </Link>
                 <form
@@ -449,7 +449,7 @@ export function DocumentWithEvaluations({
                     className="flex items-center gap-2"
                   >
                     <TrashIcon className="h-4 w-4" />
-                    Delete Document
+                    Delete
                   </Button>
                 </form>
                 {deleteError && (

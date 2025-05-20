@@ -149,7 +149,7 @@ export default function AgentVersionsClient({
                 <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
                   <div className="mb-4">
                     <h2 className="text-lg font-medium">Version Details</h2>
-                    <div className="mt-2 space-y-2 text-sm text-gray-600">
+                    <div className="mt-2 flex flex-wrap gap-x-8 gap-y-2 text-sm text-gray-600">
                       <div>
                         <span className="font-medium">Version:</span>{" "}
                         {selectedVersion.version}

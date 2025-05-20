@@ -96,9 +96,7 @@ export default function EvaluationsClient({
           {/* Left column - Evaluations list (2 columns) */}
           <div className="col-span-2">
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-              <h2 className="text-lg font-medium">
-                Evaluations ({reviews.length})
-              </h2>
+              <h2 className="text-lg font-medium">Agents ({reviews.length})</h2>
             </div>
             <div>
               {reviews.map((review: Evaluation, idx) => (
@@ -151,23 +149,7 @@ export default function EvaluationsClient({
             {selectedReview ? (
               <div>
                 <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-                  <div className="mb-1">
-                    <Link
-                      href={`/agents/${selectedReview.agentId}`}
-                      className="font-semibold text-blue-700 hover:underline"
-                    >
-                      {selectedReview.agent.name}
-                    </Link>
-                    <span className="ml-2 text-xs text-gray-500">
-                      v{selectedReview.agent.version}
-                    </span>
-                    <span className="ml-4 text-xs text-gray-400">
-                      Created: {formatDate(selectedReview.createdAt)}
-                    </span>
-                  </div>
-                  <h2 className="text-lg font-medium">
-                    Version History - {selectedReview.agent.name}
-                  </h2>
+                  <h2 className="text-lg font-medium">Version History</h2>
                 </div>
                 <div>
                   {selectedReview.versions &&
@@ -201,7 +183,7 @@ export default function EvaluationsClient({
                               </div>
                             </div>
                             <div
-                              className="flex h-8 w-8 items-center justify-center rounded-full"
+                              className="flex h-4 w-4 items-center justify-center rounded-full"
                               style={
                                 getGradeColorStrong(version.grade || 0).style
                               }
@@ -210,11 +192,6 @@ export default function EvaluationsClient({
                                 {getLetterGrade(version.grade || 0)}
                               </span>
                             </div>
-                          </div>
-                          <div className="mt-1">
-                            <p className="line-clamp-2 text-xs text-gray-600">
-                              {version.summary}
-                            </p>
                           </div>
                           <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
                             <span>
@@ -261,8 +238,13 @@ export default function EvaluationsClient({
                     <div className="mt-2 space-y-2 text-sm text-gray-600">
                       <div>
                         <span className="font-medium">Agent Version:</span>{" "}
-                        {selectedReview?.agent.name} v
-                        {selectedReview?.agent.version}
+                        <Link
+                          href={`/agents/${selectedReview?.agentId}/versions?version=${selectedReview?.agent.version}`}
+                          className="text-blue-700 hover:underline"
+                        >
+                          {selectedReview?.agent.name} v
+                          {selectedReview?.agent.version}
+                        </Link>
                       </div>
                       <div>
                         <span className="font-medium">Document Version:</span>{" "}

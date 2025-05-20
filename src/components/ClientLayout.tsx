@@ -26,6 +26,9 @@ export default function ClientLayout({
               <Link href="/agents" className="text-white hover:text-gray-200">
                 Agents
               </Link>
+              <Link href="/users" className="text-white hover:text-gray-200">
+                Users
+              </Link>
               <Link
                 href="/self-ranking"
                 className="text-white hover:text-gray-200"
