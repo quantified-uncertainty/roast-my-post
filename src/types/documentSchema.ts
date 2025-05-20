@@ -101,6 +101,7 @@ export const DocumentSchema = z.object({
       id: z.string(),
       name: z.string().nullable(),
       email: z.string().nullable(),
+      image: z.string().nullable(),
     })
     .optional(),
   versions: z.array(DocumentVersionSchema).optional(),

@@ -3,11 +3,88 @@ import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { Document, DocumentSchema } from "@/types/documentSchema";
 
+type DocumentWithRelations = {
+  id: string;
+  publishedDate: Date;
+  submittedById: string;
+  submittedBy: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+  versions: Array<{
+    id: string;
+    version: number;
+    title: string;
+    content: string;
+    platforms: string[];
+    intendedAgents: string[];
+    authors: string[];
+    urls: string[];
+    createdAt: Date;
+    updatedAt: Date;
+    documentId: string;
+  }>;
+  evaluations: Array<{
+    id: string;
+    createdAt: Date;
+    documentId: string;
+    agentId: string;
+    agent: {
+      id: string;
+      versions: Array<{
+        id: string;
+        version: number;
+        name: string;
+        agentType: string;
+        description: string;
+        genericInstructions: string;
+        summaryInstructions: string;
+        commentInstructions: string;
+        gradeInstructions: string | null;
+      }>;
+    };
+    versions: Array<{
+      id: string;
+      createdAt: Date;
+      summary: string | null;
+      grade: number | null;
+      comments: Array<{
+        id: string;
+        title: string;
+        description: string;
+        importance: number | null;
+        grade: number | null;
+        highlight: {
+          id: string;
+          startOffset: number;
+          endOffset: number;
+          prefix: string | null;
+          quotedText: string;
+          isValid: boolean;
+          error: string | null;
+        };
+      }>;
+      job: {
+        id: string;
+        costInCents: number | null;
+        llmThinking: string | null;
+        durationInSeconds: number | null;
+        logs: string | null;
+      } | null;
+      documentVersion: {
+        version: number;
+      };
+    }>;
+  }>;
+};
+
 export class DocumentModel {
   static async getDocumentWithEvaluations(
     docId: string
   ): Promise<Document | null> {
-    const dbDoc = await prisma.document.findUnique({
+    const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
       include: {
         versions: {
@@ -20,6 +97,7 @@ export class DocumentModel {
             id: true,
             name: true,
             email: true,
+            image: true,
           },
         },
         evaluations: {
@@ -55,7 +133,7 @@ export class DocumentModel {
           },
         },
       },
-    });
+    })) as unknown as DocumentWithRelations | null;
 
     if (!dbDoc || !dbDoc.versions.length) {
       return null;
@@ -75,7 +153,14 @@ export class DocumentModel {
       platforms: latestVersion.platforms,
       intendedAgents: latestVersion.intendedAgents,
       submittedById: dbDoc.submittedById,
-      submittedBy: dbDoc.submittedBy,
+      submittedBy: dbDoc.submittedBy
+        ? {
+            id: dbDoc.submittedBy.id,
+            name: dbDoc.submittedBy.name,
+            email: dbDoc.submittedBy.email,
+            image: dbDoc.submittedBy.image,
+          }
+        : undefined,
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => ({
@@ -164,6 +249,14 @@ export class DocumentModel {
     const dbDocs = await prisma.document.findMany({
       include: {
         versions: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
         evaluations: {
           include: {
             agent: {
@@ -219,7 +312,14 @@ export class DocumentModel {
         platforms: latestVersion.platforms,
         intendedAgents: latestVersion.intendedAgents,
         submittedById: dbDoc.submittedById,
-        submittedBy: dbDoc.submittedBy,
+        submittedBy: dbDoc.submittedBy
+          ? {
+              id: dbDoc.submittedBy.id,
+              name: dbDoc.submittedBy.name,
+              email: dbDoc.submittedBy.email,
+              image: dbDoc.submittedBy.image,
+            }
+          : undefined,
         reviews: dbDoc.evaluations.map((evaluation) => {
           // Map all evaluation versions
           const evaluationVersions = evaluation.versions.map((version) => ({
