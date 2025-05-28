@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { Job as PrismaJob, JobStatus } from "@prisma/client";
+import {
+  Job as PrismaJob,
+  JobStatus,
+} from "@prisma/client";
 
 import { Agent } from "../types/agentSchema";
 import { calculateApiCost } from "../utils/costCalculator";
@@ -258,7 +261,7 @@ ${finalPrompt}
 
 ## Response
 \`\`\`json
-${llmResponse}
+${JSON.stringify(llmResponse, null, 2)}
 \`\`\`
 `;
 
