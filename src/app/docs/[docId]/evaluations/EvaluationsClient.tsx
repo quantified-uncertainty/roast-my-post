@@ -8,8 +8,14 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/Button";
-import type { Document, Evaluation } from "@/types/documentSchema";
-import { getGradeColorStrong, getLetterGrade } from "@/utils/commentUtils";
+import type {
+  Document,
+  Evaluation,
+} from "@/types/documentSchema";
+import {
+  getGradeColorStrong,
+  getLetterGrade,
+} from "@/utils/commentUtils";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -329,17 +335,6 @@ export default function EvaluationsClient({
                         Summary
                       </button>
                       <button
-                        onClick={() => setActiveTab("comments")}
-                        className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
-                          activeTab === "comments"
-                            ? "border-blue-500 text-blue-600"
-                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                        }`}
-                      >
-                        <ChatBubbleLeftIcon className="h-4 w-4" />
-                        Comments ({selectedVersion.comments?.length || 0})
-                      </button>
-                      <button
                         onClick={() => setActiveTab("thinking")}
                         className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
                           activeTab === "thinking"
@@ -350,6 +345,18 @@ export default function EvaluationsClient({
                         <SparklesIcon className="h-4 w-4" />
                         Thinking
                       </button>
+                      <button
+                        onClick={() => setActiveTab("comments")}
+                        className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
+                          activeTab === "comments"
+                            ? "border-blue-500 text-blue-600"
+                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                        }`}
+                      >
+                        <ChatBubbleLeftIcon className="h-4 w-4" />
+                        Comments ({selectedVersion.comments?.length || 0})
+                      </button>
+
                       <button
                         onClick={() => setActiveTab("logs")}
                         className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
