@@ -1,3 +1,6 @@
+import {
+  ChatCompletionMessageParam,
+} from "openai/resources/chat/completions.mjs";
 import { z } from "zod";
 
 import type { Agent } from "../../../types/agentSchema";
@@ -7,6 +10,7 @@ import {
   DEFAULT_TEMPERATURE,
   openai,
 } from "../../../types/openai";
+import { BaseLLMProcessor } from "../llmResponseProcessor";
 import { getThinkingAndSummaryPrompt } from "../prompts";
 
 const ThinkingGeneratorResultSchema = z.object({
@@ -20,6 +24,7 @@ export async function generateThinkingAndSummary(
   targetWordCount: number,
   agentInfo: Agent
 ): Promise<{
+  llmMessages: string;
   thinking: string;
   summary: string;
   grade: number | undefined;
@@ -30,20 +35,26 @@ export async function generateThinkingAndSummary(
     document
   );
 
+  const messages: ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content:
+        "You are an expert document analyst. Provide detailed analysis and insights.",
+    },
+    {
+      role: "user",
+      content: thinkingPrompt,
+    },
+  ];
+
+  const messagesAsString = messages
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n");
+
   const response = await openai.chat.completions.create({
     model: ANALYSIS_MODEL,
     temperature: DEFAULT_TEMPERATURE,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are an expert document analyst. Provide detailed analysis and insights.",
-      },
-      {
-        role: "user",
-        content: thinkingPrompt,
-      },
-    ],
+    messages,
   });
 
   if (!response.choices || response.choices.length === 0) {
@@ -63,33 +74,13 @@ export async function generateThinkingAndSummary(
     throw new Error("No content received from LLM for thinking/summary/grade");
   }
 
-  let parsedJson: unknown;
-  try {
-    parsedJson = JSON.parse(rawContent);
-  } catch (jsonError) {
-    console.error(
-      "Failed to parse thinkingGenerator response JSON:",
-      jsonError
-    );
-    throw new Error(
-      `Failed to parse thinkingGenerator response JSON. Raw content: ${rawContent}`
-    );
-  }
-
-  const validationResult = ThinkingGeneratorResultSchema.safeParse(parsedJson);
-  if (!validationResult.success) {
-    console.error(
-      "thinkingGenerator response JSON failed schema validation:",
-      validationResult.error.flatten()
-    );
-    throw new Error(
-      `thinkingGenerator response JSON failed schema validation. Raw content: ${rawContent}`
-    );
-  }
+  const processor = new BaseLLMProcessor(ThinkingGeneratorResultSchema);
+  const validationResult = processor.processResponse(rawContent);
 
   return {
-    thinking: validationResult.data.thinking,
-    summary: validationResult.data.summary,
-    grade: validationResult.data.grade,
+    llmMessages: messagesAsString,
+    thinking: validationResult.thinking,
+    summary: validationResult.summary,
+    grade: validationResult.grade,
   };
 }

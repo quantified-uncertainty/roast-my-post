@@ -6,6 +6,7 @@ import {
   DEFAULT_TEMPERATURE,
   openai,
 } from "../../../types/openai";
+import { preprocessCommentData } from "../llmResponseProcessor";
 import { getCommentPrompt } from "../prompts";
 import { validateComments } from "../utils/commentUtils";
 
@@ -51,33 +52,14 @@ export async function getCommentData(
 
     console.log(`Response: ${response.choices[0]?.message?.content}`);
 
-    // Strip potential markdown fences before parsing
     const rawResponse = response.choices[0].message.content;
+    
+    // Strip potential markdown fences before parsing
     const jsonString = rawResponse.replace(/^```json\n?|\n?```$/g, "");
-
-    const result = JSON.parse(jsonString); // Parse the cleaned string
-    let newComments = result.comments || [];
-
-    // Pre-process comments: Ensure 'importance' is a number
-    newComments = newComments.map((comment: any) => {
-      if (
-        comment.importance !== undefined &&
-        typeof comment.importance === "string"
-      ) {
-        const parsedImportance = parseInt(comment.importance, 10);
-        // If parsing fails (NaN), keep it as is for validation to catch, or set a default?
-        // Let's keep it for now, validation should catch NaN.
-        comment.importance = isNaN(parsedImportance)
-          ? comment.importance
-          : parsedImportance;
-      }
-      // Pre-process grade as well
-      if (comment.grade !== undefined && typeof comment.grade === "string") {
-        const parsedGrade = parseInt(comment.grade, 10);
-        comment.grade = isNaN(parsedGrade) ? comment.grade : parsedGrade;
-      }
-      return comment;
-    });
+    const result = JSON.parse(jsonString);
+    
+    // Pre-process comments using shared utility
+    let newComments = preprocessCommentData(result.comments || []);
 
     // Validate new comments before adding them
     try {

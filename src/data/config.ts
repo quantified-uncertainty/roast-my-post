@@ -10,8 +10,8 @@ if (!OPENROUTER_API_KEY) {
   );
 }
 
-// export const MODEL = "anthropic/claude-3.7-sonnet";
-export const MODEL = "google/gemini-2.5-pro-exp-03-25:free";
+export const MODEL = "anthropic/claude-sonnet-4";
+// export const MODEL = "google/gemini-2.5-pro-exp-03-25:free";
 
 export const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",

@@ -2,7 +2,9 @@ import { Agent } from "../../types/agentSchema";
 import { Document } from "../../types/documents";
 import { AnalysisResult } from "../../types/documentSchema";
 import { getCommentData } from "./llmCalls/commentGenerator";
-import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
+import {
+  generateThinkingAndSummary,
+} from "./llmCalls/thinkingAndSummaryGenerator";
 import {
   calculateTargetComments,
   calculateTargetWordCount,
@@ -40,7 +42,7 @@ export async function analyzeDocument(
   const documentReview: AnalysisResult = {
     agentId: agent.id,
     createdAt: new Date(),
-    costInCents: 0,
+    costInCents: 0, // TODO: Calculate cost
     thinking: thinkingResult.thinking,
     summary: thinkingResult.summary,
     grade: thinkingResult.grade || 0,
@@ -59,7 +61,7 @@ export async function analyzeDocument(
     review: documentReview,
     usage,
     llmResponse: JSON.stringify(documentReview), // This is a simplification
-    finalPrompt: "Prompt used to generate the review", // This is a placeholder
+    finalPrompt: thinkingResult.llmMessages,
     agentContext: JSON.stringify(agent), // This is a simplification
   };
 }
