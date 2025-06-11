@@ -627,42 +627,129 @@ export default function EvaluationsClient({
                               Tasks Executed
                             </h3>
                             <div className="space-y-3">
-                              {selectedVersion.job.tasks.map((task, index) => (
-                                <div
-                                  key={task.id}
-                                  className="rounded-lg border border-gray-200 bg-gray-50 p-4"
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-3">
-                                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
-                                        {index + 1}
-                                      </span>
-                                      <h4 className="font-medium text-gray-900">
-                                        {task.name}
-                                      </h4>
+                              {selectedVersion.job.tasks.map((task, index) => {
+                                let logData;
+                                try {
+                                  logData = JSON.parse(task.log);
+                                } catch (e) {
+                                  logData = { summary: task.log };
+                                }
+                                
+                                return (
+                                  <div
+                                    key={task.id}
+                                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-3">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
+                                          {index + 1}
+                                        </span>
+                                        <h4 className="font-medium text-gray-900">
+                                          {task.name}
+                                        </h4>
+                                      </div>
+                                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                                        <span className="rounded bg-gray-200 px-2 py-1">
+                                          {task.modelName}
+                                        </span>
+                                        <span>
+                                          ${(task.priceInCents / 100).toFixed(4)}
+                                        </span>
+                                        {task.timeInSeconds && (
+                                          <span>{task.timeInSeconds}s</span>
+                                        )}
+                                      </div>
                                     </div>
-                                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                                      <span className="rounded bg-gray-200 px-2 py-1">
-                                        {task.modelName}
-                                      </span>
-                                      <span>
-                                        ${(task.priceInCents / 100).toFixed(4)}
-                                      </span>
-                                      {task.timeInSeconds && (
-                                        <span>{task.timeInSeconds}s</span>
+                                    
+                                    {/* Summary */}
+                                    {logData.summary && (
+                                      <div className="mt-2 text-sm text-gray-700 bg-blue-50 rounded p-3 border border-blue-200">
+                                        <strong>Summary:</strong> {logData.summary}
+                                      </div>
+                                    )}
+
+                                    {/* Input/Output Details */}
+                                    <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                      {logData.input && (
+                                        <div className="bg-white rounded p-3 border">
+                                          <h5 className="font-medium text-gray-900 mb-2">Input</h5>
+                                          <div className="text-xs text-gray-600 space-y-1">
+                                            {Object.entries(logData.input).map(([key, value]) => (
+                                              <div key={key}>
+                                                <span className="font-medium">{key}:</span>{" "}
+                                                {typeof value === 'string' && value.length > 100 
+                                                  ? `${value.substring(0, 100)}...` 
+                                                  : String(value)}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      
+                                      {logData.output && (
+                                        <div className="bg-white rounded p-3 border">
+                                          <h5 className="font-medium text-gray-900 mb-2">Output</h5>
+                                          <div className="text-xs text-gray-600 space-y-1">
+                                            {Object.entries(logData.output).map(([key, value]) => (
+                                              <div key={key}>
+                                                <span className="font-medium">{key}:</span>{" "}
+                                                {typeof value === 'string' && value.length > 100 
+                                                  ? `${value.substring(0, 100)}...` 
+                                                  : String(value)}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
                                       )}
                                     </div>
-                                  </div>
-                                  {task.log && (
-                                    <div className="mt-2 text-sm text-gray-700 bg-white rounded p-3 border">
-                                      {task.log}
+
+                                    {/* LLM Interactions */}
+                                    {logData.llmInteractions && logData.llmInteractions.length > 0 && (
+                                      <div className="mt-3">
+                                        <h5 className="font-medium text-gray-900 mb-2">LLM Interactions</h5>
+                                        <div className="space-y-2">
+                                          {logData.llmInteractions.map((interaction, idx) => (
+                                            <details key={idx} className="bg-white rounded border">
+                                              <summary className="px-3 py-2 cursor-pointer hover:bg-gray-50">
+                                                <span className="font-medium">Attempt {interaction.attempt}</span>
+                                                <span className="ml-2 text-sm text-gray-500">
+                                                  ({interaction.validCommentsCount} valid, {interaction.failedCommentsCount} failed)
+                                                </span>
+                                              </summary>
+                                              <div className="px-3 pb-3 border-t">
+                                                <div className="mt-2">
+                                                  <h6 className="font-medium text-sm">Prompt:</h6>
+                                                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mt-1 max-h-32 overflow-y-auto">
+                                                    {interaction.prompt}
+                                                  </div>
+                                                </div>
+                                                <div className="mt-2">
+                                                  <h6 className="font-medium text-sm">Response:</h6>
+                                                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mt-1 max-h-32 overflow-y-auto">
+                                                    {interaction.response}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </details>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Full Log (fallback) */}
+                                    {!logData.summary && !logData.input && !logData.output && (
+                                      <div className="mt-2 text-sm text-gray-700 bg-white rounded p-3 border">
+                                        {task.log}
+                                      </div>
+                                    )}
+                                    
+                                    <div className="mt-2 text-xs text-gray-500">
+                                      Completed: {new Date(task.createdAt).toLocaleString()}
                                     </div>
-                                  )}
-                                  <div className="mt-2 text-xs text-gray-500">
-                                    Completed: {new Date(task.createdAt).toLocaleString()}
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                             <div className="mt-4 rounded-lg bg-blue-50 p-4">
                               <div className="flex items-center justify-between text-sm">

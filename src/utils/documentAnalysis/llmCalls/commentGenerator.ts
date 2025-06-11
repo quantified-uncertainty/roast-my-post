@@ -15,8 +15,24 @@ export async function getCommentData(
   agentInfo: Agent,
   targetComments: number,
   maxAttempts = 3
-): Promise<Comment[]> {
+): Promise<{
+  comments: Comment[];
+  llmInteractions: Array<{
+    attempt: number;
+    prompt: string;
+    response: string;
+    validCommentsCount: number;
+    failedCommentsCount: number;
+  }>;
+}> {
   const comments: Comment[] = [];
+  const llmInteractions: Array<{
+    attempt: number;
+    prompt: string;
+    response: string;
+    validCommentsCount: number;
+    failedCommentsCount: number;
+  }> = [];
   let attempts = 0;
 
   while (comments.length < targetComments && attempts < maxAttempts) {
@@ -61,6 +77,9 @@ export async function getCommentData(
     // Pre-process comments using shared utility
     let newComments = preprocessCommentData(result.comments || []);
 
+    let validCommentsCount = 0;
+    let failedCommentsCount = 0;
+
     // Validate new comments before adding them
     try {
       // Cast needed here as pre-processing might not satisfy Comment type perfectly yet
@@ -68,9 +87,12 @@ export async function getCommentData(
         newComments as Comment[],
         document.content
       );
+      validCommentsCount = validComments.length;
+      failedCommentsCount = newComments.length - validComments.length;
       comments.push(...validComments);
       console.log(`✅ Added ${validComments.length} valid comments`);
     } catch (error) {
+      failedCommentsCount = newComments.length;
       console.warn(`⚠️ Invalid comments in attempt ${attempts}:`, error);
       // Log the actual comments that failed validation
       console.warn(
@@ -78,7 +100,19 @@ export async function getCommentData(
         JSON.stringify(newComments, null, 2)
       );
     }
+
+    // Record this interaction
+    llmInteractions.push({
+      attempt: attempts,
+      prompt: prompt,
+      response: rawResponse,
+      validCommentsCount,
+      failedCommentsCount
+    });
   }
 
-  return comments;
+  return {
+    comments,
+    llmInteractions
+  };
 }

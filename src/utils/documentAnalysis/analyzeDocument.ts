@@ -56,29 +56,73 @@ export async function analyzeDocument(
   // Estimate cost for thinking task (rough approximation)
   const thinkingCost = Math.round(thinkingResult.llmMessages.length * 0.001);
   
+  const thinkingLogDetails = {
+    taskName: "generateThinkingAndSummary",
+    model: ANALYSIS_MODEL,
+    startTime: new Date(thinkingStartTime).toISOString(),
+    endTime: new Date(thinkingEndTime).toISOString(),
+    durationSeconds: thinkingTimeInSeconds,
+    estimatedCostCents: thinkingCost,
+    input: {
+      prompt: thinkingResult.llmMessages,
+      targetWordCount: targetWordCount,
+      agentName: agent.name,
+      documentLength: document.content.length
+    },
+    output: {
+      thinking: thinkingResult.thinking,
+      summary: thinkingResult.summary,
+      grade: thinkingResult.grade
+    },
+    summary: `Generated thinking and summary with grade ${thinkingResult.grade || 'N/A'}`
+  };
+
   tasks.push({
     name: "generateThinkingAndSummary",
     modelName: ANALYSIS_MODEL,
     priceInCents: thinkingCost,
     timeInSeconds: thinkingTimeInSeconds,
-    log: `Generated thinking and summary. Messages: ${thinkingResult.llmMessages.substring(0, 200)}...`
+    log: JSON.stringify(thinkingLogDetails, null, 2)
   });
 
   // Task 2: Get comments
   const commentsStartTime = Date.now();
-  const comments = await getCommentData(document, agent, targetComments);
+  const commentsResult = await getCommentData(document, agent, targetComments);
   const commentsEndTime = Date.now();
   const commentsTimeInSeconds = Math.round((commentsEndTime - commentsStartTime) / 1000);
   
   // Estimate cost for comments task (rough approximation)
-  const commentsCost = Math.round(comments.length * 10); // Approximate cost per comment
+  const commentsCost = Math.round(commentsResult.comments.length * 10); // Approximate cost per comment
+  
+  const commentsLogDetails = {
+    taskName: "getCommentData",
+    model: ANALYSIS_MODEL,
+    startTime: new Date(commentsStartTime).toISOString(),
+    endTime: new Date(commentsEndTime).toISOString(),
+    durationSeconds: commentsTimeInSeconds,
+    estimatedCostCents: commentsCost,
+    input: {
+      targetComments: targetComments,
+      agentName: agent.name,
+      documentLength: document.content.length,
+      maxAttempts: 3
+    },
+    output: {
+      totalCommentsGenerated: commentsResult.comments.length,
+      targetComments: targetComments,
+      commentsAchieved: commentsResult.comments.length,
+      successRate: `${Math.round((commentsResult.comments.length / targetComments) * 100)}%`
+    },
+    llmInteractions: commentsResult.llmInteractions,
+    summary: `Generated ${commentsResult.comments.length} comments out of ${targetComments} target comments across ${commentsResult.llmInteractions.length} LLM attempts`
+  };
   
   tasks.push({
     name: "getCommentData",
     modelName: ANALYSIS_MODEL,
     priceInCents: commentsCost,
     timeInSeconds: commentsTimeInSeconds,
-    log: `Generated ${comments.length} comments out of ${targetComments} target comments`
+    log: JSON.stringify(commentsLogDetails, null, 2)
   });
 
   const totalCostInCents = tasks.reduce((sum, task) => sum + task.priceInCents, 0);
@@ -90,7 +134,7 @@ export async function analyzeDocument(
     thinking: thinkingResult.thinking,
     summary: thinkingResult.summary,
     grade: thinkingResult.grade || 0,
-    comments,
+    comments: commentsResult.comments,
   };
 
   // Usage information would come from thinkingResult and comments generation
