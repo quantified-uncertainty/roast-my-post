@@ -27,7 +27,10 @@ function transformEAForumUrl(url: string): string {
 async function fetchArticle(url: string) {
   try {
     // Check if this is a LessWrong or EA Forum URL
-    if (url.includes("lesswrong.com") || url.includes("forum.effectivealtruism.org")) {
+    if (
+      url.includes("lesswrong.com") ||
+      url.includes("forum.effectivealtruism.org")
+    ) {
       // Extract the post ID from the URL
       const postId = url.split("/posts/")[1]?.split("/")[0];
       if (!postId) {
@@ -35,7 +38,7 @@ async function fetchArticle(url: string) {
       }
 
       const isEAForum = url.includes("forum.effectivealtruism.org");
-      const apiUrl = isEAForum 
+      const apiUrl = isEAForum
         ? "https://forum.effectivealtruism.org/graphql"
         : "https://www.lesswrong.com/graphql";
       const platformName = isEAForum ? "EA Forum" : "LessWrong";
@@ -263,11 +266,6 @@ async function extractMetadataWithLLM(html: string, url: string) {
       pretendToBeVisual: false,
       includeNodeLocations: false,
       storageQuota: 10000000,
-      features: {
-        FetchExternalResources: false,
-        ProcessExternalResources: false,
-        SkipExternalResources: true
-      }
     });
     const doc = dom.window.document;
 
@@ -365,14 +363,14 @@ async function cleanContentWithLLM(
           "\n\n[Content truncated for processing]"
         : markdownContent;
 
-    const prompt = `Clean up this content to be more readable and remove any platform-specific formatting. 
-Keep the core message intact but remove any UI elements, comments, reactions, or other platform-specific content.
+    const prompt = `Format the following markdown content to ensure it is clean and readable. 
+Do not remove or change any content, only fix formatting issues such as spacing, line breaks, or markdown syntax.
 The content is from a post titled "${title}".
 
-Content to clean:
+Content to format:
 ${contentToClean}
 
-Return ONLY the cleaned content, nothing else.`;
+Return ONLY the formatted markdown content, nothing else.`;
 
     const response = await openai.chat.completions.create({
       model: SEARCH_MODEL,
@@ -422,11 +420,6 @@ export async function POST(request: NextRequest) {
       pretendToBeVisual: false,
       includeNodeLocations: false,
       storageQuota: 10000000,
-      features: {
-        FetchExternalResources: false,
-        ProcessExternalResources: false,
-        SkipExternalResources: true
-      }
     });
 
     console.log("📝 Extracting metadata...");

@@ -525,10 +525,21 @@ export class DocumentModel {
   }
 
   static async delete(docId: string) {
-    // Delete the document which will cascade delete all related records
-    // per the Prisma schema relationships with onDelete: Cascade
-    return prisma.document.delete({
-      where: { id: docId },
+    // Use a transaction to ensure all deletions succeed together
+    return prisma.$transaction(async (tx) => {
+      // First, delete all jobs related to evaluations of this document
+      await tx.job.deleteMany({
+        where: {
+          evaluation: {
+            documentId: docId,
+          },
+        },
+      });
+
+      // Then delete the document, which will cascade delete evaluations and other related records
+      return tx.document.delete({
+        where: { id: docId },
+      });
     });
   }
 

@@ -132,7 +132,7 @@ model EvaluationVersion {
   agentVersionId String
   evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
   evaluationId  String
-  documentVersion DocumentVersion @relation(fields: [documentVersionId], references: [id])
+  documentVersion DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   documentVersionId String
   comments    EvaluationComment[]
   job        Job?
