@@ -1,17 +1,27 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import {
+  use,
+  useEffect,
+  useState,
+} from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormProvider, useForm } from "react-hook-form";
+import {
+  FormProvider,
+  useForm,
+} from "react-hook-form";
 import { z } from "zod";
 
 import AgentCheckboxList from "@/components/AgentCheckboxList";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 
-import { type DocumentInput, documentSchema } from "../../../docs/new/schema";
+import {
+  type DocumentInput,
+  documentSchema,
+} from "../../../docs/new/schema";
 import { updateDocument } from "./actions";
 
 interface FormFieldConfig {
@@ -112,7 +122,7 @@ export default function EditDocumentPage({ params }: Props) {
               : "",
           intendedAgents:
             document.intendedAgents && document.intendedAgents.length > 0
-              ? document.intendedAgents.join(", ")
+              ? document.intendedAgents.join(",")
               : "",
         });
 

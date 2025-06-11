@@ -24,6 +24,11 @@ export default function AgentCheckboxList({
   const { register, setValue, watch } = useFormContext();
   const selectedAgents = watch(name) || "";
 
+  // Register the field with react-hook-form
+  useEffect(() => {
+    register(name);
+  }, [name, register]);
+
   useEffect(() => {
     const fetchAgents = async () => {
       try {
@@ -41,16 +46,23 @@ export default function AgentCheckboxList({
   }, []);
 
   const handleCheckboxChange = (agentId: string, checked: boolean) => {
-    const currentAgents = selectedAgents ? selectedAgents.split(",") : [];
+    const currentAgents = selectedAgents && selectedAgents.trim() 
+      ? selectedAgents.split(",").map(id => id.trim()).filter(id => id) 
+      : [];
     let newAgents: string[];
 
     if (checked) {
-      newAgents = [...currentAgents, agentId];
+      // Avoid duplicates
+      if (!currentAgents.includes(agentId)) {
+        newAgents = [...currentAgents, agentId];
+      } else {
+        newAgents = currentAgents;
+      }
     } else {
       newAgents = currentAgents.filter((id: string) => id !== agentId);
     }
 
-    setValue(name, newAgents.join(","));
+    setValue(name, newAgents.join(","), { shouldDirty: true });
   };
 
   if (loading) {
@@ -65,7 +77,10 @@ export default function AgentCheckboxList({
       </label>
       <div className="mt-2 space-y-2">
         {agents.map((agent) => {
-          const isChecked = selectedAgents.split(",").includes(agent.id);
+          const agentIds = selectedAgents && selectedAgents.trim() 
+            ? selectedAgents.split(",").map(id => id.trim()).filter(id => id) 
+            : [];
+          const isChecked = agentIds.includes(agent.id);
           return (
             <div key={agent.id} className="flex items-center">
               <input

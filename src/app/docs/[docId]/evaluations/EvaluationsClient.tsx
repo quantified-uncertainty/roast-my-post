@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -12,6 +12,7 @@ import type {
   Document,
   Evaluation,
 } from "@/types/documentSchema";
+import type { Agent } from "@/types/agentSchema";
 import {
   getGradeColorStrong,
   getLetterGrade,
@@ -26,11 +27,22 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-import { rerunEvaluation } from "./actions";
+import { rerunEvaluation, createOrRerunEvaluation } from "./actions";
 
 interface EvaluationsClientProps {
   document: Document;
   isOwner?: boolean;
+}
+
+interface AgentWithEvaluation {
+  id: string;
+  name: string;
+  purpose: string;
+  iconName: string;
+  version: string;
+  description: string;
+  evaluation?: Evaluation;
+  isIntended: boolean;
 }
 
 export default function EvaluationsClient({
@@ -38,6 +50,8 @@ export default function EvaluationsClient({
   isOwner,
 }: EvaluationsClientProps) {
   const { reviews } = document;
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<AgentWithEvaluation[]>([]);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<
     number | null
@@ -46,6 +60,64 @@ export default function EvaluationsClient({
   const [activeTab, setActiveTab] = useState<
     "summary" | "comments" | "thinking" | "logs"
   >("summary");
+
+  // Fetch all agents and combine with evaluations
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch("/api/agents");
+        const data = await response.json();
+        setAgents(data.agents);
+
+        // Create combined list of agents with evaluations
+        const combined: AgentWithEvaluation[] = [];
+        const intendedAgentIds = document.intendedAgents || [];
+        const reviewMap = new Map(reviews.map(review => [review.agentId, review]));
+
+        // Add all intended agents
+        for (const agentId of intendedAgentIds) {
+          const agent = data.agents.find((a: Agent) => a.id === agentId);
+          if (agent) {
+            combined.push({
+              id: agent.id,
+              name: agent.name,
+              purpose: agent.purpose,
+              iconName: agent.iconName,
+              version: agent.version,
+              description: agent.description,
+              evaluation: reviewMap.get(agentId),
+              isIntended: true,
+            });
+          }
+        }
+
+        // Add any agents with evaluations that aren't intended
+        for (const review of reviews) {
+          if (!intendedAgentIds.includes(review.agentId)) {
+            const agent = data.agents.find((a: Agent) => a.id === review.agentId);
+            if (agent) {
+              combined.push({
+                id: agent.id,
+                name: agent.name,
+                purpose: agent.purpose,
+                iconName: agent.iconName,
+                version: agent.version,
+                description: agent.description,
+                evaluation: review,
+                isIntended: false,
+              });
+            }
+          }
+        }
+
+        setAgentsWithEvaluations(combined);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+      }
+    };
+
+    fetchAgents();
+  }, [document.intendedAgents, reviews]);
 
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
@@ -58,13 +130,23 @@ export default function EvaluationsClient({
     });
   };
 
-  const handleRerun = async (evaluationId: string) => {
-    await rerunEvaluation(evaluationId, document.id);
+  const handleRerun = async (agentId: string) => {
+    // Find the agent to determine if it has an evaluation
+    const agentWithEval = agentsWithEvaluations.find(a => a.id === agentId);
+    
+    if (agentWithEval?.evaluation) {
+      // Use rerunEvaluation for existing evaluations
+      await rerunEvaluation(agentId, document.id);
+    } else {
+      // Use createOrRerunEvaluation for new evaluations
+      await createOrRerunEvaluation(agentId, document.id);
+    }
   };
 
-  const selectedReview = reviews.find(
-    (review) => review.agentId === selectedReviewId
+  const selectedAgentWithEvaluation = agentsWithEvaluations.find(
+    (agent) => agent.id === selectedReviewId
   );
+  const selectedReview = selectedAgentWithEvaluation?.evaluation;
 
   const selectedVersion = selectedReview?.versions?.[selectedVersionIndex ?? 0];
 
@@ -84,14 +166,14 @@ export default function EvaluationsClient({
         </div>
       </div>
 
-      {reviews.length === 0 ? (
+      {agentsWithEvaluations.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
             <DocumentTextIcon className="h-6 w-6 text-gray-400" />
           </div>
-          <h3 className="mb-2 text-lg font-medium">No evaluations yet</h3>
+          <h3 className="mb-2 text-lg font-medium">No agents available</h3>
           <p className="mb-4 text-gray-500">
-            This document hasn't been evaluated by any agents yet.
+            No intended agents are configured for this document.
           </p>
           {isOwner && (
             <Link href={`/docs/${document.id}`}>
@@ -106,33 +188,43 @@ export default function EvaluationsClient({
             <div className="w-[250px]">
               <div className="border-b border-gray-200 px-4 py-2">
                 <h2 className="text-lg font-medium">
-                  Agents ({reviews.length})
+                  Agents ({agentsWithEvaluations.length})
                 </h2>
               </div>
               <div>
-                {reviews.map((review: Evaluation, idx) => (
+                {agentsWithEvaluations.map((agentWithEval, idx) => (
                   <div
-                    key={review.agentId}
+                    key={agentWithEval.id}
                     className={`cursor-pointer px-3 py-2 text-sm ${
-                      selectedReviewId === review.agentId
+                      selectedReviewId === agentWithEval.id
                         ? "bg-blue-50"
                         : "bg-transparent"
-                    } ${idx !== reviews.length - 1 ? "border-b border-gray-200" : ""}`}
+                    } ${idx !== agentsWithEvaluations.length - 1 ? "border-b border-gray-200" : ""}`}
                     onClick={() => {
-                      setSelectedReviewId(review.agentId);
+                      setSelectedReviewId(agentWithEval.id);
                       setSelectedVersionIndex(0);
                     }}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium text-gray-900">
-                          {review.agent.name}
+                          {agentWithEval.name}
+                          {agentWithEval.isIntended && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                              Intended
+                            </span>
+                          )}
                         </div>
+                        {!agentWithEval.evaluation && (
+                          <div className="text-xs text-gray-500">
+                            No evaluation yet
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {review.versions && review.versions.length > 0 && (
+                        {agentWithEval.evaluation?.versions && agentWithEval.evaluation.versions.length > 0 && (
                           <div className="text-xs text-gray-500">
-                            {review.versions.length} versions
+                            {agentWithEval.evaluation.versions.length} versions
                           </div>
                         )}
                         {isOwner && (
@@ -141,11 +233,11 @@ export default function EvaluationsClient({
                             className="flex items-center gap-1 px-2 py-1 text-xs"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRerun(review.agentId);
+                              handleRerun(agentWithEval.id);
                             }}
                           >
                             <ArrowPathIcon className="h-3 w-3" />
-                            Rerun
+                            {agentWithEval.evaluation ? "Rerun" : "Run"}
                           </Button>
                         )}
                       </div>
@@ -158,44 +250,45 @@ export default function EvaluationsClient({
 
           {/* Middle column - Version history (3 columns) */}
           <div className="col-span-3">
-            {selectedReview ? (
+            {selectedAgentWithEvaluation ? (
               <div>
-                <div>
-                  {/* Tabs */}
-                  <div className="flex border-b border-gray-200 px-4">
-                    <button
-                      className={`px-4 py-2 text-sm font-medium ${
-                        middleTab === "versions"
-                          ? "border-b-2 border-blue-500 text-blue-600"
-                          : "text-gray-500 hover:text-blue-600"
-                      }`}
-                      onClick={() => setMiddleTab("versions")}
-                    >
-                      <RectangleStackIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
-                      Versions
-                      {selectedReview?.versions && (
-                        <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                          {selectedReview.versions.length}
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      className={`ml-4 px-4 py-2 text-sm font-medium ${
-                        middleTab === "jobs"
-                          ? "border-b-2 border-blue-500 text-blue-600"
-                          : "text-gray-500 hover:text-blue-600"
-                      }`}
-                      onClick={() => setMiddleTab("jobs")}
-                    >
-                      <SparklesIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
-                      Jobs
-                      {selectedReview?.jobs && (
-                        <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
-                          {selectedReview.jobs.length}
-                        </span>
-                      )}
-                    </button>
-                  </div>
+                {selectedReview ? (
+                  <div>
+                    {/* Tabs */}
+                    <div className="flex border-b border-gray-200 px-4">
+                      <button
+                        className={`px-4 py-2 text-sm font-medium ${
+                          middleTab === "versions"
+                            ? "border-b-2 border-blue-500 text-blue-600"
+                            : "text-gray-500 hover:text-blue-600"
+                        }`}
+                        onClick={() => setMiddleTab("versions")}
+                      >
+                        <RectangleStackIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
+                        Versions
+                        {selectedReview?.versions && (
+                          <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                            {selectedReview.versions.length}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        className={`ml-4 px-4 py-2 text-sm font-medium ${
+                          middleTab === "jobs"
+                            ? "border-b-2 border-blue-500 text-blue-600"
+                            : "text-gray-500 hover:text-blue-600"
+                        }`}
+                        onClick={() => setMiddleTab("jobs")}
+                      >
+                        <SparklesIcon className="mr-1 inline-block h-4 w-4 align-text-bottom" />
+                        Jobs
+                        {selectedReview?.jobs && (
+                          <span className="ml-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                            {selectedReview.jobs.length}
+                          </span>
+                        )}
+                      </button>
+                    </div>
                   {/* Tab Content */}
                   <div>
                     {middleTab === "versions" && (
@@ -286,11 +379,32 @@ export default function EvaluationsClient({
                       </div>
                     )}
                   </div>
-                </div>
+                  </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center p-8 text-center text-gray-500">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        {selectedAgentWithEvaluation.name}
+                      </h3>
+                      <p className="text-gray-500 mb-4">
+                        This agent hasn't been run for this document yet.
+                      </p>
+                      {isOwner && (
+                        <Button
+                          onClick={() => handleRerun(selectedAgentWithEvaluation.id)}
+                          className="flex items-center gap-2"
+                        >
+                          <SparklesIcon className="h-4 w-4" />
+                          Run Evaluation
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex h-full items-center justify-center p-8 text-center text-gray-500">
-                Select an evaluation to view its version history
+                Select an agent to view its evaluation details
               </div>
             )}
           </div>
@@ -370,7 +484,12 @@ export default function EvaluationsClient({
                         }`}
                       >
                         <DocumentTextIcon className="h-4 w-4" />
-                        Logs
+                        Tasks
+                        {selectedVersion.job?.tasks && (
+                          <span className="ml-1 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
+                            {selectedVersion.job.tasks.length}
+                          </span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -502,18 +621,71 @@ export default function EvaluationsClient({
                     {/* Logs Tab */}
                     {activeTab === "logs" && (
                       <div className="space-y-6">
-                        {selectedVersion.job?.logs ? (
-                          <div className="prose max-w-none">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[rehypeRaw]}
-                            >
-                              {selectedVersion.job.logs}
-                            </ReactMarkdown>
+                        {selectedVersion.job?.tasks && selectedVersion.job.tasks.length > 0 ? (
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-medium text-gray-900">
+                              Tasks Executed
+                            </h3>
+                            <div className="space-y-3">
+                              {selectedVersion.job.tasks.map((task, index) => (
+                                <div
+                                  key={task.id}
+                                  className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-3">
+                                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
+                                        {index + 1}
+                                      </span>
+                                      <h4 className="font-medium text-gray-900">
+                                        {task.name}
+                                      </h4>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                                      <span className="rounded bg-gray-200 px-2 py-1">
+                                        {task.modelName}
+                                      </span>
+                                      <span>
+                                        ${(task.priceInCents / 100).toFixed(4)}
+                                      </span>
+                                      {task.timeInSeconds && (
+                                        <span>{task.timeInSeconds}s</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {task.log && (
+                                    <div className="mt-2 text-sm text-gray-700 bg-white rounded p-3 border">
+                                      {task.log}
+                                    </div>
+                                  )}
+                                  <div className="mt-2 text-xs text-gray-500">
+                                    Completed: {new Date(task.createdAt).toLocaleString()}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="mt-4 rounded-lg bg-blue-50 p-4">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium text-blue-900">
+                                  Total Cost:
+                                </span>
+                                <span className="text-blue-700">
+                                  ${(selectedVersion.job.tasks.reduce((sum, task) => sum + task.priceInCents, 0) / 100).toFixed(4)}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm mt-1">
+                                <span className="font-medium text-blue-900">
+                                  Total Time:
+                                </span>
+                                <span className="text-blue-700">
+                                  {selectedVersion.job.tasks.reduce((sum, task) => sum + (task.timeInSeconds || 0), 0)}s
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="text-center text-gray-500">
-                            No logs available for this version
+                            No tasks available for this version
                           </div>
                         )}
                       </div>

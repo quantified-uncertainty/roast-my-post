@@ -44,3 +44,42 @@ export async function rerunEvaluation(
     };
   }
 }
+
+/**
+ * Creates a new evaluation and job for an agent, or reruns existing evaluation
+ */
+export async function createOrRerunEvaluation(
+  agentId: string,
+  documentId: string
+) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: "User must be logged in to create an evaluation",
+      };
+    }
+
+    await DocumentModel.createOrRerunEvaluation(
+      agentId,
+      documentId,
+      session.user.id
+    );
+
+    // Revalidate the evaluations page
+    revalidatePath(`/docs/${documentId}/evaluations`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating or rerunning evaluation:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create or rerun evaluation",
+    };
+  }
+}

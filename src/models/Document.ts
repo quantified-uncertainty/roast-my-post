@@ -72,6 +72,15 @@ type DocumentWithRelations = {
         llmThinking: string | null;
         durationInSeconds: number | null;
         logs: string | null;
+        tasks: Array<{
+          id: string;
+          name: string;
+          modelName: string;
+          priceInCents: number;
+          timeInSeconds: number | null;
+          log: string | null;
+          createdAt: Date;
+        }>;
       } | null;
       documentVersion: {
         version: number;
@@ -125,7 +134,11 @@ export class DocumentModel {
                     highlight: true,
                   },
                 },
-                job: true,
+                job: {
+                  include: {
+                    tasks: true,
+                  },
+                },
                 documentVersion: {
                   select: {
                     version: true,
@@ -177,6 +190,15 @@ export class DocumentModel {
                 llmThinking: version.job.llmThinking || "",
                 durationInSeconds: version.job.durationInSeconds || undefined,
                 logs: version.job.logs || undefined,
+                tasks: version.job.tasks.map((task) => ({
+                  id: task.id,
+                  name: task.name,
+                  modelName: task.modelName,
+                  priceInCents: task.priceInCents,
+                  timeInSeconds: task.timeInSeconds,
+                  log: task.log,
+                  createdAt: task.createdAt,
+                })),
               }
             : undefined,
           comments: version.comments.map((comment) => ({
@@ -291,7 +313,11 @@ export class DocumentModel {
                     highlight: true,
                   },
                 },
-                job: true,
+                job: {
+                  include: {
+                    tasks: true,
+                  },
+                },
                 documentVersion: {
                   select: {
                     version: true,
@@ -343,6 +369,9 @@ export class DocumentModel {
               ? {
                   costInCents: version.job.costInCents || 0,
                   llmThinking: version.job.llmThinking || "",
+                  durationInSeconds: version.job.durationInSeconds || undefined,
+                  logs: version.job.logs || undefined,
+                  tasks: version.job.tasks || [],
                 }
               : undefined,
             comments: version.comments.map((comment) => ({
@@ -535,6 +564,53 @@ export class DocumentModel {
 
     if (!evaluation) {
       throw new Error("Evaluation not found");
+    }
+
+    // Create a new job for this evaluation
+    await prisma.job.create({
+      data: {
+        status: "PENDING",
+        evaluation: {
+          connect: {
+            id: evaluation.id,
+          },
+        },
+      },
+    });
+
+    return { success: true };
+  }
+
+  static async createOrRerunEvaluation(
+    agentId: string,
+    documentId: string,
+    userId: string
+  ) {
+    // Check if the current user is the document owner
+    const isOwner = await this.checkOwnership(documentId, userId);
+    if (!isOwner) {
+      throw new Error(
+        "You don't have permission to create evaluations for this document"
+      );
+    }
+
+    // Find or create the evaluation record
+    let evaluation = await prisma.evaluation.findFirst({
+      where: {
+        documentId,
+        agentId,
+      },
+    });
+
+    if (!evaluation) {
+      // Create a new evaluation record
+      evaluation = await prisma.evaluation.create({
+        data: {
+          documentId,
+          agentId,
+          createdAt: new Date(),
+        },
+      });
     }
 
     // Create a new job for this evaluation

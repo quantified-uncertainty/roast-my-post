@@ -215,5 +215,23 @@ model Job {
   evaluationVersion    EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
   evaluationVersionId  String?  @unique
 
+  tasks Task[]
+
   @@index([evaluationId])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  name        String
+  modelName   String
+  priceInCents Int
+  timeInSeconds Int?
+  log        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  job         Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId       String
+
+  @@index([jobId])
 }

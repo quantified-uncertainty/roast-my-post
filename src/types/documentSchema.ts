@@ -24,6 +24,19 @@ export const CommentSchema = z.object({
 
 export type Comment = z.infer<typeof CommentSchema>;
 
+// Schema for task
+export const TaskSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  modelName: z.string(),
+  priceInCents: z.number(),
+  timeInSeconds: z.number().nullable(),
+  log: z.string().nullable(),
+  createdAt: z.date(),
+});
+
+export type Task = z.infer<typeof TaskSchema>;
+
 // Schema for evaluation version
 export const EvaluationVersionSchema = z.object({
   createdAt: z.date(),
@@ -33,6 +46,7 @@ export const EvaluationVersionSchema = z.object({
       llmThinking: z.string(),
       durationInSeconds: z.number().optional(),
       logs: z.string().optional(),
+      tasks: z.array(TaskSchema).optional(),
     })
     .optional(),
   comments: z.array(CommentSchema),

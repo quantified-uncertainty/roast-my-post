@@ -168,7 +168,7 @@ export class JobModel {
 
       // Analyze document
       console.log(`🧠 Analyzing document with agent ${agent.name}...`);
-      const { review, usage, llmResponse, finalPrompt, agentContext } =
+      const { review, usage, llmResponse, finalPrompt, agentContext, tasks } =
         await analyzeDocument(documentForAnalysis, agent);
 
       // Process the review
@@ -193,6 +193,20 @@ export class JobModel {
           },
         },
       });
+
+      // Save tasks to database
+      for (const task of tasks) {
+        await prisma.task.create({
+          data: {
+            name: task.name,
+            modelName: task.modelName,
+            priceInCents: task.priceInCents,
+            timeInSeconds: task.timeInSeconds,
+            log: task.log,
+            jobId: job.id,
+          },
+        });
+      }
 
       // Save comments with highlights
       if (polishedReview.comments && polishedReview.comments.length > 0) {

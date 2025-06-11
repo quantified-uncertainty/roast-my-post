@@ -1,6 +1,8 @@
 import { Agent } from "../../types/agentSchema";
 import { Document } from "../../types/documents";
 import { AnalysisResult } from "../../types/documentSchema";
+import { ANALYSIS_MODEL } from "../../types/openai";
+import { calculateApiCost } from "../costCalculator";
 import { getCommentData } from "./llmCalls/commentGenerator";
 import {
   generateThinkingAndSummary,
@@ -20,29 +22,71 @@ interface AnalyzeDocumentResult {
   llmResponse?: string;
   finalPrompt?: string;
   agentContext?: string;
+  tasks: TaskResult[];
+}
+
+interface TaskResult {
+  name: string;
+  modelName: string;
+  priceInCents: number;
+  timeInSeconds: number;
+  log: string;
 }
 
 export async function analyzeDocument(
   document: Document,
   agent: Agent
 ): Promise<AnalyzeDocumentResult> {
+  const tasks: TaskResult[] = [];
+  
   // Calculate target word count
   const targetComments = calculateTargetComments(document.content);
   const targetWordCount = calculateTargetWordCount(document.content);
 
+  // Task 1: Generate thinking and summary
+  const thinkingStartTime = Date.now();
   const thinkingResult = await generateThinkingAndSummary(
     document,
     targetWordCount,
     agent
   );
+  const thinkingEndTime = Date.now();
+  const thinkingTimeInSeconds = Math.round((thinkingEndTime - thinkingStartTime) / 1000);
+  
+  // Estimate cost for thinking task (rough approximation)
+  const thinkingCost = Math.round(thinkingResult.llmMessages.length * 0.001);
+  
+  tasks.push({
+    name: "generateThinkingAndSummary",
+    modelName: ANALYSIS_MODEL,
+    priceInCents: thinkingCost,
+    timeInSeconds: thinkingTimeInSeconds,
+    log: `Generated thinking and summary. Messages: ${thinkingResult.llmMessages.substring(0, 200)}...`
+  });
 
-  // Get comments
+  // Task 2: Get comments
+  const commentsStartTime = Date.now();
   const comments = await getCommentData(document, agent, targetComments);
+  const commentsEndTime = Date.now();
+  const commentsTimeInSeconds = Math.round((commentsEndTime - commentsStartTime) / 1000);
+  
+  // Estimate cost for comments task (rough approximation)
+  const commentsCost = Math.round(comments.length * 10); // Approximate cost per comment
+  
+  tasks.push({
+    name: "getCommentData",
+    modelName: ANALYSIS_MODEL,
+    priceInCents: commentsCost,
+    timeInSeconds: commentsTimeInSeconds,
+    log: `Generated ${comments.length} comments out of ${targetComments} target comments`
+  });
+
+  const totalCostInCents = tasks.reduce((sum, task) => sum + task.priceInCents, 0);
 
   const documentReview: AnalysisResult = {
     agentId: agent.id,
     createdAt: new Date(),
-    costInCents: 0, // TODO: Calculate cost
+    costInCents: totalCostInCents,
     thinking: thinkingResult.thinking,
     summary: thinkingResult.summary,
     grade: thinkingResult.grade || 0,
@@ -63,5 +107,6 @@ export async function analyzeDocument(
     llmResponse: JSON.stringify(documentReview), // This is a simplification
     finalPrompt: thinkingResult.llmMessages,
     agentContext: JSON.stringify(agent), // This is a simplification
+    tasks,
   };
 }
