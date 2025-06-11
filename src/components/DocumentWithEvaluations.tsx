@@ -115,10 +115,7 @@ function CommentsSidebar({
   const sortedComments = getValidAndSortedComments(comments);
 
   return (
-    <div className="rounded-lg bg-white shadow-sm">
-      <h2 className="border-b border-gray-100 px-4 py-2 text-base font-medium text-gray-600">
-        Highlights
-      </h2>
+    <div className="px-4">
       <div className="divide-y divide-gray-100">
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
@@ -248,7 +245,7 @@ function ReviewSelector({
   onReviewSelect,
 }: ReviewSelectorProps) {
   return (
-    <ul className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+    <ul className="overflow-hidden border border-gray-200 bg-white">
       {document.reviews.map((review, index) => {
         const isActive = index === activeReviewIndex;
         const grade = review.grade || 0;
@@ -260,11 +257,16 @@ function ReviewSelector({
         return (
           <li
             key={review.agentId}
-            className={!isLast ? "border-b border-gray-200" : undefined}
+            className={
+              `${!isLast ? "border-b border-gray-200" : ""} ` +
+              (!isActive ? "transition-colors hover:bg-gray-100" : "")
+            }
           >
             <button
               onClick={() => onReviewSelect(index)}
-              className={`relative flex w-full flex-col gap-0 bg-transparent px-6 py-4 text-left transition-all duration-200 focus:outline-none`}
+              className={`relative flex w-full flex-col gap-0 px-6 py-4 text-left transition-all duration-200 focus:outline-none ${
+                isActive ? "bg-blue-50 ring-2 ring-blue-200" : "bg-transparent"
+              }`}
               style={{ borderRadius: 0 }}
             >
               <div className="flex items-center gap-4">
@@ -331,6 +333,9 @@ export function DocumentWithEvaluations({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
   const [showReviewSelector, setShowReviewSelector] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "analysis" | "comments" | "thinking"
+  >("analysis");
 
   // Handle case when there are no reviews
   const hasReviews = document.reviews && document.reviews.length > 0;
@@ -530,16 +535,46 @@ export function DocumentWithEvaluations({
         </div>
       </div>
 
-      <div className="w-72 flex-1 overflow-y-auto border-l border-gray-200 bg-gray-50 px-4 py-2">
-        <div className="space-y-4">
-          {/* Popup trigger button */}
+      <div className="flex-1 overflow-y-auto border-l border-gray-200">
+        {/* Combined top bar: agent selector and tabs in one row */}
+        <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4">
           <button
-            className="mb-2 w-full rounded-lg bg-blue-600 py-2 font-semibold text-white transition hover:bg-blue-700"
+            className="inline-flex h-full items-center gap-2 px-3 py-0 text-base font-medium transition hover:bg-gray-100 focus:outline-none"
             onClick={() => setShowReviewSelector(true)}
           >
-            Select Agent Review
+            <span className="flex items-center rounded-md border border-orange-100 bg-orange-50 px-2 py-0.5 text-sm font-bold text-orange-800">
+              {getLetterGrade(activeReview?.grade || 0)}
+            </span>
+            <span className="ml-2 mr-1 font-semibold text-gray-900">
+              {activeReview?.agent.name || "Select Agent"}
+            </span>
+            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
           </button>
-
+          <div className="ml-8 flex h-full items-center">
+            <button
+              className={`mr-6 pb-2 text-base font-medium transition-colors ${activeTab === "analysis" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("analysis")}
+              style={{ height: "100%" }}
+            >
+              Analysis
+            </button>
+            <button
+              className={`mr-6 pb-2 text-base font-medium transition-colors ${activeTab === "comments" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("comments")}
+              style={{ height: "100%" }}
+            >
+              Comments
+            </button>
+            <button
+              className={`pb-2 text-base font-medium transition-colors ${activeTab === "thinking" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
+              onClick={() => setActiveTab("thinking")}
+              style={{ height: "100%" }}
+            >
+              Thinking
+            </button>
+          </div>
+        </div>
+        <div className="mt-2 space-y-4">
           {/* Popup modal for ReviewSelector */}
           {showReviewSelector && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -578,81 +613,27 @@ export function DocumentWithEvaluations({
 
           {activeReview && (
             <>
-              {/* Analysis section */}
-              {activeReview.summary && (
-                <div className="rounded-lg bg-white shadow-sm">
-                  <div
-                    className="flex cursor-pointer select-none items-center justify-between px-4 py-1.5 hover:bg-gray-50"
-                    onClick={() =>
-                      setExpandedTag(
-                        expandedTag === "analysis" ? null : "analysis"
-                      )
-                    }
-                  >
-                    <div className="flex items-center">
-                      <h3 className="text-sm font-medium text-gray-700">
-                        Analysis
-                      </h3>
-                      {activeReview.grade &&
-                        activeReview.agent.gradeInstructions && (
-                          <div className="ml-4 flex items-center gap-1 text-sm">
-                            <span className="text-gray-500">Grade:</span>
-                            <span
-                              className={`rounded-sm px-2 text-sm ${getGradeColorStrong(activeReview.grade).className}`}
-                              style={
-                                getGradeColorStrong(activeReview.grade).style
-                              }
-                            >
-                              {getLetterGrade(activeReview.grade)}
-                            </span>
-                          </div>
-                        )}
-                    </div>
-                    {expandedTag === "analysis" ? (
-                      <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <ChevronLeftIcon className="h-4 w-4 text-gray-400" />
-                    )}
-                  </div>
-                  <div className="prose-md prose max-w-none border-t border-gray-100 px-4 py-1.5">
-                    {expandedTag === "analysis" ? (
-                      <>
-                        <MarkdownRenderer>
-                          {activeReview.summary}
-                        </MarkdownRenderer>
-                        {activeReview.thinking && (
-                          <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
-                            <h4 className="mb-2 font-semibold text-gray-700">
-                              Thinking:
-                            </h4>
-                            <div className="text-gray-400">
-                              <MarkdownRenderer>
-                                {activeReview.thinking}
-                              </MarkdownRenderer>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="line-clamp-3">
-                        <MarkdownRenderer>
-                          {activeReview.summary}
-                        </MarkdownRenderer>
-                      </div>
-                    )}
-                  </div>
+              {activeTab === "analysis" && activeReview.summary && (
+                <div className="prose-md prose max-w-none px-8 py-0.5">
+                  <MarkdownRenderer>{activeReview.summary}</MarkdownRenderer>
                 </div>
               )}
-
-              <CommentsSidebar
-                comments={activeReview.comments}
-                activeTag={activeTag}
-                expandedTag={expandedTag}
-                onTagHover={setActiveTag}
-                onTagClick={handleCommentClick}
-                review={activeReview}
-                commentColorMap={commentColorMap}
-              />
+              {activeTab === "thinking" && activeReview.thinking && (
+                <div className="prose-md prose max-w-none px-8 py-0.5">
+                  <MarkdownRenderer>{activeReview.thinking}</MarkdownRenderer>
+                </div>
+              )}
+              {activeTab === "comments" && (
+                <CommentsSidebar
+                  comments={activeReview.comments}
+                  activeTag={activeTag}
+                  expandedTag={expandedTag}
+                  onTagHover={setActiveTag}
+                  onTagClick={handleCommentClick}
+                  review={activeReview}
+                  commentColorMap={commentColorMap}
+                />
+              )}
             </>
           )}
         </div>
