@@ -102,53 +102,57 @@ export default function EvaluationsClient({
       ) : (
         <div className="grid grid-cols-12 gap-6">
           {/* Left column - Evaluations list (2 columns) */}
-          <div className="col-span-2">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-              <h2 className="text-lg font-medium">Agents ({reviews.length})</h2>
-            </div>
-            <div>
-              {reviews.map((review: Evaluation, idx) => (
-                <div
-                  key={review.agentId}
-                  className={`cursor-pointer px-3 py-2 text-sm ${
-                    selectedReviewId === review.agentId
-                      ? "bg-blue-50"
-                      : "bg-transparent"
-                  } ${idx !== reviews.length - 1 ? "border-b border-gray-200" : ""}`}
-                  onClick={() => {
-                    setSelectedReviewId(review.agentId);
-                    setSelectedVersionIndex(0);
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {review.agent.name}
+          <div className="col-span-2 shrink-0">
+            <div className="w-[250px]">
+              <div className="border-b border-gray-200 px-4 py-2">
+                <h2 className="text-lg font-medium">
+                  Agents ({reviews.length})
+                </h2>
+              </div>
+              <div>
+                {reviews.map((review: Evaluation, idx) => (
+                  <div
+                    key={review.agentId}
+                    className={`cursor-pointer px-3 py-2 text-sm ${
+                      selectedReviewId === review.agentId
+                        ? "bg-blue-50"
+                        : "bg-transparent"
+                    } ${idx !== reviews.length - 1 ? "border-b border-gray-200" : ""}`}
+                    onClick={() => {
+                      setSelectedReviewId(review.agentId);
+                      setSelectedVersionIndex(0);
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {review.agent.name}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {review.versions && review.versions.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            {review.versions.length} versions
+                          </div>
+                        )}
+                        {isOwner && (
+                          <Button
+                            variant="secondary"
+                            className="flex items-center gap-1 px-2 py-1 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRerun(review.agentId);
+                            }}
+                          >
+                            <ArrowPathIcon className="h-3 w-3" />
+                            Rerun
+                          </Button>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {review.versions && review.versions.length > 0 && (
-                        <div className="text-xs text-gray-500">
-                          {review.versions.length} versions
-                        </div>
-                      )}
-                      {isOwner && (
-                        <Button
-                          variant="secondary"
-                          className="flex items-center gap-1 px-2 py-1 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRerun(review.agentId);
-                          }}
-                        >
-                          <ArrowPathIcon className="h-3 w-3" />
-                          Rerun
-                        </Button>
-                      )}
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
@@ -158,7 +162,7 @@ export default function EvaluationsClient({
               <div>
                 <div>
                   {/* Tabs */}
-                  <div className="flex border-b border-gray-200 bg-gray-50 px-4">
+                  <div className="flex border-b border-gray-200 px-4">
                     <button
                       className={`px-4 py-2 text-sm font-medium ${
                         middleTab === "versions"

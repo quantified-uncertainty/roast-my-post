@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,11 +17,16 @@ import remarkGfm from "remark-gfm";
 
 import { deleteDocument } from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
-import type { Comment, Document, Evaluation } from "@/types/documentSchema";
+import type {
+  Comment,
+  Document,
+  Evaluation,
+} from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
   getGradeColorStrong,
   getGradeColorWeak,
+  getGradeLabel,
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
@@ -238,43 +247,70 @@ function ReviewSelector({
   onReviewSelect,
 }: ReviewSelectorProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <ul className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
       {document.reviews.map((review, index) => {
         const isActive = index === activeReviewIndex;
         const grade = review.grade || 0;
         const gradeStyle = getGradeColorStrong(grade);
         const letterGrade = getLetterGrade(grade);
-
+        const label = getGradeLabel(grade);
+        const highlightsCount = review.comments.length;
+        const isLast = index === document.reviews.length - 1;
         return (
-          <button
+          <li
             key={review.agentId}
-            onClick={() => onReviewSelect(index)}
-            className={`flex items-center gap-2 rounded-lg border p-2 transition-all duration-200 ${
-              isActive
-                ? "border-blue-400 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
+            className={!isLast ? "border-b border-gray-200" : undefined}
           >
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full"
-              style={gradeStyle.style}
+            <button
+              onClick={() => onReviewSelect(index)}
+              className={`relative flex w-full flex-col gap-0 bg-transparent px-6 py-4 text-left transition-all duration-200 focus:outline-none`}
+              style={{ borderRadius: 0 }}
             >
-              <span className="text-sm font-medium text-white">
-                {letterGrade}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1 text-left">
-              <div className="font-medium text-gray-900">
-                {review.agent.name}
+              <div className="flex items-center gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="text-lg font-semibold text-gray-900">
+                    {review.agent.name}
+                  </div>
+                  <div className="truncate text-sm text-gray-500">
+                    {review.agent.description}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span
+                      className="rounded border px-2 py-0.5 text-sm font-semibold"
+                      style={getGradeColorWeak(grade)}
+                    >
+                      {letterGrade}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      · {highlightsCount} highlights
+                    </span>
+                  </div>
+                </div>
+                {isActive && (
+                  <span className="absolute right-4 top-4 flex items-center justify-center">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-500">
+                      <svg
+                        className="h-4 w-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </span>
+                  </span>
+                )}
               </div>
-              <div className="text-sm text-gray-500">
-                {review.comments.length} highlights
-              </div>
-            </div>
-          </button>
+            </button>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 

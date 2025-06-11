@@ -234,3 +234,15 @@ export function getGradeColorStrong(grade: number): GradeStyle {
     className: "text-white",
   };
 }
+
+/**
+ * Returns a qualitative label for a given grade (0-100).
+ * 80+ = 'Good', 60-79 = 'Fair', 40-59 = 'Weak', 20-39 = 'Poor', <20 = 'Terrible'
+ */
+export function getGradeLabel(grade: number): string {
+  if (grade >= 80) return "Good";
+  if (grade >= 60) return "Fair";
+  if (grade >= 40) return "Weak";
+  if (grade >= 20) return "Poor";
+  return "Terrible";
+}
