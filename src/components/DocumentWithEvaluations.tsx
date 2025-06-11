@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -329,6 +330,7 @@ export function DocumentWithEvaluations({
   const [expandedTag, setExpandedTag] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
+  const [showReviewSelector, setShowReviewSelector] = useState(false);
 
   // Handle case when there are no reviews
   const hasReviews = document.reviews && document.reviews.length > 0;
@@ -404,6 +406,16 @@ export function DocumentWithEvaluations({
     // Remove auto-scrolling behavior when switching reviews
     // This allows the user to maintain their scroll position
   };
+
+  // Close modal on Esc
+  useEffect(() => {
+    if (!showReviewSelector) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowReviewSelector(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showReviewSelector]);
 
   return (
     <div className="flex h-screen bg-white">
@@ -520,12 +532,48 @@ export function DocumentWithEvaluations({
 
       <div className="w-72 flex-1 overflow-y-auto border-l border-gray-200 bg-gray-50 px-4 py-2">
         <div className="space-y-4">
-          {hasReviews && (
-            <ReviewSelector
-              document={document}
-              activeReviewIndex={activeReviewIndex}
-              onReviewSelect={handleReviewSelect}
-            />
+          {/* Popup trigger button */}
+          <button
+            className="mb-2 w-full rounded-lg bg-blue-600 py-2 font-semibold text-white transition hover:bg-blue-700"
+            onClick={() => setShowReviewSelector(true)}
+          >
+            Select Agent Review
+          </button>
+
+          {/* Popup modal for ReviewSelector */}
+          {showReviewSelector && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black bg-opacity-30"
+                onClick={() => setShowReviewSelector(false)}
+              />
+              {/* Modal content */}
+              <div className="relative z-10 max-h-[80vh] min-w-[400px] max-w-full overflow-y-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-xl">
+                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                  <span className="text-lg font-semibold">
+                    Select Agent Review
+                  </span>
+                  <button
+                    className="px-2 text-2xl font-bold text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowReviewSelector(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="p-0">
+                  <ReviewSelector
+                    document={document}
+                    activeReviewIndex={activeReviewIndex}
+                    onReviewSelect={(index) => {
+                      handleReviewSelect(index);
+                      setShowReviewSelector(false);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
           {activeReview && (
