@@ -32,6 +32,7 @@ import {
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import {
+  ArrowLeftIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ListBulletIcon,
@@ -99,18 +100,19 @@ interface CommentsSidebarProps {
   expandedTag: string | null;
   onTagHover: (tag: string | null) => void;
   onTagClick: (tag: string | null) => void;
-  review: Evaluation;
+  evaluation: Evaluation;
   commentColorMap: Record<number, { background: string; color: string }>;
 }
 
 function CommentsSidebar({
   comments,
+  activeTag,
   expandedTag,
   onTagHover,
   onTagClick,
-  review,
+  evaluation,
   commentColorMap,
-}: CommentsSidebarProps & { review: Evaluation }) {
+}: CommentsSidebarProps) {
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
 
@@ -119,7 +121,7 @@ function CommentsSidebar({
       <div className="divide-y divide-gray-100">
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
-          const hasGradeInstructions = review.agent.gradeInstructions;
+          const hasGradeInstructions = evaluation.agent.gradeInstructions;
 
           return (
             <div
@@ -233,37 +235,37 @@ function CommentsSidebar({
   );
 }
 
-interface ReviewSelectorProps {
+interface EvaluationSelectorProps {
   document: Document;
-  activeReviewIndex: number;
-  onReviewSelect: (index: number) => void;
+  activeEvaluationIndex: number | null;
+  onEvaluationSelect: (index: number) => void;
 }
 
-function ReviewSelector({
+function EvaluationSelector({
   document,
-  activeReviewIndex,
-  onReviewSelect,
-}: ReviewSelectorProps) {
+  activeEvaluationIndex,
+  onEvaluationSelect,
+}: EvaluationSelectorProps) {
   return (
     <ul className="overflow-hidden border border-gray-200 bg-white">
-      {document.reviews.map((review, index) => {
-        const isActive = index === activeReviewIndex;
-        const grade = review.grade || 0;
+      {document.reviews.map((evaluation, index) => {
+        const isActive = index === activeEvaluationIndex;
+        const grade = evaluation.grade || 0;
         const gradeStyle = getGradeColorStrong(grade);
         const letterGrade = getLetterGrade(grade);
         const label = getGradeLabel(grade);
-        const highlightsCount = review.comments.length;
+        const highlightsCount = evaluation.comments.length;
         const isLast = index === document.reviews.length - 1;
         return (
           <li
-            key={review.agentId}
+            key={evaluation.agentId}
             className={
               `${!isLast ? "border-b border-gray-200" : ""} ` +
               (!isActive ? "transition-colors hover:bg-gray-100" : "")
             }
           >
             <button
-              onClick={() => onReviewSelect(index)}
+              onClick={() => onEvaluationSelect(index)}
               className={`relative flex w-full flex-col gap-0 px-6 py-4 text-left transition-all duration-200 focus:outline-none ${
                 isActive ? "bg-blue-50 ring-2 ring-blue-200" : "bg-transparent"
               }`}
@@ -272,10 +274,10 @@ function ReviewSelector({
               <div className="flex items-center gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="text-lg font-semibold text-gray-900">
-                    {review.agent.name}
+                    {evaluation.agent.name}
                   </div>
                   <div className="truncate text-sm text-gray-500">
-                    {review.agent.description}
+                    {evaluation.agent.description}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <span
@@ -322,30 +324,319 @@ interface DocumentWithReviewsProps {
   isOwner?: boolean;
 }
 
+interface EvaluationState {
+  selectedReviewIndex: number;
+  hoveredCommentId: string | null;
+  expandedCommentId: string | null;
+  activeTab: "analysis" | "comments" | "thinking";
+}
+
+interface UIState {
+  isHomeView: boolean;
+  showEvaluationSelector: boolean;
+  deleteError: string | null;
+}
+
+interface HomeViewProps {
+  document: Document;
+  isOwner?: boolean;
+  onEvaluationSelect: (index: number) => void;
+  activeEvaluationIndex: number | null;
+}
+
+function HomeView({
+  document,
+  isOwner = false,
+  onEvaluationSelect,
+  activeEvaluationIndex,
+}: HomeViewProps) {
+  const router = useRouter();
+
+  return (
+    <div className="h-full p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">{document.title}</h1>
+        <div className="mt-2 text-sm text-gray-500">
+          By {document.author} •{" "}
+          {new Date(document.publishedDate).toLocaleDateString()}
+          {document.url && (
+            <>
+              {" • "}
+              <a
+                href={document.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700"
+              >
+                View Original
+              </a>
+            </>
+          )}
+          {document.submittedById && (
+            <>
+              {" • "}
+              <Link
+                href={`/users/${document.submittedById}`}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                {document.submittedBy?.name || "View Owner"}
+              </Link>
+            </>
+          )}
+        </div>
+        {isOwner && (
+          <div className="mt-4 flex items-center gap-2">
+            <Link href={`/docs/${document.id}/evaluations`}>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <ListBulletIcon className="h-4 w-4" />
+                Details
+              </Button>
+            </Link>
+            <Link href={`/docs/${document.id}/edit`}>
+              <Button className="flex items-center gap-2">
+                <PencilIcon className="h-4 w-4" />
+                Edit
+              </Button>
+            </Link>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (
+                  confirm(
+                    "Are you sure you want to delete this document? This action cannot be undone."
+                  )
+                ) {
+                  const result = await deleteDocument(document.id);
+
+                  if (result.success) {
+                    router.push("/docs");
+                  } else {
+                    // Handle error
+                  }
+                }
+              }}
+            >
+              <Button
+                type="submit"
+                variant="danger"
+                className="flex items-center gap-2"
+              >
+                <TrashIcon className="h-4 w-4" />
+                Delete
+              </Button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      <EvaluationSelector
+        document={document}
+        activeEvaluationIndex={activeEvaluationIndex}
+        onEvaluationSelect={onEvaluationSelect}
+      />
+    </div>
+  );
+}
+
+interface TabNavigationProps {
+  activeTab: "analysis" | "comments" | "thinking";
+  onTabChange: (tab: "analysis" | "comments" | "thinking") => void;
+}
+
+function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
+  return (
+    <div className="flex border-b border-gray-200">
+      <button
+        className={`px-4 py-2 text-sm font-medium ${
+          activeTab === "analysis"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-500 hover:text-blue-600"
+        }`}
+        onClick={() => onTabChange("analysis")}
+      >
+        Analysis
+      </button>
+      <button
+        className={`px-4 py-2 text-sm font-medium ${
+          activeTab === "comments"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-500 hover:text-blue-600"
+        }`}
+        onClick={() => onTabChange("comments")}
+      >
+        Comments
+      </button>
+      <button
+        className={`px-4 py-2 text-sm font-medium ${
+          activeTab === "thinking"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-500 hover:text-blue-600"
+        }`}
+        onClick={() => onTabChange("thinking")}
+      >
+        Thinking
+      </button>
+    </div>
+  );
+}
+
+interface EvaluationViewProps {
+  evaluation: Evaluation;
+  evaluationState: EvaluationState;
+  onEvaluationStateChange: (newState: EvaluationState) => void;
+  onBackToHome: () => void;
+  onShowEvaluationSelector: () => void;
+  commentColorMap: Record<number, { background: string; color: string }>;
+}
+
+function EvaluationView({
+  evaluation,
+  evaluationState,
+  onEvaluationStateChange,
+  onBackToHome,
+  onShowEvaluationSelector,
+  commentColorMap,
+}: EvaluationViewProps) {
+  return (
+    <div className="h-full">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4">
+        <div className="flex items-center gap-2">
+          <button
+            className="inline-flex h-full items-center gap-2 px-3 py-0 text-base font-medium transition hover:bg-gray-100 focus:outline-none"
+            onClick={onShowEvaluationSelector}
+          >
+            <span className="flex items-center rounded-md border border-orange-100 bg-orange-50 px-2 py-0.5 text-sm font-bold text-orange-800">
+              {getLetterGrade(evaluation.grade || 0)}
+            </span>
+            <span className="ml-2 mr-1 font-semibold text-gray-900">
+              {evaluation.agent.name}
+            </span>
+            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+          </button>
+        </div>
+        <button
+          onClick={onBackToHome}
+          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
+          Back
+        </button>
+      </div>
+
+      <TabNavigation
+        activeTab={evaluationState.activeTab}
+        onTabChange={(tab) =>
+          onEvaluationStateChange({ ...evaluationState, activeTab: tab })
+        }
+      />
+
+      {evaluationState.activeTab === "analysis" && evaluation.summary && (
+        <div className="prose-md prose max-w-none px-8 py-0.5">
+          <MarkdownRenderer>{evaluation.summary}</MarkdownRenderer>
+        </div>
+      )}
+      {evaluationState.activeTab === "thinking" && evaluation.thinking && (
+        <div className="prose-md prose max-w-none px-8 py-0.5">
+          <MarkdownRenderer>{evaluation.thinking}</MarkdownRenderer>
+        </div>
+      )}
+      {evaluationState.activeTab === "comments" && (
+        <CommentsSidebar
+          comments={evaluation.comments}
+          activeTag={evaluationState.hoveredCommentId}
+          expandedTag={evaluationState.expandedCommentId}
+          onTagHover={(commentId) =>
+            onEvaluationStateChange({
+              ...evaluationState,
+              hoveredCommentId: commentId,
+            })
+          }
+          onTagClick={(commentId) => {
+            onEvaluationStateChange({
+              ...evaluationState,
+              expandedCommentId:
+                evaluationState.expandedCommentId === commentId
+                  ? null
+                  : commentId,
+            });
+          }}
+          evaluation={evaluation}
+          commentColorMap={commentColorMap}
+        />
+      )}
+    </div>
+  );
+}
+
+interface EvaluationSelectorModalProps {
+  document: Document;
+  activeEvaluationIndex: number | null;
+  onEvaluationSelect: (index: number) => void;
+  onClose: () => void;
+}
+
+function EvaluationSelectorModal({
+  document,
+  activeEvaluationIndex,
+  onEvaluationSelect,
+  onClose,
+}: EvaluationSelectorModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-30" onClick={onClose} />
+      <div className="relative z-50 w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Select Evaluation
+          </h2>
+          <button
+            className="px-2 text-2xl font-bold text-gray-400 hover:text-gray-600"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <EvaluationSelector
+          document={document}
+          activeEvaluationIndex={activeEvaluationIndex}
+          onEvaluationSelect={(index) => {
+            onEvaluationSelect(index);
+            onClose();
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function DocumentWithEvaluations({
   document,
   isOwner,
 }: DocumentWithReviewsProps) {
   const router = useRouter();
-  const [activeReviewIndex, setActiveReviewIndex] = useState<number>(0);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [expandedTag, setExpandedTag] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
-  const [showReviewSelector, setShowReviewSelector] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "analysis" | "comments" | "thinking"
-  >("analysis");
 
-  // Handle case when there are no reviews
-  const hasReviews = document.reviews && document.reviews.length > 0;
-  const activeReview = hasReviews ? document.reviews[activeReviewIndex] : null;
+  const [evaluationState, setEvaluationState] =
+    useState<EvaluationState | null>(null);
+  const [uiState, setUIState] = useState<UIState>({
+    isHomeView: true,
+    showEvaluationSelector: false,
+    deleteError: null,
+  });
+
+  const hasEvaluations = document.reviews && document.reviews.length > 0;
+  const activeEvaluation =
+    hasEvaluations && evaluationState !== null
+      ? document.reviews[evaluationState.selectedReviewIndex]
+      : null;
 
   // Create a stable color map for all comments
   const commentColorMap = useMemo(() => {
-    if (!activeReview) return {};
-    const sortedComments = getValidAndSortedComments(activeReview.comments);
-    const hasGradeInstructions = activeReview.agent.gradeInstructions;
+    if (!activeEvaluation) return {};
+    const sortedComments = getValidAndSortedComments(activeEvaluation.comments);
+    const hasGradeInstructions =
+      activeEvaluation.agent.gradeInstructions ?? false;
 
     // Get all importance values for percentile calculation
     const allImportances = sortedComments
@@ -375,269 +666,111 @@ export function DocumentWithEvaluations({
       },
       {} as Record<number, { background: string; color: string }>
     );
-  }, [activeReview]);
+  }, [activeEvaluation]);
 
-  const scrollToHighlight = (tag: string) => {
-    const element = window.document.getElementById(`highlight-${tag}`);
-    if (element && documentRef.current) {
-      const containerRect = documentRef.current.getBoundingClientRect();
-      const elementRect = element.getBoundingClientRect();
-      const scrollTop =
-        elementRect.top -
-        containerRect.top +
-        documentRef.current.scrollTop -
-        100;
-
-      documentRef.current.scrollTo({
-        top: scrollTop,
-        behavior: "smooth",
-      });
-    }
+  const handleEvaluationSelect = (index: number) => {
+    setEvaluationState({
+      selectedReviewIndex: index,
+      hoveredCommentId: null,
+      expandedCommentId: null,
+      activeTab: "analysis",
+    });
+    setUIState((prev) => ({ ...prev, isHomeView: false }));
   };
 
-  const handleCommentClick = (tag: string | null) => {
-    setExpandedTag(expandedTag === tag ? null : tag);
-    if (tag) scrollToHighlight(tag);
-  };
-
-  const handleHighlightClick = (tag: string) => {
-    setExpandedTag(expandedTag === tag ? null : tag);
-  };
-
-  const handleReviewSelect = (index: number) => {
-    setActiveReviewIndex(index);
-    setActiveTag(null);
-    setExpandedTag(null);
-    // Remove auto-scrolling behavior when switching reviews
-    // This allows the user to maintain their scroll position
+  const handleBackToHome = () => {
+    setEvaluationState(null);
+    setUIState((prev) => ({ ...prev, isHomeView: true }));
   };
 
   // Close modal on Esc
   useEffect(() => {
-    if (!showReviewSelector) return;
+    if (!uiState.showEvaluationSelector) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowReviewSelector(false);
+      if (e.key === "Escape") {
+        setUIState((prev) => ({ ...prev, showEvaluationSelector: false }));
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [showReviewSelector]);
+  }, [uiState.showEvaluationSelector]);
 
   return (
-    <div className="flex h-screen bg-white">
-      <div ref={documentRef} className="flex-1 overflow-y-auto p-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{document.title}</h1>
-              <div className="text-sm text-gray-500">
-                By {document.author} •{" "}
-                {new Date(document.publishedDate).toLocaleDateString()}
-                {document.url && (
-                  <>
-                    {" • "}
-                    <a
-                      href={document.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      View Original
-                    </a>
-                  </>
-                )}
-                {document.submittedById && (
-                  <>
-                    {" • "}
-                    <Link
-                      href={`/users/${document.submittedById}`}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      {document.submittedBy?.name || "View Owner"}
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-            {isOwner && (
-              <div className="flex items-center gap-2">
-                <Link href={`/docs/${document.id}/evaluations`}>
-                  <Button
-                    variant="secondary"
-                    className="flex items-center gap-2"
-                  >
-                    <ListBulletIcon className="h-4 w-4" />
-                    Details
-                  </Button>
-                </Link>
-                <Link href={`/docs/${document.id}/edit`}>
-                  <Button className="flex items-center gap-2">
-                    <PencilIcon className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
-                <form
-                  action={async () => {
-                    if (
-                      confirm(
-                        "Are you sure you want to delete this document? This action cannot be undone."
-                      )
-                    ) {
-                      const result = await deleteDocument(document.id);
-
-                      if (result.success) {
-                        // Navigate to the documents list
-                        router.push(result.redirectTo || "/docs");
-                      } else {
-                        // Show error
-                        setDeleteError(
-                          result.error || "Failed to delete document"
-                        );
-                      }
-                    }
-                  }}
-                >
-                  <Button
-                    variant="danger"
-                    type="submit"
-                    className="flex items-center gap-2"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </form>
-                {deleteError && (
-                  <div className="mt-2 text-sm text-red-600">{deleteError}</div>
-                )}
-              </div>
-            )}
-          </div>
-
+    <div className="flex h-full">
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-4xl px-4 py-8">
           <article className="prose prose-lg prose-slate max-w-none">
             <SlateEditor
               content={document.content}
-              onHighlightHover={(tag) => setActiveTag(tag)}
-              onHighlightClick={handleHighlightClick}
+              onHighlightHover={(commentId) => {
+                if (!evaluationState) return;
+                setEvaluationState({
+                  ...evaluationState,
+                  hoveredCommentId: commentId,
+                });
+              }}
+              onHighlightClick={(commentId) => {
+                if (!evaluationState) return;
+                setEvaluationState({
+                  ...evaluationState,
+                  expandedCommentId:
+                    evaluationState.expandedCommentId === commentId
+                      ? null
+                      : commentId,
+                });
+              }}
               highlights={
-                activeReview
-                  ? getValidAndSortedComments(activeReview.comments).map(
+                activeEvaluation
+                  ? getValidAndSortedComments(activeEvaluation.comments).map(
                       (comment, index) => ({
                         startOffset: comment.highlight.startOffset,
                         endOffset: comment.highlight.endOffset,
                         tag: index.toString(),
-                        color: commentColorMap[index].background.substring(1),
+                        color:
+                          commentColorMap[index]?.background.substring(1) ??
+                          "#000000",
                       })
                     )
                   : []
               }
-              activeTag={activeTag}
+              activeTag={evaluationState?.hoveredCommentId ?? null}
             />
           </article>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto border-l border-gray-200">
-        {/* Combined top bar: agent selector and tabs in one row */}
-        <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4">
-          <button
-            className="inline-flex h-full items-center gap-2 px-3 py-0 text-base font-medium transition hover:bg-gray-100 focus:outline-none"
-            onClick={() => setShowReviewSelector(true)}
-          >
-            <span className="flex items-center rounded-md border border-orange-100 bg-orange-50 px-2 py-0.5 text-sm font-bold text-orange-800">
-              {getLetterGrade(activeReview?.grade || 0)}
-            </span>
-            <span className="ml-2 mr-1 font-semibold text-gray-900">
-              {activeReview?.agent.name || "Select Agent"}
-            </span>
-            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-          </button>
-          <div className="ml-8 flex h-full items-center">
-            <button
-              className={`mr-6 pb-2 text-base font-medium transition-colors ${activeTab === "analysis" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
-              onClick={() => setActiveTab("analysis")}
-              style={{ height: "100%" }}
-            >
-              Analysis
-            </button>
-            <button
-              className={`mr-6 pb-2 text-base font-medium transition-colors ${activeTab === "comments" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
-              onClick={() => setActiveTab("comments")}
-              style={{ height: "100%" }}
-            >
-              Comments
-            </button>
-            <button
-              className={`mr-6 pb-2 text-base font-medium transition-colors ${activeTab === "thinking" ? "border-b-2 border-blue-600 text-blue-600" : "border-b-2 border-transparent text-gray-500 hover:text-gray-700"}`}
-              onClick={() => setActiveTab("thinking")}
-              style={{ height: "100%" }}
-            >
-              Thinking
-            </button>
-          </div>
-        </div>
-        <div className="mt-2 space-y-4">
-          {/* Popup modal for ReviewSelector */}
-          {showReviewSelector && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 bg-black bg-opacity-30"
-                onClick={() => setShowReviewSelector(false)}
-              />
-              {/* Modal content */}
-              <div className="relative z-10 max-h-[80vh] min-w-[400px] max-w-full overflow-y-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-xl">
-                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                  <span className="text-lg font-semibold">
-                    Select Agent Review
-                  </span>
-                  <button
-                    className="px-2 text-2xl font-bold text-gray-400 hover:text-gray-600"
-                    onClick={() => setShowReviewSelector(false)}
-                    aria-label="Close"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="p-0">
-                  <ReviewSelector
-                    document={document}
-                    activeReviewIndex={activeReviewIndex}
-                    onReviewSelect={(index) => {
-                      handleReviewSelect(index);
-                      setShowReviewSelector(false);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeReview && (
-            <>
-              {activeTab === "analysis" && activeReview.summary && (
-                <div className="prose-md prose max-w-none px-8 py-0.5">
-                  <MarkdownRenderer>{activeReview.summary}</MarkdownRenderer>
-                </div>
-              )}
-              {activeTab === "thinking" && activeReview.thinking && (
-                <div className="prose-md prose max-w-none px-8 py-0.5">
-                  <MarkdownRenderer>{activeReview.thinking}</MarkdownRenderer>
-                </div>
-              )}
-              {activeTab === "comments" && (
-                <CommentsSidebar
-                  comments={activeReview.comments}
-                  activeTag={activeTag}
-                  expandedTag={expandedTag}
-                  onTagHover={setActiveTag}
-                  onTagClick={handleCommentClick}
-                  review={activeReview}
-                  commentColorMap={commentColorMap}
-                />
-              )}
-            </>
-          )}
-        </div>
+        {uiState.isHomeView ? (
+          <HomeView
+            document={document}
+            isOwner={isOwner}
+            onEvaluationSelect={handleEvaluationSelect}
+            activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
+          />
+        ) : activeEvaluation && evaluationState ? (
+          <EvaluationView
+            evaluation={activeEvaluation}
+            evaluationState={evaluationState}
+            onEvaluationStateChange={setEvaluationState}
+            onBackToHome={handleBackToHome}
+            onShowEvaluationSelector={() =>
+              setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
+            }
+            commentColorMap={commentColorMap}
+          />
+        ) : null}
       </div>
+
+      {uiState.showEvaluationSelector && (
+        <EvaluationSelectorModal
+          document={document}
+          activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
+          onEvaluationSelect={handleEvaluationSelect}
+          onClose={() =>
+            setUIState((prev) => ({ ...prev, showEvaluationSelector: false }))
+          }
+        />
+      )}
     </div>
   );
 }
