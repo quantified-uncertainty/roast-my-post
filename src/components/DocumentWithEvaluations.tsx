@@ -355,26 +355,9 @@ function HomeView({
   return (
     <div className="h-full p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{document.title}</h1>
         <div className="mt-2 text-sm text-gray-500">
-          By {document.author} •{" "}
-          {new Date(document.publishedDate).toLocaleDateString()}
-          {document.url && (
-            <>
-              {" • "}
-              <a
-                href={document.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-700"
-              >
-                View Original
-              </a>
-            </>
-          )}
           {document.submittedById && (
             <>
-              {" • "}
               <Link
                 href={`/users/${document.submittedById}`}
                 className="text-blue-500 hover:text-blue-700"
@@ -699,6 +682,31 @@ export function DocumentWithEvaluations({
     <div className="flex h-full">
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="mb-6">
+            <h1 className="mb-2 text-3xl font-extrabold text-gray-900">
+              {document.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+              <span>By {document.author}</span>
+              <span>•</span>
+              <span>
+                {new Date(document.publishedDate).toLocaleDateString()}
+              </span>
+              {document.url && (
+                <>
+                  <span>•</span>
+                  <a
+                    href={document.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    View Original
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
           <article className="prose prose-lg prose-slate max-w-none">
             <SlateEditor
               content={document.content}
