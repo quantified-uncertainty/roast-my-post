@@ -47,12 +47,10 @@ export default async function DocumentPage({
     : false;
 
   return (
-    <div className="min-h-screen">
-      <main>
-        <div className="mx-auto max-w-full">
-          <DocumentWithEvaluations document={document} isOwner={isOwner} />
-        </div>
-      </main>
-    </div>
+    <main>
+      <div className="mx-auto max-w-full">
+        <DocumentWithEvaluations document={document} isOwner={isOwner} />
+      </div>
+    </main>
   );
 }

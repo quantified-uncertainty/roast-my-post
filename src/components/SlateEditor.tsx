@@ -598,7 +598,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             })
           }
           readOnly
-          className="prose prose-lg prose-slate max-w-none [&_em]:italic [&_strong]:font-bold"
+          className="prose-md prose prose-slate max-w-none [&_em]:italic [&_strong]:font-bold"
         />
       </Slate>
     </div>

@@ -18,6 +18,7 @@ import remarkGfm from "remark-gfm";
 
 import { deleteDocument } from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
+import { HEADER_HEIGHT_PX } from "@/constants";
 import type {
   Comment,
   Document,
@@ -593,6 +594,85 @@ function EvaluationSelectorModal({
   );
 }
 
+function DocumentContentPanel({
+  document,
+  evaluationState,
+  setEvaluationState,
+  activeEvaluation,
+  commentColorMap,
+}: {
+  document: Document;
+  evaluationState: EvaluationState | null;
+  setEvaluationState: (state: EvaluationState) => void;
+  activeEvaluation: Evaluation | null;
+  commentColorMap: Record<number, { background: string; color: string }>;
+}) {
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-extrabold text-gray-900">
+          {document.title}
+        </h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+          <span>By {document.author}</span>
+          <span>•</span>
+          <span>{new Date(document.publishedDate).toLocaleDateString()}</span>
+          {document.url && (
+            <>
+              <span>•</span>
+              <a
+                href={document.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                View Original
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+      <article className="prose prose-lg prose-slate max-w-none">
+        <SlateEditor
+          content={document.content}
+          onHighlightHover={(commentId) => {
+            if (!evaluationState) return;
+            setEvaluationState({
+              ...evaluationState,
+              hoveredCommentId: commentId,
+            });
+          }}
+          onHighlightClick={(commentId) => {
+            if (!evaluationState) return;
+            setEvaluationState({
+              ...evaluationState,
+              expandedCommentId:
+                evaluationState.expandedCommentId === commentId
+                  ? null
+                  : commentId,
+            });
+          }}
+          highlights={
+            activeEvaluation
+              ? getValidAndSortedComments(activeEvaluation.comments).map(
+                  (comment, index) => ({
+                    startOffset: comment.highlight.startOffset,
+                    endOffset: comment.highlight.endOffset,
+                    tag: index.toString(),
+                    color:
+                      commentColorMap[index]?.background.substring(1) ??
+                      "#000000",
+                  })
+                )
+              : []
+          }
+          activeTag={evaluationState?.hoveredCommentId ?? null}
+        />
+      </article>
+    </div>
+  );
+}
+
 export function DocumentWithEvaluations({
   document,
   isOwner,
@@ -679,75 +759,23 @@ export function DocumentWithEvaluations({
   }, [uiState.showEvaluationSelector]);
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-4 py-8">
-          <div className="mb-6">
-            <h1 className="mb-2 text-3xl font-extrabold text-gray-900">
-              {document.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-              <span>By {document.author}</span>
-              <span>•</span>
-              <span>
-                {new Date(document.publishedDate).toLocaleDateString()}
-              </span>
-              {document.url && (
-                <>
-                  <span>•</span>
-                  <a
-                    href={document.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    View Original
-                  </a>
-                </>
-              )}
-            </div>
-          </div>
-          <article className="prose prose-lg prose-slate max-w-none">
-            <SlateEditor
-              content={document.content}
-              onHighlightHover={(commentId) => {
-                if (!evaluationState) return;
-                setEvaluationState({
-                  ...evaluationState,
-                  hoveredCommentId: commentId,
-                });
-              }}
-              onHighlightClick={(commentId) => {
-                if (!evaluationState) return;
-                setEvaluationState({
-                  ...evaluationState,
-                  expandedCommentId:
-                    evaluationState.expandedCommentId === commentId
-                      ? null
-                      : commentId,
-                });
-              }}
-              highlights={
-                activeEvaluation
-                  ? getValidAndSortedComments(activeEvaluation.comments).map(
-                      (comment, index) => ({
-                        startOffset: comment.highlight.startOffset,
-                        endOffset: comment.highlight.endOffset,
-                        tag: index.toString(),
-                        color:
-                          commentColorMap[index]?.background.substring(1) ??
-                          "#000000",
-                      })
-                    )
-                  : []
-              }
-              activeTag={evaluationState?.hoveredCommentId ?? null}
-            />
-          </article>
-        </div>
+    <div className="flex">
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+      >
+        <DocumentContentPanel
+          document={document}
+          evaluationState={evaluationState}
+          setEvaluationState={setEvaluationState}
+          activeEvaluation={activeEvaluation}
+          commentColorMap={commentColorMap}
+        />
       </div>
-
-      <div className="flex-1 overflow-y-auto border-l border-gray-200">
+      <div
+        className="flex-1 overflow-y-auto border-l border-gray-200"
+        style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+      >
         {uiState.isHomeView ? (
           <HomeView
             document={document}
@@ -768,7 +796,6 @@ export function DocumentWithEvaluations({
           />
         ) : null}
       </div>
-
       {uiState.showEvaluationSelector && (
         <EvaluationSelectorModal
           document={document}
