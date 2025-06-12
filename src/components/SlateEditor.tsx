@@ -578,23 +578,30 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   }
 
   return (
-    <Slate editor={editor} initialValue={value}>
-      <Editable
-        data-testid="slate-editable"
-        decorate={decorate}
-        renderElement={renderElement}
-        renderLeaf={(props) =>
-          renderLeaf({
-            ...props,
-            activeTag,
-            onHighlightClick,
-            onHighlightHover,
-          })
-        }
-        readOnly
-        className="prose prose-lg prose-slate max-w-none [&_em]:italic [&_strong]:font-bold"
-      />
-    </Slate>
+    <div
+      style={{
+        fontFamily:
+          "Merriweather, Baskerville, Libre Baskerville, Georgia, serif",
+      }}
+    >
+      <Slate editor={editor} initialValue={value}>
+        <Editable
+          data-testid="slate-editable"
+          decorate={decorate}
+          renderElement={renderElement}
+          renderLeaf={(props) =>
+            renderLeaf({
+              ...props,
+              activeTag,
+              onHighlightClick,
+              onHighlightHover,
+            })
+          }
+          readOnly
+          className="prose prose-lg prose-slate max-w-none [&_em]:italic [&_strong]:font-bold"
+        />
+      </Slate>
+    </div>
   );
 };
 

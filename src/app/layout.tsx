@@ -12,6 +12,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css?family=Merriweather:400,700&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <SessionProvider>
           <ClientLayout>{children}</ClientLayout>
