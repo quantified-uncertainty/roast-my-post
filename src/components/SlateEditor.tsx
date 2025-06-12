@@ -11,9 +11,19 @@ import remarkGfm from "remark-gfm";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
-import { createEditor, Descendant, Element, Node, Text } from "slate";
+import {
+  createEditor,
+  Descendant,
+  Element,
+  Node,
+  Text,
+} from "slate";
 import { withHistory } from "slate-history";
-import { Editable, Slate, withReact } from "slate-react";
+import {
+  Editable,
+  Slate,
+  withReact,
+} from "slate-react";
 // @ts-ignore - ESM modules are handled by Next.js
 import { unified } from "unified";
 
@@ -129,6 +139,17 @@ const renderElement = ({ attributes, children, element }: any) => {
         >
           {children}
         </a>
+      );
+    case "image":
+      return (
+        <div {...attributes} contentEditable={false}>
+          <img
+            src={element.url}
+            alt={element.alt || ""}
+            style={{ maxWidth: "100%", height: "auto", display: "block" }}
+          />
+          {children}
+        </div>
       );
     default:
       return (
