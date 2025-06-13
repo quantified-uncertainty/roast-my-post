@@ -356,11 +356,11 @@ async function cleanContentWithLLM(
     console.log("🤖 Cleaning content with LLM...");
 
     // For very long content, just take the first part to avoid token limits
-    const maxLength = 8000;
+    const maxLength = 30000;
     const contentToClean =
       markdownContent.length > maxLength
         ? markdownContent.substring(0, maxLength) +
-          "\n\n[Content truncated for processing]"
+          `\n\n[Content truncated for RoastMyPost processing - ${Math.round((1 - maxLength / markdownContent.length) * 100)}% of content removed]`
         : markdownContent;
 
     const prompt = `Format the following markdown content to ensure it is clean and readable. 
@@ -376,7 +376,7 @@ Return ONLY the formatted markdown content, nothing else.`;
       model: SEARCH_MODEL,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
-      max_tokens: 4000,
+      max_tokens: 100000,
     });
 
     const cleanedContent = response.choices[0]?.message?.content?.trim();

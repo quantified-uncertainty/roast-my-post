@@ -3,7 +3,6 @@
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -26,9 +25,7 @@ import type {
 } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
-  getGradeColorStrong,
   getGradeColorWeak,
-  getGradeLabel,
   getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
@@ -95,12 +92,20 @@ function getImportancePhrase(importance: number): string {
   return "Very Low";
 }
 
+/**
+ * Handles hover and click interactions for comments in the sidebar.
+ * Note: Comments can be interacted with in two places:
+ * 1. In the document content (via SlateEditor's onHighlightHover and onHighlightClick)
+ * 2. In this sidebar (via onCommentHover and onCommentClick)
+ * Both hover interactions update the same hoveredCommentId state
+ * Both click interactions update the same expandedCommentId state
+ */
 interface CommentsSidebarProps {
   comments: Comment[];
   activeTag: string | null;
   expandedTag: string | null;
-  onTagHover: (tag: string | null) => void;
-  onTagClick: (tag: string | null) => void;
+  onCommentHover: (tag: string | null) => void;
+  onCommentClick: (tag: string | null) => void;
   evaluation: Evaluation;
   commentColorMap: Record<number, { background: string; color: string }>;
 }
@@ -109,8 +114,8 @@ function CommentsSidebar({
   comments,
   activeTag,
   expandedTag,
-  onTagHover,
-  onTagClick,
+  onCommentHover,
+  onCommentClick,
   evaluation,
   commentColorMap,
 }: CommentsSidebarProps) {
@@ -130,9 +135,9 @@ function CommentsSidebar({
               className={`transition-all duration-200 ${
                 expandedTag === tag ? "shadow-sm" : "hover:bg-gray-50"
               }`}
-              onMouseEnter={() => onTagHover(tag)}
-              onMouseLeave={() => onTagHover(null)}
-              onClick={() => onTagClick(tag)}
+              onMouseEnter={() => onCommentHover(tag)}
+              onMouseLeave={() => onCommentHover(null)}
+              onClick={() => onCommentClick(tag)}
             >
               <div
                 className={`px-4 py-3 ${expandedTag === tag ? "border-l-2 border-blue-400" : ""}`}
@@ -252,9 +257,7 @@ function EvaluationSelector({
       {document.reviews.map((evaluation, index) => {
         const isActive = index === activeEvaluationIndex;
         const grade = evaluation.grade || 0;
-        const gradeStyle = getGradeColorStrong(grade);
         const letterGrade = getLetterGrade(grade);
-        const label = getGradeLabel(grade);
         const highlightsCount = evaluation.comments.length;
         const isLast = index === document.reviews.length - 1;
         return (
@@ -529,19 +532,17 @@ function EvaluationView({
           comments={evaluation.comments}
           activeTag={evaluationState.hoveredCommentId}
           expandedTag={evaluationState.expandedCommentId}
-          onTagHover={(commentId) =>
+          onCommentHover={(commentId) =>
             onEvaluationStateChange({
               ...evaluationState,
               hoveredCommentId: commentId,
             })
           }
-          onTagClick={(commentId) => {
+          onCommentClick={(commentId) => {
             onEvaluationStateChange({
               ...evaluationState,
-              expandedCommentId:
-                evaluationState.expandedCommentId === commentId
-                  ? null
-                  : commentId,
+              expandedCommentId: commentId,
+              activeTab: "comments",
             });
           }}
           evaluation={evaluation}
@@ -595,7 +596,7 @@ function EvaluationSelectorModal({
 }
 
 function DocumentContentPanel({
-  document,
+  document: doc,
   evaluationState,
   setEvaluationState,
   activeEvaluation,
@@ -607,21 +608,33 @@ function DocumentContentPanel({
   activeEvaluation: Evaluation | null;
   commentColorMap: Record<number, { background: string; color: string }>;
 }) {
+  // Add effect to scroll to selected comment
+  useEffect(() => {
+    if (evaluationState?.expandedCommentId) {
+      const element = document.getElementById(
+        `highlight-${evaluationState.expandedCommentId}`
+      );
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [evaluationState?.expandedCommentId]);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
         <h1 className="mb-2 text-3xl font-extrabold text-gray-900">
-          {document.title}
+          {doc.title}
         </h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-          <span>By {document.author}</span>
+          <span>By {doc.author}</span>
           <span>•</span>
-          <span>{new Date(document.publishedDate).toLocaleDateString()}</span>
-          {document.url && (
+          <span>{new Date(doc.publishedDate).toLocaleDateString()}</span>
+          {doc.url && (
             <>
               <span>•</span>
               <a
-                href={document.url}
+                href={doc.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -634,7 +647,7 @@ function DocumentContentPanel({
       </div>
       <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
-          content={document.content}
+          content={doc.content}
           onHighlightHover={(commentId) => {
             if (!evaluationState) return;
             setEvaluationState({
@@ -646,10 +659,8 @@ function DocumentContentPanel({
             if (!evaluationState) return;
             setEvaluationState({
               ...evaluationState,
-              expandedCommentId:
-                evaluationState.expandedCommentId === commentId
-                  ? null
-                  : commentId,
+              expandedCommentId: commentId,
+              activeTab: "comments",
             });
           }}
           highlights={
@@ -677,9 +688,6 @@ export function DocumentWithEvaluations({
   document,
   isOwner,
 }: DocumentWithReviewsProps) {
-  const router = useRouter();
-  const documentRef = useRef<HTMLDivElement>(null);
-
   const [evaluationState, setEvaluationState] =
     useState<EvaluationState | null>(null);
   const [uiState, setUIState] = useState<UIState>({
