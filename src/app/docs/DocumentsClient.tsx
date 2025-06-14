@@ -270,7 +270,7 @@ export default function DocumentsClient({
                                     <GradeBadge
                                       grade={grade}
                                       className="ml-1 text-xs"
-                                      variant="strong"
+                                      variant="dark"
                                     />
                                   )}
                                 <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
@@ -411,7 +411,7 @@ export default function DocumentsClient({
                               <GradeBadge
                                 grade={review.grade}
                                 className="text-xs"
-                                variant="strong"
+                                variant="dark"
                               />
                             )}
                             {review && (

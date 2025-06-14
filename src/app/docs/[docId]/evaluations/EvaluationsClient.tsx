@@ -507,7 +507,10 @@ export default function EvaluationsClient({
                       <div className="space-y-6">
                         <div>
                           <div className="flex items-center gap-4">
-                            <GradeBadge grade={selectedVersion.grade} />
+                            <GradeBadge
+                              grade={selectedVersion.grade}
+                              variant="light"
+                            />
                             <div className="text-gray-700">
                               Numerical Grade: {selectedVersion.grade || 0}
                             </div>

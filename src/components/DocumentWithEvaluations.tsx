@@ -199,12 +199,11 @@ function CommentsSidebar({
                             {comment.grade !== undefined && (
                               <span className="mr-4">
                                 Grade:{" "}
-                                <span className="font-medium">
-                                  <GradeBadge
-                                    grade={comment.grade}
-                                    variant="weak"
-                                  />
-                                </span>
+                                <GradeBadge
+                                  grade={comment.grade}
+                                  variant="light"
+                                  size="xs"
+                                />
                               </span>
                             )}
                             {comment.importance !== undefined && (
@@ -272,7 +271,7 @@ function EvaluationSelector({
                     {evaluation.agent.description}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <GradeBadge grade={grade} />
+                    <GradeBadge grade={grade} variant="light" />
                     <span className="text-sm text-gray-500">
                       · {highlightsCount} highlights
                     </span>
@@ -476,7 +475,7 @@ function EvaluationView({
             onClick={onShowEvaluationSelector}
           >
             {evaluation.grade && (
-              <GradeBadge grade={evaluation.grade} variant="weak" />
+              <GradeBadge grade={evaluation.grade} variant="light" />
             )}
             <span className="ml-2 mr-1 font-semibold text-gray-900">
               {evaluation.agent.name}
