@@ -1,344 +1,254 @@
-// --- src/utils/highlightUtils.ts ---
+// Line-based highlighting system with UI support
+// Combines reliable line-based highlighting with DOM manipulation functions
 
 import type {
   Comment,
   Evaluation,
   Highlight,
 } from "../types/documentSchema";
-import {
-  DEFAULT_TEMPERATURE,
-  openai,
-  SEARCH_MODEL,
-} from "../types/openai";
 
-// Raw highlight structure expected from LLM response
-export interface RawLLMHighlight {
-  start: string;
-  end: string;
+// Line-based highlight interfaces
+export interface LineCharacterHighlight {
+  startLineIndex: number; // Which line to start (0-based)
+  startCharacters: string; // First ~6 chars of highlight
+  endLineIndex: number; // Which line to end (0-based)
+  endCharacters: string; // Last ~6 chars of highlight
 }
 
-// Calculated highlight structure after verification
-export interface CalculatedHighlight {
-  startOffset: number;
-  endOffset: number;
-  prefix?: string; // Can carry over prefix if needed
-  quotedText: string; // Store the verified quote
-}
-
-export interface TextNodePosition {
-  node: Text;
-  start: number;
-  end: number;
+export interface LineCharacterComment {
+  title: string;
+  description: string;
+  importance: number;
+  grade?: number;
+  highlight: LineCharacterHighlight;
 }
 
 /**
+ * Line-based highlighting using character snippets for precise positioning
+ * Optimized for LessWrong-style markdown posts
+ */
+export class LineBasedHighlighter {
+  private originalContent: string;
+  private lines: string[] = [];
+  private lineStartOffsets: number[] = [];
+
+  constructor(content: string) {
+    this.originalContent = content;
+    this.parseLines();
+  }
+
+  private parseLines() {
+    this.lines = this.originalContent.split("\n");
+
+    // Calculate start offset for each line in the original document
+    let offset = 0;
+    for (let i = 0; i < this.lines.length; i++) {
+      this.lineStartOffsets[i] = offset;
+      offset += this.lines[i].length + 1; // +1 for the \n character
+    }
+  }
+
+  /**
+   * Get the numbered lines content for the LLM prompt
+   */
+  getNumberedLines(): string {
+    return this.lines.map((line, index) => `Line ${index}: ${line}`).join("\n");
+  }
+
+  /**
+   * Get document statistics for the LLM prompt
+   */
+  getStats() {
+    return {
+      totalLines: this.lines.length,
+      totalCharacters: this.originalContent.length,
+      averageLineLength: Math.round(
+        this.originalContent.length / this.lines.length
+      ),
+      longestLine: Math.max(...this.lines.map((line) => line.length)),
+    };
+  }
+
+  /**
+   * Find a character snippet within a specific line using fuzzy matching
+   */
+  private findSnippetInLine(lineIndex: number, snippet: string): number | null {
+    if (lineIndex >= this.lines.length) {
+      console.warn(
+        `Line index ${lineIndex} exceeds document length ${this.lines.length}`
+      );
+      return null;
+    }
+
+    const line = this.lines[lineIndex];
+
+    // Try exact match first
+    const exactIndex = line.indexOf(snippet);
+    if (exactIndex !== -1) {
+      return exactIndex;
+    }
+
+    // Try fuzzy matching - remove spaces and special chars for comparison
+    const normalizeForSearch = (text: string) =>
+      text.replace(/\s+/g, "").replace(/[^\w]/g, "").toLowerCase();
+
+    const normalizedSnippet = normalizeForSearch(snippet);
+    const normalizedLine = normalizeForSearch(line);
+
+    const fuzzyIndex = normalizedLine.indexOf(normalizedSnippet);
+    if (fuzzyIndex !== -1) {
+      // Map back to original line position (approximate)
+      const ratio = fuzzyIndex / normalizedLine.length;
+      return Math.floor(ratio * line.length);
+    }
+
+    // Try partial matching - find the longest common substring
+    for (let len = snippet.length; len >= 3; len--) {
+      for (let start = 0; start <= snippet.length - len; start++) {
+        const partial = snippet.substring(start, start + len);
+        const partialIndex = line.indexOf(partial);
+        if (partialIndex !== -1) {
+          console.warn(
+            `Using partial match "${partial}" instead of "${snippet}" in line ${lineIndex}`
+          );
+          return partialIndex;
+        }
+      }
+    }
+
+    console.warn(
+      `Could not find snippet "${snippet}" in line ${lineIndex}: "${line}"`
+    );
+    return null;
+  }
+
+  /**
+   * Convert line-based highlight to document character offsets
+   */
+  createHighlight(
+    highlight: LineCharacterHighlight
+  ): { startOffset: number; endOffset: number; text: string } | null {
+    const { startLineIndex, startCharacters, endLineIndex, endCharacters } =
+      highlight;
+
+    // Find start position
+    const startPosInLine = this.findSnippetInLine(
+      startLineIndex,
+      startCharacters
+    );
+    if (startPosInLine === null) {
+      return null;
+    }
+
+    // Find end position
+    const endPosInLine = this.findSnippetInLine(endLineIndex, endCharacters);
+    if (endPosInLine === null) {
+      return null;
+    }
+
+    // Convert to document offsets
+    const startOffset = this.lineStartOffsets[startLineIndex] + startPosInLine;
+    let endOffset: number;
+
+    if (startLineIndex === endLineIndex) {
+      // Same line - end position should be after start position
+      const endPosAdjusted = endPosInLine + endCharacters.length;
+      if (endPosAdjusted <= startPosInLine) {
+        console.warn(
+          `End position ${endPosAdjusted} is before start position ${startPosInLine} on line ${startLineIndex}`
+        );
+        return null;
+      }
+      endOffset = this.lineStartOffsets[endLineIndex] + endPosAdjusted;
+    } else {
+      // Different lines
+      endOffset =
+        this.lineStartOffsets[endLineIndex] +
+        endPosInLine +
+        endCharacters.length;
+    }
+
+    // Validate offsets
+    if (
+      startOffset < 0 ||
+      endOffset <= startOffset ||
+      endOffset > this.originalContent.length
+    ) {
+      console.warn(
+        `Invalid offsets: start=${startOffset}, end=${endOffset}, content length=${this.originalContent.length}`
+      );
+      return null;
+    }
+
+    const text = this.originalContent.slice(startOffset, endOffset);
+
+    return {
+      startOffset,
+      endOffset,
+      text,
+    };
+  }
+
+  /**
+   * Process comments with line-based highlights and convert to standard Comment format
+   */
+  processLineComments(comments: LineCharacterComment[]): Comment[] {
+    const processedComments: Comment[] = [];
+
+    for (const comment of comments) {
+      const highlightResult = this.createHighlight(comment.highlight);
+
+      if (highlightResult) {
+        const processedComment: Comment = {
+          title: comment.title,
+          description: comment.description,
+          importance: comment.importance || 5,
+          grade: comment.grade,
+          highlight: {
+            startOffset: highlightResult.startOffset,
+            endOffset: highlightResult.endOffset,
+            quotedText: highlightResult.text,
+            isValid: true,
+          },
+          isValid: true,
+        };
+        processedComments.push(processedComment);
+      } else {
+        // Create invalid comment for debugging
+        const invalidComment: Comment = {
+          title: comment.title,
+          description: comment.description,
+          importance: comment.importance || 5,
+          grade: comment.grade,
+          highlight: {
+            startOffset: -1,
+            endOffset: -1,
+            quotedText: "",
+            isValid: false,
+          },
+          isValid: false,
+          error: `Could not find highlight: lines ${comment.highlight.startLineIndex}-${comment.highlight.endLineIndex}, snippets "${comment.highlight.startCharacters}" to "${comment.highlight.endCharacters}"`,
+        };
+        processedComments.push(invalidComment);
+      }
+    }
+
+    return processedComments;
+  }
+}
+
+// ============================================================================
+// UI FUNCTIONS - For HighlightedMarkdown component
+// ============================================================================
+
+/**
  * Checks if two highlights overlap
- * @param a First highlight
- * @param b Second highlight
- * @returns true if highlights overlap, false otherwise
  */
 export function highlightsOverlap(a: Highlight, b: Highlight): boolean {
-  // Check if one highlight starts within the other or if one completely contains the other
   return (
     (a.startOffset >= b.startOffset && a.startOffset < b.endOffset) ||
     (b.startOffset >= a.startOffset && b.startOffset < a.endOffset)
   );
-}
-
-/**
- * Attempts to find the exact start and end offsets for a highlight based on
- * a starting snippet and the expected full quoted text provided by an LLM.
- *
- * @param content The full original document content.
- * @param rawHighlight The highlight details provided by the LLM.
- * @param searchStartIndex Optional index to start searching from in the content.
- * @returns A CalculatedHighlight object with verified offsets or null if verification fails.
- */
-export function calculateHighlightOffsets(
-  content: string,
-  rawHighlight: RawLLMHighlight,
-  searchStartIndex: number = 0
-): CalculatedHighlight | null {
-  const { start, end } = rawHighlight;
-
-  // Debug logging
-  console.log("Original content start:", content.substring(0, 50));
-  console.log("Original start text:", start);
-  console.log("Original end text:", end);
-
-  // Unified normalization function that handles all markdown patterns properly
-  const normalizeText = (text: string) => {
-    return text
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Convert [text](url) to just text
-      .replace(/^\s+/, "") // Remove leading whitespace
-      .replace(/\s+/g, " ") // Normalize internal whitespace
-      .replace(/[_*]/g, "") // Remove markdown emphasis
-      .replace(/[`]/g, "") // Remove backticks
-      .replace(/[\[\]]/g, "") // Remove remaining square brackets
-      .replace(/[()]/g, "") // Remove parentheses
-      .trim();
-  };
-
-  // Generate variations of the text to try matching
-  const generateTextVariations = (text: string): string[] => {
-    const variations: string[] = [];
-
-    // Original text
-    variations.push(text);
-
-    // Normalized text (most comprehensive)
-    variations.push(normalizeText(text));
-
-    // Just markdown links converted
-    variations.push(text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"));
-
-    // Text with markdown emphasis removed
-    variations.push(text.replace(/[_*]/g, ""));
-
-    // Text with all markdown removed but keeping structure
-    variations.push(text.replace(/[_*`\[\]()]/g, ""));
-
-    // Text with spaces normalized
-    variations.push(text.replace(/\s+/g, " ").trim());
-
-    return [...new Set(variations)]; // Remove duplicates
-  };
-
-  const startVariations = generateTextVariations(start);
-  const endVariations = generateTextVariations(end);
-
-  // Debug logging for text variations
-  console.log("Start text variations:", startVariations);
-  console.log("End text variations:", endVariations);
-
-  // Create a mapping between original and normalized content
-  const createOffsetMapping = (original: string, normalized: string) => {
-    const mapping: number[] = [];
-    let originalIndex = 0;
-    let normalizedIndex = 0;
-
-    while (
-      originalIndex < original.length &&
-      normalizedIndex < normalized.length
-    ) {
-      mapping[normalizedIndex] = originalIndex;
-
-      if (original[originalIndex] === normalized[normalizedIndex]) {
-        originalIndex++;
-        normalizedIndex++;
-      } else {
-        // Skip characters that were normalized out
-        originalIndex++;
-      }
-    }
-
-    // Fill remaining positions
-    while (normalizedIndex < normalized.length) {
-      mapping[normalizedIndex] = originalIndex;
-      normalizedIndex++;
-    }
-
-    return mapping;
-  };
-
-  // Try matching against both original and normalized content
-  const findMatches = (
-    searchVariations: string[],
-    content: string,
-    isNormalized: boolean = false
-  ) => {
-    const matches: Array<{
-      position: number;
-      matchedText: string;
-      isNormalized: boolean;
-    }> = [];
-
-    for (const searchText of searchVariations) {
-      let startIndex = content.indexOf(searchText, searchStartIndex);
-      while (startIndex !== -1) {
-        matches.push({
-          position: startIndex,
-          matchedText: searchText,
-          isNormalized,
-        });
-        startIndex = content.indexOf(searchText, startIndex + 1);
-      }
-    }
-
-    return matches;
-  };
-
-  // Find matches in original content
-  const originalStartMatches = findMatches(startVariations, content, false);
-  const originalEndMatches = findMatches(endVariations, content, false);
-
-  // Find matches in normalized content
-  const normalizedContent = normalizeText(content);
-  const normalizedStartMatches = findMatches(
-    startVariations.map(normalizeText),
-    normalizedContent,
-    true
-  );
-  const normalizedEndMatches = findMatches(
-    endVariations.map(normalizeText),
-    normalizedContent,
-    true
-  );
-
-  // Create offset mapping for normalized matches
-  const offsetMapping = createOffsetMapping(content, normalizedContent);
-
-  // Convert normalized matches to original offsets
-  const convertedStartMatches = normalizedStartMatches.map((match) => ({
-    ...match,
-    position: offsetMapping[match.position] || match.position,
-    isNormalized: true,
-  }));
-
-  const convertedEndMatches = normalizedEndMatches.map((match) => ({
-    ...match,
-    position: offsetMapping[match.position] || match.position,
-    isNormalized: true,
-  }));
-
-  // Combine all matches
-  const allStartMatches = [...originalStartMatches, ...convertedStartMatches];
-  const allEndMatches = [...originalEndMatches, ...convertedEndMatches];
-
-  // Debug logging for found positions
-  console.log("Found matches:", {
-    originalStartMatches: originalStartMatches.map((m) => m.position),
-    originalEndMatches: originalEndMatches.map((m) => m.position),
-    normalizedStartMatches: normalizedStartMatches.map((m) => m.position),
-    normalizedEndMatches: normalizedEndMatches.map((m) => m.position),
-    convertedStartMatches: convertedStartMatches.map((m) => m.position),
-    convertedEndMatches: convertedEndMatches.map((m) => m.position),
-  });
-
-  // Find the first valid pair where start comes before end
-  let validStartMatch: (typeof allStartMatches)[0] | null = null;
-  let validEndMatch: (typeof allEndMatches)[0] | null = null;
-
-  for (const startMatch of allStartMatches) {
-    // Find the first end position that comes after this start position
-    const nextEndMatch = allEndMatches.find(
-      (endMatch) =>
-        endMatch.position > startMatch.position + startMatch.matchedText.length
-    );
-
-    if (nextEndMatch) {
-      validStartMatch = startMatch;
-      validEndMatch = nextEndMatch;
-      break;
-    }
-  }
-
-  // Debug logging for selected positions
-  console.log("Selected positions:", {
-    validStartMatch,
-    validEndMatch,
-    isValid: validStartMatch !== null && validEndMatch !== null,
-  });
-
-  if (!validStartMatch || !validEndMatch) {
-    console.warn(
-      `Could not find valid highlight text pair:`,
-      !validStartMatch
-        ? "no valid start position found"
-        : "no valid end position found",
-      "\nStart text variations:",
-      startVariations,
-      "\nEnd text variations:",
-      endVariations,
-      "\nOriginal start:",
-      start,
-      "\nOriginal end:",
-      end
-    );
-    return null;
-  }
-
-  // Calculate the end offset
-  const startOffset = validStartMatch.position;
-  const endOffset = validEndMatch.position + validEndMatch.matchedText.length;
-
-  // Verify the highlight length is reasonable
-  const highlightLength = endOffset - startOffset;
-  const MIN_HIGHLIGHT_LENGTH = 10;
-  const MAX_HIGHLIGHT_LENGTH = 250;
-
-  if (
-    highlightLength < MIN_HIGHLIGHT_LENGTH ||
-    highlightLength > MAX_HIGHLIGHT_LENGTH
-  ) {
-    console.warn(
-      `Invalid highlight length: ${highlightLength} characters (must be between ${MIN_HIGHLIGHT_LENGTH}-${MAX_HIGHLIGHT_LENGTH})`,
-      "\nStart text:",
-      validStartMatch.matchedText,
-      "\nEnd text:",
-      validEndMatch.matchedText,
-      "\nHighlight length:",
-      highlightLength,
-      "\nSuggested fix: Try selecting a shorter text snippet or breaking into multiple highlights"
-    );
-    return null;
-  }
-
-  // Get the actual text from the original content
-  const quotedText = content.substring(startOffset, endOffset);
-
-  // Debug logging for final result
-  console.log("Final highlight:", {
-    startOffset,
-    endOffset,
-    length: highlightLength,
-    quotedText: quotedText.substring(0, 50) + "...",
-  });
-
-  return {
-    startOffset,
-    endOffset,
-    quotedText,
-  };
-}
-
-// Helper function to map normalized offsets back to original offsets
-function findOriginalOffset(
-  original: string,
-  normalized: string,
-  normalizedOffset: number
-): number {
-  let originalOffset = 0;
-  let normalizedIndex = 0;
-
-  while (
-    normalizedIndex < normalizedOffset &&
-    originalOffset < original.length
-  ) {
-    const originalChar = original[originalOffset];
-    const normalizedChar = normalized[normalizedIndex];
-
-    if (originalChar === normalizedChar) {
-      originalOffset++;
-      normalizedIndex++;
-    } else {
-      // Skip characters that were normalized out
-      originalOffset++;
-    }
-  }
-
-  return originalOffset;
-}
-
-function normalizeSearchText(text: string): string {
-  return text
-    .replace(/\\\./g, ".") // Remove escaped dots
-    .replace(/\*\*/g, "") // Remove bold markers
-    .replace(/\*/g, "") // Remove italic markers
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove markdown links, keeping the text
-    .replace(/`([^`]+)`/g, "$1") // Remove code markers
-    .replace(/\s+/g, " ") // Normalize whitespace
-    .trim();
 }
 
 /**
@@ -352,152 +262,71 @@ export function createHighlightSpan(
 ): HTMLSpanElement {
   const span = document.createElement("span");
   span.textContent = text;
-  span.className = `bg-${color} rounded cursor-pointer hover:bg-opacity-80`;
-  span.dataset.tag = tag;
+  span.style.backgroundColor = color;
+  span.style.cursor = "pointer";
+  span.style.borderRadius = "2px";
+  span.style.padding = "1px 2px";
+  span.dataset["tag"] = tag;
+
   if (isFirstSpan) {
-    span.id = `highlight-${tag}`;
+    span.style.marginLeft = "2px";
   }
+
   return span;
 }
 
 /**
- * Stores a copy of the original text content before any highlighting is applied
- */
-const originalTextCache = new Map<HTMLElement, string>();
-
-/**
- * Function to find text nodes containing a specific string
- * Improved to handle text with escaped characters and formatting
+ * Find text nodes in a container
  */
 function findTextNodes(
   container: HTMLElement,
   searchText: string
 ): Array<{ node: Text; nodeOffset: number; globalOffset: number }> {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-
-  let currentNode: Node | null;
-  const matches: Array<{
+  const textNodes: Array<{
     node: Text;
     nodeOffset: number;
     globalOffset: number;
   }> = [];
   let globalOffset = 0;
 
-  // Normalize the search text by removing common escape sequences and handling markdown formatting
-  const normalizedSearchText = normalizeSearchText(searchText);
-  console.log("Original search text:", searchText.substring(0, 50) + "...");
-  console.log(
-    "Normalized search text:",
-    normalizedSearchText.substring(0, 50) + "..."
-  );
+  function traverse(node: Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textNode = node as Text;
+      const content = textNode.textContent || "";
 
-  // Special handling for specific document structure elements - headings and transitions
-  // This helps with problematic offsets that happen at element boundaries
-  const allTextNodes: Text[] = [];
-  while ((currentNode = walker.nextNode())) {
-    if (currentNode.nodeType === Node.TEXT_NODE) {
-      allTextNodes.push(currentNode as Text);
-    }
-  }
-
-  // First pass: try to find exact matches
-  for (let i = 0; i < allTextNodes.length; i++) {
-    const node = allTextNodes[i];
-    const nodeText = node.textContent || "";
-    let index = -1;
-
-    // Try exact match first
-    index = nodeText.indexOf(searchText);
-
-    // If that fails, try with normalized text
-    if (index === -1 && normalizedSearchText !== searchText) {
-      index = normalizedSearchText.indexOf(searchText);
-
+      // Check if this text node contains our search text
+      const index = content.indexOf(searchText);
       if (index !== -1) {
-        console.log(
-          "Found normalized match in:",
-          nodeText.substring(0, 50) + "..."
-        );
-        matches.push({
-          node,
+        textNodes.push({
+          node: textNode,
           nodeOffset: index,
           globalOffset: globalOffset + index,
         });
       }
-    } else if (index !== -1) {
-      console.log("Found exact match in:", nodeText.substring(0, 50) + "...");
-      matches.push({
-        node,
-        nodeOffset: index,
-        globalOffset: globalOffset + index,
-      });
-    }
 
-    globalOffset += nodeText.length;
-  }
-
-  // If no matches were found using exact or normalized matching,
-  // try additional strategies
-  if (matches.length === 0) {
-    globalOffset = 0;
-
-    // Second pass: try word-by-word matching (for long quotedText)
-    if (searchText.length > 20) {
-      const words = normalizedSearchText
-        .split(/\s+/)
-        .filter((w) => w.length > 3);
-
-      for (let i = 0; i < allTextNodes.length; i++) {
-        const node = allTextNodes[i];
-        const nodeText = node.textContent || "";
-
-        // Look for substantial words
-        for (const word of words) {
-          const index = nodeText.indexOf(word);
-          if (index !== -1) {
-            console.log(
-              `Found word match "${word}" in:`,
-              nodeText.substring(0, 50) + "..."
-            );
-            matches.push({
-              node,
-              nodeOffset: index,
-              globalOffset: globalOffset + index,
-            });
-            break; // Only add one match per node
-          }
-        }
-
-        globalOffset += nodeText.length;
+      globalOffset += content.length;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Skip already highlighted content
+      const element = node as HTMLElement;
+      if (element.dataset["tag"]) {
+        const content = element.textContent || "";
+        globalOffset += content.length;
+        return;
       }
-    }
 
-    // Third pass: check for section transitions
-    // This is specifically to handle the problematic range where offset is in a heading
-    if (matches.length === 0 && allTextNodes.length > 0) {
-      // Special case for headings - match the first node if it's likely a heading
-      const firstNode = allTextNodes[0];
-      const firstText = firstNode.textContent || "";
-
-      if (
-        firstText.includes("Bounded AI") ||
-        firstText.includes("Implications")
-      ) {
-        console.log("Heading match fallback for offset in mid-heading");
-        matches.push({
-          node: firstNode,
-          nodeOffset: 0,
-          globalOffset: 0,
-        });
+      // Traverse child nodes
+      for (let i = 0; i < node.childNodes.length; i++) {
+        traverse(node.childNodes[i]);
       }
     }
   }
 
-  return matches;
+  traverse(container);
+  return textNodes;
 }
 
 /**
- * Applies a highlight to a text node
+ * Apply highlight to a specific text node
  */
 export function applyHighlightToNode(
   node: Text,
@@ -506,55 +335,55 @@ export function applyHighlightToNode(
   tag: string,
   color: string
 ): HTMLSpanElement | null {
-  const text = node.textContent || "";
+  const content = node.textContent || "";
+  const highlightLength = endOffset - startOffset;
 
-  // If startOffset is 0, it might be from normalized text matching
-  // In this case, try to highlight the entire node as a fallback
-  let highlightText;
-  if (startOffset === 0 && endOffset === 0) {
-    // This is a normalized text match, highlight the entire content
-    highlightText = text;
-    startOffset = 0;
-    endOffset = text.length;
-  } else {
-    // Normal case - use the provided offsets
-    highlightText = text.substring(startOffset, endOffset);
-  }
-
-  const span = createHighlightSpan(highlightText, tag, color, false);
-
-  const container = document.createElement("div");
-
-  if (startOffset > 0) {
-    container.appendChild(
-      document.createTextNode(text.substring(0, startOffset))
+  if (
+    startOffset < 0 ||
+    endOffset > content.length ||
+    startOffset >= endOffset
+  ) {
+    console.warn(
+      `Invalid highlight range: ${startOffset}-${endOffset} for text of length ${content.length}`
     );
+    return null;
   }
 
-  container.appendChild(span);
+  // Split the text node
+  const beforeText = content.substring(0, startOffset);
+  const highlightText = content.substring(startOffset, endOffset);
+  const afterText = content.substring(endOffset);
 
-  if (endOffset < text.length) {
-    container.appendChild(document.createTextNode(text.substring(endOffset)));
+  // Create the highlight span
+  const highlightSpan = createHighlightSpan(highlightText, tag, color, true);
+
+  // Replace the original text node with the new structure
+  const parent = node.parentNode;
+  if (!parent) return null;
+
+  // Insert before text (if any)
+  if (beforeText) {
+    const beforeNode = document.createTextNode(beforeText);
+    parent.insertBefore(beforeNode, node);
   }
 
-  if (node.parentNode) {
-    node.parentNode.replaceChild(container, node);
+  // Insert highlight span
+  parent.insertBefore(highlightSpan, node);
 
-    // Move all children from container to parent, in order
-    const parent = container.parentNode;
-    while (container.firstChild) {
-      parent?.insertBefore(container.firstChild, container);
-    }
-    parent?.removeChild(container);
-
-    return span;
+  // Insert after text (if any)
+  if (afterText) {
+    const afterNode = document.createTextNode(afterText);
+    parent.insertBefore(afterNode, node);
   }
 
-  return null;
+  // Remove the original text node
+  parent.removeChild(node);
+
+  return highlightSpan;
 }
 
 /**
- * Applies highlights to a container element
+ * Apply highlights to a container element
  */
 export function applyHighlightsToContainer(
   container: HTMLElement,
@@ -562,136 +391,123 @@ export function applyHighlightsToContainer(
   colorMap: Record<string, string>,
   forceReset: boolean = false
 ): void {
-  // Cache original content if not already cached
-  if (!originalTextCache.has(container)) {
-    originalTextCache.set(container, container.innerHTML);
-  }
-
-  // Reset container if requested
   if (forceReset) {
-    const originalContent = originalTextCache.get(container);
-    if (originalContent) {
-      container.innerHTML = originalContent;
-    }
+    resetContainer(container);
   }
 
-  // Process each highlight
-  for (let i = 0; i < highlights.length; i++) {
-    const highlight = highlights[i];
-    const tag = i.toString();
-    const color = colorMap[tag] || colorMap[highlight.title] || "yellow-100";
+  // Filter valid highlights and sort by start offset
+  const validHighlights = highlights
+    .filter((comment) => comment.highlight.isValid && comment.isValid)
+    .sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
 
-    console.log(
-      `Attempting to highlight: "${highlight.highlight.quotedText.substring(
-        0,
-        50
-      )}..."`
-    );
-    const matches = findTextNodes(container, highlight.highlight.quotedText);
+  console.log(`Applying ${validHighlights.length} valid highlights`);
 
-    if (matches.length > 0) {
-      console.log(`Found ${matches.length} matches for highlight ${i}`);
+  for (const comment of validHighlights) {
+    const { startOffset, endOffset, quotedText } = comment.highlight;
+    const color = colorMap[comment.title] || "#ffeb3b";
 
-      // Find the best match based on proximity to expected offset
-      const bestMatch = matches.reduce((best, current) => {
-        const currentDiff = Math.abs(
-          current.globalOffset - highlight.highlight.startOffset
-        );
-        const bestDiff = Math.abs(
-          best.globalOffset - highlight.highlight.startOffset
-        );
-        return currentDiff < bestDiff ? current : best;
-      });
+    try {
+      // Find text nodes that contain our highlight
+      const textNodes = findTextNodes(container, quotedText);
 
-      // For normalized matches (nodeOffset is 0), we pass 0 for both start and end offset
-      // to trigger the special handling in applyHighlightToNode
-      const startOffset = bestMatch.nodeOffset === 0 ? 0 : bestMatch.nodeOffset;
-      const endOffset =
-        bestMatch.nodeOffset === 0
-          ? 0
-          : bestMatch.nodeOffset + highlight.highlight.quotedText.length;
+      if (textNodes.length === 0) {
+        console.warn(`Could not find text "${quotedText}" in container`);
+        continue;
+      }
 
-      // Apply highlight to the best matching node
-      applyHighlightToNode(bestMatch.node, startOffset, endOffset, tag, color);
-    } else {
-      console.log(`No matches found for highlight ${i}`);
+      // Use the first matching text node
+      const { node, nodeOffset } = textNodes[0];
+      const highlightLength = quotedText.length;
+
+      applyHighlightToNode(
+        node,
+        nodeOffset,
+        nodeOffset + highlightLength,
+        comment.title,
+        color
+      );
+
+      console.log(`Applied highlight for "${comment.title}"`);
+    } catch (error) {
+      console.error(`Error applying highlight for "${comment.title}":`, error);
     }
   }
 }
 
 /**
- * Debug function to find text in a container - exported for testing purposes
+ * Test if text can be found in container
  */
 export function testFindTextInContainer(
   container: HTMLElement,
   text: string
 ): boolean {
-  console.log("Testing text find for:", text.substring(0, 30) + "...");
-  const nodes = findTextNodes(container, text);
-  console.log(`Found ${nodes.length} matching nodes`);
-
-  if (nodes.length > 0) {
-    const firstNode = nodes[0];
-    console.log(
-      `First node text: "${firstNode.node.textContent?.substring(0, 30)}..."`
-    );
-    console.log(`Offset: ${firstNode.nodeOffset}`);
-    return true;
-  }
-
-  return false;
+  const containerText = container.textContent || "";
+  return containerText.includes(text);
 }
 
 /**
- * Cleans up all highlights from a container
+ * Clean up existing highlights
  */
 export function cleanupHighlights(container: HTMLElement): void {
-  const highlightSpans = container.querySelectorAll("[data-tag]");
-  highlightSpans.forEach((span) => {
-    const text = span.textContent;
-    if (text) {
-      const textNode = document.createTextNode(text);
-      span.parentNode?.replaceChild(textNode, span);
+  const highlights = container.querySelectorAll("[data-tag]");
+  highlights.forEach((highlight) => {
+    const parent = highlight.parentNode;
+    if (parent) {
+      parent.replaceChild(
+        document.createTextNode(highlight.textContent || ""),
+        highlight
+      );
     }
   });
 }
 
 /**
- * Resets a container to its original state
+ * Reset container to original state
  */
 export function resetContainer(container: HTMLElement, content?: string): void {
+  cleanupHighlights(container);
   if (content) {
     container.innerHTML = content;
-  } else if (originalTextCache.has(container)) {
-    container.innerHTML = originalTextCache.get(container)!;
-  } else {
-    cleanupHighlights(container);
   }
 }
 
-// Export additional validation functions for backwards compatibility with tests
+/**
+ * Fix overlapping highlights
+ */
 export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
-  return [...comments]; // Simplified implementation
+  // Sort by start offset
+  const sorted = [...comments].sort(
+    (a, b) => a.highlight.startOffset - b.highlight.startOffset
+  );
+
+  const fixed: Comment[] = [];
+  for (const comment of sorted) {
+    const hasOverlap = fixed.some((existing) =>
+      highlightsOverlap(existing.highlight, comment.highlight)
+    );
+
+    if (!hasOverlap) {
+      fixed.push(comment);
+    } else {
+      console.warn(`Removing overlapping highlight: ${comment.title}`);
+    }
+  }
+
+  return fixed;
 }
 
+/**
+ * Validate highlights in a review
+ */
 export function validateHighlights(review: Evaluation): {
   valid: boolean;
   errors: string[];
 } {
   const errors: string[] = [];
-  const comments = review.comments;
 
-  for (let i = 0; i < comments.length; i++) {
-    const comment = comments[i];
-
-    for (let j = i + 1; j < comments.length; j++) {
-      const otherComment = comments[j];
-
-      if (highlightsOverlap(comment.highlight, otherComment.highlight)) {
-        errors.push(
-          `Highlight for comment at index ${i} overlaps with highlight for comment at index ${j}`
-        );
-      }
+  for (const comment of review.comments) {
+    if (!comment.highlight.isValid) {
+      errors.push(`Invalid highlight for comment: ${comment.title}`);
     }
   }
 
@@ -701,361 +517,44 @@ export function validateHighlights(review: Evaluation): {
   };
 }
 
+/**
+ * Validate and fix a document review
+ */
 export function validateAndFixDocumentReview(review: Evaluation): Evaluation {
-  return { ...review }; // Simplified implementation
+  const fixedComments = fixOverlappingHighlights(review.comments);
+  return { ...review, comments: fixedComments };
 }
 
-// Use a cheaper/faster model for text matching
-// const MATCHING_MODEL = "google/gemini-2.0-flash-001";
-
-async function findTextMatchWithLLM(
-  content: string,
-  searchText: string,
-  title: string
-): Promise<string | null> {
-  const prompt = `Given the following document content and a search text, find the SHORTEST possible exact matching text in the document. 
-The search text may be slightly paraphrased or formatted differently. Return ONLY the exact text from the document that matches.
-
-IMPORTANT: Prefer shorter, more precise matches over longer ones. If multiple matches exist, choose the shortest one that still captures the essential meaning.
-
-Document content:
-${content}
-
-Search text: "${searchText}"
-
-Title of highlight: "${title}"
-
-EXAMPLES OF CORRECT MATCHING:
-
-1. For a long paragraph, prefer the key phrase:
-   Search: "The author believes the intervention is cost-effective and will have significant impact"
-   Match: "the intervention is remarkably cost-effective"
-
-2. For text with multiple points, choose the most relevant part:
-   Search: "The study found a 50% reduction in costs and improved outcomes"
-   Match: "50% reduction in costs"
-
-3. For text with context, focus on the core statement:
-   Search: "As previous research has shown, the impact was significant across all metrics"
-   Match: "the impact was significant"
-
-4. For text with examples, choose the main point:
-   Search: "Several factors contributed, including weather conditions, equipment failure, and human error"
-   Match: "Several factors contributed"
-
-Rules:
-1. Return ONLY the exact text from the document
-2. Keep matches under 50 words when possible
-3. Include all formatting (bold, italics, links)
-4. Match must be a complete phrase, not just individual words
-5. If multiple matches exist, choose the shortest one
-6. If no good match is found, return "NO_MATCH"
-
-Return ONLY the exact matching text from the document, or "NO_MATCH" if no good match is found.`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: SEARCH_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: DEFAULT_TEMPERATURE,
-      max_tokens: 100,
-    });
-
-    const response = completion.choices[0]?.message?.content?.trim();
-    if (!response || response === "NO_MATCH") {
-      return null;
-    }
-
-    // Verify the match exists in the content and isn't too long
-    if (content.includes(response) && response.split(/\s+/).length <= 50) {
-      return response;
-    }
-    return null;
-  } catch (error) {
-    console.warn(`Error using LLM to find text match for "${title}":`, error);
-    return null;
-  }
-}
-
-export async function processRawComments(
-  content: string,
-  comments: Array<Omit<Comment, "highlight"> & { highlight: RawLLMHighlight }>
-): Promise<Comment[]> {
-  return Promise.all(
-    comments.map(async (comment) => {
-      const { highlight, ...rest } = comment;
-
-      // Use our improved calculateHighlightOffsets function
-      const calculatedHighlight = calculateHighlightOffsets(content, highlight);
-
-      if (calculatedHighlight) {
-        // Successfully calculated highlight offsets
-        const isValid = calculatedHighlight.quotedText.length <= 1000; // Max 1000 characters
-        return {
-          ...rest,
-          highlight: {
-            startOffset: calculatedHighlight.startOffset,
-            endOffset: calculatedHighlight.endOffset,
-            quotedText: calculatedHighlight.quotedText,
-            isValid: true,
-          },
-          isValid,
-          error: isValid
-            ? undefined
-            : "Highlight is too long (max 1000 characters)",
-        };
-      }
-
-      // If calculateHighlightOffsets failed, try fallback approaches
-      const { start, end } = highlight;
-
-      // Fallback 1: If start and end text are identical, look for a single exact match
-      if (start === end) {
-        const exactMatch = content.indexOf(start);
-        if (exactMatch !== -1) {
-          const quotedText = start;
-          const isValid = quotedText.length <= 1000;
-          return {
-            ...rest,
-            highlight: {
-              startOffset: exactMatch,
-              endOffset: exactMatch + start.length,
-              quotedText,
-              isValid: true,
-            },
-            isValid,
-            error: isValid
-              ? undefined
-              : "Highlight is too long (max 1000 characters)",
-          };
-        }
-      }
-
-      // Fallback 2: Try simple indexOf for exact matches
-      const startIndex = content.indexOf(start);
-      const endIndex = content.indexOf(end);
-
-      if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
-        const quotedText = content.substring(startIndex, endIndex + end.length);
-        const isValid = quotedText.length <= 1000;
-        return {
-          ...rest,
-          highlight: {
-            startOffset: startIndex,
-            endOffset: endIndex + end.length,
-            quotedText,
-            isValid: true,
-          },
-          isValid,
-          error: isValid
-            ? undefined
-            : "Highlight is too long (max 1000 characters)",
-        };
-      }
-
-      // Fallback 3: Try word-based similarity matching
-      const contentWords = content.split(/\s+/);
-      const startWords = start.split(/\s+/);
-      const endWords = end.split(/\s+/);
-
-      // Find the best match for start text
-      let bestStartMatch = -1;
-      let bestStartScore = 0;
-      for (let i = 0; i < contentWords.length - startWords.length + 1; i++) {
-        const match = contentWords.slice(i, i + startWords.length).join(" ");
-        const score = similarity(start, match);
-        if (score > bestStartScore && score > 0.8) {
-          bestStartScore = score;
-          bestStartMatch = i;
-        }
-      }
-
-      // Find the best match for end text
-      let bestEndMatch = -1;
-      let bestEndScore = 0;
-      for (let i = 0; i < contentWords.length - endWords.length + 1; i++) {
-        const match = contentWords.slice(i, i + endWords.length).join(" ");
-        const score = similarity(end, match);
-        if (score > bestEndScore && score > 0.8) {
-          bestEndScore = score;
-          bestEndMatch = i;
-        }
-      }
-
-      // If we found good matches, use them
-      if (
-        bestStartMatch !== -1 &&
-        bestEndMatch !== -1 &&
-        bestStartMatch < bestEndMatch
-      ) {
-        const startOffset = contentWords
-          .slice(0, bestStartMatch)
-          .join(" ").length;
-        const endOffset = contentWords
-          .slice(0, bestEndMatch + endWords.length)
-          .join(" ").length;
-        const quotedText = content.substring(startOffset, endOffset);
-        const isValid = quotedText.length <= 1000;
-        return {
-          ...rest,
-          highlight: {
-            startOffset,
-            endOffset,
-            quotedText,
-            isValid: true,
-          },
-          isValid,
-          error: isValid
-            ? undefined
-            : "Highlight is too long (max 1000 characters)",
-        };
-      }
-
-      // All fallbacks failed - return invalid highlight
-      console.warn(`Failed to find highlight for comment: ${rest.title}`);
-      console.warn(`Start text: "${start}"`);
-      console.warn(`End text: "${end}"`);
-
-      return {
-        ...rest,
-        highlight: {
-          startOffset: -1, // Use -1 to indicate failure
-          endOffset: -1,
-          quotedText: "",
-          isValid: false,
-        },
-        isValid: false,
-        error: "Could not find valid highlight text in document",
-      };
-    })
-  );
-}
-
-// Helper function to calculate string similarity
-function similarity(str1: string, str2: string): number {
-  const longer = str1.length > str2.length ? str1 : str2;
-  const shorter = str1.length > str2.length ? str2 : str1;
-  const longerLength = longer.length;
-  if (longerLength === 0) {
-    return 1.0;
-  }
-  return (longerLength - editDistance(longer, shorter)) / longerLength;
-}
-
-// Helper function to calculate edit distance
-function editDistance(s1: string, s2: string): number {
-  s1 = s1.toLowerCase();
-  s2 = s2.toLowerCase();
-
-  const costs = [];
-  for (let i = 0; i <= s1.length; i++) {
-    let lastValue = i;
-    for (let j = 0; j <= s2.length; j++) {
-      if (i === 0) {
-        costs[j] = j;
-      } else {
-        if (j > 0) {
-          let newValue = costs[j - 1];
-          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
-            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-          }
-          costs[j - 1] = lastValue;
-          lastValue = newValue;
-        }
-      }
-    }
-    if (i > 0) {
-      costs[s2.length] = lastValue;
-    }
-  }
-  return costs[s2.length];
-}
-
+/**
+ * Validate a single highlight
+ */
 export function validateHighlight(
   content: string,
   highlight: Highlight
 ): { isValid: boolean; error?: string } {
   const { startOffset, endOffset, quotedText } = highlight;
 
-  // Basic validation
-  if (
-    startOffset < 0 ||
-    endOffset > content.length ||
-    startOffset >= endOffset
-  ) {
+  if (startOffset < 0 || endOffset <= startOffset) {
     return {
       isValid: false,
-      error: "Invalid highlight offsets",
+      error: `Invalid offsets: start=${startOffset}, end=${endOffset}`,
     };
   }
 
-  const foundText = content.substring(startOffset, endOffset);
-
-  if (foundText !== quotedText) {
+  if (endOffset > content.length) {
     return {
       isValid: false,
-      error: "Highlight text does not match quoted text",
+      error: `End offset ${endOffset} exceeds content length ${content.length}`,
+    };
+  }
+
+  const actualText = content.slice(startOffset, endOffset);
+  if (actualText !== quotedText) {
+    return {
+      isValid: false,
+      error: `Text mismatch: expected "${quotedText}", got "${actualText}"`,
     };
   }
 
   return { isValid: true };
-}
-
-export async function findExactMatch(
-  content: string,
-  searchText: string,
-  title: string
-): Promise<string | null> {
-  // First try exact match
-  if (content.includes(searchText)) {
-    return searchText;
-  }
-
-  // If no exact match, try with LLM but with a shorter, focused prompt
-  const prompt = `Find a short, exact match in this document for: "${searchText}"
-
-Document excerpt:
-${content.substring(0, 1000)}
-
-EXAMPLES OF CORRECT MATCHING:
-
-1. For a simple paragraph:
-   Search: "The quick brown fox jumps over the lazy dog"
-   Match: "quick brown fox jumps over the lazy"
-
-2. For text with markdown:
-   Search: "The author believes the intervention is cost-effective"
-   Match: "the intervention appears remarkably **cost-effective**"
-
-3. For text with special characters:
-   Search: "The cost was $1.5 million"
-   Match: "total cost was approximately $1.5 million"
-
-4. For text with links:
-   Search: "The author cites previous research"
-   Match: "As [Smith et al.](https://example.com) have shown"
-
-Rules:
-1. Return ONLY the exact text from the document
-2. Keep matches under 100 characters
-3. Include all formatting (bold, italics, links)
-4. Match must be a complete phrase
-5. If no good match, return "NO_MATCH"
-
-Return ONLY the matching text or "NO_MATCH".`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: SEARCH_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: DEFAULT_TEMPERATURE,
-      max_tokens: 50,
-    });
-
-    const match = completion.choices[0]?.message?.content?.trim() ?? null;
-    return match === "NO_MATCH" ? null : match;
-  } catch (error) {
-    console.error("Error finding match:", error);
-    return null;
-  }
 }

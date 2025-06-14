@@ -53,17 +53,26 @@ export async function getCommentData(
       messages: [
         {
           role: "system",
-          content: `You are an expert document analyst. Your task is to provide detailed comments and insights.
+          content: `You are an expert document analyst. Your task is to provide detailed comments and insights using LINE-BASED highlighting.
 
-IMPORTANT HIGHLIGHT RULES:
-1. You MUST select text that exists EXACTLY in the document
-2. The start text MUST appear before the end text
-3. Select complete sentences or logical phrases
-4. Keep highlights between 10-200 characters
-5. Copy and paste the exact text, including spaces and punctuation
-6. Do not modify or paraphrase the text in any way
+IMPORTANT LINE-BASED HIGHLIGHTING RULES:
+1. Use startLineIndex/endLineIndex (0-based line numbers)
+2. Use startCharacters/endCharacters (first ~6 chars to identify position within line)
+3. Lines are split on \\n - could be paragraphs, sentences, headings, etc.
+4. Count lines carefully - line 0 is the first line
+5. Character snippets should be the first few characters of the highlight within that line
+6. For single-line highlights: startLineIndex = endLineIndex
+7. Character snippets help identify exact position when lines are long
 
-If you cannot find exact matches for your highlights, choose different text that does exist in the document.`,
+Example format:
+{
+  "highlight": {
+    "startLineIndex": 2,
+    "startCharacters": "The key",
+    "endLineIndex": 2, 
+    "endCharacters": "important."
+  }
+}`,
         },
         {
           role: "user",
@@ -95,7 +104,7 @@ If you cannot find exact matches for your highlights, choose different text that
     try {
       // Cast needed here as pre-processing might not satisfy Comment type perfectly yet
       const validComments = await validateComments(
-        newComments as Comment[],
+        newComments as any[], // Use any[] since we're now expecting line-based format
         document.content
       );
       validCommentsCount = validComments.length;
@@ -112,12 +121,12 @@ If you cannot find exact matches for your highlights, choose different text that
       );
 
       // Add feedback to help the LLM learn from its mistakes
-      const feedback = `Previous attempt failed with error: ${error instanceof Error ? error.message : String(error)}. Please ensure your highlights:
-1. Are exact matches from the document
-2. Have start text appearing before end text
-3. Are between 10-200 characters
-4. Are complete sentences or logical phrases
-5. Include all spaces and punctuation exactly as in the document`;
+      const feedback = `Previous attempt failed with error: ${error instanceof Error ? error.message : String(error)}. Please ensure your highlights use the line-based format:
+1. startLineIndex/endLineIndex are valid 0-based line numbers
+2. startCharacters/endCharacters match the beginning of text on those lines
+3. Line indices are within document bounds
+4. Character snippets are 3-10 characters from the actual line content
+5. For single-line highlights: startLineIndex = endLineIndex`;
 
       // Add feedback to the next attempt's prompt
       prompt = `${prompt}\n\n${feedback}`;

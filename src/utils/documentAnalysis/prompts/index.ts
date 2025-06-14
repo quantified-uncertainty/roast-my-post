@@ -1,5 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { LineBasedHighlighter } from "../../highlightUtils";
 
 const documentInformationSection = (
   document: Document
@@ -70,46 +71,91 @@ export function getCommentPrompt(
   agentInfo: Agent,
   remainingComments: number
 ): string {
+  const highlighter = new LineBasedHighlighter(document.content);
+  const numberedLines = highlighter.getNumberedLines();
+  const stats = highlighter.getStats();
+
   return `
 ${agentContextSection(agentInfo, "comment")}
 
 ${documentInformationSection(document)}
 
 ## ANALYSIS INSTRUCTIONS
-Your task is to analyze this document and provide ${remainingComments} specific comments. Each comment should:
-1. Focus on a distinct aspect of the document
-2. Include exact text highlights
-3. Provide your expert perspective
-4. Include an importance rating (0-100)
+Your task is to analyze this document and provide ${remainingComments} specific comments using LINE-BASED highlighting.
 
-HIGHLIGHT GUIDELINES:
-- Select text snippets that are between 10-200 characters long
-- The start and end text MUST be exact matches from the document
-- The start text MUST appear before the end text in the document
-- Choose complete sentences or logical phrases
-- Avoid selecting text that's too short (less than 10 chars) or too long (more than 200 chars)
-- The highlight should capture the key point you want to comment on
+The document is shown with LINE NUMBERS. Each line is numbered (0, 1, 2, etc.).
+For highlights, specify the LINE INDEX and the first/last few CHARACTERS of what you want to highlight.
 
-Format your response in JSON like this:
+## EXAMPLES:
+
+**Example: Highlighting within a single line**
+Line 5: When I started this blog in high school, I did not imagine that I would cause [_The Daily Show_] to do an episode about shrimp.
+
+To highlight "The Daily Show":
+\`\`\`json
+{
+  "startLineIndex": 5,
+  "startCharacters": "[_The ",
+  "endLineIndex": 5,
+  "endCharacters": "Show_]"
+}
+\`\`\`
+
+**Example: Highlighting across multiple lines**
+Line 10: > Andres: I was working in investment banking. My wife was helping refugees,
+Line 11: > and I saw how meaningful her work was. And I decided to do the same.
+
+To highlight the full quote:
+\`\`\`json
+{
+  "startLineIndex": 10,
+  "startCharacters": "> Andre",
+  "endLineIndex": 11,
+  "endCharacters": "same."
+}
+\`\`\`
+
+## DOCUMENT ANALYSIS:
+- Total lines: ${stats.totalLines}
+- Content lines: ${stats.totalLines} (excluding empty lines)
+- Average line length: ${stats.averageLineLength} characters
+- Longest line: ${stats.longestLine} characters
+
+## NUMBERED DOCUMENT:
+${numberedLines}
+
+## RESPONSE FORMAT:
 {
   "comments": [
     {
-      "title": "string",
-      "description": "string",
+      "title": "Comment title with optional emojis",
+      "description": "Detailed description with Markdown formatting",
+      "importance": 75,
       "highlight": {
-        "start": "exact text snippet from document where highlight begins",
-        "end": "exact text snippet from document where highlight ends"
-      },
-      "importance": "0-100"${shouldIncludeGrade(agentInfo) ? ',\n  "grade": "number from 0-100"' : ""}
+        "startLineIndex": 0,
+        "startCharacters": "First ",
+        "endLineIndex": 0,
+        "endCharacters": "chars."
+      }${shouldIncludeGrade(agentInfo) ? ',\n      "grade": 85' : ""}
     }
   ]
 }
 
-Title: A short string, with optional emojis, bold, or italic formatting.
-Description: A short string with Markdown formatting. Make sure to make good use of Markdown formatting to make the comment more readable. Aim for 2-10 sentences.
-Importance: A number from 0-100 that represents how important the comment is to the document. Aim to average at around 50.
-${shouldIncludeGrade(agentInfo) ? "grade: A number from 0-100 that represents if the highlighted section was negative or positive." : ""}
+## RULES:
+1. **Count line numbers carefully** - Line 0 is the first line, Line 1 is the second, etc.
+2. **Use 4-8 characters** for startCharacters and endCharacters
+3. **Copy characters exactly** - include spaces, punctuation, markdown syntax
+4. **Make characters distinctive** - choose unique snippets that won't appear elsewhere in the line
+5. **Can span multiple lines** - endLineIndex can be different from startLineIndex
+6. **Choose complete thoughts** - highlight logical phrases or sentences
+7. **Include markdown syntax** when relevant (links, emphasis, blockquotes)
+8. **Importance**: 0-100 (higher for key insights)
+${shouldIncludeGrade(agentInfo) ? "9. **Grade**: 0-100 (positive feedback = higher grades)" : ""}
 
-# DOCUMENT CONTENT
-${document.content}`;
+## TIPS:
+- Look at the line numbers to orient yourself
+- Choose character snippets that are unique within their respective lines
+- For markdown links like [text](url), include the brackets in your characters
+- For blockquotes, include the ">" in your characters
+- If a line is very long, choose distinctive characters that won't repeat`;
 }
