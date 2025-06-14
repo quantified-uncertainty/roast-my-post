@@ -34,7 +34,6 @@ export async function getCommentData(
     failedCommentsCount: number;
   }> = [];
   let attempts = 0;
-  console.log("getCommentData");
 
   while (comments.length < targetComments && attempts < maxAttempts) {
     attempts++;
@@ -45,7 +44,6 @@ export async function getCommentData(
       agentInfo,
       targetComments - comments.length
     );
-    console.log(`Comment Prompt: ${prompt}`);
 
     const response = await openai.chat.completions.create({
       model: ANALYSIS_MODEL,
@@ -99,7 +97,6 @@ Example format:
     let validCommentsCount = 0;
     let failedCommentsCount = 0;
 
-    console.log("83");
     // Validate new comments before adding them
     try {
       // Cast needed here as pre-processing might not satisfy Comment type perfectly yet
