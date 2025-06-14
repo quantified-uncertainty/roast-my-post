@@ -82,6 +82,14 @@ Your task is to analyze this document and provide ${remainingComments} specific 
 3. Provide your expert perspective
 4. Include an importance rating (0-100)
 
+HIGHLIGHT GUIDELINES:
+- Select text snippets that are between 10-200 characters long
+- The start and end text MUST be exact matches from the document
+- The start text MUST appear before the end text in the document
+- Choose complete sentences or logical phrases
+- Avoid selecting text that's too short (less than 10 chars) or too long (more than 200 chars)
+- The highlight should capture the key point you want to comment on
+
 Format your response in JSON like this:
 {
   "comments": [

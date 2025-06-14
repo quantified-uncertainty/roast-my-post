@@ -1,7 +1,15 @@
 // --- src/utils/highlightUtils.ts ---
 
-import type { Comment, Evaluation, Highlight } from "../types/documentSchema";
-import { DEFAULT_TEMPERATURE, openai, SEARCH_MODEL } from "../types/openai";
+import type {
+  Comment,
+  Evaluation,
+  Highlight,
+} from "../types/documentSchema";
+import {
+  DEFAULT_TEMPERATURE,
+  openai,
+  SEARCH_MODEL,
+} from "../types/openai";
 
 // Raw highlight structure expected from LLM response
 export interface RawLLMHighlight {
@@ -53,25 +61,244 @@ export function calculateHighlightOffsets(
 ): CalculatedHighlight | null {
   const { start, end } = rawHighlight;
 
-  // Find the start and end positions
-  const startIndex = content.indexOf(start, searchStartIndex);
-  const endIndex = content.indexOf(end, startIndex);
+  // Debug logging
+  console.log("Original content start:", content.substring(0, 50));
+  console.log("Original start text:", start);
+  console.log("Original end text:", end);
 
-  if (startIndex === -1 || endIndex === -1) {
+  // Unified normalization function that handles all markdown patterns properly
+  const normalizeText = (text: string) => {
+    return text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Convert [text](url) to just text
+      .replace(/^\s+/, "") // Remove leading whitespace
+      .replace(/\s+/g, " ") // Normalize internal whitespace
+      .replace(/[_*]/g, "") // Remove markdown emphasis
+      .replace(/[`]/g, "") // Remove backticks
+      .replace(/[\[\]]/g, "") // Remove remaining square brackets
+      .replace(/[()]/g, "") // Remove parentheses
+      .trim();
+  };
+
+  // Generate variations of the text to try matching
+  const generateTextVariations = (text: string): string[] => {
+    const variations: string[] = [];
+
+    // Original text
+    variations.push(text);
+
+    // Normalized text (most comprehensive)
+    variations.push(normalizeText(text));
+
+    // Just markdown links converted
+    variations.push(text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"));
+
+    // Text with markdown emphasis removed
+    variations.push(text.replace(/[_*]/g, ""));
+
+    // Text with all markdown removed but keeping structure
+    variations.push(text.replace(/[_*`\[\]()]/g, ""));
+
+    // Text with spaces normalized
+    variations.push(text.replace(/\s+/g, " ").trim());
+
+    return [...new Set(variations)]; // Remove duplicates
+  };
+
+  const startVariations = generateTextVariations(start);
+  const endVariations = generateTextVariations(end);
+
+  // Debug logging for text variations
+  console.log("Start text variations:", startVariations);
+  console.log("End text variations:", endVariations);
+
+  // Create a mapping between original and normalized content
+  const createOffsetMapping = (original: string, normalized: string) => {
+    const mapping: number[] = [];
+    let originalIndex = 0;
+    let normalizedIndex = 0;
+
+    while (
+      originalIndex < original.length &&
+      normalizedIndex < normalized.length
+    ) {
+      mapping[normalizedIndex] = originalIndex;
+
+      if (original[originalIndex] === normalized[normalizedIndex]) {
+        originalIndex++;
+        normalizedIndex++;
+      } else {
+        // Skip characters that were normalized out
+        originalIndex++;
+      }
+    }
+
+    // Fill remaining positions
+    while (normalizedIndex < normalized.length) {
+      mapping[normalizedIndex] = originalIndex;
+      normalizedIndex++;
+    }
+
+    return mapping;
+  };
+
+  // Try matching against both original and normalized content
+  const findMatches = (
+    searchVariations: string[],
+    content: string,
+    isNormalized: boolean = false
+  ) => {
+    const matches: Array<{
+      position: number;
+      matchedText: string;
+      isNormalized: boolean;
+    }> = [];
+
+    for (const searchText of searchVariations) {
+      let startIndex = content.indexOf(searchText, searchStartIndex);
+      while (startIndex !== -1) {
+        matches.push({
+          position: startIndex,
+          matchedText: searchText,
+          isNormalized,
+        });
+        startIndex = content.indexOf(searchText, startIndex + 1);
+      }
+    }
+
+    return matches;
+  };
+
+  // Find matches in original content
+  const originalStartMatches = findMatches(startVariations, content, false);
+  const originalEndMatches = findMatches(endVariations, content, false);
+
+  // Find matches in normalized content
+  const normalizedContent = normalizeText(content);
+  const normalizedStartMatches = findMatches(
+    startVariations.map(normalizeText),
+    normalizedContent,
+    true
+  );
+  const normalizedEndMatches = findMatches(
+    endVariations.map(normalizeText),
+    normalizedContent,
+    true
+  );
+
+  // Create offset mapping for normalized matches
+  const offsetMapping = createOffsetMapping(content, normalizedContent);
+
+  // Convert normalized matches to original offsets
+  const convertedStartMatches = normalizedStartMatches.map((match) => ({
+    ...match,
+    position: offsetMapping[match.position] || match.position,
+    isNormalized: true,
+  }));
+
+  const convertedEndMatches = normalizedEndMatches.map((match) => ({
+    ...match,
+    position: offsetMapping[match.position] || match.position,
+    isNormalized: true,
+  }));
+
+  // Combine all matches
+  const allStartMatches = [...originalStartMatches, ...convertedStartMatches];
+  const allEndMatches = [...originalEndMatches, ...convertedEndMatches];
+
+  // Debug logging for found positions
+  console.log("Found matches:", {
+    originalStartMatches: originalStartMatches.map((m) => m.position),
+    originalEndMatches: originalEndMatches.map((m) => m.position),
+    normalizedStartMatches: normalizedStartMatches.map((m) => m.position),
+    normalizedEndMatches: normalizedEndMatches.map((m) => m.position),
+    convertedStartMatches: convertedStartMatches.map((m) => m.position),
+    convertedEndMatches: convertedEndMatches.map((m) => m.position),
+  });
+
+  // Find the first valid pair where start comes before end
+  let validStartMatch: (typeof allStartMatches)[0] | null = null;
+  let validEndMatch: (typeof allEndMatches)[0] | null = null;
+
+  for (const startMatch of allStartMatches) {
+    // Find the first end position that comes after this start position
+    const nextEndMatch = allEndMatches.find(
+      (endMatch) =>
+        endMatch.position > startMatch.position + startMatch.matchedText.length
+    );
+
+    if (nextEndMatch) {
+      validStartMatch = startMatch;
+      validEndMatch = nextEndMatch;
+      break;
+    }
+  }
+
+  // Debug logging for selected positions
+  console.log("Selected positions:", {
+    validStartMatch,
+    validEndMatch,
+    isValid: validStartMatch !== null && validEndMatch !== null,
+  });
+
+  if (!validStartMatch || !validEndMatch) {
     console.warn(
-      `Could not find highlight text:`,
-      startIndex === -1 ? "start text not found" : "end text not found"
+      `Could not find valid highlight text pair:`,
+      !validStartMatch
+        ? "no valid start position found"
+        : "no valid end position found",
+      "\nStart text variations:",
+      startVariations,
+      "\nEnd text variations:",
+      endVariations,
+      "\nOriginal start:",
+      start,
+      "\nOriginal end:",
+      end
     );
     return null;
   }
 
-  // Calculate the end offset by adding the length of the end text
-  const endOffset = endIndex + end.length;
+  // Calculate the end offset
+  const startOffset = validStartMatch.position;
+  const endOffset = validEndMatch.position + validEndMatch.matchedText.length;
+
+  // Verify the highlight length is reasonable
+  const highlightLength = endOffset - startOffset;
+  const MIN_HIGHLIGHT_LENGTH = 10;
+  const MAX_HIGHLIGHT_LENGTH = 250;
+
+  if (
+    highlightLength < MIN_HIGHLIGHT_LENGTH ||
+    highlightLength > MAX_HIGHLIGHT_LENGTH
+  ) {
+    console.warn(
+      `Invalid highlight length: ${highlightLength} characters (must be between ${MIN_HIGHLIGHT_LENGTH}-${MAX_HIGHLIGHT_LENGTH})`,
+      "\nStart text:",
+      validStartMatch.matchedText,
+      "\nEnd text:",
+      validEndMatch.matchedText,
+      "\nHighlight length:",
+      highlightLength,
+      "\nSuggested fix: Try selecting a shorter text snippet or breaking into multiple highlights"
+    );
+    return null;
+  }
+
+  // Get the actual text from the original content
+  const quotedText = content.substring(startOffset, endOffset);
+
+  // Debug logging for final result
+  console.log("Final highlight:", {
+    startOffset,
+    endOffset,
+    length: highlightLength,
+    quotedText: quotedText.substring(0, 50) + "...",
+  });
 
   return {
-    startOffset: startIndex,
+    startOffset,
     endOffset,
-    quotedText: content.substring(startIndex, endOffset),
+    quotedText,
   };
 }
 
@@ -557,14 +784,37 @@ export async function processRawComments(
   return Promise.all(
     comments.map(async (comment) => {
       const { highlight, ...rest } = comment;
+
+      // Use our improved calculateHighlightOffsets function
+      const calculatedHighlight = calculateHighlightOffsets(content, highlight);
+
+      if (calculatedHighlight) {
+        // Successfully calculated highlight offsets
+        const isValid = calculatedHighlight.quotedText.length <= 1000; // Max 1000 characters
+        return {
+          ...rest,
+          highlight: {
+            startOffset: calculatedHighlight.startOffset,
+            endOffset: calculatedHighlight.endOffset,
+            quotedText: calculatedHighlight.quotedText,
+            isValid: true,
+          },
+          isValid,
+          error: isValid
+            ? undefined
+            : "Highlight is too long (max 1000 characters)",
+        };
+      }
+
+      // If calculateHighlightOffsets failed, try fallback approaches
       const { start, end } = highlight;
 
-      // If start and end text are identical, we're looking for a single exact match
+      // Fallback 1: If start and end text are identical, look for a single exact match
       if (start === end) {
         const exactMatch = content.indexOf(start);
         if (exactMatch !== -1) {
           const quotedText = start;
-          const isValid = quotedText.length <= 1000; // Max 1000 characters
+          const isValid = quotedText.length <= 1000;
           return {
             ...rest,
             highlight: {
@@ -581,97 +831,101 @@ export async function processRawComments(
         }
       }
 
-      // Otherwise, look for separate start and end matches
+      // Fallback 2: Try simple indexOf for exact matches
       const startIndex = content.indexOf(start);
       const endIndex = content.indexOf(end);
 
-      // If we can't find exact matches, try to find the closest matches
-      if (startIndex === -1 || endIndex === -1) {
-        // Split content into words for more accurate matching
-        const contentWords = content.split(/\s+/);
-        const startWords = start.split(/\s+/);
-        const endWords = end.split(/\s+/);
+      if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
+        const quotedText = content.substring(startIndex, endIndex + end.length);
+        const isValid = quotedText.length <= 1000;
+        return {
+          ...rest,
+          highlight: {
+            startOffset: startIndex,
+            endOffset: endIndex + end.length,
+            quotedText,
+            isValid: true,
+          },
+          isValid,
+          error: isValid
+            ? undefined
+            : "Highlight is too long (max 1000 characters)",
+        };
+      }
 
-        // Find the best match for start text
-        let bestStartMatch = -1;
-        let bestStartScore = 0;
-        for (let i = 0; i < contentWords.length - startWords.length + 1; i++) {
-          const match = contentWords.slice(i, i + startWords.length).join(" ");
-          const score = similarity(start, match);
-          if (score > bestStartScore && score > 0.8) {
-            // Require high similarity
-            bestStartScore = score;
-            bestStartMatch = i;
-          }
-        }
+      // Fallback 3: Try word-based similarity matching
+      const contentWords = content.split(/\s+/);
+      const startWords = start.split(/\s+/);
+      const endWords = end.split(/\s+/);
 
-        // Find the best match for end text
-        let bestEndMatch = -1;
-        let bestEndScore = 0;
-        for (let i = 0; i < contentWords.length - endWords.length + 1; i++) {
-          const match = contentWords.slice(i, i + endWords.length).join(" ");
-          const score = similarity(end, match);
-          if (score > bestEndScore && score > 0.8) {
-            // Require high similarity
-            bestEndScore = score;
-            bestEndMatch = i;
-          }
-        }
-
-        // If we found good matches, use them
-        if (bestStartMatch !== -1 && bestEndMatch !== -1) {
-          const startOffset = contentWords
-            .slice(0, bestStartMatch)
-            .join(" ").length;
-          const endOffset = contentWords
-            .slice(0, bestEndMatch + endWords.length)
-            .join(" ").length;
-          const quotedText = content.substring(startOffset, endOffset);
-          const isValid = quotedText.length <= 1000; // Max 1000 characters
-          return {
-            ...rest,
-            highlight: {
-              startOffset,
-              endOffset,
-              quotedText,
-              isValid: true,
-            },
-            isValid,
-            error: isValid
-              ? undefined
-              : "Highlight is too long (max 1000 characters)",
-          };
+      // Find the best match for start text
+      let bestStartMatch = -1;
+      let bestStartScore = 0;
+      for (let i = 0; i < contentWords.length - startWords.length + 1; i++) {
+        const match = contentWords.slice(i, i + startWords.length).join(" ");
+        const score = similarity(start, match);
+        if (score > bestStartScore && score > 0.8) {
+          bestStartScore = score;
+          bestStartMatch = i;
         }
       }
 
-      // We found exact matches, use them
-      const quotedText = content.substring(startIndex, endIndex + end.length);
-      const isValid = quotedText.length <= 1000; // Max 1000 characters
-      return {
-        ...rest,
-        highlight: {
-          startOffset: startIndex,
-          endOffset: endIndex + end.length,
-          quotedText,
-          isValid: true,
-        },
-        isValid,
-        error: isValid
-          ? undefined
-          : "Highlight is too long (max 1000 characters)",
-      };
+      // Find the best match for end text
+      let bestEndMatch = -1;
+      let bestEndScore = 0;
+      for (let i = 0; i < contentWords.length - endWords.length + 1; i++) {
+        const match = contentWords.slice(i, i + endWords.length).join(" ");
+        const score = similarity(end, match);
+        if (score > bestEndScore && score > 0.8) {
+          bestEndScore = score;
+          bestEndMatch = i;
+        }
+      }
 
-      // If we couldn't find good matches, return an invalid highlight
+      // If we found good matches, use them
+      if (
+        bestStartMatch !== -1 &&
+        bestEndMatch !== -1 &&
+        bestStartMatch < bestEndMatch
+      ) {
+        const startOffset = contentWords
+          .slice(0, bestStartMatch)
+          .join(" ").length;
+        const endOffset = contentWords
+          .slice(0, bestEndMatch + endWords.length)
+          .join(" ").length;
+        const quotedText = content.substring(startOffset, endOffset);
+        const isValid = quotedText.length <= 1000;
+        return {
+          ...rest,
+          highlight: {
+            startOffset,
+            endOffset,
+            quotedText,
+            isValid: true,
+          },
+          isValid,
+          error: isValid
+            ? undefined
+            : "Highlight is too long (max 1000 characters)",
+        };
+      }
+
+      // All fallbacks failed - return invalid highlight
+      console.warn(`Failed to find highlight for comment: ${rest.title}`);
+      console.warn(`Start text: "${start}"`);
+      console.warn(`End text: "${end}"`);
+
       return {
         ...rest,
         highlight: {
-          startOffset: 0,
-          endOffset: 0,
+          startOffset: -1, // Use -1 to indicate failure
+          endOffset: -1,
           quotedText: "",
           isValid: false,
         },
         isValid: false,
-        error: "Could not find valid highlight text",
+        error: "Could not find valid highlight text in document",
       };
     })
   );
