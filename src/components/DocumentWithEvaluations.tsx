@@ -25,8 +25,6 @@ import type {
 } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
-  getGradeColorWeak,
-  getLetterGrade,
   getValidAndSortedComments,
 } from "@/utils/commentUtils";
 import {
@@ -43,6 +41,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/solid";
 
+import { GradeBadge } from "./GradeBadge";
 import SlateEditor from "./SlateEditor";
 
 function MarkdownRenderer({
@@ -74,14 +73,6 @@ function MarkdownRenderer({
       </ReactMarkdown>
     </div>
   );
-}
-
-function getGradePhrase(grade: number): string {
-  if (grade >= 80) return "Strongly positive";
-  if (grade >= 60) return "Positive";
-  if (grade >= 40) return "Neutral";
-  if (grade >= 20) return "Negative";
-  return "Strongly negative";
 }
 
 function getImportancePhrase(importance: number): string {
@@ -209,12 +200,10 @@ function CommentsSidebar({
                               <span className="mr-4">
                                 Grade:{" "}
                                 <span className="font-medium">
-                                  <span
-                                    className="rounded-full px-2 py-0.5 text-sm"
-                                    style={getGradeColorWeak(comment.grade)}
-                                  >
-                                    {getGradePhrase(comment.grade)}
-                                  </span>
+                                  <GradeBadge
+                                    grade={comment.grade}
+                                    variant="weak"
+                                  />
                                 </span>
                               </span>
                             )}
@@ -257,7 +246,6 @@ function EvaluationSelector({
       {document.reviews.map((evaluation, index) => {
         const isActive = index === activeEvaluationIndex;
         const grade = evaluation.grade || 0;
-        const letterGrade = getLetterGrade(grade);
         const highlightsCount = evaluation.comments.length;
         const isLast = index === document.reviews.length - 1;
         return (
@@ -284,12 +272,7 @@ function EvaluationSelector({
                     {evaluation.agent.description}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <span
-                      className="rounded border px-2 py-0.5 text-sm font-semibold"
-                      style={getGradeColorWeak(grade)}
-                    >
-                      {letterGrade}
-                    </span>
+                    <GradeBadge grade={grade} />
                     <span className="text-sm text-gray-500">
                       · {highlightsCount} highlights
                     </span>
@@ -492,9 +475,9 @@ function EvaluationView({
             className="inline-flex h-full items-center gap-2 px-3 py-0 text-base font-medium transition hover:bg-gray-100 focus:outline-none"
             onClick={onShowEvaluationSelector}
           >
-            <span className="flex items-center rounded-md border border-orange-100 bg-orange-50 px-2 py-0.5 text-sm font-bold text-orange-800">
-              {getLetterGrade(evaluation.grade || 0)}
-            </span>
+            {evaluation.grade && (
+              <GradeBadge grade={evaluation.grade} variant="weak" />
+            )}
             <span className="ml-2 mr-1 font-semibold text-gray-900">
               {evaluation.agent.name}
             </span>

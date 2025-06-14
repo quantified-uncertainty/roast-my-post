@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -8,15 +11,15 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/Button";
+import {
+  getLetterGrade,
+  GradeBadge,
+} from "@/components/GradeBadge";
+import type { Agent } from "@/types/agentSchema";
 import type {
   Document,
   Evaluation,
 } from "@/types/documentSchema";
-import type { Agent } from "@/types/agentSchema";
-import {
-  getGradeColorStrong,
-  getLetterGrade,
-} from "@/utils/commentUtils";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -27,7 +30,10 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-import { rerunEvaluation, createOrRerunEvaluation } from "./actions";
+import {
+  createOrRerunEvaluation,
+  rerunEvaluation,
+} from "./actions";
 
 interface EvaluationsClientProps {
   document: Document;
@@ -51,7 +57,9 @@ export default function EvaluationsClient({
 }: EvaluationsClientProps) {
   const { reviews } = document;
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<AgentWithEvaluation[]>([]);
+  const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<
+    AgentWithEvaluation[]
+  >([]);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<
     number | null
@@ -72,7 +80,9 @@ export default function EvaluationsClient({
         // Create combined list of agents with evaluations
         const combined: AgentWithEvaluation[] = [];
         const intendedAgentIds = document.intendedAgents || [];
-        const reviewMap = new Map(reviews.map(review => [review.agentId, review]));
+        const reviewMap = new Map(
+          reviews.map((review) => [review.agentId, review])
+        );
 
         // Add all intended agents
         for (const agentId of intendedAgentIds) {
@@ -94,7 +104,9 @@ export default function EvaluationsClient({
         // Add any agents with evaluations that aren't intended
         for (const review of reviews) {
           if (!intendedAgentIds.includes(review.agentId)) {
-            const agent = data.agents.find((a: Agent) => a.id === review.agentId);
+            const agent = data.agents.find(
+              (a: Agent) => a.id === review.agentId
+            );
             if (agent) {
               combined.push({
                 id: agent.id,
@@ -132,8 +144,8 @@ export default function EvaluationsClient({
 
   const handleRerun = async (agentId: string) => {
     // Find the agent to determine if it has an evaluation
-    const agentWithEval = agentsWithEvaluations.find(a => a.id === agentId);
-    
+    const agentWithEval = agentsWithEvaluations.find((a) => a.id === agentId);
+
     if (agentWithEval?.evaluation) {
       // Use rerunEvaluation for existing evaluations
       await rerunEvaluation(agentId, document.id);
@@ -222,11 +234,13 @@ export default function EvaluationsClient({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {agentWithEval.evaluation?.versions && agentWithEval.evaluation.versions.length > 0 && (
-                          <div className="text-xs text-gray-500">
-                            {agentWithEval.evaluation.versions.length} versions
-                          </div>
-                        )}
+                        {agentWithEval.evaluation?.versions &&
+                          agentWithEval.evaluation.versions.length > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {agentWithEval.evaluation.versions.length}{" "}
+                              versions
+                            </div>
+                          )}
                         {isOwner && (
                           <Button
                             variant="secondary"
@@ -289,109 +303,102 @@ export default function EvaluationsClient({
                         )}
                       </button>
                     </div>
-                  {/* Tab Content */}
-                  <div>
-                    {middleTab === "versions" && (
-                      <div>
-                        {selectedReview.versions &&
-                        selectedReview.versions.length > 0 ? (
-                          <div>
-                            {selectedReview.versions.map((version, index) => (
-                              <div
-                                key={index}
-                                className={`cursor-pointer px-3 py-2 text-sm transition-colors ${
-                                  selectedVersionIndex === index
-                                    ? "bg-blue-50"
-                                    : "bg-transparent"
-                                } ${
-                                  index !==
-                                  (selectedReview.versions?.length ?? 0) - 1
-                                    ? "border-b border-gray-200"
-                                    : ""
-                                }`}
-                                onClick={() => setSelectedVersionIndex(index)}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <div className="font-medium text-gray-800">
-                                      Version{" "}
-                                      {selectedReview.versions?.length
-                                        ? selectedReview.versions.length - index
-                                        : 0}
-                                      {index === 0 && " (Latest)"}
+                    {/* Tab Content */}
+                    <div>
+                      {middleTab === "versions" && (
+                        <div>
+                          {selectedReview.versions &&
+                          selectedReview.versions.length > 0 ? (
+                            <div>
+                              {selectedReview.versions.map((version, index) => (
+                                <div
+                                  key={index}
+                                  className={`cursor-pointer px-3 py-2 text-sm transition-colors ${
+                                    selectedVersionIndex === index
+                                      ? "bg-blue-50"
+                                      : "bg-transparent"
+                                  } ${
+                                    index !==
+                                    (selectedReview.versions?.length ?? 0) - 1
+                                      ? "border-b border-gray-200"
+                                      : ""
+                                  }`}
+                                  onClick={() => setSelectedVersionIndex(index)}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <div className="font-medium text-gray-800">
+                                        Version{" "}
+                                        {selectedReview.versions?.length
+                                          ? selectedReview.versions.length -
+                                            index
+                                          : 0}
+                                        {index === 0 && " (Latest)"}
+                                      </div>
+                                      <div className="mt-1 text-xs text-gray-500">
+                                        {formatDate(version.createdAt)}
+                                      </div>
                                     </div>
-                                    <div className="mt-1 text-xs text-gray-500">
-                                      {formatDate(version.createdAt)}
-                                    </div>
-                                  </div>
-                                  <div
-                                    className="flex h-4 w-4 items-center justify-center rounded-full"
-                                    style={
-                                      getGradeColorStrong(version.grade || 0)
-                                        .style
-                                    }
-                                  >
-                                    <span className="text-xs font-medium text-white">
-                                      {getLetterGrade(version.grade || 0)}
-                                    </span>
+                                    <GradeBadge grade={version.grade} />
                                   </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="py-4 text-center text-gray-500">
-                            No versions available for this evaluation
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {middleTab === "jobs" && (
-                      <div>
-                        {/* Jobs Content */}
-                        {selectedReview.jobs &&
-                        selectedReview.jobs.length > 0 ? (
-                          <ul className="space-y-1 px-4 py-2 text-sm">
-                            {selectedReview.jobs.map((job) => (
-                              <li
-                                key={job.id}
-                                className="flex items-center gap-4"
-                              >
-                                <span className="font-mono text-xs">
-                                  {job.id.slice(0, 8)}...
-                                </span>
-                                <span className="rounded bg-gray-200 px-2 py-0.5 text-gray-700">
-                                  {job.status}
-                                </span>
-                                {job.createdAt && (
-                                  <span className="text-gray-500">
-                                    {new Date(job.createdAt).toLocaleString()}
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="py-4 text-center text-gray-500">
+                              No versions available for this evaluation
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {middleTab === "jobs" && (
+                        <div>
+                          {/* Jobs Content */}
+                          {selectedReview.jobs &&
+                          selectedReview.jobs.length > 0 ? (
+                            <ul className="space-y-1 px-4 py-2 text-sm">
+                              {selectedReview.jobs.map((job) => (
+                                <li
+                                  key={job.id}
+                                  className="flex items-center gap-4"
+                                >
+                                  <span className="font-mono text-xs">
+                                    {job.id.slice(0, 8)}...
                                   </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="py-4 text-center text-gray-500">
-                            No jobs available for this evaluation
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                                  <span className="rounded bg-gray-200 px-2 py-0.5 text-gray-700">
+                                    {job.status}
+                                  </span>
+                                  {job.createdAt && (
+                                    <span className="text-gray-500">
+                                      {new Date(job.createdAt).toLocaleString()}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="py-4 text-center text-gray-500">
+                              No jobs available for this evaluation
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center p-8 text-center text-gray-500">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <h3 className="mb-2 text-lg font-medium text-gray-900">
                         {selectedAgentWithEvaluation.name}
                       </h3>
-                      <p className="text-gray-500 mb-4">
+                      <p className="mb-4 text-gray-500">
                         This agent hasn't been run for this document yet.
                       </p>
                       {isOwner && (
                         <Button
-                          onClick={() => handleRerun(selectedAgentWithEvaluation.id)}
+                          onClick={() =>
+                            handleRerun(selectedAgentWithEvaluation.id)
+                          }
                           className="flex items-center gap-2"
                         >
                           <SparklesIcon className="h-4 w-4" />
@@ -499,9 +506,14 @@ export default function EvaluationsClient({
                     {activeTab === "summary" && (
                       <div className="space-y-6">
                         <div>
-                          <h3 className="mb-2 text-lg font-medium text-gray-900">
-                            Summary
-                          </h3>
+                          <div className="flex items-center gap-4">
+                            <GradeBadge grade={selectedVersion.grade} />
+                            <div className="text-gray-700">
+                              Numerical Grade: {selectedVersion.grade || 0}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
                           <div className="prose max-w-none">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
@@ -509,26 +521,6 @@ export default function EvaluationsClient({
                             >
                               {selectedVersion.summary}
                             </ReactMarkdown>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="mb-2 text-lg font-medium text-gray-900">
-                            Grade
-                          </h3>
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-medium text-white"
-                              style={
-                                getGradeColorStrong(selectedVersion.grade || 0)
-                                  .style
-                              }
-                            >
-                              {getLetterGrade(selectedVersion.grade || 0)}
-                            </div>
-                            <div className="text-gray-700">
-                              Numerical Grade: {selectedVersion.grade || 0}
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -547,12 +539,7 @@ export default function EvaluationsClient({
                                 {comment.title}
                               </h4>
                               {comment.grade !== undefined && (
-                                <div
-                                  className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white"
-                                  style={
-                                    getGradeColorStrong(comment.grade).style
-                                  }
-                                >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white">
                                   {getLetterGrade(comment.grade)}
                                 </div>
                               )}
@@ -579,9 +566,15 @@ export default function EvaluationsClient({
                                 </div>
                               </div>
                             )}
-                            {comment.importance && (
-                              <div className="mt-2 text-sm text-gray-500">
-                                Importance: {comment.importance}
+                            {(comment.importance ||
+                              comment.grade !== undefined) && (
+                              <div className="mt-2 flex gap-4 text-sm text-gray-500">
+                                {comment.importance && (
+                                  <span>Importance: {comment.importance}</span>
+                                )}
+                                {comment.grade !== undefined && (
+                                  <span>Grade: {comment.grade}</span>
+                                )}
                               </div>
                             )}
                           </div>
@@ -621,26 +614,26 @@ export default function EvaluationsClient({
                     {/* Logs Tab */}
                     {activeTab === "logs" && (
                       <div className="space-y-6">
-                        {selectedVersion.job?.tasks && selectedVersion.job.tasks.length > 0 ? (
+                        {selectedVersion.job?.tasks &&
+                        selectedVersion.job.tasks.length > 0 ? (
                           <div className="space-y-4">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              Tasks Executed
-                            </h3>
                             <div className="space-y-3">
                               {selectedVersion.job.tasks.map((task, index) => {
                                 let logData;
                                 try {
-                                  logData = JSON.parse(task.log);
+                                  logData = task.log
+                                    ? JSON.parse(task.log)
+                                    : { summary: "No log data" };
                                 } catch (e) {
                                   logData = { summary: task.log };
                                 }
-                                
+
                                 return (
                                   <div
                                     key={task.id}
                                     className="rounded-lg border border-gray-200 bg-gray-50 p-4"
                                   >
-                                    <div className="flex items-center justify-between mb-2">
+                                    <div className="mb-2 flex items-center justify-between">
                                       <div className="flex items-center gap-3">
                                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
                                           {index + 1}
@@ -654,98 +647,145 @@ export default function EvaluationsClient({
                                           {task.modelName}
                                         </span>
                                         <span>
-                                          ${(task.priceInCents / 100).toFixed(4)}
+                                          $
+                                          {(task.priceInCents / 100).toFixed(4)}
                                         </span>
                                         {task.timeInSeconds && (
                                           <span>{task.timeInSeconds}s</span>
                                         )}
                                       </div>
                                     </div>
-                                    
+
                                     {/* Summary */}
                                     {logData.summary && (
-                                      <div className="mt-2 text-sm text-gray-700 bg-blue-50 rounded p-3 border border-blue-200">
-                                        <strong>Summary:</strong> {logData.summary}
+                                      <div className="mt-2 rounded border border-blue-200 bg-blue-50 p-3 text-sm text-gray-700">
+                                        <strong>Summary:</strong>{" "}
+                                        {logData.summary}
                                       </div>
                                     )}
 
                                     {/* Input/Output Details */}
-                                    <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                    <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
                                       {logData.input && (
-                                        <div className="bg-white rounded p-3 border">
-                                          <h5 className="font-medium text-gray-900 mb-2">Input</h5>
-                                          <div className="text-xs text-gray-600 space-y-1">
-                                            {Object.entries(logData.input).map(([key, value]) => (
-                                              <div key={key}>
-                                                <span className="font-medium">{key}:</span>{" "}
-                                                {typeof value === 'string' && value.length > 100 
-                                                  ? `${value.substring(0, 100)}...` 
-                                                  : String(value)}
-                                              </div>
-                                            ))}
+                                        <div className="rounded border bg-white p-3">
+                                          <h5 className="mb-2 font-medium text-gray-900">
+                                            Input
+                                          </h5>
+                                          <div className="space-y-1 text-xs text-gray-600">
+                                            {Object.entries(logData.input).map(
+                                              ([key, value]) => (
+                                                <div key={key}>
+                                                  <span className="font-medium">
+                                                    {key}:
+                                                  </span>{" "}
+                                                  {typeof value === "string" &&
+                                                  value.length > 100
+                                                    ? `${value.substring(0, 100)}...`
+                                                    : String(value)}
+                                                </div>
+                                              )
+                                            )}
                                           </div>
                                         </div>
                                       )}
-                                      
+
                                       {logData.output && (
-                                        <div className="bg-white rounded p-3 border">
-                                          <h5 className="font-medium text-gray-900 mb-2">Output</h5>
-                                          <div className="text-xs text-gray-600 space-y-1">
-                                            {Object.entries(logData.output).map(([key, value]) => (
-                                              <div key={key}>
-                                                <span className="font-medium">{key}:</span>{" "}
-                                                {typeof value === 'string' && value.length > 100 
-                                                  ? `${value.substring(0, 100)}...` 
-                                                  : String(value)}
-                                              </div>
-                                            ))}
+                                        <div className="rounded border bg-white p-3">
+                                          <h5 className="mb-2 font-medium text-gray-900">
+                                            Output
+                                          </h5>
+                                          <div className="space-y-1 text-xs text-gray-600">
+                                            {Object.entries(logData.output).map(
+                                              ([key, value]) => (
+                                                <div key={key}>
+                                                  <span className="font-medium">
+                                                    {key}:
+                                                  </span>{" "}
+                                                  {typeof value === "string" &&
+                                                  value.length > 100
+                                                    ? `${value.substring(0, 100)}...`
+                                                    : String(value)}
+                                                </div>
+                                              )
+                                            )}
                                           </div>
                                         </div>
                                       )}
                                     </div>
 
                                     {/* LLM Interactions */}
-                                    {logData.llmInteractions && logData.llmInteractions.length > 0 && (
-                                      <div className="mt-3">
-                                        <h5 className="font-medium text-gray-900 mb-2">LLM Interactions</h5>
-                                        <div className="space-y-2">
-                                          {logData.llmInteractions.map((interaction, idx) => (
-                                            <details key={idx} className="bg-white rounded border">
-                                              <summary className="px-3 py-2 cursor-pointer hover:bg-gray-50">
-                                                <span className="font-medium">Attempt {interaction.attempt}</span>
-                                                <span className="ml-2 text-sm text-gray-500">
-                                                  ({interaction.validCommentsCount} valid, {interaction.failedCommentsCount} failed)
-                                                </span>
-                                              </summary>
-                                              <div className="px-3 pb-3 border-t">
-                                                <div className="mt-2">
-                                                  <h6 className="font-medium text-sm">Prompt:</h6>
-                                                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mt-1 max-h-32 overflow-y-auto">
-                                                    {interaction.prompt}
+                                    {logData.llmInteractions &&
+                                      logData.llmInteractions.length > 0 && (
+                                        <div className="mt-3">
+                                          <h5 className="mb-2 font-medium text-gray-900">
+                                            LLM Interactions
+                                          </h5>
+                                          <div className="space-y-2">
+                                            {logData.llmInteractions.map(
+                                              (
+                                                interaction: any,
+                                                idx: number
+                                              ) => (
+                                                <details
+                                                  key={idx}
+                                                  className="rounded border bg-white"
+                                                >
+                                                  <summary className="cursor-pointer px-3 py-2 hover:bg-gray-50">
+                                                    <span className="font-medium">
+                                                      Attempt{" "}
+                                                      {interaction.attempt}
+                                                    </span>
+                                                    <span className="ml-2 text-sm text-gray-500">
+                                                      (
+                                                      {
+                                                        interaction.validCommentsCount
+                                                      }{" "}
+                                                      valid,{" "}
+                                                      {
+                                                        interaction.failedCommentsCount
+                                                      }{" "}
+                                                      failed)
+                                                    </span>
+                                                  </summary>
+                                                  <div className="border-t px-3 pb-3">
+                                                    <div className="mt-2">
+                                                      <h6 className="text-sm font-medium">
+                                                        Prompt:
+                                                      </h6>
+                                                      <div className="mt-1 max-h-32 overflow-y-auto rounded bg-gray-50 p-2 text-xs text-gray-600">
+                                                        {interaction.prompt}
+                                                      </div>
+                                                    </div>
+                                                    <div className="mt-2">
+                                                      <h6 className="text-sm font-medium">
+                                                        Response:
+                                                      </h6>
+                                                      <div className="mt-1 max-h-32 overflow-y-auto rounded bg-gray-50 p-2 text-xs text-gray-600">
+                                                        {interaction.response}
+                                                      </div>
+                                                    </div>
                                                   </div>
-                                                </div>
-                                                <div className="mt-2">
-                                                  <h6 className="font-medium text-sm">Response:</h6>
-                                                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mt-1 max-h-32 overflow-y-auto">
-                                                    {interaction.response}
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </details>
-                                          ))}
+                                                </details>
+                                              )
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    )}
+                                      )}
 
                                     {/* Full Log (fallback) */}
-                                    {!logData.summary && !logData.input && !logData.output && (
-                                      <div className="mt-2 text-sm text-gray-700 bg-white rounded p-3 border">
-                                        {task.log}
-                                      </div>
-                                    )}
-                                    
+                                    {!logData.summary &&
+                                      !logData.input &&
+                                      !logData.output && (
+                                        <div className="mt-2 rounded border bg-white p-3 text-sm text-gray-700">
+                                          {task.log}
+                                        </div>
+                                      )}
+
                                     <div className="mt-2 text-xs text-gray-500">
-                                      Completed: {new Date(task.createdAt).toLocaleString()}
+                                      Completed:{" "}
+                                      {new Date(
+                                        task.createdAt
+                                      ).toLocaleString()}
                                     </div>
                                   </div>
                                 );
@@ -757,15 +797,26 @@ export default function EvaluationsClient({
                                   Total Cost:
                                 </span>
                                 <span className="text-blue-700">
-                                  ${(selectedVersion.job.tasks.reduce((sum, task) => sum + task.priceInCents, 0) / 100).toFixed(4)}
+                                  $
+                                  {(
+                                    selectedVersion.job.tasks.reduce(
+                                      (sum, task) => sum + task.priceInCents,
+                                      0
+                                    ) / 100
+                                  ).toFixed(4)}
                                 </span>
                               </div>
-                              <div className="flex items-center justify-between text-sm mt-1">
+                              <div className="mt-1 flex items-center justify-between text-sm">
                                 <span className="font-medium text-blue-900">
                                   Total Time:
                                 </span>
                                 <span className="text-blue-700">
-                                  {selectedVersion.job.tasks.reduce((sum, task) => sum + (task.timeInSeconds || 0), 0)}s
+                                  {selectedVersion.job.tasks.reduce(
+                                    (sum, task) =>
+                                      sum + (task.timeInSeconds || 0),
+                                    0
+                                  )}
+                                  s
                                 </span>
                               </div>
                             </div>

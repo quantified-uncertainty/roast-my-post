@@ -3,16 +3,15 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { Document, Evaluation } from "@/types/documentSchema";
+import { GradeBadge } from "@/components/GradeBadge";
 import {
-  getGradeColorStrong,
-  getLetterGrade,
-  getValidCommentCount,
-} from "@/utils/commentUtils";
+  Document,
+  Evaluation,
+} from "@/types/documentSchema";
+import { getValidCommentCount } from "@/utils/commentUtils";
 import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   Squares2X2Icon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
@@ -268,12 +267,11 @@ export default function DocumentsClient({
                                 {review?.agent.name}
                                 {hasGradeInstructions &&
                                   grade !== undefined && (
-                                    <span
-                                      className={`ml-1 rounded-sm px-1.5 ${getGradeColorStrong(grade).className}`}
-                                      style={getGradeColorStrong(grade).style}
-                                    >
-                                      {getLetterGrade(grade)}
-                                    </span>
+                                    <GradeBadge
+                                      grade={grade}
+                                      className="ml-1 text-xs"
+                                      variant="strong"
+                                    />
                                   )}
                                 <ChatBubbleLeftIcon className="ml-2 h-3 w-3 text-gray-400" />{" "}
                                 <span className="text-gray-500">
@@ -410,12 +408,11 @@ export default function DocumentsClient({
                             className="whitespace-nowrap border-b border-gray-200 px-6 py-4 text-sm"
                           >
                             {review?.grade !== undefined && (
-                              <span
-                                className={`rounded-sm px-1.5 text-xs font-medium ${getGradeColorStrong(review.grade).className}`}
-                                style={getGradeColorStrong(review.grade).style}
-                              >
-                                {getLetterGrade(review.grade)}
-                              </span>
+                              <GradeBadge
+                                grade={review.grade}
+                                className="text-xs"
+                                variant="strong"
+                              />
                             )}
                             {review && (
                               <span className="ml-2 text-gray-500">
