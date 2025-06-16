@@ -1,8 +1,31 @@
 import { Button } from "@/components/Button";
 import { GradeBadge } from "@/components/GradeBadge";
-import { RectangleStackIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  PlayIcon,
+  RectangleStackIcon,
+  SparklesIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 
 import type { AgentWithEvaluation } from "../types";
+
+// Helper function to get status icon
+function getStatusIcon(status: string) {
+  switch (status) {
+    case "PENDING":
+      return <ClockIcon className="h-4 w-4 text-yellow-500" />;
+    case "RUNNING":
+      return <PlayIcon className="h-4 w-4 animate-pulse text-blue-500" />;
+    case "COMPLETED":
+      return <CheckCircleIcon className="h-4 w-4 text-green-500" />;
+    case "FAILED":
+      return <XCircleIcon className="h-4 w-4 text-red-500" />;
+    default:
+      return null;
+  }
+}
 
 interface VersionHistoryProps {
   selectedAgent: AgentWithEvaluation | null;
@@ -153,7 +176,8 @@ export function VersionHistory({
                     <span className="font-mono text-xs">
                       {job.id.slice(0, 8)}...
                     </span>
-                    <span className="rounded bg-gray-200 px-2 py-0.5 text-gray-700">
+                    <span className="flex items-center gap-1 rounded bg-gray-200 px-2 py-0.5 text-gray-700">
+                      {getStatusIcon(job.status)}
                       {job.status}
                     </span>
                     {job.createdAt && (

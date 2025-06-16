@@ -1,5 +1,9 @@
 import { Button } from "@/components/Button";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowPathIcon,
+  ClockIcon,
+  PlayIcon,
+} from "@heroicons/react/24/outline";
 
 import type { AgentWithEvaluation } from "../types";
 
@@ -9,6 +13,13 @@ interface AgentListProps {
   isOwner?: boolean;
   onAgentSelect: (agentId: string) => void;
   onRerun: (agentId: string) => void;
+}
+
+// Helper function to get the latest job status
+function getLatestJobStatus(agentWithEval: AgentWithEvaluation) {
+  if (!agentWithEval.evaluation?.jobs?.length) return null;
+  return agentWithEval.evaluation.jobs[agentWithEval.evaluation.jobs.length - 1]
+    .status;
 }
 
 export function AgentList({
@@ -58,6 +69,12 @@ export function AgentList({
                         {agentWithEval.evaluation.versions.length} versions
                       </div>
                     )}
+                  {getLatestJobStatus(agentWithEval) === "RUNNING" && (
+                    <PlayIcon className="h-4 w-4 animate-pulse text-blue-500" />
+                  )}
+                  {getLatestJobStatus(agentWithEval) === "PENDING" && (
+                    <ClockIcon className="h-4 w-4 text-yellow-500" />
+                  )}
                   {isOwner && (
                     <Button
                       variant="secondary"
