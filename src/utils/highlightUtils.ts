@@ -1,11 +1,7 @@
 // Line-based highlighting system with UI support
 // Combines reliable line-based highlighting with DOM manipulation functions
 
-import type {
-  Comment,
-  Evaluation,
-  Highlight,
-} from "../types/documentSchema";
+import type { Comment, Evaluation, Highlight } from "../types/documentSchema";
 
 // Line-based highlight interfaces
 export interface LineCharacterHighlight {
@@ -66,6 +62,55 @@ export class LineBasedHighlighter {
         this.originalContent.length / this.lines.length
       ),
       longestLine: Math.max(...this.lines.map((line) => line.length)),
+    };
+  }
+
+  /**
+   * Convert offset-based highlight to line-based format
+   */
+  convertOffsetToLineBased(highlight: {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+  }): LineCharacterHighlight {
+    // Find the line containing startOffset
+    let startLineIndex = 0;
+    while (
+      startLineIndex < this.lineStartOffsets.length - 1 &&
+      this.lineStartOffsets[startLineIndex + 1] <= highlight.startOffset
+    ) {
+      startLineIndex++;
+    }
+
+    // Find the line containing endOffset
+    let endLineIndex = startLineIndex;
+    while (
+      endLineIndex < this.lineStartOffsets.length - 1 &&
+      this.lineStartOffsets[endLineIndex + 1] <= highlight.endOffset
+    ) {
+      endLineIndex++;
+    }
+
+    // Get the text snippets
+    const startPosInLine =
+      highlight.startOffset - this.lineStartOffsets[startLineIndex];
+    const endPosInLine =
+      highlight.endOffset - this.lineStartOffsets[endLineIndex];
+
+    const startCharacters = this.lines[startLineIndex].slice(
+      startPosInLine,
+      startPosInLine + 6
+    );
+    const endCharacters = this.lines[endLineIndex].slice(
+      endPosInLine - 6,
+      endPosInLine
+    );
+
+    return {
+      startLineIndex,
+      startCharacters,
+      endLineIndex,
+      endCharacters,
     };
   }
 

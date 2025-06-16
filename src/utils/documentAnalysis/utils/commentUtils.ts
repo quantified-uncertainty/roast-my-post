@@ -93,59 +93,73 @@ export async function validateComments(
   const processed = highlighter.processLineComments(rawComments);
 
   // Additional validation for the processed comments
+  const validComments: Comment[] = [];
+  const errors: string[] = [];
+
   processed.forEach((comment, index) => {
     console.log(`Validating processed comment ${index}: ${comment.title}`);
 
-    if (!comment.highlight) {
-      throw new Error(`Comment ${index} is missing highlight data`);
-    }
+    try {
+      if (!comment.highlight) {
+        throw new Error(`Comment ${index} is missing highlight data`);
+      }
 
-    if (!comment.isValid) {
-      throw new Error(
-        `Comment ${index} failed highlight processing: ${comment.title}`
-      );
-    }
+      if (!comment.isValid) {
+        throw new Error(
+          `Comment ${index} failed highlight processing: ${comment.title}`
+        );
+      }
 
-    if (
-      comment.highlight.startOffset === undefined ||
-      comment.highlight.endOffset === undefined
-    ) {
-      throw new Error(`Comment ${index} has missing highlight offsets`);
-    }
+      if (
+        comment.highlight.startOffset === undefined ||
+        comment.highlight.endOffset === undefined
+      ) {
+        throw new Error(`Comment ${index} has missing highlight offsets`);
+      }
 
-    if (comment.highlight.startOffset < 0) {
-      throw new Error(
-        `Comment ${index} has negative start offset: ${comment.highlight.startOffset}`
-      );
-    }
+      if (comment.highlight.startOffset < 0) {
+        throw new Error(
+          `Comment ${index} has negative start offset: ${comment.highlight.startOffset}`
+        );
+      }
 
-    if (comment.highlight.endOffset <= comment.highlight.startOffset) {
-      throw new Error(
-        `Comment ${index} has invalid highlight range: start (${comment.highlight.startOffset}) must be before end (${comment.highlight.endOffset})`
-      );
-    }
+      if (comment.highlight.endOffset <= comment.highlight.startOffset) {
+        throw new Error(
+          `Comment ${index} has invalid highlight range: start (${comment.highlight.startOffset}) must be before end (${comment.highlight.endOffset})`
+        );
+      }
 
-    if (
-      !comment.highlight.quotedText ||
-      comment.highlight.quotedText.length === 0
-    ) {
-      throw new Error(`Comment ${index} has empty quoted text`);
-    }
+      if (
+        !comment.highlight.quotedText ||
+        comment.highlight.quotedText.length === 0
+      ) {
+        throw new Error(`Comment ${index} has empty quoted text`);
+      }
 
-    // More lenient length validation for line-based approach
-    if (comment.highlight.quotedText.length < 5) {
-      throw new Error(
-        `Comment ${index} has highlight too short: ${comment.highlight.quotedText.length} characters (minimum 5)`
-      );
-    }
+      // More lenient length validation for line-based approach
+      if (comment.highlight.quotedText.length < 5) {
+        throw new Error(
+          `Comment ${index} has highlight too short: ${comment.highlight.quotedText.length} characters (minimum 5)`
+        );
+      }
 
-    if (comment.highlight.quotedText.length > 1000) {
-      throw new Error(
-        `Comment ${index} has highlight too long: ${comment.highlight.quotedText.length} characters (maximum 1000)`
-      );
+      if (comment.highlight.quotedText.length > 1000) {
+        throw new Error(
+          `Comment ${index} has highlight too long: ${comment.highlight.quotedText.length} characters (maximum 1000)`
+        );
+      }
+
+      // If we get here, the comment is valid
+      validComments.push(comment);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
     }
   });
 
-  console.log("All line-based highlights validated successfully");
-  return processed;
+  if (errors.length > 0) {
+    console.warn(`⚠️ Found ${errors.length} invalid comments:`, errors);
+  }
+
+  console.log(`✅ Validated ${validComments.length} comments successfully`);
+  return validComments;
 }

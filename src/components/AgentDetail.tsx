@@ -108,7 +108,7 @@ export default function AgentDetail({
       </div>
 
       <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Summary Instructions</h2>
+        <h2 className="mb-4 text-xl font-semibold">Analysis Instructions</h2>
         <div className="mb-8 whitespace-pre-wrap">
           {agent.summaryInstructions}
         </div>

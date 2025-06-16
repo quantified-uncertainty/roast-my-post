@@ -206,7 +206,7 @@ export default function AgentVersionsClient({
 
                     <div>
                       <h3 className="mb-2 text-lg font-medium text-gray-900">
-                        Summary Instructions
+                        Analysis Instructions
                       </h3>
                       <div className="prose max-w-none">
                         <ReactMarkdown

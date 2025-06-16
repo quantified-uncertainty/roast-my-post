@@ -16,6 +16,7 @@ export const EvaluationVersionSchema = z.object({
   agentId: z.string(),
   grade: z.number().min(0).max(100),
   summary: z.string(),
+  analysis: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

@@ -15,6 +15,7 @@ import { getThinkingAndSummaryPrompt } from "../prompts";
 
 const ThinkingGeneratorResultSchema = z.object({
   thinking: z.string(),
+  analysis: z.string(),
   summary: z.string(),
   grade: z.number().optional(),
 });
@@ -26,6 +27,7 @@ export async function generateThinkingAndSummary(
 ): Promise<{
   llmMessages: string;
   thinking: string;
+  analysis: string;
   summary: string;
   grade: number | undefined;
 }> {
@@ -80,6 +82,7 @@ export async function generateThinkingAndSummary(
   return {
     llmMessages: messagesAsString,
     thinking: validationResult.thinking,
+    analysis: validationResult.analysis,
     summary: validationResult.summary,
     grade: validationResult.grade,
   };

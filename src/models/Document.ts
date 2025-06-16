@@ -49,6 +49,7 @@ type DocumentWithRelations = {
       id: string;
       createdAt: Date;
       summary: string | null;
+      analysis: string | null;
       grade: number | null;
       comments: Array<{
         id: string;
@@ -216,6 +217,7 @@ export class DocumentModel {
             error: comment.highlight.isValid ? undefined : "Invalid highlight",
           })),
           summary: version.summary || "",
+          analysis: version.analysis || undefined,
           grade: version.grade || 0,
           documentVersion: {
             version: version.documentVersion.version,
@@ -270,6 +272,7 @@ export class DocumentModel {
             })) || [],
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
+          analysis: evaluation.versions[0]?.analysis || "",
           grade: evaluation.versions[0]?.grade || 0,
           versions: evaluationVersions,
           jobs,
@@ -391,6 +394,7 @@ export class DocumentModel {
                 : "Invalid highlight",
             })),
             summary: version.summary || "",
+            analysis: version.analysis || undefined,
             grade: version.grade || 0,
             documentVersion: {
               version: version.documentVersion.version,
@@ -445,6 +449,7 @@ export class DocumentModel {
               })) || [],
             thinking: evaluation.versions[0]?.job?.llmThinking || "",
             summary: evaluation.versions[0]?.summary || "",
+            analysis: evaluation.versions[0]?.analysis || "",
             grade: evaluation.versions[0]?.grade || 0,
             versions: evaluationVersions,
             jobs,

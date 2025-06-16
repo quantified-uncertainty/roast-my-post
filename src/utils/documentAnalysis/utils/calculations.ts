@@ -10,11 +10,11 @@ export function calculateTargetWordCount(content: string): number {
 }
 
 export function calculateTargetComments(content: string): number {
-  const baseComments = 3;
+  const baseComments = 2;
   const contentLength = content.length;
   // Roughly 1 comment per 1000 characters
-  const additionalComments = Math.floor(contentLength / 1000) * 2;
-  return Math.max(baseComments, Math.min(additionalComments, 20)); // Cap at 20 comments
+  const additionalComments = Math.floor(contentLength / 1000) / 3;
+  return Math.max(baseComments, Math.min(additionalComments, 10)); // Cap at 20 comments
 }
 
 export function calculateCost(

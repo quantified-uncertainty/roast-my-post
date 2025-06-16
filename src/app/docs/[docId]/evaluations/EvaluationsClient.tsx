@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -11,15 +8,9 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/Button";
-import {
-  getLetterGrade,
-  GradeBadge,
-} from "@/components/GradeBadge";
+import { getLetterGrade, GradeBadge } from "@/components/GradeBadge";
 import type { Agent } from "@/types/agentSchema";
-import type {
-  Document,
-  Evaluation,
-} from "@/types/documentSchema";
+import type { Document, Evaluation } from "@/types/documentSchema";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -30,10 +21,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-import {
-  createOrRerunEvaluation,
-  rerunEvaluation,
-} from "./actions";
+import { createOrRerunEvaluation, rerunEvaluation } from "./actions";
 
 interface EvaluationsClientProps {
   document: Document;
@@ -66,8 +54,8 @@ export default function EvaluationsClient({
   >(null);
   const [middleTab, setMiddleTab] = useState<"versions" | "jobs">("versions");
   const [activeTab, setActiveTab] = useState<
-    "summary" | "comments" | "thinking" | "logs"
-  >("summary");
+    "analysis" | "comments" | "thinking" | "logs"
+  >("analysis");
 
   // Fetch all agents and combine with evaluations
   useEffect(() => {
@@ -449,15 +437,15 @@ export default function EvaluationsClient({
                     {/* Tabs */}
                     <div className="flex space-x-4 border-b border-gray-200">
                       <button
-                        onClick={() => setActiveTab("summary")}
+                        onClick={() => setActiveTab("analysis")}
                         className={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium ${
-                          activeTab === "summary"
+                          activeTab === "analysis"
                             ? "border-blue-500 text-blue-600"
                             : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                         }`}
                       >
                         <DocumentTextIcon2 className="h-4 w-4" />
-                        Summary
+                        Analysis
                       </button>
                       <button
                         onClick={() => setActiveTab("thinking")}
@@ -503,7 +491,7 @@ export default function EvaluationsClient({
 
                   <div className="p-6">
                     {/* Summary Tab */}
-                    {activeTab === "summary" && (
+                    {activeTab === "analysis" && (
                       <div className="space-y-6">
                         <div>
                           <div className="flex items-center gap-4">
@@ -526,6 +514,24 @@ export default function EvaluationsClient({
                             </ReactMarkdown>
                           </div>
                         </div>
+                        {selectedVersion.analysis && (
+                          <>
+                            <div className="h-px bg-gray-200" />
+                            <div>
+                              <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                                Analysis
+                              </h2>
+                              <div className="prose max-w-none">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  rehypePlugins={[rehypeRaw]}
+                                >
+                                  {selectedVersion.analysis}
+                                </ReactMarkdown>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
 

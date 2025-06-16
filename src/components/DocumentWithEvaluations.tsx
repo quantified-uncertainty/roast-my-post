@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,11 +14,7 @@ import remarkGfm from "remark-gfm";
 import { deleteDocument } from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
 import { HEADER_HEIGHT_PX } from "@/constants";
-import type {
-  Comment,
-  Document,
-  Evaluation,
-} from "@/types/documentSchema";
+import type { Comment, Document, Evaluation } from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
   getValidAndSortedComments,
@@ -499,9 +491,25 @@ function EvaluationView({
         }
       />
 
-      {evaluationState.activeTab === "analysis" && evaluation.summary && (
+      {evaluationState.activeTab === "analysis" && (
         <div className="prose-md prose max-w-none px-8 py-0.5">
-          <MarkdownRenderer>{evaluation.summary}</MarkdownRenderer>
+          <div className="mb-6">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900">
+              Summary
+            </h2>
+            <MarkdownRenderer>{evaluation.summary}</MarkdownRenderer>
+          </div>
+          {evaluation.analysis && (
+            <>
+              <div className="my-6 h-px bg-gray-200" />
+              <div>
+                <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                  Analysis
+                </h2>
+                <MarkdownRenderer>{evaluation.analysis}</MarkdownRenderer>
+              </div>
+            </>
+          )}
         </div>
       )}
       {evaluationState.activeTab === "thinking" && evaluation.thinking && (

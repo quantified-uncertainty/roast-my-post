@@ -28,6 +28,7 @@ export const AgentVersionSchema = z.object({
   description: z.string(),
   genericInstructions: z.string(),
   summaryInstructions: z.string(),
+  analysisInstructions: z.string().optional(),
   commentInstructions: z.string(),
   gradeInstructions: z.string().optional(),
   createdAt: z.date(),
@@ -48,6 +49,7 @@ const BaseAgentSchema = z.object({
   summaryInstructions: z
     .string()
     .min(30, "Summary instructions must be at least 30 characters"),
+  analysisInstructions: z.string().optional(),
   commentInstructions: z
     .string()
     .min(30, "Comment instructions must be at least 30 characters"),

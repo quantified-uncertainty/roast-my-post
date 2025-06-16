@@ -182,6 +182,7 @@ export class JobModel {
         data: {
           agentId: agent.id,
           summary: polishedReview.summary,
+          analysis: polishedReview.analysis,
           grade: polishedReview.grade,
           agentVersionId: agentVersion.id,
           evaluationId: job.evaluation.id,

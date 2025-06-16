@@ -56,7 +56,13 @@ export const agentFormFields: FormFieldConfig[] = [
     label: "Summary Instructions",
     required: true,
     type: "textarea",
-    placeholder: "Instructions for generating summaries",
+    placeholder: "Instructions for generating summary",
+  },
+  {
+    name: "analysisInstructions",
+    label: "Analysis Instructions",
+    type: "textarea",
+    placeholder: "Instructions for performing analysis (optional)",
   },
   {
     name: "commentInstructions",

@@ -127,6 +127,7 @@ model EvaluationVersion {
   agentId     String
   createdAt   DateTime @default(now())
   summary     String?
+  analysis    String?
   grade       Int?
   agentVersion AgentVersion @relation(fields: [agentVersionId], references: [id])
   agentVersionId String
@@ -183,6 +184,7 @@ model AgentVersion {
   description String
   genericInstructions String
   summaryInstructions String
+  analysisInstructions String?
   commentInstructions String
   gradeInstructions String?
   agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)

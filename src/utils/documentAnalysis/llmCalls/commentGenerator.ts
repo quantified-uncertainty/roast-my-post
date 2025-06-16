@@ -6,9 +6,20 @@ import {
   DEFAULT_TEMPERATURE,
   openai,
 } from "../../../types/openai";
+import { LineBasedHighlighter } from "../../highlightUtils";
 import { preprocessCommentData } from "../llmResponseProcessor";
 import { getCommentPrompt } from "../prompts";
 import { validateComments } from "../utils/commentUtils";
+
+function convertToLineBasedComments(comments: Comment[], document: Document) {
+  const highlighter = new LineBasedHighlighter(document.content);
+  return comments.map((comment) => ({
+    title: comment.title,
+    description: comment.description,
+    highlight: highlighter.convertOffsetToLineBased(comment.highlight),
+    importance: comment.importance ?? 50,
+  }));
+}
 
 export async function getCommentData(
   document: Document,
@@ -38,12 +49,18 @@ export async function getCommentData(
   while (comments.length < targetComments && attempts < maxAttempts) {
     attempts++;
     console.log(`💬 Attempt ${attempts}/${maxAttempts} to get comments...`);
+    console.log(
+      `📊 Current progress: ${comments.length}/${targetComments} valid comments`
+    );
 
     let prompt = getCommentPrompt(
       document,
       agentInfo,
-      targetComments - comments.length
+      targetComments - comments.length,
+      convertToLineBasedComments(comments, document)
     );
+
+    console.log("📝 Generated prompt:", prompt);
 
     const response = await openai.chat.completions.create({
       model: ANALYSIS_MODEL,
@@ -51,7 +68,10 @@ export async function getCommentData(
       messages: [
         {
           role: "system",
-          content: `You are an expert document analyst. Your task is to provide detailed comments and insights using LINE-BASED highlighting.
+          content: `You are ${agentInfo.name}, an expert ${agentInfo.purpose}.
+Your purpose is to ${agentInfo.description}.
+Your instructions are: ${agentInfo.genericInstructions}
+${agentInfo.commentInstructions ? `\nYour instructions for comments are: ${agentInfo.commentInstructions}` : ""}
 
 IMPORTANT LINE-BASED HIGHLIGHTING RULES:
 1. Use startLineIndex/endLineIndex (0-based line numbers)
@@ -61,6 +81,7 @@ IMPORTANT LINE-BASED HIGHLIGHTING RULES:
 5. Character snippets should be the first few characters of the highlight within that line
 6. For single-line highlights: startLineIndex = endLineIndex
 7. Character snippets help identify exact position when lines are long
+8. DO NOT duplicate existing comments - focus on new sections of the document
 
 Example format:
 {
@@ -83,13 +104,24 @@ Example format:
       throw new Error("No response from LLM for comments");
     }
 
-    console.log(`Response: ${response.choices[0]?.message?.content}`);
-
     const rawResponse = response.choices[0].message.content;
+    console.log(`Response: ${rawResponse}`);
+
+    // Find the JSON object in the response, handling cases where there might be markdown content before it
+    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No valid JSON found in LLM response");
+    }
 
     // Strip potential markdown fences before parsing
-    const jsonString = rawResponse.replace(/^```json\n?|\n?```$/g, "");
-    const result = JSON.parse(jsonString);
+    const jsonString = jsonMatch[0].replace(/^```json\n?|\n?```$/g, "");
+    let result;
+    try {
+      result = JSON.parse(jsonString);
+    } catch (error) {
+      console.error("Failed to parse JSON:", jsonString);
+      throw error;
+    }
 
     // Pre-process comments using shared utility
     let newComments = preprocessCommentData(result.comments || []);
@@ -123,7 +155,9 @@ Example format:
 2. startCharacters/endCharacters match the beginning of text on those lines
 3. Line indices are within document bounds
 4. Character snippets are 3-10 characters from the actual line content
-5. For single-line highlights: startLineIndex = endLineIndex`;
+5. For single-line highlights: startLineIndex = endLineIndex
+6. DO NOT duplicate existing comments - focus on new sections of the document
+7. Keep highlights between 5-1000 characters - focus on the most important part of long sections`;
 
       // Add feedback to the next attempt's prompt
       prompt = `${prompt}\n\n${feedback}`;
@@ -137,6 +171,13 @@ Example format:
       validCommentsCount,
       failedCommentsCount,
     });
+
+    // If we have some valid comments, don't retry for those sections
+    if (validCommentsCount > 0) {
+      console.log(
+        `📝 Keeping ${validCommentsCount} valid comments and retrying for remaining ${targetComments - comments.length} comments`
+      );
+    }
   }
 
   return {
