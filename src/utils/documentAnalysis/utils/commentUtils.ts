@@ -136,16 +136,9 @@ export async function validateComments(
         throw new Error(`Comment ${index} has empty quoted text`);
       }
 
-      // More lenient length validation for line-based approach
-      if (comment.highlight.quotedText.length < 5) {
+      if (comment.highlight.quotedText.length > 1500) {
         throw new Error(
-          `Comment ${index} has highlight too short: ${comment.highlight.quotedText.length} characters (minimum 5)`
-        );
-      }
-
-      if (comment.highlight.quotedText.length > 1000) {
-        throw new Error(
-          `Comment ${index} has highlight too long: ${comment.highlight.quotedText.length} characters (maximum 1000)`
+          `Comment ${index} has highlight too long: ${comment.highlight.quotedText.length} characters (maximum 1500)`
         );
       }
 
