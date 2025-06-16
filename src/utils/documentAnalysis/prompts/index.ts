@@ -57,7 +57,8 @@ Your task is to analyze this document and provide your thinking process, detaile
 2. Key themes and patterns you notice
 3. Your expert perspective on the content
 
-Format your response in JSON like this:
+IMPORTANT: Your response must be a valid JSON object. Do not include any markdown tables or other markdown content outside the JSON object. The JSON object should look like this:
+
 {
   "thinking": "Your detailed thinking process in markdown format. Use \\n for newlines and \\" for quotes.",
   "analysis": "Your detailed analysis and insights. This should be approximately ${targetWordCount} words long.",

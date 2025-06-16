@@ -9,15 +9,25 @@ export class BaseLLMProcessor<T> implements LLMProcessor<T> {
   constructor(private schema: z.ZodSchema<T>) {}
 
   parseResponse(raw: string): unknown {
-    // Strip potential markdown fences before parsing
-    const jsonString = raw.replace(/^```json\n?|\n?```$/g, "");
-    
+    // First try to find a JSON object in the content
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error(
+        `Failed to find JSON object in LLM response. Raw content: ${raw}`
+      );
+    }
+
+    // Clean the JSON string
+    let jsonString = jsonMatch[0]
+      .replace(/^```json\n?|\n?```$/g, "") // Remove markdown code fences
+      .replace(/\\n/g, "\n") // Convert escaped newlines
+      .replace(/\\"/g, '"') // Convert escaped quotes
+      .trim();
+
     try {
       return JSON.parse(jsonString);
     } catch (jsonError) {
-      throw new Error(
-        `Failed to parse LLM response JSON. Raw content: ${raw}`
-      );
+      throw new Error(`Failed to parse LLM response JSON. Raw content: ${raw}`);
     }
   }
 
@@ -50,13 +60,13 @@ export function preprocessCommentData(comments: any[]): any[] {
         ? comment.importance
         : parsedImportance;
     }
-    
+
     // Pre-process grade as well
     if (comment.grade !== undefined && typeof comment.grade === "string") {
       const parsedGrade = parseInt(comment.grade, 10);
       comment.grade = isNaN(parsedGrade) ? comment.grade : parsedGrade;
     }
-    
+
     return comment;
   });
 }

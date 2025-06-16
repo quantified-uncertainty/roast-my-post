@@ -30,23 +30,27 @@ function getStatusIcon(status: string) {
 interface VersionHistoryProps {
   selectedAgent: AgentWithEvaluation | null;
   selectedVersionIndex: number | null;
+  selectedJobIndex: number | null;
   middleTab: "versions" | "jobs";
   isOwner?: boolean;
   onVersionSelect: (index: number) => void;
   onTabChange: (tab: "versions" | "jobs") => void;
   onRunEvaluation: (agentId: string) => void;
   formatDate: (date: Date) => string;
+  onJobSelect: (index: number) => void;
 }
 
 export function VersionHistory({
   selectedAgent,
   selectedVersionIndex,
+  selectedJobIndex,
   middleTab,
   isOwner,
   onVersionSelect,
   onTabChange,
   onRunEvaluation,
   formatDate,
+  onJobSelect,
 }: VersionHistoryProps) {
   if (!selectedAgent) {
     return (
@@ -171,8 +175,12 @@ export function VersionHistory({
           <div>
             {selectedReview.jobs && selectedReview.jobs.length > 0 ? (
               <ul className="space-y-1 px-4 py-2 text-sm">
-                {selectedReview.jobs.map((job) => (
-                  <li key={job.id} className="flex items-center gap-4">
+                {selectedReview.jobs.map((job, index) => (
+                  <li
+                    key={job.id}
+                    className={`flex cursor-pointer items-center gap-4 ${selectedJobIndex === index ? "bg-blue-50" : "bg-transparent"}`}
+                    onClick={() => onJobSelect(index)}
+                  >
                     <span className="font-mono text-xs">
                       {job.id.slice(0, 8)}...
                     </span>

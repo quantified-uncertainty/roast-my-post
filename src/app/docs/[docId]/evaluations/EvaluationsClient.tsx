@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
 import type { Document } from "@/types/documentSchema";
-import { ArrowLeftIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
 
-import { createOrRerunEvaluation, rerunEvaluation } from "./actions";
+import {
+  createOrRerunEvaluation,
+  rerunEvaluation,
+} from "./actions";
 import { AgentList } from "./components/AgentList";
+import { JobDetails } from "./components/JobDetails";
 import { VersionDetails } from "./components/VersionDetails";
 import { VersionHistory } from "./components/VersionHistory";
 import type { AgentWithEvaluation } from "./types";
@@ -33,6 +43,8 @@ export default function EvaluationsClient({
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<
     number | null
   >(null);
+  const [selectedJobIndex, setSelectedJobIndex] = useState<number | null>(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
   const [middleTab, setMiddleTab] = useState<"versions" | "jobs">("versions");
   const [activeTab, setActiveTab] = useState<
     "analysis" | "comments" | "thinking" | "logs"
@@ -131,6 +143,22 @@ export default function EvaluationsClient({
   const selectedVersion =
     selectedReview?.versions?.[selectedVersionIndex ?? 0] || null;
 
+  const handleJobSelect = async (index: number) => {
+    setSelectedJobIndex(index);
+    const jobId = selectedReview?.jobs?.[index]?.id;
+    if (jobId) {
+      const res = await fetch(`/api/jobs/${jobId}`);
+      if (res.ok) {
+        const job = await res.json();
+        setSelectedJob(job);
+      } else {
+        setSelectedJob(null);
+      }
+    } else {
+      setSelectedJob(null);
+    }
+  };
+
   return (
     <div className="w-full px-2 py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -176,12 +204,14 @@ export default function EvaluationsClient({
             <VersionHistory
               selectedAgent={selectedAgentWithEvaluation}
               selectedVersionIndex={selectedVersionIndex}
+              selectedJobIndex={selectedJobIndex}
               middleTab={middleTab}
               isOwner={isOwner}
               onVersionSelect={setSelectedVersionIndex}
               onTabChange={setMiddleTab}
               onRunEvaluation={handleRerun}
               formatDate={formatDate}
+              onJobSelect={handleJobSelect}
             />
           </div>
 
@@ -193,6 +223,9 @@ export default function EvaluationsClient({
               onTabChange={setActiveTab}
               formatDate={formatDate}
             />
+          )}
+          {middleTab === "jobs" && selectedJob && (
+            <JobDetails job={selectedJob} />
           )}
         </div>
       )}
