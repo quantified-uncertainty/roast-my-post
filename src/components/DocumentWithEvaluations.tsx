@@ -236,7 +236,7 @@ function EvaluationSelector({
     <ul className="overflow-hidden border border-gray-200 bg-white">
       {document.reviews.map((evaluation, index) => {
         const isActive = index === activeEvaluationIndex;
-        const grade = evaluation.grade || 0;
+        const grade = evaluation.grade;
         const highlightsCount = evaluation.comments.length;
         const isLast = index === document.reviews.length - 1;
         return (
@@ -259,13 +259,15 @@ function EvaluationSelector({
                   <div className="text-lg font-semibold text-gray-900">
                     {evaluation.agent.name}
                   </div>
-                  <div className="truncate text-sm text-gray-500">
-                    {evaluation.agent.description}
+                  <div className="text-sm text-gray-500">
+                    {evaluation.summary}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <GradeBadge grade={grade} variant="light" />
+                    {grade !== undefined && (
+                      <GradeBadge grade={grade} variant="light" />
+                    )}
                     <span className="text-sm text-gray-500">
-                      · {highlightsCount} highlights
+                      {highlightsCount} highlights
                     </span>
                   </div>
                 </div>

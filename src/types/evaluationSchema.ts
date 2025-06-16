@@ -14,7 +14,7 @@ export type AgentReview = z.infer<typeof AgentReviewSchema>;
 export const EvaluationVersionSchema = z.object({
   id: z.string(),
   agentId: z.string(),
-  grade: z.number().min(0).max(100),
+  grade: z.number().min(0).max(100).optional(),
   summary: z.string(),
   analysis: z.string().optional(),
   createdAt: z.date(),

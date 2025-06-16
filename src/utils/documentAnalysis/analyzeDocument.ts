@@ -151,7 +151,7 @@ export async function analyzeDocument(
     thinking: thinkingResult.thinking,
     analysis: thinkingResult.analysis,
     summary: thinkingResult.summary,
-    grade: thinkingResult.grade || 0,
+    grade: thinkingResult.grade ?? undefined,
     comments: commentsResult.comments,
   };
 

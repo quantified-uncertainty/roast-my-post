@@ -218,7 +218,7 @@ export class DocumentModel {
           })),
           summary: version.summary || "",
           analysis: version.analysis || undefined,
-          grade: version.grade || 0,
+          grade: version.grade ?? undefined,
           documentVersion: {
             version: version.documentVersion.version,
           },
@@ -273,7 +273,7 @@ export class DocumentModel {
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
           analysis: evaluation.versions[0]?.analysis || "",
-          grade: evaluation.versions[0]?.grade || 0,
+          grade: evaluation.versions[0]?.grade ?? undefined,
           versions: evaluationVersions,
           jobs,
         };
@@ -395,7 +395,7 @@ export class DocumentModel {
             })),
             summary: version.summary || "",
             analysis: version.analysis || undefined,
-            grade: version.grade || 0,
+            grade: version.grade ?? undefined,
             documentVersion: {
               version: version.documentVersion.version,
             },
@@ -450,7 +450,7 @@ export class DocumentModel {
             thinking: evaluation.versions[0]?.job?.llmThinking || "",
             summary: evaluation.versions[0]?.summary || "",
             analysis: evaluation.versions[0]?.analysis || "",
-            grade: evaluation.versions[0]?.grade || 0,
+            grade: evaluation.versions[0]?.grade ?? undefined,
             versions: evaluationVersions,
             jobs,
           };

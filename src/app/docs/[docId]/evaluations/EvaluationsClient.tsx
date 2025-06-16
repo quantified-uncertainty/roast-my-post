@@ -327,7 +327,9 @@ export default function EvaluationsClient({
                                         {formatDate(version.createdAt)}
                                       </div>
                                     </div>
-                                    <GradeBadge grade={version.grade} />
+                                    {version.grade !== undefined && (
+                                      <GradeBadge grade={version.grade} />
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -495,13 +497,17 @@ export default function EvaluationsClient({
                       <div className="space-y-6">
                         <div>
                           <div className="flex items-center gap-4">
-                            <GradeBadge
-                              grade={selectedVersion.grade}
-                              variant="light"
-                            />
-                            <div className="text-gray-700">
-                              Numerical Grade: {selectedVersion.grade || 0}
-                            </div>
+                            {selectedVersion.grade !== undefined && (
+                              <>
+                                <GradeBadge
+                                  grade={selectedVersion.grade}
+                                  variant="light"
+                                />
+                                <div className="text-gray-700">
+                                  Numerical Grade: {selectedVersion.grade}
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div>

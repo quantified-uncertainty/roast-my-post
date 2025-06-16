@@ -52,7 +52,7 @@ export const EvaluationVersionSchema = z.object({
   comments: z.array(CommentSchema),
   summary: z.string(),
   analysis: z.string().optional(),
-  grade: z.number(),
+  grade: z.number().optional(),
   documentVersion: z.object({
     version: z.number(),
   }),
@@ -81,7 +81,7 @@ export const EvaluationSchema = z.object({
   thinking: z.string(),
   summary: z.string(),
   analysis: z.string().optional(),
-  grade: z.number(),
+  grade: z.number().optional(),
   versions: z.array(EvaluationVersionSchema).optional(),
   jobs: z
     .array(
@@ -162,7 +162,7 @@ export const AnalysisResultSchema = z.object({
   thinking: z.string(),
   summary: z.string(),
   analysis: z.string(),
-  grade: z.number(),
+  grade: z.number().optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
