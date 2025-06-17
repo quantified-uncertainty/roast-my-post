@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,12 +17,16 @@ import remarkGfm from "remark-gfm";
 
 import { deleteDocument } from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
-import { HEADER_HEIGHT_PX } from "@/constants";
-import type { Comment, Document, Evaluation } from "@/types/documentSchema";
+import type {
+  Comment,
+  Document,
+  Evaluation,
+} from "@/types/documentSchema";
 import {
   getCommentColorByGrade,
   getValidAndSortedComments,
-} from "@/utils/commentUtils";
+} from "@/utils/ui/commentUtils";
+import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import {
   ArrowLeftIcon,
   ChevronDownIcon,

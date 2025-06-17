@@ -2,8 +2,8 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import {
   LineBasedHighlighter,
-  LineCharacterComment,
-} from "../../highlightUtils";
+  type LineBasedComment,
+} from "./lineBasedHighlighter";
 
 const documentInformationSection = (document: Document) => {
   const highlighter = new LineBasedHighlighter(document.content);
@@ -23,7 +23,7 @@ function shouldIncludeGrade(agentInfo: Agent): boolean {
 
 export function agentContextSection(
   agentInfo: Agent,
-  type: "analysis" | "comment"
+  type: "comment"
 ): string {
   return `
 ## AGENT CONTEXT
@@ -31,62 +31,15 @@ You are ${agentInfo.name}, an expert ${agentInfo.purpose}.
 Your purpose is to ${agentInfo.description}.
 Your instructions are: ${agentInfo.genericInstructions}.
 
-${type === "comment" && agentInfo.commentInstructions ? `Your instructions for comments are: ${agentInfo.commentInstructions}.` : ""}
-
-${type === "analysis" && agentInfo.summaryInstructions ? `Your instructions for summary are: ${agentInfo.summaryInstructions}.` : ""}
-
-${type === "analysis" && agentInfo.analysisInstructions ? `Your instructions for analysis are: ${agentInfo.analysisInstructions}.` : ""}
-
-${type === "analysis" && agentInfo.gradeInstructions ? `Your instructions for grading are: ${agentInfo.gradeInstructions}.` : ""}
+${agentInfo.commentInstructions ? `Your instructions for comments are: ${agentInfo.commentInstructions}.` : ""}
 `;
-}
-
-export function getThinkingAnalysisSummaryPrompts(
-  agentInfo: Agent,
-  targetWordCount: number,
-  document: Document
-): { systemMessage: string; userMessage: string } {
-  const systemMessage = agentContextSection(agentInfo, "analysis");
-
-  const userMessage = `
-${documentInformationSection(document)}
-
-## ANALYSIS INSTRUCTIONS
-Your task is to analyze this document and provide your thinking process, detailed analysis, and concise summary. Focus on:
-1. Your overall assessment of the document
-2. Key themes and patterns you notice
-3. Your expert perspective on the content
-
-**Thinking**: Provide a comprehensive, detailed thinking process (400-600 words). Use this as your analytical scratchpad. Include:
-- Key points that stand out to you
-- Connections and patterns you notice
-- Questions or uncertainties that arise
-- Your reasoning process and methodology
-- Use proper markdown formatting with headers, bullet points, emphasis, etc.
-
-**Analysis**: Provide a thorough, expert analysis (300-500 words) based on your agent expertise. Include:
-- Deep insights beyond simple summarization  
-- Your professional perspective and recommendations
-- Critical evaluation of the content
-- Implications and broader context
-- Use rich markdown formatting (headers, bullet points, bold/italic text, etc.)
-
-**Summary**: Provide a concise 1-2 sentence summary that captures your main finding, recommendation, or key takeaway.
-
-${shouldIncludeGrade(agentInfo) ? "**Grade**: Provide a numerical grade from 0-1 based on your assessment." : ""}
-
-Document to analyze:
-
-${document.content}`;
-
-  return { systemMessage, userMessage };
 }
 
 export function getCommentPrompts(
   document: Document,
   agentInfo: Agent,
   targetComments: number,
-  existingComments: LineCharacterComment[] = []
+  existingComments: LineBasedComment[] = []
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = agentContextSection(agentInfo, "comment");
   const userMessage = `${documentInformationSection(document)}
@@ -199,8 +152,6 @@ IMPORTANT: Focus ONLY on generating the requested number of comments. Just provi
     }
   ]
 }
-
-${shouldIncludeGrade(agentInfo) ? "\n- Include a grade (0-100) for each comment" : ""}
 `;
 
   return { systemMessage, userMessage };

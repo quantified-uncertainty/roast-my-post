@@ -1,14 +1,7 @@
-import type {
-  Comment,
-  Highlight,
-} from "../types/documentSchema";
 import {
-  fixOverlappingHighlights,
-  highlightsOverlap,
   LineBasedHighlighter,
-  type LineCharacterComment,
-  validateHighlight,
-} from "./highlightUtils";
+  type LineBasedComment,
+} from "../lineBasedHighlighter";
 
 describe("LineBasedHighlighter", () => {
   const sampleContent = `Crossposted from [my blog](https://benthams.substack.com/p/the-importance-of-blasting-good-ideas). 
@@ -81,7 +74,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("processes line comments correctly", () => {
     const highlighter = new LineBasedHighlighter(sampleContent);
 
-    const lineComments: LineCharacterComment[] = [
+    const lineComments: LineBasedComment[] = [
       {
         title: "Opening Hook",
         description:
@@ -129,105 +122,5 @@ When I started this blog in high school, I did not imagine that I would cause [_
     });
 
     expect(highlight).toBeNull();
-  });
-});
-
-describe("UI Helper Functions", () => {
-  test("detects overlapping highlights", () => {
-    const highlight1: Highlight = {
-      startOffset: 10,
-      endOffset: 20,
-      quotedText: "test text",
-      isValid: true,
-    };
-
-    const highlight2: Highlight = {
-      startOffset: 15,
-      endOffset: 25,
-      quotedText: "overlapping",
-      isValid: true,
-    };
-
-    const highlight3: Highlight = {
-      startOffset: 30,
-      endOffset: 40,
-      quotedText: "separate",
-      isValid: true,
-    };
-
-    expect(highlightsOverlap(highlight1, highlight2)).toBe(true);
-    expect(highlightsOverlap(highlight1, highlight3)).toBe(false);
-  });
-
-  test("validates highlights correctly", () => {
-    const content = "This is a test content for validation.";
-
-    const validHighlight: Highlight = {
-      startOffset: 0,
-      endOffset: 4,
-      quotedText: "This",
-      isValid: true,
-    };
-
-    const invalidHighlight: Highlight = {
-      startOffset: -1,
-      endOffset: 4,
-      quotedText: "This",
-      isValid: true,
-    };
-
-    const result1 = validateHighlight(content, validHighlight);
-    const result2 = validateHighlight(content, invalidHighlight);
-
-    expect(result1.isValid).toBe(true);
-    expect(result2.isValid).toBe(false);
-    expect(result2.error).toContain("Invalid offsets");
-  });
-
-  test("fixes overlapping highlights", () => {
-    const comments: Comment[] = [
-      {
-        title: "First",
-        description: "First comment",
-        importance: 5,
-        highlight: {
-          startOffset: 10,
-          endOffset: 20,
-          quotedText: "first",
-          isValid: true,
-        },
-        isValid: true,
-      },
-      {
-        title: "Overlapping",
-        description: "Overlapping comment",
-        importance: 5,
-        highlight: {
-          startOffset: 15,
-          endOffset: 25,
-          quotedText: "overlap",
-          isValid: true,
-        },
-        isValid: true,
-      },
-      {
-        title: "Separate",
-        description: "Separate comment",
-        importance: 5,
-        highlight: {
-          startOffset: 30,
-          endOffset: 40,
-          quotedText: "separate",
-          isValid: true,
-        },
-        isValid: true,
-      },
-    ];
-
-    const fixed = fixOverlappingHighlights(comments);
-
-    expect(fixed).toHaveLength(2);
-    expect(fixed[0].title).toBe("First");
-    expect(fixed[1].title).toBe("Separate");
   });
 });

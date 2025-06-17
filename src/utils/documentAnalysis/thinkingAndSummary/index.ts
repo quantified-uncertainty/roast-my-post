@@ -1,39 +1,43 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import type {
+  LLMInteraction,
+  LLMMessage,
+} from "../../../types/llm";
 import {
   ANALYSIS_MODEL,
   anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
 } from "../../../types/openai";
-import { getThinkingAnalysisSummaryPrompts } from "../prompts";
+import {
+  calculateApiCost,
+  mapModelToCostModel,
+} from "../../../utils/costCalculator";
+import type { TaskResult, ThinkingAnalysisOutputs } from "../shared/types";
+import { getThinkingAnalysisSummaryPrompts } from "./prompts";
+import { createLogDetails } from "../shared/llmUtils";
 
 export async function generateThinkingAndSummary(
   document: Document,
   targetWordCount: number,
   agentInfo: Agent
-): Promise<{
-  llmMessages: string;
-  thinking: string;
-  analysis: string;
-  summary: string;
-  grade: number | undefined;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}> {
+): Promise<{ task: TaskResult; outputs: ThinkingAnalysisOutputs }> {
+  const startTime = Date.now();
   const { systemMessage, userMessage } = getThinkingAnalysisSummaryPrompts(
     agentInfo,
     targetWordCount,
     document
   );
 
-  const messagesAsString = `system: ${systemMessage}\nuser: ${userMessage}`;
+  const messages: LLMMessage[] = [
+    { role: "system", content: systemMessage },
+    { role: "user", content: userMessage },
+  ];
 
   let response;
   let validationResult;
+  let rawResponse;
 
   try {
     response = await withTimeout(
@@ -127,12 +131,7 @@ export async function generateThinkingAndSummary(
       );
     }
 
-    validationResult = toolUse.input as {
-      thinking: string;
-      analysis: string;
-      summary: string;
-      grade?: number;
-    };
+    validationResult = toolUse.input as ThinkingAnalysisOutputs;
 
     // Validate that required fields are present and non-empty
     if (
@@ -166,6 +165,8 @@ export async function generateThinkingAndSummary(
     validationResult.thinking = fixFormatting(validationResult.thinking);
     validationResult.analysis = fixFormatting(validationResult.analysis);
     validationResult.summary = fixFormatting(validationResult.summary);
+
+    rawResponse = JSON.stringify(validationResult);
   } catch (error) {
     console.error("❌ Failed to parse or validate Anthropic response:", error);
     throw new Error(
@@ -173,19 +174,61 @@ export async function generateThinkingAndSummary(
     );
   }
 
+  const interaction: LLMInteraction = {
+    messages: [...messages, { role: "assistant", content: rawResponse }],
+    usage: {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+    },
+  };
+
+  const endTime = Date.now();
+  const timeInSeconds = Math.round((endTime - startTime) / 1000);
+
+  const cost = calculateApiCost(
+    {
+      input_tokens: interaction.usage.input_tokens,
+      output_tokens: interaction.usage.output_tokens,
+    },
+    mapModelToCostModel(ANALYSIS_MODEL)
+  );
+
+  const logDetails = createLogDetails(
+    "generateThinkingAndSummary",
+    ANALYSIS_MODEL,
+    startTime,
+    endTime,
+    cost,
+    interaction.usage.input_tokens,
+    interaction.usage.output_tokens,
+    {
+      targetWordCount,
+      agentName: agentInfo.name,
+      documentLength: document.content.length,
+    },
+    {
+      thinking: validationResult.thinking,
+      analysis: validationResult.analysis,
+      summary: validationResult.summary,
+      grade: validationResult.grade,
+    },
+    `Generated thinking, analysis, and summary with grade ${validationResult.grade || "N/A"}`
+  );
+
   return {
-    llmMessages: messagesAsString,
-    thinking: validationResult.thinking,
-    analysis: validationResult.analysis,
-    summary: validationResult.summary,
-    grade: validationResult.grade,
-    usage: response.usage
-      ? {
-          prompt_tokens: response.usage.input_tokens,
-          completion_tokens: response.usage.output_tokens,
-          total_tokens:
-            response.usage.input_tokens + response.usage.output_tokens,
-        }
-      : undefined,
+    task: {
+      name: "generateThinkingAndSummary",
+      modelName: ANALYSIS_MODEL,
+      priceInCents: cost,
+      timeInSeconds,
+      log: JSON.stringify(logDetails, null, 2),
+      llmInteractions: [interaction],
+    },
+    outputs: {
+      thinking: validationResult.thinking,
+      analysis: validationResult.analysis,
+      summary: validationResult.summary,
+      grade: validationResult.grade,
+    },
   };
 }

@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import { Clock, Pencil } from "lucide-react";
+import {
+  Clock,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import type { AgentReview } from "@/types/evaluationSchema";
-import { getIcon } from "@/utils/iconMap";
+import { getIcon } from "@/utils/ui/iconMap";
 
 interface AgentDetailProps {
   agent: Agent;

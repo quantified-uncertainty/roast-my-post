@@ -14,7 +14,7 @@ import {
   applyHighlightsToContainer,
   resetContainer,
   testFindTextInContainer,
-} from "@/utils/highlightUtils";
+} from "@/utils/ui/highlightUtils";
 
 interface HighlightedMarkdownProps {
   content: string;

@@ -1,20 +1,39 @@
 import type { Comment } from "../../../types/documentSchema";
 import {
+  type LineBasedComment,
   LineBasedHighlighter,
-  type LineCharacterComment,
-  type LineCharacterHighlight,
-} from "../../highlightUtils";
+  type LineSnippetHighlight,
+} from "./lineBasedHighlighter";
+import type { RawLLMComment } from "./types";
 
-export async function validateComments(
-  comments: any[],
-  content: string
+/**
+ * Normalizes raw LLM comments by adding default values
+ */
+export function normalizeComments(
+  rawComments: RawLLMComment[]
+): LineBasedComment[] {
+  return rawComments.map((comment) => ({
+    title: comment.title,
+    description: comment.description,
+    highlight: comment.highlight,
+    importance: comment.importance ?? 50,
+    grade: comment.grade,
+  }));
+}
+
+/**
+ * Validates and converts line-based comments to offset-based format
+ */
+export async function validateAndConvertComments(
+  comments: LineBasedComment[],
+  documentContent: string
 ): Promise<Comment[]> {
   if (!Array.isArray(comments)) {
     throw new Error("Comments must be an array");
   }
 
   // Validate the raw comment structure
-  const rawComments: LineCharacterComment[] = comments.map((comment, index) => {
+  const rawComments: LineBasedComment[] = comments.map((comment, index) => {
     if (!comment.title || typeof comment.title !== "string") {
       throw new Error(`Comment ${index} missing or invalid title`);
     }
@@ -78,14 +97,14 @@ export async function validateComments(
     return {
       title: comment.title,
       description: comment.description,
-      highlight: highlight as LineCharacterHighlight,
+      highlight: highlight as LineSnippetHighlight,
       importance: comment.importance,
       grade: comment.grade,
     };
   });
 
   // Use the line-based highlighter to process comments
-  const highlighter = new LineBasedHighlighter(content);
+  const highlighter = new LineBasedHighlighter(documentContent);
   const processed = highlighter.processLineComments(rawComments);
 
   // Additional validation for the processed comments
@@ -93,7 +112,6 @@ export async function validateComments(
   const errors: string[] = [];
 
   processed.forEach((comment, index) => {
-
     try {
       if (!comment.highlight) {
         throw new Error(`Comment ${index} is missing highlight data`);
@@ -147,10 +165,40 @@ export async function validateComments(
   if (errors.length > 0) {
     console.warn(`⚠️ Found ${errors.length} invalid comments:`, errors);
     // Create a detailed error message for debugging
-    const detailedError = `Validation failed for ${errors.length} comments:\n${errors.map((error, index) => `  ${index + 1}. ${error}`).join('\n')}`;
+    const detailedError = `Validation failed for ${errors.length} comments:\n${errors.map((error, index) => `  ${index + 1}. ${error}`).join("\n")}`;
     throw new Error(detailedError);
   }
 
   console.log(`✅ Validated ${validComments.length} comments successfully`);
   return validComments;
+}
+
+/**
+ * Creates error feedback for failed comments
+ */
+export function createValidationErrorFeedback(
+  error: unknown,
+  failedComments: any[],
+  documentContent: string
+): string {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const documentLines = documentContent.split("\n").length;
+
+  return `
+VALIDATION ERROR FROM PREVIOUS ATTEMPT:
+${errorMessage}
+
+DEBUGGING TIPS FOR FIXING HIGHLIGHTS:
+1. VERIFY LINE NUMBERS: Check that your startLineIndex and endLineIndex match the "Line X:" numbers in the document above
+2. COPY TEXT EXACTLY: Your startCharacters and endCharacters must be copied EXACTLY from the specified lines
+3. CHECK DOCUMENT BOUNDS: The document has ${documentLines} lines (0-${documentLines - 1})
+4. USE PROPER SNIPPETS: Character snippets should be 3-8 characters from the actual line content
+5. SINGLE-LINE RULE: If highlighting within one line, startLineIndex must equal endLineIndex
+6. NO DUPLICATES: Don't create comments for sections already covered by existing comments
+7. REASONABLE LENGTH: Keep highlights between 5-1000 characters
+
+FAILED COMMENTS DEBUG INFO:
+${JSON.stringify(failedComments, null, 2)}
+
+Please carefully review the line numbers and text snippets above, then create new highlights that exactly match the document content.`;
 }

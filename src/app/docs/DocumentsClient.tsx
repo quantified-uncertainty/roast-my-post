@@ -8,7 +8,7 @@ import {
   Document,
   Evaluation,
 } from "@/types/documentSchema";
-import { getValidCommentCount } from "@/utils/commentUtils";
+import { getValidCommentCount } from "@/utils/ui/commentUtils";
 import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,

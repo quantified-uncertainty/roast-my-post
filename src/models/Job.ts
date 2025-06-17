@@ -5,11 +5,12 @@ import {
 } from "@prisma/client";
 
 import { Agent } from "../types/agentSchema";
-import { calculateApiCost, mapModelToCostModel } from "../utils/costCalculator";
-import { analyzeDocument } from "../utils/documentAnalysis";
-import { polishReview } from "../utils/documentAnalysis/polishReview";
-import { writeLogFile } from "../utils/documentAnalysis/utils";
 import { ANALYSIS_MODEL } from "../types/openai";
+import {
+  calculateApiCost,
+  mapModelToCostModel,
+} from "../utils/costCalculator";
+import { analyzeDocument, countTokensFromInteractions } from "../utils/documentAnalysis";
 
 export class JobModel {
   /**
@@ -169,22 +170,21 @@ export class JobModel {
 
       // Analyze document
       console.log(`🧠 Analyzing document with agent ${agent.name}...`);
-      const { review, usage, llmResponse, finalPrompt, agentContext, tasks } =
-        await analyzeDocument(documentForAnalysis, agent);
-
-      // Process the review
-      const polishedReview = await polishReview(
-        review,
-        documentForAnalysis.content
+      const analysisResult = await analyzeDocument(
+        documentForAnalysis,
+        agent
       );
+
+      // Extract the outputs and tasks
+      const { tasks, ...evaluationOutputs } = analysisResult;
 
       // Create evaluation version
       const evaluationVersion = await prisma.evaluationVersion.create({
         data: {
           agentId: agent.id,
-          summary: polishedReview.summary,
-          analysis: polishedReview.analysis,
-          grade: polishedReview.grade,
+          summary: evaluationOutputs.summary,
+          analysis: evaluationOutputs.analysis,
+          grade: evaluationOutputs.grade,
           agentVersionId: agentVersion.id,
           evaluationId: job.evaluation.id,
           documentVersionId: documentVersion.id,
@@ -211,8 +211,8 @@ export class JobModel {
       }
 
       // Save comments with highlights
-      if (polishedReview.comments && polishedReview.comments.length > 0) {
-        for (const comment of polishedReview.comments) {
+      if (evaluationOutputs.comments && evaluationOutputs.comments.length > 0) {
+        for (const comment of evaluationOutputs.comments) {
           // Create highlight
           const highlight = await prisma.evaluationHighlight.create({
             data: {
@@ -237,7 +237,27 @@ export class JobModel {
         }
       }
 
-      const costInCents = calculateApiCost(usage, mapModelToCostModel(ANALYSIS_MODEL));
+      // Calculate total usage from all interactions
+      const totalInputTokens = tasks.reduce(
+        (sum, task) =>
+          sum +
+          countTokensFromInteractions(task.llmInteractions, "input_tokens"),
+        0
+      );
+      const totalOutputTokens = tasks.reduce(
+        (sum, task) =>
+          sum +
+          countTokensFromInteractions(task.llmInteractions, "output_tokens"),
+        0
+      );
+
+      const costInCents = calculateApiCost(
+        {
+          input_tokens: totalInputTokens,
+          output_tokens: totalOutputTokens,
+        },
+        mapModelToCostModel(ANALYSIS_MODEL)
+      );
 
       // Create log file with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -256,54 +276,62 @@ export class JobModel {
 - Type: ${agentVersion.agentType}
 
 ## Summary Statistics
-- Total Tokens: ${usage?.total_tokens || 0}
-  * Prompt Tokens: ${usage?.prompt_tokens || 0}
-  * Completion Tokens: ${usage?.completion_tokens || 0}
+- Total Tokens: ${totalInputTokens + totalOutputTokens}
+  * Input Tokens: ${totalInputTokens}
+  * Output Tokens: ${totalOutputTokens}
 - Estimated Cost: $${(costInCents / 100).toFixed(6)}
 - Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
 
 ## LLM Thinking
 \`\`\`
-${polishedReview.thinking || "No thinking provided"}
+${evaluationOutputs.thinking || "No thinking provided"}
 \`\`\`
 
-## Prompt
+## Tasks
+${tasks
+  .map(
+    (task) => `
+### ${task.name}
+- Model: ${task.modelName}
+- Time: ${task.timeInSeconds}s
+- Cost: $${(task.priceInCents / 100).toFixed(6)}
+- Interactions: ${task.llmInteractions.length}
+${task.llmInteractions
+  .map(
+    (interaction) => `
+#### Interaction
 \`\`\`
-${finalPrompt}
+${interaction.messages.map((m) => `${m.role}: ${m.content}`).join("\n")}
 \`\`\`
+`
+  )
+  .join("\n")}
+`
+  )
+  .join("\n")}
 
 ## Response
 \`\`\`json
-${JSON.stringify(llmResponse, null, 2)}
+${JSON.stringify(evaluationOutputs, null, 2)}
 \`\`\`
 `;
 
-      // Calculate final duration including ALL processing (DB writes, file I/O, etc.)
-      const endTime = Date.now();
-      const durationInSeconds = Math.round((endTime - startTime) / 1000);
-      
-      // Update the log file with actual duration
-      const finalLogContent = logContent.replace('[DURATION_PLACEHOLDER]', durationInSeconds.toString());
-      await writeLogFile(finalLogContent, logFilename);
-
-      console.log(`📝 Log written to ${logFilename}`);
-
-      // Update job as completed
       await this.markJobAsCompleted(job.id, {
-        llmThinking: polishedReview.thinking || null,
-        costInCents,
-        durationInSeconds,
-        logs: finalLogContent,
+        llmThinking: evaluationOutputs.thinking,
+        costInCents: costInCents,
+        durationInSeconds: (Date.now() - startTime) / 1000,
+        logs: logContent,
       });
 
-      console.log(`✅ Job ${job.id} completed successfully`);
-      return true;
+      return {
+        job,
+        logFilename,
+        logContent,
+      };
     } catch (error) {
-      console.error("❌ Error processing job:", error);
       await this.markJobAsFailed(job.id, error);
-      console.log(`❌ Job ${job.id} marked as failed`);
-      return false;
+      throw error;
     }
   }
 

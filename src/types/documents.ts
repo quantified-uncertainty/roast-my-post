@@ -1,5 +1,8 @@
 // Document type definitions
-import type { Comment, Evaluation } from "./documentSchema";
+import type {
+  Comment,
+  Evaluation,
+} from "./documentSchema";
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {
@@ -21,7 +24,7 @@ export interface RawDocumentReview {
   createdAt: string;
   thinking: string;
   summary: string;
-  grade: number;
+  grade: number | null;
 }
 
 export interface RawDocument {

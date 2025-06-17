@@ -42,16 +42,16 @@ export function mapModelToCostModel(model: string): ModelName {
     "claude-sonnet-4-20250514": "anthropic/claude-sonnet-4",
     "claude-sonnet-4": "anthropic/claude-sonnet-4",
     "anthropic/claude-sonnet-4": "anthropic/claude-sonnet-4",
-    
+
     // OpenAI models
     "gpt-4.1": "openai/gpt-4.1",
     "openai/gpt-4.1": "openai/gpt-4.1",
-    
+
     // Google models
     "gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
     "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
   };
-  
+
   return mapping[model] || "anthropic/claude-sonnet-4";
 }
 
@@ -134,12 +134,12 @@ export function compareModelCosts(
 
 /**
  * Calculate API cost in cents based on token usage
- * @param usage Token usage object containing prompt_tokens and completion_tokens
+ * @param usage Token usage object containing input_tokens and output_tokens
  * @param model The model name to use for pricing calculation
  * @returns Cost in cents
  */
 export function calculateApiCost(
-  usage: { prompt_tokens: number; completion_tokens: number } | undefined,
+  usage: { input_tokens: number; output_tokens: number } | undefined,
   model?: ModelName
 ): number {
   if (!usage) return 0;
@@ -148,24 +148,24 @@ export function calculateApiCost(
   const defaultModel: ModelName = "anthropic/claude-sonnet-4";
   const modelToUse = model || defaultModel;
   const pricing = OPENROUTER_PRICING[modelToUse];
-  const promptCostPerToken = pricing.input / 1_000_000; // Convert to cost per token
-  const completionCostPerToken = pricing.output / 1_000_000; // Convert to cost per token
+  const inputCostPerToken = pricing.input / 1_000_000; // Convert to cost per token
+  const outputCostPerToken = pricing.output / 1_000_000; // Convert to cost per token
 
-  const promptCost = usage.prompt_tokens * promptCostPerToken;
-  const completionCost = usage.completion_tokens * completionCostPerToken;
+  const inputCost = usage.input_tokens * inputCostPerToken;
+  const outputCost = usage.output_tokens * outputCostPerToken;
 
   // Convert to cents (multiply by 100)
-  return Math.round((promptCost + completionCost) * 100);
+  return Math.round((inputCost + outputCost) * 100);
 }
 
 /**
  * Calculate API cost in dollars based on token usage
- * @param usage Token usage object containing prompt_tokens and completion_tokens
+ * @param usage Token usage object containing input_tokens and output_tokens
  * @param model The model name to use for pricing calculation
  * @returns Cost in dollars
  */
 export function calculateApiCostInDollars(
-  usage: { prompt_tokens: number; completion_tokens: number } | undefined,
+  usage: { input_tokens: number; output_tokens: number } | undefined,
   model?: ModelName
 ): number {
   return calculateApiCost(usage, model) / 100;
