@@ -4,13 +4,16 @@ import {
   JobStatus,
 } from "@prisma/client";
 
+import {
+  analyzeDocument,
+  countTokensFromInteractions,
+} from "../lib/documentAnalysis";
 import { Agent } from "../types/agentSchema";
 import { ANALYSIS_MODEL } from "../types/openai";
 import {
   calculateApiCost,
   mapModelToCostModel,
 } from "../utils/costCalculator";
-import { analyzeDocument, countTokensFromInteractions } from "../utils/documentAnalysis";
 
 export class JobModel {
   /**
@@ -170,10 +173,7 @@ export class JobModel {
 
       // Analyze document
       console.log(`🧠 Analyzing document with agent ${agent.name}...`);
-      const analysisResult = await analyzeDocument(
-        documentForAnalysis,
-        agent
-      );
+      const analysisResult = await analyzeDocument(documentForAnalysis, agent);
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
