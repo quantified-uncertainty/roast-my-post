@@ -181,13 +181,11 @@ export function TaskLogs({ selectedVersion }: TaskLogsProps) {
                                     },
                                   }}
                                 >
-                                  {`\
-\
-
+                                  {`
 ${"```"}
 ${interaction.prompt}
 ${"```"}
-`}
+`}
                                 </ReactMarkdown>
                               </div>
                             </div>

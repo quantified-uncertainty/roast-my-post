@@ -8,7 +8,7 @@ import {
 } from "../../../types/openai";
 import { LineBasedHighlighter } from "../../highlightUtils";
 import { preprocessCommentData } from "../llmResponseProcessor";
-import { getCommentPrompt } from "../prompts";
+import { getCommentPrompts } from "../prompts";
 import { validateComments } from "../utils/commentUtils";
 
 function convertToLineBasedComments(comments: Comment[], document: Document) {
@@ -53,7 +53,7 @@ export async function getCommentData(
       `📊 Current progress: ${comments.length}/${targetComments} valid comments`
     );
 
-    let prompt = getCommentPrompt(
+    let prompt = getCommentPrompts(
       document,
       agentInfo,
       targetComments - comments.length,

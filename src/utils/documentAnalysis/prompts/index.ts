@@ -23,7 +23,7 @@ function shouldIncludeGrade(agentInfo: Agent): boolean {
 
 export function agentContextSection(
   agentInfo: Agent,
-  type: "comment" | "thinking"
+  type: "analysis" | "comment"
 ): string {
   return `
 ## AGENT CONTEXT
@@ -33,22 +33,22 @@ Your instructions are: ${agentInfo.genericInstructions}.
 
 ${type === "comment" && agentInfo.commentInstructions ? `Your instructions for comments are: ${agentInfo.commentInstructions}.` : ""}
 
-${type === "thinking" && agentInfo.summaryInstructions ? `Your instructions for summary are: ${agentInfo.summaryInstructions}.` : ""}
+${type === "analysis" && agentInfo.summaryInstructions ? `Your instructions for summary are: ${agentInfo.summaryInstructions}.` : ""}
 
-${type === "thinking" && agentInfo.analysisInstructions ? `Your instructions for analysis are: ${agentInfo.analysisInstructions}.` : ""}
+${type === "analysis" && agentInfo.analysisInstructions ? `Your instructions for analysis are: ${agentInfo.analysisInstructions}.` : ""}
 
-${type === "thinking" && agentInfo.gradeInstructions ? `Your instructions for grading are: ${agentInfo.gradeInstructions}.` : ""}
+${type === "analysis" && agentInfo.gradeInstructions ? `Your instructions for grading are: ${agentInfo.gradeInstructions}.` : ""}
 `;
 }
 
-export function getThinkingAndSummaryPrompt(
+export function getThinkingAnalysisSummaryPrompts(
   agentInfo: Agent,
   targetWordCount: number,
   document: Document
-): string {
-  return `
-${agentContextSection(agentInfo, "thinking")}
+): { systemMessage: string; userMessage: string } {
+  const systemMessage = agentContextSection(agentInfo, "analysis");
 
+  const userMessage = `
 ${documentInformationSection(document)}
 
 ## ANALYSIS INSTRUCTIONS
@@ -76,33 +76,18 @@ ${shouldIncludeGrade(agentInfo) ? "Grade: A number from 0-100. This is a subject
 Here's the document to analyze:
 
 ${document.content}`;
+
+  return { systemMessage, userMessage };
 }
 
-export function getCommentPrompt(
+export function getCommentPrompts(
   document: Document,
   agentInfo: Agent,
   targetComments: number,
   existingComments: LineCharacterComment[] = []
-): string {
-  const documentInfo = documentInformationSection(document);
-  const agentContext = agentContextSection(agentInfo, "comment");
-  const gradeSection = shouldIncludeGrade(agentInfo)
-    ? "\n- Include a grade (0-100) for each comment"
-    : "";
-
-  const existingCommentsSection = existingComments.length
-    ? `\n\nEXISTING COMMENTS (DO NOT DUPLICATE THESE):
-${existingComments
-  .map(
-    (c) =>
-      `- "${c.title}" (${c.highlight.startLineIndex}-${c.highlight.endLineIndex})`
-  )
-  .join("\n")}`
-    : "";
-
-  return `${documentInfo}
-
-${agentContext}
+): { systemMessage: string; userMessage: string } {
+  const systemMessage = agentContextSection(agentInfo, "comment");
+  const userMessage = `${documentInformationSection(document)}
 
 Please analyze this document and provide ${targetComments} detailed comments. Each comment should:
 - Have a clear, descriptive title
@@ -110,7 +95,7 @@ Please analyze this document and provide ${targetComments} detailed comments. Ea
 - Focus on the most important 5-1000 characters of text (DO NOT highlight entire paragraphs)
 - For long sections, select only the most crucial 2-3 sentences
 - Use line-based highlighting with startLineIndex/endLineIndex and startCharacters/endCharacters
-- Include importance score (0-100)${gradeSection}
+- Include importance score (0-100)${shouldIncludeGrade(agentInfo) ? "\n- Include a grade (0-100) for each comment" : ""}
 - Provide relevant external references and connections
 - Avoid duplicating existing comments - focus on new sections
 
@@ -165,7 +150,17 @@ And you want to highlight "'This is crucial.'":
   "endCharacters": "crucial.'"
 }
 
-${existingCommentsSection}
+${
+  existingComments.length
+    ? `\n\nEXISTING COMMENTS (DO NOT DUPLICATE THESE):
+${existingComments
+  .map(
+    (c) =>
+      `- "${c.title}" (${c.highlight.startLineIndex}-${c.highlight.endLineIndex})`
+  )
+  .join("\n")}`
+    : ""
+}
 
 IMPORTANT: Focus ONLY on generating the requested number of comments. Just provide the comments in the following JSON format:
 
@@ -185,4 +180,6 @@ IMPORTANT: Focus ONLY on generating the requested number of comments. Just provi
     }
   ]
 }`;
+
+  return { systemMessage, userMessage };
 }

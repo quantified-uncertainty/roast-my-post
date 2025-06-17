@@ -11,7 +11,7 @@ import {
   openai,
 } from "../../../types/openai";
 import { BaseLLMProcessor } from "../llmResponseProcessor";
-import { getThinkingAndSummaryPrompt } from "../prompts";
+import { getThinkingAnalysisSummaryPrompts } from "../prompts";
 
 const ThinkingGeneratorResultSchema = z.object({
   thinking: z.string(),
@@ -31,7 +31,7 @@ export async function generateThinkingAndSummary(
   summary: string;
   grade: number | undefined;
 }> {
-  const thinkingPrompt = getThinkingAndSummaryPrompt(
+  const { systemMessage, userMessage } = getThinkingAnalysisSummaryPrompts(
     agentInfo,
     targetWordCount,
     document
@@ -40,12 +40,11 @@ export async function generateThinkingAndSummary(
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content:
-        "You are an expert document analyst. Provide detailed analysis and insights.",
+      content: systemMessage,
     },
     {
       role: "user",
-      content: thinkingPrompt,
+      content: userMessage,
     },
   ];
 
