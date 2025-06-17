@@ -16,12 +16,3 @@ export function calculateTargetComments(content: string): number {
   const additionalComments = Math.floor(contentLength / 1000) / 3;
   return Math.max(baseComments, Math.min(additionalComments, 10)); // Cap at 20 comments
 }
-
-export function calculateCost(
-  promptTokens: number,
-  completionTokens: number,
-  model: string
-): number {
-  // TODO: Implement actual cost calculation based on model
-  return (promptTokens + completionTokens) * 0.00002; // Placeholder
-}

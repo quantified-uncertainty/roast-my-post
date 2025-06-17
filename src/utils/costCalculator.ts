@@ -14,6 +14,13 @@ export const OPENROUTER_PRICING = {
     imageInput: 4.8, // $4.8 per thousand input images
     context: 200_000, // 200K context window
   },
+  // Claude Sonnet 4
+  "anthropic/claude-sonnet-4": {
+    input: 3, // $3 per million input tokens
+    output: 15, // $15 per million output tokens
+    imageInput: 4.8, // $4.8 per thousand input images
+    context: 200_000, // 200K context window
+  },
   // GPT-4.1
   "openai/gpt-4.1": {
     input: 2, // $2 per million input tokens
@@ -24,6 +31,29 @@ export const OPENROUTER_PRICING = {
 } as const;
 
 export type ModelName = keyof typeof OPENROUTER_PRICING;
+
+/**
+ * Map any model ID to OpenRouter model names for cost calculation
+ * Handles Anthropic, OpenAI, and Google model naming variations
+ */
+export function mapModelToCostModel(model: string): ModelName {
+  const mapping: Record<string, ModelName> = {
+    // Anthropic models
+    "claude-sonnet-4-20250514": "anthropic/claude-sonnet-4",
+    "claude-sonnet-4": "anthropic/claude-sonnet-4",
+    "anthropic/claude-sonnet-4": "anthropic/claude-sonnet-4",
+    
+    // OpenAI models
+    "gpt-4.1": "openai/gpt-4.1",
+    "openai/gpt-4.1": "openai/gpt-4.1",
+    
+    // Google models
+    "gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
+    "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001",
+  };
+  
+  return mapping[model] || "anthropic/claude-sonnet-4";
+}
 
 export interface CostCalculation {
   inputCost: number;
@@ -105,20 +135,38 @@ export function compareModelCosts(
 /**
  * Calculate API cost in cents based on token usage
  * @param usage Token usage object containing prompt_tokens and completion_tokens
+ * @param model The model name to use for pricing calculation
  * @returns Cost in cents
  */
 export function calculateApiCost(
-  usage: { prompt_tokens: number; completion_tokens: number } | undefined
+  usage: { prompt_tokens: number; completion_tokens: number } | undefined,
+  model?: ModelName
 ): number {
   if (!usage) return 0;
 
-  // Default to Claude 3.7 Sonnet rates
-  const promptCostPerToken = 3 / 1_000_000; // $3 per million tokens in dollars
-  const completionCostPerToken = 15 / 1_000_000; // $15 per million tokens in dollars
+  // Default to claude-sonnet-4 if no model specified
+  const defaultModel: ModelName = "anthropic/claude-sonnet-4";
+  const modelToUse = model || defaultModel;
+  const pricing = OPENROUTER_PRICING[modelToUse];
+  const promptCostPerToken = pricing.input / 1_000_000; // Convert to cost per token
+  const completionCostPerToken = pricing.output / 1_000_000; // Convert to cost per token
 
   const promptCost = usage.prompt_tokens * promptCostPerToken;
   const completionCost = usage.completion_tokens * completionCostPerToken;
 
   // Convert to cents (multiply by 100)
   return Math.round((promptCost + completionCost) * 100);
+}
+
+/**
+ * Calculate API cost in dollars based on token usage
+ * @param usage Token usage object containing prompt_tokens and completion_tokens
+ * @param model The model name to use for pricing calculation
+ * @returns Cost in dollars
+ */
+export function calculateApiCostInDollars(
+  usage: { prompt_tokens: number; completion_tokens: number } | undefined,
+  model?: ModelName
+): number {
+  return calculateApiCost(usage, model) / 100;
 }

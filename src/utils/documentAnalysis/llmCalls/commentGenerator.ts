@@ -1,3 +1,7 @@
+import type {
+  ToolUseBlock,
+} from "@anthropic-ai/sdk/resources/messages/messages";
+
 import type { Agent } from "../../../types/agentSchema";
 import { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
@@ -7,7 +11,6 @@ import {
   DEFAULT_TEMPERATURE,
   withTimeout,
 } from "../../../types/openai";
-import type { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages/messages";
 import { LineBasedHighlighter } from "../../highlightUtils";
 import { preprocessCommentData } from "../llmResponseProcessor";
 import { getCommentPrompts } from "../prompts";
@@ -57,7 +60,17 @@ export async function getCommentData(
     response: string;
     validCommentsCount: number;
     failedCommentsCount: number;
+    usage?: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    };
   }>;
+  totalUsage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }> {
   const comments: Comment[] = [];
   const llmInteractions: Array<{
@@ -66,8 +79,15 @@ export async function getCommentData(
     response: string;
     validCommentsCount: number;
     failedCommentsCount: number;
+    usage?: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    };
   }> = [];
   let attempts = 0;
+  let totalPromptTokens = 0;
+  let totalCompletionTokens = 0;
 
   while (comments.length < targetComments && attempts < maxAttempts) {
     attempts++;
@@ -83,7 +103,9 @@ export async function getCommentData(
       convertToLineBasedComments(comments, document)
     );
 
-    console.log(`📝 Generated prompt: ${promptData.userMessage.length} characters`);
+    console.log(
+      `📝 Generated prompt: ${promptData.userMessage.length} characters`
+    );
 
     let response;
     let result;
@@ -94,114 +116,134 @@ export async function getCommentData(
     try {
       response = await withTimeout(
         anthropic.messages.create({
-        model: ANALYSIS_MODEL,
-        max_tokens: 8000,
-        temperature: DEFAULT_TEMPERATURE * (attempts / maxAttempts),
-        system: promptData.systemMessage,
-        messages: [
-          {
-            role: "user",
-            content: promptData.userMessage,
-          },
-        ],
-        tools: [
-          {
-            name: "provide_comments",
-            description: "Provide concise, focused comments for the document. Keep descriptions under 200 words each.",
-            input_schema: {
-              type: "object",
-              properties: {
-                comments: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      title: { 
-                        type: "string",
-                        description: "Clear, descriptive title for the comment"
-                      },
-                      description: { 
-                        type: "string",
-                        description: "Concise description (max 200 words) with specific insights. Use simple markdown formatting. Be substantive but brief."
-                      },
-                      highlight: {
-                        type: "object",
-                        properties: {
-                          startLineIndex: { type: "number" },
-                          startCharacters: { type: "string" },
-                          endLineIndex: { type: "number" },
-                          endCharacters: { type: "string" },
+          model: ANALYSIS_MODEL,
+          max_tokens: 8000,
+          temperature: DEFAULT_TEMPERATURE * (attempts / maxAttempts),
+          system: promptData.systemMessage,
+          messages: [
+            {
+              role: "user",
+              content: promptData.userMessage,
+            },
+          ],
+          tools: [
+            {
+              name: "provide_comments",
+              description:
+                "Provide concise, focused comments for the document. Keep descriptions under 200 words each.",
+              input_schema: {
+                type: "object",
+                properties: {
+                  comments: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: {
+                          type: "string",
+                          description:
+                            "Clear, descriptive title for the comment",
                         },
-                        required: [
-                          "startLineIndex",
-                          "startCharacters",
-                          "endLineIndex",
-                          "endCharacters",
-                        ],
+                        description: {
+                          type: "string",
+                          description:
+                            "Concise description (max 200 words) with specific insights. Use simple markdown formatting. Be substantive but brief.",
+                        },
+                        highlight: {
+                          type: "object",
+                          properties: {
+                            startLineIndex: { type: "number" },
+                            startCharacters: { type: "string" },
+                            endLineIndex: { type: "number" },
+                            endCharacters: { type: "string" },
+                          },
+                          required: [
+                            "startLineIndex",
+                            "startCharacters",
+                            "endLineIndex",
+                            "endCharacters",
+                          ],
+                        },
+                        importance: { type: "number" },
+                        grade: { type: "number" },
                       },
-                      importance: { type: "number" },
-                      grade: { type: "number" },
+                      required: [
+                        "title",
+                        "description",
+                        "highlight",
+                        "importance",
+                      ],
                     },
-                    required: ["title", "description", "highlight", "importance"],
                   },
                 },
+                required: ["comments"],
               },
-              required: ["comments"],
             },
-          },
-        ],
-        tool_choice: { type: "tool", name: "provide_comments" },
+          ],
+          tool_choice: { type: "tool", name: "provide_comments" },
         }),
         120000, // 2 minute timeout
         `Anthropic API request timed out after 2 minutes (attempt ${attempts})`
       );
       const apiCallEnd = Date.now();
-      console.log(`✅ Received response from Anthropic API (${Math.round((apiCallEnd - apiCallStart) / 1000)}s)`);
+      console.log(
+        `✅ Received response from Anthropic API (${Math.round((apiCallEnd - apiCallStart) / 1000)}s)`
+      );
     } catch (error: any) {
       console.error(`❌ Anthropic API error on attempt ${attempts}:`, error);
-      
+
       // Handle rate limiting with exponential backoff
       if (error?.status === 429) {
         const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 30000); // Max 30s
         console.log(`⏳ Rate limited, waiting ${waitTime}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
         continue; // Retry this attempt
       }
-      
+
       // Handle quota exceeded
       if (error?.status === 402) {
-        throw new Error("Anthropic API quota exceeded. Please check your billing.");
+        throw new Error(
+          "Anthropic API quota exceeded. Please check your billing."
+        );
       }
-      
+
       // Handle authentication errors
       if (error?.status === 401) {
-        throw new Error("Anthropic API authentication failed. Please check your API key.");
+        throw new Error(
+          "Anthropic API authentication failed. Please check your API key."
+        );
       }
-      
+
       // Handle server errors (500-599) - these are retryable
       if (error?.status >= 500) {
-        console.warn(`🔄 Server error (${error.status}), will retry on next attempt`);
+        console.warn(
+          `🔄 Server error (${error.status}), will retry on next attempt`
+        );
         continue; // Continue to next attempt
       }
-      
+
       // For other errors, throw immediately
-      throw new Error(`Anthropic API error (${error?.status || 'unknown'}): ${error?.message || error}`);
+      throw new Error(
+        `Anthropic API error (${error?.status || "unknown"}): ${error?.message || error}`
+      );
     }
 
     try {
-      const toolUse = response.content.find((c): c is ToolUseBlock => c.type === "tool_use");
+      const toolUse = response.content.find(
+        (c): c is ToolUseBlock => c.type === "tool_use"
+      );
       if (!toolUse || toolUse.name !== "provide_comments") {
         throw new Error("No tool use response from Anthropic for comments");
       }
 
       result = toolUse.input as { comments: any[] };
-      
+
       // Post-process to fix formatting issues from JSON tool use
       const fixFormatting = (text: string): string => {
         return text
-          .replace(/\\n/g, '\n')  // Convert escaped newlines to actual newlines
-          .replace(/\\"/g, '"')   // Convert escaped quotes
-          .replace(/\\\\/g, '\\') // Convert escaped backslashes
+          .replace(/\\n/g, "\n") // Convert escaped newlines to actual newlines
+          .replace(/\\"/g, '"') // Convert escaped quotes
+          .replace(/\\\\/g, "\\") // Convert escaped backslashes
           .trim();
       };
 
@@ -210,13 +252,18 @@ export async function getCommentData(
         result.comments = result.comments.map((comment: any) => ({
           ...comment,
           title: comment.title ? fixFormatting(comment.title) : comment.title,
-          description: comment.description ? fixFormatting(comment.description) : comment.description,
+          description: comment.description
+            ? fixFormatting(comment.description)
+            : comment.description,
         }));
       }
-      
+
       rawResponse = JSON.stringify(result);
     } catch (error) {
-      console.error(`❌ Failed to parse Anthropic response on attempt ${attempts}:`, error);
+      console.error(
+        `❌ Failed to parse Anthropic response on attempt ${attempts}:`,
+        error
+      );
       continue; // Continue to next attempt
     }
 
@@ -247,7 +294,8 @@ export async function getCommentData(
       );
 
       // Add detailed feedback to help the LLM learn from its mistakes
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const feedback = `
 VALIDATION ERROR FROM PREVIOUS ATTEMPT:
 ${errorMessage}
@@ -255,7 +303,7 @@ ${errorMessage}
 DEBUGGING TIPS FOR FIXING HIGHLIGHTS:
 1. VERIFY LINE NUMBERS: Check that your startLineIndex and endLineIndex match the "Line X:" numbers in the document above
 2. COPY TEXT EXACTLY: Your startCharacters and endCharacters must be copied EXACTLY from the specified lines
-3. CHECK DOCUMENT BOUNDS: The document has ${document.content.split('\n').length} lines (0-${document.content.split('\n').length - 1})
+3. CHECK DOCUMENT BOUNDS: The document has ${document.content.split("\n").length} lines (0-${document.content.split("\n").length - 1})
 4. USE PROPER SNIPPETS: Character snippets should be 3-8 characters from the actual line content
 5. SINGLE-LINE RULE: If highlighting within one line, startLineIndex must equal endLineIndex
 6. NO DUPLICATES: Don't create comments for sections already covered by existing comments
@@ -277,7 +325,21 @@ Please carefully review the line numbers and text snippets above, then create ne
       response: rawResponse,
       validCommentsCount,
       failedCommentsCount,
+      usage: response.usage
+        ? {
+            prompt_tokens: response.usage.input_tokens,
+            completion_tokens: response.usage.output_tokens,
+            total_tokens:
+              response.usage.input_tokens + response.usage.output_tokens,
+          }
+        : undefined,
     });
+
+    // Update total token counts
+    if (response.usage) {
+      totalPromptTokens += response.usage.input_tokens;
+      totalCompletionTokens += response.usage.output_tokens;
+    }
 
     // If we have some valid comments, don't retry for those sections
     if (validCommentsCount > 0) {
@@ -290,5 +352,10 @@ Please carefully review the line numbers and text snippets above, then create ne
   return {
     comments,
     llmInteractions,
+    totalUsage: {
+      prompt_tokens: totalPromptTokens,
+      completion_tokens: totalCompletionTokens,
+      total_tokens: totalPromptTokens + totalCompletionTokens,
+    },
   };
 }

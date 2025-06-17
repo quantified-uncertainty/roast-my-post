@@ -85,6 +85,8 @@ async function loop() {
         // Reset counter and show full info for actual job processing
         if (consecutiveEmptyRuns > 1) {
           console.log(`\n🔄 Found job after ${consecutiveEmptyRuns} empty runs`);
+        } else if (consecutiveEmptyRuns === 1) {
+          console.log(`\n🔄 Found job after 1 empty run`);
         }
         consecutiveEmptyRuns = 0;
         console.log(`✅ Iteration ${iteration} completed in ${duration}s`);

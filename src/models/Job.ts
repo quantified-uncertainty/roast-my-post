@@ -5,10 +5,11 @@ import {
 } from "@prisma/client";
 
 import { Agent } from "../types/agentSchema";
-import { calculateApiCost } from "../utils/costCalculator";
+import { calculateApiCost, mapModelToCostModel } from "../utils/costCalculator";
 import { analyzeDocument } from "../utils/documentAnalysis";
 import { polishReview } from "../utils/documentAnalysis/polishReview";
 import { writeLogFile } from "../utils/documentAnalysis/utils";
+import { ANALYSIS_MODEL } from "../types/openai";
 
 export class JobModel {
   /**
@@ -236,7 +237,7 @@ export class JobModel {
         }
       }
 
-      const costInCents = calculateApiCost(usage);
+      const costInCents = calculateApiCost(usage, mapModelToCostModel(ANALYSIS_MODEL));
 
       // Create log file with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");

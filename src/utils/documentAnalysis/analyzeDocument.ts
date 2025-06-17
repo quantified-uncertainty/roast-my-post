@@ -2,8 +2,14 @@ import { Agent } from "../../types/agentSchema";
 import { Document } from "../../types/documents";
 import { AnalysisResult } from "../../types/documentSchema";
 import { ANALYSIS_MODEL } from "../../types/openai";
+import {
+  calculateApiCost,
+  mapModelToCostModel,
+} from "../../utils/costCalculator";
 import { getCommentData } from "./llmCalls/commentGenerator";
-import { generateThinkingAndSummary } from "./llmCalls/thinkingAndSummaryGenerator";
+import {
+  generateThinkingAndSummary,
+} from "./llmCalls/thinkingAndSummaryGenerator";
 import {
   calculateTargetComments,
   calculateTargetWordCount,
@@ -52,8 +58,11 @@ export async function analyzeDocument(
     (thinkingEndTime - thinkingStartTime) / 1000
   );
 
-  // Estimate cost for thinking task (rough approximation)
-  const thinkingCost = Math.round(thinkingResult.llmMessages.length * 0.001);
+  // Calculate cost based on actual token usage from Anthropic API
+  const thinkingCost = calculateApiCost(
+    thinkingResult.usage,
+    mapModelToCostModel(ANALYSIS_MODEL)
+  );
 
   const thinkingLogDetails = {
     taskName: "generateThinkingAndSummary",
@@ -99,14 +108,22 @@ export async function analyzeDocument(
     (commentsEndTime - commentsStartTime) / 1000
   );
 
-  // Estimate cost for comments task (rough approximation)
-  const commentsCost = Math.round(commentsResult.comments.length * 10); // Approximate cost per comment
+  // Calculate cost based on actual token usage from all comment generation attempts
+  const commentsCost = calculateApiCost(
+    commentsResult.totalUsage,
+    mapModelToCostModel(ANALYSIS_MODEL)
+  );
 
   console.log(`\n✅ Comment generation completed:`);
   console.log(`   ⏱️  Time: ${commentsTimeInSeconds} seconds`);
   console.log(`   💰 Estimated cost: ${commentsCost} cents`);
   console.log(`   📊 Comments generated: ${commentsResult.comments.length}`);
   console.log(`   🔄 Total attempts: ${commentsResult.llmInteractions.length}`);
+  if (commentsResult.totalUsage) {
+    console.log(
+      `   📝 Total tokens: ${commentsResult.totalUsage.total_tokens} (${commentsResult.totalUsage.prompt_tokens} prompt + ${commentsResult.totalUsage.completion_tokens} completion)`
+    );
+  }
 
   const commentsLogDetails = {
     taskName: "getCommentData",
@@ -155,20 +172,25 @@ export async function analyzeDocument(
     comments: commentsResult.comments,
   };
 
-  // Usage information would come from thinkingResult and comments generation
-  // For now, we'll mock it up with approximate values
+  // Aggregate usage information from both tasks
   const usage = {
-    prompt_tokens: 0, // Would be filled from API responses
-    completion_tokens: 0, // Would be filled from API responses
-    total_tokens: 0, // Would be filled from API responses
+    prompt_tokens:
+      (thinkingResult.usage?.prompt_tokens || 0) +
+      (commentsResult.totalUsage?.prompt_tokens || 0),
+    completion_tokens:
+      (thinkingResult.usage?.completion_tokens || 0) +
+      (commentsResult.totalUsage?.completion_tokens || 0),
+    total_tokens:
+      (thinkingResult.usage?.total_tokens || 0) +
+      (commentsResult.totalUsage?.total_tokens || 0),
   };
 
   return {
     review: documentReview,
     usage,
-    llmResponse: JSON.stringify(documentReview), // This is a simplification
+    llmResponse: JSON.stringify(documentReview),
     finalPrompt: thinkingResult.llmMessages,
-    agentContext: JSON.stringify(agent), // This is a simplification
+    agentContext: JSON.stringify(agent),
     tasks,
   };
 }

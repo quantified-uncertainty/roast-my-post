@@ -1,6 +1,8 @@
 import "dotenv/config";
-import Anthropic from "@anthropic-ai/sdk";
+
 import OpenAI from "openai";
+
+import Anthropic from "@anthropic-ai/sdk";
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -17,8 +19,8 @@ if (!OPENROUTER_API_KEY) {
   );
 }
 
-export const SEARCH_MODEL = "openai/gpt-4.1"; // For search tasks still using OpenRouter
-export const ANALYSIS_MODEL = "claude-3-5-sonnet-20241022"; // Using Anthropic directly
+export const SEARCH_MODEL = process.env.SEARCH_MODEL || "openai/gpt-4.1"; // For search tasks still using OpenRouter
+export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514"; // Using Anthropic directly
 
 // Anthropic client for analysis tasks
 export const anthropic = new Anthropic({
@@ -47,6 +49,6 @@ export async function withTimeout<T>(
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
   });
-  
+
   return Promise.race([promise, timeoutPromise]);
 }
