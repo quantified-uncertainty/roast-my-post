@@ -151,6 +151,9 @@ export async function validateComments(
 
   if (errors.length > 0) {
     console.warn(`⚠️ Found ${errors.length} invalid comments:`, errors);
+    // Create a detailed error message for debugging
+    const detailedError = `Validation failed for ${errors.length} comments:\n${errors.map((error, index) => `  ${index + 1}. ${error}`).join('\n')}`;
+    throw new Error(detailedError);
   }
 
   console.log(`✅ Validated ${validComments.length} comments successfully`);

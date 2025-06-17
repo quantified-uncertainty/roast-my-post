@@ -133,6 +133,23 @@ export class LineBasedHighlighter {
       return exactIndex;
     }
 
+    // Try case-insensitive exact match
+    const lowerSnippet = snippet.toLowerCase();
+    const lowerLine = line.toLowerCase();
+    const caseInsensitiveIndex = lowerLine.indexOf(lowerSnippet);
+    if (caseInsensitiveIndex !== -1) {
+      console.warn(`Using case-insensitive match for "${snippet}" in line ${lineIndex}`);
+      return caseInsensitiveIndex;
+    }
+
+    // Try trimmed exact match (remove leading/trailing whitespace)
+    const trimmedSnippet = snippet.trim();
+    const trimmedIndex = line.indexOf(trimmedSnippet);
+    if (trimmedIndex !== -1) {
+      console.warn(`Using trimmed match "${trimmedSnippet}" instead of "${snippet}" in line ${lineIndex}`);
+      return trimmedIndex;
+    }
+
     // Try fuzzy matching - remove spaces and special chars for comparison
     const normalizeForSearch = (text: string) =>
       text.replace(/\s+/g, "").replace(/[^\w]/g, "").toLowerCase();
@@ -140,15 +157,19 @@ export class LineBasedHighlighter {
     const normalizedSnippet = normalizeForSearch(snippet);
     const normalizedLine = normalizeForSearch(line);
 
-    const fuzzyIndex = normalizedLine.indexOf(normalizedSnippet);
-    if (fuzzyIndex !== -1) {
-      // Map back to original line position (approximate)
-      const ratio = fuzzyIndex / normalizedLine.length;
-      return Math.floor(ratio * line.length);
+    if (normalizedSnippet.length > 0) {
+      const fuzzyIndex = normalizedLine.indexOf(normalizedSnippet);
+      if (fuzzyIndex !== -1) {
+        // Map back to original line position (approximate)
+        const ratio = fuzzyIndex / normalizedLine.length;
+        const approximateIndex = Math.floor(ratio * line.length);
+        console.warn(`Using fuzzy match for "${snippet}" at approximate position ${approximateIndex} in line ${lineIndex}`);
+        return approximateIndex;
+      }
     }
 
     // Try partial matching - find the longest common substring
-    for (let len = snippet.length; len >= 3; len--) {
+    for (let len = Math.min(snippet.length, 10); len >= 3; len--) {
       for (let start = 0; start <= snippet.length - len; start++) {
         const partial = snippet.substring(start, start + len);
         const partialIndex = line.indexOf(partial);
@@ -157,6 +178,34 @@ export class LineBasedHighlighter {
             `Using partial match "${partial}" instead of "${snippet}" in line ${lineIndex}`
           );
           return partialIndex;
+        }
+      }
+    }
+
+    // Try searching in nearby lines as a fallback (LLM might have line numbers slightly off)
+    const searchRange = 2;
+    for (let offset = 1; offset <= searchRange; offset++) {
+      // Check line above
+      if (lineIndex - offset >= 0) {
+        const nearbyLine = this.lines[lineIndex - offset];
+        const nearbyIndex = nearbyLine.indexOf(snippet);
+        if (nearbyIndex !== -1) {
+          console.warn(
+            `Found snippet "${snippet}" in nearby line ${lineIndex - offset} instead of line ${lineIndex}`
+          );
+          // Don't return this match, just log it for debugging
+        }
+      }
+      
+      // Check line below
+      if (lineIndex + offset < this.lines.length) {
+        const nearbyLine = this.lines[lineIndex + offset];
+        const nearbyIndex = nearbyLine.indexOf(snippet);
+        if (nearbyIndex !== -1) {
+          console.warn(
+            `Found snippet "${snippet}" in nearby line ${lineIndex + offset} instead of line ${lineIndex}`
+          );
+          // Don't return this match, just log it for debugging
         }
       }
     }
@@ -176,18 +225,36 @@ export class LineBasedHighlighter {
     const { startLineIndex, startCharacters, endLineIndex, endCharacters } =
       highlight;
 
+    // Validate line indices first
+    if (startLineIndex < 0 || startLineIndex >= this.lines.length) {
+      console.warn(`Invalid startLineIndex ${startLineIndex}, document has ${this.lines.length} lines`);
+      return null;
+    }
+    
+    if (endLineIndex < 0 || endLineIndex >= this.lines.length) {
+      console.warn(`Invalid endLineIndex ${endLineIndex}, document has ${this.lines.length} lines`);
+      return null;
+    }
+
+    if (startLineIndex > endLineIndex) {
+      console.warn(`startLineIndex ${startLineIndex} is after endLineIndex ${endLineIndex}`);
+      return null;
+    }
+
     // Find start position
     const startPosInLine = this.findSnippetInLine(
       startLineIndex,
       startCharacters
     );
     if (startPosInLine === null) {
+      console.warn(`Failed to find start snippet "${startCharacters}" in line ${startLineIndex}: "${this.lines[startLineIndex]}"`);
       return null;
     }
 
     // Find end position
     const endPosInLine = this.findSnippetInLine(endLineIndex, endCharacters);
     if (endPosInLine === null) {
+      console.warn(`Failed to find end snippet "${endCharacters}" in line ${endLineIndex}: "${this.lines[endLineIndex]}"`);
       return null;
     }
 
@@ -200,11 +267,17 @@ export class LineBasedHighlighter {
       const endPosAdjusted = endPosInLine + endCharacters.length;
       if (endPosAdjusted <= startPosInLine) {
         console.warn(
-          `End position ${endPosAdjusted} is before start position ${startPosInLine} on line ${startLineIndex}`
+          `End position ${endPosAdjusted} is before start position ${startPosInLine} on line ${startLineIndex}. Attempting to fix...`
         );
-        return null;
+        
+        // Try to find a reasonable end position after the start
+        const lineText = this.lines[startLineIndex];
+        const remainingText = lineText.substring(startPosInLine);
+        const minHighlightLength = Math.min(50, remainingText.length);
+        endOffset = startOffset + minHighlightLength;
+      } else {
+        endOffset = this.lineStartOffsets[endLineIndex] + endPosAdjusted;
       }
-      endOffset = this.lineStartOffsets[endLineIndex] + endPosAdjusted;
     } else {
       // Different lines
       endOffset =
@@ -222,7 +295,15 @@ export class LineBasedHighlighter {
       console.warn(
         `Invalid offsets: start=${startOffset}, end=${endOffset}, content length=${this.originalContent.length}`
       );
-      return null;
+      
+      // Try to create a valid fallback highlight
+      if (startOffset >= 0 && startOffset < this.originalContent.length) {
+        const maxLength = Math.min(100, this.originalContent.length - startOffset);
+        endOffset = startOffset + maxLength;
+        console.warn(`Using fallback highlight of ${maxLength} characters`);
+      } else {
+        return null;
+      }
     }
 
     const text = this.originalContent.slice(startOffset, endOffset);

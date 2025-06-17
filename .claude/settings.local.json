@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm run review-agent:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(rg:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(pkill:*)",
+      "Bash(grep:*)",
+      "Bash(npm outdated)",
+      "Bash(npm run lint:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   },

@@ -3,9 +3,11 @@ import { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import {
   ANALYSIS_MODEL,
+  anthropic,
   DEFAULT_TEMPERATURE,
-  openai,
+  withTimeout,
 } from "../../../types/openai";
+import type { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages/messages";
 import { LineBasedHighlighter } from "../../highlightUtils";
 import { preprocessCommentData } from "../llmResponseProcessor";
 import { getCommentPrompts } from "../prompts";
@@ -13,12 +15,33 @@ import { validateComments } from "../utils/commentUtils";
 
 function convertToLineBasedComments(comments: Comment[], document: Document) {
   const highlighter = new LineBasedHighlighter(document.content);
-  return comments.map((comment) => ({
-    title: comment.title,
-    description: comment.description,
-    highlight: highlighter.convertOffsetToLineBased(comment.highlight),
-    importance: comment.importance ?? 50,
-  }));
+  return comments.map((comment) => {
+    // Ensure highlight has required properties for conversion
+    if (
+      typeof comment.highlight.startOffset === "number" &&
+      typeof comment.highlight.endOffset === "number" &&
+      typeof comment.highlight.quotedText === "string"
+    ) {
+      return {
+        title: comment.title,
+        description: comment.description,
+        highlight: highlighter.convertOffsetToLineBased({
+          startOffset: comment.highlight.startOffset,
+          endOffset: comment.highlight.endOffset,
+          quotedText: comment.highlight.quotedText,
+        }),
+        importance: comment.importance ?? 50,
+      };
+    } else {
+      // If it's already in line-based format, use as-is
+      return {
+        title: comment.title,
+        description: comment.description,
+        highlight: comment.highlight as any, // Type assertion since we know it's line-based
+        importance: comment.importance ?? 50,
+      };
+    }
+  });
 }
 
 export async function getCommentData(
@@ -53,74 +76,145 @@ export async function getCommentData(
       `📊 Current progress: ${comments.length}/${targetComments} valid comments`
     );
 
-    let prompt = getCommentPrompts(
+    let promptData = getCommentPrompts(
       document,
       agentInfo,
       targetComments - comments.length,
       convertToLineBasedComments(comments, document)
     );
 
-    console.log("📝 Generated prompt:", prompt);
+    console.log("📝 Generated prompt:", promptData.userMessage);
 
-    const response = await openai.chat.completions.create({
-      model: ANALYSIS_MODEL,
-      temperature: DEFAULT_TEMPERATURE * (attempts / maxAttempts),
-      messages: [
-        {
-          role: "system",
-          content: `You are ${agentInfo.name}, an expert ${agentInfo.purpose}.
-Your purpose is to ${agentInfo.description}.
-Your instructions are: ${agentInfo.genericInstructions}
-${agentInfo.commentInstructions ? `\nYour instructions for comments are: ${agentInfo.commentInstructions}` : ""}
-
-IMPORTANT LINE-BASED HIGHLIGHTING RULES:
-1. Use startLineIndex/endLineIndex (0-based line numbers)
-2. Use startCharacters/endCharacters (first ~6 chars to identify position within line)
-3. Lines are split on \\n - could be paragraphs, sentences, headings, etc.
-4. Count lines carefully - line 0 is the first line
-5. Character snippets should be the first few characters of the highlight within that line
-6. For single-line highlights: startLineIndex = endLineIndex
-7. Character snippets help identify exact position when lines are long
-8. DO NOT duplicate existing comments - focus on new sections of the document
-
-Example format:
-{
-  "highlight": {
-    "startLineIndex": 2,
-    "startCharacters": "The key",
-    "endLineIndex": 2, 
-    "endCharacters": "important."
-  }
-}`,
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-
-    if (!response.choices[0]?.message?.content) {
-      throw new Error("No response from LLM for comments");
-    }
-
-    const rawResponse = response.choices[0].message.content;
-    console.log(`Response: ${rawResponse}`);
-
-    // Find the JSON object in the response, handling cases where there might be markdown content before it
-    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("No valid JSON found in LLM response");
-    }
-
-    // Strip potential markdown fences before parsing
-    const jsonString = jsonMatch[0].replace(/^```json\n?|\n?```$/g, "");
+    let response;
     let result;
+    let rawResponse;
+
     try {
-      result = JSON.parse(jsonString);
+      response = await withTimeout(
+        anthropic.messages.create({
+        model: ANALYSIS_MODEL,
+        max_tokens: 8000,
+        temperature: DEFAULT_TEMPERATURE * (attempts / maxAttempts),
+        system: promptData.systemMessage,
+        messages: [
+          {
+            role: "user",
+            content: promptData.userMessage,
+          },
+        ],
+        tools: [
+          {
+            name: "provide_comments",
+            description: "Provide detailed, well-formatted comments for the document with proper markdown formatting",
+            input_schema: {
+              type: "object",
+              properties: {
+                comments: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { 
+                        type: "string",
+                        description: "Clear, descriptive title for the comment"
+                      },
+                      description: { 
+                        type: "string",
+                        description: "Detailed description with proper markdown formatting. Use headers, bullet points, emphasis as appropriate. Should be substantive and insightful."
+                      },
+                      highlight: {
+                        type: "object",
+                        properties: {
+                          startLineIndex: { type: "number" },
+                          startCharacters: { type: "string" },
+                          endLineIndex: { type: "number" },
+                          endCharacters: { type: "string" },
+                        },
+                        required: [
+                          "startLineIndex",
+                          "startCharacters",
+                          "endLineIndex",
+                          "endCharacters",
+                        ],
+                      },
+                      importance: { type: "number" },
+                      grade: { type: "number" },
+                    },
+                    required: ["title", "description", "highlight", "importance"],
+                  },
+                },
+              },
+              required: ["comments"],
+            },
+          },
+        ],
+        tool_choice: { type: "tool", name: "provide_comments" },
+        }),
+        120000, // 2 minute timeout
+        `Anthropic API request timed out after 2 minutes (attempt ${attempts})`
+      );
+    } catch (error: any) {
+      console.error(`❌ Anthropic API error on attempt ${attempts}:`, error);
+      
+      // Handle rate limiting with exponential backoff
+      if (error?.status === 429) {
+        const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 30000); // Max 30s
+        console.log(`⏳ Rate limited, waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue; // Retry this attempt
+      }
+      
+      // Handle quota exceeded
+      if (error?.status === 402) {
+        throw new Error("Anthropic API quota exceeded. Please check your billing.");
+      }
+      
+      // Handle authentication errors
+      if (error?.status === 401) {
+        throw new Error("Anthropic API authentication failed. Please check your API key.");
+      }
+      
+      // Handle server errors (500-599) - these are retryable
+      if (error?.status >= 500) {
+        console.warn(`🔄 Server error (${error.status}), will retry on next attempt`);
+        continue; // Continue to next attempt
+      }
+      
+      // For other errors, throw immediately
+      throw new Error(`Anthropic API error (${error?.status || 'unknown'}): ${error?.message || error}`);
+    }
+
+    try {
+      const toolUse = response.content.find((c): c is ToolUseBlock => c.type === "tool_use");
+      if (!toolUse || toolUse.name !== "provide_comments") {
+        throw new Error("No tool use response from Anthropic for comments");
+      }
+
+      result = toolUse.input as { comments: any[] };
+      
+      // Post-process to fix formatting issues from JSON tool use
+      const fixFormatting = (text: string): string => {
+        return text
+          .replace(/\\n/g, '\n')  // Convert escaped newlines to actual newlines
+          .replace(/\\"/g, '"')   // Convert escaped quotes
+          .replace(/\\\\/g, '\\') // Convert escaped backslashes
+          .trim();
+      };
+
+      // Fix formatting in comment descriptions and titles
+      if (result.comments && Array.isArray(result.comments)) {
+        result.comments = result.comments.map((comment: any) => ({
+          ...comment,
+          title: comment.title ? fixFormatting(comment.title) : comment.title,
+          description: comment.description ? fixFormatting(comment.description) : comment.description,
+        }));
+      }
+      
+      console.log(`Response: ${JSON.stringify(result, null, 2)}`);
+      rawResponse = JSON.stringify(result);
     } catch (error) {
-      console.error("Failed to parse JSON:", jsonString);
-      throw error;
+      console.error(`❌ Failed to parse Anthropic response on attempt ${attempts}:`, error);
+      continue; // Continue to next attempt
     }
 
     // Pre-process comments using shared utility
@@ -149,24 +243,34 @@ Example format:
         JSON.stringify(newComments, null, 2)
       );
 
-      // Add feedback to help the LLM learn from its mistakes
-      const feedback = `Previous attempt failed with error: ${error instanceof Error ? error.message : String(error)}. Please ensure your highlights use the line-based format:
-1. startLineIndex/endLineIndex are valid 0-based line numbers
-2. startCharacters/endCharacters match the beginning of text on those lines
-3. Line indices are within document bounds
-4. Character snippets are 3-10 characters from the actual line content
-5. For single-line highlights: startLineIndex = endLineIndex
-6. DO NOT duplicate existing comments - focus on new sections of the document
-7. Keep highlights between 5-1000 characters - focus on the most important part of long sections`;
+      // Add detailed feedback to help the LLM learn from its mistakes
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const feedback = `
+VALIDATION ERROR FROM PREVIOUS ATTEMPT:
+${errorMessage}
+
+DEBUGGING TIPS FOR FIXING HIGHLIGHTS:
+1. VERIFY LINE NUMBERS: Check that your startLineIndex and endLineIndex match the "Line X:" numbers in the document above
+2. COPY TEXT EXACTLY: Your startCharacters and endCharacters must be copied EXACTLY from the specified lines
+3. CHECK DOCUMENT BOUNDS: The document has ${document.content.split('\n').length} lines (0-${document.content.split('\n').length - 1})
+4. USE PROPER SNIPPETS: Character snippets should be 3-8 characters from the actual line content
+5. SINGLE-LINE RULE: If highlighting within one line, startLineIndex must equal endLineIndex
+6. NO DUPLICATES: Don't create comments for sections already covered by existing comments
+7. REASONABLE LENGTH: Keep highlights between 5-1000 characters
+
+FAILED COMMENTS DEBUG INFO:
+${JSON.stringify(newComments, null, 2)}
+
+Please carefully review the line numbers and text snippets above, then create new highlights that exactly match the document content.`;
 
       // Add feedback to the next attempt's prompt
-      prompt = `${prompt}\n\n${feedback}`;
+      promptData.userMessage = `${promptData.userMessage}\n\n${feedback}`;
     }
 
     // Record this interaction
     llmInteractions.push({
       attempt: attempts,
-      prompt: prompt,
+      prompt: promptData.userMessage,
       response: rawResponse,
       validCommentsCount,
       failedCommentsCount,

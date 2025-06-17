@@ -159,7 +159,14 @@ export function VersionDetails({
                     <GradeBadge grade={comment.grade} />
                   )}
                 </div>
-                <p className="text-sm text-gray-600">{comment.description}</p>
+                <div className="prose max-w-none">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                  >
+                    {comment.description}
+                  </ReactMarkdown>
+                </div>
                 {comment.highlight && (
                   <div className="mt-2 rounded bg-yellow-50 p-2 text-sm">
                     <div className="font-medium text-yellow-800">
