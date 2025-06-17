@@ -10,7 +10,8 @@
       "Bash(grep:*)",
       "Bash(npm outdated)",
       "Bash(npm run lint:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   },

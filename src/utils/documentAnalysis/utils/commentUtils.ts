@@ -13,8 +13,6 @@ export async function validateComments(
     throw new Error("Comments must be an array");
   }
 
-  console.log("Starting line-based comment validation");
-
   // Validate the raw comment structure
   const rawComments: LineCharacterComment[] = comments.map((comment, index) => {
     if (!comment.title || typeof comment.title !== "string") {
@@ -86,8 +84,6 @@ export async function validateComments(
     };
   });
 
-  console.log("Raw comments validated, processing line-based highlights");
-
   // Use the line-based highlighter to process comments
   const highlighter = new LineBasedHighlighter(content);
   const processed = highlighter.processLineComments(rawComments);
@@ -97,7 +93,6 @@ export async function validateComments(
   const errors: string[] = [];
 
   processed.forEach((comment, index) => {
-    console.log(`Validating processed comment ${index}: ${comment.title}`);
 
     try {
       if (!comment.highlight) {

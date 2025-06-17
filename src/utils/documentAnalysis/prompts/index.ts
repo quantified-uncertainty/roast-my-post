@@ -92,13 +92,13 @@ export function getCommentPrompts(
   const userMessage = `${documentInformationSection(document)}
 
 Please analyze this document and provide ${targetComments} detailed comments. Each comment should:
-- Have a clear, descriptive title
-- Include a detailed description with specific insights
+- Have a clear, descriptive title (max 80 characters)
+- Include a concise description with specific insights (max 200 words)
 - Focus on the most important 5-1000 characters of text (DO NOT highlight entire paragraphs)
 - For long sections, select only the most crucial 2-3 sentences
 - Use line-based highlighting with startLineIndex/endLineIndex and startCharacters/endCharacters
 - Include importance score (0-100)${shouldIncludeGrade(agentInfo) ? "\n- Include a grade (0-100) for each comment" : ""}
-- Provide relevant external references and connections
+- Be concise and focused - avoid lengthy tables, multiple sections, or excessive formatting
 - Avoid duplicating existing comments - focus on new sections
 
 CRITICAL LINE NUMBER AND TEXT MATCHING RULES:

@@ -83,12 +83,14 @@ export async function getCommentData(
       convertToLineBasedComments(comments, document)
     );
 
-    console.log("📝 Generated prompt:", promptData.userMessage);
+    console.log(`📝 Generated prompt: ${promptData.userMessage.length} characters`);
 
     let response;
     let result;
     let rawResponse;
 
+    console.log("🤖 Calling Anthropic API...");
+    const apiCallStart = Date.now();
     try {
       response = await withTimeout(
         anthropic.messages.create({
@@ -105,7 +107,7 @@ export async function getCommentData(
         tools: [
           {
             name: "provide_comments",
-            description: "Provide detailed, well-formatted comments for the document with proper markdown formatting",
+            description: "Provide concise, focused comments for the document. Keep descriptions under 200 words each.",
             input_schema: {
               type: "object",
               properties: {
@@ -120,7 +122,7 @@ export async function getCommentData(
                       },
                       description: { 
                         type: "string",
-                        description: "Detailed description with proper markdown formatting. Use headers, bullet points, emphasis as appropriate. Should be substantive and insightful."
+                        description: "Concise description (max 200 words) with specific insights. Use simple markdown formatting. Be substantive but brief."
                       },
                       highlight: {
                         type: "object",
@@ -153,6 +155,8 @@ export async function getCommentData(
         120000, // 2 minute timeout
         `Anthropic API request timed out after 2 minutes (attempt ${attempts})`
       );
+      const apiCallEnd = Date.now();
+      console.log(`✅ Received response from Anthropic API (${Math.round((apiCallEnd - apiCallStart) / 1000)}s)`);
     } catch (error: any) {
       console.error(`❌ Anthropic API error on attempt ${attempts}:`, error);
       
@@ -210,7 +214,6 @@ export async function getCommentData(
         }));
       }
       
-      console.log(`Response: ${JSON.stringify(result, null, 2)}`);
       rawResponse = JSON.stringify(result);
     } catch (error) {
       console.error(`❌ Failed to parse Anthropic response on attempt ${attempts}:`, error);

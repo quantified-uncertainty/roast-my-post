@@ -55,7 +55,7 @@
     "next": "15.3.2",
     "next-auth": "5.0.0-beta.28",
     "next-safe-action": "^7.10.8",
-    "nodemailer": "^7.0.3",
+    "nodemailer": "^6.10.1",
     "openai": "^4.93.0",
     "prisma": "^6.8.2",
     "prismjs": "^1.30.0",

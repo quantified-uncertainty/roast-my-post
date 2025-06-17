@@ -122,9 +122,9 @@ export class JobModel {
       };
     }
   ) {
+    const startTime = Date.now(); // Start timing immediately
     try {
       await this.markJobAsRunning(job.id);
-      const startTime = Date.now();
 
       // Get the latest document version and agent version
       const documentVersion = job.evaluation.document.versions[0];
@@ -236,8 +236,6 @@ export class JobModel {
         }
       }
 
-      const endTime = Date.now();
-      const durationInSeconds = Math.round((endTime - startTime) / 1000);
       const costInCents = calculateApiCost(usage);
 
       // Create log file with timestamp
@@ -261,7 +259,7 @@ export class JobModel {
   * Prompt Tokens: ${usage?.prompt_tokens || 0}
   * Completion Tokens: ${usage?.completion_tokens || 0}
 - Estimated Cost: $${(costInCents / 100).toFixed(6)}
-- Runtime: ${durationInSeconds}s
+- Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
 
 ## LLM Thinking
@@ -280,14 +278,22 @@ ${JSON.stringify(llmResponse, null, 2)}
 \`\`\`
 `;
 
-      await writeLogFile(logContent, logFilename);
+      // Calculate final duration including ALL processing (DB writes, file I/O, etc.)
+      const endTime = Date.now();
+      const durationInSeconds = Math.round((endTime - startTime) / 1000);
+      
+      // Update the log file with actual duration
+      const finalLogContent = logContent.replace('[DURATION_PLACEHOLDER]', durationInSeconds.toString());
+      await writeLogFile(finalLogContent, logFilename);
+
+      console.log(`📝 Log written to ${logFilename}`);
 
       // Update job as completed
       await this.markJobAsCompleted(job.id, {
         llmThinking: polishedReview.thinking || null,
         costInCents,
         durationInSeconds,
-        logs: logContent,
+        logs: finalLogContent,
       });
 
       console.log(`✅ Job ${job.id} completed successfully`);
