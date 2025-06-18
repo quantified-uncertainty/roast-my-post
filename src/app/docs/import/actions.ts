@@ -15,7 +15,7 @@ export async function importDocument(url: string) {
           "Content-Type": "application/json",
           Cookie: cookieHeader,
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, importUrl: url }),
       }
     );
 

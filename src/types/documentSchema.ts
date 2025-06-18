@@ -105,6 +105,7 @@ export const DocumentVersionSchema = z.object({
   urls: z.array(z.string()),
   platforms: z.array(z.string()),
   intendedAgents: z.array(z.string()),
+  importUrl: z.string().optional(),
 });
 
 export type DocumentVersion = z.infer<typeof DocumentVersionSchema>;
@@ -118,6 +119,7 @@ export const DocumentSchema = z.object({
   author: z.string(),
   publishedDate: z.string(),
   url: z.string(),
+  importUrl: z.string().optional(),
   platforms: z.array(z.string()),
   intendedAgents: z.array(z.string()),
   reviews: z.array(EvaluationSchema),

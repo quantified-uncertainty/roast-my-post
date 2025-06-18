@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url } = await request.json();
+    const { url, importUrl } = await request.json();
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       content: processedArticle.content,
       urls: processedArticle.url,
       platforms: processedArticle.platforms.join(", "),
+      importUrl: importUrl || url,
     };
 
     console.log("💾 Creating document...");

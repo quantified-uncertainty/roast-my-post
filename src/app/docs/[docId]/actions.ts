@@ -69,16 +69,16 @@ export async function reuploadDocument(docId: string) {
       };
     }
 
-    const url = document.url;
-    if (!url) {
+    const importUrl = document.importUrl;
+    if (!importUrl) {
       return {
         success: false,
-        error: "Document has no URL to re-upload from",
+        error: "Document was not imported from a URL and cannot be re-uploaded",
       };
     }
 
-    // Process the article again from the URL
-    const processedArticle = await processArticle(url);
+    // Process the article again from the importUrl
+    const processedArticle = await processArticle(importUrl);
 
     // Update the document with the new content
     await DocumentModel.update(
@@ -89,6 +89,7 @@ export async function reuploadDocument(docId: string) {
         content: processedArticle.content,
         urls: processedArticle.url,
         platforms: processedArticle.platforms.join(", "),
+        importUrl: importUrl,
       },
       session.user.id
     );

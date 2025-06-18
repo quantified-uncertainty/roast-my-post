@@ -384,7 +384,7 @@ function HomeView({
                 Edit
               </Button>
             </Link>
-            {document.url && (
+            {document.importUrl && (
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();

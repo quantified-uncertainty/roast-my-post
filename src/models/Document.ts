@@ -25,6 +25,7 @@ type DocumentWithRelations = {
     intendedAgents: string[];
     authors: string[];
     urls: string[];
+    importUrl: string | null;
     createdAt: Date;
     updatedAt: Date;
     documentId: string;
@@ -177,6 +178,7 @@ export class DocumentModel {
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
+      importUrl: latestVersion.importUrl || undefined,
       platforms: latestVersion.platforms,
       intendedAgents: latestVersion.intendedAgents,
       submittedById: dbDoc.submittedById,
@@ -365,6 +367,7 @@ export class DocumentModel {
         author: latestVersion.authors.join(", "),
         publishedDate: dbDoc.publishedDate.toISOString(),
         url: latestVersion.urls[0] || "", // Provide empty string as fallback
+        uploadedFrom: latestVersion.uploadedFrom || undefined,
         platforms: latestVersion.platforms,
         intendedAgents: latestVersion.intendedAgents,
         submittedById: dbDoc.submittedById,
@@ -481,6 +484,7 @@ export class DocumentModel {
     platforms?: string;
     intendedAgents?: string;
     content: string;
+    importUrl?: string;
     submittedById: string;
   }) {
     // Generate a nanoid for the document id
@@ -505,6 +509,7 @@ export class DocumentModel {
               ? data.intendedAgents.split(",").map((a) => a.trim())
               : [],
             content: data.content,
+            importUrl: data.importUrl || null,
           },
         },
         // Create evaluations for each intended agent
@@ -665,6 +670,7 @@ export class DocumentModel {
       platforms?: string;
       intendedAgents?: string;
       content: string;
+      uploadedFrom?: string;
     },
     userId: string
   ) {
@@ -711,6 +717,7 @@ export class DocumentModel {
               ? data.intendedAgents.split(",").map((a) => a.trim())
               : [],
             content: data.content,
+            uploadedFrom: data.uploadedFrom || null,
           },
         },
       },
