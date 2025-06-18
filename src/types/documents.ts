@@ -12,7 +12,6 @@ export interface RawDocumentReview {
     name: string;
     version: string;
     description: string;
-    iconName: string;
     purpose: string;
     genericInstructions?: string;
     summaryInstructions?: string;
@@ -84,6 +83,7 @@ export function transformDocument(raw: RawDocument): Document {
         return {
           ...review,
           createdAt: createdAt, // Assign the parsed or fallback date
+          grade: review.grade ?? undefined, // Convert null to undefined for optional field
         };
       }),
   };

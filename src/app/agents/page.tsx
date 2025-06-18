@@ -23,7 +23,6 @@ export default async function AgentsPage() {
     purpose: dbAgent.versions[0].agentType,
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
-    iconName: "robot", // Default icon
     genericInstructions: dbAgent.versions[0].genericInstructions,
     summaryInstructions: dbAgent.versions[0].summaryInstructions,
     commentInstructions: dbAgent.versions[0].commentInstructions,

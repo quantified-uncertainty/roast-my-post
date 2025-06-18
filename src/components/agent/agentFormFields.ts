@@ -38,13 +38,6 @@ export const agentFormFields: FormFieldConfig[] = [
     placeholder: "Describe what this agent does",
   },
   {
-    name: "iconName",
-    label: "Icon Name",
-    required: true,
-    type: "text",
-    placeholder: "Icon name (e.g., StarIcon)",
-  },
-  {
     name: "genericInstructions",
     label: "Generic Instructions",
     required: true,

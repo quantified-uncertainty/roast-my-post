@@ -15,7 +15,6 @@ import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import type { AgentReview } from "@/types/evaluationSchema";
-import { getIcon } from "@/utils/ui/iconMap";
 
 interface AgentDetailProps {
   agent: Agent;
@@ -26,7 +25,6 @@ export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
-  const IconComponent = getIcon(agent.iconName);
   const [review, setReview] = useState<AgentReview | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,33 +52,24 @@ export default function AgentDetail({
   return (
     <div className="mx-auto max-w-4xl p-8">
       <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div
-            className={`rounded-lg bg-${AGENT_TYPE_INFO[agent.purpose].color}-100 p-3`}
-          >
-            <IconComponent
-              className={`h-8 w-8 text-${AGENT_TYPE_INFO[agent.purpose].color}-600`}
-            />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
-              {agent.name}
-            </h2>
-            <p className="text-sm text-gray-500">
-              {AGENT_TYPE_INFO[agent.purpose].individualTitle} v{agent.version}
-              {agent.owner && (
-                <>
-                  {" • "}
-                  <Link
-                    href={`/users/${agent.owner.id}`}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    {agent.owner.name || "View Owner"}
-                  </Link>
-                </>
-              )}
-            </p>
-          </div>
+        <div>
+          <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
+            {agent.name}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {AGENT_TYPE_INFO[agent.purpose].individualTitle} v{agent.version}
+            {agent.owner && (
+              <>
+                {" • "}
+                <Link
+                  href={`/users/${agent.owner.id}`}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  {agent.owner.name || "View Owner"}
+                </Link>
+              </>
+            )}
+          </p>
         </div>
 
         <div className="flex items-center gap-2">

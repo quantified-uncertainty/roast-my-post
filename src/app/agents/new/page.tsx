@@ -27,8 +27,6 @@ export default function NewAgentPage() {
       name: "",
       purpose: "ASSESSOR",
       description: "",
-      iconName: "",
-
       genericInstructions: "",
       summaryInstructions: "",
       commentInstructions: "",

@@ -42,7 +42,6 @@ const BaseAgentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   purpose: AgentPurposeEnum,
   description: z.string().min(30, "Description must be at least 30 characters"),
-  iconName: z.string().min(1, "Icon name is required"),
   genericInstructions: z
     .string()
     .min(30, "Generic instructions must be at least 30 characters"),

@@ -161,7 +161,6 @@ export class JobModel {
       const agent: Agent = {
         id: job.evaluation.agent.id,
         name: agentVersion.name,
-        iconName: "robot", // TODO: Fix this
         purpose: agentVersion.agentType.toLowerCase(),
         version: agentVersion.version.toString(),
         description: agentVersion.description,

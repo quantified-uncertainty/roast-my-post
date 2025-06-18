@@ -252,7 +252,6 @@ export class DocumentModel {
             name: evaluation.agent.versions[0].name,
             version: evaluation.agent.versions[0].version.toString(),
             description: evaluation.agent.versions[0].description,
-            iconName: "robot", // TODO: Fix this
             purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
             genericInstructions:
               evaluation.agent.versions[0].genericInstructions,
@@ -436,7 +435,6 @@ export class DocumentModel {
               name: evaluation.agent.versions[0].name,
               version: evaluation.agent.versions[0].version.toString(),
               description: evaluation.agent.versions[0].description,
-              iconName: "robot", // TODO: Fix this
               purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
               genericInstructions:
                 evaluation.agent.versions[0].genericInstructions,

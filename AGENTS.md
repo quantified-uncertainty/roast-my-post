@@ -21,7 +21,6 @@ export interface EvaluationAgent {
   name: string;
   version: string;
   description: string;
-  iconName: string;
   capabilities: string[];
   use_cases: string[];
   limitations: string[];
@@ -36,7 +35,6 @@ JSON example:
   "name": "Example Agent",
   "version": "1.0",
   "description": "This is an example agent that does cool things.",
-  "iconName": "StarIcon",
   "capabilities": ["Capability 1", "Capability 2", "Capability 3"],
   "use_cases": ["Use case 1", "Use case 2", "Use case 3"],
   "limitations": ["Limitation 1", "Limitation 2", "Limitation 3"]

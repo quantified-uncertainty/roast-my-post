@@ -50,7 +50,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           name: data.name,
           purpose: data.purpose.toUpperCase(),
           description: data.description,
-          iconName: data.iconName || "robot",
           genericInstructions: data.genericInstructions,
           summaryInstructions: data.summaryInstructions,
           analysisInstructions: data.analysisInstructions || "",

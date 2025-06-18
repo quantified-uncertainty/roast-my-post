@@ -13,7 +13,6 @@ describe("getCommentData E2E", () => {
     version: "1.0",
     purpose: "ADVISOR",
     description: "A test agent for providing writing feedback on blog posts and articles",
-    iconName: "pencil",
     genericInstructions: "You are a helpful writing coach focused on improving clarity and engagement",
     summaryInstructions: "Provide a brief summary highlighting the main points and overall quality",
     commentInstructions: "Focus on specific areas where the writing could be improved, such as clarity, flow, evidence, and engagement",
