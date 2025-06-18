@@ -31,12 +31,14 @@ import {
   ArrowLeftIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
+  ClipboardDocumentListIcon,
   ListBulletIcon,
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
+  CheckIcon,
   StarIcon,
   XCircleIcon,
 } from "@heroicons/react/24/solid";
@@ -240,6 +242,25 @@ function EvaluationSelector({
   activeEvaluationIndex,
   onEvaluationSelect,
 }: EvaluationSelectorProps) {
+  // Handle case where there are no evaluations
+  if (!document.reviews || document.reviews.length === 0) {
+    return (
+      <div className="overflow-hidden border border-gray-200 bg-white p-8">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 text-gray-400">
+            <ClipboardDocumentListIcon className="h-12 w-12" />
+          </div>
+          <h3 className="mt-2 text-sm font-semibold text-gray-900">
+            No evaluations yet
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            This document hasn't been evaluated by any agents yet.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ul className="overflow-hidden border border-gray-200 bg-white">
       {document.reviews.map((evaluation, index) => {
@@ -282,19 +303,7 @@ function EvaluationSelector({
                 {isActive && (
                   <span className="absolute right-4 top-4 flex items-center justify-center">
                     <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-500">
-                      <svg
-                        className="h-4 w-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="h-4 w-4 text-white" />
                     </span>
                   </span>
                 )}

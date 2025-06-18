@@ -1,0 +1,18 @@
+{
+  "id": "example-domain",
+  "slug": "example-domain",
+  "title": "Example Domain",
+  "author": "Unknown Author",
+  "publishedDate": "2024-12-19",
+  "url": "https://example.com",
+  "platforms": [],
+  "intendedAgents": [
+    "clarity-coach",
+    "research-scholar",
+    "quantitative-forecaster",
+    "ea-impact-evaluator",
+    "bias-detector"
+  ],
+  "content": "I notice that you've provided the instructions for cleaning content, but the actual content to be cleaned appears to be missing. The message ends with \"Content to clean:\" but no content follows.\n\nCould you please provide the actual content that you'd like me to clean up? Once you share the content, I'll be happy to remove the obvious platform UI elements while preserving all the meaningful article content, images, headings, and structure as requested.",
+  "reviews": []
+}

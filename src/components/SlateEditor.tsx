@@ -329,6 +329,49 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       // Process all nodes in the tree
       nodes = nodes.map(processNode);
+      
+      // Validate and fix nodes to ensure they have proper text content
+      const validateNode = (node: any): any => {
+        // If it's a text node, ensure it has the correct structure
+        if (typeof node === 'string') {
+          return { text: node };
+        }
+        
+        if (node && typeof node.text === 'string') {
+          return node;
+        }
+        
+        // If it's an element, ensure it has children
+        if (node && typeof node === 'object') {
+          if (!node.children || !Array.isArray(node.children)) {
+            // If no children, create a text node
+            return {
+              ...node,
+              children: [{ text: '' }]
+            };
+          }
+          
+          // Recursively validate children, ensuring they're not empty
+          const validatedChildren = node.children
+            .map(validateNode)
+            .filter(child => child !== null && child !== undefined);
+          
+          // If no valid children remain, add an empty text node
+          if (validatedChildren.length === 0) {
+            validatedChildren.push({ text: '' });
+          }
+          
+          return {
+            ...node,
+            children: validatedChildren
+          };
+        }
+        
+        // Fallback for invalid nodes
+        return { text: '' };
+      };
+      
+      nodes = nodes.map(validateNode);
       return nodes as Descendant[];
     } catch (error) {
       console.error("Error parsing markdown:", error);

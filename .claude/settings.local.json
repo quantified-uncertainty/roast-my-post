@@ -13,7 +13,9 @@
       "Bash(find:*)",
       "Bash(node:*)",
       "Bash(true)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": []
   },
