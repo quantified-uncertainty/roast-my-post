@@ -1,7 +1,10 @@
 import { nanoid } from "nanoid";
 
 import { prisma } from "@/lib/prisma";
-import { Document, DocumentSchema } from "@/types/documentSchema";
+import {
+  Document,
+  DocumentSchema,
+} from "@/types/documentSchema";
 
 type DocumentWithRelations = {
   id: string;
@@ -117,7 +120,11 @@ export class DocumentModel {
         },
         evaluations: {
           include: {
-            jobs: true,
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
             agent: {
               include: {
                 versions: {
@@ -198,6 +205,7 @@ export class DocumentModel {
                   priceInCents: task.priceInCents,
                   timeInSeconds: task.timeInSeconds,
                   log: task.log,
+                  llmInteractions: (task as any).llmInteractions,
                   createdAt: task.createdAt,
                 })),
               }
@@ -298,7 +306,11 @@ export class DocumentModel {
         },
         evaluations: {
           include: {
-            jobs: true,
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
             agent: {
               include: {
                 versions: {

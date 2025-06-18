@@ -32,6 +32,7 @@ export const TaskSchema = z.object({
   priceInCents: z.number(),
   timeInSeconds: z.number().nullable(),
   log: z.string().nullable(),
+  llmInteractions: z.any().nullable(), // JSON field storing LLMInteraction[]
   createdAt: z.date(),
 });
 

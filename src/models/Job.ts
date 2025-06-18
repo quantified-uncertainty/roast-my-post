@@ -205,6 +205,7 @@ export class JobModel {
             priceInCents: task.priceInCents,
             timeInSeconds: task.timeInSeconds,
             log: task.log,
+            llmInteractions: task.llmInteractions as any, // Cast for Prisma Json type
             jobId: job.id,
           },
         });

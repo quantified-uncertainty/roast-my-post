@@ -229,6 +229,7 @@ model Task {
   priceInCents Int
   timeInSeconds Int?
   log        String?
+  llmInteractions Json? // Array of LLMInteraction objects (messages + usage)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
