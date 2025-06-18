@@ -1,5 +1,22 @@
 # Claude Development Notes
 
+## Key Learnings
+
+### Git Commit Issues
+If encountering `_safe_eval` errors with git commands, use full paths: `/usr/bin/git`
+For complex commit messages, write to a temp file and use `git commit -F /tmp/commit_msg.txt`
+
+### Field Naming Considerations
+- Choose field names that reflect their purpose (e.g., `importUrl` vs `uploadedFrom`)
+- Consider whether fields should suggest mutability or historical data
+- `importUrl` better indicates it's a source URL that can be changed for re-importing
+
+### Conditional UI Rendering
+When adding conditional features (like re-upload button):
+- Check for the presence of required data (e.g., `document.importUrl`)
+- Ensure the feature logic uses the correct field
+- Update error messages to be descriptive of the actual requirement
+
 ## Shell Issues
 - If basic commands fail with `_safe_eval` errors, use full paths: `/bin/rm`, `/bin/ls`, `/bin/mv`
 

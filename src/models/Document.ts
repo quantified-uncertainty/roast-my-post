@@ -9,6 +9,8 @@ import {
 type DocumentWithRelations = {
   id: string;
   publishedDate: Date;
+  createdAt: Date;
+  updatedAt: Date;
   submittedById: string;
   submittedBy: {
     id: string;
@@ -190,6 +192,8 @@ export class DocumentModel {
             image: dbDoc.submittedBy.image,
           }
         : undefined,
+      createdAt: dbDoc.createdAt,
+      updatedAt: dbDoc.updatedAt,
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => ({
@@ -367,7 +371,7 @@ export class DocumentModel {
         author: latestVersion.authors.join(", "),
         publishedDate: dbDoc.publishedDate.toISOString(),
         url: latestVersion.urls[0] || "", // Provide empty string as fallback
-        uploadedFrom: latestVersion.uploadedFrom || undefined,
+        importUrl: latestVersion.importUrl || undefined,
         platforms: latestVersion.platforms,
         intendedAgents: latestVersion.intendedAgents,
         submittedById: dbDoc.submittedById,
@@ -379,6 +383,8 @@ export class DocumentModel {
               image: dbDoc.submittedBy.image,
             }
           : undefined,
+        createdAt: dbDoc.createdAt,
+        updatedAt: dbDoc.updatedAt,
         reviews: dbDoc.evaluations.map((evaluation) => {
           // Map all evaluation versions
           const evaluationVersions = evaluation.versions.map((version) => ({
@@ -670,7 +676,7 @@ export class DocumentModel {
       platforms?: string;
       intendedAgents?: string;
       content: string;
-      uploadedFrom?: string;
+      importUrl?: string;
     },
     userId: string
   ) {
@@ -717,7 +723,7 @@ export class DocumentModel {
               ? data.intendedAgents.split(",").map((a) => a.trim())
               : [],
             content: data.content,
-            uploadedFrom: data.uploadedFrom || null,
+            importUrl: data.importUrl || null,
           },
         },
       },

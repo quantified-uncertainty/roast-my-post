@@ -133,6 +133,8 @@ export const DocumentSchema = z.object({
     })
     .optional(),
   versions: z.array(DocumentVersionSchema).optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export type Document = z.infer<typeof DocumentSchema>;

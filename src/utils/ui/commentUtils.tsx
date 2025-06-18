@@ -168,3 +168,10 @@ export function getCommentColorByGrade(
   const baseColor = getBaseColor(grade);
   return getColorStyle(baseColor, importance, allImportances);
 }
+
+export const WORD_COUNT_LEVELS = [
+  { threshold: 1000, color: "text-gray-400" },
+  { threshold: 5000, color: "text-gray-500" },
+  { threshold: 20000, color: "text-gray-600" },
+  { threshold: Infinity, color: "text-gray-700" },
+] as const;

@@ -10,43 +10,15 @@ import {
 } from "@/types/documentSchema";
 import { getValidCommentCount } from "@/utils/ui/commentUtils";
 import {
+  formatWordCount,
+  getWordCountInfo,
+} from "@/utils/ui/documentUtils";
+import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,
   Squares2X2Icon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
-
-const WORD_COUNT_LEVELS = [
-  { threshold: 1000, color: "text-gray-400" },
-  { threshold: 5000, color: "text-gray-500" },
-  { threshold: 20000, color: "text-gray-600" },
-  { threshold: Infinity, color: "text-gray-700" },
-] as const;
-
-function getWordCountInfo(content: string) {
-  const wordCount = content.split(/\s+/).length;
-  const level = WORD_COUNT_LEVELS.findIndex(
-    ({ threshold }) => wordCount < threshold
-  );
-  return {
-    level,
-    color: WORD_COUNT_LEVELS[level].color,
-    wordCount,
-  };
-}
-
-function WordCountIndicator({ content }: { content: string }) {
-  const { level } = getWordCountInfo(content);
-  const bars = Array.from({ length: level }, (_, i) => (
-    <div
-      key={i}
-      className="w-0.5 bg-gray-500"
-      style={{ height: `${(i + 1) * 3}px` }}
-    />
-  ));
-
-  return <div className="flex items-end gap-0.5">{bars}</div>;
-}
 
 export default function DocumentsClient({
   documents,
@@ -190,20 +162,16 @@ export default function DocumentsClient({
                         </div>
                         <div className="text-gray-300">•</div>
                         <div className="flex items-center gap-1">
-                          <WordCountIndicator content={document.content} />
-                          <span
-                            className={getWordCountInfo(document.content).color}
-                          >
-                            {(() => {
-                              const { wordCount } = getWordCountInfo(
-                                document.content
-                              );
-                              if (wordCount >= 1000) {
-                                return `${(wordCount / 1000).toFixed(1)}k words`;
-                              }
-                              return `${wordCount} words`;
-                            })()}
-                          </span>
+                          {(() => {
+                            const { wordCount, color } = getWordCountInfo(
+                              document.content
+                            );
+                            return (
+                              <span className={color}>
+                                {formatWordCount(wordCount) + " words"}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                       {document.url && (
@@ -381,21 +349,17 @@ export default function DocumentsClient({
                         </div>
                       </td>
                       <td className="w-32 whitespace-nowrap border-b border-gray-200 px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <WordCountIndicator content={document.content} />
-                          <span
-                            className={getWordCountInfo(document.content).color}
-                          >
-                            {(() => {
-                              const { wordCount } = getWordCountInfo(
-                                document.content
-                              );
-                              if (wordCount >= 1000) {
-                                return `${(wordCount / 1000).toFixed(1)}k`;
-                              }
-                              return `${wordCount}`;
-                            })()}
-                          </span>
+                        <div className="flex items-center gap-1">
+                          {(() => {
+                            const { wordCount, color } = getWordCountInfo(
+                              document.content
+                            );
+                            return (
+                              <span className={color}>
+                                {formatWordCount(wordCount) + " words"}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </td>
                       {evaluators.map((evaluator) => {

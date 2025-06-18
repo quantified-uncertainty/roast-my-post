@@ -15,7 +15,10 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/actions";
+import {
+  deleteDocument,
+  reuploadDocument,
+} from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
 import type {
   Comment,
@@ -27,6 +30,7 @@ import {
   getValidAndSortedComments,
 } from "@/utils/ui/commentUtils";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
+import { formatWordCount } from "@/utils/ui/documentUtils";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -119,7 +123,7 @@ function CommentsSidebar({
   return (
     <div className="px-4">
       <div className="divide-y divide-gray-100">
-        {sortedComments.map((comment, index) => {
+        {sortedComments.map((comment: Comment, index: number) => {
           const tag = index.toString();
           const hasGradeInstructions = evaluation.agent.gradeInstructions;
 
@@ -358,18 +362,6 @@ function HomeView({
   return (
     <div className="h-full p-8">
       <div className="mb-8">
-        <div className="mt-2 text-sm text-gray-500">
-          {document.submittedById && (
-            <>
-              <Link
-                href={`/users/${document.submittedById}`}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                {document.submittedBy?.name || "View Owner"}
-              </Link>
-            </>
-          )}
-        </div>
         {isOwner && (
           <div className="mt-4 flex items-center gap-2">
             <Link href={`/docs/${document.id}/evaluations`}>
@@ -403,8 +395,10 @@ function HomeView({
                   className="flex items-center gap-2"
                   disabled={isReuploadingDocument}
                 >
-                  <ArrowPathIcon className={`h-4 w-4 ${isReuploadingDocument ? 'animate-spin' : ''}`} />
-                  {isReuploadingDocument ? 'Re-uploading...' : 'Re-upload'}
+                  <ArrowPathIcon
+                    className={`h-4 w-4 ${isReuploadingDocument ? "animate-spin" : ""}`}
+                  />
+                  {isReuploadingDocument ? "Re-uploading..." : "Re-upload"}
                 </Button>
               </form>
             )}
@@ -437,6 +431,57 @@ function HomeView({
             </form>
           </div>
         )}
+      </div>
+      {/* Document Details Section */}
+      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-gray-900">
+          Document Details
+        </h3>
+        <div className="grid grid-cols-1 gap-2 text-sm text-gray-600 sm:grid-cols-2">
+          <div>
+            <span className="font-medium text-gray-400">Updated:</span>{" "}
+            {new Date(document.updatedAt).toLocaleDateString()}
+          </div>
+          <div>
+            <span className="font-medium text-gray-400">Length:</span>{" "}
+            {formatWordCount(
+              document.content.split(/\s+/).filter((w) => w.length > 0).length
+            ) + " words"}
+          </div>
+          {document.platforms && document.platforms.length > 0 && (
+            <div>
+              <span className="font-medium text-gray-400">Platforms:</span>{" "}
+              {document.platforms.join(", ")}
+            </div>
+          )}
+          {document.submittedBy && (
+            <div>
+              <span className="font-medium text-gray-400">Submitter:</span>{" "}
+              <Link
+                href={`/users/${document.submittedById}`}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                {document.submittedBy.name}
+              </Link>
+            </div>
+          )}
+          {document.importUrl && (
+            <div className="sm:col-span-2">
+              <span className="font-medium text-gray-400">Uploaded from:</span>{" "}
+              <a
+                href={document.importUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700 hover:underline"
+              >
+                {(() => {
+                  const url = document.importUrl.replace(/^https?:\/\//, "");
+                  return url.length > 30 ? url.slice(0, 30) + "…" : url;
+                })()}
+              </a>
+            </div>
+          )}
+        </div>
       </div>
 
       <EvaluationSelector
@@ -608,7 +653,9 @@ function LoadingModal({ isOpen, message }: LoadingModalProps) {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{message}</h2>
-            <p className="text-sm text-gray-600">This may take a few moments...</p>
+            <p className="text-sm text-gray-600">
+              This may take a few moments...
+            </p>
           </div>
         </div>
       </div>
@@ -729,7 +776,7 @@ function DocumentContentPanel({
           highlights={
             activeEvaluation
               ? getValidAndSortedComments(activeEvaluation.comments).map(
-                  (comment, index) => ({
+                  (comment: Comment, index: number) => ({
                     startOffset: comment.highlight.startOffset,
                     endOffset: comment.highlight.endOffset,
                     tag: index.toString(),
@@ -775,11 +822,18 @@ export function DocumentWithEvaluations({
 
     // Get all importance values for percentile calculation
     const allImportances = sortedComments
-      .map((comment) => comment.importance)
-      .filter((importance): importance is number => importance !== undefined);
+      .map((comment: Comment) => comment.importance)
+      .filter(
+        (importance: number | undefined): importance is number =>
+          importance !== undefined
+      );
 
     return sortedComments.reduce(
-      (map, comment, index) => {
+      (
+        map: Record<number, { background: string; color: string }>,
+        comment: Comment,
+        index: number
+      ) => {
         if (hasGradeInstructions && comment.grade !== undefined) {
           map[index] = getCommentColorByGrade(
             comment.grade,
@@ -819,8 +873,8 @@ export function DocumentWithEvaluations({
   };
 
   const handleReupload = async () => {
-    setUIState(prev => ({ ...prev, isReuploadingDocument: true }));
-    
+    setUIState((prev) => ({ ...prev, isReuploadingDocument: true }));
+
     try {
       const result = await reuploadDocument(document.id);
 
@@ -828,11 +882,11 @@ export function DocumentWithEvaluations({
         // Refresh the page to show the updated content
         window.location.reload();
       } else {
-        setUIState(prev => ({ ...prev, isReuploadingDocument: false }));
+        setUIState((prev) => ({ ...prev, isReuploadingDocument: false }));
         alert(result.error || "Failed to re-upload document");
       }
     } catch (error) {
-      setUIState(prev => ({ ...prev, isReuploadingDocument: false }));
+      setUIState((prev) => ({ ...prev, isReuploadingDocument: false }));
       alert("An unexpected error occurred while re-uploading");
     }
   };
