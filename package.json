@@ -16,7 +16,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "process-jobs": "tsx src/scripts/process-job.ts",
-    "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts"
+    "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts",
+    "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

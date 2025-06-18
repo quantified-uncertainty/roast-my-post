@@ -47,6 +47,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           iconName: data.iconName || "robot",
           genericInstructions: data.genericInstructions,
           summaryInstructions: data.summaryInstructions,
+          analysisInstructions: data.analysisInstructions || "",
           commentInstructions: data.commentInstructions,
           gradeInstructions: data.gradeInstructions || "",
         });
