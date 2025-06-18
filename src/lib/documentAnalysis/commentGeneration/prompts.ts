@@ -1,39 +1,25 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import {
-  LineBasedHighlighter,
+  getAgentContextXML,
+  getDocumentMetadataXML,
+  getTaskPurposeXML,
+  shouldIncludeGrade,
+} from "../shared/agentContext";
+import {
   type LineBasedComment,
+  LineBasedHighlighter,
 } from "./lineBasedHighlighter";
 
 const documentInformationSection = (document: Document) => {
   const highlighter = new LineBasedHighlighter(document.content);
-  return `## DOCUMENT INFORMATION
-Title: ${document.title || "Untitled"}
-Author: ${document.author || "Not provided"}
-Published: ${document.publishedDate || "Not provided"}
-URL: ${document.url || "Not provided"}
-
-## DOCUMENT CONTENT
-${highlighter.getNumberedLines()}`;
+  return `<document>
+  ${getDocumentMetadataXML(document)}
+  <content>
+${highlighter.getNumberedLines()}
+  </content>
+</document>`;
 };
-
-function shouldIncludeGrade(agentInfo: Agent): boolean {
-  return !!agentInfo.gradeInstructions;
-}
-
-export function agentContextSection(
-  agentInfo: Agent,
-  type: "comment"
-): string {
-  return `
-## AGENT CONTEXT
-You are ${agentInfo.name}, an expert ${agentInfo.purpose}.
-Your purpose is to ${agentInfo.description}.
-Your instructions are: ${agentInfo.genericInstructions}.
-
-${agentInfo.commentInstructions ? `Your instructions for comments are: ${agentInfo.commentInstructions}.` : ""}
-`;
-}
 
 export function getCommentPrompts(
   document: Document,
@@ -41,18 +27,24 @@ export function getCommentPrompts(
   targetComments: number,
   existingComments: LineBasedComment[] = []
 ): { systemMessage: string; userMessage: string } {
-  const systemMessage = agentContextSection(agentInfo, "comment");
+  const systemMessage = `${getAgentContextXML(agentInfo)}
+
+<task_instructions>
+  ${getTaskPurposeXML(agentInfo)}
+  <output_format>
+    Provide detailed comments on the document. Focus on specific sections that warrant attention based on your expertise.
+  </output_format>
+</task_instructions>`;
+
   const userMessage = `${documentInformationSection(document)}
 
 Please analyze this document and provide ${targetComments} detailed comments. Each comment should:
 - Have a clear, descriptive title (max 80 characters)
-- Include a concise description with specific insights (max 200 words)
+- Include a concise description with specific details (max 200 words)
 - Focus on the most important 5-1000 characters of text (DO NOT highlight entire paragraphs)
 - For long sections, select only the most crucial 2-3 sentences
 - Use line-based highlighting with startLineIndex/endLineIndex and startCharacters/endCharacters
 - Include importance score (0-100)${shouldIncludeGrade(agentInfo) ? "\n- Include a grade (0-100) for each comment" : ""}
-- Be concise and focused - avoid lengthy tables, multiple sections, or excessive formatting
-- Avoid duplicating existing comments - focus on new sections
 
 CRITICAL LINE NUMBER AND TEXT MATCHING RULES:
 1. Line numbers start at 0 (first line is line 0)
@@ -135,23 +127,6 @@ ${existingComments
 }
 
 IMPORTANT: Focus ONLY on generating the requested number of comments. Just provide the comments in the following JSON format:
-
-{
-  "comments": [
-    {
-      "title": "string",
-      "description": "string",
-      "importance": number,
-      "grade": number, // Optional - only include if shouldIncludeGrade(agentInfo) is true
-      "highlight": {
-        "startLineIndex": number,
-        "startCharacters": "string",
-        "endLineIndex": number,
-        "endCharacters": "string"
-      }
-    }
-  ]
-}
 `;
 
   return { systemMessage, userMessage };
