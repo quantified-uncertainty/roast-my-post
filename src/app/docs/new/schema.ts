@@ -8,6 +8,7 @@ export const documentSchema = z.object({
   urls: z.string().optional(),
   platforms: z.string().optional(),
   intendedAgents: z.string().optional(),
+  importUrl: z.string().optional(),
 });
 
 export type DocumentInput = z.infer<typeof documentSchema>;

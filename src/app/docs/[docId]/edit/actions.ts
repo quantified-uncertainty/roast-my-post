@@ -22,6 +22,7 @@ export async function updateDocument(
         urls: formData.get("urls") as string,
         platforms: formData.get("platforms") as string,
         intendedAgents: formData.get("intendedAgents") as string,
+        importUrl: formData.get("importUrl") as string,
       };
     } else {
       // Handle direct object submission

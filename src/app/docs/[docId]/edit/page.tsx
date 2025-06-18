@@ -60,6 +60,12 @@ const formFields: FormFieldConfig[] = [
     placeholder: "Platforms (e.g., LessWrong, EA Forum)",
   },
   {
+    name: "importUrl",
+    label: "Import URL",
+    type: "text",
+    placeholder: "Original URL where this document was imported from",
+  },
+  {
     name: "intendedAgents",
     label: "Intended Agents",
     type: "agentCheckboxList",
@@ -88,6 +94,7 @@ export default function EditDocumentPage({ params }: Props) {
       urls: "",
       platforms: "",
       intendedAgents: "",
+      importUrl: "",
     },
   });
 
@@ -124,6 +131,7 @@ export default function EditDocumentPage({ params }: Props) {
             document.intendedAgents && document.intendedAgents.length > 0
               ? document.intendedAgents.join(",")
               : "",
+          importUrl: document.importUrl || "",
         });
 
         setLoading(false);
@@ -237,13 +245,22 @@ export default function EditDocumentPage({ params }: Props) {
                       error={errors[field.name]}
                     />
                   ) : (
-                    <input
-                      {...methods.register(field.name)}
-                      type={field.type}
-                      id={field.name}
-                      className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
-                      placeholder={field.placeholder}
-                    />
+                    <div>
+                      <input
+                        {...methods.register(field.name)}
+                        type={field.type}
+                        id={field.name}
+                        className={`form-input w-full ${errors[field.name] ? "border-red-500" : ""}`}
+                        placeholder={field.placeholder}
+                      />
+                      {field.name === "importUrl" && (
+                        <p className="mt-2 text-sm text-gray-600">
+                          This is the URL where the document was originally
+                          imported from. It's used for re-importing the document
+                          when you want to fetch the latest version.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </FormField>
               ))}
@@ -258,7 +275,7 @@ export default function EditDocumentPage({ params }: Props) {
                   {...methods.register("content")}
                   id="content"
                   rows={15}
-                  className={`form-input ${errors.content ? "border-red-500" : ""}`}
+                  className={`form-input w-full ${errors.content ? "border-red-500" : ""}`}
                   placeholder="Document content in Markdown format"
                 />
               </FormField>
