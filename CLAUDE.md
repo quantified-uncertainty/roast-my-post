@@ -3,8 +3,18 @@
 ## Key Learnings
 
 ### Git Commit Issues
-If encountering `_safe_eval` errors with git commands, use full paths: `/usr/bin/git`
-For complex commit messages, write to a temp file and use `git commit -F /tmp/commit_msg.txt`
+**CRITICAL: Always use `/usr/bin/git` for ALL git commands due to shell evaluation issues**
+
+- NEVER use just `git` - always use `/usr/bin/git`
+- For files with brackets like `[docId]`, quote the entire path: `"/path/to/file[with]/brackets"`
+- For complex commit messages, ALWAYS write to temp file first:
+  ```bash
+  /bin/rm -f /tmp/commit_msg.txt  # Remove if exists
+  echo "Commit message here" > /tmp/commit_msg.txt
+  /usr/bin/git commit -F /tmp/commit_msg.txt
+  ```
+- NEVER try to use heredoc syntax directly in git commit commands
+- Stage files individually with quoted paths, not glob patterns
 
 ### Field Naming Considerations
 - Choose field names that reflect their purpose (e.g., `importUrl` vs `uploadedFrom`)

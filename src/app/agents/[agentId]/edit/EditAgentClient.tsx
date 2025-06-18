@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +13,10 @@ import { z } from "zod";
 import { agentFormFields } from "@/components/agent/agentFormFields";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
-import { type AgentInput, agentSchema } from "@/models/Agent";
+import {
+  type AgentInput,
+  agentSchema,
+} from "@/models/Agent";
 
 import { updateAgent } from "./actions";
 
@@ -162,7 +168,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
                   <select
                     {...register(field.name)}
                     id={field.name}
-                    className={`form-select ${errors[field.name] ? "border-red-500" : ""}`}
+                    className={`form-select w-full ${errors[field.name] ? "border-red-500" : ""}`}
                   >
                     {field.options?.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -175,7 +181,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
                     {...register(field.name)}
                     id={field.name}
                     rows={4}
-                    className={`form-textarea ${errors[field.name] ? "border-red-500" : ""}`}
+                    className={`form-textarea w-full ${errors[field.name] ? "border-red-500" : ""}`}
                     placeholder={field.placeholder}
                   />
                 ) : (
@@ -183,7 +189,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
                     {...register(field.name)}
                     type={field.type}
                     id={field.name}
-                    className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
+                    className={`form-input w-full ${errors[field.name] ? "border-red-500" : ""}`}
                     placeholder={field.placeholder}
                   />
                 )}

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import { useFormContext } from "react-hook-form";
 
@@ -46,9 +49,13 @@ export default function AgentCheckboxList({
   }, []);
 
   const handleCheckboxChange = (agentId: string, checked: boolean) => {
-    const currentAgents = selectedAgents && selectedAgents.trim() 
-      ? selectedAgents.split(",").map(id => id.trim()).filter(id => id) 
-      : [];
+    const currentAgents =
+      selectedAgents && selectedAgents.trim()
+        ? selectedAgents
+            .split(",")
+            .map((id: string) => id.trim())
+            .filter((id: string) => id)
+        : [];
     let newAgents: string[];
 
     if (checked) {
@@ -70,16 +77,16 @@ export default function AgentCheckboxList({
   }
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-red-500">*</span>}
-      </label>
-      <div className="mt-2 space-y-2">
+    <div>
+      <div className="mt-2 flex flex-wrap gap-4">
         {agents.map((agent) => {
-          const agentIds = selectedAgents && selectedAgents.trim() 
-            ? selectedAgents.split(",").map(id => id.trim()).filter(id => id) 
-            : [];
+          const agentIds =
+            selectedAgents && selectedAgents.trim()
+              ? selectedAgents
+                  .split(",")
+                  .map((id: string) => id.trim())
+                  .filter((id: string) => id)
+              : [];
           const isChecked = agentIds.includes(agent.id);
           return (
             <div key={agent.id} className="flex items-center">
