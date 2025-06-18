@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/lib/auth";
+import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
 
 export async function deleteDocument(docId: string) {
@@ -36,5 +37,71 @@ export async function deleteDocument(docId: string) {
   } catch (error) {
     console.error("Error deleting document:", error);
     return { success: false, error: "Failed to delete document" };
+  }
+}
+
+export async function reuploadDocument(docId: string) {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: "User must be logged in to re-upload a document",
+      };
+    }
+
+    // Check if the current user is the document owner
+    const isOwner = await DocumentModel.checkOwnership(docId, session.user.id);
+    if (!isOwner) {
+      return {
+        success: false,
+        error: "You don't have permission to re-upload this document",
+      };
+    }
+
+    // Get the current document to extract its URL
+    const document = await DocumentModel.getDocumentWithEvaluations(docId);
+    if (!document) {
+      return {
+        success: false,
+        error: "Document not found",
+      };
+    }
+
+    const url = document.url;
+    if (!url) {
+      return {
+        success: false,
+        error: "Document has no URL to re-upload from",
+      };
+    }
+
+    // Process the article again from the URL
+    const processedArticle = await processArticle(url);
+
+    // Update the document with the new content
+    await DocumentModel.update(
+      docId,
+      {
+        title: processedArticle.title,
+        authors: processedArticle.author,
+        content: processedArticle.content,
+        urls: processedArticle.url,
+        platforms: processedArticle.platforms.join(", "),
+      },
+      session.user.id
+    );
+
+    // Revalidate the document path
+    revalidatePath(`/docs/${docId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error re-uploading document:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to re-upload document" 
+    };
   }
 }

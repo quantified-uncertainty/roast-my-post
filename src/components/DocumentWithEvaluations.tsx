@@ -15,7 +15,7 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { deleteDocument } from "@/app/docs/[docId]/actions";
+import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/actions";
 import { Button } from "@/components/Button";
 import type {
   Comment,
@@ -29,6 +29,7 @@ import {
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
@@ -332,6 +333,7 @@ interface UIState {
   isHomeView: boolean;
   showEvaluationSelector: boolean;
   deleteError: string | null;
+  isReuploadingDocument: boolean;
 }
 
 interface HomeViewProps {
@@ -339,6 +341,8 @@ interface HomeViewProps {
   isOwner?: boolean;
   onEvaluationSelect: (index: number) => void;
   activeEvaluationIndex: number | null;
+  isReuploadingDocument: boolean;
+  onReupload: () => Promise<void>;
 }
 
 function HomeView({
@@ -346,6 +350,8 @@ function HomeView({
   isOwner = false,
   onEvaluationSelect,
   activeEvaluationIndex,
+  isReuploadingDocument,
+  onReupload,
 }: HomeViewProps) {
   const router = useRouter();
 
@@ -378,6 +384,30 @@ function HomeView({
                 Edit
               </Button>
             </Link>
+            {document.url && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (
+                    confirm(
+                      "This will fetch the latest content from the original URL and create a new version. Continue?"
+                    )
+                  ) {
+                    await onReupload();
+                  }
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                  disabled={isReuploadingDocument}
+                >
+                  <ArrowPathIcon className={`h-4 w-4 ${isReuploadingDocument ? 'animate-spin' : ''}`} />
+                  {isReuploadingDocument ? 'Re-uploading...' : 'Re-upload'}
+                </Button>
+              </form>
+            )}
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -562,6 +592,30 @@ function EvaluationView({
   );
 }
 
+interface LoadingModalProps {
+  isOpen: boolean;
+  message: string;
+}
+
+function LoadingModal({ isOpen, message }: LoadingModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50" />
+      <div className="relative z-50 rounded-lg bg-white p-8 shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{message}</h2>
+            <p className="text-sm text-gray-600">This may take a few moments...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface EvaluationSelectorModalProps {
   document: Document;
   activeEvaluationIndex: number | null;
@@ -703,6 +757,7 @@ export function DocumentWithEvaluations({
     isHomeView: true,
     showEvaluationSelector: false,
     deleteError: null,
+    isReuploadingDocument: false,
   });
 
   const hasEvaluations = document.reviews && document.reviews.length > 0;
@@ -763,6 +818,25 @@ export function DocumentWithEvaluations({
     setUIState((prev) => ({ ...prev, isHomeView: true }));
   };
 
+  const handleReupload = async () => {
+    setUIState(prev => ({ ...prev, isReuploadingDocument: true }));
+    
+    try {
+      const result = await reuploadDocument(document.id);
+
+      if (result.success) {
+        // Refresh the page to show the updated content
+        window.location.reload();
+      } else {
+        setUIState(prev => ({ ...prev, isReuploadingDocument: false }));
+        alert(result.error || "Failed to re-upload document");
+      }
+    } catch (error) {
+      setUIState(prev => ({ ...prev, isReuploadingDocument: false }));
+      alert("An unexpected error occurred while re-uploading");
+    }
+  };
+
   // Close modal on Esc
   useEffect(() => {
     if (!uiState.showEvaluationSelector) return;
@@ -799,6 +873,8 @@ export function DocumentWithEvaluations({
             isOwner={isOwner}
             onEvaluationSelect={handleEvaluationSelect}
             activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
+            isReuploadingDocument={uiState.isReuploadingDocument}
+            onReupload={handleReupload}
           />
         ) : activeEvaluation && evaluationState ? (
           <EvaluationView
@@ -823,6 +899,10 @@ export function DocumentWithEvaluations({
           }
         />
       )}
+      <LoadingModal
+        isOpen={uiState.isReuploadingDocument}
+        message="Re-uploading document..."
+      />
     </div>
   );
 }
