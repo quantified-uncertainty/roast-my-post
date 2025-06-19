@@ -2,7 +2,11 @@ import axios from "axios";
 import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 
-import { anthropic, ANALYSIS_MODEL, withTimeout } from "@/types/openai";
+import {
+  ANALYSIS_MODEL,
+  anthropic,
+  withTimeout,
+} from "@/types/openai";
 
 export interface ArticleData {
   html: string;
@@ -190,13 +194,13 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
 export function createCleanDOM(html: string): JSDOM {
   // Strip out all scripts and styles before parsing to prevent execution
   const cleanedHtml = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<link[^>]*>/gi, '');
-    
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<link[^>]*>/gi, "");
+
   // Create a virtual console that suppresses all output
   const virtualConsole = new (require("jsdom").VirtualConsole)();
-  
+
   return new JSDOM(cleanedHtml, {
     virtualConsole,
     runScripts: "dangerously",
@@ -277,21 +281,25 @@ ${metaSections.join("\n")}`;
         tools: [
           {
             name: "extract_metadata",
-            description: "Extract title, author, and publication date from the provided text sections",
+            description:
+              "Extract title, author, and publication date from the provided text sections",
             input_schema: {
               type: "object",
               properties: {
                 title: {
                   type: "string",
-                  description: "The article title, or 'Untitled Article' if not found",
+                  description:
+                    "The article title, or 'Untitled Article' if not found",
                 },
                 author: {
                   type: "string",
-                  description: "The author name, or 'Unknown Author' if not found",
+                  description:
+                    "The author name, or 'Unknown Author' if not found",
                 },
                 date: {
                   type: "string",
-                  description: "Publication date in YYYY-MM-DD format, or today's date if not found",
+                  description:
+                    "Publication date in YYYY-MM-DD format, or today's date if not found",
                 },
               },
               required: ["title", "author", "date"],
@@ -308,10 +316,16 @@ ${metaSections.join("\n")}`;
 
     const toolUse = response.content.find((c) => c.type === "tool_use");
     if (!toolUse || toolUse.name !== "extract_metadata") {
-      throw new Error("No tool use response from Claude for metadata extraction");
+      throw new Error(
+        "No tool use response from Claude for metadata extraction"
+      );
     }
 
-    const metadata = toolUse.input as { title: string; author: string; date: string };
+    const metadata = toolUse.input as {
+      title: string;
+      author: string;
+      date: string;
+    };
 
     return {
       title: metadata.title || "Untitled Article",
@@ -387,7 +401,7 @@ export function extractContent(dom: JSDOM): string {
     "[data-testid='post-content']",
     // Generic selectors
     "article",
-    ".article-content", 
+    ".article-content",
     ".entry-content",
     "main",
     "#content",
@@ -426,7 +440,7 @@ export function extractContent(dom: JSDOM): string {
     // Substack-specific elements
     ".subscription-widget",
     ".share-dialog",
-    ".social-buttons", 
+    ".social-buttons",
     ".subscribe-widget",
     "[class*='share']",
     "[class*='social']",
@@ -458,7 +472,7 @@ export function convertToMarkdown(html: string): string {
       const element = node as Element;
       const text = element.textContent?.toLowerCase() || "";
       const className = element.className?.toLowerCase() || "";
-      
+
       // Remove elements that contain sharing/social text
       return (
         text.includes("share this post") ||
@@ -515,19 +529,53 @@ export function convertToMarkdown(html: string): string {
     replacement: (content, node) => {
       const alt = (node as Element).getAttribute("alt") || "";
       const src = (node as Element).getAttribute("src") || "";
-      
+
       // Only include images that have actual source URLs
       if (src && src.startsWith("http")) {
         const altText = alt || "Image";
         return `\n\n![${altText}](${src})\n\n`;
       }
-      
+
       // Skip images without valid sources (likely placeholders or broken)
       return "";
     },
   });
 
-  // Add rule to preserve links
+  // Add rule to handle linked images (common in Substack)
+  turndownService.addRule("linkedImages", {
+    filter: (node) => {
+      if (node.nodeName !== "A") return false;
+      const link = node as Element;
+      const img = link.querySelector("img");
+      if (!img) return false;
+
+      // Check if this is a link that just wraps an image
+      const href = link.getAttribute("href") || "";
+      const imgSrc = img.getAttribute("src") || "";
+
+      // If the link points to an image URL (common in Substack), return true
+      return (
+        href.includes("substackcdn.com/image") ||
+        href.includes(".jpg") ||
+        href.includes(".jpeg") ||
+        href.includes(".png") ||
+        href.includes(".gif") ||
+        href.includes(".webp")
+      );
+    },
+    replacement: (content, node) => {
+      const img = (node as Element).querySelector("img");
+      if (!img) return content;
+
+      const alt = img.getAttribute("alt") || "Image";
+      const src = img.getAttribute("src") || "";
+
+      // Just return the image markdown without the link wrapper
+      return src && src.startsWith("http") ? `\n\n![${alt}](${src})\n\n` : "";
+    },
+  });
+
+  // Add rule to preserve regular links (but not image links)
   turndownService.addRule("preserveLinks", {
     filter: "a",
     replacement: (content, node) => {
@@ -540,14 +588,13 @@ export function convertToMarkdown(html: string): string {
 }
 
 export async function cleanContentWithClaude(
-  markdownContent: string,
-  title: string
+  markdownContent: string
 ): Promise<string> {
   try {
     console.log("🤖 Cleaning content with Claude...");
 
     // For very long content, just take the first part to avoid token limits
-    const maxLength = 30000;
+    const maxLength = 100000;
     const contentToClean =
       markdownContent.length > maxLength
         ? markdownContent.substring(0, maxLength) +
@@ -567,47 +614,65 @@ IMPORTANT INSTRUCTIONS:
 Content to clean:
 ${contentToClean}`;
 
-    const response = await withTimeout(
-      anthropic.messages.create({
-        model: ANALYSIS_MODEL,
-        max_tokens: 4000,
-        temperature: 0.1,
-        messages: [
-          {
-            role: "user",
-            content: userMessage,
-          },
-        ],
-        tools: [
-          {
-            name: "clean_content",
-            description: "Clean and format content by removing platform-specific elements while preserving core message",
-            input_schema: {
-              type: "object",
-              properties: {
-                cleaned_content: {
-                  type: "string",
-                  description: "The cleaned content with platform-specific formatting and UI elements removed",
-                },
+    // Use streaming for long content to avoid timeout issues
+    const stream = await anthropic.messages.create({
+      model: ANALYSIS_MODEL,
+      max_tokens: 64000, // Max allowed for Sonnet
+      temperature: 0.1,
+      stream: true,
+      messages: [
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+      tools: [
+        {
+          name: "clean_content",
+          description:
+            "Clean and format content by removing platform-specific elements while preserving core message",
+          input_schema: {
+            type: "object",
+            properties: {
+              cleaned_content: {
+                type: "string",
+                description:
+                  "The cleaned content with platform-specific formatting and UI elements removed",
               },
-              required: ["cleaned_content"],
             },
+            required: ["cleaned_content"],
           },
-        ],
-        tool_choice: { type: "tool", name: "clean_content" },
-      }),
-      120000, // 120 second timeout for content processing
-      "Claude API request timed out after 120 seconds"
-    );
+        },
+      ],
+      tool_choice: { type: "tool", name: "clean_content" },
+    });
 
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "clean_content") {
+    let fullContent = "";
+    let toolUse: any = null;
+
+    for await (const chunk of stream) {
+      if (
+        chunk.type === "content_block_start" &&
+        chunk.content_block.type === "tool_use"
+      ) {
+        toolUse = { name: chunk.content_block.name, input: {} };
+      } else if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "input_json_delta"
+      ) {
+        fullContent += chunk.delta.partial_json;
+      }
+    }
+
+    if (!toolUse || fullContent === "") {
       throw new Error("No tool use response from Claude for content cleaning");
     }
 
-    const result = toolUse.input as { cleaned_content: string };
-    const cleanedContent = result.cleaned_content?.trim();
-    
+    // Parse the accumulated JSON
+    const parsedInput = JSON.parse(fullContent);
+
+    const cleanedContent = parsedInput.cleaned_content?.trim();
+
     if (!cleanedContent) {
       throw new Error("Empty Claude response for content cleaning");
     }
@@ -615,7 +680,7 @@ ${contentToClean}`;
     // Safety check: if cleaned content is much shorter than original, use original
     const originalWordCount = markdownContent.split(/\s+/).length;
     const cleanedWordCount = cleanedContent.split(/\s+/).length;
-    
+
     if (cleanedWordCount < originalWordCount * 0.3) {
       console.warn("⚠️ Cleaned content too short, using original markdown");
       return markdownContent;
@@ -664,10 +729,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
   const markdownContent = convertToMarkdown(contentHtml);
 
   console.log("🧹 Cleaning content with Claude...");
-  const cleanedContent = await cleanContentWithClaude(
-    markdownContent,
-    title || metadata.title || "Untitled Article"
-  );
+  const cleanedContent = await cleanContentWithClaude(markdownContent);
 
   // Use the best available title, author, and date
   const finalTitle = title || metadata.title || "Untitled Article";
