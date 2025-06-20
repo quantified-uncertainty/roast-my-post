@@ -28,9 +28,12 @@ import {
 /**
  * Main function to generate comments for a document
  */
+import type { ThinkingOutputs } from "../shared/types";
+
 export async function getCommentData(
   document: Document,
   agentInfo: Agent,
+  thinkingData: ThinkingOutputs,
   targetComments: number = 5,
   maxAttempts: number = 3
 ): Promise<{ task: TaskResult; outputs: CommentAnalysisOutputs }> {
@@ -52,6 +55,7 @@ export async function getCommentData(
     let { systemMessage, userMessage } = getCommentPrompts(
       document,
       agentInfo,
+      thinkingData,
       targetComments - comments.length,
       convertCommentsToLineBased(comments, document)
     );

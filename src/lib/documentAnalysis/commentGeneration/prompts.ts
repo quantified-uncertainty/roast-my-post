@@ -1,5 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import type { ThinkingOutputs } from "../shared/types";
 import {
   getAgentContextXML,
   getDocumentMetadataXML,
@@ -24,6 +25,7 @@ ${highlighter.getNumberedLines()}
 export function getCommentPrompts(
   document: Document,
   agentInfo: Agent,
+  thinkingData: ThinkingOutputs,
   targetComments: number,
   existingComments: LineBasedComment[] = []
 ): { systemMessage: string; userMessage: string } {
@@ -38,7 +40,13 @@ export function getCommentPrompts(
 
   const userMessage = `${documentInformationSection(document)}
 
-Please analyze this document and provide ${targetComments} detailed comments. Each comment should:
+<comprehensive_thinking>
+The following comprehensive thinking process has already been completed for this document:
+
+${thinkingData.thinking}
+</comprehensive_thinking>
+
+Based on the thinking process above and the document content, please provide ${targetComments} detailed comments. Each comment should:
 - Have a clear, descriptive title (max 80 characters)
 - Include a concise description with specific details (max 200 words)
 - Focus on the most important 5-1000 characters of text (DO NOT highlight entire paragraphs)

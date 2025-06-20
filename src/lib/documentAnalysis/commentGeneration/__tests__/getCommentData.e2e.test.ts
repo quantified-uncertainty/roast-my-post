@@ -55,11 +55,16 @@ What are your thoughts on AI in education? How can we balance innovation with th
       return;
     }
 
+    const mockThinkingData = {
+      thinking: "This is a comprehensive analysis of the AI in education topic. The article presents a balanced view of both benefits and challenges. The structure is clear with good use of bullet points and sections. The content addresses key concerns like privacy and equity while maintaining an optimistic but realistic tone about AI's role in education."
+    };
+
     let result;
     try {
       result = await getCommentData(
         mockDocument,
         mockAgent,
+        mockThinkingData,
         3, // targetComments
         2  // maxAttempts
       );

@@ -11,6 +11,16 @@ export interface TaskResult {
   llmInteractions: LLMInteraction[];
 }
 
+export interface ThinkingOutputs {
+  thinking: string;
+}
+
+export interface AnalysisOutputs {
+  analysis: string;
+  summary: string;
+  grade?: number;
+}
+
 export interface ThinkingAnalysisOutputs {
   thinking: string;
   analysis: string;
