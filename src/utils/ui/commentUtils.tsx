@@ -135,8 +135,8 @@ function getColorStyle(
 
     // Lower percentile = much less saturated, much brighter (closer to white)
     // Higher percentile = more saturated, darker (more visible)
-    const saturationMult = 0.1 + normalizedImportance * 0.9; // Range from 0.1 to 1.0
-    const brightnessMult = 2 - normalizedImportance; // Range from 2.0 to 1.0 (low importance = brighter)
+    const saturationMult = 0.5 + normalizedImportance * 0.5; // Range from 0.5 to 1.0
+    const brightnessMult = 1.5 - normalizedImportance * 0.5; // Range from 1.5 to 1.0 (low importance = brighter)
 
     color = color
       .saturate((saturationMult - 1) * 2)

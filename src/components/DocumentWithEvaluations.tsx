@@ -782,7 +782,7 @@ function DocumentContentPanel({
                     tag: index.toString(),
                     color:
                       commentColorMap[index]?.background.substring(1) ??
-                      "#000000",
+                      "#3b82f6",
                   })
                 )
               : []
