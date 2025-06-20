@@ -25,10 +25,10 @@ export function getAgentContextXML(agentInfo: Agent): string {
   <name>${agentInfo.name}</name>
   <expertise>${agentInfo.purpose}</expertise>
   <purpose>${agentInfo.description}</purpose>
-  <general_instructions>${agentInfo.genericInstructions}</general_instructions>
-  <summary_instructions>${agentInfo.summaryInstructions}</summary_instructions>
-  <analysis_instructions>${agentInfo.analysisInstructions}</analysis_instructions>
-  <comment_instructions>${agentInfo.commentInstructions}</comment_instructions>
+  ${agentInfo.genericInstructions ? `<general_instructions>${agentInfo.genericInstructions}</general_instructions>` : ""}
+  ${agentInfo.summaryInstructions ? `<summary_instructions>${agentInfo.summaryInstructions}</summary_instructions>` : ""}
+  ${agentInfo.analysisInstructions ? `<analysis_instructions>${agentInfo.analysisInstructions}</analysis_instructions>` : ""}
+  ${agentInfo.commentInstructions ? `<comment_instructions>${agentInfo.commentInstructions}</comment_instructions>` : ""}
   ${shouldIncludeGrade(agentInfo) ? `<grade_instructions>${agentInfo.gradeInstructions}</grade_instructions>` : ""}
 </agent>`;
 }

@@ -15,6 +15,7 @@ import {
 import type { CommentAnalysisOutputs, TaskResult } from "../shared/types";
 import { getCommentPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
+import { shouldIncludeGrade } from "../shared/agentContext";
 
 import type { AnthropicResponse } from "./types";
 import { convertCommentsToLineBased } from "./highlightConverter";
@@ -73,7 +74,8 @@ export async function getCommentData(
         systemMessage,
         userMessage,
         attempts,
-        maxAttempts
+        maxAttempts,
+        shouldIncludeGrade(agentInfo)
       );
 
       // Parse and validate response
@@ -203,11 +205,51 @@ async function callAnthropicAPI(
   systemMessage: string,
   userMessage: string,
   attempt: number,
-  maxAttempts: number
+  maxAttempts: number,
+  shouldIncludeGradeField: boolean = false
 ): Promise<AnthropicResponse> {
   console.log("🤖 Calling Anthropic API...");
   const apiCallStart = Date.now();
   
+  // Build comment properties dynamically
+  const commentProperties: any = {
+    title: {
+      type: "string",
+      description: "Title of the comment",
+    },
+    description: {
+      type: "string",
+      description: "Detailed description of the comment",
+    },
+    highlight: {
+      type: "object",
+      properties: {
+        startLineIndex: { type: "number" },
+        startCharacters: { type: "string" },
+        endLineIndex: { type: "number" },
+        endCharacters: { type: "string" },
+      },
+      required: [
+        "startLineIndex",
+        "startCharacters",
+        "endLineIndex",
+        "endCharacters",
+      ],
+    },
+    importance: {
+      type: "number",
+      description: "Importance of the comment (0-100)",
+    },
+  };
+
+  // Only include grade field for agents that should provide grades
+  if (shouldIncludeGradeField) {
+    commentProperties.grade = {
+      type: "number",
+      description: "Grade for this section (0-100)",
+    };
+  }
+
   const response = await withTimeout(
     anthropic.messages.create({
       model: ANALYSIS_MODEL,
@@ -232,39 +274,7 @@ async function callAnthropicAPI(
                 type: "array",
                 items: {
                   type: "object",
-                  properties: {
-                    title: {
-                      type: "string",
-                      description: "Title of the comment",
-                    },
-                    description: {
-                      type: "string",
-                      description: "Detailed description of the comment",
-                    },
-                    highlight: {
-                      type: "object",
-                      properties: {
-                        startLineIndex: { type: "number" },
-                        startCharacters: { type: "string" },
-                        endLineIndex: { type: "number" },
-                        endCharacters: { type: "string" },
-                      },
-                      required: [
-                        "startLineIndex",
-                        "startCharacters",
-                        "endLineIndex",
-                        "endCharacters",
-                      ],
-                    },
-                    importance: {
-                      type: "number",
-                      description: "Importance of the comment (0-100)",
-                    },
-                    grade: {
-                      type: "number",
-                      description: "Grade for this section (0-100)",
-                    },
-                  },
+                  properties: commentProperties,
                   required: ["title", "description", "highlight"],
                 },
               },

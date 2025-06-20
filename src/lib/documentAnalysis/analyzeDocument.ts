@@ -27,7 +27,6 @@ export async function analyzeDocument(
     return await analyzeLinkDocument(
       document,
       agentInfo,
-      anthropicApiKey || process.env.ANTHROPIC_API_KEY!,
       targetComments
     );
   }

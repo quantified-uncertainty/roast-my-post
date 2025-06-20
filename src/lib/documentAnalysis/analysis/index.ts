@@ -17,6 +17,7 @@ import {
 import type { TaskResult, AnalysisOutputs, ThinkingOutputs } from "../shared/types";
 import { getAnalysisPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
+import { shouldIncludeGrade } from "../shared/agentContext";
 
 export async function generateAnalysis(
   document: Document,
@@ -41,6 +42,27 @@ export async function generateAnalysis(
   let validationResult;
   let rawResponse;
 
+  // Build properties dynamically
+  const analysisProperties: any = {
+    analysis: {
+      type: "string",
+      description:
+        "Detailed analysis with heavy markdown formatting. Should be approximately 200-400 words with headers, bullet points, emphasis, etc. Based on the thinking provided, distill the key insights into a well-formatted analysis.",
+    },
+    summary: {
+      type: "string",
+      description: "Concise 1-2 sentence summary of the main findings",
+    },
+  };
+
+  // Only include grade field for agents that should provide grades
+  if (shouldIncludeGrade(agentInfo)) {
+    analysisProperties.grade = {
+      type: "number",
+      description: "Grade from 0-100 based on the agent's assessment",
+    };
+  }
+
   try {
     response = await withTimeout(
       anthropic.messages.create({
@@ -61,21 +83,7 @@ export async function generateAnalysis(
               "Provide concise analysis and summary based on the comprehensive thinking already completed.",
             input_schema: {
               type: "object",
-              properties: {
-                analysis: {
-                  type: "string",
-                  description:
-                    "Detailed analysis with heavy markdown formatting. Should be approximately 200-400 words with headers, bullet points, emphasis, etc. Based on the thinking provided, distill the key insights into a well-formatted analysis.",
-                },
-                summary: {
-                  type: "string",
-                  description: "Concise 1-2 sentence summary of the main findings",
-                },
-                grade: {
-                  type: "number",
-                  description: "Optional grade from 0-100 based on the agent's assessment",
-                },
-              },
+              properties: analysisProperties,
               required: ["analysis", "summary"],
             },
           },

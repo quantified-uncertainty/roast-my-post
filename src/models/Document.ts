@@ -441,7 +441,7 @@ export class DocumentModel {
               summaryInstructions:
                 evaluation.agent.versions[0].summaryInstructions || undefined,
               commentInstructions:
-                evaluation.agent.versions[0].commentInstructions,
+                evaluation.agent.versions[0].commentInstructions || undefined,
               gradeInstructions:
                 evaluation.agent.versions[0].gradeInstructions || undefined,
             },
