@@ -183,11 +183,12 @@ model AgentVersion {
   name        String
   agentType   AgentType
   description String
-  genericInstructions String
-  summaryInstructions String
+  genericInstructions String?
+  summaryInstructions String?
   analysisInstructions String?
-  commentInstructions String
+  commentInstructions String?
   gradeInstructions String?
+  extendedCapabilityId String?
   agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId     String
   createdAt   DateTime @default(now())

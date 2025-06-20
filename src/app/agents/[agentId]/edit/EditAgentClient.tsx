@@ -50,11 +50,12 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           name: data.name,
           purpose: data.purpose.toUpperCase(),
           description: data.description,
-          genericInstructions: data.genericInstructions,
-          summaryInstructions: data.summaryInstructions,
+          genericInstructions: data.genericInstructions || "",
+          summaryInstructions: data.summaryInstructions || "",
           analysisInstructions: data.analysisInstructions || "",
-          commentInstructions: data.commentInstructions,
+          commentInstructions: data.commentInstructions || "",
           gradeInstructions: data.gradeInstructions || "",
+          extendedCapabilityId: data.extendedCapabilityId || "",
         });
 
         setLoading(false);

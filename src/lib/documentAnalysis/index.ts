@@ -1,5 +1,5 @@
 // Main analysis function
-export { analyzeDocument, type AnalysisMode } from "./analyzeDocument";
+export { analyzeDocument } from "./analyzeDocument";
 
 // Alternative analysis functions
 export { generateThinking } from "./thinking";

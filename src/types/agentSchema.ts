@@ -26,11 +26,12 @@ export const AgentVersionSchema = z.object({
   name: z.string(),
   agentType: AgentPurposeEnum,
   description: z.string(),
-  genericInstructions: z.string(),
-  summaryInstructions: z.string(),
+  genericInstructions: z.string().optional(),
+  summaryInstructions: z.string().optional(),
   analysisInstructions: z.string().optional(),
-  commentInstructions: z.string(),
+  commentInstructions: z.string().optional(),
   gradeInstructions: z.string().optional(),
+  extendedCapabilityId: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -44,15 +45,19 @@ const BaseAgentSchema = z.object({
   description: z.string().min(30, "Description must be at least 30 characters"),
   genericInstructions: z
     .string()
-    .min(30, "Generic instructions must be at least 30 characters"),
+    .min(30, "Generic instructions must be at least 30 characters")
+    .optional(),
   summaryInstructions: z
     .string()
-    .min(30, "Summary instructions must be at least 30 characters"),
+    .min(30, "Summary instructions must be at least 30 characters")
+    .optional(),
   analysisInstructions: z.string().optional(),
   commentInstructions: z
     .string()
-    .min(30, "Comment instructions must be at least 30 characters"),
+    .min(30, "Comment instructions must be at least 30 characters")
+    .optional(),
   gradeInstructions: z.string().optional(),
+  extendedCapabilityId: z.string().optional(),
 });
 
 // Schema for the complete agent

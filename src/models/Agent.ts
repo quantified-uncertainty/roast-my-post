@@ -32,6 +32,7 @@ export class AgentModel {
               summaryInstructions: data.summaryInstructions,
               commentInstructions: data.commentInstructions,
               gradeInstructions: data.gradeInstructions,
+              extendedCapabilityId: data.extendedCapabilityId,
             },
           },
         },
@@ -60,6 +61,7 @@ export class AgentModel {
         summaryInstructions: agent.versions[0].summaryInstructions,
         commentInstructions: agent.versions[0].commentInstructions,
         gradeInstructions: agent.versions[0].gradeInstructions,
+        extendedCapabilityId: agent.versions[0].extendedCapabilityId,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
@@ -102,6 +104,7 @@ export class AgentModel {
               summaryInstructions: data.summaryInstructions,
               commentInstructions: data.commentInstructions,
               gradeInstructions: data.gradeInstructions,
+              extendedCapabilityId: data.extendedCapabilityId,
             },
           },
         },
@@ -127,6 +130,7 @@ export class AgentModel {
         summaryInstructions: agent.versions[0].summaryInstructions,
         commentInstructions: agent.versions[0].commentInstructions,
         gradeInstructions: agent.versions[0].gradeInstructions,
+        extendedCapabilityId: agent.versions[0].extendedCapabilityId,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
@@ -174,6 +178,7 @@ export class AgentModel {
         summaryInstructions: dbAgent.versions[0].summaryInstructions,
         commentInstructions: dbAgent.versions[0].commentInstructions,
         gradeInstructions: dbAgent.versions[0].gradeInstructions,
+        extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId,
         owner: {
           id: dbAgent.submittedById,
           name: dbAgent.submittedBy.name || "Unknown",
@@ -204,6 +209,7 @@ export class AgentModel {
           summaryInstructions: version.summaryInstructions,
           commentInstructions: version.commentInstructions,
           gradeInstructions: version.gradeInstructions,
+          extendedCapabilityId: version.extendedCapabilityId,
           createdAt: version.createdAt,
           updatedAt: version.updatedAt,
         })

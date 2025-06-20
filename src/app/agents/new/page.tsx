@@ -31,6 +31,7 @@ export default function NewAgentPage() {
       summaryInstructions: "",
       commentInstructions: "",
       gradeInstructions: "",
+      extendedCapabilityId: "",
     },
   });
 

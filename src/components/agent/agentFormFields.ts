@@ -40,16 +40,16 @@ export const agentFormFields: FormFieldConfig[] = [
   {
     name: "genericInstructions",
     label: "Generic Instructions",
-    required: true,
+    required: false,
     type: "textarea",
-    placeholder: "Instructions for general agent behavior",
+    placeholder: "Instructions for general agent behavior (optional for special agents)",
   },
   {
     name: "summaryInstructions",
     label: "Summary Instructions",
-    required: true,
+    required: false,
     type: "textarea",
-    placeholder: "Instructions for generating summary",
+    placeholder: "Instructions for generating summary (optional for special agents)",
   },
   {
     name: "analysisInstructions",
@@ -60,14 +60,20 @@ export const agentFormFields: FormFieldConfig[] = [
   {
     name: "commentInstructions",
     label: "Comment Instructions",
-    required: true,
+    required: false,
     type: "textarea",
-    placeholder: "Instructions for generating comments",
+    placeholder: "Instructions for generating comments (optional for special agents)",
   },
   {
     name: "gradeInstructions",
     label: "Grade Instructions",
     type: "textarea",
     placeholder: "Instructions for grading (optional)",
+  },
+  {
+    name: "extendedCapabilityId",
+    label: "Extended Capability ID",
+    type: "text",
+    placeholder: "ID for special agent capabilities (optional)",
   },
 ];

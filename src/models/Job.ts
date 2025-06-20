@@ -164,10 +164,11 @@ export class JobModel {
         purpose: agentVersion.agentType.toLowerCase(),
         version: agentVersion.version.toString(),
         description: agentVersion.description,
-        genericInstructions: agentVersion.genericInstructions,
-        summaryInstructions: agentVersion.summaryInstructions,
-        commentInstructions: agentVersion.commentInstructions,
+        genericInstructions: agentVersion.genericInstructions || undefined,
+        summaryInstructions: agentVersion.summaryInstructions || undefined,
+        commentInstructions: agentVersion.commentInstructions || undefined,
         gradeInstructions: agentVersion.gradeInstructions || undefined,
+        extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       };
 
       // Analyze document

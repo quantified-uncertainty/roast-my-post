@@ -437,9 +437,9 @@ export class DocumentModel {
               description: evaluation.agent.versions[0].description,
               purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
               genericInstructions:
-                evaluation.agent.versions[0].genericInstructions,
+                evaluation.agent.versions[0].genericInstructions || undefined,
               summaryInstructions:
-                evaluation.agent.versions[0].summaryInstructions,
+                evaluation.agent.versions[0].summaryInstructions || undefined,
               commentInstructions:
                 evaluation.agent.versions[0].commentInstructions,
               gradeInstructions:

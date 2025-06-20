@@ -7,14 +7,11 @@ import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import type { TaskResult } from "./shared/types";
 import { generateThinking } from "./thinking";
 
-export type AnalysisMode = "standard" | "linkAnalysis";
-
 export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 500,
   targetComments: number = 5,
-  mode: AnalysisMode = "standard",
   anthropicApiKey?: string
 ): Promise<{
   thinking: string;
@@ -24,15 +21,18 @@ export async function analyzeDocument(
   comments: Comment[];
   tasks: TaskResult[];
 }> {
-  // Choose workflow based on mode
-  // if (mode === "linkAnalysis") {
-  if (true) {
+  // Choose workflow based on agent's extended capability
+  if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
+    console.log(`🔗 Using link analysis workflow for agent ${agentInfo.name}`);
     return await analyzeLinkDocument(
       document,
       agentInfo,
+      anthropicApiKey || process.env.ANTHROPIC_API_KEY!,
       targetComments
     );
   }
+
+  console.log(`📝 Using standard analysis workflow for agent ${agentInfo.name}`);
 
   // Standard workflow
   const tasks: TaskResult[] = [];
