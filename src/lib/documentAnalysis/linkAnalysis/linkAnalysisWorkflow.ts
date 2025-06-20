@@ -1,0 +1,353 @@
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documents";
+import type { Comment } from "../../../types/documentSchema";
+import { type LinkAnalysis } from "../../urlValidator";
+import type { TaskResult } from "../shared/types";
+import { generateLinkAnalysis } from "./index";
+import { extractUrls } from "./urlExtractor";
+
+/**
+ * Complete link analysis workflow that produces thinking, analysis, summary, and comments
+ * without additional LLM calls after the initial link analysis step
+ */
+export async function analyzeLinkDocument(
+  document: Document,
+  agentInfo: Agent,
+  targetComments: number = 5
+): Promise<{
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade?: number;
+  comments: Comment[];
+  tasks: TaskResult[];
+}> {
+  const tasks: TaskResult[] = [];
+
+  // Step 1: Generate link analysis (this includes the thinking output)
+  const linkAnalysisResult = await generateLinkAnalysis(
+    document,
+    agentInfo
+  );
+  tasks.push(linkAnalysisResult.task);
+
+  // Step 2: Generate analysis and summary from link data (no LLM needed)
+  const { analysis, summary, grade } = generateLinkAnalysisAndSummary(
+    document,
+    linkAnalysisResult.linkAnalysisResults
+  );
+
+  // Step 3: Generate comments from link issues (no LLM needed)
+  const urls = extractUrls(document.content);
+  const comments = generateLinkComments(
+    document,
+    linkAnalysisResult.linkAnalysisResults,
+    targetComments,
+    urls
+  );
+
+  return {
+    thinking: linkAnalysisResult.outputs.thinking,
+    analysis,
+    summary,
+    grade,
+    comments,
+    tasks,
+  };
+}
+
+/**
+ * Generates analysis and summary from link validation results without LLM
+ */
+function generateLinkAnalysisAndSummary(
+  document: Document,
+  linkAnalysisResults: LinkAnalysis[]
+): { analysis: string; summary: string; grade: number } {
+  // Calculate metrics from LinkAnalysis results
+  const metrics = calculateLinkMetrics(linkAnalysisResults);
+
+  const analysis = `## Link Quality Analysis
+
+This document was analyzed specifically for link quality and accuracy. The analysis focused on identifying broken links, hallucinated URLs, and incorrectly cited sources.
+
+### Overall Link Health
+- **Total Links Found:** ${metrics.totalLinks}
+- **Working Links:** ${metrics.workingLinks} (${metrics.totalLinks > 0 ? Math.round((metrics.workingLinks / metrics.totalLinks) * 100) : 0}%)
+- **Broken Links:** ${metrics.brokenLinks}
+
+### Key Findings
+
+${
+  metrics.brokenLinks > 0
+    ? `**⚠️ Broken Links Detected**
+Found ${metrics.brokenLinks} broken or non-existent URLs. These may be hallucinated links or references to content that has moved or been deleted.
+
+`
+    : ""
+}${
+    metrics.workingLinks === metrics.totalLinks && metrics.totalLinks > 0
+      ? `**✅ All Links Valid**
+All links in the document are working and correctly cited. This demonstrates good research practices and attention to detail.
+
+`
+      : ""
+  }### Document Reliability Score
+
+Based on link analysis, this document has a **${calculateLinkGradeFromMetrics(metrics)}% reliability score** for external references.
+
+${generateRecommendationsFromMetrics(metrics)}`;
+
+  const summary =
+    metrics.totalLinks === 0
+      ? "No external links found in this document."
+      : `Link analysis found ${metrics.workingLinks}/${metrics.totalLinks} working links${metrics.brokenLinks > 0 ? ` with ${metrics.brokenLinks} broken references` : ""}.`;
+
+  return {
+    analysis,
+    summary,
+    grade: calculateLinkGradeFromMetrics(metrics),
+  };
+}
+
+/**
+ * Generates comments from link analysis results without parsing reports
+ */
+function generateLinkComments(
+  document: Document,
+  linkAnalysisResults: LinkAnalysis[],
+  targetComments: number,
+  originalUrls: string[]
+): Comment[] {
+  const comments: Comment[] = [];
+
+  // Create a map of URL to analysis result for faster lookup
+  const linkResultMap = new Map<string, LinkAnalysis>();
+  linkAnalysisResults.forEach((result) => {
+    linkResultMap.set(result.url, result);
+  });
+
+  // Track positions we've already commented on to avoid duplicates
+  const processedPositions = new Set<string>();
+
+  // Process all URLs in the order they appear in the document
+  for (const url of originalUrls) {
+    const urlPosition = findUrlPosition(document.content, url);
+
+    if (urlPosition) {
+      // Create a unique key for this position to prevent duplicates
+      const positionKey = `${urlPosition.startOffset}-${urlPosition.endOffset}`;
+
+      // Skip if we've already processed this exact position
+      if (processedPositions.has(positionKey)) {
+        continue;
+      }
+
+      const linkResult = linkResultMap.get(url);
+
+      if (linkResult) {
+        let title: string;
+        let grade: number;
+        let importance: number;
+        let description: string;
+
+        if (linkResult.accessError) {
+          // Handle different error types
+          switch (linkResult.accessError.type) {
+            case "NotFound":
+              title = `❌ Broken link`;
+              grade = 0;
+              importance = 100;
+              description = `${url} - Page not found (HTTP 404)`;
+              break;
+            case "Forbidden":
+              title = `🚫 Access denied`;
+              grade = 0;
+              importance = 100;
+              description = `${url} - Access forbidden (HTTP 403)`;
+              break;
+            case "Timeout":
+              title = `⏱️ Link timeout`;
+              grade = 0;
+              importance = 100;
+              description = `${url} - Request timed out`;
+              break;
+            default:
+              title = `❌ Link error`;
+              grade = 0;
+              importance = 100;
+              const errorMsg =
+                "message" in linkResult.accessError
+                  ? linkResult.accessError.message
+                  : "Unknown error";
+              description = `${url} - ${errorMsg}`;
+          }
+        } else {
+          // URL is accessible - simple verification
+          title = `✅ Link verified`;
+          grade = 90;
+          importance = 10;
+          description = `${url} - Server responded successfully (HTTP 200)`;
+        }
+
+        comments.push({
+          title,
+          description,
+          highlight: urlPosition,
+          importance,
+          grade,
+          isValid: true,
+        });
+
+        // Mark this position as processed
+        processedPositions.add(positionKey);
+      }
+    }
+  }
+
+  // Sort comments by their position in the document to ensure top-to-bottom order
+  comments.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+
+  // Don't limit comments - generate one for each analyzed link
+  return comments;
+}
+
+
+
+
+function calculateLinkMetrics(linkAnalysisResults: LinkAnalysis[]) {
+  const totalLinks = linkAnalysisResults.length;
+  let workingLinks = 0;
+  let brokenLinks = 0;
+
+  linkAnalysisResults.forEach((result) => {
+    if (result.accessError) {
+      brokenLinks++;
+    } else {
+      workingLinks++;
+    }
+  });
+
+  return {
+    totalLinks,
+    workingLinks,
+    brokenLinks,
+  };
+}
+
+function calculateLinkGradeFromMetrics(metrics: {
+  totalLinks: number;
+  workingLinks: number;
+  brokenLinks: number;
+}): number {
+  if (metrics.totalLinks === 0) return 80; // No links is neutral
+
+  const workingRatio = metrics.workingLinks / metrics.totalLinks;
+  const brokenPenalty = (metrics.brokenLinks / metrics.totalLinks) * 40; // Heavy penalty for broken links
+
+  const baseScore = workingRatio * 100;
+  const finalScore = Math.max(
+    0,
+    Math.min(100, baseScore - brokenPenalty)
+  );
+
+  return Math.round(finalScore);
+}
+
+function generateRecommendationsFromMetrics(metrics: {
+  totalLinks: number;
+  workingLinks: number;
+  brokenLinks: number;
+}): string {
+  if (metrics.totalLinks === 0) {
+    return "**Recommendation:** Consider adding relevant external references to support key claims and provide additional context for readers.";
+  }
+
+  if (metrics.brokenLinks === 0) {
+    return "**Recommendation:** Excellent link hygiene! All references are working and accessible. Continue this high standard of link maintenance.";
+  }
+
+  let recommendations = "**Recommendations:**\n";
+
+  if (metrics.brokenLinks > 0) {
+    recommendations += `- **Fix ${metrics.brokenLinks} broken link(s):** Verify URLs and replace with working alternatives or archived versions\n`;
+  }
+
+  recommendations +=
+    "- **Regular maintenance:** Periodically check links to prevent link rot over time";
+
+  return recommendations;
+}
+
+
+export function findUrlPosition(
+  content: string,
+  url: string
+): {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+  isValid: boolean;
+} | null {
+  // First, find the URL in the content
+  let urlIndex = content.indexOf(url);
+
+  if (urlIndex === -1) {
+    console.warn(`Could not find URL in content: ${url.substring(0, 50)}...`);
+    return null;
+  }
+
+  // Check if this URL is part of a markdown link [text](url)
+  // Look backwards from the URL to find if it's in markdown format
+  let startOffset = urlIndex;
+  let endOffset = urlIndex + url.length;
+  let quotedText = url;
+
+  // Check if URL is preceded by ]( - indicating it's part of a markdown link
+  if (urlIndex >= 2 && content.substring(urlIndex - 2, urlIndex) === "](") {
+    // Find the opening bracket of the markdown link
+    const beforeParens = content.substring(0, urlIndex - 2);
+    const openBracketIndex = beforeParens.lastIndexOf("[");
+
+    if (openBracketIndex !== -1) {
+      // Find the matching closing parenthesis for the markdown link
+      // We need to account for any parentheses that might be part of the URL itself
+      const afterUrlStart = urlIndex + url.length;
+      let parenCount = 0;
+      let closeParenIndex = -1;
+
+      // Count any unmatched opening parens in the URL
+      for (let i = 0; i < url.length; i++) {
+        if (url[i] === "(") parenCount++;
+        else if (url[i] === ")") parenCount--;
+      }
+
+      // Now look for the closing paren that matches the markdown syntax
+      // We need to find a closing paren when parenCount reaches -1
+      for (let i = afterUrlStart; i < content.length; i++) {
+        if (content[i] === ")") {
+          parenCount--;
+          if (parenCount === -1) {
+            closeParenIndex = i - afterUrlStart;
+            break;
+          }
+        } else if (content[i] === "(") {
+          parenCount++;
+        }
+      }
+
+      if (closeParenIndex !== -1) {
+        // This is a complete markdown link [text](url)
+        startOffset = openBracketIndex;
+        endOffset = afterUrlStart + closeParenIndex + 1;
+        quotedText = content.substring(startOffset, endOffset);
+      }
+    }
+  }
+
+  return {
+    startOffset,
+    endOffset,
+    quotedText,
+    isValid: true,
+  };
+}

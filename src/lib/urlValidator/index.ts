@@ -1,24 +1,72 @@
-import { Anthropic } from "@anthropic-ai/sdk";
 import { z } from "zod";
 
-// Schema for the validation result
-export const UrlValidationResultSchema = z.object({
-  doesExist: z.boolean(),
-  correctlyCited: z.boolean(),
-  message: z.string().optional(),
+// Access error types
+export const AccessErrorSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("NetworkError"),
+    message: z.string(),
+    retryable: z.boolean().optional(),
+  }),
+  z.object({
+    type: z.literal("NotFound"),
+    statusCode: z.literal(404),
+  }),
+  z.object({
+    type: z.literal("Forbidden"),
+    statusCode: z.literal(403),
+    authMethod: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal("Timeout"),
+    duration: z.number(),
+  }),
+  z.object({
+    type: z.literal("RateLimited"),
+    resetTime: z.number().optional(),
+  }),
+  z.object({
+    type: z.literal("ServerError"),
+    statusCode: z.number(),
+  }),
+  z.object({
+    type: z.literal("Unknown"),
+    message: z.string(),
+  }),
+]);
+
+export type AccessError = z.infer<typeof AccessErrorSchema>;
+
+// Link analysis schema
+export const LinkAnalysisSchema = z.object({
+  url: z.string(),
+  finalUrl: z.string().optional(),
+  timestamp: z.date(),
+  accessError: AccessErrorSchema.optional(),
+  linkDetails: z.object({
+    contentType: z.string(),
+    statusCode: z.number(),
+  }).optional(),
 });
 
-export type UrlValidationResult = z.infer<typeof UrlValidationResultSchema>;
+export type LinkAnalysis = z.infer<typeof LinkAnalysisSchema>;
 
-// Schema for the input
+// Input schema for URL validation
 export const UrlValidationInputSchema = z.object({
   url: z.string().url(),
-  usageContext: z.string().describe("Description of how the URL is being used or what it's supposed to reference"),
 });
 
 export type UrlValidationInput = z.infer<typeof UrlValidationInputSchema>;
 
-async function checkUrlExists(url: string): Promise<{ exists: boolean; status?: number; finalUrl?: string; error?: string }> {
+
+async function checkUrlAccess(url: string): Promise<{
+  accessible: boolean;
+  finalUrl?: string;
+  contentType?: string;
+  statusCode?: number;
+  error?: AccessError;
+}> {
+  const startTime = Date.now();
+  
   try {
     const response = await fetch(url, {
       method: "HEAD",
@@ -29,119 +77,147 @@ async function checkUrlExists(url: string): Promise<{ exists: boolean; status?: 
       signal: AbortSignal.timeout(10000), // 10 second timeout
     });
     
+    const contentType = response.headers.get("content-type") || "";
+    
+    if (response.status === 404) {
+      return {
+        accessible: false,
+        error: { type: "NotFound", statusCode: 404 },
+      };
+    }
+    
+    if (response.status === 403) {
+      return {
+        accessible: false,
+        error: { type: "Forbidden", statusCode: 403 },
+      };
+    }
+    
+    if (response.status === 429) {
+      const resetTime = response.headers.get("x-ratelimit-reset");
+      return {
+        accessible: false,
+        error: { 
+          type: "RateLimited", 
+          resetTime: resetTime ? parseInt(resetTime) : undefined 
+        },
+      };
+    }
+    
+    if (response.status >= 500) {
+      return {
+        accessible: false,
+        error: { type: "ServerError", statusCode: response.status },
+      };
+    }
+    
+    if (!response.ok) {
+      return {
+        accessible: false,
+        error: { 
+          type: "Unknown", 
+          message: `HTTP ${response.status}: ${response.statusText}` 
+        },
+      };
+    }
+    
+    // All content types are treated equally - we only check server response
+    
     return {
-      exists: response.ok || response.status < 400,
-      status: response.status,
-      finalUrl: response.url, // After redirects
+      accessible: true,
+      finalUrl: response.url,
+      contentType,
+      statusCode: response.status,
     };
   } catch (error) {
+    const duration = Date.now() - startTime;
+    
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        return {
+          accessible: false,
+          error: { type: "Timeout", duration },
+        };
+      }
+      
+      if (error.message.includes("ENOTFOUND") || 
+          error.message.includes("ECONNREFUSED") ||
+          error.message.includes("ERR_NAME_NOT_RESOLVED")) {
+        return {
+          accessible: false,
+          error: { 
+            type: "NetworkError", 
+            message: "Domain not found or connection refused",
+            retryable: false,
+          },
+        };
+      }
+      
+      return {
+        accessible: false,
+        error: { 
+          type: "NetworkError", 
+          message: error.message,
+          retryable: true,
+        },
+      };
+    }
+    
     return {
-      exists: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      accessible: false,
+      error: { type: "Unknown", message: "Unknown error occurred" },
     };
   }
 }
 
 export async function validateUrl(
-  input: UrlValidationInput,
-  anthropicApiKey: string
-): Promise<UrlValidationResult> {
-  const anthropic = new Anthropic({
-    apiKey: anthropicApiKey,
-  });
-
-  // First, check if the URL exists
-  const urlCheck = await checkUrlExists(input.url);
-  const doesExist = urlCheck.exists;
-
-  // Now use Claude to analyze the results
-  const systemPrompt = `You are a URL validation expert. Analyze the URL validation results and provide a JSON response.
-
-Your response must be valid JSON in this exact format:
-{
-  "correctlyCited": boolean,
-  "message": "string explaining the validation result"
-}`;
-
-  const userPrompt = `Validate this URL citation:
-URL: ${input.url}
-Usage Context: ${input.usageContext}
-URL Exists: ${doesExist}
-${urlCheck.finalUrl && urlCheck.finalUrl !== input.url ? `Redirects to: ${urlCheck.finalUrl}` : ''}
-${urlCheck.error ? `Error: ${urlCheck.error}` : ''}
-
-Analyze:
-1. If the URL exists, does it correctly match the usage context?
-2. If it doesn't exist, explain why this is problematic
-3. Provide a clear, concise message explaining your findings
-
-Consider:
-- Domain authenticity and plausibility
-- Contextual appropriateness 
-- Common hallucination patterns (made-up domains, incorrect TLDs, etc.)
-- Temporal accuracy (are dates/years appropriate?)
-- Whether the URL structure makes sense for the claimed content`;
-
-  try {
-    const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 500,
-      temperature: 0,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    });
-
-    // Extract JSON from Claude's response
-    const responseText = response.content[0].type === "text" 
-      ? response.content[0].text 
-      : "{}";
-    
-    // Try to find JSON in the response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("No JSON found in response");
-    }
-    
-    const analysis = JSON.parse(jsonMatch[0]);
-    
+  input: UrlValidationInput
+): Promise<LinkAnalysis> {
+  const timestamp = new Date();
+  
+  // Check if the URL is accessible
+  const accessCheck = await checkUrlAccess(input.url);
+  
+  // If not accessible, return with error
+  if (!accessCheck.accessible || accessCheck.error) {
     return {
-      doesExist,
-      correctlyCited: analysis.correctlyCited || false,
-      message: analysis.message,
-    };
-  } catch (error) {
-    console.error("Error analyzing URL:", error);
-    
-    // Fallback response
-    return {
-      doesExist,
-      correctlyCited: doesExist,
-      message: doesExist 
-        ? "URL exists but could not verify if it matches the usage context"
-        : "URL does not exist",
+      url: input.url,
+      finalUrl: accessCheck.finalUrl,
+      timestamp,
+      accessError: accessCheck.error,
     };
   }
+  
+  // URL is accessible, return success
+  return {
+    url: input.url,
+    finalUrl: accessCheck.finalUrl,
+    timestamp,
+    linkDetails: {
+      contentType: accessCheck.contentType!,
+      statusCode: accessCheck.statusCode!,
+    },
+  };
 }
 
 // Convenience function for validating multiple URLs
 export async function validateUrls(
-  inputs: UrlValidationInput[],
-  anthropicApiKey: string
-): Promise<UrlValidationResult[]> {
-  // Process in batches to avoid rate limits
-  const batchSize = 5;
-  const results: UrlValidationResult[] = [];
+  inputs: UrlValidationInput[]
+): Promise<LinkAnalysis[]> {
+  // Process in batches to avoid overwhelming servers
+  const batchSize = 10;
+  const results: LinkAnalysis[] = [];
   
   for (let i = 0; i < inputs.length; i += batchSize) {
     const batch = inputs.slice(i, i + batchSize);
     const batchResults = await Promise.all(
-      batch.map(input => validateUrl(input, anthropicApiKey))
+      batch.map(input => validateUrl(input))
     );
     results.push(...batchResults);
     
-    // Add a small delay between batches to respect rate limits
+    // Add a small delay between batches to be respectful
     if (i + batchSize < inputs.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
   

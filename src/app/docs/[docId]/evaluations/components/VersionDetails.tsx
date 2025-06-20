@@ -155,9 +155,6 @@ export function VersionDetails({
               >
                 <div className="mb-2 flex items-center justify-between">
                   <h4 className="font-medium text-gray-900">{comment.title}</h4>
-                  {comment.grade !== undefined && (
-                    <GradeBadge grade={comment.grade} />
-                  )}
                 </div>
                 <div className="prose max-w-none">
                   <ReactMarkdown
@@ -168,14 +165,29 @@ export function VersionDetails({
                   </ReactMarkdown>
                 </div>
                 {comment.highlight && (
-                  <div className="mt-2 rounded bg-yellow-50 p-2 text-sm">
-                    <div className="font-medium text-yellow-800">
-                      Highlighted Text:
+                  <>
+                    <div className="mt-2 rounded bg-yellow-50 p-2 text-sm">
+                      <div className="font-medium text-yellow-800">
+                        Highlighted Text:
+                      </div>
+                      <div className="mt-1 text-yellow-700">
+                        {comment.highlight.quotedText}
+                      </div>
                     </div>
-                    <div className="mt-1 text-yellow-700">
-                      {comment.highlight.quotedText}
+                    <div className="mt-1 flex gap-4 text-xs text-gray-500">
+                      <span>Start: {comment.highlight.startOffset}</span>
+                      <span>End: {comment.highlight.endOffset}</span>
+                      {comment.highlight.prefix && (
+                        <span>Prefix: {comment.highlight.prefix}</span>
+                      )}
+                      {comment.importance !== undefined && (
+                        <span>Importance: {comment.importance}</span>
+                      )}
+                      {comment.grade !== undefined && (
+                        <span>Grade: {comment.grade}</span>
+                      )}
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             ))}

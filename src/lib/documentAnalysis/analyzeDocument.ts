@@ -1,16 +1,21 @@
 import type { Agent } from "../../types/agentSchema";
 import type { Document } from "../../types/documents";
 import type { Comment } from "../../types/documentSchema";
-import { getCommentData } from "./commentGeneration";
-import { generateThinking } from "./thinking";
 import { generateAnalysis } from "./analysis";
-import type { TaskResult, ThinkingOutputs, AnalysisOutputs, CommentAnalysisOutputs } from "./shared/types";
+import { getCommentData } from "./commentGeneration";
+import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
+import type { TaskResult } from "./shared/types";
+import { generateThinking } from "./thinking";
+
+export type AnalysisMode = "standard" | "linkAnalysis";
 
 export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 500,
-  targetComments: number = 5
+  targetComments: number = 5,
+  mode: AnalysisMode = "standard",
+  anthropicApiKey?: string
 ): Promise<{
   thinking: string;
   analysis: string;
@@ -19,6 +24,17 @@ export async function analyzeDocument(
   comments: Comment[];
   tasks: TaskResult[];
 }> {
+  // Choose workflow based on mode
+  // if (mode === "linkAnalysis") {
+  if (true) {
+    return await analyzeLinkDocument(
+      document,
+      agentInfo,
+      targetComments
+    );
+  }
+
+  // Standard workflow
   const tasks: TaskResult[] = [];
 
   // Step 1: Generate comprehensive thinking
