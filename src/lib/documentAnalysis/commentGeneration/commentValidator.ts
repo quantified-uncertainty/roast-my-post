@@ -163,13 +163,14 @@ export async function validateAndConvertComments(
   });
 
   if (errors.length > 0) {
-    console.warn(`⚠️ Found ${errors.length} invalid comments:`, errors);
-    // Create a detailed error message for debugging
-    const detailedError = `Validation failed for ${errors.length} comments:\n${errors.map((error, index) => `  ${index + 1}. ${error}`).join("\n")}`;
-    throw new Error(detailedError);
+    console.warn(`⚠️ Skipped ${errors.length} invalid comments:`, errors);
+    // Log details for debugging but don't fail
+    errors.forEach((error, index) => {
+      console.warn(`  - Comment ${index + 1}: ${error}`);
+    });
   }
 
-  console.log(`✅ Validated ${validComments.length} comments successfully`);
+  console.log(`✅ Validated ${validComments.length} comments successfully${errors.length > 0 ? ` (${errors.length} skipped due to errors)` : ''}`);
   return validComments;
 }
 

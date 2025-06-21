@@ -354,7 +354,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           // Recursively validate children, ensuring they're not empty
           const validatedChildren = node.children
             .map(validateNode)
-            .filter(child => child !== null && child !== undefined);
+            .filter((child: any) => child !== null && child !== undefined);
           
           // If no valid children remain, add an empty text node
           if (validatedChildren.length === 0) {
