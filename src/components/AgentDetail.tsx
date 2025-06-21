@@ -53,6 +53,7 @@ export default function AgentDetail({
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [exportType, setExportType] = useState<'JSON' | 'Markdown'>('JSON');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -154,6 +155,87 @@ export default function AgentDetail({
     
     try {
       await navigator.clipboard.writeText(jsonString);
+      setExportType('JSON');
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+    
+    setExportDropdownOpen(false);
+  };
+
+  const exportAgentAsMarkdown = async () => {
+    const exportDate = new Date().toISOString();
+    const agentTypeInfo = AGENT_TYPE_INFO[agent.purpose];
+    
+    let markdown = `---
+id: ${agent.id}
+name: "${agent.name}"
+type: ${agent.purpose}
+version: ${agent.version}
+owner: ${agent.owner?.name || 'Unknown'}
+created: ${exportDate}
+extended_capability: ${agent.extendedCapabilityId || 'none'}
+---
+
+# ${agent.name}
+
+**Type:** ${agentTypeInfo.individualTitle}  
+**Version:** ${agent.version}  
+**Owner:** ${agent.owner?.name || 'Unknown'}`;
+
+    if (agent.extendedCapabilityId) {
+      markdown += `  
+**Extended Capability:** ${agent.extendedCapabilityId}`;
+    }
+
+    markdown += `
+
+## Description
+
+${agent.description}`;
+
+    if (agent.genericInstructions) {
+      markdown += `
+
+## Primary Instructions
+
+${agent.genericInstructions}`;
+    }
+
+    if (agent.summaryInstructions) {
+      markdown += `
+
+## Summary Instructions
+
+${agent.summaryInstructions}`;
+    }
+
+    if (agent.commentInstructions) {
+      markdown += `
+
+## Comment Instructions
+
+${agent.commentInstructions}`;
+    }
+
+    if (agent.gradeInstructions) {
+      markdown += `
+
+## Grade Instructions
+
+${agent.gradeInstructions}`;
+    }
+
+    markdown += `
+
+---
+*Exported from RoastMyPost on ${new Date(exportDate).toLocaleString()}*`;
+    
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setExportType('Markdown');
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
@@ -176,7 +258,7 @@ export default function AgentDetail({
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-green-800">
-                Agent JSON copied to clipboard!
+                Agent {exportType} copied to clipboard!
               </p>
             </div>
           </div>
@@ -225,6 +307,12 @@ export default function AgentDetail({
                   className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                 >
                   JSON
+                </button>
+                <button
+                  onClick={exportAgentAsMarkdown}
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Markdown
                 </button>
               </div>
             )}
