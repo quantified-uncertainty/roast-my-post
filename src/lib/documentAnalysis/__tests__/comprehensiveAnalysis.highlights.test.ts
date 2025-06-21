@@ -43,6 +43,7 @@ Line 5 has the final content.`,
     author: "Test Author",
     publishedDate: "2024-01-01",
     reviews: [],
+    intendedAgents: [],
   };
 
   beforeEach(() => {
