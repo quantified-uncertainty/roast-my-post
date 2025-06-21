@@ -13,6 +13,7 @@ import {
   FileText,
   Download,
   ChevronDown,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -325,12 +326,20 @@ ${agent.gradeInstructions}`;
             </Button>
           </Link>
           {isOwner && (
-            <Link href={`/agents/${agent.id}/edit`}>
-              <Button variant="secondary" className="flex items-center gap-2">
-                <Pencil className="h-4 w-4" />
-                Edit Agent
-              </Button>
-            </Link>
+            <>
+              <Link href={`/agents/${agent.id}/import`}>
+                <Button variant="secondary" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Import
+                </Button>
+              </Link>
+              <Link href={`/agents/${agent.id}/edit`}>
+                <Button variant="secondary" className="flex items-center gap-2">
+                  <Pencil className="h-4 w-4" />
+                  Edit Agent
+                </Button>
+              </Link>
+            </>
           )}
         </div>
       </div>

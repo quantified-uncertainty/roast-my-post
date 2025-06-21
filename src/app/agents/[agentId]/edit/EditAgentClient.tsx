@@ -6,7 +6,7 @@ import {
 } from "react";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -22,8 +22,10 @@ import { updateAgent } from "./actions";
 
 export function EditAgentClient({ agentId }: { agentId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
 
   const {
     register,
@@ -34,9 +36,24 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
   } = useForm<AgentInput>();
 
   useEffect(() => {
-    // Fetch the agent data from the server
+    // Check if this is an import flow
+    const isImport = searchParams.get('import') === 'true';
+    
     const fetchAgent = async () => {
       try {
+        // Check for imported data first
+        let importedData = null;
+        if (isImport) {
+          const storedData = sessionStorage.getItem(`importedAgentData_${agentId}`);
+          if (storedData) {
+            importedData = JSON.parse(storedData);
+            // Clear the stored data
+            sessionStorage.removeItem(`importedAgentData_${agentId}`);
+            setImportNotice("Form pre-filled with imported data. Review and save to apply changes.");
+          }
+        }
+
+        // Fetch the current agent data from the server
         const response = await fetch(`/api/agents/${agentId}`);
 
         if (!response.ok) {
@@ -45,17 +62,20 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
         const data = await response.json();
 
+        // Use imported data if available, otherwise use current agent data
+        const formData = importedData || data;
+
         // Convert the agent data to form format
         reset({
-          name: data.name,
-          purpose: data.purpose.toUpperCase(),
-          description: data.description,
-          genericInstructions: data.genericInstructions || "",
-          summaryInstructions: data.summaryInstructions || "",
-          analysisInstructions: data.analysisInstructions || "",
-          commentInstructions: data.commentInstructions || "",
-          gradeInstructions: data.gradeInstructions || "",
-          extendedCapabilityId: data.extendedCapabilityId || "",
+          name: formData.name || data.name,
+          purpose: (formData.purpose || data.purpose).toUpperCase(),
+          description: formData.description || data.description,
+          genericInstructions: formData.genericInstructions || data.genericInstructions || "",
+          summaryInstructions: formData.summaryInstructions || data.summaryInstructions || "",
+          analysisInstructions: formData.analysisInstructions || data.analysisInstructions || "",
+          commentInstructions: formData.commentInstructions || data.commentInstructions || "",
+          gradeInstructions: formData.gradeInstructions || data.gradeInstructions || "",
+          extendedCapabilityId: formData.extendedCapabilityId || data.extendedCapabilityId || "",
         });
 
         setLoading(false);
@@ -69,7 +89,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
     };
 
     fetchAgent();
-  }, [agentId, reset]);
+  }, [agentId, reset, searchParams]);
 
   const onSubmit = async (data: AgentInput) => {
     try {
@@ -153,6 +173,17 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
             <p className="mt-2 text-sm text-gray-600">
               Update your agent (this will create a new version)
             </p>
+            
+            {importNotice && (
+              <div className="mt-4 rounded-md bg-blue-50 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">Import Successful</h3>
+                    <div className="mt-2 text-sm text-blue-700">{importNotice}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
