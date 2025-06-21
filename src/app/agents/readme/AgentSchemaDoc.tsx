@@ -82,7 +82,7 @@ export function AgentSchemaDoc() {
 
         {/* Full Documentation */}
         <div className="rounded-lg border border-gray-200 bg-white p-8">
-          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-p:text-gray-700 prose-code:rounded prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:text-sm prose-pre:border prose-pre:border-gray-200 prose-pre:bg-gray-50 prose-ol:text-gray-700 prose-ul:text-gray-700 prose-li:text-gray-700 prose-table:border-collapse prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-td:border prose-td:border-gray-300">
+          <div className="prose max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {MARKDOWN_CONTENT}
             </ReactMarkdown>

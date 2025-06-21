@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Upload,
 } from "lucide-react";
+import * as yaml from 'js-yaml';
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
@@ -54,7 +55,7 @@ export default function AgentDetail({
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [exportType, setExportType] = useState<'JSON' | 'Markdown'>('JSON');
+  const [exportType, setExportType] = useState<'JSON' | 'Markdown' | 'YAML'>('JSON');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -246,6 +247,48 @@ ${agent.gradeInstructions}`;
     setExportDropdownOpen(false);
   };
 
+  const exportAgentAsYaml = async () => {
+    const agentData = {
+      id: agent.id,
+      name: agent.name,
+      purpose: agent.purpose,
+      version: agent.version,
+      description: agent.description,
+      genericInstructions: agent.genericInstructions,
+      summaryInstructions: agent.summaryInstructions,
+      commentInstructions: agent.commentInstructions,
+      gradeInstructions: agent.gradeInstructions,
+      extendedCapabilityId: agent.extendedCapabilityId,
+      owner: {
+        id: agent.owner?.id,
+        name: agent.owner?.name,
+      },
+      exportedAt: new Date().toISOString(),
+    };
+
+    // Remove null/undefined values to clean up the YAML
+    const cleanData = Object.fromEntries(
+      Object.entries(agentData).filter(([_, value]) => value !== null && value !== undefined)
+    );
+
+    try {
+      const yamlString = yaml.dump(cleanData, {
+        indent: 2,
+        lineWidth: 80,
+        noRefs: true,
+      });
+      
+      await navigator.clipboard.writeText(yamlString);
+      setExportType('YAML');
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+    
+    setExportDropdownOpen(false);
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-8">
       {/* Success Notification */}
@@ -315,6 +358,12 @@ ${agent.gradeInstructions}`;
                 >
                   Markdown
                 </button>
+                <button
+                  onClick={exportAgentAsYaml}
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  YAML
+                </button>
               </div>
             )}
           </div>
@@ -327,7 +376,7 @@ ${agent.gradeInstructions}`;
           </Link>
           {isOwner && (
             <>
-              <Link href={`/agents/${agent.id}/import`}>
+              <Link href={`/agents/${agent.id}/import-yaml`}>
                 <Button variant="secondary" className="flex items-center gap-2">
                   <Upload className="h-4 w-4" />
                   Import

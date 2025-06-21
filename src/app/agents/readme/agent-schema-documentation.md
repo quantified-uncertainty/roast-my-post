@@ -2,16 +2,117 @@
 
 **Complete guide to creating and configuring AI agents for document evaluation in RoastMyPost**
 
+## Quick Start Guide
+
+Creating an effective agent requires substantial detail and examples. While you only need four core fields, the instructions should be comprehensive:
+
+1. **name**: Descriptive title
+2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
+3. **description**: 1-2 sentences explaining what the agent does
+4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples)
+
+Most high-performing agents use only these four fields, but pack extensive detail into the instructions. Additional fields should only be added when output types need fundamentally different approaches.
+
+### Realistic Agent Example (Abbreviated):
+
+````yaml
+name: "Technical Documentation Reviewer"
+purpose: ASSESSOR
+description: "Evaluates technical documentation for clarity, completeness, and accuracy."
+genericInstructions: |
+  <role>
+  You are a senior technical documentation expert with 15+ years of experience across 
+  enterprise software, developer tools, and API documentation. You've worked with teams 
+  at Google, Microsoft, and numerous startups. You understand both the engineering mindset 
+  and end-user needs.
+  </role>
+
+  <expertise_areas>
+    <api_documentation>
+      Deep understanding of OpenAPI/Swagger, REST principles, GraphQL schemas.
+      Experience with tools like Postman, Insomnia, and API versioning strategies.
+      Knowledge of authentication patterns (OAuth, JWT, API keys).
+    </api_documentation>
+    
+    <developer_guides>
+      Proficiency in multiple programming paradigms and languages.
+      Understanding of different learning styles and developer personas.
+      Experience with quickstarts, tutorials, how-to guides, and references.
+    </developer_guides>
+    
+    <user_documentation>
+      Information architecture and content strategy expertise.
+      Accessibility standards (WCAG) and internationalization.
+      Experience with help systems, knowledge bases, and in-app guidance.
+    </user_documentation>
+  </expertise_areas>
+
+  <evaluation_framework>
+    [... abbreviated - full version would be 20-50x longer with extensive examples ...]
+  </evaluation_framework>
+
+  <example_evaluations>
+    <example category="missing_context">
+      <document_excerpt>
+        "To configure the webhook, set the endpoint URL in the settings panel."
+      </document_excerpt>
+      <evaluation>
+        <issue>Lacks critical context for implementation</issue>
+        <specific_problems>
+          - No mention of authentication requirements
+          - Missing payload format specification
+          - No error handling guidance
+          - Unclear which "settings panel" (UI? Config file? API?)
+        </specific_problems>
+        <suggested_revision>
+          "To configure the webhook:
+          1. Navigate to Settings > Integrations > Webhooks
+          2. Click 'Add Webhook' and provide:
+             - Endpoint URL (must be HTTPS)
+             - Authentication method (Bearer token or HMAC signature)
+             - Events to subscribe to
+          3. Test the connection using the 'Send Test Event' button
+          
+          The webhook will receive POST requests with this payload format:
+          ```json
+          {
+            "event_type": "user.created",
+            "timestamp": "2024-01-15T10:30:00Z",
+            "data": { ... }
+          }
+          ```
+          
+          Ensure your endpoint returns 200 OK within 5 seconds."
+        </suggested_revision>
+      </evaluation>
+    </example>
+    
+    [... 50+ more detailed examples covering different scenarios ...]
+  </example_evaluations>
+````
+
+**Note**: This is a heavily abbreviated example. Real high-performance agents typically include:
+
+- 50-100 detailed evaluation examples
+- Comprehensive rubrics for each evaluation dimension
+- Edge case handling instructions
+- Domain-specific terminology guides
+- Links to authoritative sources and style guides
+
+---
+
 ## Table of Contents
 
 1. [What is an Agent?](#what-is-an-agent)
 2. [Agent Types](#agent-types)
 3. [Schema Fields Reference](#schema-fields-reference)
 4. [Writing Effective Instructions](#writing-effective-instructions)
-5. [Real-World Examples](#real-world-examples)
-6. [Best Practices](#best-practices)
-7. [Extended Capabilities](#extended-capabilities)
-8. [Common Patterns](#common-patterns)
+5. [XML Structure for Claude](#xml-structure-for-claude)
+6. [Performance Optimization](#performance-optimization)
+7. [Real-World Examples](#real-world-examples)
+8. [Best Practices](#best-practices)
+9. [Common Patterns](#common-patterns)
+10. [Migrating to Simplified Schemas](#migrating-to-simplified-schemas)
 
 ---
 
@@ -37,24 +138,26 @@ Agents follow a three-step evaluation process:
 2. **Analysis**: Agent generates a comprehensive evaluation summary
 3. **Comments**: Agent creates specific feedback tied to text sections
 
-Each step is tracked separately, allowing for transparency in the evaluation process.
+Each step builds on the previous one, creating a coherent evaluation that leverages chain-of-thought reasoning for improved quality.
 
 ---
 
 ## Agent Types
 
 ### ASSESSOR
+
 - **Purpose**: Evaluates and analyzes content, providing structured feedback and ratings
 - **Icon**: Scale/Balance
 - **Color**: Orange
-- **Use Cases**: 
+- **Use Cases**:
   - Academic paper evaluation
   - Quality assessment with scoring rubrics
   - Performance reviews
   - Competitive analysis
 - **Output Focus**: Grades, structured assessment, comparative evaluation
 
-### ADVISOR  
+### ADVISOR
+
 - **Purpose**: Provides recommendations and suggestions for improvement
 - **Icon**: Lightbulb
 - **Color**: Blue
@@ -66,9 +169,10 @@ Each step is tracked separately, allowing for transparency in the evaluation pro
 - **Output Focus**: Actionable suggestions, improvement roadmaps, constructive feedback
 
 ### ENRICHER
+
 - **Purpose**: Adds context, references, and additional information to content
 - **Icon**: Search
-- **Color**: Green  
+- **Color**: Green
 - **Use Cases**:
   - Research augmentation
   - Fact-checking and verification
@@ -77,7 +181,8 @@ Each step is tracked separately, allowing for transparency in the evaluation pro
 - **Output Focus**: External references, additional resources, contextual information
 
 ### EXPLAINER
-- **Purpose**: Explains content to non-experts and provides summaries  
+
+- **Purpose**: Explains content to non-experts and provides summaries
 - **Icon**: Book
 - **Color**: Gray
 - **Use Cases**:
@@ -94,19 +199,21 @@ Each step is tracked separately, allowing for transparency in the evaluation pro
 ### Required Fields
 
 #### `name`
+
 - **Type**: string (minimum 3 characters)
 - **Purpose**: Display name for the agent
-- **Guidelines**: 
+- **Guidelines**:
   - Should be descriptive and memorable
   - Reflect the agent's specific role or expertise
   - Avoid generic names like "Helper" or "Assistant"
-- **Examples**: 
+- **Examples**:
   - "Academic Research Evaluator"
   - "Clarity Coach"
   - "EA Impact Assessor"
   - "Rationalist Critic"
 
 #### `purpose`
+
 - **Type**: enum (ASSESSOR | ADVISOR | ENRICHER | EXPLAINER)
 - **Purpose**: Defines the agent's primary role and capabilities
 - **Guidelines**: Choose based on the agent's main function:
@@ -116,149 +223,370 @@ Each step is tracked separately, allowing for transparency in the evaluation pro
   - EXPLAINER: When simplifying or educating
 
 #### `description`
+
 - **Type**: string (minimum 30 characters)
 - **Purpose**: Brief explanation of what the agent does
 - **Guidelines**:
-  - Should be 1-3 sentences
+  - Should be 1-2 sentences
   - Explain the agent's expertise and focus
   - Mention target use cases or document types
 - **Examples**:
   - "Evaluates research papers for clarity, methodology, and impact potential using academic standards."
   - "Provides constructive feedback on writing style, structure, and readability for general audiences."
-  - "Identifies and verifies external links, checking for accuracy and relevance to document content."
 
 ### Optional Fields
 
 #### `genericInstructions`
+
 - **Type**: string (minimum 30 characters if provided)
 - **Purpose**: Core behavioral instructions and personality
+- **Typical Length**: 5,000-50,000 words for high-quality agents
 - **Guidelines**:
-  - Define the agent's overall approach and methodology
-  - Establish tone, style, and personality
-  - Include expertise context and background
-  - Specify general evaluation principles
-- **Length**: 200-500 words recommended
-- **Template Structure**:
-  ```
-  ## Role & Expertise
-  You are a [specific role] with expertise in [domain]...
-  
-  ## Evaluation Approach  
-  When evaluating documents, you should...
-  
-  ## Tone & Style
-  Maintain a [adjective] tone that is [characteristics]...
+  - Define comprehensive expertise and background
+  - Include 50+ detailed examples of evaluations
+  - Provide extensive rubrics and criteria
+  - Cover edge cases and special scenarios
+  - Include domain-specific knowledge
+- **Essential Components**:
+  ```xml
+  <role>Detailed background, expertise, experience</role>
+  <approach>Comprehensive methodology and framework</approach>
+  <evaluation_criteria>Detailed rubrics with examples</evaluation_criteria>
+  <example_evaluations>50+ categorized examples</example_evaluations>
+  <edge_cases>How to handle special scenarios</edge_cases>
+  <domain_knowledge>Terminology, standards, best practices</domain_knowledge>
+  <tone>Nuanced guidance for different contexts</tone>
   ```
 
 #### `summaryInstructions`
+
 - **Type**: string (minimum 30 characters if provided)
 - **Purpose**: How to generate document summaries
-- **Guidelines**:
-  - Specify summary length and format
-  - Define key elements to include
-  - Clarify target audience level
-  - Include structure preferences
-- **Length**: 100-200 words recommended
-- **Example Elements**:
-  - Summary length (e.g., "2-3 paragraphs", "150-200 words")
-  - Key components (main thesis, key findings, implications)
-  - Audience level (expert, general public, specific field)
+- **Default Behavior**: If not provided, agent uses genericInstructions
+- **When to Use**: Only when summary format differs significantly from general approach
 
 #### `commentInstructions`
+
 - **Type**: string (minimum 30 characters if provided)
 - **Purpose**: How to generate specific comments on text sections
-- **Guidelines**:
-  - Define comment style and approach
-  - Specify feedback types (strengths, improvements, questions)
-  - Include highlighting criteria
-  - Set comment frequency expectations
-- **Length**: 200-400 words recommended
-- **Key Elements**:
-  - Comment types (e.g., "methodological concerns", "clarity issues")
-  - Feedback balance (strengths vs. improvements)
-  - Specificity level (detailed vs. high-level)
+- **Default Behavior**: If not provided, agent uses genericInstructions
+- **When to Use**: Only when comment style needs specific guidance beyond general approach
 
 #### `gradeInstructions`
+
 - **Type**: string
 - **Purpose**: How to assign numerical grades (0-100 scale)
-- **Guidelines**:
-  - Define clear grading criteria
-  - Explain scale interpretation
-  - Provide anchor points for different score ranges
-  - Include weighting for different aspects
-- **Length**: 100-300 words recommended
-- **Scale Guidance**:
-  - 90-100: Exceptional quality
-  - 80-89: High quality
-  - 70-79: Good quality
-  - 60-69: Adequate quality
-  - Below 60: Needs significant improvement
+- **Recommended Structure**:
+  ```xml
+  <grading_criteria>
+    <dimension weight="30">Criterion description and standards</dimension>
+    <dimension weight="25">Another criterion...</dimension>
+  </grading_criteria>
+  <scale_interpretation>
+    <range score="90-100">Exceptional quality</range>
+    <range score="80-89">High quality</range>
+  </scale_interpretation>
+  ```
 
 #### `analysisInstructions`
+
 - **Type**: string
 - **Purpose**: How to perform detailed analysis
-- **Guidelines**:
-  - Guide the overall evaluation approach
-  - Specify analysis depth and scope
-  - Include methodology preferences
-  - Define output structure
-
-#### `extendedCapabilityId`
-- **Type**: string  
-- **Purpose**: Identifier for special agent capabilities
-- **Current Options**:
-  - `"simple-link-verifier"`: URL validation and link checking
-- **Usage**: Only use for agents with specialized workflows beyond standard evaluation
+- **Default Behavior**: If not provided, agent uses genericInstructions
+- **When to Use**: For complex multi-step analysis requirements
 
 ---
 
 ## Writing Effective Instructions
 
-### Best Practices
+### The Reality of Comprehensive Agents
 
-1. **Be Specific**: Use concrete examples and clear criteria rather than vague guidance
-2. **Define Tone**: Specify formal/informal, encouraging/critical, expert/accessible style
-3. **Set Expectations**: Clarify output format, length, and structure
-4. **Include Context**: Explain the agent's expertise area and perspective
-5. **Provide Examples**: Show 2-3 examples of desired output style
-6. **Balance Requirements**: Don't ask for conflicting goals (e.g., "brief but comprehensive")
-7. **Test Iteratively**: Try instructions with sample documents and refine
+High-quality agents require extensive instructions—typically 5,000 to 50,000 words. This isn't over-engineering; it's providing the depth needed for consistent, expert-level evaluation. Think of it as embedding an expert's lifetime of knowledge into the system.
 
-### Common Pitfalls to Avoid
+### Core Components of Comprehensive Instructions
 
-- **Vague Instructions**: "Be helpful" instead of specific guidance
-- **Conflicting Goals**: Asking for both brevity and comprehensiveness
-- **Missing Context**: Not explaining the evaluation purpose or audience
-- **No Examples**: Leaving output format unclear
-- **Unrealistic Expectations**: Asking for capabilities beyond the agent's scope
-- **Overly Complex**: Instructions so detailed they confuse rather than guide
+1. **Deep Role Definition** (500-1,000 words)
 
-### Instruction Template Structure
+   - Detailed background and credentials
+   - Specific areas of expertise
+   - Years of experience in different domains
+   - Notable projects or achievements
+   - Philosophical approach to evaluation
 
-```markdown
-## Role & Expertise
-You are a [specific role] with expertise in [domain]. Your background includes [relevant experience/knowledge areas]. You approach evaluation from the perspective of [viewpoint/methodology].
+2. **Extensive Examples** (60-80% of total content)
 
-## Evaluation Approach
-When evaluating documents, you should:
-- Focus on [primary evaluation criteria]
-- Pay special attention to [key aspects]
-- Consider [context factors]
-- Use [specific methodology or framework]
+   - 50-100 real evaluation scenarios
+   - Before/after comparisons
+   - Edge cases and exceptions
+   - Common mistakes to avoid
+   - Graduated examples from simple to complex
 
-## Output Format
-Provide feedback in the following format:
-- [Structure requirements]
-- [Length specifications]
-- [Style guidelines]
+3. **Detailed Rubrics** (2,000-5,000 words)
 
-## Tone & Style
-Maintain a [tone description] that is [characteristics]. Your feedback should be [helpful/direct/encouraging/etc.] and aimed at [target audience].
+   - Precise criteria for each evaluation dimension
+   - Scoring guidelines with specific thresholds
+   - Examples of work at each quality level
+   - Industry-specific standards and benchmarks
 
-## Examples
-Here are examples of your evaluation style:
-[Include 2-3 concrete examples]
+4. **Domain Knowledge** (1,000-3,000 words)
+   - Technical terminology definitions
+   - Industry best practices
+   - Common frameworks and methodologies
+   - Links to authoritative sources
+   - Evolution of standards over time
+
+### Example Structure for Comprehensive Instructions
+
+````xml
+<agent_configuration>
+  <role>
+    <background>
+      You are a senior [role] with [X] years of experience across [domains].
+      You've worked at [notable organizations] and have deep expertise in [specialties].
+      You've [specific achievements that establish credibility].
+    </background>
+    <philosophy>
+      Your evaluation philosophy centers on [core principles].
+      You believe that [fundamental beliefs about quality/excellence].
+      You approach evaluation with [mindset/methodology].
+    </philosophy>
+  </role>
+
+  <evaluation_methodology>
+    <framework name="primary_framework">
+      [Detailed explanation of your main evaluation approach]
+      [Step-by-step process you follow]
+      [How you prioritize different aspects]
+    </framework>
+    <supplementary_frameworks>
+      [Additional frameworks for specific contexts]
+      [When and how to apply each one]
+    </supplementary_frameworks>
+  </evaluation_methodology>
+
+  <detailed_examples>
+    <category name="clarity_issues">
+      <example id="1">
+        <context>Technical API documentation for a REST endpoint</context>
+        <original>
+          "POST /users - Creates a user"
+        </original>
+        <evaluation>
+          <problems>
+            - No request body specification
+            - No response format
+            - No error codes
+            - No authentication requirements
+            - No rate limiting information
+          </problems>
+          <improved>
+            "POST /users - Create a new user
+
+            Authentication: Bearer token required
+            Rate limit: 100 requests per hour
+
+            Request body:
+            ```json
+            {
+              "email": "user@example.com",    // required, must be unique
+              "name": "Jane Doe",             // required, 1-100 chars
+              "role": "member",               // optional, defaults to "member"
+              "metadata": {}                  // optional, custom key-value pairs
+            }
+            ```
+
+            Success response (201 Created):
+            ```json
+            {
+              "id": "usr_1234567890",
+              "email": "user@example.com",
+              "name": "Jane Doe",
+              "role": "member",
+              "created_at": "2024-01-15T10:30:00Z"
+            }
+            ```
+
+            Error responses:
+            - 400: Invalid input (missing required fields, invalid email format)
+            - 401: Invalid or missing authentication token
+            - 409: Email already exists
+            - 429: Rate limit exceeded"
+          </improved>
+          <lesson>
+            API documentation must be complete and self-contained. Developers should
+            never have to guess or experiment to understand how to use an endpoint.
+          </lesson>
+        </evaluation>
+      </example>
+
+      [... 20+ more examples in this category ...]
+    </category>
+
+    <category name="completeness_issues">
+      [... 20+ examples ...]
+    </category>
+
+    <category name="accuracy_problems">
+      [... 20+ examples ...]
+    </category>
+
+    [... more categories with extensive examples ...]
+  </detailed_examples>
+
+  <edge_cases>
+    <case name="empty_documentation">
+      When encountering placeholder or stub documentation, don't just flag it as
+      incomplete. Provide a comprehensive template of what should be included based
+      on the document type and context.
+    </case>
+
+    <case name="conflicting_information">
+      When documentation contains contradictions, identify all instances and suggest
+      a resolution path. Consider version history if available.
+    </case>
+
+    [... 30+ more edge cases ...]
+  </edge_cases>
+
+  <grading_rubrics>
+    <dimension name="clarity" weight="30">
+      <score range="90-100">
+        Crystal clear to target audience. Technical terms properly introduced.
+        Complex concepts broken down effectively. Excellent use of examples.
+        Logical flow that builds understanding progressively.
+      </score>
+      <score range="80-89">
+        Generally clear with minor ambiguities. Most technical terms explained.
+        Good examples but could use more. Flow is logical but has minor jumps.
+      </score>
+      [... detailed descriptions for all score ranges ...]
+    </dimension>
+
+    [... detailed rubrics for all dimensions ...]
+  </grading_rubrics>
+</agent_configuration>
+````
+
+### Building Comprehensive Instructions: A Process
+
+1. **Start with Expert Interviews**
+
+   - What would a senior expert look for?
+   - What are common mistakes in this domain?
+   - What separates good from great?
+
+2. **Collect Real Examples**
+
+   - Gather 100+ real documents
+   - Identify patterns of excellence and failure
+   - Create before/after improvements
+
+3. **Test and Iterate**
+
+   - Run agent on diverse documents
+   - Identify inconsistencies
+   - Add examples to address gaps
+
+4. **Continuous Refinement**
+   - Add new examples as edge cases emerge
+   - Update based on domain evolution
+   - Incorporate user feedback
+
+### Why Length Matters
+
+- **Consistency**: More examples = more consistent evaluation
+- **Nuance**: Complex domains need detailed guidance
+- **Edge Cases**: Real-world documents are messy
+- **Expertise**: Encoding true expertise takes space
+- **Context**: Different situations need different approaches
+
+---
+
+## XML Structure for Claude
+
+Claude has been fine-tuned to recognize XML tags, which significantly improves response quality. When writing instructions, use XML structure for clarity and performance.
+
+### Why XML Works Better
+
+- **30% Performance Improvement**: Structured prompts with XML show measurable quality gains
+- **Clear Parsing**: Claude can distinguish between different types of information
+- **Hierarchical Organization**: Nested tags create logical relationships
+- **Consistency**: Standardized format across all agents
+
+### Effective XML Patterns
+
+```xml
+<!-- Single-Level Structure -->
+<role>Academic reviewer with 20 years experience</role>
+<focus>Methodology and empirical rigor</focus>
+<tone>Constructive but demanding</tone>
+
+<!-- Nested Structure for Complex Instructions -->
+<evaluation_framework>
+  <methodology>
+    <quantitative>Statistical validity, sample size, controls</quantitative>
+    <qualitative>Rigor of analysis, triangulation, saturation</qualitative>
+  </methodology>
+  <writing>
+    <clarity>Accessible to target audience</clarity>
+    <structure>Logical flow and organization</structure>
+  </writing>
+</evaluation_framework>
+
+<!-- Weighted Criteria -->
+<grading_dimensions>
+  <dimension weight="40">Technical accuracy</dimension>
+  <dimension weight="30">Practical applicability</dimension>
+  <dimension weight="30">Innovation and originality</dimension>
+</grading_dimensions>
 ```
+
+### XML Best Practices
+
+1. **Consistent Tag Names**: Use the same tags across all agents
+2. **Semantic Naming**: Tags should describe their content clearly
+3. **Balanced Nesting**: 2-3 levels maximum for readability
+4. **Avoid Over-Structuring**: Don't create tags for single sentences
+
+---
+
+## Performance Optimization
+
+### Chain-of-Thought Integration
+
+Claude performs up to 39% better when allowed to think through problems step-by-step. Structure instructions to encourage this:
+
+```xml
+<thinking_process>
+Before providing feedback, analyze:
+1. Document's main purpose and intended audience
+2. Structural strengths and weaknesses
+3. Key areas requiring attention
+4. Most effective framing for feedback
+</thinking_process>
+```
+
+### Data-First Pattern
+
+Claude performs 30% better when document content comes before instructions:
+
+1. **Document content** (what to evaluate)
+2. **Context or previous analysis** (background information)
+3. **Specific instructions** (what to do)
+4. **Output format requirements** (how to present it)
+
+### Instruction Clarity Principles
+
+- **Use Affirmative Language**: "Identify strengths" not "Don't ignore positives"
+- **Specify Quantities**: "Provide 5-7 comments" not "several comments"
+- **Define Edge Cases**: "If no issues found, explain why the document excels"
+- **Concrete Examples**: Show, don't just tell
+
+### Token Efficiency
+
+- **Reuse Tag Names**: Consistent naming reduces token usage
+- **Avoid Redundancy**: Don't repeat instructions across fields
+- **Concise Structure**: Balance clarity with brevity
 
 ---
 
@@ -266,101 +594,244 @@ Here are examples of your evaluation style:
 
 ### Academic Research Evaluator (ASSESSOR)
 
-**Configuration:**
-- **Name**: "Academic Research Evaluator"
-- **Purpose**: ASSESSOR
-- **Description**: "Evaluates research papers using academic standards, focusing on methodology, novelty, and potential impact."
+```yaml
+name: "Academic Research Evaluator"
+purpose: ASSESSOR
+description: "Evaluates research papers using rigorous academic standards, focusing on methodology, novelty, and potential impact."
+genericInstructions: |
+  <role>
+    <background>
+      You are a senior academic reviewer with 20+ years of experience evaluating research 
+      across multiple disciplines. You've served on editorial boards for Nature, Science, 
+      PNAS, and numerous field-specific journals. You've reviewed over 2,000 papers and 
+      understand the nuances of different research paradigms—from randomized controlled 
+      trials in medicine to ethnographic studies in anthropology, from theoretical physics 
+      to computational biology.
+      
+      Your expertise spans:
+      - Quantitative methods: Statistical analysis, experimental design, power analysis,
+        causal inference, meta-analysis, Bayesian methods
+      - Qualitative methods: Grounded theory, phenomenology, content analysis, case studies
+      - Mixed methods: Integration strategies, triangulation, sequential designs
+      - Computational approaches: Machine learning validation, reproducibility, benchmarking
+      - Domain-specific standards across 15+ fields
+    </background>
+    
+    <philosophy>
+      You believe rigorous peer review strengthens science while supporting researchers'
+      growth. You balance high standards with constructive feedback, recognizing that
+      harsh criticism without guidance helps no one. You're particularly attentive to:
+      - Reproducibility and open science practices
+      - Ethical considerations and potential harms
+      - Diversity of perspectives and citations
+      - Real-world applicability and impact
+    </philosophy>
+  </role>
 
-**genericInstructions** (excerpt):
+  <evaluation_framework>
+    <methodological_rigor>
+      <quantitative_studies>
+        <sample_size>
+          - Power analysis: Was it conducted? Are results adequately powered?
+          - Effect size considerations: Clinical vs statistical significance
+          - Multiple comparisons: Appropriate corrections applied?
+        </sample_size>
+        <design>
+          - Control groups: Appropriate selection and matching
+          - Randomization: Method clearly described and appropriate
+          - Blinding: Single, double, or triple where applicable
+          - Confounding: Identified and addressed through design or analysis
+        </design>
+        <analysis>
+          - Assumptions: Tested and reported (normality, homoscedasticity, etc.)
+          - Missing data: Handling method appropriate and transparent
+          - Sensitivity analyses: Robustness of findings tested
+          - Pre-registration: Analysis plan pre-specified vs exploratory
+        </analysis>
+      </quantitative_studies>
+      
+      <qualitative_studies>
+        <trustworthiness>
+          - Credibility: Triangulation, member checking, peer debriefing
+          - Transferability: Thick description, purposive sampling rationale
+          - Dependability: Audit trail, reflexivity statements
+          - Confirmability: Researcher positionality acknowledged
+        </trustworthiness>
+        <rigor>
+          - Saturation: How determined and justified
+          - Coding: Process described, inter-rater reliability if applicable
+          - Theoretical framework: Appropriate and consistently applied
+          - Negative cases: Actively sought and discussed
+        </rigor>
+      </qualitative_studies>
+    </methodological_rigor>
+    
+    [... continues with extensive examples - full version would be 30,000+ words ...]
+  </evaluation_framework>
+
+  <detailed_evaluation_examples>
+    <example category="statistical_issues" severity="major">
+      <paper_excerpt>
+        "We found a significant difference between groups (p = 0.048). This proves
+        our hypothesis that the intervention is effective."
+      </paper_excerpt>
+      <evaluation>
+        <issues>
+          1. P-value interpretation: p = 0.048 is barely significant and fragile
+          2. No effect size reported - statistical vs practical significance unclear
+          3. "Proves" is too strong - evidence supports but doesn't prove
+          4. No confidence intervals provided
+          5. Multiple comparisons not mentioned - was this the only test?
+        </issues>
+        <suggested_revision>
+          "We found a statistically significant difference between groups (mean 
+          difference = 2.3 units, 95% CI [0.1, 4.5], p = 0.048, Cohen's d = 0.35).
+          This small-to-moderate effect provides preliminary evidence supporting the
+          intervention's effectiveness, though the marginal p-value suggests findings
+          should be replicated. After Bonferroni correction for 5 comparisons, the
+          result was no longer significant (adjusted p = 0.24), indicating caution
+          in interpretation."
+        </suggested_revision>
+        <lesson>
+          Statistical reporting must be complete, nuanced, and avoid overstatement.
+          Include effect sizes, confidence intervals, and acknowledge limitations.
+        </lesson>
+      </evaluation>
+    </example>
+    
+    [... 100+ more detailed examples across different categories ...]
+  </detailed_evaluation_examples>
+
+gradeInstructions: |
+  <grading_framework>
+    <dimension name="methodology" weight="35">
+      <score_90_100>
+        Exemplary methodology that could serve as a model for the field.
+        Power analysis conducted and exceeded. Design addresses all major confounds.
+        Analysis plan pre-registered. Sensitivity analyses comprehensive.
+        Limitations acknowledged with empirical assessment of impact.
+        Code and data openly available with clear documentation.
+      </score_90_100>
+      
+      <score_80_89>
+        Strong methodology with minor gaps. Appropriate design for research questions.
+        Statistical analyses correct with few omissions. Most assumptions tested.
+        Some limitations acknowledged. Reproducibility mostly ensured.
+      </score_80_89>
+      
+      [... detailed criteria for all score ranges ...]
+    </dimension>
+    
+    <dimension name="contribution" weight="25">
+      [... extensive scoring criteria ...]
+    </dimension>
+    
+    <dimension name="clarity" weight="25">
+      [... extensive scoring criteria ...]
+    </dimension>
+    
+    <dimension name="impact" weight="15">
+      [... extensive scoring criteria ...]
+    </dimension>
+  </grading_framework>
+
+  <grade_calibration>
+    <benchmarks>
+      95-100: Nature/Science quality - paradigm shifting
+      90-94: Top-tier journal - significant advance
+      85-89: Strong field-specific journal - solid contribution
+      80-84: Good regional journal - competent work
+      75-79: Lower-tier journal - acceptable with revisions
+      70-74: Major revisions needed but salvageable
+      60-69: Fundamental flaws but potential exists
+      Below 60: Recommend rejection or complete reconceptualization
+    </benchmarks>
+  </grade_calibration>
 ```
-You are an experienced academic reviewer with expertise across multiple research domains. You evaluate papers using rigorous academic standards, focusing on:
 
-1. **Methodological Rigor**: Experimental design, data collection, analysis methods
-2. **Novelty & Significance**: Original contribution to the field
-3. **Clarity & Presentation**: Writing quality, structure, figure quality
-4. **Impact Potential**: Theoretical and practical implications
+**Note**: This example is abbreviated from ~40,000 words. The full version includes:
 
-Your reviews should be thorough but constructive, helping authors improve their work while maintaining high standards.
-```
-
-**gradeInstructions**:
-```
-Grade papers on a 0-100 scale based on:
-- Methodology (30%): Rigor, appropriateness, execution
-- Novelty (25%): Original contribution, innovation
-- Clarity (25%): Writing, structure, presentation
-- Impact (20%): Significance, implications, applications
-
-90+: Exceptional work ready for top-tier venues
-80-89: Strong work with minor revisions needed
-70-79: Good work requiring moderate revisions
-60-69: Adequate work needing substantial improvements
-<60: Significant issues requiring major revision
-```
+- 100+ detailed evaluation examples across methodological issues
+- Complete rubrics for 15+ research domains
+- Extensive guidance on ethical considerations
+- Field-specific standards and expectations
+- Common reviewer mistakes to avoid
+- Templates for constructive feedback
+- Citation analysis guidelines
+- Open science best practices
 
 ### Clarity Coach (ADVISOR)
 
-**Configuration:**
-- **Name**: "Clarity Coach"  
-- **Purpose**: ADVISOR
-- **Description**: "Helps improve writing clarity, structure, and readability for general audiences."
+```yaml
+name: "Clarity Coach"
+purpose: ADVISOR
+description: "Helps improve writing clarity, structure, and readability for general audiences."
+genericInstructions: |
+  <role>
+  You are a writing coach specializing in clear communication. You help writers
+  transform complex ideas into accessible content without losing depth or nuance.
+  </role>
 
-**commentInstructions** (excerpt):
-```
-Focus on providing actionable suggestions for improving clarity:
+  <coaching_approach>
+    <identify>Spot unclear passages, jargon, and structural issues</identify>
+    <explain>Show why changes improve clarity and flow</explain>
+    <demonstrate>Provide specific rewrites and alternatives</demonstrate>
+  </coaching_approach>
 
-1. **Sentence Structure**: Identify overly complex sentences and suggest simplifications
-2. **Word Choice**: Flag jargon, unclear terms, or unnecessarily complex language
-3. **Flow & Transitions**: Point out areas where ideas don't connect smoothly
-4. **Paragraph Structure**: Suggest improvements to organization and coherence
+  <focus_areas>
+    - Sentence structure and length variation
+    - Transition effectiveness between ideas
+    - Technical term usage and explanation
+    - Paragraph organization and flow
+    - Active voice and concrete language
+  </focus_areas>
 
-Your comments should be encouraging while being specific about improvements. Always explain WHY a change would help and HOW to implement it.
-```
-
-### Research Scholar (ENRICHER)
-
-**Configuration:**
-- **Name**: "Research Scholar"
-- **Purpose**: ENRICHER  
-- **Description**: "Finds and provides relevant external research, references, and resources to enrich document content."
-
-**commentInstructions** (excerpt):
-```
-Your role is to identify opportunities to add relevant external information:
-
-1. **Missing Citations**: Where claims need academic backing
-2. **Related Research**: Relevant studies that support or challenge points
-3. **Background Context**: Historical or theoretical background readers might need
-4. **Additional Resources**: Tools, datasets, or references that would be valuable
-
-Format suggestions as markdown tables with:
-- **Resource**: Title/description
-- **Relevance**: How it connects to the text
-- **Link**: Direct URL when possible
-- **Type**: Paper/tool/dataset/etc.
+  <tone>
+  Encouraging and supportive while being direct about needed improvements.
+  Celebrate strengths and frame suggestions as opportunities for enhancement.
+  </tone>
 ```
 
-### EA Impact Evaluator (ASSESSOR)
+### EA Impact Assessor (ASSESSOR)
 
-**Configuration:**
-- **Name**: "EA Impact Evaluator"
-- **Purpose**: ASSESSOR
-- **Description**: "Evaluates content through an Effective Altruism lens, focusing on impact, neglectedness, and tractability."
+```yaml
+name: "EA Impact Evaluator"
+purpose: ASSESSOR
+description: "Evaluates proposals and research through an Effective Altruism framework, assessing impact, neglectedness, and tractability."
+genericInstructions: |
+  <role>
+  You are an expert in Effective Altruism methodology, cause prioritization,
+  and impact evaluation. You apply rigorous frameworks to assess interventions
+  and research for potential positive impact.
+  </role>
 
-**genericInstructions** (excerpt):
-```
-You are an expert in Effective Altruism methodology and impact evaluation. You assess content using the ITN framework:
+  <evaluation_framework>
+    <importance>
+      Assess scale: How many individuals affected and how significantly?
+      Consider both immediate and long-term effects, direct and indirect impacts.
+      Quantify when possible using QALYs, DALYs, or other relevant metrics.
+    </importance>
+    
+    <neglectedness>
+      Evaluate current resource allocation to this area.
+      Research existing efforts and funding levels.
+      Identify gaps in current approaches.
+    </neglectedness>
+    
+    <tractability>
+      Assess solvability with additional resources.
+      Consider evidence for successful interventions.
+      Evaluate implementation challenges and success factors.
+    </tractability>
+  </evaluation_framework>
 
-**Importance**: How many people/beings are affected and how significantly?
-**Neglectedness**: How much attention/resources does this area currently receive?
-**Tractability**: How solvable is this problem with additional resources?
-
-You should:
-- Provide concrete estimates with explicit reasoning
-- Consider both direct and indirect effects
-- Account for uncertainty and model limitations
-- Reference EA research and frameworks where relevant
-- Think in terms of expected value and cost-effectiveness
+  <analytical_approach>
+    - Use expected value calculations with explicit uncertainty
+    - Consider multiple cause areas: global health, animal welfare, long-term future
+    - Reference EA research and established frameworks
+    - Acknowledge model limitations and key assumptions
+    - Think in terms of marginal impact and counterfactuals
+  </analytical_approach>
 ```
 
 ---
@@ -369,112 +840,201 @@ You should:
 
 ### Agent Design Principles
 
-1. **Single Purpose Focus**: Each agent should have one clear, well-defined role
-2. **Consistent Persona**: Maintain the same voice, expertise, and approach throughout
-3. **Clear Criteria**: Define evaluation standards explicitly with measurable components
-4. **Balanced Feedback**: Include both strengths and areas for improvement
-5. **Actionable Output**: Provide specific, implementable suggestions
-6. **Appropriate Scope**: Match the agent's capabilities to realistic expectations
+1. **Depth Over Breadth**: Better to be exceptional at one thing than mediocre at many
+2. **Examples Drive Behavior**: 50+ examples typically needed for consistent performance
+3. **Test with Edge Cases**: Weird documents reveal instruction gaps
+4. **Iterate Based on Failures**: Every inconsistency is a missing example
+5. **Domain Expertise Matters**: Surface-level knowledge produces surface-level evaluation
+6. **Version Everything**: Track instruction changes and their impact
 
-### Implementation Guidelines
+### Building High-Performance Agents
 
-1. **Test Iteratively**: Try your agent with sample documents and refine based on results
-2. **Monitor Costs**: Be mindful of instruction length vs. evaluation quality trade-offs
-3. **Version Control**: Update agents based on user feedback and performance
-4. **Document Changes**: Keep notes on what modifications improve agent performance
-5. **User Feedback**: Collect and incorporate feedback from agent users
-6. **Performance Metrics**: Track agent effectiveness and user satisfaction
+1. **Research Phase** (1-2 weeks)
 
-### Recommended Instruction Lengths
+   - Interview domain experts
+   - Collect 100+ sample documents
+   - Identify evaluation patterns
+   - Study existing rubrics and frameworks
 
-- **genericInstructions**: 200-500 words (core personality and approach)
-- **summaryInstructions**: 100-200 words (format and content guidance)
-- **commentInstructions**: 200-400 words (feedback style and criteria)
-- **gradeInstructions**: 100-300 words (scoring criteria and scale)
-- **analysisInstructions**: 150-300 words (evaluation methodology)
+2. **Initial Development** (2-3 weeks)
 
-### Quality Indicators
+   - Write comprehensive role definition
+   - Create 30-50 initial examples
+   - Develop detailed rubrics
+   - Test on diverse documents
 
-**High-Quality Instructions:**
-- Specific, actionable guidance
-- Clear examples and templates
-- Consistent tone and approach
-- Realistic expectations
-- Measurable criteria
+3. **Refinement Phase** (ongoing)
+   - Add examples for failure cases
+   - Expand edge case coverage
+   - Calibrate scoring based on results
+   - Incorporate user feedback
 
-**Low-Quality Instructions:**
-- Vague, generic guidance
-- Conflicting requirements
-- Unrealistic expectations
-- No examples or structure
-- Inconsistent tone
+### Performance Benchmarks
 
----
+**Minimum Viable Agent**:
 
-## Extended Capabilities
+- 5,000 words of instructions
+- 20-30 detailed examples
+- Coverage of common cases
+- Basic edge case handling
 
-Some agents can have special capabilities beyond standard document evaluation using the `extendedCapabilityId` field.
+**Production-Quality Agent**:
 
-### Available Extended Capabilities
+- 15,000-30,000 words
+- 50-75 examples across categories
+- Comprehensive edge cases
+- Domain-specific optimizations
 
-#### `simple-link-verifier`
-- **Purpose**: Validates URLs and checks for hallucinated or broken links
-- **Workflow**: Uses specialized URL extraction and validation pipeline instead of standard evaluation
-- **Output Focus**: Link accuracy, availability, and relevance
-- **Special Behavior**: May bypass some standard instruction fields in favor of specialized link analysis
+**Expert-Level Agent**:
 
-### Creating Extended Capability Agents
+- 30,000-50,000+ words
+- 100+ examples with nuanced variations
+- Exhaustive edge case coverage
+- Multiple evaluation frameworks
+- Calibrated against human experts
 
-When using extended capabilities:
-1. **Reduced Instruction Dependency**: Some instruction fields may be optional or ignored
-2. **Specialized Workflows**: Agent follows capability-specific evaluation pipeline
-3. **Different Output Format**: May produce different types of comments and analysis
-4. **Testing Requirements**: Test with documents containing the relevant content type (e.g., links for link verification)
+### Anti-Patterns to Avoid
+
+- **Kitchen Sink Approach**: Adding every possible instruction without organization
+- **Shallow Examples**: One-line examples instead of detailed scenarios
+- **Rigid Templates**: Forcing all evaluations into identical formats
+- **Missing Context**: Examples without explaining why they matter
+- **Inconsistent Terminology**: Using different terms for same concepts
+- **Untested Confidence**: Assuming instructions work without validation
 
 ---
 
 ## Common Patterns
 
-### Persona-Based Agents
-
-Some effective agents simulate specific experts or viewpoints:
-
-- **Domain Experts**: "Academic Statistician", "UX Designer", "Policy Analyst"
-- **Methodology Experts**: "Bayesian Reasoner", "Systems Thinker", "Evidence-Based Reviewer"
-- **Style Experts**: "Plain Language Advocate", "Academic Writer", "Technical Communicator"
-- **Perspective Agents**: "Devil's Advocate", "Optimistic Reviewer", "Skeptical Analyst"
-
 ### Multi-Criteria Evaluation
 
-For complex evaluations, break down into specific criteria:
+For complex assessments requiring balanced evaluation:
 
-```
-Evaluate documents across four dimensions:
-1. **Technical Accuracy** (25%): Factual correctness, methodology
-2. **Clarity & Communication** (25%): Writing quality, accessibility  
-3. **Novelty & Insight** (25%): Original thinking, new perspectives
-4. **Practical Value** (25%): Actionability, real-world applicability
+```xml
+<evaluation_dimensions>
+  <dimension name="technical" weight="25">
+    Accuracy, methodology, evidence quality
+  </dimension>
+  <dimension name="clarity" weight="25">
+    Readability, structure, accessibility
+  </dimension>
+  <dimension name="innovation" weight="25">
+    Originality, creative solutions, new perspectives
+  </dimension>
+  <dimension name="impact" weight="25">
+    Practical applications, significance, actionability
+  </dimension>
+</evaluation_dimensions>
 ```
 
 ### Progressive Evaluation
 
 Structure evaluation from general to specific:
 
-```
-1. **Overall Assessment**: Document's main strengths and purpose
-2. **Structural Analysis**: Organization, flow, logical progression
-3. **Content Analysis**: Accuracy, depth, coverage of key topics
-4. **Detailed Feedback**: Specific line-by-line improvements
+```xml
+<evaluation_stages>
+  <overview>High-level assessment of purpose and achievement</overview>
+  <structure>Document organization and logical flow</structure>
+  <content>Detailed analysis of arguments and evidence</content>
+  <specifics>Line-by-line feedback on key sections</specifics>
+</evaluation_stages>
 ```
 
 ### Audience-Specific Agents
 
 Tailor evaluation to specific audiences:
 
-- **Expert Review**: Focus on methodology, technical accuracy, novelty
-- **General Public**: Emphasize clarity, accessibility, engagement
-- **Student Learning**: Highlight educational value, comprehension aids
-- **Professional Application**: Focus on practical utility, implementation
+```xml
+<audience_calibration>
+  <expert_review>
+    Focus on methodology, theoretical contribution, technical accuracy
+  </expert_review>
+  <public_communication>
+    Emphasize clarity, engagement, practical takeaways
+  </public_communication>
+  <peer_learning>
+    Highlight educational value, examples, comprehension aids
+  </peer_learning>
+</audience_calibration>
+```
+
+### Domain-Specific Frameworks
+
+Incorporate established evaluation frameworks:
+
+```xml
+<framework name="CRAAP Test">
+  <currency>How recent and up-to-date is the information?</currency>
+  <relevance>How well does it meet the stated needs?</relevance>
+  <authority>What are the author's credentials?</authority>
+  <accuracy>How reliable and error-free is the content?</accuracy>
+  <purpose>What is the intent behind the information?</purpose>
+</framework>
+```
+
+---
+
+## Migrating to Simplified Schemas
+
+If you have existing complex agents, here's how to simplify them effectively:
+
+### Step 1: Audit Current Usage
+
+Identify which instruction fields are actually providing unique value:
+
+```python
+# Questions to ask:
+- Are summaryInstructions different from genericInstructions?
+- Do commentInstructions add specific guidance not in generic?
+- Could gradeInstructions be part of the main instructions?
+```
+
+### Step 2: Consolidate with XML
+
+Transform multiple fields into structured generic instructions:
+
+```xml
+<!-- Before: Separate fields -->
+genericInstructions: "You are an expert..."
+summaryInstructions: "Keep summaries to 200 words"
+commentInstructions: "Focus on actionable feedback"
+gradeInstructions: "Use academic grading scale"
+
+<!-- After: Unified with XML -->
+genericInstructions: |
+  <role>You are an expert...</role>
+
+  <output_guidelines>
+    <summaries>Concise overviews, maximum 200 words</summaries>
+    <comments>Actionable feedback with specific examples</comments>
+    <grades>Academic scale: A=90-100, B=80-89...</grades>
+  </output_guidelines>
+```
+
+### Step 3: Test and Validate
+
+1. Run both versions on same test documents
+2. Compare output quality and consistency
+3. Gather user feedback on both versions
+4. Monitor performance metrics
+
+### Step 4: Gradual Migration
+
+- Start with agents that have the most redundant instructions
+- Move one agent at a time to validate approach
+- Document lessons learned for future migrations
+- Keep backup of original configurations
+
+### Migration Checklist
+
+- [ ] Identify redundant instructions across fields
+- [ ] Create XML-structured consolidation
+- [ ] Test on representative documents
+- [ ] Compare output quality metrics
+- [ ] Get user feedback
+- [ ] Document changes and rationale
+- [ ] Update agent incrementally
+- [ ] Monitor performance post-migration
 
 ---
 
@@ -482,25 +1042,64 @@ Tailor evaluation to specific audiences:
 
 When using this documentation with an LLM to create agents:
 
-1. **Be Specific About Purpose**: Clearly state what the agent should evaluate and for whom
-2. **Provide Context**: Explain the domain, audience, and use case
-3. **Request Examples**: Ask for specific examples of instructions and evaluation criteria
-4. **Iterate and Refine**: Use the LLM to improve initial drafts based on this documentation
-5. **Test-Driven Creation**: Ask the LLM to simulate agent behavior on sample content
-6. **Validation**: Have the LLM check against this schema for completeness and consistency
-
-### Sample Prompt for Agent Creation
+### Effective Prompting Template
 
 ```
-Using the Agent Schema Documentation, create a [AGENT_TYPE] agent that:
-- Evaluates [CONTENT_TYPE] for [TARGET_AUDIENCE]
-- Focuses on [KEY_CRITERIA]
-- Uses a [TONE_STYLE] approach
-- Provides [OUTPUT_TYPE] feedback
+Create an agent using the RoastMyPost Agent Schema with these requirements:
 
-Include all required fields and relevant optional fields with specific, actionable instructions following the best practices outlined in the documentation.
+Agent Type: [ASSESSOR/ADVISOR/ENRICHER/EXPLAINER]
+Domain: [Specific field or expertise area]
+Target Documents: [Types of content to evaluate]
+Key Focus: [Primary evaluation criteria]
+Tone: [Desired communication style]
+Special Requirements: [Any unique needs]
+
+IMPORTANT: Create comprehensive instructions (5,000+ words) that include:
+1. Detailed role definition with specific expertise
+2. At least 30-50 evaluation examples across different categories
+3. Complete rubrics for all evaluation dimensions
+4. Edge case handling
+5. Domain-specific knowledge and terminology
+
+Use XML structure throughout and focus on creating a single, comprehensive
+genericInstructions field unless there's a specific need for different
+behavior across output types.
 ```
+
+### Iteration Process
+
+1. **Generate Initial Agent**: Start with minimal fields
+2. **Test on Sample**: Use representative documents
+3. **Identify Gaps**: Note what's missing or incorrect
+4. **Refine Instructions**: Add specificity where needed
+5. **Validate Improvements**: Ensure changes improve output
+
+### Quality Checklist
+
+- [ ] Clear, specific role definition with detailed background
+- [ ] XML-structured instructions throughout
+- [ ] 30+ detailed evaluation examples minimum
+- [ ] Comprehensive rubrics with specific scoring criteria
+- [ ] Edge case coverage (20+ scenarios)
+- [ ] Domain-specific terminology and standards
+- [ ] Before/after examples showing improvements
+- [ ] Tested on 20+ diverse real documents
+- [ ] Consistent terminology and tag names
+- [ ] No redundant instructions across fields
+- [ ] Calibrated against expert human evaluation
+- [ ] Version tracked with change rationale
+
+### Instruction Length Guidelines
+
+| Component        | Minimum         | Recommended       | Expert-Level       |
+| ---------------- | --------------- | ----------------- | ------------------ |
+| Role Definition  | 500 words       | 1,000-2,000       | 3,000+             |
+| Examples         | 20 examples     | 50-75 examples    | 100+ examples      |
+| Rubrics          | 1,000 words     | 3,000-5,000       | 8,000+             |
+| Edge Cases       | 10 scenarios    | 30 scenarios      | 50+ scenarios      |
+| Domain Knowledge | 500 words       | 2,000-3,000       | 5,000+             |
+| **Total**        | **5,000 words** | **15,000-30,000** | **30,000-50,000+** |
 
 ---
 
-*This documentation serves as a comprehensive guide for creating effective AI agents in the RoastMyPost platform. Use it as a reference when designing new agents or improving existing ones.*
+_This documentation provides comprehensive guidance for creating effective AI agents in RoastMyPost. Remember: start simple, test thoroughly, and add complexity only when it demonstrably improves results._
