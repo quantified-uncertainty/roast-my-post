@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useRef,
 } from "react";
 
 import {
@@ -10,6 +11,8 @@ import {
   Pencil,
   User,
   FileText,
+  Download,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -48,6 +51,9 @@ export default function AgentDetail({
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchReview() {
@@ -93,6 +99,20 @@ export default function AgentDetail({
     }
   }, [activeTab]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setExportDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -114,8 +134,55 @@ export default function AgentDetail({
     );
   };
 
+  const exportAgentAsJson = async () => {
+    const agentData = {
+      id: agent.id,
+      name: agent.name,
+      purpose: agent.purpose,
+      version: agent.version,
+      description: agent.description,
+      genericInstructions: agent.genericInstructions,
+      summaryInstructions: agent.summaryInstructions,
+      commentInstructions: agent.commentInstructions,
+      gradeInstructions: agent.gradeInstructions,
+      extendedCapabilityId: agent.extendedCapabilityId,
+      owner: agent.owner,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const jsonString = JSON.stringify(agentData, null, 2);
+    
+    try {
+      await navigator.clipboard.writeText(jsonString);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+    
+    setExportDropdownOpen(false);
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-8">
+      {/* Success Notification */}
+      {copySuccess && (
+        <div className="fixed top-4 right-4 rounded-md bg-green-50 p-4 shadow-lg z-50">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-800">
+                Agent JSON copied to clipboard!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -139,6 +206,30 @@ export default function AgentDetail({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Export Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <Button
+              variant="secondary"
+              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            
+            {exportDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                <button
+                  onClick={exportAgentAsJson}
+                  className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  JSON
+                </button>
+              </div>
+            )}
+          </div>
+
           <Link href={`/agents/${agent.id}/versions`}>
             <Button variant="secondary" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
