@@ -8,6 +8,8 @@ import {
 import {
   Clock,
   Pencil,
+  User,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -21,12 +23,31 @@ interface AgentDetailProps {
   isOwner?: boolean;
 }
 
+interface AgentDocument {
+  id: string;
+  title: string;
+  author: string;
+  publishedDate: string;
+  evaluationId: string;
+  evaluationCreatedAt: string;
+  summary?: string;
+  analysis?: string;
+  grade?: number;
+  jobStatus?: string;
+  jobCreatedAt?: string;
+  jobCompletedAt?: string;
+  costInCents?: number;
+}
+
 export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
+  const [activeTab, setActiveTab] = useState<"details" | "documents">("details");
   const [review, setReview] = useState<AgentReview | null>(null);
+  const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
 
   useEffect(() => {
     async function fetchReview() {
@@ -49,8 +70,53 @@ export default function AgentDetail({
     fetchReview();
   }, [agent.id]);
 
+  const fetchDocuments = async () => {
+    if (documents.length > 0) return; // Already loaded
+    
+    setDocumentsLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/documents`);
+      const data = await response.json();
+      if (data.documents) {
+        setDocuments(data.documents);
+      }
+    } catch (error) {
+      console.error("Error fetching agent documents:", error);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "documents") {
+      fetchDocuments();
+    }
+  }, [activeTab]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadge = (status?: string) => {
+    if (!status) return null;
+    
+    const statusMap = {
+      COMPLETED: "bg-green-100 text-green-800",
+      RUNNING: "bg-yellow-100 text-yellow-800", 
+      PENDING: "bg-blue-100 text-blue-800",
+      FAILED: "bg-red-100 text-red-800",
+    };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusMap[status as keyof typeof statusMap] || "bg-gray-100 text-gray-800"}`}>
+        {status}
+      </span>
+    );
+  };
+
   return (
-    <div className="mx-auto max-w-4xl p-8">
+    <div className="mx-auto max-w-6xl p-8">
+      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
@@ -90,49 +156,166 @@ export default function AgentDetail({
         </div>
       </div>
 
-      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Description</h2>
-        <div className="mb-8 whitespace-pre-wrap">{agent.description}</div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab("details")}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "details"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <User className="mr-2 h-5 w-5" />
+            Details
+          </button>
+          <button
+            onClick={() => setActiveTab("documents")}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "documents"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <FileText className="mr-2 h-5 w-5" />
+            Documents
+          </button>
+        </nav>
       </div>
 
-      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
-        <div className="mb-8 whitespace-pre-wrap">
-          {agent.genericInstructions}
-        </div>
-      </div>
+      {/* Tab Content */}
+      <div className="mt-8">
+        {activeTab === "details" && (
+          <div className="space-y-8">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-semibold">Description</h2>
+              <div className="whitespace-pre-wrap">{agent.description}</div>
+            </div>
 
-      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Summary Instructions</h2>
-        <div className="mb-8 whitespace-pre-wrap">
-          {agent.summaryInstructions}
-        </div>
-      </div>
+            {agent.extendedCapabilityId && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Extended Capability</h2>
+                <div className="text-gray-700">{agent.extendedCapabilityId}</div>
+              </div>
+            )}
 
-      {agent.analysisInstructions && (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Analysis Instructions</h2>
-          <div className="mb-8 whitespace-pre-wrap">
-            {agent.analysisInstructions}
+            {agent.genericInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.genericInstructions}</div>
+              </div>
+            )}
+
+            {agent.summaryInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Summary Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.summaryInstructions}</div>
+              </div>
+            )}
+
+            {agent.analysisInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Analysis Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.analysisInstructions}</div>
+              </div>
+            )}
+
+            {agent.commentInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Comment Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.commentInstructions}</div>
+              </div>
+            )}
+
+            {agent.gradeInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Grade Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.gradeInstructions}</div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-xl font-semibold">Comment Instructions</h2>
-        <div className="mb-8 whitespace-pre-wrap">
-          {agent.commentInstructions}
-        </div>
-      </div>
-
-      {agent.gradeInstructions && (
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Grade Instructions</h2>
-          <div className="mb-8 whitespace-pre-wrap">
-            {agent.gradeInstructions}
+        {activeTab === "documents" && (
+          <div className="space-y-6">
+            {documentsLoading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">Loading documents...</div>
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">No documents have been evaluated by this agent yet.</div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Recent Evaluations ({documents.length})
+                </h3>
+                <div className="space-y-4">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.evaluationId}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="text-lg font-medium text-gray-900">
+                                <Link 
+                                  href={`/docs/${doc.id}/evaluations`}
+                                  className="hover:text-blue-600 transition-colors"
+                                >
+                                  {doc.title}
+                                </Link>
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                By {doc.author} • Published {formatDate(doc.publishedDate)}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Evaluated {formatDate(doc.evaluationCreatedAt)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {doc.grade !== undefined && (
+                                <div className="text-right">
+                                  <div className="text-lg font-semibold text-gray-900">
+                                    {doc.grade}/100
+                                  </div>
+                                  <div className="text-xs text-gray-500">Grade</div>
+                                </div>
+                              )}
+                              {getStatusBadge(doc.jobStatus)}
+                            </div>
+                          </div>
+                          
+                          {doc.summary && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-700 line-clamp-3">
+                                {doc.summary}
+                              </p>
+                            </div>
+                          )}
+                          
+                          <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                            {doc.costInCents && (
+                              <span>Cost: ${(doc.costInCents / 100).toFixed(2)}</span>
+                            )}
+                            {doc.jobCompletedAt && (
+                              <span>Completed: {formatDate(doc.jobCompletedAt)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

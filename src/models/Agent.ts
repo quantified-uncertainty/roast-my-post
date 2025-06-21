@@ -257,4 +257,71 @@ export class AgentModel {
       await prisma.$disconnect();
     }
   }
+
+  static async getAgentDocuments(agentId: string, limit: number = 40) {
+    try {
+      const evaluations = await prisma.evaluation.findMany({
+        where: {
+          agentId: agentId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: limit,
+        include: {
+          document: {
+            include: {
+              versions: {
+                orderBy: { version: "desc" },
+                take: 1,
+              },
+              submittedBy: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          versions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: {
+              job: {
+                select: {
+                  status: true,
+                  createdAt: true,
+                  completedAt: true,
+                  costInCents: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return evaluations.map((evaluation) => {
+        const latestDocumentVersion = evaluation.document.versions[0];
+        const latestEvaluationVersion = evaluation.versions[0];
+
+        return {
+          id: evaluation.document.id,
+          title: latestDocumentVersion?.title || "Untitled",
+          author: evaluation.document.submittedBy.name || "Unknown",
+          publishedDate: evaluation.document.publishedDate,
+          evaluationId: evaluation.id,
+          evaluationCreatedAt: evaluation.createdAt,
+          summary: latestEvaluationVersion?.summary,
+          analysis: latestEvaluationVersion?.analysis,
+          grade: latestEvaluationVersion?.grade,
+          jobStatus: latestEvaluationVersion?.job?.status,
+          jobCreatedAt: latestEvaluationVersion?.job?.createdAt,
+          jobCompletedAt: latestEvaluationVersion?.job?.completedAt,
+          costInCents: latestEvaluationVersion?.job?.costInCents,
+        };
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
 }
