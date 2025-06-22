@@ -194,6 +194,7 @@ model AgentVersion {
   gradeInstructions String?
   selfCritiqueInstructions String?
   extendedCapabilityId String?
+  readme      String?  @db.Text
   agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId     String
   createdAt   DateTime @default(now())
