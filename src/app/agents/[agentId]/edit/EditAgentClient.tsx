@@ -61,12 +61,17 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         }
 
         const data = await response.json();
+        
+        // Validate that we got data back
+        if (!data) {
+          throw new Error('No data returned from API');
+        }
 
         // Convert the agent data to form format
         // When importing, use imported data preferentially for all fields
         const resetData = {
           name: importedData ? importedData.name : data.name,
-          purpose: (importedData ? importedData.purpose : data.purpose).toUpperCase(),
+          purpose: importedData ? importedData.purpose?.toUpperCase() : data.purpose?.toUpperCase() || "ASSESSOR",
           description: importedData ? importedData.description : data.description,
           genericInstructions: importedData ? (importedData.genericInstructions ?? "") : (data.genericInstructions || ""),
           summaryInstructions: importedData ? (importedData.summaryInstructions ?? "") : (data.summaryInstructions || ""),
