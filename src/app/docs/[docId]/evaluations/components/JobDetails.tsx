@@ -27,7 +27,7 @@ export const JobDetails: React.FC<JobDetailsProps> = ({ job }) => {
   const [showLogs, setShowLogs] = useState(false);
   const [showError, setShowError] = useState(false);
   return (
-    <div className="col-span-6 rounded-lg bg-white p-6 shadow">
+    <div className="rounded-lg bg-white p-6 shadow">
       <h2 className="mb-2 text-lg font-bold">Job Details</h2>
       <div className="mb-2">
         <strong>ID:</strong> {job.id}

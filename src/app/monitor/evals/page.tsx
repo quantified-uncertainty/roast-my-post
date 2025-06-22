@@ -16,6 +16,7 @@ import {
   ListBulletIcon
 } from "@heroicons/react/24/outline";
 import { GradeBadge } from "@/components/GradeBadge";
+import { TaskLogs } from "@/app/docs/[docId]/evaluations/components/TaskLogs";
 
 interface Evaluation {
   id: string;
@@ -37,6 +38,7 @@ interface Evaluation {
     summary: string;
     analysis: string;
     grade: number;
+    selfCritique: string | null;
     createdAt: string;
     agentVersion: {
       name: string;
@@ -49,6 +51,21 @@ interface Evaluation {
       importance: number | null;
       grade: number | null;
     }>;
+    job?: {
+      id: string;
+      tasks: Array<{
+        id: string;
+        name: string;
+        modelName: string;
+        priceInCents: number;
+        timeInSeconds: number | null;
+        log: string | null;
+        createdAt: Date;
+        llmInteractions: any;
+      }>;
+      costInCents: number;
+      llmThinking: string | null;
+    };
   }>;
   jobs: Array<{
     id: string;
@@ -95,7 +112,7 @@ const formatCost = (costInCents?: number) => {
 export default function EvaluationsMonitorPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [activeTab, setActiveTab] = useState<"analysis" | "comments" | "summary">("analysis");
+  const [activeTab, setActiveTab] = useState<"analysis" | "comments" | "summary" | "selfCritique" | "logs">("analysis");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,17 +160,17 @@ export default function EvaluationsMonitorPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Evaluations Monitor</h1>
         <div className="text-sm text-gray-500">
-          Last 20 evaluations • Auto-refresh every 30s
+          Last 20 completed evaluations • Auto-refresh every 30s
         </div>
       </div>
 
       <div className="grid grid-cols-12 gap-6">
         {/* Evaluation List */}
-        <div className="col-span-5 bg-white shadow rounded-lg">
+        <div className="col-span-4 bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Recent Evaluations</h2>
+            <h2 className="text-lg font-medium text-gray-900">Recent Completed Evaluations</h2>
           </div>
-          <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
             {evaluations.map((evaluation) => {
               const latestVersion = evaluation.versions[0];
               const latestJob = evaluation.jobs[0];
@@ -171,7 +188,13 @@ export default function EvaluationsMonitorPage() {
                       <span className="font-mono text-sm text-gray-900">
                         {evaluation.id.slice(0, 8)}...
                       </span>
-                      {latestVersion && <GradeBadge grade={latestVersion.grade} />}
+                      {latestVersion && latestVersion.grade !== null ? (
+                        <GradeBadge grade={latestVersion.grade} />
+                      ) : (
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                          No Grade
+                        </span>
+                      )}
                     </div>
                     {latestJob && (
                       <div className="flex items-center space-x-1">
@@ -193,7 +216,7 @@ export default function EvaluationsMonitorPage() {
                   )}
                   
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{formatDate(evaluation.createdAt)}</span>
+                    <span>{latestVersion ? formatDate(latestVersion.createdAt) : formatDate(evaluation.createdAt)}</span>
                     <div className="flex space-x-2">
                       {latestVersion && (
                         <span>{latestVersion.comments.length} comments</span>
@@ -210,7 +233,7 @@ export default function EvaluationsMonitorPage() {
         </div>
 
         {/* Evaluation Details */}
-        <div className="col-span-7">
+        <div className="col-span-8">
           {selectedEvaluation && selectedVersion ? (
             <div className="bg-white shadow rounded-lg">
               {/* Header */}
@@ -223,7 +246,13 @@ export default function EvaluationsMonitorPage() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <GradeBadge grade={selectedVersion.grade} />
+                    {selectedVersion.grade !== null ? (
+                      <GradeBadge grade={selectedVersion.grade} />
+                    ) : (
+                      <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded">
+                        No Grade Assigned
+                      </span>
+                    )}
                     {selectedJob && (
                       <div className="flex items-center space-x-1">
                         {getStatusIcon(selectedJob.status)}
@@ -236,15 +265,26 @@ export default function EvaluationsMonitorPage() {
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <dt className="font-medium text-gray-900">Document</dt>
-                    <dd className="text-blue-600 hover:text-blue-800">
-                      <Link href={`/docs/${selectedEvaluation.document.id}`}>
-                        {selectedEvaluation.document.versions[0]?.title || 'Unknown Document'}
-                      </Link>
+                    <dd className="space-y-1">
+                      <div className="text-blue-600 hover:text-blue-800">
+                        <Link href={`/docs/${selectedEvaluation.document.id}`}>
+                          {selectedEvaluation.document.versions[0]?.title || 'Unknown Document'}
+                        </Link>
+                      </div>
+                      <div className="text-xs text-blue-600 hover:text-blue-800">
+                        <Link href={`/docs/${selectedEvaluation.document.id}/evaluations`}>
+                          View All Evaluations →
+                        </Link>
+                      </div>
                     </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Agent</dt>
-                    <dd className="text-gray-600">{selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent'}</dd>
+                    <dd className="text-blue-600 hover:text-blue-800">
+                      <Link href={`/agents/${selectedEvaluation.agent.id}`}>
+                        {selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent'}
+                      </Link>
+                    </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Created</dt>
@@ -260,6 +300,8 @@ export default function EvaluationsMonitorPage() {
                     { id: "analysis", label: "Analysis", icon: DocumentTextIcon },
                     { id: "summary", label: "Summary", icon: ListBulletIcon },
                     { id: "comments", label: `Comments (${selectedVersion.comments.length})`, icon: ChatBubbleLeftIcon },
+                    { id: "selfCritique", label: "Self-Critique", icon: LightBulbIcon },
+                    { id: "logs", label: "Logs", icon: ListBulletIcon },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -284,7 +326,7 @@ export default function EvaluationsMonitorPage() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-6 max-h-96 overflow-y-auto">
+              <div className="p-6 max-h-[calc(100vh-400px)] overflow-y-auto">
                 {activeTab === "analysis" && (
                   <div className="prose prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
@@ -328,6 +370,44 @@ export default function EvaluationsMonitorPage() {
                           </div>
                         </div>
                       ))
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "selfCritique" && (
+                  <div className="prose prose-sm max-w-none">
+                    {selectedVersion.selfCritique ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        {selectedVersion.selfCritique}
+                      </ReactMarkdown>
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        No self-critique available for this evaluation
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "logs" && (
+                  <div>
+                    {selectedVersion.job ? (
+                      <TaskLogs
+                        selectedVersion={{
+                          createdAt: new Date(selectedVersion.createdAt),
+                          comments: selectedVersion.comments,
+                          summary: selectedVersion.summary,
+                          documentVersion: { version: 0 },
+                          job: {
+                            tasks: selectedVersion.job.tasks,
+                            costInCents: selectedVersion.job.costInCents || 0,
+                            llmThinking: selectedVersion.job.llmThinking || "",
+                          },
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">
+                        No logs available for this evaluation
+                      </div>
                     )}
                   </div>
                 )}

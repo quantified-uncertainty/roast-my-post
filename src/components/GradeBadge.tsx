@@ -176,7 +176,7 @@ const PADDING_CLASSES = {
 } as const;
 
 interface GradeBadgeProps {
-  grade: number;
+  grade: number | null;
   variant?: "light" | "dark";
   size?: "xs" | "sm" | "md";
   className?: string;
@@ -188,6 +188,11 @@ export function GradeBadge({
   size = "sm",
   className = "",
 }: GradeBadgeProps) {
+  // Don't render anything if grade is null
+  if (grade === null) {
+    return null;
+  }
+
   const baseClasses = `rounded ${PADDING_CLASSES[size]} py-0.5 font-semibold ${SIZE_CLASSES[size]} ${className}`;
   const style =
     variant === "dark" ? getGradeColorDark(grade) : getGradeColorLight(grade);

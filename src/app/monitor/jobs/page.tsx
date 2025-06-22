@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { 
   CheckCircleIcon, 
   XCircleIcon, 
@@ -150,11 +151,11 @@ export default function JobsMonitorPage() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* Job List */}
-        <div className="col-span-5 bg-white shadow rounded-lg">
+        <div className="col-span-4 bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900">Recent Jobs</h2>
           </div>
-          <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
             {jobs.map((job) => (
               <div
                 key={job.id}
@@ -193,7 +194,7 @@ export default function JobsMonitorPage() {
         </div>
 
         {/* Job Details */}
-        <div className="col-span-7">
+        <div className="col-span-8">
           {selectedJob ? (
             <div className="space-y-4">
               {/* Header */}
@@ -215,11 +216,26 @@ export default function JobsMonitorPage() {
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Document</dt>
-                    <dd className="text-gray-600">{selectedJob.evaluation.document.versions[0]?.title || 'Unknown Document'}</dd>
+                    <dd className="space-y-1">
+                      <div className="text-blue-600 hover:text-blue-800">
+                        <Link href={`/docs/${selectedJob.evaluation.document.id}`}>
+                          {selectedJob.evaluation.document.versions[0]?.title || 'Unknown Document'}
+                        </Link>
+                      </div>
+                      <div className="text-xs text-blue-600 hover:text-blue-800">
+                        <Link href={`/docs/${selectedJob.evaluation.document.id}/evaluations`}>
+                          View Evaluations →
+                        </Link>
+                      </div>
+                    </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Agent</dt>
-                    <dd className="text-gray-600">{selectedJob.evaluation.agent.versions[0]?.name || 'Unknown Agent'}</dd>
+                    <dd className="text-blue-600 hover:text-blue-800">
+                      <Link href={`/agents/${selectedJob.evaluation.agent.id}`}>
+                        {selectedJob.evaluation.agent.versions[0]?.name || 'Unknown Agent'}
+                      </Link>
+                    </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Created</dt>
