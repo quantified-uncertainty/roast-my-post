@@ -74,7 +74,7 @@ export const agentFormFields: FormFieldConfig[] = [
     name: "selfCritiqueInstructions",
     label: "Self-Critique Instructions",
     type: "textarea",
-    placeholder: "Instructions for self-evaluation and critique (optional)",
+    placeholder: "Instructions for scoring evaluation quality 1-100 (e.g., 'Score based on: Technical accuracy (40%), Completeness (30%), Actionability (30%)')",
   },
   {
     name: "extendedCapabilityId",

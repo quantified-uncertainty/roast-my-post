@@ -75,6 +75,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           analysisInstructions: formData.analysisInstructions || data.analysisInstructions || "",
           commentInstructions: formData.commentInstructions || data.commentInstructions || "",
           gradeInstructions: formData.gradeInstructions || data.gradeInstructions || "",
+          selfCritiqueInstructions: formData.selfCritiqueInstructions || data.selfCritiqueInstructions || "",
           extendedCapabilityId: formData.extendedCapabilityId || data.extendedCapabilityId || "",
         });
 
