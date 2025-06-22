@@ -50,11 +50,8 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           const storedData = sessionStorage.getItem(
             `importedAgentData_${agentId}`
           );
-          console.log("storedData:", storedData);
           if (storedData) {
             importedData = JSON.parse(storedData);
-            // Clear the stored data
-            sessionStorage.removeItem(`importedAgentData_${agentId}`);
             setImportNotice(
               "Form pre-filled with imported data. Review and save to apply changes."
             );
@@ -69,10 +66,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         }
 
         const data = await response.json();
-        
-        console.log('API returned data:', data);
-        console.log('API analysisInstructions:', data.analysisInstructions);
-        console.log('API selfCritiqueInstructions:', data.selfCritiqueInstructions);
 
         // Validate that we got data back
         if (!data) {
@@ -113,14 +106,14 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         };
 
         reset(resetData);
-        
-        console.log('Form reset with data:', resetData);
-        console.log('Reset analysisInstructions length:', resetData.analysisInstructions?.length);
-        console.log('Reset selfCritiqueInstructions length:', resetData.selfCritiqueInstructions?.length);
+
+        // Clear the stored data after successful form reset
+        if (importedData) {
+          sessionStorage.removeItem(`importedAgentData_${agentId}`);
+        }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching agent:", err);
         setError(
           err instanceof Error ? err.message : "Failed to load agent data"
         );
@@ -133,22 +126,14 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
   const onSubmit = async (data: AgentInput) => {
     try {
-      console.log("Form data being submitted:", data);
-      console.log("analysisInstructions:", data.analysisInstructions);
-      console.log("selfCritiqueInstructions:", data.selfCritiqueInstructions);
-
       const result = agentSchema.parse(data);
-      console.log('Parsed result:', result);
-      console.log('Result analysisInstructions:', result.analysisInstructions);
-      console.log('Result selfCritiqueInstructions:', result.selfCritiqueInstructions);
-      
+
       // Use updateAgent for editing, passing both parsedInput and rawInput
       const dataToSend = {
         ...result,
         agentId,
       };
-      console.log('Data being sent to updateAgent:', dataToSend);
-      
+
       const updateResult = await updateAgent(dataToSend);
 
       if (!updateResult?.data) {
@@ -177,7 +162,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           }
         });
       } else {
-        console.error("Error submitting form:", err);
         setFormError("root", { message: "An unexpected error occurred" });
       }
     }

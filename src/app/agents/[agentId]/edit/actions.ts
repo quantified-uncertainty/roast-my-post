@@ -37,14 +37,6 @@ export const updateAgent = actionClient
         agent: updatedAgent,
       };
     } catch (error) {
-      console.error("Error updating agent:", error);
-      if (error instanceof Error) {
-        console.error("Error details:", {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        });
-      }
       return {
         success: false,
         error:

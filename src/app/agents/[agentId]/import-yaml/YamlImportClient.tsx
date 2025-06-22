@@ -132,24 +132,21 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       // Store the imported data in sessionStorage to pass to edit page
       try {
         const dataToStore = JSON.stringify(agentData);
-        console.log('Data size to store:', dataToStore.length, 'bytes');
         sessionStorage.setItem(`importedAgentData_${agentId}`, dataToStore);
         
         // Verify it was stored correctly
         const verification = sessionStorage.getItem(`importedAgentData_${agentId}`);
         if (verification !== dataToStore) {
-          console.error('SessionStorage verification failed - data may be too large');
           alert('Warning: Some data may not have been saved due to size limitations. Consider reducing the size of your instructions.');
         }
       } catch (e) {
-        console.error('Failed to store in sessionStorage:', e);
         alert('Failed to store import data. The content may be too large. Please try reducing the size of your instructions.');
         return;
       }
       
       router.push(`/agents/${agentId}/edit?import=true`);
     } catch (error) {
-      console.error('Import error:', error);
+      // Error is already handled by setError in the validation process
     } finally {
       setLoading(false);
     }
