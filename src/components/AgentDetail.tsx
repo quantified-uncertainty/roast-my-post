@@ -14,6 +14,7 @@ import {
   Download,
   ChevronDown,
   Upload,
+  BarChart3,
 } from "lucide-react";
 import * as yaml from 'js-yaml';
 import Link from "next/link";
@@ -44,15 +45,36 @@ interface AgentDocument {
   costInCents?: number;
 }
 
+interface AgentEvaluation {
+  id: string;
+  evaluationId: string;
+  documentId: string;
+  documentTitle: string;
+  documentAuthor: string;
+  agentVersion: number;
+  agentVersionName?: string;
+  summary?: string;
+  analysis?: string;
+  grade?: number;
+  selfCritique?: string;
+  createdAt: string;
+  jobStatus?: string;
+  jobCreatedAt?: string;
+  jobCompletedAt?: string;
+  costInCents?: number;
+}
+
 export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "documents">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals">("details");
   const [review, setReview] = useState<AgentReview | null>(null);
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
+  const [evaluations, setEvaluations] = useState<AgentEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [evalsLoading, setEvalsLoading] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exportType, setExportType] = useState<'JSON' | 'Markdown' | 'YAML'>('JSON');
@@ -96,9 +118,28 @@ export default function AgentDetail({
     }
   };
 
+  const fetchEvaluations = async () => {
+    if (evaluations.length > 0) return; // Already loaded
+    
+    setEvalsLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/evaluations`);
+      const data = await response.json();
+      if (data.evaluations) {
+        setEvaluations(data.evaluations);
+      }
+    } catch (error) {
+      console.error("Error fetching agent evaluations:", error);
+    } finally {
+      setEvalsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "documents") {
       fetchDocuments();
+    } else if (activeTab === "evals") {
+      fetchEvaluations();
     }
   }, [activeTab]);
 
@@ -438,6 +479,17 @@ ${agent.selfCritiqueInstructions}`;
             <FileText className="mr-2 h-5 w-5" />
             Documents
           </button>
+          <button
+            onClick={() => setActiveTab("evals")}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "evals"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <BarChart3 className="mr-2 h-5 w-5" />
+            Evals
+          </button>
         </nav>
       </div>
 
@@ -570,6 +622,109 @@ ${agent.selfCritiqueInstructions}`;
                               <span>Completed: {formatDate(doc.jobCompletedAt)}</span>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "evals" && (
+          <div className="space-y-6">
+            {evalsLoading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">Loading evaluations...</div>
+              </div>
+            ) : evaluations.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">No evaluations have been performed by this agent yet.</div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  All Evaluations ({evaluations.length})
+                </h3>
+                <div className="space-y-4">
+                  {evaluations.map((evalItem) => (
+                    <div
+                      key={evalItem.id}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <Link
+                              href={`/docs/${evalItem.documentId}`}
+                              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                            >
+                              {evalItem.documentTitle}
+                            </Link>
+                            <p className="text-sm text-gray-600 mt-1">
+                              by {evalItem.documentAuthor}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                evalItem.agentVersion === Number(agent.version)
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}>
+                                v{evalItem.agentVersion}
+                                {evalItem.agentVersionName && ` - ${evalItem.agentVersionName}`}
+                              </span>
+                              <p className="text-sm text-gray-500">
+                                {formatDate(evalItem.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {evalItem.grade !== undefined && (
+                              <div className="text-right">
+                                <div className="text-lg font-semibold text-gray-900">
+                                  {evalItem.grade}/100
+                                </div>
+                                <div className="text-xs text-gray-500">Grade</div>
+                              </div>
+                            )}
+                            {getStatusBadge(evalItem.jobStatus)}
+                          </div>
+                        </div>
+                        
+                        {evalItem.summary && (
+                          <div className="mt-3">
+                            <p className="text-sm text-gray-700 line-clamp-3">
+                              {evalItem.summary}
+                            </p>
+                          </div>
+                        )}
+
+                        {evalItem.selfCritique && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                            <p className="text-xs font-medium text-gray-600 mb-1">Self-Critique:</p>
+                            <p className="text-sm text-gray-700 line-clamp-2">
+                              {evalItem.selfCritique}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                          {evalItem.costInCents && (
+                            <span>Cost: ${(evalItem.costInCents / 100).toFixed(2)}</span>
+                          )}
+                          {evalItem.jobCompletedAt && (
+                            <span>Duration: {
+                              Math.round((new Date(evalItem.jobCompletedAt).getTime() - 
+                                          new Date(evalItem.jobCreatedAt || evalItem.createdAt).getTime()) / 1000)
+                            }s</span>
+                          )}
+                          <Link
+                            href={`/docs/${evalItem.documentId}/evaluations?evaluationId=${evalItem.evaluationId}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            View Details →
+                          </Link>
                         </div>
                       </div>
                     </div>

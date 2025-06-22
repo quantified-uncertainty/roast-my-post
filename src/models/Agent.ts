@@ -336,4 +336,77 @@ export class AgentModel {
       await prisma.$disconnect();
     }
   }
+
+  static async getAgentEvaluations(agentId: string, limit: number = 50) {
+    try {
+      const evaluations = await prisma.evaluationVersion.findMany({
+        where: {
+          agentId: agentId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: limit,
+        include: {
+          evaluation: {
+            include: {
+              document: {
+                include: {
+                  versions: {
+                    orderBy: { version: "desc" },
+                    take: 1,
+                  },
+                  submittedBy: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          job: {
+            select: {
+              status: true,
+              createdAt: true,
+              completedAt: true,
+              costInCents: true,
+            },
+          },
+          agentVersion: {
+            select: {
+              version: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return evaluations.map((evalVersion) => {
+        const latestDocumentVersion = evalVersion.evaluation.document.versions[0];
+        
+        return {
+          id: evalVersion.id,
+          evaluationId: evalVersion.evaluationId,
+          documentId: evalVersion.evaluation.documentId,
+          documentTitle: latestDocumentVersion?.title || "Untitled",
+          documentAuthor: evalVersion.evaluation.document.submittedBy.name || "Unknown",
+          agentVersion: evalVersion.agentVersion?.version || evalVersion.agentVersionId,
+          agentVersionName: evalVersion.agentVersion?.name,
+          summary: evalVersion.summary,
+          analysis: evalVersion.analysis,
+          grade: evalVersion.grade,
+          selfCritique: evalVersion.selfCritique,
+          createdAt: evalVersion.createdAt,
+          jobStatus: evalVersion.job?.status,
+          jobCreatedAt: evalVersion.job?.createdAt,
+          jobCompletedAt: evalVersion.job?.completedAt,
+          costInCents: evalVersion.job?.costInCents,
+        };
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
 }
