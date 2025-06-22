@@ -384,6 +384,12 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 - **Type**: string
 - **Purpose**: Human-readable documentation about the agent
 - **Display**: Shown in the Overview tab of the agent detail page
+- **Format**: Standard Markdown with proper formatting
+- **Important Formatting Requirements**:
+  - **Line breaks**: Add two spaces at the end of lines to create line breaks within paragraphs
+  - **Lists**: Ensure proper spacing between list items
+  - **Example**: `✅ Feature one  ` (note the two trailing spaces)
+  - Without proper formatting, bullet points may render on a single line
 - **Recommended Content**:
   - What the agent does and when to use it
   - Capabilities and limitations
@@ -402,18 +408,39 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - Types of documents it works best with
   
   ## Capabilities & Limitations
-  - ✅ What it does well
-  - ❌ What it doesn't do
+  - ✅ What it does well  
+  - ❌ What it doesn't do  
   
   ## For LLMs Modifying This Agent
-  - Architecture notes
-  - Key design decisions
-  - Testing recommendations
+  - Architecture notes  
+  - Key design decisions  
+  - Testing recommendations  
   ```
+  
+  **Note**: The example above shows two trailing spaces after each bullet point to ensure proper line breaks when rendered.
 
 ---
 
 ## Writing Effective Instructions
+
+### Voice and Perspective Guidelines
+
+**Critical**: Agents should always use third-person perspective when referring to the document or author:
+
+✅ **Correct Third-Person Examples**:
+- "This essay argues that..."
+- "The author claims..."
+- "The document presents evidence for..."
+- "The analysis demonstrates..."
+- "This research suggests..."
+
+❌ **Avoid Second-Person References**:
+- "You argue that..." 
+- "Your analysis shows..."
+- "You fail to consider..."
+- "Your evidence suggests..."
+
+**Rationale**: Third-person maintains professional distance and objectivity. Second-person can feel confrontational and assumes the document author will read the evaluation directly, which may not be the case.
 
 ### The Reality of Comprehensive Agents
 
@@ -999,6 +1026,7 @@ genericInstructions: |
 4. **Iterate Based on Failures**: Every inconsistency is a missing example
 5. **Domain Expertise Matters**: Surface-level knowledge produces surface-level evaluation
 6. **Version Everything**: Track instruction changes and their impact
+7. **Maintain Third-Person Voice**: Always refer to "the document" or "the author", never "you"
 
 ### Building High-Performance Agents
 
@@ -1217,6 +1245,16 @@ IMPORTANT: Create comprehensive instructions (5,000+ words) that include:
 Use XML structure throughout and focus on creating a single, comprehensive
 genericInstructions field unless there's a specific need for different
 behavior across output types.
+
+MARKDOWN FORMATTING: In the readme field, ensure proper Markdown formatting:
+- Add two spaces at the end of lines that need line breaks
+- This is especially important for bullet points and lists
+- Example: "✅ Feature one  " (note the two trailing spaces)
+
+VOICE AND PERSPECTIVE: Always use third-person perspective:
+- Refer to "the document", "the author", "this essay", "the analysis"
+- Never use second-person ("you", "your") when addressing the content
+- Maintain professional, objective distance in all evaluations
 ```
 
 ### Iteration Process
