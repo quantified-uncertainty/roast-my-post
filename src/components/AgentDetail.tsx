@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Upload,
   BarChart3,
+  FileDown,
 } from "lucide-react";
 import * as yaml from 'js-yaml';
 import Link from "next/link";
@@ -351,6 +352,99 @@ ${agent.selfCritiqueInstructions}`;
     setExportDropdownOpen(false);
   };
 
+  const exportEvaluationsReport = async () => {
+    const filteredEvals = selectedVersion 
+      ? evaluations.filter(e => e.agentVersion === selectedVersion)
+      : evaluations;
+
+    // Create a comprehensive report for LLM analysis
+    const report = `# Agent Evaluation Report: ${agent.name}
+
+## Agent Information
+- **Name**: ${agent.name}
+- **Type**: ${AGENT_TYPE_INFO[agent.purpose].individualTitle}
+- **Current Version**: v${agent.version}
+- **Total Evaluations**: ${filteredEvals.length}
+${selectedVersion ? `- **Filtered to Version**: v${selectedVersion}` : '- **Showing**: All versions'}
+
+## Agent Instructions
+
+### Description
+${agent.description}
+
+${agent.genericInstructions ? `### Primary Instructions
+${agent.genericInstructions}` : ''}
+
+${agent.summaryInstructions ? `### Summary Instructions
+${agent.summaryInstructions}` : ''}
+
+${agent.analysisInstructions ? `### Analysis Instructions
+${agent.analysisInstructions}` : ''}
+
+${agent.commentInstructions ? `### Comment Instructions
+${agent.commentInstructions}` : ''}
+
+${agent.gradeInstructions ? `### Grade Instructions
+${agent.gradeInstructions}` : ''}
+
+${agent.selfCritiqueInstructions ? `### Self-Critique Instructions
+${agent.selfCritiqueInstructions}` : ''}
+
+## Evaluation Results
+
+${filteredEvals.map((evalItem, index) => `
+### Evaluation ${index + 1}: ${evalItem.documentTitle}
+- **Document Author**: ${evalItem.documentAuthor}
+- **Agent Version**: v${evalItem.agentVersion}
+- **Date**: ${formatDate(evalItem.createdAt)}
+- **Status**: ${evalItem.jobStatus || 'Unknown'}
+${evalItem.grade !== undefined && agent.gradeInstructions ? `- **Grade**: ${evalItem.grade}/100` : ''}
+${evalItem.costInCents ? `- **Cost**: $${(evalItem.costInCents / 100).toFixed(2)}` : ''}
+${evalItem.jobCompletedAt ? `- **Duration**: ${Math.round((new Date(evalItem.jobCompletedAt).getTime() - new Date(evalItem.jobCreatedAt || evalItem.createdAt).getTime()) / 1000)}s` : ''}
+
+#### Summary
+${evalItem.summary || 'No summary available'}
+
+${evalItem.selfCritique ? `#### Self-Critique
+${evalItem.selfCritique}` : ''}
+`).join('\n---\n')}
+
+## Analysis Prompts for LLM
+
+Based on the above evaluations, please analyze:
+
+1. **Consistency**: Are the evaluations consistent in their approach and quality?
+2. **Instruction Clarity**: Are there any patterns in the evaluations that suggest the instructions could be clearer?
+3. **Grading Patterns**: ${agent.gradeInstructions ? 'How consistent and fair is the grading?' : 'N/A - This agent does not provide grades'}
+4. **Common Issues**: What recurring themes or issues appear across evaluations?
+5. **Improvement Suggestions**: What specific changes to the agent instructions would improve evaluation quality?
+
+## Export Metadata
+- **Exported**: ${new Date().toISOString()}
+- **Total Evaluations in Report**: ${filteredEvals.length}
+- **Version Range**: v${Math.min(...filteredEvals.map(e => e.agentVersion))} - v${Math.max(...filteredEvals.map(e => e.agentVersion))}
+`;
+
+    try {
+      await navigator.clipboard.writeText(report);
+      setExportType('Report');
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy report to clipboard:', err);
+      // Fallback: download as file
+      const blob = new Blob([report], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${agent.name.toLowerCase().replace(/\s+/g, '-')}-evaluation-report.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-8">
       {/* Success Notification */}
@@ -656,26 +750,36 @@ ${agent.selfCritiqueInstructions}`;
                       : evaluations.length
                     })
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
-                      Filter by version:
-                    </label>
-                    <select
-                      id="version-filter"
-                      value={selectedVersion || ""}
-                      onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
-                      className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
+                        Filter by version:
+                      </label>
+                      <select
+                        id="version-filter"
+                        value={selectedVersion || ""}
+                        onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
+                        className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="">All versions</option>
+                        {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
+                          .reverse()
+                          .map((version) => (
+                            <option key={version} value={version}>
+                              v{version}
+                              {version === Number(agent.version) && " (current)"}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() => exportEvaluationsReport()}
+                      className="flex items-center gap-2 text-sm"
                     >
-                      <option value="">All versions</option>
-                      {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
-                        .reverse()
-                        .map((version) => (
-                          <option key={version} value={version}>
-                            v{version}
-                            {version === Number(agent.version) && " (current)"}
-                          </option>
-                        ))}
-                    </select>
+                      <FileDown className="h-4 w-4" />
+                      Export Report
+                    </Button>
                   </div>
                 </div>
                 <div className="space-y-4">
