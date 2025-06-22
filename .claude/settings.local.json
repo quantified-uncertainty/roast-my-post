@@ -68,7 +68,8 @@
       "Bash(/usr/bin/false:*)",
       "Bash(for:*)",
       "Bash(do echo \"=== $file ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(timeout 180 npm run process-jobs 2 >& 1)"
     ],
     "deny": []
   },

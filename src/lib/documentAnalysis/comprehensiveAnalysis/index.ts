@@ -9,6 +9,7 @@ import {
   anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
+  COMPREHENSIVE_ANALYSIS_TIMEOUT,
 } from "../../../types/openai";
 import {
   calculateApiCost,
@@ -124,8 +125,8 @@ export async function generateComprehensiveAnalysis(
 
     response = await withTimeout(
       anthropic.messages.create(apiParams),
-      180000, // 3 minute timeout for comprehensive analysis
-      "Anthropic API request timed out after 3 minutes"
+      COMPREHENSIVE_ANALYSIS_TIMEOUT,
+      `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
     );
   } catch (error: any) {
     console.error(

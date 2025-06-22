@@ -7,6 +7,7 @@ import {
   anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
+  COMMENT_EXTRACTION_TIMEOUT,
 } from "../../../types/openai";
 import {
   calculateApiCost,
@@ -228,8 +229,8 @@ export async function extractCommentsFromAnalysis(
         ],
         tool_choice: { type: "tool", name: "provide_comments" },
       }),
-      90000, // 1.5 minute timeout
-      "Anthropic API request timed out after 1.5 minutes"
+      COMMENT_EXTRACTION_TIMEOUT,
+      `Anthropic API request timed out after ${COMMENT_EXTRACTION_TIMEOUT / 60000} minutes`
     );
 
     const toolUse = response.content.find((c) => c.type === "tool_use");

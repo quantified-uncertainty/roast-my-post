@@ -8,6 +8,7 @@ import {
   anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
+  SELF_CRITIQUE_TIMEOUT,
 } from "../../../types/openai";
 import {
   calculateApiCost,
@@ -112,8 +113,8 @@ ${evaluationText}`;
 
     response = (await withTimeout(
       anthropic.messages.create(apiParams),
-      60000, // 1 minute timeout
-      "Anthropic API request timed out after 1 minute"
+      SELF_CRITIQUE_TIMEOUT,
+      `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
     )) as any; // Type assertion to avoid complex union type issues
   } catch (error: any) {
     console.error("❌ Anthropic API error in self-critique generation:", error);

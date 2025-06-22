@@ -44,6 +44,7 @@ interface AgentData {
   selfCritiqueInstructions?: string;
   analysisInstructions?: string;
   extendedCapabilityId?: string;
+  readme?: string;
 }
 
 const REQUIRED_FIELDS = ["name", "purpose", "description"];
@@ -55,6 +56,7 @@ const OPTIONAL_FIELDS = [
   "selfCritiqueInstructions",
   "analysisInstructions",
   "extendedCapabilityId",
+  "readme",
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 const VALID_PURPOSES = ["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"];
@@ -284,7 +286,11 @@ selfCritiqueInstructions: |
   - Technical accuracy (40%)
   - Completeness (30%)
   - Actionability (30%)
-analysisInstructions: Provide detailed analysis"
+analysisInstructions: Provide detailed analysis
+readme: |
+  # My Agent
+  
+  This agent is designed to..."
               className="h-96 w-full resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             />
@@ -486,6 +492,18 @@ analysisInstructions: Provide detailed analysis"
                       {validation.parsedData.analysisInstructions.slice(0, 100)}
                       {validation.parsedData.analysisInstructions.length >
                         100 && "..."}
+                    </p>
+                  </div>
+                )}
+
+                {validation.parsedData.readme && (
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      README:
+                    </span>
+                    <p className="mt-1 max-h-24 overflow-y-auto rounded border bg-white p-2 text-gray-900">
+                      {validation.parsedData.readme.slice(0, 200)}
+                      {validation.parsedData.readme.length > 200 && "..."}
                     </p>
                   </div>
                 )}

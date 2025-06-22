@@ -38,7 +38,12 @@ export const openai = new OpenAI({
 });
 
 export const DEFAULT_TEMPERATURE = 0.1; // Lower temperature for more deterministic results
-export const DEFAULT_TIMEOUT = 120000; // 2 minutes timeout for LLM requests
+export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests
+
+// Configurable timeouts via environment variables
+export const COMPREHENSIVE_ANALYSIS_TIMEOUT = parseInt(process.env.COMPREHENSIVE_ANALYSIS_TIMEOUT || '600000'); // 10 minutes
+export const COMMENT_EXTRACTION_TIMEOUT = parseInt(process.env.COMMENT_EXTRACTION_TIMEOUT || '300000'); // 5 minutes
+export const SELF_CRITIQUE_TIMEOUT = parseInt(process.env.SELF_CRITIQUE_TIMEOUT || '180000'); // 3 minutes
 
 // Helper function to add timeout to Anthropic requests
 export async function withTimeout<T>(

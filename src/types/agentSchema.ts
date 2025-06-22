@@ -45,24 +45,12 @@ const BaseAgentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
   purpose: AgentPurposeEnum,
   description: z.string().min(30, "Description must be at least 30 characters"),
-  genericInstructions: z
-    .string()
-    .min(30, "Generic instructions must be at least 30 characters")
-    .optional(),
-  summaryInstructions: z
-    .string()
-    .min(30, "Summary instructions must be at least 30 characters")
-    .optional(),
+  genericInstructions: z.string().optional(),
+  summaryInstructions: z.string().optional(),
   analysisInstructions: z.string().optional(),
-  commentInstructions: z
-    .string()
-    .min(30, "Comment instructions must be at least 30 characters")
-    .optional(),
+  commentInstructions: z.string().optional(),
   gradeInstructions: z.string().optional(),
-  selfCritiqueInstructions: z
-    .string()
-    .min(30, "Self-critique instructions must be at least 30 characters")
-    .optional(),
+  selfCritiqueInstructions: z.string().optional(),
   extendedCapabilityId: z.string().optional(),
   readme: z.string().optional(),
 });
