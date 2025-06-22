@@ -1,5 +1,7 @@
 # Claude Development Notes
 
+> **Note**: This file contains project-specific technical notes. For Claude Code operations, analysis scripts, and system insights, see `/claude/README.md`
+
 ## Key Learnings
 
 ### Git Commit Issues

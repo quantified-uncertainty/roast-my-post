@@ -2,6 +2,8 @@
 
 **Complete guide to creating and configuring AI agents for document evaluation in RoastMyPost**
 
+> **For Claude Code**: System-specific analysis and helper scripts are in `/claude/README.md`
+
 ## Quick Start Guide
 
 Creating an effective agent requires substantial detail and examples. While you only need four core fields, the instructions should be comprehensive:
