@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import MarkdownRenderer from "@/components/MarkdownRenderer";
 import type { Agent } from "@/types/agentSchema";
 
 import { StatusBadge } from "../components";
@@ -31,11 +32,9 @@ export function OverviewTab({
       {agent.readme && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">README</h2>
-          <div className="prose prose-sm max-w-none">
-            <div className="whitespace-pre-wrap text-gray-700">
-              {agent.readme}
-            </div>
-          </div>
+          <MarkdownRenderer className="prose prose-sm max-w-none text-gray-700">
+            {agent.readme}
+          </MarkdownRenderer>
         </div>
       )}
 

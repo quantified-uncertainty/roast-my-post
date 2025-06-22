@@ -64,6 +64,7 @@ const BaseAgentSchema = z.object({
     .min(30, "Self-critique instructions must be at least 30 characters")
     .optional(),
   extendedCapabilityId: z.string().optional(),
+  readme: z.string().optional(),
 });
 
 // Schema for the complete agent

@@ -82,4 +82,10 @@ export const agentFormFields: FormFieldConfig[] = [
     type: "text",
     placeholder: "ID for special agent capabilities (optional)",
   },
+  {
+    name: "readme",
+    label: "README",
+    type: "textarea",
+    placeholder: "Human-readable documentation for users and future modifiers (optional)",
+  },
 ];

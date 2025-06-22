@@ -103,6 +103,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           extendedCapabilityId: importedData
             ? (importedData.extendedCapabilityId ?? "")
             : data.extendedCapabilityId || "",
+          readme: importedData
+            ? (importedData.readme ?? "")
+            : data.readme || "",
         };
 
         reset(resetData);

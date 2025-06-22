@@ -35,6 +35,7 @@ export class AgentModel {
               selfCritiqueInstructions: data.selfCritiqueInstructions,
               analysisInstructions: data.analysisInstructions,
               extendedCapabilityId: data.extendedCapabilityId,
+              readme: data.readme,
             },
           },
         },
@@ -66,6 +67,7 @@ export class AgentModel {
         selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
         analysisInstructions: agent.versions[0].analysisInstructions || undefined,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
+        readme: agent.versions[0].readme || undefined,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
@@ -111,6 +113,7 @@ export class AgentModel {
               selfCritiqueInstructions: data.selfCritiqueInstructions,
               analysisInstructions: data.analysisInstructions,
               extendedCapabilityId: data.extendedCapabilityId,
+              readme: data.readme,
             },
           },
         },
@@ -139,6 +142,7 @@ export class AgentModel {
         selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
         analysisInstructions: agent.versions[0].analysisInstructions || undefined,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
+        readme: agent.versions[0].readme || undefined,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
