@@ -47,10 +47,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           const storedData = sessionStorage.getItem(`importedAgentData_${agentId}`);
           if (storedData) {
             importedData = JSON.parse(storedData);
-            // Debug: Log what we retrieved
-            console.log('Retrieved stored data:', importedData);
-            console.log('Self-critique instructions:', importedData.selfCritiqueInstructions?.substring(0, 100));
-            console.log('Analysis instructions:', importedData.analysisInstructions?.substring(0, 100));
             // Clear the stored data
             sessionStorage.removeItem(`importedAgentData_${agentId}`);
             setImportNotice("Form pre-filled with imported data. Review and save to apply changes.");
@@ -66,27 +62,20 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
         const data = await response.json();
 
-        // Use imported data if available, otherwise use current agent data
-        const formData = importedData || data;
-
         // Convert the agent data to form format
+        // When importing, use imported data preferentially for all fields
         const resetData = {
-          name: formData.name || data.name,
-          purpose: (formData.purpose || data.purpose).toUpperCase(),
-          description: formData.description || data.description,
-          genericInstructions: formData.genericInstructions || data.genericInstructions || "",
-          summaryInstructions: formData.summaryInstructions || data.summaryInstructions || "",
-          analysisInstructions: formData.analysisInstructions || data.analysisInstructions || "",
-          commentInstructions: formData.commentInstructions || data.commentInstructions || "",
-          gradeInstructions: formData.gradeInstructions || data.gradeInstructions || "",
-          selfCritiqueInstructions: formData.selfCritiqueInstructions || data.selfCritiqueInstructions || "",
-          extendedCapabilityId: formData.extendedCapabilityId || data.extendedCapabilityId || "",
+          name: importedData ? importedData.name : data.name,
+          purpose: (importedData ? importedData.purpose : data.purpose).toUpperCase(),
+          description: importedData ? importedData.description : data.description,
+          genericInstructions: importedData ? (importedData.genericInstructions ?? "") : (data.genericInstructions || ""),
+          summaryInstructions: importedData ? (importedData.summaryInstructions ?? "") : (data.summaryInstructions || ""),
+          analysisInstructions: importedData ? (importedData.analysisInstructions ?? "") : (data.analysisInstructions || ""),
+          commentInstructions: importedData ? (importedData.commentInstructions ?? "") : (data.commentInstructions || ""),
+          gradeInstructions: importedData ? (importedData.gradeInstructions ?? "") : (data.gradeInstructions || ""),
+          selfCritiqueInstructions: importedData ? (importedData.selfCritiqueInstructions ?? "") : (data.selfCritiqueInstructions || ""),
+          extendedCapabilityId: importedData ? (importedData.extendedCapabilityId ?? "") : (data.extendedCapabilityId || ""),
         };
-
-        // Debug: Log what we're setting in the form
-        console.log('Form reset data:', resetData);
-        console.log('Analysis instructions being set:', resetData.analysisInstructions?.substring(0, 100));
-        console.log('Self-critique instructions being set:', resetData.selfCritiqueInstructions?.substring(0, 100));
 
         reset(resetData);
 

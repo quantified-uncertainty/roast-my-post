@@ -128,10 +128,6 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
         }
       });
 
-      // Debug: Log what we're storing
-      console.log('Storing agent data:', agentData);
-      console.log('Self-critique instructions length:', agentData.selfCritiqueInstructions?.length);
-      console.log('Analysis instructions length:', agentData.analysisInstructions?.length);
 
       // Store the imported data in sessionStorage to pass to edit page
       try {
