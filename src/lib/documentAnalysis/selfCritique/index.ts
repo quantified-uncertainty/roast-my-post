@@ -13,8 +13,8 @@ import {
   calculateApiCost,
   mapModelToCostModel,
 } from "../../../utils/costCalculator";
-import type { TaskResult } from "../shared/types";
 import { createLogDetails } from "../shared/llmUtils";
+import type { TaskResult } from "../shared/types";
 
 export interface SelfCritiqueInput {
   summary: string;
@@ -38,11 +38,11 @@ export async function generateSelfCritique(
 
   // Prepare the evaluation text for critique
   let evaluationText = `# Summary\n${evaluationOutput.summary}\n\n# Analysis\n${evaluationOutput.analysis}`;
-  
+
   if (evaluationOutput.grade !== undefined) {
     evaluationText += `\n\n# Grade\n${evaluationOutput.grade}/100`;
   }
-  
+
   if (evaluationOutput.comments && evaluationOutput.comments.length > 0) {
     evaluationText += `\n\n# Comments\n`;
     evaluationOutput.comments.forEach((comment, index) => {
@@ -52,13 +52,16 @@ export async function generateSelfCritique(
 
   const systemMessage = `You are an expert critic tasked with evaluating the quality of an AI-generated evaluation. Your job is to provide an honest, thorough critique of the evaluation provided.
 
-${agent.selfCritiqueInstructions || `Assess the evaluation based on:
+${
+  agent.selfCritiqueInstructions ||
+  `Assess the evaluation based on:
 - Completeness and thoroughness of analysis
 - Quality and strength of evidence
 - Fairness and objectivity
 - Clarity and coherence of writing
 - Practical usefulness of insights
-- Adherence to any specific requirements`}
+- Adherence to any specific requirements`
+}
 
 Be specific about both strengths and weaknesses. Provide constructive feedback on how the evaluation could be improved.`;
 
@@ -83,7 +86,7 @@ ${evaluationText}`;
       system: systemMessage,
       messages: [
         {
-          role: "user",
+          role: "user" as const,
           content: userMessage,
         },
       ],
@@ -92,53 +95,69 @@ ${evaluationText}`;
           name: "provide_self_critique",
           description: "Provide a quality evaluation of the given analysis",
           input_schema: {
-            type: "object",
+            type: "object" as const,
             properties: {
               selfCritique: {
-                type: "string",
-                description: "Quality evaluation of the analysis. Provide a numerical score (1-100) and explain your assessment based on completeness, evidence quality, fairness, clarity, usefulness, and adherence to instructions. Be specific about strengths and weaknesses. 200-400 words.",
+                type: "string" as const,
+                description:
+                  "Quality evaluation of the analysis. Provide a numerical score (1-100) and explain your assessment based on completeness, evidence quality, fairness, clarity, usefulness, and adherence to instructions. Be specific about strengths and weaknesses. 200-400 words.",
               },
             },
             required: ["selfCritique"],
           },
         },
       ],
-      tool_choice: { type: "tool", name: "provide_self_critique" },
+      tool_choice: { type: "tool" as const, name: "provide_self_critique" },
     };
 
-    response = await withTimeout(
+    response = (await withTimeout(
       anthropic.messages.create(apiParams),
       60000, // 1 minute timeout
       "Anthropic API request timed out after 1 minute"
-    );
+    )) as any; // Type assertion to avoid complex union type issues
   } catch (error: any) {
     console.error("❌ Anthropic API error in self-critique generation:", error);
 
     if (error?.status === 429) {
-      throw new Error("Anthropic API rate limit exceeded. Please try again in a moment.");
+      throw new Error(
+        "Anthropic API rate limit exceeded. Please try again in a moment."
+      );
     }
     if (error?.status === 402) {
-      throw new Error("Anthropic API quota exceeded. Please check your billing.");
+      throw new Error(
+        "Anthropic API quota exceeded. Please check your billing."
+      );
     }
     if (error?.status === 401) {
-      throw new Error("Anthropic API authentication failed. Please check your API key.");
+      throw new Error(
+        "Anthropic API authentication failed. Please check your API key."
+      );
     }
     if (error?.status >= 500) {
-      throw new Error(`Anthropic API server error (${error.status}). Please try again later.`);
+      throw new Error(
+        `Anthropic API server error (${error.status}). Please try again later.`
+      );
     }
     throw new Error(`Anthropic API error: ${error?.message || error}`);
   }
 
   try {
-    const toolUse = response.content.find((c) => c.type === "tool_use");
+    const toolUse = response.content.find((c: any) => c.type === "tool_use");
     if (!toolUse || toolUse.name !== "provide_self_critique") {
-      throw new Error("No tool use response from Anthropic for self-critique generation");
+      throw new Error(
+        "No tool use response from Anthropic for self-critique generation"
+      );
     }
 
     validationResult = toolUse.input as SelfCritiqueOutput;
 
-    if (!validationResult.selfCritique || validationResult.selfCritique.trim().length === 0) {
-      throw new Error("Anthropic response missing or empty 'selfCritique' field");
+    if (
+      !validationResult.selfCritique ||
+      validationResult.selfCritique.trim().length === 0
+    ) {
+      throw new Error(
+        "Anthropic response missing or empty 'selfCritique' field"
+      );
     }
 
     // Fix formatting issues from JSON tool use

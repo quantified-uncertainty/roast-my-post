@@ -3,8 +3,8 @@ import type { Document } from "../../types/documents";
 import type { Comment } from "../../types/documentSchema";
 import { extractCommentsFromAnalysis } from "./commentExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
-import { generateSelfCritique } from "./selfCritique";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
+import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 
 export async function analyzeDocument(
@@ -43,7 +43,9 @@ export async function analyzeDocument(
       targetWordCount,
       targetComments
     );
-    console.log(`✅ Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.commentInsights.length}`);
+    console.log(
+      `✅ Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.commentInsights.length}`
+    );
     tasks.push(analysisResult.task);
 
     // Step 2: Extract and format comments from the analysis
@@ -54,22 +56,24 @@ export async function analyzeDocument(
       analysisResult.outputs,
       targetComments
     );
-    console.log(`✅ Extracted ${commentResult.outputs.comments.length} comments`);
+    console.log(
+      `✅ Extracted ${commentResult.outputs.comments.length} comments`
+    );
     tasks.push(commentResult.task);
 
     // Step 3: Generate self-critique if instructions are provided and randomly selected (10% chance)
     let selfCritique: string | undefined;
-    if (agentInfo.selfCritiqueInstructions && Math.random() < 0.1) {
+    if (agentInfo.selfCritiqueInstructions) {
       console.log(`🔍 Generating self-critique...`);
       const critiqueResult = await generateSelfCritique(
         {
           summary: analysisResult.outputs.summary,
           analysis: analysisResult.outputs.analysis,
           grade: analysisResult.outputs.grade,
-          comments: commentResult.outputs.comments.map(c => ({
-            title: c.highlight?.text || "Comment",
-            text: c.text
-          }))
+          comments: commentResult.outputs.comments.map((c) => ({
+            title: c.highlight?.quotedText || "Comment",
+            text: c.description,
+          })),
         },
         agentInfo
       );
