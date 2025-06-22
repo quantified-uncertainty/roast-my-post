@@ -65,7 +65,10 @@
       "Bash(true:*)",
       "Bash(/usr/bin/true:*)",
       "Bash(false:*)",
-      "Bash(/usr/bin/false:*)"
+      "Bash(/usr/bin/false:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)"
     ],
     "deny": []
   },
