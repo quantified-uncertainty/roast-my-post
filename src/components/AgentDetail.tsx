@@ -69,7 +69,7 @@ export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals" | "export">("details");
   const [review, setReview] = useState<AgentReview | null>(null);
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [evaluations, setEvaluations] = useState<AgentEvaluation[]>([]);
@@ -352,44 +352,6 @@ ${agent.selfCritiqueInstructions}`;
     setExportDropdownOpen(false);
   };
 
-  const exportEvaluationsReport = async () => {
-    try {
-      // Build query params
-      const params = new URLSearchParams();
-      if (selectedVersion) {
-        params.append('version', selectedVersion.toString());
-      }
-      params.append('limit', '100'); // Get up to 100 evaluations
-      
-      // Fetch the YAML export
-      const response = await fetch(`/api/agents/${agent.id}/export-data?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to export data');
-      }
-      
-      const yamlData = await response.text();
-      
-      // Download as file
-      const blob = new Blob([yamlData], { type: 'text/yaml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${agent.name.toLowerCase().replace(/\s+/g, '-')}-export-${new Date().toISOString().split('T')[0]}.yaml`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      // Show success notification
-      setExportType('YAML Export');
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error('Failed to export data:', err);
-      alert('Failed to export evaluation data. Please try again.');
-    }
-  };
 
   return (
     <div className="mx-auto max-w-6xl p-8">
@@ -530,6 +492,17 @@ ${agent.selfCritiqueInstructions}`;
           >
             <BarChart3 className="mr-2 h-5 w-5" />
             Evals
+          </button>
+          <button
+            onClick={() => setActiveTab("export")}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "export"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <FileDown className="mr-2 h-5 w-5" />
+            Export
           </button>
         </nav>
       </div>
@@ -696,36 +669,26 @@ ${agent.selfCritiqueInstructions}`;
                       : evaluations.length
                     })
                   </h3>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
-                        Filter by version:
-                      </label>
-                      <select
-                        id="version-filter"
-                        value={selectedVersion || ""}
-                        onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
-                        className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-                      >
-                        <option value="">All versions</option>
-                        {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
-                          .reverse()
-                          .map((version) => (
-                            <option key={version} value={version}>
-                              v{version}
-                              {version === Number(agent.version) && " (current)"}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => exportEvaluationsReport()}
-                      className="flex items-center gap-2 text-sm"
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
+                      Filter by version:
+                    </label>
+                    <select
+                      id="version-filter"
+                      value={selectedVersion || ""}
+                      onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
+                      className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                     >
-                      <FileDown className="h-4 w-4" />
-                      Export Report
-                    </Button>
+                      <option value="">All versions</option>
+                      {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
+                        .reverse()
+                        .map((version) => (
+                          <option key={version} value={version}>
+                            v{version}
+                            {version === Number(agent.version) && " (current)"}
+                          </option>
+                        ))}
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -815,6 +778,118 @@ ${agent.selfCritiqueInstructions}`;
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "export" && (
+          <div className="space-y-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Export Evaluation Data
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Configure your export parameters to download evaluation data in YAML format.
+                This includes full document content, evaluation results, comments, and job details.
+              </p>
+              
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const params = new URLSearchParams();
+                  
+                  const version = formData.get('version');
+                  if (version && version !== 'all') {
+                    params.append('version', version.toString());
+                  }
+                  
+                  const startDate = formData.get('startDate');
+                  if (startDate) {
+                    params.append('startDateTime', new Date(startDate.toString()).toISOString());
+                  }
+                  
+                  const limit = formData.get('limit');
+                  if (limit) {
+                    params.append('limit', limit.toString());
+                  }
+                  
+                  // Open in new tab
+                  window.open(`/api/agents/${agent.id}/export-data?${params}`, '_blank');
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label htmlFor="export-version" className="block text-sm font-medium text-gray-700 mb-1">
+                    Agent Version
+                  </label>
+                  <select
+                    id="export-version"
+                    name="version"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="all">All versions</option>
+                    {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
+                      .reverse()
+                      .map((version) => (
+                        <option key={version} value={version}>
+                          v{version}
+                          {version === Number(agent.version) && " (current)"}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="export-start-date" className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    id="export-start-date"
+                    name="startDate"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Only include evaluations after this date</p>
+                </div>
+                
+                <div>
+                  <label htmlFor="export-limit" className="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum Results
+                  </label>
+                  <input
+                    type="number"
+                    id="export-limit"
+                    name="limit"
+                    defaultValue="100"
+                    min="1"
+                    max="1000"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Maximum number of evaluations to export (1-1000)</p>
+                </div>
+                
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button type="submit" className="flex items-center gap-2">
+                    <FileDown className="h-4 w-4" />
+                    Export as YAML
+                  </Button>
+                </div>
+              </form>
+              
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Export Format</h4>
+                <p className="text-sm text-gray-600">
+                  The export will include:
+                </p>
+                <ul className="mt-2 text-sm text-gray-600 list-disc list-inside space-y-1">
+                  <li>Full document content and metadata</li>
+                  <li>Complete evaluation analysis and summaries</li>
+                  <li>All comments with highlight positions</li>
+                  <li>Job execution details and costs</li>
+                  <li>Agent configuration and instructions</li>
+                </ul>
+              </div>
+            </div>
           </div>
         )}
       </div>
