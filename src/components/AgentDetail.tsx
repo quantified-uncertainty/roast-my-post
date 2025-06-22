@@ -353,95 +353,41 @@ ${agent.selfCritiqueInstructions}`;
   };
 
   const exportEvaluationsReport = async () => {
-    const filteredEvals = selectedVersion 
-      ? evaluations.filter(e => e.agentVersion === selectedVersion)
-      : evaluations;
-
-    // Create a comprehensive report for LLM analysis
-    const report = `# Agent Evaluation Report: ${agent.name}
-
-## Agent Information
-- **Name**: ${agent.name}
-- **Type**: ${AGENT_TYPE_INFO[agent.purpose].individualTitle}
-- **Current Version**: v${agent.version}
-- **Total Evaluations**: ${filteredEvals.length}
-${selectedVersion ? `- **Filtered to Version**: v${selectedVersion}` : '- **Showing**: All versions'}
-
-## Agent Instructions
-
-### Description
-${agent.description}
-
-${agent.genericInstructions ? `### Primary Instructions
-${agent.genericInstructions}` : ''}
-
-${agent.summaryInstructions ? `### Summary Instructions
-${agent.summaryInstructions}` : ''}
-
-${agent.analysisInstructions ? `### Analysis Instructions
-${agent.analysisInstructions}` : ''}
-
-${agent.commentInstructions ? `### Comment Instructions
-${agent.commentInstructions}` : ''}
-
-${agent.gradeInstructions ? `### Grade Instructions
-${agent.gradeInstructions}` : ''}
-
-${agent.selfCritiqueInstructions ? `### Self-Critique Instructions
-${agent.selfCritiqueInstructions}` : ''}
-
-## Evaluation Results
-
-${filteredEvals.map((evalItem, index) => `
-### Evaluation ${index + 1}: ${evalItem.documentTitle}
-- **Document Author**: ${evalItem.documentAuthor}
-- **Agent Version**: v${evalItem.agentVersion}
-- **Date**: ${formatDate(evalItem.createdAt)}
-- **Status**: ${evalItem.jobStatus || 'Unknown'}
-${evalItem.grade !== undefined && agent.gradeInstructions ? `- **Grade**: ${evalItem.grade}/100` : ''}
-${evalItem.costInCents ? `- **Cost**: $${(evalItem.costInCents / 100).toFixed(2)}` : ''}
-${evalItem.jobCompletedAt ? `- **Duration**: ${Math.round((new Date(evalItem.jobCompletedAt).getTime() - new Date(evalItem.jobCreatedAt || evalItem.createdAt).getTime()) / 1000)}s` : ''}
-
-#### Summary
-${evalItem.summary || 'No summary available'}
-
-${evalItem.selfCritique ? `#### Self-Critique
-${evalItem.selfCritique}` : ''}
-`).join('\n---\n')}
-
-## Analysis Prompts for LLM
-
-Based on the above evaluations, please analyze:
-
-1. **Consistency**: Are the evaluations consistent in their approach and quality?
-2. **Instruction Clarity**: Are there any patterns in the evaluations that suggest the instructions could be clearer?
-3. **Grading Patterns**: ${agent.gradeInstructions ? 'How consistent and fair is the grading?' : 'N/A - This agent does not provide grades'}
-4. **Common Issues**: What recurring themes or issues appear across evaluations?
-5. **Improvement Suggestions**: What specific changes to the agent instructions would improve evaluation quality?
-
-## Export Metadata
-- **Exported**: ${new Date().toISOString()}
-- **Total Evaluations in Report**: ${filteredEvals.length}
-- **Version Range**: v${Math.min(...filteredEvals.map(e => e.agentVersion))} - v${Math.max(...filteredEvals.map(e => e.agentVersion))}
-`;
-
     try {
-      await navigator.clipboard.writeText(report);
-      setExportType('Report');
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy report to clipboard:', err);
-      // Fallback: download as file
-      const blob = new Blob([report], { type: 'text/markdown' });
+      // Build query params
+      const params = new URLSearchParams();
+      if (selectedVersion) {
+        params.append('version', selectedVersion.toString());
+      }
+      params.append('limit', '100'); // Get up to 100 evaluations
+      
+      // Fetch the YAML export
+      const response = await fetch(`/api/agents/${agent.id}/export-data?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to export data');
+      }
+      
+      const yamlData = await response.text();
+      
+      // Download as file
+      const blob = new Blob([yamlData], { type: 'text/yaml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${agent.name.toLowerCase().replace(/\s+/g, '-')}-evaluation-report.md`;
+      a.download = `${agent.name.toLowerCase().replace(/\s+/g, '-')}-export-${new Date().toISOString().split('T')[0]}.yaml`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      // Show success notification
+      setExportType('YAML Export');
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to export data:', err);
+      alert('Failed to export evaluation data. Please try again.');
     }
   };
 
