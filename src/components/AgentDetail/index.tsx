@@ -118,7 +118,7 @@ export default function AgentDetail({
   return (
     <div
       className={
-        activeTab === "jobs"
+        activeTab === "jobs" || activeTab === "evals"
           ? "w-full px-4 py-8 sm:px-6 lg:px-8"
           : "mx-auto max-w-6xl p-8"
       }
