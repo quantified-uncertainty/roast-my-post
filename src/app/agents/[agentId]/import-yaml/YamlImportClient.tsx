@@ -29,11 +29,13 @@ interface AgentData {
   summaryInstructions?: string;
   commentInstructions?: string;
   gradeInstructions?: string;
+  selfCritiqueInstructions?: string;
+  analysisInstructions?: string;
   extendedCapabilityId?: string;
 }
 
 const REQUIRED_FIELDS = ['name', 'description'];
-const OPTIONAL_FIELDS = ['genericInstructions', 'summaryInstructions', 'commentInstructions', 'gradeInstructions', 'extendedCapabilityId'];
+const OPTIONAL_FIELDS = ['genericInstructions', 'summaryInstructions', 'commentInstructions', 'gradeInstructions', 'selfCritiqueInstructions', 'analysisInstructions', 'extendedCapabilityId'];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
 export function YamlImportClient({ agentId }: YamlImportClientProps) {
@@ -211,7 +213,13 @@ genericInstructions: |
   You are an expert assistant...
 summaryInstructions: Create concise summaries
 commentInstructions: Provide insightful comments
-gradeInstructions: Grade based on quality"
+gradeInstructions: Grade based on quality
+selfCritiqueInstructions: |
+  Score your evaluation quality 1-100 based on:
+  - Technical accuracy (40%)
+  - Completeness (30%)
+  - Actionability (30%)
+analysisInstructions: Provide detailed analysis"
               className="w-full h-96 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
               disabled={loading}
             />
@@ -352,6 +360,26 @@ gradeInstructions: Grade based on quality"
                     <p className="text-gray-900 mt-1 bg-white p-2 rounded border">
                       {validation.parsedData.gradeInstructions.slice(0, 100)}
                       {validation.parsedData.gradeInstructions.length > 100 && '...'}
+                    </p>
+                  </div>
+                )}
+
+                {validation.parsedData.selfCritiqueInstructions && (
+                  <div>
+                    <span className="font-medium text-gray-700">Self-Critique Instructions:</span>
+                    <p className="text-gray-900 mt-1 bg-white p-2 rounded border">
+                      {validation.parsedData.selfCritiqueInstructions.slice(0, 100)}
+                      {validation.parsedData.selfCritiqueInstructions.length > 100 && '...'}
+                    </p>
+                  </div>
+                )}
+
+                {validation.parsedData.analysisInstructions && (
+                  <div>
+                    <span className="font-medium text-gray-700">Analysis Instructions:</span>
+                    <p className="text-gray-900 mt-1 bg-white p-2 rounded border">
+                      {validation.parsedData.analysisInstructions.slice(0, 100)}
+                      {validation.parsedData.analysisInstructions.length > 100 && '...'}
                     </p>
                   </div>
                 )}
