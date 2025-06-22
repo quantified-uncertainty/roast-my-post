@@ -59,6 +59,75 @@ export class JobModel {
   }
 
   /**
+   * Atomically claim and mark a pending job as running
+   * Returns the claimed job or null if no job available
+   */
+  async claimNextPendingJob() {
+    // Use a transaction to atomically find and update a job
+    const result = await prisma.$transaction(async (tx) => {
+      // Find the oldest pending job with row-level lock
+      const job = await tx.$queryRaw<Array<{id: string}>>`
+        SELECT id FROM "Job" 
+        WHERE status = 'PENDING'
+        ORDER BY "createdAt" ASC
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      `;
+
+      if (!job || job.length === 0) {
+        return null;
+      }
+
+      const jobId = job[0].id;
+
+      // Update the job to RUNNING status
+      await tx.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.RUNNING,
+          startedAt: new Date(),
+          attempts: { increment: 1 },
+        },
+      });
+
+      // Fetch the full job with relations
+      const fullJob = await tx.job.findUnique({
+        where: { id: jobId },
+        include: {
+          evaluation: {
+            include: {
+              document: {
+                include: {
+                  versions: {
+                    orderBy: {
+                      version: "desc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
+              agent: {
+                include: {
+                  versions: {
+                    orderBy: {
+                      version: "desc",
+                    },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      return fullJob;
+    });
+
+    return result;
+  }
+
+  /**
    * Update job status to running
    */
   async markJobAsRunning(jobId: string) {
@@ -129,8 +198,6 @@ export class JobModel {
   ) {
     const startTime = Date.now(); // Start timing immediately
     try {
-      await this.markJobAsRunning(job.id);
-
       // Get the latest document version and agent version
       const documentVersion = job.evaluation.document.versions[0];
       const agentVersion = job.evaluation.agent.versions[0];
@@ -344,7 +411,7 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
   async run() {
     try {
       console.log("🔍 Looking for pending jobs...");
-      const job = await this.findNextPendingJob();
+      const job = await this.claimNextPendingJob();
 
       if (!job) {
         console.log("✅ No pending jobs found.");

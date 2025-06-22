@@ -17,6 +17,8 @@
     "db:studio": "prisma studio",
     "process-jobs": "tsx src/scripts/process-job.ts",
     "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts",
+    "process-jobs-parallel": "tsx src/scripts/process-jobs-parallel.ts",
+    "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts"
   },
   "dependencies": {
