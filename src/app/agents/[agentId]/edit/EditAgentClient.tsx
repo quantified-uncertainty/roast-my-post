@@ -47,6 +47,10 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           const storedData = sessionStorage.getItem(`importedAgentData_${agentId}`);
           if (storedData) {
             importedData = JSON.parse(storedData);
+            // Debug: Log what we retrieved
+            console.log('Retrieved stored data:', importedData);
+            console.log('Self-critique instructions:', importedData.selfCritiqueInstructions?.substring(0, 100));
+            console.log('Analysis instructions:', importedData.analysisInstructions?.substring(0, 100));
             // Clear the stored data
             sessionStorage.removeItem(`importedAgentData_${agentId}`);
             setImportNotice("Form pre-filled with imported data. Review and save to apply changes.");
@@ -66,7 +70,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         const formData = importedData || data;
 
         // Convert the agent data to form format
-        reset({
+        const resetData = {
           name: formData.name || data.name,
           purpose: (formData.purpose || data.purpose).toUpperCase(),
           description: formData.description || data.description,
@@ -77,7 +81,14 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           gradeInstructions: formData.gradeInstructions || data.gradeInstructions || "",
           selfCritiqueInstructions: formData.selfCritiqueInstructions || data.selfCritiqueInstructions || "",
           extendedCapabilityId: formData.extendedCapabilityId || data.extendedCapabilityId || "",
-        });
+        };
+
+        // Debug: Log what we're setting in the form
+        console.log('Form reset data:', resetData);
+        console.log('Analysis instructions being set:', resetData.analysisInstructions?.substring(0, 100));
+        console.log('Self-critique instructions being set:', resetData.selfCritiqueInstructions?.substring(0, 100));
+
+        reset(resetData);
 
         setLoading(false);
       } catch (err) {
