@@ -128,17 +128,19 @@ An **Agent** is an AI-powered evaluator that analyzes documents and provides str
 - **Grading**: Assign numerical scores (0-100) based on defined criteria
 - **Contextual Highlighting**: Identify and mark specific text passages for feedback
 - **Cost Tracking**: Monitor AI API usage and provide cost transparency
+- **Self-Critique**: Built-in quality scoring where agents rate their evaluation quality (1-100) with detailed explanation
 - **Versioning**: Support multiple versions with change tracking
 
 ### Evaluation Workflow
 
-Agents follow a three-step evaluation process:
+Agents follow a four-step evaluation process:
 
 1. **Thinking**: Agent analyzes the document and plans its approach
 2. **Analysis**: Agent generates a comprehensive evaluation summary
-3. **Comments**: Agent creates specific feedback tied to text sections
+3. **Self-Critique**: Agent scores the quality of its evaluation on a 1-100 scale with explanation
+4. **Comments**: Agent creates specific feedback tied to text sections
 
-Each step builds on the previous one, creating a coherent evaluation that leverages chain-of-thought reasoning for improved quality.
+Each step builds on the previous one, creating a coherent evaluation that leverages chain-of-thought reasoning for improved quality. The self-critique step provides quantitative quality assessment and transparency about the evaluation's strengths and limitations.
 
 ---
 
@@ -191,6 +193,44 @@ Each step builds on the previous one, creating a coherent evaluation that levera
   - Accessibility improvements
   - Knowledge translation
 - **Output Focus**: Clear explanations, simplified language, educational content
+
+---
+
+## Self-Critique Feature
+
+The self-critique feature is an automatic quality scoring component where agents evaluate the quality of their own evaluation on a numerical scale (1-100). This enhances evaluation quality by encouraging agents to critically assess their work against specific quality criteria.
+
+### How Self-Critique Works
+
+After generating their analysis, agents automatically score the quality of their evaluation by examining:
+
+- **Completeness**: Did they address all key aspects of the document?
+- **Evidence**: Are their claims well-supported with specific examples?
+- **Fairness**: Is the evaluation balanced and objective?
+- **Clarity**: Is the analysis clear and well-structured?
+- **Usefulness**: Will the feedback help improve the document?
+- **Adherence**: Did they follow their agent instructions properly?
+
+The agent provides:
+1. A numerical score from 1-100
+2. Explanation of what aspects were strong
+3. Identification of what could be improved
+
+### Benefits
+
+- **Quality Calibration**: Provides a quantitative measure of evaluation quality
+- **Transparency**: Makes the agent's confidence in their work explicit
+- **Continuous Improvement**: Helps identify patterns in evaluation quality
+- **User Trust**: Allows users to gauge how well the agent performed its task
+- **Performance Tracking**: Enables measurement of agent effectiveness over time
+
+### In the UI
+
+Self-critique appears as a separate tab in the document evaluation view, alongside Analysis, Comments, and Thinking. Users can see both the numerical score and the agent's explanation of their self-assessment.
+
+### Writing Instructions for Self-Critique
+
+You can customize the scoring criteria by providing `selfCritiqueInstructions` in your agent configuration. This field should specify the exact scale and criteria for quality scoring. If not provided, the system uses default criteria focusing on completeness, evidence, fairness, clarity, usefulness, and adherence to instructions.
 
 ---
 
@@ -286,6 +326,41 @@ Each step builds on the previous one, creating a coherent evaluation that levera
     <range score="90-100">Exceptional quality</range>
     <range score="80-89">High quality</range>
   </scale_interpretation>
+  ```
+
+#### `selfCritiqueInstructions`
+
+- **Type**: string (minimum 30 characters if provided)
+- **Purpose**: Custom criteria for scoring the quality of the evaluation on a 1-100 scale
+- **Default Behavior**: If not provided, uses built-in criteria for completeness, evidence, fairness, clarity, usefulness, and adherence
+- **When to Use**: When you want specific quality metrics or domain-specific scoring criteria
+- **Recommended Content**:
+  - Specific quality dimensions to evaluate
+  - Relative weights for different criteria
+  - Examples of what constitutes different score ranges
+  - Domain-specific quality indicators
+- **Example**:
+  ```xml
+  <self_critique_scoring>
+    <scale>
+      Judge the quality of your evaluation on a scale of 1-100 based on:
+    </scale>
+    <criteria>
+      <criterion weight="25">Technical Accuracy: Are all technical claims correct and well-supported?</criterion>
+      <criterion weight="20">Comprehensiveness: Did you cover all major aspects of the document?</criterion>
+      <criterion weight="20">Actionability: Are your suggestions specific and implementable?</criterion>
+      <criterion weight="15">Evidence Quality: Did you cite specific examples from the text?</criterion>
+      <criterion weight="10">Clarity: Is your feedback easy to understand?</criterion>
+      <criterion weight="10">Objectivity: Did you maintain professional neutrality?</criterion>
+    </criteria>
+    <scoring_guide>
+      90-100: Exceptional evaluation meeting all criteria at the highest level
+      80-89: Strong evaluation with minor areas for improvement
+      70-79: Good evaluation but missing some important aspects
+      60-69: Adequate evaluation with significant gaps
+      Below 60: Evaluation needs major improvement
+    </scoring_guide>
+  </self_critique_scoring>
   ```
 
 #### `analysisInstructions`
@@ -747,6 +822,43 @@ gradeInstructions: |
       Below 60: Recommend rejection or complete reconceptualization
     </benchmarks>
   </grade_calibration>
+
+selfCritiqueInstructions: |
+  <academic_self_critique>
+    <methodological_reflection>
+      Critically examine my evaluation approach:
+      - Did I apply appropriate standards for this research domain?
+      - Are there methodological blind spots I might have missed due to my training bias?
+      - Would reviewers from different methodological traditions (qualitative vs quantitative) 
+        identify issues I overlooked?
+      - Have I been overly harsh or lenient based on my own research background?
+    </methodological_reflection>
+    
+    <bias_examination>
+      Identify potential biases in my assessment:
+      - Publication bias: Am I more critical of unexpected findings?
+      - Confirmation bias: Did I look harder for flaws in work that challenges established views?
+      - Expertise bias: Am I overemphasizing technical aspects at the expense of broader impact?
+      - Novelty bias: Am I undervaluing solid confirmatory research?
+      - Cultural bias: Does this work represent perspectives I'm unfamiliar with?
+    </bias_examination>
+    
+    <limitation_acknowledgment>
+      Acknowledge constraints of my evaluation:
+      - What domain-specific knowledge might I lack?
+      - Are there ethical considerations I didn't fully explore?
+      - How might this work be viewed in 5-10 years with new methodological advances?
+      - What would experts in adjacent fields focus on that I missed?
+    </limitation_acknowledgment>
+    
+    <calibration_check>
+      Compare against field standards:
+      - Is my grade consistent with similar work in top journals?
+      - Would my assessment align with consensus among expert reviewers?
+      - Am I calibrated to current standards or outdated criteria?
+      - Have I appropriately weighted innovation vs. rigor for this venue?
+    </calibration_check>
+  </academic_self_critique>
 ```
 
 **Note**: This example is abbreviated from ~40,000 words. The full version includes:

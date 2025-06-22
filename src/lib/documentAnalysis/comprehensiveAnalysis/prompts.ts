@@ -77,12 +77,30 @@ Synthesize your key findings and contributions based on your role.
 ${agentInfo.gradeInstructions ? `## Grade
 Assign a grade from 0-100 with clear justification based on your assessment criteria.` : ''}
 
+${agentInfo.selfCritiqueInstructions ? `## Self-Critique
+Evaluate the quality of your evaluation above using these specific criteria:
+
+${agentInfo.selfCritiqueInstructions}
+
+Provide a numerical score (1-100) and explain your reasoning.` : `## Self-Critique
+Evaluate the quality of your evaluation above on a scale of 1-100. Consider:
+
+- **Completeness**: Did you address all key aspects of the document?
+- **Evidence**: Are your claims well-supported with specific examples?
+- **Fairness**: Is your evaluation balanced and objective?
+- **Clarity**: Is your analysis clear and well-structured?
+- **Usefulness**: Will your feedback help improve the document?
+- **Adherence**: Did you follow your agent instructions properly?
+
+Provide a score (1-100) and explain what aspects were strong and what could be improved.`}
+
 Remember:
 1. This is your ONLY chance to do analytical work - be thorough
 2. All highlights that will become comments must be identified here
 3. Use rich markdown formatting (headers, lists, emphasis, code blocks, etc.)
 4. Be specific with line numbers or section references
-5. Make your reasoning transparent and evidence-based`;
+5. Make your reasoning transparent and evidence-based
+6. Include a thoughtful self-critique to improve the quality of your work`;
 
   // Number the lines exactly like in comment extraction
   const numberedContent = document.content.split('\n').map((line, i) => 

@@ -62,6 +62,7 @@ Line 5 has the final content.`,
           input: {
             summary: "Test summary",
             analysis: "# Analysis\\n\\n## Overview\\nTest analysis content\\n\\n## Key Highlights\\n\\nHighlights listed below",
+            selfCritique: "This analysis could be improved by considering additional perspectives and providing more specific evidence.",
             commentInsights: [
               {
                 id: "insight-1",
@@ -159,6 +160,7 @@ Line 5 has the final content.`,
           input: {
             summary: "Test summary",
             analysis: "Test analysis",
+            selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
             commentInsights: [
               {
                 id: "insight-1",
@@ -215,6 +217,7 @@ Line 5 has the final content.`,
           input: {
             summary: "Test summary",
             analysis: "Test analysis",
+            selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
             commentInsights: [
               {
                 id: "insight-1",

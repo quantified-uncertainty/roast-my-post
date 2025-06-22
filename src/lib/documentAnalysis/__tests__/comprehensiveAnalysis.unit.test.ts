@@ -82,6 +82,7 @@ Overall, this is a well-structured test document.
 ## Grade
 85/100 - Good test document with clear purpose`,
               grade: 85,
+              selfCritique: "My analysis focused primarily on structure but could have delved deeper into content quality and potential improvements. The assessment may be somewhat superficial given the limited content available.",
               commentInsights: [
                 {
                   id: "insight-1",

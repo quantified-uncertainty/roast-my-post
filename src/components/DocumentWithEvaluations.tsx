@@ -330,7 +330,7 @@ interface EvaluationState {
   selectedReviewIndex: number;
   hoveredCommentId: string | null;
   expandedCommentId: string | null;
-  activeTab: "analysis" | "comments" | "thinking";
+  activeTab: "analysis" | "comments" | "thinking" | "selfCritique";
 }
 
 interface UIState {
@@ -494,8 +494,8 @@ function HomeView({
 }
 
 interface TabNavigationProps {
-  activeTab: "analysis" | "comments" | "thinking";
-  onTabChange: (tab: "analysis" | "comments" | "thinking") => void;
+  activeTab: "analysis" | "comments" | "thinking" | "selfCritique";
+  onTabChange: (tab: "analysis" | "comments" | "thinking" | "selfCritique") => void;
 }
 
 function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
@@ -530,6 +530,16 @@ function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         onClick={() => onTabChange("thinking")}
       >
         Thinking
+      </button>
+      <button
+        className={`px-4 py-2 text-sm font-medium ${
+          activeTab === "selfCritique"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-500 hover:text-blue-600"
+        }`}
+        onClick={() => onTabChange("selfCritique")}
+      >
+        Self-Critique
       </button>
     </div>
   );
@@ -609,6 +619,16 @@ function EvaluationView({
       {evaluationState.activeTab === "thinking" && evaluation.thinking && (
         <div className="prose-md prose max-w-none px-8 py-0.5">
           <MarkdownRenderer>{evaluation.thinking}</MarkdownRenderer>
+        </div>
+      )}
+      {evaluationState.activeTab === "selfCritique" && evaluation.selfCritique && (
+        <div className="prose-md prose max-w-none px-8 py-0.5">
+          <div className="mb-6">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900">
+              Self-Critique
+            </h2>
+            <MarkdownRenderer>{evaluation.selfCritique}</MarkdownRenderer>
+          </div>
         </div>
       )}
       {evaluationState.activeTab === "comments" && (

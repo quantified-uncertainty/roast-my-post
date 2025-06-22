@@ -168,6 +168,7 @@ export class JobModel {
         summaryInstructions: agentVersion.summaryInstructions || undefined,
         commentInstructions: agentVersion.commentInstructions || undefined,
         gradeInstructions: agentVersion.gradeInstructions || undefined,
+        selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
         extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       };
 
@@ -185,6 +186,7 @@ export class JobModel {
           summary: evaluationOutputs.summary,
           analysis: evaluationOutputs.analysis,
           grade: evaluationOutputs.grade,
+          selfCritique: evaluationOutputs.selfCritique,
           agentVersionId: agentVersion.id,
           evaluationId: job.evaluation.id,
           documentVersionId: documentVersion.id,

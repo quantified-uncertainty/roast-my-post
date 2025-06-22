@@ -57,6 +57,10 @@ const BaseAgentSchema = z.object({
     .min(30, "Comment instructions must be at least 30 characters")
     .optional(),
   gradeInstructions: z.string().optional(),
+  selfCritiqueInstructions: z
+    .string()
+    .min(30, "Self-critique instructions must be at least 30 characters")
+    .optional(),
   extendedCapabilityId: z.string().optional(),
 });
 

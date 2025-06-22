@@ -71,6 +71,12 @@ export const agentFormFields: FormFieldConfig[] = [
     placeholder: "Instructions for grading (optional)",
   },
   {
+    name: "selfCritiqueInstructions",
+    label: "Self-Critique Instructions",
+    type: "textarea",
+    placeholder: "Instructions for self-evaluation and critique (optional)",
+  },
+  {
     name: "extendedCapabilityId",
     label: "Extended Capability ID",
     type: "text",

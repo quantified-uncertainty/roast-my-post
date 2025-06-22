@@ -49,6 +49,7 @@ type DocumentWithRelations = {
         summaryInstructions: string;
         commentInstructions: string;
         gradeInstructions: string | null;
+        selfCritiqueInstructions: string | null;
       }>;
     };
     versions: Array<{
@@ -57,6 +58,7 @@ type DocumentWithRelations = {
       summary: string | null;
       analysis: string | null;
       grade: number | null;
+      selfCritique: string | null;
       comments: Array<{
         id: string;
         title: string;
@@ -233,6 +235,7 @@ export class DocumentModel {
           summary: version.summary || "",
           analysis: version.analysis || undefined,
           grade: version.grade ?? undefined,
+          selfCritique: version.selfCritique || undefined,
           documentVersion: {
             version: version.documentVersion.version,
           },
@@ -261,6 +264,8 @@ export class DocumentModel {
               evaluation.agent.versions[0].commentInstructions,
             gradeInstructions:
               evaluation.agent.versions[0].gradeInstructions || undefined,
+            selfCritiqueInstructions:
+              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
           },
           createdAt: new Date(
             evaluation.versions[0]?.createdAt || evaluation.createdAt
@@ -287,6 +292,7 @@ export class DocumentModel {
           summary: evaluation.versions[0]?.summary || "",
           analysis: evaluation.versions[0]?.analysis || "",
           grade: evaluation.versions[0]?.grade ?? undefined,
+          selfCritique: evaluation.versions[0]?.selfCritique || undefined,
           versions: evaluationVersions,
           jobs,
         };
@@ -416,6 +422,7 @@ export class DocumentModel {
             summary: version.summary || "",
             analysis: version.analysis || undefined,
             grade: version.grade ?? undefined,
+            selfCritique: version.selfCritique || undefined,
             documentVersion: {
               version: version.documentVersion.version,
             },
@@ -444,6 +451,8 @@ export class DocumentModel {
                 evaluation.agent.versions[0].commentInstructions || undefined,
               gradeInstructions:
                 evaluation.agent.versions[0].gradeInstructions || undefined,
+              selfCritiqueInstructions:
+                evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
             },
             createdAt: new Date(
               evaluation.versions[0]?.createdAt || evaluation.createdAt
@@ -470,6 +479,7 @@ export class DocumentModel {
             summary: evaluation.versions[0]?.summary || "",
             analysis: evaluation.versions[0]?.analysis || "",
             grade: evaluation.versions[0]?.grade ?? undefined,
+            selfCritique: evaluation.versions[0]?.selfCritique || undefined,
             versions: evaluationVersions,
             jobs,
           };

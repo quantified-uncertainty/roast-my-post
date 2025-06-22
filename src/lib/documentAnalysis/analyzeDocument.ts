@@ -17,6 +17,7 @@ export async function analyzeDocument(
   analysis: string;
   summary: string;
   grade?: number;
+  selfCritique?: string;
   comments: Comment[];
   tasks: TaskResult[];
 }> {
@@ -60,6 +61,7 @@ export async function analyzeDocument(
       analysis: analysisResult.outputs.analysis,
       summary: analysisResult.outputs.summary,
       grade: analysisResult.outputs.grade,
+      selfCritique: analysisResult.outputs.selfCritique,
       comments: commentResult.outputs.comments,
       tasks,
     };

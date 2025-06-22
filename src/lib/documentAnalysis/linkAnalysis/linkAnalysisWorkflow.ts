@@ -19,6 +19,7 @@ export async function analyzeLinkDocument(
   analysis: string;
   summary: string;
   grade?: number;
+  selfCritique?: string;
   comments: Comment[];
   tasks: TaskResult[];
 }> {
@@ -51,6 +52,7 @@ export async function analyzeLinkDocument(
     analysis,
     summary,
     grade,
+    selfCritique: undefined, // Link analysis doesn't generate selfCritique
     comments,
     tasks,
   };

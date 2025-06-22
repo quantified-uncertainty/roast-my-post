@@ -54,6 +54,7 @@ export const EvaluationVersionSchema = z.object({
   summary: z.string(),
   analysis: z.string().optional(),
   grade: z.number().optional(),
+  selfCritique: z.string().optional(),
   documentVersion: z.object({
     version: z.number(),
   }),
@@ -74,6 +75,7 @@ export const EvaluationSchema = z.object({
     summaryInstructions: z.string().optional(),
     commentInstructions: z.string().optional(),
     gradeInstructions: z.string().optional(),
+    selfCritiqueInstructions: z.string().optional(),
   }),
   createdAt: z.date(),
   costInCents: z.number(),
@@ -82,6 +84,7 @@ export const EvaluationSchema = z.object({
   summary: z.string(),
   analysis: z.string().optional(),
   grade: z.number().optional(),
+  selfCritique: z.string().optional(),
   versions: z.array(EvaluationVersionSchema).optional(),
   jobs: z
     .array(
@@ -167,6 +170,7 @@ export const AnalysisResultSchema = z.object({
   summary: z.string(),
   analysis: z.string(),
   grade: z.number().optional(),
+  selfCritique: z.string().optional(),
 });
 
 export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;

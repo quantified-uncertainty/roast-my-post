@@ -23,6 +23,7 @@ export interface ComprehensiveAnalysisOutputs {
   summary: string;
   analysis: string;
   grade?: number;
+  selfCritique?: string;
   commentInsights: CommentInsight[];
 }
 
@@ -74,6 +75,10 @@ export async function generateComprehensiveAnalysis(
         5. Quality Assessment section
         Use proper markdown with headers, subheaders, lists, emphasis, code blocks, etc.`,
     },
+    selfCritique: {
+      type: "string",
+      description: "Quality evaluation of your analysis above. Provide a numerical score (1-100) and explain your assessment based on completeness, evidence quality, fairness, clarity, usefulness, and adherence to instructions. Be specific about strengths and weaknesses. 200-400 words.",
+    },
     commentInsights: {
       type: "array",
       description: "Structured insights that will become comments",
@@ -121,7 +126,7 @@ export async function generateComprehensiveAnalysis(
           input_schema: {
             type: "object",
             properties: analysisProperties,
-            required: ["summary", "analysis", "commentInsights"],
+            required: ["summary", "analysis", "selfCritique", "commentInsights"],
           },
         },
       ],
@@ -192,6 +197,12 @@ export async function generateComprehensiveAnalysis(
       throw new Error("Anthropic response missing or empty 'analysis' field");
     }
     if (
+      !validationResult.selfCritique ||
+      validationResult.selfCritique.trim().length === 0
+    ) {
+      throw new Error("Anthropic response missing or empty 'selfCritique' field");
+    }
+    if (
       !validationResult.commentInsights ||
       !Array.isArray(validationResult.commentInsights)
     ) {
@@ -209,6 +220,7 @@ export async function generateComprehensiveAnalysis(
 
     validationResult.summary = fixFormatting(validationResult.summary);
     validationResult.analysis = fixFormatting(validationResult.analysis);
+    validationResult.selfCritique = fixFormatting(validationResult.selfCritique!);
     
     // Fix formatting in comment insights
     validationResult.commentInsights = validationResult.commentInsights.map(insight => ({
