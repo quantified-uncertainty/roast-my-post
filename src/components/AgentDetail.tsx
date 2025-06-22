@@ -75,6 +75,7 @@ export default function AgentDetail({
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [evalsLoading, setEvalsLoading] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exportType, setExportType] = useState<'JSON' | 'Markdown' | 'YAML'>('JSON');
@@ -644,11 +645,43 @@ ${agent.selfCritiqueInstructions}`;
               </div>
             ) : (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  All Evaluations ({evaluations.length})
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {selectedVersion
+                      ? `Evaluations - Version ${selectedVersion}`
+                      : "All Evaluations"}
+                    {" "}
+                    ({selectedVersion
+                      ? evaluations.filter(e => e.agentVersion === selectedVersion).length
+                      : evaluations.length
+                    })
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
+                      Filter by version:
+                    </label>
+                    <select
+                      id="version-filter"
+                      value={selectedVersion || ""}
+                      onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
+                      className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="">All versions</option>
+                      {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
+                        .reverse()
+                        .map((version) => (
+                          <option key={version} value={version}>
+                            v{version}
+                            {version === Number(agent.version) && " (current)"}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="space-y-4">
-                  {evaluations.map((evalItem) => (
+                  {evaluations
+                    .filter(evalItem => selectedVersion === null || evalItem.agentVersion === selectedVersion)
+                    .map((evalItem) => (
                     <div
                       key={evalItem.id}
                       className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
