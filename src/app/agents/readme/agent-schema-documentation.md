@@ -6,14 +6,17 @@
 
 ## Quick Start Guide
 
-Creating an effective agent requires substantial detail and examples. While you only need four core fields, the instructions should be comprehensive:
+Creating an effective agent requires substantial detail and examples. While you only need three core fields, the instructions should be comprehensive:
 
 1. **name**: Descriptive title
 2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
 3. **description**: 1-2 sentences explaining what the agent does
-4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples)
 
-Most high-performing agents use only these four fields, but pack extensive detail into the instructions. Additional fields should only be added when output types need fundamentally different approaches.
+Optional but highly recommended:
+4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples)
+5. **readme**: Human-readable documentation for users and future modifiers
+
+Most high-performing agents use only these fields, but pack extensive detail into the instructions. Additional fields should only be added when output types need fundamentally different approaches.
 
 **Important Note**: The `gradeInstructions` field is OPTIONAL. Without it, agents won't provide numerical grades - this is by design. Only add grading if you specifically want scoring functionality.
 
@@ -375,6 +378,38 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 - **Purpose**: How to perform detailed analysis
 - **Default Behavior**: If not provided, agent uses genericInstructions
 - **When to Use**: For complex multi-step analysis requirements
+
+#### `readme`
+
+- **Type**: string
+- **Purpose**: Human-readable documentation about the agent
+- **Display**: Shown in the Overview tab of the agent detail page
+- **Recommended Content**:
+  - What the agent does and when to use it
+  - Capabilities and limitations
+  - Sample outputs and expected behavior
+  - Technical notes for LLMs modifying the agent
+  - Version history and design decisions
+- **Example Structure**:
+  ```markdown
+  # Agent Name
+  
+  ## What This Agent Does
+  Brief explanation of purpose and capabilities
+  
+  ## When to Use This Agent
+  - Specific use cases
+  - Types of documents it works best with
+  
+  ## Capabilities & Limitations
+  - ✅ What it does well
+  - ❌ What it doesn't do
+  
+  ## For LLMs Modifying This Agent
+  - Architecture notes
+  - Key design decisions
+  - Testing recommendations
+  ```
 
 ---
 

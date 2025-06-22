@@ -31,7 +31,9 @@ export const AgentVersionSchema = z.object({
   analysisInstructions: z.string().optional(),
   commentInstructions: z.string().optional(),
   gradeInstructions: z.string().optional(),
+  selfCritiqueInstructions: z.string().optional(),
   extendedCapabilityId: z.string().optional(),
+  readme: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -70,6 +72,7 @@ export const AgentSchema = BaseAgentSchema.extend({
   version: z.string(),
   owner: AgentOwnerSchema.optional(),
   isOwner: z.boolean().optional(),
+  readme: z.string().optional(),
 });
 
 export type Agent = z.infer<typeof AgentSchema>;

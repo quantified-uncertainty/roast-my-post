@@ -66,6 +66,15 @@ export function DetailsTab({ agent }: DetailsTabProps) {
           </div>
         </div>
       )}
+
+      {agent.readme && (
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">README</h2>
+          <div className="prose prose-sm max-w-none">
+            <div className="whitespace-pre-wrap">{agent.readme}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

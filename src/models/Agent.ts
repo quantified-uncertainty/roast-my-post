@@ -189,6 +189,7 @@ export class AgentModel {
         selfCritiqueInstructions: dbAgent.versions[0].selfCritiqueInstructions || undefined,
         analysisInstructions: dbAgent.versions[0].analysisInstructions || undefined,
         extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
+        readme: dbAgent.versions[0].readme || undefined,
         owner: {
           id: dbAgent.submittedById,
           name: dbAgent.submittedBy.name || "Unknown",
@@ -222,6 +223,7 @@ export class AgentModel {
           selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
           analysisInstructions: version.analysisInstructions || undefined,
           extendedCapabilityId: version.extendedCapabilityId || undefined,
+          readme: version.readme || undefined,
           createdAt: version.createdAt,
           updatedAt: version.updatedAt,
         })

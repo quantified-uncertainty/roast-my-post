@@ -27,6 +27,18 @@ export function OverviewTab({
         </div>
       </div>
 
+      {/* README Preview */}
+      {agent.readme && (
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">README</h2>
+          <div className="prose prose-sm max-w-none">
+            <div className="whitespace-pre-wrap text-gray-700">
+              {agent.readme}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Loading state */}
       {overviewLoading ? (
         <div className="py-8 text-center">
