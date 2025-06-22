@@ -89,6 +89,53 @@ export async function GET(request: NextRequest, context: any) {
       },
     });
 
+    // Calculate statistics
+    const stats = {
+      total_evaluations: evaluations.length,
+      evaluations_with_grades: evaluations.filter(e => e.grade !== null).length,
+      average_grade: evaluations.filter(e => e.grade !== null).length > 0
+        ? evaluations.filter(e => e.grade !== null).reduce((sum, e) => sum + e.grade!, 0) / evaluations.filter(e => e.grade !== null).length
+        : null,
+      grade_std_dev: null as number | null,
+      average_cost_cents: evaluations.filter(e => e.job?.costInCents).length > 0
+        ? evaluations.filter(e => e.job?.costInCents).reduce((sum, e) => sum + e.job!.costInCents!, 0) / evaluations.filter(e => e.job?.costInCents).length
+        : null,
+      average_duration_seconds: null as number | null,
+      total_comments: evaluations.reduce((sum, e) => sum + e.comments.length, 0),
+      average_comments_per_eval: evaluations.length > 0 
+        ? evaluations.reduce((sum, e) => sum + e.comments.length, 0) / evaluations.length
+        : 0,
+      self_critique_count: evaluations.filter(e => e.selfCritique).length,
+      self_critique_rate: evaluations.length > 0
+        ? evaluations.filter(e => e.selfCritique).length / evaluations.length
+        : 0,
+      job_success_rate: evaluations.filter(e => e.job).length > 0
+        ? evaluations.filter(e => e.job?.status === 'COMPLETED').length / evaluations.filter(e => e.job).length
+        : 0,
+      failed_jobs: evaluations.filter(e => e.job?.status === 'FAILED').length,
+    };
+
+    // Calculate grade standard deviation if we have grades
+    if (stats.evaluations_with_grades > 1 && stats.average_grade !== null) {
+      const grades = evaluations.filter(e => e.grade !== null).map(e => e.grade!);
+      const variance = grades.reduce((sum, grade) => sum + Math.pow(grade - stats.average_grade!, 2), 0) / grades.length;
+      stats.grade_std_dev = Math.sqrt(variance);
+    }
+
+    // Calculate average duration
+    const durationsMs = evaluations
+      .filter(e => e.job?.completedAt && e.job?.createdAt)
+      .map(e => new Date(e.job!.completedAt!).getTime() - new Date(e.job!.createdAt).getTime());
+    
+    if (durationsMs.length > 0) {
+      stats.average_duration_seconds = durationsMs.reduce((sum, d) => sum + d, 0) / durationsMs.length / 1000;
+    }
+
+    // Estimate token count for context window info
+    const fullContent = JSON.stringify(evaluations);
+    const charCount = fullContent.length;
+    const estimatedTokens = Math.ceil(charCount / 4); // Rough estimate: 4 chars per token
+
     // Transform to YAML-friendly structure
     const exportData = {
       export_metadata: {
@@ -101,6 +148,13 @@ export async function GET(request: NextRequest, context: any) {
         },
         export_date: new Date().toISOString(),
         total_evaluations: evaluations.length,
+      },
+      statistics: stats,
+      export_size_info: {
+        total_characters: charCount,
+        estimated_tokens: estimatedTokens,
+        recommended_chunk_size: Math.min(10, evaluations.length),
+        warning: estimatedTokens > 100000 ? "This export may exceed typical LLM context windows" : null,
       },
       agent: {
         id: agent.id,
@@ -163,6 +217,7 @@ export async function GET(request: NextRequest, context: any) {
               model: task.modelName,
               price_in_cents: task.priceInCents,
               time_in_seconds: task.timeInSeconds,
+              log: task.log ? JSON.parse(task.log) : null,
             })),
           } : null,
         };
