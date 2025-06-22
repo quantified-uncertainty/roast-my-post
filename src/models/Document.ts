@@ -54,6 +54,7 @@ type DocumentWithRelations = {
     };
     versions: Array<{
       id: string;
+      version: number | null;
       createdAt: Date;
       summary: string | null;
       analysis: string | null;
@@ -199,6 +200,7 @@ export class DocumentModel {
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => ({
+          version: version.version,
           createdAt: new Date(version.createdAt),
           job: version.job
             ? {

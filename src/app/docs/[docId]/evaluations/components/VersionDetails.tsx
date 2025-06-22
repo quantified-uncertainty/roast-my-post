@@ -44,10 +44,13 @@ export function VersionDetails({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium text-gray-900">
-              Version {selectedVersion.documentVersion.version}
+              Evaluation Details
             </h3>
             <p className="text-sm text-gray-500">
               Document Version: {selectedVersion.documentVersion.version}
+              {selectedVersion.version && (
+                <> • Evaluation Version: {selectedVersion.version}</>
+              )}
             </p>
           </div>
           <div className="text-right text-sm text-gray-500">

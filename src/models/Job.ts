@@ -246,10 +246,22 @@ export class JobModel {
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
 
+      // Get the latest version number for this evaluation
+      const latestEvaluationVersion = await prisma.evaluationVersion.findFirst({
+        where: { evaluationId: job.evaluation.id },
+        orderBy: { version: "desc" },
+        select: { version: true },
+      });
+      
+      const nextVersion = latestEvaluationVersion?.version 
+        ? latestEvaluationVersion.version + 1 
+        : 1;
+
       // Create evaluation version
       const evaluationVersion = await prisma.evaluationVersion.create({
         data: {
           agentId: agent.id,
+          version: nextVersion,
           summary: evaluationOutputs.summary,
           analysis: evaluationOutputs.analysis,
           grade: evaluationOutputs.grade,

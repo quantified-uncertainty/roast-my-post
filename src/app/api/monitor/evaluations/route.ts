@@ -106,6 +106,7 @@ export async function GET() {
       agent: evaluation.agent,
       versions: evaluation.versions.map((version) => ({
         id: version.id,
+        version: version.version,
         summary: version.summary,
         analysis: version.analysis,
         grade: version.grade,

@@ -436,6 +436,7 @@ export class AgentModel {
           documentAuthor: evalVersion.evaluation.document.submittedBy.name || "Unknown",
           agentVersion: evalVersion.agentVersion?.version || evalVersion.agentVersionId,
           agentVersionName: evalVersion.agentVersion?.name,
+          evaluationVersion: evalVersion.version,
           summary: evalVersion.summary,
           analysis: evalVersion.analysis,
           grade: evalVersion.grade,

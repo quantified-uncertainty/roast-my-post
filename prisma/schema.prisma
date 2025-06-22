@@ -125,6 +125,7 @@ model Evaluation {
 
 model EvaluationVersion {
   id          String   @id @default(uuid())
+  version     Int      @default(1)
   agentId     String
   createdAt   DateTime @default(now())
   summary     String?
@@ -140,6 +141,7 @@ model EvaluationVersion {
   comments    EvaluationComment[]
   job        Job?
 
+  @@unique([evaluationId, version])
   @@index([evaluationId])
   @@index([agentVersionId])
   @@index([documentVersionId])

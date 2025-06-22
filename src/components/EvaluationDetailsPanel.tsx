@@ -11,6 +11,7 @@ interface EvaluationDetailsPanelProps {
     agentId: string;
     agentName: string;
     agentVersion?: string;
+    evaluationVersion?: number | null;
     grade?: number | null;
     jobStatus?: string;
     createdAt: string | Date;
@@ -38,6 +39,8 @@ interface EvaluationDetailsPanelProps {
         llmInteractions?: any;
       }>;
     } | null;
+    testBatchId?: string | null;
+    testBatchName?: string | null;
   };
   activeTab: EvaluationTab;
   setActiveTab: (tab: EvaluationTab) => void;
@@ -68,10 +71,17 @@ export function EvaluationDetailsPanel({
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
+          <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold text-gray-900">Evaluation Details</h2>
-            {evaluation.agentVersion && (
-              <p className="text-sm text-gray-500">{evaluation.agentVersion}</p>
+            {evaluation.evaluationVersion && (
+              <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-sm font-medium">
+                Eval v{evaluation.evaluationVersion}
+              </span>
+            )}
+            {evaluation.testBatchId && (
+              <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded text-sm font-medium">
+                Batch: {evaluation.testBatchName || evaluation.testBatchId.slice(0, 8)}
+              </span>
             )}
           </div>
           <div className="flex items-center space-x-3">
@@ -90,6 +100,9 @@ export function EvaluationDetailsPanel({
             )}
           </div>
         </div>
+        {evaluation.agentVersion && (
+          <p className="text-sm text-gray-500 mb-2">{evaluation.agentVersion}</p>
+        )}
 
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div>

@@ -5,6 +5,8 @@ import type {
 import {
   formatCost,
   formatDate,
+  formatDateWithTime,
+  formatRelativeDate,
 } from "../utils";
 
 interface BatchesTabProps {
@@ -46,112 +48,106 @@ export function BatchesTab({
             {batches.map((batch) => (
               <div
                 key={batch.id}
-                className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-900">
-                          {batch.name || `Test Batch #${batch.id.slice(0, 8)}`}
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Created {formatDate(batch.createdAt)} • Target:{" "}
-                          {batch.targetCount} evaluations
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {batch.isComplete ? (
-                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                            Complete
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                            {batch.progress}% Complete
-                          </span>
-                        )}
-                      </div>
+                {/* Header */}
+                <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-semibold text-gray-900">
+                        {batch.name || `test${batch.id.slice(0, 3)}`}
+                      </h4>
+                      <p className="mt-1 text-sm text-gray-600">
+                        Created{" "}
+                        <span title={formatDateWithTime(batch.createdAt)}>
+                          {formatRelativeDate(batch.createdAt)}
+                        </span>{" "}
+                        • Target: {batch.targetCount} evaluations
+                      </p>
                     </div>
-
-                    <div className="mb-3 grid grid-cols-2 gap-4 md:grid-cols-4">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-green-600">
-                          {batch.completedCount}
-                        </div>
-                        <div className="text-xs text-gray-500">Completed</div>
-                      </div>
-                      {batch.runningCount > 0 && (
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-blue-600">
-                            {batch.runningCount}
-                          </div>
-                          <div className="text-xs text-gray-500">Running</div>
-                        </div>
+                    <div>
+                      {batch.isComplete ? (
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                          Complete
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                          In Progress
+                        </span>
                       )}
-                      {batch.failedCount > 0 && (
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-red-600">
-                            {batch.failedCount}
-                          </div>
-                          <div className="text-xs text-gray-500">Failed</div>
-                        </div>
-                      )}
-                      {batch.pendingCount > 0 && (
-                        <div className="text-center">
-                          <div className="text-lg font-semibold text-yellow-600">
-                            {batch.pendingCount}
-                          </div>
-                          <div className="text-xs text-gray-500">Pending</div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        {batch.totalCost > 0 && (
-                          <span>Cost: {formatCost(batch.totalCost)}</span>
-                        )}
-                        {batch.avgDuration > 0 && (
-                          <span>
-                            Avg Duration: {Math.floor(batch.avgDuration / 60)}m{" "}
-                            {batch.avgDuration % 60}s
-                          </span>
-                        )}
-                        {batch.avgGrade !== null && (
-                          <span>Avg Grade: {batch.avgGrade.toFixed(1)}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            setActiveTab("jobs");
-                            setSelectedBatchFilter(batch.id);
-                          }}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          View Jobs →
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveTab("evals");
-                            setEvalsBatchFilter(batch.id);
-                          }}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          View Evals →
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveTab("export");
-                            setExportBatchFilter(batch.id);
-                          }}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          Export →
-                        </button>
-                      </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Stats */}
+                <div className="px-6 py-4">
+                  <div className="mb-4 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">
+                        {batch.completedCount}
+                      </div>
+                      <div className="text-sm text-gray-500">Completed</div>
+                    </div>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="space-y-2 text-sm">
+                    {batch.avgDuration > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Avg Duration:</span>
+                        <span className="font-medium text-gray-900">
+                          {Math.floor(batch.avgDuration / 60)}m {batch.avgDuration % 60}s
+                        </span>
+                      </div>
+                    )}
+                    {batch.avgGrade !== null && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Avg Grade:</span>
+                        <span className="font-medium text-gray-900">
+                          {batch.avgGrade.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                    {batch.totalCost > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Total Cost:</span>
+                        <span className="font-medium text-gray-900">
+                          {formatCost(batch.totalCost)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setActiveTab("jobs");
+                      setSelectedBatchFilter(batch.id);
+                    }}
+                    className="flex-1 px-4 py-3 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                  >
+                    View Jobs →
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("evals");
+                      setEvalsBatchFilter(batch.id);
+                    }}
+                    className="flex-1 border-l border-gray-100 px-4 py-3 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                  >
+                    View Evals →
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("export");
+                      setExportBatchFilter(batch.id);
+                    }}
+                    className="flex-1 border-l border-gray-100 px-4 py-3 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                  >
+                    Export →
+                  </button>
                 </div>
               </div>
             ))}

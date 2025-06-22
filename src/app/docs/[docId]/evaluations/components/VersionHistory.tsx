@@ -147,11 +147,20 @@ export function VersionHistory({
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="font-medium text-gray-800">
-                          Version{" "}
-                          {selectedReview.versions?.length
-                            ? selectedReview.versions.length - index
-                            : 0}
-                          {index === 0 && " (Latest)"}
+                          {version.version ? (
+                            <>
+                              Version {version.version}
+                              {index === 0 && " (Latest)"}
+                            </>
+                          ) : (
+                            <>
+                              Version{" "}
+                              {selectedReview.versions?.length
+                                ? selectedReview.versions.length - index
+                                : 0}
+                              {index === 0 && " (Latest)"}
+                            </>
+                          )}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(version.createdAt)}

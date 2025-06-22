@@ -40,6 +40,7 @@ export type Task = z.infer<typeof TaskSchema>;
 
 // Schema for evaluation version
 export const EvaluationVersionSchema = z.object({
+  version: z.number().nullable().optional(),
   createdAt: z.date(),
   job: z
     .object({

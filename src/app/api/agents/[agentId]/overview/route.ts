@@ -40,13 +40,26 @@ export async function GET(
       _count: { grade: true },
     });
 
-    // Get total cost
+    // Get total cost and average cost
     const costsResult = await prisma.job.aggregate({
       where: {
         evaluation: { agentId: agentId },
         costInCents: { not: null },
       },
       _sum: { costInCents: true },
+      _avg: { costInCents: true },
+      _count: { costInCents: true },
+    });
+
+    // Get average time
+    const timeResult = await prisma.job.aggregate({
+      where: {
+        evaluation: { agentId: agentId },
+        durationInSeconds: { not: null },
+        status: 'COMPLETED',
+      },
+      _avg: { durationInSeconds: true },
+      _count: { durationInSeconds: true },
     });
 
     // Get success rate
@@ -107,6 +120,8 @@ export async function GET(
       totalEvaluations,
       averageGrade: gradesResult._avg.grade,
       totalCost: costsResult._sum.costInCents || 0,
+      averageCost: costsResult._avg.costInCents || 0,
+      averageTime: timeResult._avg.durationInSeconds || 0,
       successRate,
       uniqueDocuments: uniqueDocuments.length,
       activeJobs,

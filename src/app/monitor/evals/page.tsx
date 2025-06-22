@@ -29,6 +29,7 @@ interface Evaluation {
   };
   versions: Array<{
     id: string;
+    version: number | null;
     summary: string;
     analysis: string;
     grade: number;
@@ -212,6 +213,11 @@ export default function EvaluationsMonitorPage() {
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>{latestVersion ? formatDate(latestVersion.createdAt) : formatDate(evaluation.createdAt)}</span>
                     <div className="flex space-x-2">
+                      {latestVersion && latestVersion.version && (
+                        <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          v{latestVersion.version}
+                        </span>
+                      )}
                       {latestVersion && (
                         <span>{latestVersion.comments.length} comments</span>
                       )}

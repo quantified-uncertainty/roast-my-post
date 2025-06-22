@@ -29,6 +29,7 @@ export interface AgentEvaluation {
   documentAuthor: string;
   agentVersion: number;
   agentVersionName?: string;
+  evaluationVersion?: number | null;
   summary?: string;
   analysis?: string;
   grade?: number | null;
@@ -104,6 +105,8 @@ export interface OverviewStats {
   totalEvaluations: number;
   averageGrade: number | null;
   totalCost: number;
+  averageCost: number;
+  averageTime: number;
   successRate: number;
   uniqueDocuments: number;
   activeJobs: number;

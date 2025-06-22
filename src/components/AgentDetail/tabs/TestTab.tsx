@@ -136,6 +136,7 @@ export function TestTab({
               className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Select number of tests...</option>
+              <option value="1">1 evaluation (Sanity check)</option>
               <option value="5">5 evaluations (Quick test)</option>
               <option value="10">10 evaluations (Standard test)</option>
               <option value="20">20 evaluations (Comprehensive test)</option>

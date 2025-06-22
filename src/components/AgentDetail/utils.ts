@@ -2,11 +2,20 @@ import * as yaml from "js-yaml";
 
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
+import { formatRelativeTime, formatDateTime } from "@/utils/dateUtils";
 
 import type { ExportType } from "./types";
 
 export const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString();
+};
+
+export const formatDateWithTime = (dateString: string) => {
+  return formatDateTime(dateString);
+};
+
+export const formatRelativeDate = (dateString: string) => {
+  return formatRelativeTime(dateString);
 };
 
 export const getStatusBadgeClass = (status?: string) => {

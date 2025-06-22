@@ -5,6 +5,7 @@ import {
 
 import type { Agent } from "@/types/agentSchema";
 import type { AgentReview } from "@/types/evaluationSchema";
+import type { EvaluationTab } from "@/components/EvaluationDetails";
 
 import type {
   ActiveTab,

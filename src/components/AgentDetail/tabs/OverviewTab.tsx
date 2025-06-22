@@ -4,7 +4,7 @@ import type { Agent } from "@/types/agentSchema";
 
 import { StatusBadge } from "../components";
 import type { OverviewStats } from "../types";
-import { formatDate } from "../utils";
+import { formatDate, formatDateWithTime, formatRelativeDate } from "../utils";
 
 interface OverviewTabProps {
   agent: Agent;
@@ -62,6 +62,24 @@ export function OverviewTab({
                 ${(overviewStats.totalCost / 100).toFixed(2)}
               </div>
               <div className="text-sm text-gray-500">Total Cost</div>
+            </div>
+
+            {/* Average Cost */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="text-2xl font-bold text-gray-900">
+                ${(overviewStats.averageCost / 100).toFixed(3)}
+              </div>
+              <div className="text-sm text-gray-500">Average Cost</div>
+            </div>
+
+            {/* Average Time */}
+            <div className="rounded-lg bg-white p-6 shadow">
+              <div className="text-2xl font-bold text-gray-900">
+                {overviewStats.averageTime > 0 
+                  ? `${Math.round(overviewStats.averageTime)}s`
+                  : "—"}
+              </div>
+              <div className="text-sm text-gray-500">Average Time</div>
             </div>
 
             {/* Success Rate */}
@@ -131,20 +149,18 @@ export function OverviewTab({
                             </Link>
                           </div>
                           <div className="text-sm text-gray-500">
-                            {formatDate(evaluation.createdAt)}
+                            <span title={formatDateWithTime(evaluation.createdAt)}>
+                              {formatRelativeDate(evaluation.createdAt)}
+                            </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          {evaluation.grade !== null &&
-                          evaluation.grade !== undefined &&
-                          agent.gradeInstructions ? (
+                          {agent.gradeInstructions && 
+                           evaluation.grade !== null &&
+                           evaluation.grade !== undefined && (
                             <div className="text-lg font-semibold text-gray-900">
                               {evaluation.grade}/100
                             </div>
-                          ) : (
-                            <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                              No Grade
-                            </span>
                           )}
                           <StatusBadge status={evaluation.status} />
                         </div>
