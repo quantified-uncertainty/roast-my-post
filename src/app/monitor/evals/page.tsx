@@ -2,21 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
 import { 
   CheckCircleIcon, 
   XCircleIcon, 
   ClockIcon, 
-  PlayIcon,
-  DocumentTextIcon,
-  ChatBubbleLeftIcon,
-  LightBulbIcon,
-  ListBulletIcon
+  PlayIcon
 } from "@heroicons/react/24/outline";
 import { GradeBadge } from "@/components/GradeBadge";
-import { TaskLogs } from "@/app/docs/[docId]/evaluations/components/TaskLogs";
+import { EvaluationDetailsPanel } from "@/components/EvaluationDetailsPanel";
+import type { EvaluationTab } from "@/components/EvaluationDetails";
 
 interface Evaluation {
   id: string;
@@ -112,7 +106,7 @@ const formatCost = (costInCents?: number) => {
 export default function EvaluationsMonitorPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [activeTab, setActiveTab] = useState<"analysis" | "comments" | "summary" | "selfCritique" | "logs">("analysis");
+  const [activeTab, setActiveTab] = useState<EvaluationTab>("analysis");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -235,184 +229,27 @@ export default function EvaluationsMonitorPage() {
         {/* Evaluation Details */}
         <div className="col-span-8">
           {selectedEvaluation && selectedVersion ? (
-            <div className="bg-white shadow rounded-lg">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">Evaluation Details</h2>
-                    <p className="text-sm text-gray-500">
-                      {selectedVersion.agentVersion.name} v{selectedVersion.agentVersion.version}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {selectedVersion.grade !== null ? (
-                      <GradeBadge grade={selectedVersion.grade} />
-                    ) : (
-                      <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded">
-                        No Grade Assigned
-                      </span>
-                    )}
-                    {selectedJob && (
-                      <div className="flex items-center space-x-1">
-                        {getStatusIcon(selectedJob.status)}
-                        <span className="text-sm text-gray-600">{selectedJob.status}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <dt className="font-medium text-gray-900">Document</dt>
-                    <dd className="space-y-1">
-                      <div className="text-blue-600 hover:text-blue-800">
-                        <Link href={`/docs/${selectedEvaluation.document.id}`}>
-                          {selectedEvaluation.document.versions[0]?.title || 'Unknown Document'}
-                        </Link>
-                      </div>
-                      <div className="text-xs text-blue-600 hover:text-blue-800">
-                        <Link href={`/docs/${selectedEvaluation.document.id}/evaluations`}>
-                          View All Evaluations →
-                        </Link>
-                      </div>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-gray-900">Agent</dt>
-                    <dd className="text-blue-600 hover:text-blue-800">
-                      <Link href={`/agents/${selectedEvaluation.agent.id}`}>
-                        {selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent'}
-                      </Link>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-gray-900">Created</dt>
-                    <dd className="text-gray-600">{formatDate(selectedVersion.createdAt)}</dd>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8 px-6">
-                  {[
-                    { id: "analysis", label: "Analysis", icon: DocumentTextIcon },
-                    { id: "summary", label: "Summary", icon: ListBulletIcon },
-                    { id: "comments", label: `Comments (${selectedVersion.comments.length})`, icon: ChatBubbleLeftIcon },
-                    { id: "selfCritique", label: "Self-Critique", icon: LightBulbIcon },
-                    { id: "logs", label: "Logs", icon: ListBulletIcon },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                      className={`group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      <tab.icon
-                        className={`-ml-0.5 mr-2 h-5 w-5 ${
-                          activeTab === tab.id
-                            ? "text-blue-500"
-                            : "text-gray-400 group-hover:text-gray-500"
-                        }`}
-                      />
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-6 max-h-[calc(100vh-400px)] overflow-y-auto">
-                {activeTab === "analysis" && (
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                      {selectedVersion.analysis}
-                    </ReactMarkdown>
-                  </div>
-                )}
-
-                {activeTab === "summary" && (
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                      {selectedVersion.summary}
-                    </ReactMarkdown>
-                  </div>
-                )}
-
-                {activeTab === "comments" && (
-                  <div className="space-y-4">
-                    {selectedVersion.comments.length === 0 ? (
-                      <div className="text-center text-gray-500 py-8">
-                        No comments for this evaluation
-                      </div>
-                    ) : (
-                      selectedVersion.comments.map((comment) => (
-                        <div key={comment.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-medium text-gray-900">{comment.title}</h4>
-                            <div className="flex items-center space-x-2">
-                              {comment.grade && <GradeBadge grade={comment.grade} />}
-                              {comment.importance && (
-                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                  Importance: {comment.importance}/10
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="prose prose-sm text-gray-700">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                              {comment.description}
-                            </ReactMarkdown>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "selfCritique" && (
-                  <div className="prose prose-sm max-w-none">
-                    {selectedVersion.selfCritique ? (
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                        {selectedVersion.selfCritique}
-                      </ReactMarkdown>
-                    ) : (
-                      <div className="text-center text-gray-500 py-8">
-                        No self-critique available for this evaluation
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "logs" && (
-                  <div>
-                    {selectedVersion.job ? (
-                      <TaskLogs
-                        selectedVersion={{
-                          createdAt: new Date(selectedVersion.createdAt),
-                          comments: selectedVersion.comments,
-                          summary: selectedVersion.summary,
-                          documentVersion: { version: 0 },
-                          job: {
-                            tasks: selectedVersion.job.tasks,
-                            costInCents: selectedVersion.job.costInCents || 0,
-                            llmThinking: selectedVersion.job.llmThinking || "",
-                          },
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center text-gray-500 py-8">
-                        No logs available for this evaluation
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <EvaluationDetailsPanel
+              evaluation={{
+                id: selectedEvaluation.id,
+                documentId: selectedEvaluation.document.id,
+                documentTitle: selectedEvaluation.document.versions[0]?.title || 'Unknown Document',
+                agentId: selectedEvaluation.agent.id,
+                agentName: selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent',
+                agentVersion: `${selectedVersion.agentVersion.name} v${selectedVersion.agentVersion.version}`,
+                grade: selectedVersion.grade,
+                jobStatus: selectedJob?.status,
+                createdAt: selectedVersion.createdAt,
+                summary: selectedVersion.summary,
+                analysis: selectedVersion.analysis,
+                selfCritique: selectedVersion.selfCritique,
+                comments: selectedVersion.comments,
+                job: selectedVersion.job,
+              }}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              statusIcon={selectedJob && getStatusIcon(selectedJob.status)}
+            />
           ) : (
             <div className="bg-white shadow rounded-lg p-6 text-center">
               <div className="text-gray-500">Select an evaluation to view details</div>

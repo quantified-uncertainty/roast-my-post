@@ -128,10 +128,4 @@ export type ActiveTab =
   | "test"
   | "batches"
   | "export";
-export type EvalDetailsTab =
-  | "summary"
-  | "analysis"
-  | "comments"
-  | "selfCritique"
-  | "logs";
 export type ExportType = "JSON" | "Markdown" | "YAML";

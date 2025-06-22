@@ -11,7 +11,6 @@ import type {
   AgentDocument,
   AgentEvaluation,
   BatchSummary,
-  EvalDetailsTab,
   ExportType,
   Job,
   OverviewStats,
@@ -25,7 +24,7 @@ export function useAgentDetail(agent: Agent) {
   const [selectedEvaluation, setSelectedEvaluation] =
     useState<AgentEvaluation | null>(null);
   const [evalDetailsTab, setEvalDetailsTab] =
-    useState<EvalDetailsTab>("summary");
+    useState<EvaluationTab>("analysis");
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [evalsLoading, setEvalsLoading] = useState(false);
