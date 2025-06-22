@@ -2,6 +2,8 @@
 
 This directory contains scripts and documentation specifically for Claude Code to analyze and improve the Open Annotate system.
 
+**Essential Reading**: Always refer to `/src/app/agents/readme/agent-schema-documentation.md` for the authoritative guide on agent configuration and requirements.
+
 ## Quick Status
 
 For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-evaluation-analysis.md`

@@ -15,6 +15,8 @@ Creating an effective agent requires substantial detail and examples. While you 
 
 Most high-performing agents use only these four fields, but pack extensive detail into the instructions. Additional fields should only be added when output types need fundamentally different approaches.
 
+**Important Note**: The `gradeInstructions` field is OPTIONAL. Without it, agents won't provide numerical grades - this is by design. Only add grading if you specifically want scoring functionality.
+
 ### Realistic Agent Example (Abbreviated):
 
 ````yaml
@@ -316,8 +318,10 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 
 #### `gradeInstructions`
 
-- **Type**: string
+- **Type**: string (optional)
 - **Purpose**: How to assign numerical grades (0-100 scale)
+- **Important**: This field is OPTIONAL. Agents without `gradeInstructions` will not provide grades - this is intentional, not a bug. Most agents don't need to grade documents.
+- **When to Use**: Only add this field if you want the agent to provide numerical scores
 - **Recommended Structure**:
   ```xml
   <grading_criteria>
