@@ -16,7 +16,14 @@ import {
   Upload,
   BarChart3,
   FileDown,
+  Play,
 } from "lucide-react";
+import { 
+  CheckCircleIcon, 
+  XCircleIcon, 
+  ClockIcon, 
+  PlayIcon 
+} from "@heroicons/react/24/outline";
 import * as yaml from 'js-yaml';
 import Link from "next/link";
 
@@ -24,6 +31,7 @@ import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import type { AgentReview } from "@/types/evaluationSchema";
+import { JobDetails } from "@/app/docs/[docId]/evaluations/components/JobDetails";
 
 interface AgentDetailProps {
   agent: Agent;
@@ -65,11 +73,27 @@ interface AgentEvaluation {
   costInCents?: number;
 }
 
+interface BatchSummary {
+  id: string;
+  name: string | null;
+  targetCount: number;
+  createdAt: string;
+  progress: number;
+  completedCount: number;
+  runningCount: number;
+  failedCount: number;
+  pendingCount: number;
+  totalCost: number;
+  avgDuration: number;
+  avgGrade: number | null;
+  isComplete: boolean;
+}
+
 export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals" | "export">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals" | "jobs" | "test" | "batches" | "export">("details");
   const [review, setReview] = useState<AgentReview | null>(null);
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [evaluations, setEvaluations] = useState<AgentEvaluation[]>([]);
@@ -80,6 +104,14 @@ export default function AgentDetail({
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [exportType, setExportType] = useState<'JSON' | 'Markdown' | 'YAML'>('JSON');
+  const [testLoading, setTestLoading] = useState(false);
+  const [testSuccess, setTestSuccess] = useState<string | null>(null);
+  const [batches, setBatches] = useState<BatchSummary[]>([]);
+  const [batchesLoading, setBatchesLoading] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [selectedBatchFilter, setSelectedBatchFilter] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -137,13 +169,52 @@ export default function AgentDetail({
     }
   };
 
+  const fetchBatches = async () => {
+    if (batches.length > 0) return; // Already loaded
+    
+    setBatchesLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/batches`);
+      const data = await response.json();
+      if (data.batches) {
+        setBatches(data.batches);
+      }
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+    } finally {
+      setBatchesLoading(false);
+    }
+  };
+
+  const fetchJobs = async (batchId?: string) => {
+    setJobsLoading(true);
+    try {
+      const url = batchId 
+        ? `/api/agents/${agent.id}/jobs?batchId=${batchId}`
+        : `/api/agents/${agent.id}/jobs`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.jobs) {
+        setJobs(data.jobs);
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "documents") {
       fetchDocuments();
     } else if (activeTab === "evals") {
       fetchEvaluations();
+    } else if (activeTab === "jobs") {
+      fetchJobs(selectedBatchFilter || undefined);
+    } else if (activeTab === "batches") {
+      fetchBatches();
     }
-  }, [activeTab]);
+  }, [activeTab, selectedBatchFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -178,6 +249,33 @@ export default function AgentDetail({
         {status}
       </span>
     );
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
+      case "FAILED":
+        return <XCircleIcon className="h-5 w-5 text-red-600" />;
+      case "RUNNING":
+        return <PlayIcon className="h-5 w-5 text-blue-600 animate-pulse" />;
+      case "PENDING":
+        return <ClockIcon className="h-5 w-5 text-yellow-600" />;
+      default:
+        return <ClockIcon className="h-5 w-5 text-gray-600" />;
+    }
+  };
+
+  const formatDuration = (durationInSeconds?: number | null) => {
+    if (!durationInSeconds) return "—";
+    const minutes = Math.floor(durationInSeconds / 60);
+    const seconds = durationInSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const formatCost = (costInCents?: number | null) => {
+    if (!costInCents) return "—";
+    return `$${(costInCents / 100).toFixed(3)}`;
   };
 
   const exportAgentAsJson = async () => {
@@ -354,7 +452,7 @@ ${agent.selfCritiqueInstructions}`;
 
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
+    <div className={activeTab === "jobs" ? "w-full px-4 sm:px-6 lg:px-8 py-8" : "mx-auto max-w-6xl p-8"}>
       {/* Success Notification */}
       {copySuccess && (
         <div className="fixed top-4 right-4 rounded-md bg-green-50 p-4 shadow-lg z-50">
@@ -493,6 +591,46 @@ ${agent.selfCritiqueInstructions}`;
             <BarChart3 className="mr-2 h-5 w-5" />
             Evals
           </button>
+          <button
+            onClick={() => {
+              setActiveTab("jobs");
+              setSelectedBatchFilter(null); // Clear any batch filter when switching to jobs tab
+            }}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "jobs"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <Clock className="mr-2 h-5 w-5" />
+            Jobs
+          </button>
+          {isOwner && (
+            <>
+              <button
+                onClick={() => setActiveTab("test")}
+                className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+                  activeTab === "test"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+              >
+                <Play className="mr-2 h-5 w-5" />
+                Test
+              </button>
+              <button
+                onClick={() => setActiveTab("batches")}
+                className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+                  activeTab === "batches"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                }`}
+              >
+                <BarChart3 className="mr-2 h-5 w-5" />
+                Batch Tests
+              </button>
+            </>
+          )}
           <button
             onClick={() => setActiveTab("export")}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
@@ -771,6 +909,421 @@ ${agent.selfCritiqueInstructions}`;
                           >
                             View Details →
                           </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "jobs" && (
+          <div className="w-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Agent Jobs {selectedBatchFilter ? `(Batch: ${batches.find(b => b.id === selectedBatchFilter)?.name || selectedBatchFilter.slice(0, 8)})` : ''}
+              </h3>
+              <div className="flex items-center gap-4">
+                {selectedBatchFilter && (
+                  <button
+                    onClick={() => setSelectedBatchFilter(null)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Clear batch filter
+                  </button>
+                )}
+                <div className="text-sm text-gray-500">
+                  {jobs.length} jobs shown
+                </div>
+              </div>
+            </div>
+            
+            {jobsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg text-gray-600">Loading jobs...</div>
+              </div>
+            ) : jobs.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg text-gray-600">
+                  {selectedBatchFilter ? 'No jobs found for this batch.' : 'No jobs found for this agent.'}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-12 gap-6">
+                {/* Job List */}
+                <div className="col-span-4 bg-white shadow rounded-lg">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-lg font-medium text-gray-900">Recent Jobs</h2>
+                  </div>
+                  <div className="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
+                    {jobs.map((job) => (
+                      <div
+                        key={job.id}
+                        onClick={() => setSelectedJob(job)}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedJob?.id === job.id ? "bg-blue-50 border-r-4 border-blue-500" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(job.status)}
+                            <span className="font-mono text-sm text-gray-900">
+                              {job.id.slice(0, 8)}...
+                            </span>
+                          </div>
+                          {getStatusBadge(job.status)}
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 mb-1">
+                          <div className="font-medium">{job.document.title}</div>
+                          <div className="text-xs">Agent: {job.agent.name}</div>
+                          {job.batch && (
+                            <div className="text-xs text-blue-600">
+                              Batch: {job.batch.name || `#${job.batch.id.slice(0, 8)}`}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{formatDate(job.createdAt)}</span>
+                          <div className="flex space-x-3">
+                            <span>{formatDuration(job.durationInSeconds)}</span>
+                            <span>{formatCost(job.costInCents)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Job Details */}
+                <div className="col-span-8">
+                  {selectedJob ? (
+                    <div className="space-y-4">
+                      {/* Header */}
+                      <div className="bg-white shadow rounded-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-xl font-bold text-gray-900">Job Details</h2>
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(selectedJob.status)}
+                            {getStatusBadge(selectedJob.status)}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <dt className="font-medium text-gray-900">Job ID</dt>
+                            <dd className="font-mono text-gray-600">{selectedJob.id}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-medium text-gray-900">Document</dt>
+                            <dd className="space-y-1">
+                              <div className="text-blue-600 hover:text-blue-800">
+                                <Link href={`/docs/${selectedJob.document.id}`}>
+                                  {selectedJob.document.title}
+                                </Link>
+                              </div>
+                              <div className="text-xs text-blue-600 hover:text-blue-800">
+                                <Link href={`/docs/${selectedJob.document.id}/evaluations`}>
+                                  View Evaluations →
+                                </Link>
+                              </div>
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="font-medium text-gray-900">Agent</dt>
+                            <dd className="text-blue-600 hover:text-blue-800">
+                              <Link href={`/agents/${selectedJob.agent.id}`}>
+                                {selectedJob.agent.name}
+                              </Link>
+                            </dd>
+                          </div>
+                          {selectedJob.batch && (
+                            <div>
+                              <dt className="font-medium text-gray-900">Batch</dt>
+                              <dd>
+                                <button
+                                  onClick={() => {
+                                    setSelectedBatchFilter(selectedJob.batch.id);
+                                    fetchJobs(selectedJob.batch.id);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  {selectedJob.batch.name || `Batch #${selectedJob.batch.id.slice(0, 8)}`}
+                                </button>
+                              </dd>
+                            </div>
+                          )}
+                          <div>
+                            <dt className="font-medium text-gray-900">Created</dt>
+                            <dd className="text-gray-600">{formatDate(selectedJob.createdAt)}</dd>
+                          </div>
+                          {selectedJob.completedAt && (
+                            <div>
+                              <dt className="font-medium text-gray-900">Completed</dt>
+                              <dd className="text-gray-600">{formatDate(selectedJob.completedAt)}</dd>
+                            </div>
+                          )}
+                          {selectedJob.durationInSeconds && (
+                            <div>
+                              <dt className="font-medium text-gray-900">Duration</dt>
+                              <dd className="text-gray-600">{formatDuration(selectedJob.durationInSeconds)}</dd>
+                            </div>
+                          )}
+                          {selectedJob.costInCents && (
+                            <div>
+                              <dt className="font-medium text-gray-900">Cost</dt>
+                              <dd className="text-gray-600">{formatCost(selectedJob.costInCents)}</dd>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {selectedJob.error && (
+                          <div className="mt-4 p-4 bg-red-50 rounded-lg">
+                            <h3 className="text-sm font-medium text-red-800 mb-2">Error</h3>
+                            <p className="text-sm text-red-700 whitespace-pre-wrap">{selectedJob.error}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Job Details Component */}
+                      <JobDetails job={selectedJob} />
+                    </div>
+                  ) : (
+                    <div className="bg-white shadow rounded-lg p-6">
+                      <div className="text-center text-gray-500">
+                        Select a job from the list to view details
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "test" && isOwner && (
+          <div className="space-y-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Test Agent Performance
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Run evaluation tests to benchmark your agent's performance. This will create new evaluations 
+                on documents that have been previously evaluated by this agent.
+              </p>
+              
+              {testSuccess && (
+                <div className="mb-6 rounded-md bg-green-50 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-green-800">{testSuccess}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setTestLoading(true);
+                  setTestSuccess(null);
+                  
+                  try {
+                    const formData = new FormData(e.currentTarget);
+                    const targetCount = parseInt(formData.get('targetCount') as string, 10);
+                    const name = formData.get('name') as string;
+                    
+                    const response = await fetch(`/api/agents/${agent.id}/eval-batch`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        name: name || undefined,
+                        targetCount,
+                      }),
+                    });
+                    
+                    if (!response.ok) {
+                      const error = await response.json();
+                      throw new Error(error.error || 'Failed to create test batch');
+                    }
+                    
+                    const result = await response.json();
+                    setTestSuccess(`${result.message} Switch to the Jobs tab to monitor progress.`);
+                    
+                    // Reset form
+                    (e.target as HTMLFormElement).reset();
+                    
+                    // Refresh batches list if we're on that tab
+                    if (activeTab === "batches") {
+                      setBatches([]);
+                      fetchBatches();
+                    }
+                    
+                  } catch (error) {
+                    console.error('Test creation failed:', error);
+                    setTestSuccess(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                  } finally {
+                    setTestLoading(false);
+                  }
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Test Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="e.g., Agent v2.1 benchmark"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional name to identify this test run
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="targetCount" className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Evaluations
+                  </label>
+                  <select
+                    id="targetCount"
+                    name="targetCount"
+                    required
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">Select number of tests...</option>
+                    <option value="5">5 evaluations (Quick test)</option>
+                    <option value="10">10 evaluations (Standard test)</option>
+                    <option value="20">20 evaluations (Comprehensive test)</option>
+                    <option value="50">50 evaluations (Extensive benchmark)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Documents will be randomly selected from those previously evaluated by this agent
+                  </p>
+                </div>
+                
+                <div className="rounded-md bg-blue-50 p-4">
+                  <h4 className="text-sm font-medium text-blue-900 mb-2">What happens next:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Jobs will be queued for parallel processing</li>
+                    <li>• You can monitor progress in the system monitor</li>
+                    <li>• Results will appear in the evaluations list</li>
+                    <li>• Costs will be tracked and reported</li>
+                  </ul>
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <Button type="submit" disabled={testLoading} className="flex items-center gap-2">
+                    <Play className="h-4 w-4" />
+                    {testLoading ? 'Creating Tests...' : 'Start Test Run'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "batches" && isOwner && (
+          <div className="space-y-6">
+            {batchesLoading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">Loading batch tests...</div>
+              </div>
+            ) : batches.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">No test batches created yet.</div>
+                <p className="text-sm text-gray-400 mt-2">Use the Test tab to create your first batch test.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Recent Test Batches ({batches.length})
+                </h3>
+                <div className="grid gap-4">
+                  {batches.map((batch) => (
+                    <div
+                      key={batch.id}
+                      className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="text-lg font-medium text-gray-900">
+                                {batch.name || `Test Batch #${batch.id.slice(0, 8)}`}
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                Created {formatDate(batch.createdAt)} • Target: {batch.targetCount} evaluations
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {batch.isComplete ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Complete
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  {batch.progress}% Complete
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                            <div className="text-center">
+                              <div className="text-lg font-semibold text-green-600">{batch.completedCount}</div>
+                              <div className="text-xs text-gray-500">Completed</div>
+                            </div>
+                            {batch.runningCount > 0 && (
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-blue-600">{batch.runningCount}</div>
+                                <div className="text-xs text-gray-500">Running</div>
+                              </div>
+                            )}
+                            {batch.failedCount > 0 && (
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-red-600">{batch.failedCount}</div>
+                                <div className="text-xs text-gray-500">Failed</div>
+                              </div>
+                            )}
+                            {batch.pendingCount > 0 && (
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-yellow-600">{batch.pendingCount}</div>
+                                <div className="text-xs text-gray-500">Pending</div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              {batch.totalCost > 0 && (
+                                <span>Cost: ${(batch.totalCost / 100).toFixed(3)}</span>
+                              )}
+                              {batch.avgDuration > 0 && (
+                                <span>Avg Duration: {Math.floor(batch.avgDuration / 60)}m {batch.avgDuration % 60}s</span>
+                              )}
+                              {batch.avgGrade !== null && (
+                                <span>Avg Grade: {batch.avgGrade.toFixed(1)}</span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setActiveTab("jobs");
+                                setSelectedBatchFilter(batch.id);
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              View Jobs →
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
