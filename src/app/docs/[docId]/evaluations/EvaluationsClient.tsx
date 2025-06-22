@@ -47,7 +47,7 @@ export default function EvaluationsClient({
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [middleTab, setMiddleTab] = useState<"versions" | "jobs">("versions");
   const [activeTab, setActiveTab] = useState<
-    "analysis" | "comments" | "thinking" | "logs"
+    "analysis" | "comments" | "thinking" | "selfCritique" | "logs"
   >("analysis");
 
   // Fetch all agents and combine with evaluations

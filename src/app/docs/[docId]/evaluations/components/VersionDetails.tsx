@@ -9,6 +9,7 @@ import {
   DocumentTextIcon,
   LightBulbIcon,
   ListBulletIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
 import { TaskLogs } from "./TaskLogs";
@@ -16,8 +17,8 @@ import { TaskLogs } from "./TaskLogs";
 interface VersionDetailsProps {
   selectedVersion: NonNullable<Evaluation["versions"]>[number] | null;
   selectedReview: Evaluation | null;
-  activeTab: "analysis" | "comments" | "thinking" | "logs";
-  onTabChange: (tab: "analysis" | "comments" | "thinking" | "logs") => void;
+  activeTab: "analysis" | "comments" | "thinking" | "selfCritique" | "logs";
+  onTabChange: (tab: "analysis" | "comments" | "thinking" | "selfCritique" | "logs") => void;
   formatDate: (date: Date) => string;
 }
 
@@ -102,6 +103,19 @@ export function VersionDetails({
             <LightBulbIcon className="mr-2 h-5 w-5" />
             Thinking
           </button>
+          {selectedVersion.selfCritique && (
+            <button
+              onClick={() => onTabChange("selfCritique")}
+              className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+                activeTab === "selfCritique"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+              }`}
+            >
+              <CheckCircleIcon className="mr-2 h-5 w-5" />
+              Self-Critique
+            </button>
+          )}
           <button
             onClick={() => onTabChange("logs")}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
@@ -207,6 +221,25 @@ export function VersionDetails({
                 >
                   {selectedVersion.job?.llmThinking?.trim() ||
                     "_No thinking process available for this version._"}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "selfCritique" && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900">
+                Self-Critique
+              </h2>
+              <div className="prose max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {selectedVersion.selfCritique?.trim() ||
+                    "_No self-critique available for this version._"}
                 </ReactMarkdown>
               </div>
             </div>
