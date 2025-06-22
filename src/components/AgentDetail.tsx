@@ -93,7 +93,7 @@ export default function AgentDetail({
   agent,
   isOwner = false,
 }: AgentDetailProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "documents" | "evals" | "jobs" | "test" | "batches" | "export">("details");
+  const [activeTab, setActiveTab] = useState<"overview" | "details" | "documents" | "evals" | "jobs" | "test" | "batches" | "export">("overview");
   const [review, setReview] = useState<AgentReview | null>(null);
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [evaluations, setEvaluations] = useState<AgentEvaluation[]>([]);
@@ -114,6 +114,8 @@ export default function AgentDetail({
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [evalsBatchFilter, setEvalsBatchFilter] = useState<string | null>(null);
   const [exportBatchFilter, setExportBatchFilter] = useState<string | null>(null);
+  const [overviewStats, setOverviewStats] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -207,8 +209,27 @@ export default function AgentDetail({
     }
   };
 
+  const fetchOverviewStats = async () => {
+    if (overviewStats) return; // Already loaded
+    
+    setOverviewLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agent.id}/overview`);
+      const data = await response.json();
+      if (data.stats) {
+        setOverviewStats(data.stats);
+      }
+    } catch (error) {
+      console.error("Error fetching overview stats:", error);
+    } finally {
+      setOverviewLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (activeTab === "documents") {
+    if (activeTab === "overview") {
+      fetchOverviewStats();
+    } else if (activeTab === "documents") {
       fetchDocuments();
     } else if (activeTab === "evals") {
       fetchEvaluations(evalsBatchFilter || undefined);
@@ -562,6 +583,17 @@ ${agent.selfCritiqueInstructions}`;
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <button
+            onClick={() => setActiveTab("overview")}
+            className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
+              activeTab === "overview"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            <User className="mr-2 h-5 w-5" />
+            Overview
+          </button>
+          <button
             onClick={() => setActiveTab("details")}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
               activeTab === "details"
@@ -569,7 +601,7 @@ ${agent.selfCritiqueInstructions}`;
                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
-            <User className="mr-2 h-5 w-5" />
+            <FileText className="mr-2 h-5 w-5" />
             Details
           </button>
           <button
@@ -656,6 +688,124 @@ ${agent.selfCritiqueInstructions}`;
 
       {/* Tab Content */}
       <div className="mt-8">
+        {activeTab === "overview" && (
+          <div className="space-y-6">
+            {/* Description */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-xl font-semibold">Description</h2>
+              <div className="whitespace-pre-wrap text-gray-700">{agent.description}</div>
+            </div>
+
+            {/* Loading state */}
+            {overviewLoading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-500">Loading overview statistics...</div>
+              </div>
+            ) : overviewStats ? (
+              <>
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Evaluations */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-900">{overviewStats.totalEvaluations}</div>
+                    <div className="text-sm text-gray-500">Total Evaluations</div>
+                  </div>
+
+                  {/* Average Grade */}
+                  {agent.gradeInstructions && (
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {overviewStats.averageGrade !== null ? overviewStats.averageGrade.toFixed(1) : "—"}
+                      </div>
+                      <div className="text-sm text-gray-500">Average Grade</div>
+                    </div>
+                  )}
+
+                  {/* Total Cost */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-900">
+                      ${(overviewStats.totalCost / 100).toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-500">Total Cost</div>
+                  </div>
+
+                  {/* Success Rate */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-900">{overviewStats.successRate.toFixed(1)}%</div>
+                    <div className="text-sm text-gray-500">Success Rate</div>
+                  </div>
+
+                  {/* Documents Evaluated */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-900">{overviewStats.uniqueDocuments}</div>
+                    <div className="text-sm text-gray-500">Documents Evaluated</div>
+                  </div>
+
+                  {/* Active Jobs */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-900">{overviewStats.activeJobs}</div>
+                    <div className="text-sm text-gray-500">Active Jobs</div>
+                  </div>
+
+                  {/* Created Date */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-lg font-semibold text-gray-900">{formatDate(overviewStats.createdAt)}</div>
+                    <div className="text-sm text-gray-500">Created</div>
+                  </div>
+
+                  {/* Updated Date */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="text-lg font-semibold text-gray-900">{formatDate(overviewStats.updatedAt)}</div>
+                    <div className="text-sm text-gray-500">Last Updated</div>
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                {overviewStats.recentEvaluations && overviewStats.recentEvaluations.length > 0 && (
+                  <div className="bg-white rounded-lg shadow">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+                    </div>
+                    <div className="divide-y divide-gray-200">
+                      {overviewStats.recentEvaluations.map((evaluation: any) => (
+                        <div key={evaluation.id} className="px-6 py-4 hover:bg-gray-50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="text-sm font-medium text-gray-900">
+                                <Link
+                                  href={`/docs/${evaluation.documentId}/evaluations`}
+                                  className="hover:text-blue-600"
+                                >
+                                  {evaluation.documentTitle}
+                                </Link>
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {formatDate(evaluation.createdAt)}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              {evaluation.grade !== null && agent.gradeInstructions && (
+                                <div className="text-lg font-semibold text-gray-900">
+                                  {evaluation.grade}/100
+                                </div>
+                              )}
+                              {getStatusBadge(evaluation.status)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-500">Unable to load overview statistics</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "details" && (
           <div className="space-y-8">
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -810,7 +960,11 @@ ${agent.selfCritiqueInstructions}`;
                     {selectedVersion
                       ? `Evaluations - Version ${selectedVersion}`
                       : "All Evaluations"}
-                    {evalsBatchFilter ? ` (Batch: ${batches.find(b => b.id === evalsBatchFilter)?.name || evalsBatchFilter.slice(0, 8)})` : ''}
+                    {evalsBatchFilter && (
+                      <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                        Batch: {batches.find(b => b.id === evalsBatchFilter)?.name || evalsBatchFilter.slice(0, 8)}
+                      </span>
+                    )}
                     {" "}
                     ({selectedVersion
                       ? evaluations.filter(e => e.agentVersion === selectedVersion).length
@@ -946,7 +1100,11 @@ ${agent.selfCritiqueInstructions}`;
           <div className="w-full space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">
-                Agent Jobs {selectedBatchFilter ? `(Batch: ${batches.find(b => b.id === selectedBatchFilter)?.name || selectedBatchFilter.slice(0, 8)})` : ''}
+                Agent Jobs {selectedBatchFilter && (
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                    Batch: {batches.find(b => b.id === selectedBatchFilter)?.name || selectedBatchFilter.slice(0, 8)}
+                  </span>
+                )}
               </h3>
               <div className="flex items-center gap-4">
                 {selectedBatchFilter && (
@@ -1383,7 +1541,11 @@ ${agent.selfCritiqueInstructions}`;
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Export Evaluation Data
-                  {exportBatchFilter ? ` (Batch: ${batches.find(b => b.id === exportBatchFilter)?.name || exportBatchFilter.slice(0, 8)})` : ''}
+                  {exportBatchFilter && (
+                    <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                      Batch: {batches.find(b => b.id === exportBatchFilter)?.name || exportBatchFilter.slice(0, 8)}
+                    </span>
+                  )}
                 </h3>
                 {exportBatchFilter && (
                   <button
