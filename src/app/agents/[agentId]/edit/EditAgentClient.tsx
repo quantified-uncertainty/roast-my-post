@@ -6,7 +6,10 @@ import {
 } from "react";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -37,19 +40,24 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
   useEffect(() => {
     // Check if this is an import flow
-    const isImport = searchParams.get('import') === 'true';
-    
+    const isImport = searchParams.get("import") === "true";
+
     const fetchAgent = async () => {
       try {
         // Check for imported data first
         let importedData = null;
         if (isImport) {
-          const storedData = sessionStorage.getItem(`importedAgentData_${agentId}`);
+          const storedData = sessionStorage.getItem(
+            `importedAgentData_${agentId}`
+          );
+          console.log("storedData:", storedData);
           if (storedData) {
             importedData = JSON.parse(storedData);
             // Clear the stored data
             sessionStorage.removeItem(`importedAgentData_${agentId}`);
-            setImportNotice("Form pre-filled with imported data. Review and save to apply changes.");
+            setImportNotice(
+              "Form pre-filled with imported data. Review and save to apply changes."
+            );
           }
         }
 
@@ -62,24 +70,46 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
         const data = await response.json();
         
+        console.log('API returned data:', data);
+        console.log('API analysisInstructions:', data.analysisInstructions);
+        console.log('API selfCritiqueInstructions:', data.selfCritiqueInstructions);
+
         // Validate that we got data back
         if (!data) {
-          throw new Error('No data returned from API');
+          throw new Error("No data returned from API");
         }
 
         // Convert the agent data to form format
         // When importing, use imported data preferentially for all fields
         const resetData = {
           name: importedData ? importedData.name : data.name,
-          purpose: importedData ? importedData.purpose?.toUpperCase() : data.purpose?.toUpperCase() || "ASSESSOR",
-          description: importedData ? importedData.description : data.description,
-          genericInstructions: importedData ? (importedData.genericInstructions ?? "") : (data.genericInstructions || ""),
-          summaryInstructions: importedData ? (importedData.summaryInstructions ?? "") : (data.summaryInstructions || ""),
-          analysisInstructions: importedData ? (importedData.analysisInstructions ?? "") : (data.analysisInstructions || ""),
-          commentInstructions: importedData ? (importedData.commentInstructions ?? "") : (data.commentInstructions || ""),
-          gradeInstructions: importedData ? (importedData.gradeInstructions ?? "") : (data.gradeInstructions || ""),
-          selfCritiqueInstructions: importedData ? (importedData.selfCritiqueInstructions ?? "") : (data.selfCritiqueInstructions || ""),
-          extendedCapabilityId: importedData ? (importedData.extendedCapabilityId ?? "") : (data.extendedCapabilityId || ""),
+          purpose: importedData
+            ? importedData.purpose?.toUpperCase()
+            : data.purpose?.toUpperCase() || "ASSESSOR",
+          description: importedData
+            ? importedData.description
+            : data.description,
+          genericInstructions: importedData
+            ? (importedData.genericInstructions ?? "")
+            : data.genericInstructions || "",
+          summaryInstructions: importedData
+            ? (importedData.summaryInstructions ?? "")
+            : data.summaryInstructions || "",
+          analysisInstructions: importedData
+            ? (importedData.analysisInstructions ?? "")
+            : data.analysisInstructions || "",
+          commentInstructions: importedData
+            ? (importedData.commentInstructions ?? "")
+            : data.commentInstructions || "",
+          gradeInstructions: importedData
+            ? (importedData.gradeInstructions ?? "")
+            : data.gradeInstructions || "",
+          selfCritiqueInstructions: importedData
+            ? (importedData.selfCritiqueInstructions ?? "")
+            : data.selfCritiqueInstructions || "",
+          extendedCapabilityId: importedData
+            ? (importedData.extendedCapabilityId ?? "")
+            : data.extendedCapabilityId || "",
         };
 
         reset(resetData);
@@ -99,6 +129,10 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
   const onSubmit = async (data: AgentInput) => {
     try {
+      console.log("Form data being submitted:", data);
+      console.log("analysisInstructions:", data.analysisInstructions);
+      console.log("selfCritiqueInstructions:", data.selfCritiqueInstructions);
+
       const result = agentSchema.parse(data);
       // Use updateAgent for editing, passing both parsedInput and rawInput
       const updateResult = await updateAgent({
@@ -179,13 +213,17 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
             <p className="mt-2 text-sm text-gray-600">
               Update your agent (this will create a new version)
             </p>
-            
+
             {importNotice && (
               <div className="mt-4 rounded-md bg-blue-50 p-4">
                 <div className="flex">
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Import Successful</h3>
-                    <div className="mt-2 text-sm text-blue-700">{importNotice}</div>
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Import Successful
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      {importNotice}
+                    </div>
                   </div>
                 </div>
               </div>
