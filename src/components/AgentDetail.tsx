@@ -146,8 +146,10 @@ export default function AgentDetail({
       description: agent.description,
       genericInstructions: agent.genericInstructions,
       summaryInstructions: agent.summaryInstructions,
+      analysisInstructions: agent.analysisInstructions,
       commentInstructions: agent.commentInstructions,
       gradeInstructions: agent.gradeInstructions,
+      selfCritiqueInstructions: agent.selfCritiqueInstructions,
       extendedCapabilityId: agent.extendedCapabilityId,
       owner: agent.owner,
       exportedAt: new Date().toISOString(),
@@ -230,6 +232,22 @@ ${agent.commentInstructions}`;
 ${agent.gradeInstructions}`;
     }
 
+    if (agent.analysisInstructions) {
+      markdown += `
+
+## Analysis Instructions
+
+${agent.analysisInstructions}`;
+    }
+
+    if (agent.selfCritiqueInstructions) {
+      markdown += `
+
+## Self-Critique Instructions
+
+${agent.selfCritiqueInstructions}`;
+    }
+
     markdown += `
 
 ---
@@ -256,8 +274,10 @@ ${agent.gradeInstructions}`;
       description: agent.description,
       genericInstructions: agent.genericInstructions,
       summaryInstructions: agent.summaryInstructions,
+      analysisInstructions: agent.analysisInstructions,
       commentInstructions: agent.commentInstructions,
       gradeInstructions: agent.gradeInstructions,
+      selfCritiqueInstructions: agent.selfCritiqueInstructions,
       extendedCapabilityId: agent.extendedCapabilityId,
       owner: {
         id: agent.owner?.id,
@@ -469,6 +489,13 @@ ${agent.gradeInstructions}`;
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-xl font-semibold">Grade Instructions</h2>
                 <div className="whitespace-pre-wrap">{agent.gradeInstructions}</div>
+              </div>
+            )}
+
+            {agent.selfCritiqueInstructions && (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-xl font-semibold">Self-Critique Instructions</h2>
+                <div className="whitespace-pre-wrap">{agent.selfCritiqueInstructions}</div>
               </div>
             )}
           </div>
