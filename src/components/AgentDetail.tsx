@@ -594,7 +594,7 @@ ${agent.selfCritiqueInstructions}`;
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              {doc.grade !== undefined && (
+                              {doc.grade !== undefined && agent.gradeInstructions && (
                                 <div className="text-right">
                                   <div className="text-lg font-semibold text-gray-900">
                                     {doc.grade}/100
@@ -680,7 +680,7 @@ ${agent.selfCritiqueInstructions}`;
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {evalItem.grade !== undefined && (
+                            {evalItem.grade !== undefined && agent.gradeInstructions && (
                               <div className="text-right">
                                 <div className="text-lg font-semibold text-gray-900">
                                   {evalItem.grade}/100
