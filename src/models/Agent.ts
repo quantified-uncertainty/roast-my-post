@@ -337,12 +337,32 @@ export class AgentModel {
     }
   }
 
-  static async getAgentEvaluations(agentId: string, limit: number = 50) {
+  static async getAgentEvaluations(agentId: string, options?: { limit?: number; batchId?: string }) {
+    const limit = options?.limit || 50;
+    const batchId = options?.batchId;
+    
     try {
+      let whereConditions: any = {
+        agentId: agentId,
+      };
+
+      // If batchId is provided, filter evaluations by batch
+      if (batchId) {
+        // First get all job IDs for this batch
+        const jobsInBatch = await prisma.job.findMany({
+          where: { agentEvalBatchId: batchId },
+          select: { evaluationVersionId: true },
+        });
+        
+        const evaluationVersionIds = jobsInBatch
+          .map(job => job.evaluationVersionId)
+          .filter((id): id is string => id !== null);
+        
+        whereConditions.id = { in: evaluationVersionIds };
+      }
+
       const evaluations = await prisma.evaluationVersion.findMany({
-        where: {
-          agentId: agentId,
-        },
+        where: whereConditions,
         orderBy: {
           createdAt: "desc",
         },

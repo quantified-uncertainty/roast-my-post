@@ -112,6 +112,8 @@ export default function AgentDetail({
   const [jobsLoading, setJobsLoading] = useState(false);
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
+  const [evalsBatchFilter, setEvalsBatchFilter] = useState<string | null>(null);
+  const [exportBatchFilter, setExportBatchFilter] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,12 +154,13 @@ export default function AgentDetail({
     }
   };
 
-  const fetchEvaluations = async () => {
-    if (evaluations.length > 0) return; // Already loaded
-    
+  const fetchEvaluations = async (batchId?: string) => {
     setEvalsLoading(true);
     try {
-      const response = await fetch(`/api/agents/${agent.id}/evaluations`);
+      const url = batchId 
+        ? `/api/agents/${agent.id}/evaluations?batchId=${batchId}`
+        : `/api/agents/${agent.id}/evaluations`;
+      const response = await fetch(url);
       const data = await response.json();
       if (data.evaluations) {
         setEvaluations(data.evaluations);
@@ -208,13 +211,13 @@ export default function AgentDetail({
     if (activeTab === "documents") {
       fetchDocuments();
     } else if (activeTab === "evals") {
-      fetchEvaluations();
+      fetchEvaluations(evalsBatchFilter || undefined);
     } else if (activeTab === "jobs") {
       fetchJobs(selectedBatchFilter || undefined);
     } else if (activeTab === "batches") {
       fetchBatches();
     }
-  }, [activeTab, selectedBatchFilter]);
+  }, [activeTab, selectedBatchFilter, evalsBatchFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -581,7 +584,10 @@ ${agent.selfCritiqueInstructions}`;
             Documents
           </button>
           <button
-            onClick={() => setActiveTab("evals")}
+            onClick={() => {
+              setActiveTab("evals");
+              setEvalsBatchFilter(null); // Clear any batch filter when clicking tab directly
+            }}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
               activeTab === "evals"
                 ? "border-blue-500 text-blue-600"
@@ -632,7 +638,10 @@ ${agent.selfCritiqueInstructions}`;
             </>
           )}
           <button
-            onClick={() => setActiveTab("export")}
+            onClick={() => {
+              setActiveTab("export");
+              setExportBatchFilter(null); // Clear any batch filter when clicking tab directly
+            }}
             className={`inline-flex items-center border-b-2 px-1 py-4 text-sm font-medium ${
               activeTab === "export"
                 ? "border-blue-500 text-blue-600"
@@ -801,32 +810,46 @@ ${agent.selfCritiqueInstructions}`;
                     {selectedVersion
                       ? `Evaluations - Version ${selectedVersion}`
                       : "All Evaluations"}
+                    {evalsBatchFilter ? ` (Batch: ${batches.find(b => b.id === evalsBatchFilter)?.name || evalsBatchFilter.slice(0, 8)})` : ''}
                     {" "}
                     ({selectedVersion
                       ? evaluations.filter(e => e.agentVersion === selectedVersion).length
                       : evaluations.length
                     })
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
-                      Filter by version:
-                    </label>
-                    <select
-                      id="version-filter"
-                      value={selectedVersion || ""}
-                      onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
-                      className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value="">All versions</option>
-                      {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
-                        .reverse()
-                        .map((version) => (
-                          <option key={version} value={version}>
-                            v{version}
-                            {version === Number(agent.version) && " (current)"}
-                          </option>
-                        ))}
-                    </select>
+                  <div className="flex items-center gap-4">
+                    {evalsBatchFilter && (
+                      <button
+                        onClick={() => {
+                          setEvalsBatchFilter(null);
+                          fetchEvaluations();
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        Clear batch filter
+                      </button>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="version-filter" className="text-sm font-medium text-gray-700">
+                        Filter by version:
+                      </label>
+                      <select
+                        id="version-filter"
+                        value={selectedVersion || ""}
+                        onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
+                        className="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="">All versions</option>
+                        {Array.from({ length: Number(agent.version) }, (_, i) => i + 1)
+                          .reverse()
+                          .map((version) => (
+                            <option key={version} value={version}>
+                              v{version}
+                              {version === Number(agent.version) && " (current)"}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -1314,15 +1337,35 @@ ${agent.selfCritiqueInstructions}`;
                                 <span>Avg Grade: {batch.avgGrade.toFixed(1)}</span>
                               )}
                             </div>
-                            <button
-                              onClick={() => {
-                                setActiveTab("jobs");
-                                setSelectedBatchFilter(batch.id);
-                              }}
-                              className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                              View Jobs →
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => {
+                                  setActiveTab("jobs");
+                                  setSelectedBatchFilter(batch.id);
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                View Jobs →
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveTab("evals");
+                                  setEvalsBatchFilter(batch.id);
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                View Evals →
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveTab("export");
+                                  setExportBatchFilter(batch.id);
+                                }}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Export →
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1337,12 +1380,24 @@ ${agent.selfCritiqueInstructions}`;
         {activeTab === "export" && (
           <div className="space-y-6">
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Export Evaluation Data
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Export Evaluation Data
+                  {exportBatchFilter ? ` (Batch: ${batches.find(b => b.id === exportBatchFilter)?.name || exportBatchFilter.slice(0, 8)})` : ''}
+                </h3>
+                {exportBatchFilter && (
+                  <button
+                    onClick={() => setExportBatchFilter(null)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Clear batch filter
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-gray-600 mb-6">
                 Configure your export parameters to download evaluation data in YAML format.
                 This includes full document content, evaluation results, comments, and job details.
+                {exportBatchFilter && " Only evaluations from the selected batch will be included."}
               </p>
               
               <form
@@ -1369,6 +1424,11 @@ ${agent.selfCritiqueInstructions}`;
                   const showLlmInteractions = formData.get('showLlmInteractions');
                   if (showLlmInteractions) {
                     params.append('showLlmInteractions', 'true');
+                  }
+                  
+                  // Add batch filter if present
+                  if (exportBatchFilter) {
+                    params.append('batchId', exportBatchFilter);
                   }
                   
                   // Open in new tab

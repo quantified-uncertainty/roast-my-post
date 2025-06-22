@@ -13,6 +13,7 @@ export async function GET(request: NextRequest, context: any) {
     const startDateTime = searchParams.get('startDateTime') ? new Date(searchParams.get('startDateTime')!) : undefined;
     const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 50;
     const showLlmInteractions = searchParams.get('showLlmInteractions') === 'true';
+    const batchId = searchParams.get('batchId');
 
     // First get the agent details
     const agent = await prisma.agent.findUnique({
@@ -55,6 +56,21 @@ export async function GET(request: NextRequest, context: any) {
       whereConditions.createdAt = {
         gte: startDateTime,
       };
+    }
+
+    // If batchId is provided, filter evaluations by batch
+    if (batchId) {
+      // First get all job IDs for this batch
+      const jobsInBatch = await prisma.job.findMany({
+        where: { agentEvalBatchId: batchId },
+        select: { evaluationVersionId: true },
+      });
+      
+      const evaluationVersionIds = jobsInBatch
+        .map(job => job.evaluationVersionId)
+        .filter((id): id is string => id !== null);
+      
+      whereConditions.id = { in: evaluationVersionIds };
     }
 
     // Get evaluations with all related data

@@ -6,7 +6,16 @@ export async function GET(request: NextRequest, context: any) {
   const { params } = context;
   try {
     const agentId = params.agentId;
-    const evaluations = await AgentModel.getAgentEvaluations(agentId);
+    const { searchParams } = new URL(request.url);
+    const batchId = searchParams.get('batchId');
+    
+    // If batchId is provided, fetch evaluations for that batch
+    let evaluations;
+    if (batchId) {
+      evaluations = await AgentModel.getAgentEvaluations(agentId, { batchId });
+    } else {
+      evaluations = await AgentModel.getAgentEvaluations(agentId);
+    }
     
     return NextResponse.json({ evaluations });
   } catch (error) {
