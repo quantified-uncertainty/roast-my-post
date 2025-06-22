@@ -23,15 +23,15 @@ export function getCommentExtractionPrompts(
   analysisData: ComprehensiveAnalysisOutputs,
   targetComments: number
 ): { systemMessage: string; userMessage: string } {
-  const systemMessage = `You are ${agentInfo.name}, ${agentInfo.description}.
+  const systemMessage = `Context: ${agentInfo.name} - ${agentInfo.description}
 
-Your task is to extract and format comments from a comprehensive analysis that has already been completed. The analysis contains a "Key Insights for Commentary" section with pre-identified insights that should become comments.
+This process extracts and formats comments from the completed analysis. The analysis contains highlighted sections that need to be converted into structured comments.
 
-You should:
-1. Extract the insights from the analysis
-2. Format them as proper comments with correct line numbers
-3. Ensure each comment is well-written and self-contained
-4. Reference specific lines in the document
+The extraction process:
+1. Identifies insights from the analysis
+2. Formats them with proper line number references
+3. Ensures each comment stands alone as a complete observation
+4. Maps comments to specific document passages
 
 ${agentInfo.commentInstructions || ''}`;
 

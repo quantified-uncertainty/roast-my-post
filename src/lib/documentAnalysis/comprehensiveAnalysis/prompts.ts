@@ -11,85 +11,26 @@ export function getComprehensiveAnalysisPrompts(
 
 ${agentInfo.genericInstructions}
 
-Your task is to conduct a COMPREHENSIVE analysis of the document. This is the main analytical step where ALL intellectual work happens.
+Structure your response as a markdown document (${targetWordCount}+ words) with:
 
-${
-  agentInfo.purpose === "ENRICHER"
-    ? `IMPORTANT: As an ENRICHER, you must ADD VALUE to the document, not critique it. Accept the author's claims and enrich them with your expertise. Never say things "lack evidence" or "need improvement" - instead, provide the evidence or quantification yourself.`
-    : agentInfo.purpose === "ADVISOR"
-      ? `Focus on actionable recommendations.`
-      : agentInfo.purpose === "EXPLAINER"
-        ? `Focus on clarity and accessibility.`
-        : agentInfo.purpose === "ASSESSOR"
-          ? `Focus on thorough evaluation.`
-          : ``
-}
+1. A brief summary section
+2. Your main content (structured according to your role)
+3. A "Key Highlights" section with approximately ${targetComments} specific comments
 
-Your analysis output should be structured as a complete markdown document (${targetWordCount}+ words) with the following sections:
+For the Key Highlights section, use this format for each comment:
 
-# Executive Summary
-1-2 paragraphs providing a high-level overview of your key findings and conclusions.
+### Highlight [#]: [Title]
+- **Location**: Line X or Lines X-Y
+- **Context**: What this passage is about
+- **Your Contribution**: Your specific comment/insight/resource (100-300 words)
 
-# Analysis
+Important formatting notes:
+- Use single line numbers like "Line 42" or ranges like "Lines 156-162"
+- Number highlights sequentially (Highlight 1, Highlight 2, etc.)
+- Make your contributions specific and actionable
+- Use markdown formatting (headers, lists, emphasis, code blocks) throughout
 
-## Overview
-A 1-page (300-500 words) summary based on your role and expertise.
-
-## Detailed Analysis
-Multiple sections diving deep into different aspects of the document. Structure this according to your expertise as ${agentInfo.name}.
-
-## Key Highlights
-${
-  agentInfo.purpose === "ENRICHER"
-    ? "Identify specific passages where you can ADD VALUE with your expertise. For each highlight:"
-    : "This section should identify specific passages or aspects that warrant highlighting as comments. For each highlight:"
-}
-
-### Highlight 1: [Descriptive Title] {#highlight-1}
-- **Location**: Use one of these formats:
-  - Single line: "Line 42"
-  - Range of lines: "Lines 156-162" (use hyphen for ranges)
-  - If the comment relates to multiple separate sections, choose the most important one
-${
-  agentInfo.purpose === "ENRICHER"
-    ? `- **Observation**: [What claim or topic you're enriching]
-- **Significance**: [Why your enrichment adds value]
-- **Suggested Comment**: [Your enrichment - forecasts, estimates, models, data - 100-300 words]`
-    : `- **Observation**: [Detailed explanation of what you noticed]
-- **Significance**: [Why this matters in the context of the document]
-- **Suggested Comment**: [The actual comment text that should appear, 100-300 words]`
-}
-
-Example:
-### Highlight 1: Statistical Methodology Issues {#highlight-1}
-- **Location**: Lines 234-241
-- **Observation**: The author uses a simple average without considering sample size variations across groups
-- **Significance**: This could lead to misleading conclusions as smaller groups are weighted equally with larger ones
-- **Suggested Comment**: The statistical approach here uses unweighted averages across groups of varying sizes. Consider using weighted averages based on sample size to avoid giving disproportionate influence to smaller groups. This is particularly important given that Group A has 1000 participants while Group C only has 50.
-
-(Include approximately ${targetComments} highlights, can vary by ±20% based on content quality)
-
-## Calculations & Quantitative Analysis
-If relevant, include any:
-- Statistical analysis
-- Fermi estimates
-- Numerical evaluations
-- Data validation
-- Quantitative comparisons
-
-${
-  agentInfo.gradeInstructions
-    ? `## Grade
-Assign a grade from 0-100 with clear justification based on your assessment criteria.`
-    : ""
-}
-
-Remember:
-1. This is your ONLY chance to do analytical work - be thorough
-2. All highlights that will become comments must be identified here
-3. Use rich markdown formatting (headers, lists, emphasis, code blocks, etc.)
-4. Be specific with line numbers or section references
-5. Make your reasoning transparent and evidence-based`;
+${agentInfo.gradeInstructions ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 
   // Number the lines exactly like in comment extraction
   const numberedContent = document.content
@@ -97,16 +38,13 @@ Remember:
     .map((line, i) => `${(i + 1).toString().padStart(4, " ")} ${line}`)
     .join("\n");
 
-  const userMessage = `Please provide your comprehensive analysis of this document:
+  const userMessage = `Document to process:
 
-**Title:** ${document.title}
-**Author:** ${document.author}
-**Published:** ${new Date(document.publishedDate).toLocaleDateString()}
+Title: ${document.title}
+Author: ${document.author}
+Published: ${new Date(document.publishedDate).toLocaleDateString()}
 
-**Document Content (with line numbers):**
-${numberedContent}
-
-Conduct your comprehensive analysis now, ensuring all analytical work is complete and all potential comments are identified in the "Key Highlights" section with specific line number references.`;
+${numberedContent}`;
 
   return { systemMessage, userMessage };
 }

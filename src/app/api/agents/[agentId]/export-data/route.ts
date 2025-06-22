@@ -12,6 +12,7 @@ export async function GET(request: NextRequest, context: any) {
     const version = searchParams.get('version') ? Number(searchParams.get('version')) : undefined;
     const startDateTime = searchParams.get('startDateTime') ? new Date(searchParams.get('startDateTime')!) : undefined;
     const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 50;
+    const showLlmInteractions = searchParams.get('showLlmInteractions') === 'true';
 
     // First get the agent details
     const agent = await prisma.agent.findUnique({
@@ -131,8 +132,77 @@ export async function GET(request: NextRequest, context: any) {
       stats.average_duration_seconds = durationsMs.reduce((sum, d) => sum + d, 0) / durationsMs.length / 1000;
     }
 
+    // Build the export data structure first to get accurate size
+    const evaluationData = evaluations.map((evalVersion, index) => {
+      const docVersion = evalVersion.evaluation.document.versions[0];
+      return {
+        evaluation_id: evalVersion.id,
+        created_at: evalVersion.createdAt.toISOString(),
+        agent_version: evalVersion.agentVersion?.version,
+        
+        document: {
+          id: evalVersion.evaluation.document.id,
+          title: docVersion?.title || "Untitled",
+          author: evalVersion.evaluation.document.submittedBy.name,
+          content: docVersion?.content || "",
+          url: evalVersion.evaluation.document.url,
+          published_date: evalVersion.evaluation.document.publishedDate?.toISOString(),
+          word_count: docVersion?.content?.split(/\s+/).length || 0,
+        },
+        
+        evaluation_result: {
+          summary: evalVersion.summary,
+          analysis: evalVersion.analysis,
+          grade: evalVersion.grade,
+          self_critique: evalVersion.selfCritique,
+          comment_count: evalVersion.comments.length,
+          comments: evalVersion.comments.map((comment) => ({
+            text: comment.text,
+            importance: comment.importance,
+            highlight: comment.highlight ? {
+              text: comment.highlight.text,
+              start_offset: comment.highlight.startOffset,
+              end_offset: comment.highlight.endOffset,
+            } : null,
+          })),
+        },
+        
+        job: evalVersion.job ? {
+          id: evalVersion.job.id,
+          status: evalVersion.job.status,
+          created_at: evalVersion.job.createdAt.toISOString(),
+          completed_at: evalVersion.job.completedAt?.toISOString(),
+          cost_in_cents: evalVersion.job.costInCents,
+          attempts: evalVersion.job.attempts,
+          error: evalVersion.job.error,
+          tasks: evalVersion.job.tasks.map((task) => {
+            const taskData: any = {
+              name: task.name,
+              model: task.modelName,
+              price_in_cents: task.priceInCents,
+              time_in_seconds: task.timeInSeconds,
+              log: task.log ? JSON.parse(task.log) : null,
+            };
+            
+            if (showLlmInteractions) {
+              // Only include LLM interactions for the first 10% of evaluations (minimum 1)
+              const includeForThisEval = index < Math.max(1, Math.ceil(evaluations.length * 0.1));
+              if (includeForThisEval) {
+                taskData.llm_interactions = task.llmInteractions || null;
+              } else if (index === Math.max(1, Math.ceil(evaluations.length * 0.1))) {
+                // Add a note on the first evaluation without LLM interactions
+                taskData.llm_interactions_note = "LLM interactions omitted for remaining evaluations to reduce export size";
+              }
+            }
+            
+            return taskData;
+          }),
+        } : null,
+      };
+    });
+
     // Estimate token count for context window info
-    const fullContent = JSON.stringify(evaluations);
+    const fullContent = JSON.stringify(evaluationData);
     const charCount = fullContent.length;
     const estimatedTokens = Math.ceil(charCount / 4); // Rough estimate: 4 chars per token
 
@@ -145,6 +215,7 @@ export async function GET(request: NextRequest, context: any) {
           version: version || "all",
           start_date_time: startDateTime?.toISOString() || "none",
           limit: limit,
+          show_llm_interactions: showLlmInteractions,
         },
         export_date: new Date().toISOString(),
         total_evaluations: evaluations.length,
@@ -155,6 +226,9 @@ export async function GET(request: NextRequest, context: any) {
         estimated_tokens: estimatedTokens,
         recommended_chunk_size: Math.min(10, evaluations.length),
         warning: estimatedTokens > 100000 ? "This export may exceed typical LLM context windows" : null,
+        llm_interactions_included_for: showLlmInteractions 
+          ? `First ${Math.max(1, Math.ceil(evaluations.length * 0.1))} evaluations (${Math.min(100, Math.ceil(10))}% sample)`
+          : "None",
       },
       agent: {
         id: agent.id,
@@ -170,58 +244,7 @@ export async function GET(request: NextRequest, context: any) {
         self_critique_instructions: agent.versions[0].selfCritiqueInstructions,
         extended_capability: agent.versions[0].extendedCapabilityId,
       },
-      evaluations: evaluations.map((evalVersion) => {
-        const docVersion = evalVersion.evaluation.document.versions[0];
-        return {
-          evaluation_id: evalVersion.id,
-          created_at: evalVersion.createdAt.toISOString(),
-          agent_version: evalVersion.agentVersion?.version,
-          
-          document: {
-            id: evalVersion.evaluation.document.id,
-            title: docVersion?.title || "Untitled",
-            author: evalVersion.evaluation.document.submittedBy.name,
-            content: docVersion?.content || "",
-            url: evalVersion.evaluation.document.url,
-            published_date: evalVersion.evaluation.document.publishedDate?.toISOString(),
-            word_count: docVersion?.content?.split(/\s+/).length || 0,
-          },
-          
-          evaluation_result: {
-            summary: evalVersion.summary,
-            analysis: evalVersion.analysis,
-            grade: evalVersion.grade,
-            self_critique: evalVersion.selfCritique,
-            comment_count: evalVersion.comments.length,
-            comments: evalVersion.comments.map((comment) => ({
-              text: comment.text,
-              importance: comment.importance,
-              highlight: comment.highlight ? {
-                text: comment.highlight.text,
-                start_offset: comment.highlight.startOffset,
-                end_offset: comment.highlight.endOffset,
-              } : null,
-            })),
-          },
-          
-          job: evalVersion.job ? {
-            id: evalVersion.job.id,
-            status: evalVersion.job.status,
-            created_at: evalVersion.job.createdAt.toISOString(),
-            completed_at: evalVersion.job.completedAt?.toISOString(),
-            cost_in_cents: evalVersion.job.costInCents,
-            attempts: evalVersion.job.attempts,
-            error: evalVersion.job.error,
-            tasks: evalVersion.job.tasks.map((task) => ({
-              name: task.name,
-              model: task.modelName,
-              price_in_cents: task.priceInCents,
-              time_in_seconds: task.timeInSeconds,
-              log: task.log ? JSON.parse(task.log) : null,
-            })),
-          } : null,
-        };
-      }),
+      evaluations: evaluationData,
     };
 
     // Convert to YAML

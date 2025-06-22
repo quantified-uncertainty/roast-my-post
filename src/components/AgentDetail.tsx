@@ -813,6 +813,11 @@ ${agent.selfCritiqueInstructions}`;
                     params.append('limit', limit.toString());
                   }
                   
+                  const showLlmInteractions = formData.get('showLlmInteractions');
+                  if (showLlmInteractions) {
+                    params.append('showLlmInteractions', 'true');
+                  }
+                  
                   // Open in new tab
                   window.open(`/api/agents/${agent.id}/export-data?${params}`, '_blank');
                 }}
@@ -868,6 +873,23 @@ ${agent.selfCritiqueInstructions}`;
                   <p className="mt-1 text-xs text-gray-500">Maximum number of evaluations to export (1-1000)</p>
                 </div>
                 
+                <div>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="export-llm-interactions"
+                      name="showLlmInteractions"
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Include LLM interactions
+                    </span>
+                  </label>
+                  <p className="mt-1 text-xs text-gray-500 ml-6">
+                    Include full prompt/response data for first 10% of evaluations (minimum 1)
+                  </p>
+                </div>
+                
                 <div className="mt-6 flex justify-end gap-3">
                   <Button type="submit" className="flex items-center gap-2">
                     <FileDown className="h-4 w-4" />
@@ -886,6 +908,7 @@ ${agent.selfCritiqueInstructions}`;
                   <li>Complete evaluation analysis and summaries</li>
                   <li>All comments with highlight positions</li>
                   <li>Job execution details and costs</li>
+                  <li>Complete LLM interactions (prompts and responses)</li>
                   <li>Agent configuration and instructions</li>
                 </ul>
               </div>

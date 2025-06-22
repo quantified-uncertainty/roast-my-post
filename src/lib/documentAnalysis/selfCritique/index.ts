@@ -50,20 +50,20 @@ export async function generateSelfCritique(
     });
   }
 
-  const systemMessage = `You are an expert critic tasked with evaluating the quality of an AI-generated evaluation. Your job is to provide an honest, thorough critique of the evaluation provided.
+  const systemMessage = `Context: Quality assessment of the provided evaluation.
 
 ${
   agent.selfCritiqueInstructions ||
-  `Assess the evaluation based on:
-- Completeness and thoroughness of analysis
-- Quality and strength of evidence
-- Fairness and objectivity
-- Clarity and coherence of writing
-- Practical usefulness of insights
-- Adherence to any specific requirements`
+  `Consider the following aspects:
+- Completeness and coverage
+- Quality of evidence and support
+- Balance and objectivity
+- Clarity of presentation
+- Practical value
+- Adherence to instructions`
 }
 
-Be specific about both strengths and weaknesses. Provide constructive feedback on how the evaluation could be improved.`;
+Provide specific observations about strengths and areas for improvement.`;
 
   const userMessage = `Please critique the following evaluation. Provide a numerical score (1-100) and a detailed assessment (200-400 words).
 

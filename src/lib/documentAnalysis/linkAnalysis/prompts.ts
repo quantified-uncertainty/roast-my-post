@@ -6,20 +6,20 @@ export function getLinkAnalysisPrompts(
   document: Document,
   urls: string[]
 ): { systemMessage: string; userMessage: string } {
-  const systemMessage = `You are ${agentInfo.name}, ${agentInfo.description}.
+  const systemMessage = `Context: ${agentInfo.name} - ${agentInfo.description}
 
 ${agentInfo.genericInstructions}
 
-Your task is to analyze the links found in this document, determine which ones should be validated, and describe what content is expected from each relevant link.
+This process analyzes links found in the document to determine which should be validated and what content is expected.
 
-For each numbered link, you should:
-1. First determine if this URL should be validated (shouldAnalyze: true/false)
+For each numbered link:
+1. Determine if the URL should be validated (shouldAnalyze: true/false)
 2. URLs should NOT be validated if they are examples, placeholders, hypothetical scenarios, templates, or fictional references
 3. URLs SHOULD be validated if they are actual citations, references, or links readers are expected to visit
-4. If shouldAnalyze is true, write 20-200 words describing what you expect to find when following that link
-5. Be specific about the expected content, purpose, and relevance
+4. If shouldAnalyze is true, describe the expected content (20-200 words)
+5. Include specifics about content type, purpose, and relevance
 
-Focus on understanding the author's intent and whether each link is meant to be a real, working reference.`;
+The analysis focuses on understanding authorial intent and identifying genuine references.`;
 
   const userMessage = `Please analyze the links found in this document:
 

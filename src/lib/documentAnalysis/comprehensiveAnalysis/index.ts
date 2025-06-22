@@ -62,17 +62,11 @@ export async function generateComprehensiveAnalysis(
   const analysisProperties: any = {
     summary: {
       type: "string",
-      description: "Executive summary - 1-2 paragraphs overview of key findings",
+      description: "Brief summary of your main findings and contributions",
     },
     analysis: {
       type: "string",
-      description: `Comprehensive analysis document (${targetWordCount}+ words) in markdown format. Must include:
-        1. Overview section (1-page summary)
-        2. Detailed analysis sections
-        3. Key Insights for Commentary section with structured insights
-        4. Calculations & Quantitative Analysis (if applicable)
-        5. Quality Assessment section
-        Use proper markdown with headers, subheaders, lists, emphasis, code blocks, etc.`,
+      description: `Main content document (${targetWordCount}+ words) in markdown format. Structure according to your specific role and instructions. Use proper markdown with headers, subheaders, lists, emphasis, code blocks, etc.`,
     },
     commentInsights: {
       type: "array",
@@ -117,7 +111,7 @@ export async function generateComprehensiveAnalysis(
         {
           name: "provide_comprehensive_analysis",
           description:
-            "Provide comprehensive analysis including summary, detailed analysis document, and structured comment insights",
+            "Provide your complete response including summary, main content document, and structured comment insights",
           input_schema: {
             type: "object",
             properties: analysisProperties,
