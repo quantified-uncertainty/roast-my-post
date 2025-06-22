@@ -45,6 +45,7 @@ When adding conditional features (like re-upload button):
 ### Core Architecture
 - **Documents**: Content items for analysis (with versioning)
 - **Agents**: AI evaluators (ASSESSOR, ADVISOR, ENRICHER, EXPLAINER) stored as TOML configs
+  - Note: Only agents with `gradeInstructions` provide grades - this is optional and intentional
 - **Evaluations**: AI-generated analysis with comments and highlights
 - **Jobs**: Asynchronous processing queue for AI analysis with retry logic
 

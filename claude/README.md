@@ -11,6 +11,11 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 - High grade variance across agents (σ=20-35)
 - Missing critical instruction sections in most agents
 
+**Important Note about Instructions:**
+- `gradeInstructions` are OPTIONAL - agents without them don't provide grades (this is intentional)
+- Only `genericInstructions` is truly required
+- `analysisInstructions` and `selfCritiqueInstructions` improve consistency but aren't mandatory
+
 ## Helper Scripts
 
 All scripts use TypeScript with Prisma for direct database access.
