@@ -263,7 +263,7 @@ export function EvaluationsTab({
                       <div>
                         <dt className="font-medium text-gray-900">Cost</dt>
                         <dd className="text-gray-600">
-                          {formatCost(selectedEvaluation.costInCents)}
+                          {formatCost(selectedEvaluation.costInCents || null)}
                         </dd>
                       </div>
                     )}
