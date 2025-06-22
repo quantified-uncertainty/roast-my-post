@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { FileDown, Copy, CheckCircle } from "lucide-react";
+
+import {
+  CheckCircle,
+  FileDown,
+} from "lucide-react";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
@@ -108,9 +112,9 @@ export function ExportTab({
           )}
         </div>
         <p className="mb-6 text-sm text-gray-600">
-          Configure your export parameters to copy evaluation data to clipboard in YAML
-          format. This includes full document content, evaluation results,
-          comments, and job details.
+          Configure your export parameters to copy evaluation data to clipboard
+          in YAML format. This includes full document content, evaluation
+          results, comments, and job details.
           {exportBatchFilter &&
             " Only evaluations from the selected batch will be included."}
         </p>
@@ -224,7 +228,7 @@ export function ExportTab({
                   </>
                 ) : (
                   <>
-                    <Copy className="h-4 w-4" />
+                    <FileDown className="h-4 w-4" />
                     Copy to Clipboard
                   </>
                 )}

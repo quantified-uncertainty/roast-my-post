@@ -392,12 +392,34 @@ export class AgentModel {
               createdAt: true,
               completedAt: true,
               costInCents: true,
+              llmThinking: true,
+              tasks: {
+                select: {
+                  id: true,
+                  name: true,
+                  modelName: true,
+                  priceInCents: true,
+                  timeInSeconds: true,
+                  log: true,
+                  createdAt: true,
+                  llmInteractions: true,
+                },
+              },
             },
           },
           agentVersion: {
             select: {
               version: true,
               name: true,
+            },
+          },
+          comments: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              importance: true,
+              grade: true,
             },
           },
         },
@@ -423,6 +445,8 @@ export class AgentModel {
           jobCreatedAt: evalVersion.job?.createdAt,
           jobCompletedAt: evalVersion.job?.completedAt,
           costInCents: evalVersion.job?.costInCents,
+          comments: evalVersion.comments,
+          job: evalVersion.job,
         };
       });
     } finally {

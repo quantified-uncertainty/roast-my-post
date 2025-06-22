@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 
 import { GradeBadge } from "@/components/GradeBadge";
 import type { Agent } from "@/types/agentSchema";
+import { TaskLogs } from "@/app/docs/[docId]/evaluations/components/TaskLogs";
 
 import { StatusBadge, StatusIcon } from "../components";
 import type {
@@ -303,7 +304,7 @@ export function EvaluationsTab({
                 <div className="rounded-lg bg-white shadow">
                   <div className="border-b border-gray-200">
                     <nav className="-mb-px flex">
-                      {["summary", "analysis", "comments", "selfCritique"].map(
+                      {["summary", "analysis", "comments", "selfCritique", "logs"].map(
                         (tab) => (
                           <button
                             key={tab}
@@ -314,8 +315,9 @@ export function EvaluationsTab({
                                 : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                             } whitespace-nowrap border-b-2 px-6 py-4 text-sm font-medium capitalize`}
                             disabled={
-                              tab === "selfCritique" &&
-                              !selectedEvaluation.selfCritique
+                              (tab === "selfCritique" &&
+                                !selectedEvaluation.selfCritique) ||
+                              (tab === "logs" && !selectedEvaluation.job)
                             }
                           >
                             {tab === "selfCritique" ? "Self-Critique" : tab}
@@ -348,20 +350,93 @@ export function EvaluationsTab({
                       )}
 
                     {evalDetailsTab === "comments" && (
-                      <div className="text-gray-500">
-                        Comments view not yet implemented. View full details to
-                        see comments.
+                      <div className="space-y-4">
+                        {!selectedEvaluation.comments ||
+                        selectedEvaluation.comments.length === 0 ? (
+                          <div className="py-8 text-center text-gray-500">
+                            No comments for this evaluation
+                          </div>
+                        ) : (
+                          selectedEvaluation.comments.map((comment) => (
+                            <div
+                              key={comment.id}
+                              className="rounded-lg border border-gray-200 p-4"
+                            >
+                              <div className="mb-2 flex items-center justify-between">
+                                <h4 className="font-medium text-gray-900">
+                                  {comment.title}
+                                </h4>
+                                <div className="flex items-center space-x-2">
+                                  {comment.grade && (
+                                    <GradeBadge grade={comment.grade} />
+                                  )}
+                                  {comment.importance && (
+                                    <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700">
+                                      Importance: {comment.importance}/10
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="prose prose-sm text-gray-700">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  rehypePlugins={[rehypeRaw]}
+                                >
+                                  {comment.description}
+                                </ReactMarkdown>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     )}
 
-                    {evalDetailsTab === "selfCritique" &&
-                      selectedEvaluation.selfCritique && (
-                        <div className="prose max-w-none">
-                          <p className="text-gray-700">
+                    {evalDetailsTab === "selfCritique" && (
+                      <div className="prose prose-sm max-w-none">
+                        {selectedEvaluation.selfCritique ? (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                          >
                             {selectedEvaluation.selfCritique}
-                          </p>
-                        </div>
-                      )}
+                          </ReactMarkdown>
+                        ) : (
+                          <div className="py-8 text-center text-gray-500">
+                            No self-critique available for this evaluation
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {evalDetailsTab === "logs" && (
+                      <div>
+                        {selectedEvaluation.job ? (
+                          <TaskLogs
+                            selectedVersion={{
+                              createdAt: new Date(selectedEvaluation.createdAt),
+                              comments: [],
+                              summary: selectedEvaluation.summary || "",
+                              documentVersion: { version: 0 },
+                              job: {
+                                tasks: (selectedEvaluation.job.tasks || []).map(task => ({
+                                  ...task,
+                                  log: task.log || null,
+                                  timeInSeconds: task.timeInSeconds || null,
+                                })),
+                                costInCents:
+                                  selectedEvaluation.job.costInCents || 0,
+                                llmThinking:
+                                  selectedEvaluation.job.llmThinking || "",
+                              },
+                            }}
+                          />
+                        ) : (
+                          <div className="py-8 text-center text-gray-500">
+                            No logs available for this evaluation
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

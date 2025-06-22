@@ -38,6 +38,28 @@ export interface AgentEvaluation {
   jobCreatedAt?: string;
   jobCompletedAt?: string;
   costInCents?: number;
+  comments?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    importance?: number | null;
+    grade?: number | null;
+  }>;
+  job?: {
+    status: string;
+    llmThinking?: string | null;
+    costInCents?: number | null;
+    tasks?: Array<{
+      id: string;
+      name: string;
+      modelName: string;
+      priceInCents: number;
+      timeInSeconds?: number | null;
+      log?: string | null;
+      createdAt: Date;
+      llmInteractions?: any;
+    }>;
+  };
 }
 
 export interface BatchSummary {
@@ -110,5 +132,6 @@ export type EvalDetailsTab =
   | "summary"
   | "analysis"
   | "comments"
-  | "selfCritique";
+  | "selfCritique"
+  | "logs";
 export type ExportType = "JSON" | "Markdown" | "YAML";
