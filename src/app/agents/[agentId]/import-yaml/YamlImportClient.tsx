@@ -24,6 +24,7 @@ interface ValidationResult {
 
 interface AgentData {
   name: string;
+  purpose: string;
   description: string;
   genericInstructions?: string;
   summaryInstructions?: string;
@@ -34,9 +35,10 @@ interface AgentData {
   extendedCapabilityId?: string;
 }
 
-const REQUIRED_FIELDS = ['name', 'description'];
+const REQUIRED_FIELDS = ['name', 'purpose', 'description'];
 const OPTIONAL_FIELDS = ['genericInstructions', 'summaryInstructions', 'commentInstructions', 'gradeInstructions', 'selfCritiqueInstructions', 'analysisInstructions', 'extendedCapabilityId'];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
+const VALID_PURPOSES = ['ASSESSOR', 'ADVISOR', 'ENRICHER', 'EXPLAINER'];
 
 export function YamlImportClient({ agentId }: YamlImportClientProps) {
   const router = useRouter();
@@ -84,6 +86,11 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
         warnings.push("Description should be at least 30 characters");
       }
 
+      // Check purpose is valid
+      if (parsedObj.purpose && !VALID_PURPOSES.includes(parsedObj.purpose.toUpperCase())) {
+        warnings.push(`Purpose must be one of: ${VALID_PURPOSES.join(', ')}`);
+      }
+
       // Warn about extra fields that won't be saved
       if (extraFields.length > 0) {
         warnings.push(`These fields won't be saved: ${extraFields.join(', ')}`);
@@ -118,6 +125,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       // Extract only the supported fields
       const agentData: AgentData = {
         name: validation.parsedData.name,
+        purpose: validation.parsedData.purpose?.toUpperCase() || 'ASSESSOR',
         description: validation.parsedData.description,
       };
 
