@@ -3,6 +3,7 @@ import type { Document } from "../../types/documents";
 import type { Comment } from "../../types/documentSchema";
 import { extractCommentsFromAnalysis } from "./commentExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
+import { generateSelfCritique } from "./selfCritique";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import type { TaskResult } from "./shared/types";
 
@@ -56,12 +57,33 @@ export async function analyzeDocument(
     console.log(`✅ Extracted ${commentResult.outputs.comments.length} comments`);
     tasks.push(commentResult.task);
 
+    // Step 3: Generate self-critique if instructions are provided and randomly selected (10% chance)
+    let selfCritique: string | undefined;
+    if (agentInfo.selfCritiqueInstructions && Math.random() < 0.1) {
+      console.log(`🔍 Generating self-critique...`);
+      const critiqueResult = await generateSelfCritique(
+        {
+          summary: analysisResult.outputs.summary,
+          analysis: analysisResult.outputs.analysis,
+          grade: analysisResult.outputs.grade,
+          comments: commentResult.outputs.comments.map(c => ({
+            title: c.highlight?.text || "Comment",
+            text: c.text
+          }))
+        },
+        agentInfo
+      );
+      console.log(`✅ Generated self-critique`);
+      selfCritique = critiqueResult.outputs.selfCritique;
+      tasks.push(critiqueResult.task);
+    }
+
     return {
       thinking: "", // Keep thinking empty when using comprehensive analysis
       analysis: analysisResult.outputs.analysis,
       summary: analysisResult.outputs.summary,
       grade: analysisResult.outputs.grade,
-      selfCritique: analysisResult.outputs.selfCritique,
+      selfCritique,
       comments: commentResult.outputs.comments,
       tasks,
     };
