@@ -1,0 +1,28 @@
+{
+  "name": "open-annotate-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Open Annotate database operations",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prisma:generate": "prisma generate --schema=../prisma/schema.prisma",
+    "configure": "node configure-claude.js",
+    "setup": "npm install && npm run prisma:generate && npm run build && npm run configure"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.7.0",
+    "@prisma/client": "6.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "prisma": "^6.1.0",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
