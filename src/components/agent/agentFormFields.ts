@@ -4,9 +4,10 @@ export interface FormFieldConfig {
   name: keyof AgentInput;
   label: string;
   required?: boolean;
-  type: "text" | "textarea" | "select";
-  placeholder: string;
+  type: "text" | "textarea" | "select" | "checkbox";
+  placeholder?: string;
   options?: { value: string; label: string }[];
+  description?: string;
 }
 
 export const agentFormFields: FormFieldConfig[] = [
@@ -49,6 +50,12 @@ export const agentFormFields: FormFieldConfig[] = [
     label: "Self-Critique Instructions",
     type: "textarea",
     placeholder: "Instructions for scoring evaluation quality 1-100 (e.g., 'Score based on: Technical accuracy (40%), Completeness (30%), Actionability (30%)')",
+  },
+  {
+    name: "providesGrades",
+    label: "Provides Grades",
+    type: "checkbox",
+    description: "Check if this agent should provide grades (0-100) for documents",
   },
   {
     name: "extendedCapabilityId",

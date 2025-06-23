@@ -28,6 +28,7 @@ export const AgentVersionSchema = z.object({
   description: z.string(),
   primaryInstructions: z.string().optional(),
   selfCritiqueInstructions: z.string().optional(),
+  providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
   readme: z.string().optional(),
   createdAt: z.date(),
@@ -43,6 +44,7 @@ const BaseAgentSchema = z.object({
   description: z.string().min(30, "Description must be at least 30 characters"),
   primaryInstructions: z.string().optional(),
   selfCritiqueInstructions: z.string().optional(),
+  providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
   readme: z.string().optional(),
 });

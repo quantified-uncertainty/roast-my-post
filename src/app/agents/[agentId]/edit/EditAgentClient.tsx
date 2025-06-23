@@ -36,7 +36,18 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
     formState: { errors, isSubmitting },
     setError: setFormError,
     reset,
-  } = useForm<AgentInput>();
+  } = useForm<AgentInput>({
+    defaultValues: {
+      name: "",
+      purpose: "ASSESSOR",
+      description: "",
+      primaryInstructions: "",
+      selfCritiqueInstructions: "",
+      providesGrades: false,
+      extendedCapabilityId: "",
+      readme: "",
+    }
+  });
 
   useEffect(() => {
     // Check if this is an import flow
@@ -88,6 +99,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           selfCritiqueInstructions: importedData
             ? (importedData.selfCritiqueInstructions ?? "")
             : data.selfCritiqueInstructions || "",
+          providesGrades: importedData
+            ? (importedData.providesGrades ?? false)
+            : data.providesGrades ?? false,
           extendedCapabilityId: importedData
             ? (importedData.extendedCapabilityId ?? "")
             : data.extendedCapabilityId || "",
@@ -218,6 +232,29 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {agentFormFields.map((field) => (
+              field.type === "checkbox" ? (
+                <div key={field.name} className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      {...register(field.name)}
+                      type="checkbox"
+                      id={field.name}
+                      className={`form-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${errors[field.name] ? "border-red-500" : ""}`}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor={field.name} className="font-medium text-gray-700">
+                      {field.label}
+                    </label>
+                    {field.description && (
+                      <p className="text-gray-500">{field.description}</p>
+                    )}
+                    {errors[field.name] && (
+                      <p className="mt-1 text-sm text-red-600">{errors[field.name]?.message}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
               <FormField
                 key={field.name}
                 name={field.name}
@@ -255,6 +292,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
                   />
                 )}
               </FormField>
+              )
             ))}
 
             {errors.root && (

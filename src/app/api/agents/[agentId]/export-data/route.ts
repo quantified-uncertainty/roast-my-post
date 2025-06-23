@@ -4,7 +4,7 @@ import * as yaml from 'js-yaml';
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest, context: any) {
-  const { params } = context;
+  const params = await context.params;
   const searchParams = request.nextUrl.searchParams;
   
   try {
@@ -252,6 +252,7 @@ export async function GET(request: NextRequest, context: any) {
         type: agent.versions[0].agentType,
         current_version: agent.versions[0].version,
         description: agent.versions[0].description,
+        provides_grades: agent.versions[0].providesGrades,
         instructions: agent.versions[0].primaryInstructions,
         self_critique_instructions: agent.versions[0].selfCritiqueInstructions,
         extended_capability: agent.versions[0].extendedCapabilityId,

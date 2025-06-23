@@ -10,6 +10,7 @@ describe("Self-Critique", () => {
       description: "A test agent for critiquing",
       version: "1",
       selfCritiqueInstructions: "Focus on accuracy and completeness of the evaluation.",
+      providesGrades: true,
     };
 
     const mockEvaluation = {

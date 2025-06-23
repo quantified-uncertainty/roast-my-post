@@ -2,9 +2,7 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 
 export function shouldIncludeGrade(agentInfo: Agent): boolean {
-  // TODO: NEEDS GRADE FLAG - This function should check a new agent field like 'providesGrades'
-  // For now, returning false since gradeInstructions field has been removed
-  return false;
+  return agentInfo.providesGrades ?? false;
 }
 
 export function getAgentContextXML(agentInfo: Agent): string {

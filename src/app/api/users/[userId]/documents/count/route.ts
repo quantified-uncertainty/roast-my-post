@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { UserModel } from "@/models/User";
 
 export async function GET(req: NextRequest, context: any) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const userId = params.userId;
 

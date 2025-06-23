@@ -28,6 +28,7 @@ export default function NewAgentPage() {
       purpose: "ASSESSOR",
       description: "",
       primaryInstructions: "",
+      providesGrades: false,
       extendedCapabilityId: "",
     },
   });
@@ -83,6 +84,29 @@ export default function NewAgentPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {agentFormFields.map((field) => (
+              field.type === "checkbox" ? (
+                <div key={field.name} className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      {...register(field.name)}
+                      type="checkbox"
+                      id={field.name}
+                      className={`form-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${errors[field.name] ? "border-red-500" : ""}`}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor={field.name} className="font-medium text-gray-700">
+                      {field.label}
+                    </label>
+                    {field.description && (
+                      <p className="text-gray-500">{field.description}</p>
+                    )}
+                    {errors[field.name] && (
+                      <p className="mt-1 text-sm text-red-600">{errors[field.name]?.message}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
               <FormField
                 key={field.name}
                 name={field.name}
@@ -120,6 +144,7 @@ export default function NewAgentPage() {
                   />
                 )}
               </FormField>
+              )
             ))}
 
             {errors.root && (

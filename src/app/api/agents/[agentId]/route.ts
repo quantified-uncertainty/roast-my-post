@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(request: NextRequest, context: any) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const agentId = params.agentId;
     const session = await auth();

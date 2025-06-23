@@ -390,6 +390,7 @@ export class JobModel {
         description: agentVersion.description,
         primaryInstructions: agentVersion.primaryInstructions || undefined,
         selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
+        providesGrades: agentVersion.providesGrades || false,
         extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       };
 

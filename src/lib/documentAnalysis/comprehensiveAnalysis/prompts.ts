@@ -30,7 +30,7 @@ Important formatting notes:
 - Make your contributions specific and actionable
 - Use markdown formatting (headers, lists, emphasis, code blocks) throughout
 
-${/* TODO: NEEDS GRADE FLAG - Replace with agentInfo.providesGrades */false ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
+${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 
   // Number the lines exactly like in comment extraction
   const numberedContent = document.content

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(request: Request, context: any) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const review = await AgentModel.getAgentReview(params.agentId);
     return NextResponse.json({ review });

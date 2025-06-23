@@ -74,6 +74,7 @@ export const EvaluationSchema = z.object({
     purpose: z.string(),
     primaryInstructions: z.string().optional(),
     selfCritiqueInstructions: z.string().optional(),
+    providesGrades: z.boolean().optional(),
   }),
   createdAt: z.date(),
   costInCents: z.number(),

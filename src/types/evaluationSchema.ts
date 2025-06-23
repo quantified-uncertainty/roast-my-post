@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const AgentReviewSchema = z.object({
   evaluatedAgentId: z.string(),
-  grade: z.number().min(0).max(100),
+  grade: z.number().min(0).max(100).optional(),
   summary: z.string(),
   author: z.string(),
   createdAt: z.date(),

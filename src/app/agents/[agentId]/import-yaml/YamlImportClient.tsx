@@ -39,6 +39,7 @@ interface AgentData {
   description: string;
   primaryInstructions?: string;
   selfCritiqueInstructions?: string;
+  providesGrades?: boolean;
   extendedCapabilityId?: string;
   readme?: string;
 }
@@ -47,6 +48,7 @@ const REQUIRED_FIELDS = ["name", "purpose", "description"];
 const OPTIONAL_FIELDS = [
   "primaryInstructions",
   "selfCritiqueInstructions",
+  "providesGrades",
   "extendedCapabilityId",
   "readme",
 ];

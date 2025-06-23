@@ -85,6 +85,12 @@ export default function AgentsList({ agents }: AgentsListProps) {
                         <p className="line-clamp-2 text-gray-700">
                           {agent.description}
                         </p>
+                        
+                        {agent.providesGrades && (
+                          <div className="mt-2 inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
+                            ✓ Grades
+                          </div>
+                        )}
                       </div>
                     </Link>
                   );

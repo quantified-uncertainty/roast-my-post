@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(request: NextRequest, context: any) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const agentId = params.agentId;
     const { searchParams } = new URL(request.url);

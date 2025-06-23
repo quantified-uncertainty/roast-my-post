@@ -189,6 +189,7 @@ model AgentVersion {
   description String
   primaryInstructions String?
   selfCritiqueInstructions String?
+  providesGrades Boolean @default(false)
   extendedCapabilityId String?
   readme      String?  @db.Text
   agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)

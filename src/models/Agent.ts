@@ -30,6 +30,7 @@ export class AgentModel {
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
+              providesGrades: data.providesGrades || false,
               extendedCapabilityId: data.extendedCapabilityId,
               readme: data.readme,
             },
@@ -58,6 +59,7 @@ export class AgentModel {
         description: agent.versions[0].description,
         primaryInstructions: agent.versions[0].primaryInstructions || undefined,
         selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
+        providesGrades: agent.versions[0].providesGrades ?? false,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
         readme: agent.versions[0].readme || undefined,
         owner: {
@@ -100,6 +102,7 @@ export class AgentModel {
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
+              providesGrades: data.providesGrades || false,
               extendedCapabilityId: data.extendedCapabilityId,
               readme: data.readme,
             },
@@ -125,6 +128,7 @@ export class AgentModel {
         description: agent.versions[0].description,
         primaryInstructions: agent.versions[0].primaryInstructions || undefined,
         selfCritiqueInstructions: agent.versions[0].selfCritiqueInstructions || undefined,
+        providesGrades: agent.versions[0].providesGrades ?? false,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
         readme: agent.versions[0].readme || undefined,
         owner: {
@@ -172,6 +176,7 @@ export class AgentModel {
         description: dbAgent.versions[0].description,
         primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
         selfCritiqueInstructions: dbAgent.versions[0].selfCritiqueInstructions || undefined,
+        providesGrades: dbAgent.versions[0].providesGrades ?? false,
         extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
         readme: dbAgent.versions[0].readme || undefined,
         owner: {
