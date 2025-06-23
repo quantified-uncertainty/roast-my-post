@@ -99,6 +99,8 @@ export interface Job {
   durationInSeconds?: number;
   costInCents?: number;
   error?: string;
+  attempts?: number;
+  originalJobId?: string | null;
 }
 
 export interface OverviewStats {

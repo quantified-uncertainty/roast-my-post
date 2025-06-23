@@ -50,7 +50,16 @@ export async function GET(
       where: whereClause,
       orderBy: { createdAt: "desc" },
       take: 100, // Limit to most recent 100 jobs
-      include: {
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        completedAt: true,
+        error: true,
+        costInCents: true,
+        durationInSeconds: true,
+        attempts: true,
+        originalJobId: true,
         evaluation: {
           include: {
             document: {

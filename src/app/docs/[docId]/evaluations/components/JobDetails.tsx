@@ -20,6 +20,8 @@ interface JobDetailsProps {
     error?: string;
     logs?: string;
     tasks?: Task[];
+    attempts?: number;
+    originalJobId?: string | null;
   };
 }
 
@@ -28,7 +30,14 @@ export const JobDetails: React.FC<JobDetailsProps> = ({ job }) => {
   const [showError, setShowError] = useState(false);
   return (
     <div className="rounded-lg bg-white p-6 shadow">
-      <h2 className="mb-2 text-lg font-bold">Job Details</h2>
+      <h2 className="mb-2 text-lg font-bold">
+        Job Details
+        {job.originalJobId && (
+          <span className="ml-2 text-sm bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-normal">
+            Retry #{(job.attempts || 0) + 1}
+          </span>
+        )}
+      </h2>
       <div className="mb-2">
         <strong>ID:</strong> {job.id}
       </div>

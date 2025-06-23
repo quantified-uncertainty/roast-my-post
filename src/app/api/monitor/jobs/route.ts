@@ -8,7 +8,17 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        completedAt: true,
+        error: true,
+        logs: true,
+        costInCents: true,
+        durationInSeconds: true,
+        attempts: true,
+        originalJobId: true,
         evaluation: {
           include: {
             document: {

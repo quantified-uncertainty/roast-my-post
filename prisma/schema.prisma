@@ -230,6 +230,11 @@ model Job {
   durationInSeconds Int?
   logs String?
   
+  // Retry tracking
+  originalJobId   String?
+  originalJob     Job?     @relation("JobRetries", fields: [originalJobId], references: [id])
+  retryJobs       Job[]    @relation("JobRetries")
+  
   evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
   evaluationId  String
   
@@ -243,6 +248,7 @@ model Job {
 
   @@index([evaluationId])
   @@index([agentEvalBatchId])
+  @@index([originalJobId])
 }
 
 model Task {

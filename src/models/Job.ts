@@ -17,45 +17,84 @@ import {
 
 export class JobModel {
   /**
-   * Find the oldest pending job
+   * Find the oldest pending job (skips retries if original is still pending/running)
    */
   async findNextPendingJob() {
-    const job = await prisma.job.findFirst({
+    // Get all pending jobs ordered by creation time
+    const pendingJobs = await prisma.job.findMany({
       where: {
         status: JobStatus.PENDING,
       },
       orderBy: {
         createdAt: "asc",
       },
-      include: {
-        evaluation: {
-          include: {
-            document: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
+      select: {
+        id: true,
+        originalJobId: true,
+        createdAt: true,
+      },
+    });
+
+    // For each pending job, check if it's safe to process
+    for (const job of pendingJobs) {
+      if (job.originalJobId) {
+        // This is a retry - check if any earlier attempts are still pending/running
+        const earlierAttempts = await prisma.job.findMany({
+          where: {
+            OR: [
+              { id: job.originalJobId },
+              { 
+                AND: [
+                  { originalJobId: job.originalJobId },
+                  { createdAt: { lt: job.createdAt } }
+                ]
+              }
+            ],
+            status: { in: [JobStatus.PENDING, JobStatus.RUNNING] }
+          }
+        });
+
+        if (earlierAttempts.length > 0) {
+          // Skip this retry - earlier attempts are still in progress
+          continue;
+        }
+      }
+
+      // This job is safe to process - fetch full details
+      const fullJob = await prisma.job.findFirst({
+        where: { id: job.id },
+        include: {
+          evaluation: {
+            include: {
+              document: {
+                include: {
+                  versions: {
+                    orderBy: {
+                      version: "desc",
+                    },
+                    take: 1,
                   },
-                  take: 1,
                 },
               },
-            },
-            agent: {
-              include: {
-                versions: {
-                  orderBy: {
-                    version: "desc",
+              agent: {
+                include: {
+                  versions: {
+                    orderBy: {
+                      version: "desc",
+                    },
+                    take: 1,
                   },
-                  take: 1,
                 },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    return job;
+      return fullJob;
+    }
+
+    return null;
   }
 
   /**
@@ -164,10 +203,28 @@ export class JobModel {
   }
 
   /**
-   * Update job as failed
+   * Update job as failed and create retry if needed
    */
   async markJobAsFailed(jobId: string, error: unknown) {
-    return prisma.job.update({
+    const MAX_RETRY_ATTEMPTS = 3;
+    
+    // Get current job info
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { 
+        attempts: true,
+        originalJobId: true,
+        evaluationId: true,
+        agentEvalBatchId: true,
+      }
+    });
+
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
+    // Update current job as failed
+    await prisma.job.update({
       where: { id: jobId },
       data: {
         status: JobStatus.FAILED,
@@ -175,6 +232,106 @@ export class JobModel {
         completedAt: new Date(),
       },
     });
+
+    // Check if we should retry
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isRetryableError = this.isRetryableError(errorMessage);
+    
+    if (isRetryableError && job.attempts < MAX_RETRY_ATTEMPTS) {
+      // Create retry job
+      const retryJob = await prisma.job.create({
+        data: {
+          status: JobStatus.PENDING,
+          evaluationId: job.evaluationId,
+          originalJobId: job.originalJobId || jobId, // Link to original job
+          attempts: job.attempts + 1,
+          agentEvalBatchId: job.agentEvalBatchId,
+        },
+      });
+
+      console.log(`🔄 Created retry job ${retryJob.id} (attempt ${job.attempts + 2}/${MAX_RETRY_ATTEMPTS + 1}) for original job ${job.originalJobId || jobId}`);
+      return retryJob;
+    } else {
+      const reason = !isRetryableError 
+        ? "non-retryable error" 
+        : `max attempts (${MAX_RETRY_ATTEMPTS + 1}) reached`;
+      console.log(`❌ Job ${jobId} permanently failed - ${reason}`);
+    }
+
+    return prisma.job.findUnique({ where: { id: jobId } });
+  }
+
+  /**
+   * Determine if an error should trigger a retry
+   */
+  private isRetryableError(errorMessage: string): boolean {
+    // Don't retry validation errors or permanent failures
+    const nonRetryablePatterns = [
+      'validation',
+      'invalid',
+      'not found',
+      'unauthorized',
+      'forbidden',
+      'bad request',
+    ];
+    
+    const lowerError = errorMessage.toLowerCase();
+    if (nonRetryablePatterns.some(pattern => lowerError.includes(pattern))) {
+      return false;
+    }
+
+    // Retry network/API/timeout errors
+    const retryablePatterns = [
+      'timeout',
+      'timed out',
+      'econnrefused',
+      'econnreset',
+      'socket hang up',
+      'rate limit',
+      'too many requests',
+      '429',
+      '502',
+      '503',
+      '504',
+      'internal server error',
+      '500',
+      'network',
+      'api error',
+    ];
+    
+    return retryablePatterns.some(pattern => lowerError.includes(pattern));
+  }
+
+  /**
+   * Get all job attempts (original + retries) for a given job
+   */
+  async getJobAttempts(jobId: string) {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { originalJobId: true }
+    });
+
+    if (!job) return [];
+
+    // If this is a retry, use its originalJobId, otherwise use the jobId itself
+    const originalId = job.originalJobId || jobId;
+
+    // Get all attempts for this original job
+    const attempts = await prisma.job.findMany({
+      where: {
+        OR: [
+          { id: originalId },
+          { originalJobId: originalId }
+        ]
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        tasks: true,
+        evaluationVersion: true
+      }
+    });
+
+    return attempts;
   }
 
   /**

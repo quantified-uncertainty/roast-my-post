@@ -8,7 +8,7 @@ import type {
 } from "../types";
 import {
   formatCost,
-  formatDate,
+  formatRelativeDate,
   formatDuration,
 } from "../utils";
 
@@ -80,9 +80,14 @@ export function JobsTab({
                 <div>
                   <h4 className="font-medium text-gray-900">
                     {job.document.title}
+                    {job.originalJobId && (
+                      <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                        retry #{(job.attempts || 0) + 1}
+                      </span>
+                    )}
                   </h4>
                   <p className="text-sm text-gray-500">
-                    Agent: {job.agent.name} • {formatDate(job.createdAt)}
+                    Agent: {job.agent.name} • Created {formatRelativeDate(job.createdAt)}
                   </p>
                   {job.batch && (
                     <p className="text-sm text-blue-600">

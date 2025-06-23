@@ -19,6 +19,8 @@ interface Job {
   logs?: string;
   costInCents?: number;
   durationInSeconds?: number;
+  attempts: number;
+  originalJobId?: string | null;
   evaluation: {
     document: {
       id: string;
@@ -170,6 +172,11 @@ export default function JobsMonitorPage() {
                     <span className="font-mono text-sm text-gray-900">
                       {job.id.slice(0, 8)}...
                     </span>
+                    {job.originalJobId && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded" title={`Retry attempt ${job.attempts + 1}`}>
+                        retry
+                      </span>
+                    )}
                   </div>
                   <span className={getStatusBadge(job.status)}>
                     {job.status}
@@ -212,7 +219,14 @@ export default function JobsMonitorPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <dt className="font-medium text-gray-900">Job ID</dt>
-                    <dd className="font-mono text-gray-600">{selectedJob.id}</dd>
+                    <dd className="font-mono text-gray-600">
+                      {selectedJob.id}
+                      {selectedJob.originalJobId && (
+                        <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          Retry #{selectedJob.attempts + 1}
+                        </span>
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="font-medium text-gray-900">Document</dt>

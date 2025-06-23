@@ -15,7 +15,19 @@ export async function GET(
   try {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      include: { tasks: true },
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        completedAt: true,
+        error: true,
+        logs: true,
+        costInCents: true,
+        durationInSeconds: true,
+        attempts: true,
+        originalJobId: true,
+        tasks: true,
+      },
     });
     if (!job) {
       return new Response(JSON.stringify({ error: "Job not found" }), {
