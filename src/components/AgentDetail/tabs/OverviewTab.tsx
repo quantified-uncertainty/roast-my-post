@@ -56,7 +56,7 @@ export function OverviewTab({
             </div>
 
             {/* Average Grade */}
-            {agent.gradeInstructions && (
+            {overviewStats.averageGrade !== null && (
               <div className="rounded-lg bg-white p-6 shadow">
                 <div className="text-2xl font-bold text-gray-900">
                   {overviewStats.averageGrade !== null
@@ -166,7 +166,7 @@ export function OverviewTab({
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          {agent.gradeInstructions && 
+                          {
                            evaluation.grade !== null &&
                            evaluation.grade !== undefined && (
                             <div className="text-lg font-semibold text-gray-900">

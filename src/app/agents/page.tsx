@@ -24,9 +24,6 @@ export default async function AgentsPage() {
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
     genericInstructions: dbAgent.versions[0].genericInstructions || undefined,
-    summaryInstructions: dbAgent.versions[0].summaryInstructions || undefined,
-    commentInstructions: dbAgent.versions[0].commentInstructions || undefined,
-    gradeInstructions: dbAgent.versions[0].gradeInstructions || undefined,
     extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
   }));
 

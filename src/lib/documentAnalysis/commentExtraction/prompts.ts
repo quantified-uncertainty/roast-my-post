@@ -33,7 +33,7 @@ The extraction process:
 3. Ensures each comment stands alone as a complete observation
 4. Maps comments to specific document passages
 
-${agentInfo.commentInstructions || ''}`;
+`;
 
   const userMessage = `${documentInformationSection(document)}
 

@@ -72,10 +72,6 @@ export const exportAgentAsJson = async (
     version: agent.version,
     description: agent.description,
     genericInstructions: agent.genericInstructions,
-    summaryInstructions: agent.summaryInstructions,
-    analysisInstructions: agent.analysisInstructions,
-    commentInstructions: agent.commentInstructions,
-    gradeInstructions: agent.gradeInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
     extendedCapabilityId: agent.extendedCapabilityId,
     owner: agent.owner,
@@ -132,41 +128,9 @@ ${agent.description}`;
   if (agent.genericInstructions) {
     markdown += `
 
-## Primary Instructions
+## Instructions
 
 ${agent.genericInstructions}`;
-  }
-
-  if (agent.summaryInstructions) {
-    markdown += `
-
-## Summary Instructions
-
-${agent.summaryInstructions}`;
-  }
-
-  if (agent.commentInstructions) {
-    markdown += `
-
-## Comment Instructions
-
-${agent.commentInstructions}`;
-  }
-
-  if (agent.gradeInstructions) {
-    markdown += `
-
-## Grade Instructions
-
-${agent.gradeInstructions}`;
-  }
-
-  if (agent.analysisInstructions) {
-    markdown += `
-
-## Analysis Instructions
-
-${agent.analysisInstructions}`;
   }
 
   if (agent.selfCritiqueInstructions) {
@@ -204,10 +168,6 @@ export const exportAgentAsYaml = async (
     version: agent.version,
     description: agent.description,
     genericInstructions: agent.genericInstructions,
-    summaryInstructions: agent.summaryInstructions,
-    analysisInstructions: agent.analysisInstructions,
-    commentInstructions: agent.commentInstructions,
-    gradeInstructions: agent.gradeInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
     extendedCapabilityId: agent.extendedCapabilityId,
     owner: {

@@ -30,7 +30,7 @@ export async function GET(
       where: { agentId: agentId },
     });
 
-    // Get average grade
+    // Get average grade (will be null if no grades exist)
     const gradesResult = await prisma.evaluationVersion.aggregate({
       where: {
         agentId: agentId,

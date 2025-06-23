@@ -12,17 +12,13 @@ Creating an effective agent requires substantial detail and examples. While you 
 2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
 3. **description**: 1-2 sentences explaining what the agent does
 
-Optional but highly recommended:
-4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples)
-5. **readme**: Human-readable documentation for users and future modifiers
+Optional but highly recommended: 4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
 
-Most high-performing agents use only these fields, but pack extensive detail into the instructions. Additional fields should only be added when output types need fundamentally different approaches.
-
-**Important Note**: The `gradeInstructions` field is OPTIONAL. Without it, agents won't provide numerical grades - this is by design. Only add grading if you specifically want scoring functionality.
+**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `genericInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your agent needs to provide grades, include grading criteria within `genericInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\ngenericInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\ngenericInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
 
 ### Realistic Agent Example (Abbreviated):
 
-````yaml
+```yaml
 name: "Technical Documentation Reviewer"
 purpose: ASSESSOR
 description: "Evaluates technical documentation for clarity, completeness, and accuracy."
@@ -46,57 +42,108 @@ genericInstructions: |
       Understanding of different learning styles and developer personas.
       Experience with quickstarts, tutorials, how-to guides, and references.
     </developer_guides>
-    
-    <user_documentation>
-      Information architecture and content strategy expertise.
-      Accessibility standards (WCAG) and internationalization.
-      Experience with help systems, knowledge bases, and in-app guidance.
-    </user_documentation>
   </expertise_areas>
 
-  <evaluation_framework>
-    [... abbreviated - full version would be 20-50x longer with extensive examples ...]
-  </evaluation_framework>
+  ## Summary Generation Instructions
+
+  When generating the summary, provide a 2-3 paragraph overview that:
+  - States what type of documentation this is (API reference, user guide, tutorial, etc.)
+  - Identifies the target audience and whether the content serves them well
+  - Highlights 2-3 major strengths and 2-3 critical gaps
+  - Gives an overall assessment of documentation quality
+  - Uses clear, professional language accessible to both technical and non-technical readers
+
+  Example summary format:
+  "This API documentation for the WebhookService covers the basic endpoints but lacks critical 
+  implementation details needed by developers. While the endpoint descriptions are clear and 
+  include proper HTTP methods and paths, the documentation is missing authentication requirements, 
+  payload schemas, and error handling guidance."
+
+  ## Analysis Section Instructions
+
+  Structure your detailed analysis into these sections:
+
+  1. **Completeness Assessment** (25% of analysis)
+     - Check for missing critical sections (authentication, errors, examples, schemas)
+     - Verify all user journeys are documented
+     - Identify gaps in edge case coverage
+
+  2. **Technical Accuracy** (25% of analysis)
+     - Validate code examples for correctness
+     - Check for outdated or deprecated approaches
+     - Verify consistency between examples and explanations
+
+  3. **Clarity and Organization** (25% of analysis)
+     - Evaluate information architecture
+     - Assess navigation and discoverability
+     - Check for ambiguous language or jargon without explanation
+
+  4. **Usability and Examples** (25% of analysis)
+     - Quality and relevance of code examples
+     - Presence of common use case scenarios
+     - Effectiveness of quickstart guides
+
+  Use specific quotes from the documentation to support each point. Aim for 800-1500 words total.
+
+  ## Comment Generation Guidelines
+
+  Create 5-10 specific comments focusing on:
+  - Missing critical information (auth, errors, rate limits)
+  - Unclear or ambiguous instructions
+  - Code examples that won't work as written
+  - Excellent practices worth highlighting
+  - Specific improvement suggestions
+
+  For each comment:
+  - Title: Clear, specific issue or observation (5-10 words)
+  - Description: Detailed explanation with specific fix (100-300 words)
+  - Always suggest concrete improvements, not just identify problems
+
+  IMPORTANT: When highlighting text:
+  - Select only the specific problematic sentence or code snippet
+  - Maximum 1000 characters per highlight
+  - Never highlight entire paragraphs
+  - Focus on the exact text that needs attention
+
+  ## Grading Criteria
+
+  Grade the documentation on a 0-100 scale:
+
+  - **Completeness (30%)**: All necessary sections present and thorough
+    - 27-30: All critical sections present with comprehensive coverage
+    - 21-26: Most sections present, some gaps in coverage
+    - 15-20: Several important sections missing
+    - 0-14: Major gaps making docs unusable
+
+  - **Technical Accuracy (25%)**: Code examples work, information is correct
+    - 23-25: All examples tested and working, information accurate
+    - 18-22: Mostly accurate with minor issues
+    - 13-17: Several errors that would block users
+    - 0-12: Significant errors throughout
+
+  - **Clarity (25%)**: Easy to understand and well-organized
+    - 23-25: Crystal clear, excellent organization
+    - 18-22: Generally clear with minor ambiguities
+    - 13-17: Often unclear or poorly organized
+    - 0-12: Very difficult to understand
+
+  - **Practical Value (20%)**: Helps users accomplish real tasks
+    - 18-20: Excellent examples and use cases
+    - 14-17: Good practical coverage
+    - 10-13: Some practical help but gaps
+    - 0-9: Lacks practical application
+
+  Overall scores:
+  - 90-100: Publication-ready, exemplary documentation
+  - 80-89: High quality with minor improvements needed
+  - 70-79: Solid documentation with some gaps
+  - 60-69: Usable but needs significant work
+  - Below 60: Major revision required
 
   <example_evaluations>
-    <example category="missing_context">
-      <document_excerpt>
-        "To configure the webhook, set the endpoint URL in the settings panel."
-      </document_excerpt>
-      <evaluation>
-        <issue>Lacks critical context for implementation</issue>
-        <specific_problems>
-          - No mention of authentication requirements
-          - Missing payload format specification
-          - No error handling guidance
-          - Unclear which "settings panel" (UI? Config file? API?)
-        </specific_problems>
-        <suggested_revision>
-          "To configure the webhook:
-          1. Navigate to Settings > Integrations > Webhooks
-          2. Click 'Add Webhook' and provide:
-             - Endpoint URL (must be HTTPS)
-             - Authentication method (Bearer token or HMAC signature)
-             - Events to subscribe to
-          3. Test the connection using the 'Send Test Event' button
-          
-          The webhook will receive POST requests with this payload format:
-          ```json
-          {
-            "event_type": "user.created",
-            "timestamp": "2024-01-15T10:30:00Z",
-            "data": { ... }
-          }
-          ```
-          
-          Ensure your endpoint returns 200 OK within 5 seconds."
-        </suggested_revision>
-      </evaluation>
-    </example>
-    
-    [... 50+ more detailed examples covering different scenarios ...]
+    [... detailed examples showing all above sections in action ...]
   </example_evaluations>
-````
+```
 
 **Note**: This is a heavily abbreviated example. Real high-performance agents typically include:
 
@@ -219,6 +266,7 @@ After generating their analysis, agents automatically score the quality of their
 - **Adherence**: Did they follow their agent instructions properly?
 
 The agent provides:
+
 1. A numerical score from 1-100
 2. Explanation of what aspects were strong
 3. Identification of what could be improved
@@ -285,8 +333,8 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 
 #### `genericInstructions`
 
-- **Type**: string (minimum 30 characters if provided)
-- **Purpose**: Core behavioral instructions and personality
+- **Type**: string (required, minimum 30 characters)
+- **Purpose**: Comprehensive instructions for all agent behaviors
 - **Typical Length**: 5,000-50,000 words for high-quality agents
 - **Guidelines**:
   - Define comprehensive expertise and background
@@ -294,47 +342,73 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - Provide extensive rubrics and criteria
   - Cover edge cases and special scenarios
   - Include domain-specific knowledge
-- **Essential Components**:
+  - **NEW**: Include all specialized instructions (summary format, comment style, grading criteria) in sections within this field
+- **Essential Components** (ALL agents should include these sections):
+
   ```xml
   <role>Detailed background, expertise, experience</role>
   <approach>Comprehensive methodology and framework</approach>
-  <evaluation_criteria>Detailed rubrics with examples</evaluation_criteria>
-  <example_evaluations>50+ categorized examples</example_evaluations>
-  <edge_cases>How to handle special scenarios</edge_cases>
   <domain_knowledge>Terminology, standards, best practices</domain_knowledge>
+
+  ## Summary Generation Instructions
+  Provide a brief summary (2-3 paragraphs) that:
+  - Captures the main thesis or purpose of the document
+  - Identifies key strengths and weaknesses
+  - Sets context for the detailed analysis that follows
+  - Uses accessible language for the intended audience
+
+  ## Analysis Section Instructions
+  Structure your main analysis to:
+  - Follow a logical flow (e.g., by theme, by document section, or by quality dimension)
+  - Provide detailed examination of content quality, argumentation, evidence
+  - Include specific examples from the text to support your points
+  - Balance criticism with recognition of strengths
+  - Suggest concrete improvements where applicable
+  - Typical length: 500-2000 words depending on document complexity
+
+  ## Comment Generation Guidelines
+  For the "Key Highlights" section, create 5-10 specific comments that:
+  - Focus on particular passages or claims in the document
+  - Provide targeted feedback on specific issues or strengths
+  - Include actionable suggestions for improvement
+  - Connect to broader principles or best practices
+
+  IMPORTANT: When highlighting text:
+  - Keep highlights SHORT and focused (max 1000 characters)
+  - Select only the most relevant portion of text
+  - Avoid highlighting entire paragraphs or sections
+  - Each comment should have a clear title and 100-300 word explanation
+
+  ## Grading Criteria (if applicable)
+  <!-- Only include this section if the agent should provide numerical grades -->
+  Evaluate the document on a 0-100 scale based on:
+  - [Dimension 1 - 30%]: Specific criteria and what constitutes excellence
+  - [Dimension 2 - 25%]: Another criterion with clear standards
+  - [Dimension 3 - 25%]: Additional evaluation dimension
+  - [Dimension 4 - 20%]: Final criterion
+
+  Score interpretation:
+  - 90-100: Exceptional quality that exceeds professional standards
+  - 80-89: Strong work with minor areas for improvement
+  - 70-79: Good work that meets basic requirements
+  - 60-69: Adequate but with significant gaps
+  - Below 60: Needs major revision
+
+  <!-- Example-heavy sections -->
+  <example_evaluations>
+    <!-- Include 50+ detailed examples showing how to apply all the above -->
+    <example category="strong_analysis">
+      <document_excerpt>...</document_excerpt>
+      <summary>...</summary>
+      <analysis>...</analysis>
+      <comments>...</comments>
+      <grade>85 - Strong work because...</grade>
+    </example>
+    <!-- Many more examples covering different scenarios -->
+  </example_evaluations>
+
+  <edge_cases>How to handle special scenarios</edge_cases>
   <tone>Nuanced guidance for different contexts</tone>
-  ```
-
-#### `summaryInstructions`
-
-- **Type**: string (minimum 30 characters if provided)
-- **Purpose**: How to generate document summaries
-- **Default Behavior**: If not provided, agent uses genericInstructions
-- **When to Use**: Only when summary format differs significantly from general approach
-
-#### `commentInstructions`
-
-- **Type**: string (minimum 30 characters if provided)
-- **Purpose**: How to generate specific comments on text sections
-- **Default Behavior**: If not provided, agent uses genericInstructions
-- **When to Use**: Only when comment style needs specific guidance beyond general approach
-
-#### `gradeInstructions`
-
-- **Type**: string (optional)
-- **Purpose**: How to assign numerical grades (0-100 scale)
-- **Important**: This field is OPTIONAL. Agents without `gradeInstructions` will not provide grades - this is intentional, not a bug. Most agents don't need to grade documents.
-- **When to Use**: Only add this field if you want the agent to provide numerical scores
-- **Recommended Structure**:
-  ```xml
-  <grading_criteria>
-    <dimension weight="30">Criterion description and standards</dimension>
-    <dimension weight="25">Another criterion...</dimension>
-  </grading_criteria>
-  <scale_interpretation>
-    <range score="90-100">Exceptional quality</range>
-    <range score="80-89">High quality</range>
-  </scale_interpretation>
   ```
 
 #### `selfCritiqueInstructions`
@@ -372,13 +446,6 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   </self_critique_scoring>
   ```
 
-#### `analysisInstructions`
-
-- **Type**: string
-- **Purpose**: How to perform detailed analysis
-- **Default Behavior**: If not provided, agent uses genericInstructions
-- **When to Use**: For complex multi-step analysis requirements
-
 #### `readme`
 
 - **Type**: string
@@ -397,26 +464,31 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
   - Technical notes for LLMs modifying the agent
   - Version history and design decisions
 - **Example Structure**:
+
   ```markdown
   # Agent Name
-  
+
   ## What This Agent Does
+
   Brief explanation of purpose and capabilities
-  
+
   ## When to Use This Agent
+
   - Specific use cases
   - Types of documents it works best with
-  
+
   ## Capabilities & Limitations
-  - ✅ What it does well  
-  - ❌ What it doesn't do  
-  
+
+  - ✅ What it does well
+  - ❌ What it doesn't do
+
   ## For LLMs Modifying This Agent
-  - Architecture notes  
-  - Key design decisions  
-  - Testing recommendations  
+
+  - Architecture notes
+  - Key design decisions
+  - Testing recommendations
   ```
-  
+
   **Note**: The example above shows two trailing spaces after each bullet point to ensure proper line breaks when rendered.
 
 ---
@@ -428,6 +500,7 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 **Critical**: Agents should always use third-person perspective when referring to the document or author:
 
 ✅ **Correct Third-Person Examples**:
+
 - "This essay argues that..."
 - "The author claims..."
 - "The document presents evidence for..."
@@ -435,7 +508,8 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 - "This research suggests..."
 
 ❌ **Avoid Second-Person References**:
-- "You argue that..." 
+
+- "You argue that..."
 - "Your analysis shows..."
 - "You fail to consider..."
 - "Your evidence suggests..."
@@ -845,7 +919,9 @@ genericInstructions: |
     [... 100+ more detailed examples across different categories ...]
   </detailed_evaluation_examples>
 
-gradeInstructions: |
+  ## Grading Criteria
+  
+
   <grading_framework>
     <dimension name="methodology" weight="35">
       <score_90_100>
@@ -1165,9 +1241,9 @@ Identify which instruction fields are actually providing unique value:
 
 ```python
 # Questions to ask:
-- Are summaryInstructions different from genericInstructions?
-- Do commentInstructions add specific guidance not in generic?
-- Could gradeInstructions be part of the main instructions?
+- Are separate instruction sections needed within genericInstructions?
+- Does the agent need specialized behavior for different outputs?
+- Could all instructions be unified into a single comprehensive guide?
 ```
 
 ### Step 2: Consolidate with XML

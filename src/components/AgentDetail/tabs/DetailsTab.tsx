@@ -22,38 +22,8 @@ export function DetailsTab({ agent }: DetailsTabProps) {
 
       {agent.genericInstructions && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Primary Instructions</h2>
+          <h2 className="mb-4 text-xl font-semibold">Instructions</h2>
           <div className="whitespace-pre-wrap">{agent.genericInstructions}</div>
-        </div>
-      )}
-
-      {agent.summaryInstructions && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Summary Instructions</h2>
-          <div className="whitespace-pre-wrap">{agent.summaryInstructions}</div>
-        </div>
-      )}
-
-      {agent.analysisInstructions && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Analysis Instructions</h2>
-          <div className="whitespace-pre-wrap">
-            {agent.analysisInstructions}
-          </div>
-        </div>
-      )}
-
-      {agent.commentInstructions && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Comment Instructions</h2>
-          <div className="whitespace-pre-wrap">{agent.commentInstructions}</div>
-        </div>
-      )}
-
-      {agent.gradeInstructions && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold">Grade Instructions</h2>
-          <div className="whitespace-pre-wrap">{agent.gradeInstructions}</div>
         </div>
       )}
 

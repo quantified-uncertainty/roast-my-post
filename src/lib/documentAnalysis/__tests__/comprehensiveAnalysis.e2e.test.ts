@@ -14,9 +14,6 @@ describe("Comprehensive Analysis E2E", () => {
     purpose: "ADVISOR",
     description: "A test agent for providing writing feedback on blog posts and articles",
     genericInstructions: "You are a helpful writing coach focused on improving clarity and engagement. Provide detailed analysis with specific examples.",
-    summaryInstructions: "Provide a brief summary highlighting the main points and overall quality",
-    commentInstructions: "Focus on specific areas where the writing could be improved, such as clarity, flow, evidence, and engagement",
-    gradeInstructions: "Grade based on clarity, structure, evidence quality, and overall impact"
   };
 
   const mockDocument: Document = {

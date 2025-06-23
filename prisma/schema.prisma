@@ -188,10 +188,6 @@ model AgentVersion {
   agentType   AgentType
   description String
   genericInstructions String?
-  summaryInstructions String?
-  analysisInstructions String?
-  commentInstructions String?
-  gradeInstructions String?
   selfCritiqueInstructions String?
   extendedCapabilityId String?
   readme      String?  @db.Text

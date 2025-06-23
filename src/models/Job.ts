@@ -389,9 +389,6 @@ export class JobModel {
         version: agentVersion.version.toString(),
         description: agentVersion.description,
         genericInstructions: agentVersion.genericInstructions || undefined,
-        summaryInstructions: agentVersion.summaryInstructions || undefined,
-        commentInstructions: agentVersion.commentInstructions || undefined,
-        gradeInstructions: agentVersion.gradeInstructions || undefined,
         selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
         extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       };

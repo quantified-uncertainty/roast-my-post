@@ -223,8 +223,8 @@ export default function DocumentsClient({
                             const review = document.reviews.find(
                               (r: Evaluation) => r.agentId === agentId
                             );
-                            const hasGradeInstructions =
-                              review?.agent.gradeInstructions;
+                            // Just check if grade exists in the evaluation
+                            const hasGrade = review?.grade !== null && review?.grade !== undefined;
                             const grade = review?.grade;
 
                             return (
@@ -233,8 +233,7 @@ export default function DocumentsClient({
                                 className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600"
                               >
                                 {review?.agent.name}
-                                {hasGradeInstructions &&
-                                  grade !== undefined && (
+                                {hasGrade && (
                                     <GradeBadge
                                       grade={grade}
                                       className="ml-1 text-xs"

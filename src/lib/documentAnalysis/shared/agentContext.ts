@@ -2,18 +2,17 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 
 export function shouldIncludeGrade(agentInfo: Agent): boolean {
-  return !!agentInfo.gradeInstructions;
+  // TODO: NEEDS GRADE FLAG - This function should check a new agent field like 'providesGrades'
+  // For now, returning false since gradeInstructions field has been removed
+  return false;
 }
 
 export function getAgentContextXML(agentInfo: Agent): string {
   return `<agent>
   <name>${agentInfo.name}</name>
   <description>${agentInfo.description}</description>
-  ${agentInfo.genericInstructions ? `<general_instructions>${agentInfo.genericInstructions}</general_instructions>` : ""}
-  ${agentInfo.summaryInstructions ? `<summary_instructions>${agentInfo.summaryInstructions}</summary_instructions>` : ""}
-  ${agentInfo.analysisInstructions ? `<analysis_instructions>${agentInfo.analysisInstructions}</analysis_instructions>` : ""}
-  ${agentInfo.commentInstructions ? `<comment_instructions>${agentInfo.commentInstructions}</comment_instructions>` : ""}
-  ${shouldIncludeGrade(agentInfo) ? `<grade_instructions>${agentInfo.gradeInstructions}</grade_instructions>` : ""}
+  ${agentInfo.genericInstructions ? `<instructions>${agentInfo.genericInstructions}</instructions>` : ""}
+  ${agentInfo.selfCritiqueInstructions ? `<self_critique_instructions>${agentInfo.selfCritiqueInstructions}</self_critique_instructions>` : ""}
 </agent>`;
 }
 

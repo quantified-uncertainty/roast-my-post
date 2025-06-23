@@ -28,9 +28,6 @@ export default function NewAgentPage() {
       purpose: "ASSESSOR",
       description: "",
       genericInstructions: "",
-      summaryInstructions: "",
-      commentInstructions: "",
-      gradeInstructions: "",
       extendedCapabilityId: "",
     },
   });

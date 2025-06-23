@@ -190,59 +190,33 @@ export default function AgentVersionsClient({
                       </div>
                     </div>
 
-                    <div>
-                      <h3 className="mb-2 text-lg font-medium text-gray-900">
-                        Generic Instructions
-                      </h3>
-                      <div className="prose max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
-                          {selectedVersion.genericInstructions}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="mb-2 text-lg font-medium text-gray-900">
-                        Analysis Instructions
-                      </h3>
-                      <div className="prose max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
-                          {selectedVersion.summaryInstructions}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="mb-2 text-lg font-medium text-gray-900">
-                        Comment Instructions
-                      </h3>
-                      <div className="prose max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeRaw]}
-                        >
-                          {selectedVersion.commentInstructions}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-
-                    {selectedVersion.gradeInstructions && (
+                    {selectedVersion.genericInstructions && (
                       <div>
                         <h3 className="mb-2 text-lg font-medium text-gray-900">
-                          Grade Instructions
+                          Instructions
                         </h3>
                         <div className="prose max-w-none">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw]}
                           >
-                            {selectedVersion.gradeInstructions}
+                            {selectedVersion.genericInstructions}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedVersion.selfCritiqueInstructions && (
+                      <div>
+                        <h3 className="mb-2 text-lg font-medium text-gray-900">
+                          Self-Critique Instructions
+                        </h3>
+                        <div className="prose max-w-none">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                          >
+                            {selectedVersion.selfCritiqueInstructions}
                           </ReactMarkdown>
                         </div>
                       </div>

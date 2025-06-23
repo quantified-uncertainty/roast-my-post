@@ -85,18 +85,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           genericInstructions: importedData
             ? (importedData.genericInstructions ?? "")
             : data.genericInstructions || "",
-          summaryInstructions: importedData
-            ? (importedData.summaryInstructions ?? "")
-            : data.summaryInstructions || "",
-          analysisInstructions: importedData
-            ? (importedData.analysisInstructions ?? "")
-            : data.analysisInstructions || "",
-          commentInstructions: importedData
-            ? (importedData.commentInstructions ?? "")
-            : data.commentInstructions || "",
-          gradeInstructions: importedData
-            ? (importedData.gradeInstructions ?? "")
-            : data.gradeInstructions || "",
           selfCritiqueInstructions: importedData
             ? (importedData.selfCritiqueInstructions ?? "")
             : data.selfCritiqueInstructions || "",

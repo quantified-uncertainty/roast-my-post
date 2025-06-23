@@ -12,8 +12,6 @@ describe("Link Analysis Integration", () => {
     purpose: "ASSESSOR",
     description: "A test agent for checking link validity and detecting broken or hallucinated URLs",
     genericInstructions: "You are a link validation expert focused on detecting broken or hallucinated URLs",
-    summaryInstructions: "Provide a summary of link validation findings",
-    commentInstructions: "Generate comments for link issues found",
   };
 
   const mockDocumentWithLinks: Document = {

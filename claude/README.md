@@ -14,9 +14,24 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 - Missing critical instruction sections in most agents
 
 **Important Note about Instructions:**
-- `gradeInstructions` are OPTIONAL - agents without them don't provide grades (this is intentional)
-- Only `genericInstructions` is truly required
-- `analysisInstructions` and `selfCritiqueInstructions` improve consistency but aren't mandatory
+- Instructions have been consolidated into `genericInstructions` and `selfCritiqueInstructions`
+- All analysis, summary, comment, and grading instructions should be sections within `genericInstructions`
+- `selfCritiqueInstructions` are optional and provide quality scoring criteria
+- A `providesGrades` flag is coming soon to explicitly indicate grade-providing agents
+
+## Claude Code Efficiency Lessons
+
+### Lesson 1: Don't Search for Known Information (2025-06-23)
+**Issue**: Wasted ~5 minutes using Task tool to search for agent schema definitions when I already knew the Prisma schema location.
+**Root Cause**: Defaulting to search behavior instead of direct navigation when uncertain.
+**Solution**: When you know a file location or have worked with it before, go directly to it. Use search tools only for truly unknown information.
+**Impact**: This pattern likely wastes significant time across sessions.
+
+### Lesson 2: Verify Data Source Before Making Changes (2025-06-23)
+**Issue**: Spent significant time updating TOML files in /data/agents that were outdated/unused. The real agent data lives in the database.
+**Root Cause**: Assumed file-based data was the source of truth without verifying.
+**Solution**: Always confirm where the authoritative data lives before making changes. Check imports, database models, and how data is actually loaded.
+**Impact**: Wasted effort on dead code that had no effect on the system.
 
 ## Helper Scripts
 

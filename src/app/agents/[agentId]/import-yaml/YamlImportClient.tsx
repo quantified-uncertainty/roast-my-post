@@ -38,11 +38,7 @@ interface AgentData {
   purpose: string;
   description: string;
   genericInstructions?: string;
-  summaryInstructions?: string;
-  commentInstructions?: string;
-  gradeInstructions?: string;
   selfCritiqueInstructions?: string;
-  analysisInstructions?: string;
   extendedCapabilityId?: string;
   readme?: string;
 }
@@ -50,11 +46,7 @@ interface AgentData {
 const REQUIRED_FIELDS = ["name", "purpose", "description"];
 const OPTIONAL_FIELDS = [
   "genericInstructions",
-  "summaryInstructions",
-  "commentInstructions",
-  "gradeInstructions",
   "selfCritiqueInstructions",
-  "analysisInstructions",
   "extendedCapabilityId",
   "readme",
 ];
@@ -278,15 +270,11 @@ purpose: ASSESSOR
 description: A helpful agent that does amazing things
 genericInstructions: |
   You are an expert assistant...
-summaryInstructions: Create concise summaries
-commentInstructions: Provide insightful comments
-gradeInstructions: Grade based on quality
 selfCritiqueInstructions: |
   Score your evaluation quality 1-100 based on:
   - Technical accuracy (40%)
   - Completeness (30%)
   - Actionability (30%)
-analysisInstructions: Provide detailed analysis
 readme: |
   # My Agent
   
@@ -418,7 +406,7 @@ readme: |
                 {validation.parsedData.genericInstructions && (
                   <div>
                     <span className="font-medium text-gray-700">
-                      Generic Instructions:
+                      Instructions:
                     </span>
                     <p className="mt-1 max-h-24 overflow-y-auto rounded border bg-white p-2 text-gray-900">
                       {validation.parsedData.genericInstructions.slice(0, 200)}
@@ -428,44 +416,6 @@ readme: |
                   </div>
                 )}
 
-                {validation.parsedData.summaryInstructions && (
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Summary Instructions:
-                    </span>
-                    <p className="mt-1 rounded border bg-white p-2 text-gray-900">
-                      {validation.parsedData.summaryInstructions.slice(0, 100)}
-                      {validation.parsedData.summaryInstructions.length > 100 &&
-                        "..."}
-                    </p>
-                  </div>
-                )}
-
-                {validation.parsedData.commentInstructions && (
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Comment Instructions:
-                    </span>
-                    <p className="mt-1 rounded border bg-white p-2 text-gray-900">
-                      {validation.parsedData.commentInstructions.slice(0, 100)}
-                      {validation.parsedData.commentInstructions.length > 100 &&
-                        "..."}
-                    </p>
-                  </div>
-                )}
-
-                {validation.parsedData.gradeInstructions && (
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Grade Instructions:
-                    </span>
-                    <p className="mt-1 rounded border bg-white p-2 text-gray-900">
-                      {validation.parsedData.gradeInstructions.slice(0, 100)}
-                      {validation.parsedData.gradeInstructions.length > 100 &&
-                        "..."}
-                    </p>
-                  </div>
-                )}
 
                 {validation.parsedData.selfCritiqueInstructions && (
                   <div>
@@ -483,18 +433,6 @@ readme: |
                   </div>
                 )}
 
-                {validation.parsedData.analysisInstructions && (
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Analysis Instructions:
-                    </span>
-                    <p className="mt-1 rounded border bg-white p-2 text-gray-900">
-                      {validation.parsedData.analysisInstructions.slice(0, 100)}
-                      {validation.parsedData.analysisInstructions.length >
-                        100 && "..."}
-                    </p>
-                  </div>
-                )}
 
                 {validation.parsedData.readme && (
                   <div>

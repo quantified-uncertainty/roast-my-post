@@ -14,9 +14,7 @@ export interface RawDocumentReview {
     description: string;
     purpose: string;
     genericInstructions?: string;
-    summaryInstructions?: string;
-    commentInstructions?: string;
-    gradeInstructions?: string;
+    selfCritiqueInstructions?: string;
   };
   comments: Comment[];
   costInCents: number;

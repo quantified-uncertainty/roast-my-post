@@ -157,7 +157,7 @@ export function EvaluationsTab({
                         <span className="font-mono text-sm text-gray-900">
                           {evalItem.id.slice(0, 8)}...
                         </span>
-                        {evalItem.grade !== null && evalItem.grade !== undefined && agent.gradeInstructions ? (
+                        {evalItem.grade !== null && evalItem.grade !== undefined ? (
                           <GradeBadge grade={evalItem.grade} />
                         ) : (
                           <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
@@ -221,7 +221,7 @@ export function EvaluationsTab({
                       : ""
                   }`,
                   evaluationVersion: selectedEvaluation.evaluationVersion,
-                  grade: agent.gradeInstructions && selectedEvaluation.grade !== undefined ? selectedEvaluation.grade : null,
+                  grade: selectedEvaluation.grade !== undefined ? selectedEvaluation.grade : null,
                   jobStatus: selectedEvaluation.jobStatus,
                   createdAt: selectedEvaluation.createdAt,
                   summary: selectedEvaluation.summary,

@@ -125,7 +125,8 @@ function CommentsSidebar({
       <div className="divide-y divide-gray-100">
         {sortedComments.map((comment: Comment, index: number) => {
           const tag = index.toString();
-          const hasGradeInstructions = evaluation.agent.gradeInstructions;
+          // TODO: NEEDS GRADE FLAG - Replace with evaluation.agent.providesGrades when available
+          const hasGradeInstructions = false;
 
           return (
             <div
@@ -837,8 +838,8 @@ export function DocumentWithEvaluations({
   const commentColorMap = useMemo(() => {
     if (!activeEvaluation) return {};
     const sortedComments = getValidAndSortedComments(activeEvaluation.comments);
-    const hasGradeInstructions =
-      activeEvaluation.agent.gradeInstructions ?? false;
+    // TODO: NEEDS GRADE FLAG - Replace with activeEvaluation.agent.providesGrades when available
+    const hasGradeInstructions = false;
 
     // Get all importance values for percentile calculation
     const allImportances = sortedComments
