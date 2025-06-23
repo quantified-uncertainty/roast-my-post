@@ -43,11 +43,34 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 4. Take "--accept-data-loss" literally - it WILL lose data
 **Impact**: Complete data loss for all agent instructions in development database.
 
-## Helper Scripts
+## Database Access Options
 
-All scripts use TypeScript with Prisma for direct database access.
+### Recommended: MCP Server (Fastest)
 
-### 1. Analyze Recent Evaluations
+We now have an MCP (Model Context Protocol) server that provides direct database access without needing to write scripts. This is **10-20x faster** than writing and executing TypeScript scripts.
+
+**To use the MCP server in Claude:**
+```
+"Show me all active agents"
+"Get recent failed evaluations for research-scholar"
+"What's the performance of ASSESSOR agents over the last 30 days?"
+"Find documents with no evaluations"
+```
+
+The MCP server provides these tools:
+- `get_agents` - List agents with their latest versions
+- `get_recent_evaluations` - View recent evaluations with filtering
+- `get_agent_stats` - Get performance statistics for specific agents
+- `get_failed_jobs` - Get recent failed jobs with error details
+- `get_documents` - Search and list documents with evaluation status
+
+See `/mcp-server/README.md` for setup instructions if not already configured.
+
+### Alternative: Helper Scripts
+
+If you need to run specific analysis scripts or the MCP server isn't available, all scripts use TypeScript with Prisma for direct database access.
+
+#### 1. Analyze Recent Evaluations
 ```bash
 npx tsx claude/scripts/scripts/analyze-recent-evals.ts
 ```
@@ -56,7 +79,7 @@ npx tsx claude/scripts/scripts/analyze-recent-evals.ts
 - Failure rate analysis
 - Grade distribution statistics
 
-### 2. Deep Dive Analysis
+#### 2. Deep Dive Analysis
 ```bash
 npx tsx claude/scripts/deep-dive-analysis.ts
 ```
@@ -65,7 +88,7 @@ npx tsx claude/scripts/deep-dive-analysis.ts
 - Comment quality metrics
 - Cost efficiency by agent
 
-### 3. Agent Performance Analysis
+#### 3. Agent Performance Analysis
 ```bash
 npx tsx claude/scripts/analyze-agent.ts <agent-id>
 ```
@@ -73,7 +96,7 @@ npx tsx claude/scripts/analyze-agent.ts <agent-id>
 - Recent evaluation history
 - Common failure patterns
 
-### 4. Improvement Workflow
+#### 4. Improvement Workflow
 ```bash
 npx tsx claude/scripts/improve-agent-workflow.ts <agent-id>
 ```
@@ -101,7 +124,16 @@ cat /tmp/agent-analysis-$AGENT_ID.json
 
 ## Database Queries
 
-For direct analysis when scripts aren't enough:
+### Using MCP Server (Recommended)
+
+The MCP server is the fastest way to query the database. Just ask naturally:
+- "Find all jobs that failed in the last 7 days"
+- "Show grade statistics grouped by agent"
+- "Which documents have the most evaluations?"
+
+### Writing Custom Queries
+
+For direct analysis when you need custom queries not covered by the MCP tools:
 
 ```typescript
 // Find all recent failures

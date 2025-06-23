@@ -69,9 +69,20 @@
       "Bash(for:*)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
-      "Bash(timeout 180 npm run process-jobs 2 >& 1)"
+      "Bash(timeout 180 npm run process-jobs 2 >& 1)",
+      "Bash(/usr/bin/npm install)",
+      "Bash(/bin/bash -c \"cd /Users/ozziegooen/Documents/Github/open-annotate-mcp-experiment/mcp-server && npm install\")",
+      "Bash(/bin/bash -c \"cd /Users/ozziegooen/Documents/Github/open-annotate-mcp-experiment/mcp-server && npm run prisma:generate\")",
+      "Bash(/bin/bash -c \"cd /Users/ozziegooen/Documents/Github/open-annotate-mcp-experiment/mcp-server && npm run build\")",
+      "Bash(/bin/bash:*)",
+      "Bash(mcp-client-cli:*)",
+      "Bash(/opt/homebrew/bin/node configure-claude.js)",
+      "Bash(/opt/homebrew/bin/node test-mcp.js)",
+      "Bash(/usr/bin/env node configure-claude.js)",
+      "Bash(/usr/bin/npm run setup)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": []
   },
-  "enableAllProjectMcpServers": false
+  "enableAllProjectMcpServers": true
 }

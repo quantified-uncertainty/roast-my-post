@@ -92,6 +92,7 @@ When adding conditional features (like re-upload button):
 - **Authentication**: NextAuth.js 5.0.0-beta.28
 - **UI**: Tailwind CSS, Slate.js editor for document highlighting
 - **AI**: Anthropic Claude API + OpenAI integration
+- **MCP Server**: Fast database access via Model Context Protocol
 
 ### Core Architecture
 - **Documents**: Content items for analysis (with versioning)
@@ -131,3 +132,17 @@ When adding conditional features (like re-upload button):
 - `npm run typecheck` - Type checking
 - `npm run db:push` - Push schema changes
 - `npm run process-jobs` - Manual job processing
+
+## Database Access
+
+### MCP Server (Recommended for Claude Code)
+We have an MCP server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files. See `/mcp-server/README.md` for setup.
+
+Example usage in Claude:
+- "Show me all agents with high failure rates"
+- "Get evaluation stats for the last 30 days"
+- "Find documents without any evaluations"
+
+### Direct Script Access
+For complex queries, you can still write TypeScript scripts using Prisma. See `/claude/README.md` for examples.
+

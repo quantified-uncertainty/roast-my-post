@@ -4,6 +4,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 RoastMyPost is a document annotation application built with Next.js. It allows users to upload, analyze, and add annotations to documents. The app features AI-powered document analysis tools and a clean, responsive interface for working with Markdown documents.
 
+## For Developers
+
+This project includes an MCP (Model Context Protocol) server for fast database access. If you're using Claude Code, the MCP server provides instant database queries without writing scripts. See `/mcp-server/README.md` for setup and `/claude/README.md` for Claude-specific workflows.
+
 ## Getting Started
 
 First, run the development server:
