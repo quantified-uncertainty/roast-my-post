@@ -13,7 +13,7 @@ export interface RawDocumentReview {
     version: string;
     description: string;
     purpose: string;
-    genericInstructions?: string;
+    primaryInstructions?: string;
     selfCritiqueInstructions?: string;
   };
   comments: Comment[];

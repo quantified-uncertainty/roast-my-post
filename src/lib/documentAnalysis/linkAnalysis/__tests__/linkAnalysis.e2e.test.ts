@@ -17,7 +17,7 @@ const mockAgent: Agent = {
   version: "1",
   purpose: "ASSESSOR",
   description: "A test agent for analyzing links in documents to validate their accessibility and correctness",
-  genericInstructions: "Analyze the provided document focusing on link validation and accessibility",
+  primaryInstructions: "Analyze the provided document focusing on link validation and accessibility",
 };
 
 // Helper to create test documents

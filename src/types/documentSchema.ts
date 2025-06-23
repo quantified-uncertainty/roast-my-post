@@ -72,7 +72,7 @@ export const EvaluationSchema = z.object({
     version: z.string(),
     description: z.string(),
     purpose: z.string(),
-    genericInstructions: z.string().optional(),
+    primaryInstructions: z.string().optional(),
     selfCritiqueInstructions: z.string().optional(),
   }),
   createdAt: z.date(),

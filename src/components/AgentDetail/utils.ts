@@ -71,7 +71,7 @@ export const exportAgentAsJson = async (
     purpose: agent.purpose,
     version: agent.version,
     description: agent.description,
-    genericInstructions: agent.genericInstructions,
+    primaryInstructions: agent.primaryInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
     extendedCapabilityId: agent.extendedCapabilityId,
     owner: agent.owner,
@@ -125,12 +125,12 @@ extended_capability: ${agent.extendedCapabilityId || "none"}
 
 ${agent.description}`;
 
-  if (agent.genericInstructions) {
+  if (agent.primaryInstructions) {
     markdown += `
 
 ## Instructions
 
-${agent.genericInstructions}`;
+${agent.primaryInstructions}`;
   }
 
   if (agent.selfCritiqueInstructions) {
@@ -167,7 +167,7 @@ export const exportAgentAsYaml = async (
     purpose: agent.purpose,
     version: agent.version,
     description: agent.description,
-    genericInstructions: agent.genericInstructions,
+    primaryInstructions: agent.primaryInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
     extendedCapabilityId: agent.extendedCapabilityId,
     owner: {

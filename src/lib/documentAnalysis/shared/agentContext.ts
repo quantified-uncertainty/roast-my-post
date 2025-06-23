@@ -11,7 +11,7 @@ export function getAgentContextXML(agentInfo: Agent): string {
   return `<agent>
   <name>${agentInfo.name}</name>
   <description>${agentInfo.description}</description>
-  ${agentInfo.genericInstructions ? `<instructions>${agentInfo.genericInstructions}</instructions>` : ""}
+  ${agentInfo.primaryInstructions ? `<instructions>${agentInfo.primaryInstructions}</instructions>` : ""}
   ${agentInfo.selfCritiqueInstructions ? `<self_critique_instructions>${agentInfo.selfCritiqueInstructions}</self_critique_instructions>` : ""}
 </agent>`;
 }

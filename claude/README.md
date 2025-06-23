@@ -33,6 +33,16 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 **Solution**: Always confirm where the authoritative data lives before making changes. Check imports, database models, and how data is actually loaded.
 **Impact**: Wasted effort on dead code that had no effect on the system.
 
+### Lesson 3: CRITICAL - Always Backup Before Database Schema Changes (2025-06-23)
+**Issue**: Lost all data in genericInstructions column (32 agent versions) by using `prisma db push --accept-data-loss` to "rename" a column.
+**Root Cause**: Misunderstood that `db push` with column name changes = DROP + ADD, not RENAME. Ignored the explicit data loss warning.
+**Solution**: 
+1. ALWAYS create a backup before ANY schema change: `pg_dump -U postgres -d open_annotate > backup_$(date +%Y%m%d_%H%M%S).sql`
+2. Use proper migrations for column renames: `ALTER TABLE "TableName" RENAME COLUMN "old" TO "new";`
+3. Test destructive operations on a database copy first
+4. Take "--accept-data-loss" literally - it WILL lose data
+**Impact**: Complete data loss for all agent instructions in development database.
+
 ## Helper Scripts
 
 All scripts use TypeScript with Prisma for direct database access.

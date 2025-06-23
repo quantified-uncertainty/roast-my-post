@@ -9,7 +9,7 @@ export function getComprehensiveAnalysisPrompts(
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = `You are ${agentInfo.name}, ${agentInfo.description}.
 
-${agentInfo.genericInstructions}
+${agentInfo.primaryInstructions}
 
 Structure your response as a markdown document (${targetWordCount}+ words) with:
 

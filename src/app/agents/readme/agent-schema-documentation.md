@@ -12,9 +12,9 @@ Creating an effective agent requires substantial detail and examples. While you 
 2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
 3. **description**: 1-2 sentences explaining what the agent does
 
-Optional but highly recommended: 4. **genericInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
+Optional but highly recommended: 4. **primaryInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
 
-**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `genericInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your agent needs to provide grades, include grading criteria within `genericInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\ngenericInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\ngenericInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
+**Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `primaryInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your agent needs to provide grades, include grading criteria within `primaryInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\nprimaryInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\nprimaryInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
 
 ### Realistic Agent Example (Abbreviated):
 
@@ -22,7 +22,7 @@ Optional but highly recommended: 4. **genericInstructions**: Comprehensive behav
 name: "Technical Documentation Reviewer"
 purpose: ASSESSOR
 description: "Evaluates technical documentation for clarity, completeness, and accuracy."
-genericInstructions: |
+primaryInstructions: |
   <role>
   You are a senior technical documentation expert with 15+ years of experience across 
   enterprise software, developer tools, and API documentation. You've worked with teams 
@@ -331,7 +331,7 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 
 ### Optional Fields
 
-#### `genericInstructions`
+#### `primaryInstructions`
 
 - **Type**: string (required, minimum 30 characters)
 - **Purpose**: Comprehensive instructions for all agent behaviors
@@ -815,7 +815,7 @@ Claude performs 30% better when document content comes before instructions:
 name: "Academic Research Evaluator"
 purpose: ASSESSOR
 description: "Evaluates research papers using rigorous academic standards, focusing on methodology, novelty, and potential impact."
-genericInstructions: |
+primaryInstructions: |
   <role>
     <background>
       You are a senior academic reviewer with 20+ years of experience evaluating research 
@@ -1022,7 +1022,7 @@ selfCritiqueInstructions: |
 name: "Clarity Coach"
 purpose: ADVISOR
 description: "Helps improve writing clarity, structure, and readability for general audiences."
-genericInstructions: |
+primaryInstructions: |
   <role>
   You are a writing coach specializing in clear communication. You help writers
   transform complex ideas into accessible content without losing depth or nuance.
@@ -1054,7 +1054,7 @@ genericInstructions: |
 name: "EA Impact Evaluator"
 purpose: ASSESSOR
 description: "Evaluates proposals and research through an Effective Altruism framework, assessing impact, neglectedness, and tractability."
-genericInstructions: |
+primaryInstructions: |
   <role>
   You are an expert in Effective Altruism methodology, cause prioritization,
   and impact evaluation. You apply rigorous frameworks to assess interventions
@@ -1241,7 +1241,7 @@ Identify which instruction fields are actually providing unique value:
 
 ```python
 # Questions to ask:
-- Are separate instruction sections needed within genericInstructions?
+- Are separate instruction sections needed within primaryInstructions?
 - Does the agent need specialized behavior for different outputs?
 - Could all instructions be unified into a single comprehensive guide?
 ```
@@ -1252,13 +1252,13 @@ Transform multiple fields into structured generic instructions:
 
 ```xml
 <!-- Before: Separate fields -->
-genericInstructions: "You are an expert..."
+primaryInstructions: "You are an expert..."
 summaryInstructions: "Keep summaries to 200 words"
 commentInstructions: "Focus on actionable feedback"
 gradeInstructions: "Use academic grading scale"
 
 <!-- After: Unified with XML -->
-genericInstructions: |
+primaryInstructions: |
   <role>You are an expert...</role>
 
   <output_guidelines>
@@ -1319,7 +1319,7 @@ IMPORTANT: Create comprehensive instructions (5,000+ words) that include:
 5. Domain-specific knowledge and terminology
 
 Use XML structure throughout and focus on creating a single, comprehensive
-genericInstructions field unless there's a specific need for different
+primaryInstructions field unless there's a specific need for different
 behavior across output types.
 
 MARKDOWN FORMATTING: In the readme field, ensure proper Markdown formatting:

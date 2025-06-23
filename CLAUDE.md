@@ -2,6 +2,57 @@
 
 > **Note**: This file contains project-specific technical notes. For Claude Code operations, analysis scripts, and system insights, see `/claude/README.md`
 
+## Critical Database Safety Incident (2024-01-23)
+
+### What Happened
+I lost 32 agent versions' worth of instruction data by using `prisma db push --accept-data-loss` to "rename" a column from `genericInstructions` to `primaryInstructions`. This command doesn't rename - it DROPS the old column and ADDS a new empty one.
+
+### Root Cause
+- Misunderstood how `prisma db push` works with column changes
+- Ignored the warning in `--accept-data-loss` flag
+- Didn't create a backup before a potentially destructive operation
+- Should have written a proper migration to preserve data
+
+### Lessons Learned
+1. **ALWAYS backup the database before schema changes**
+   ```bash
+   pg_dump -U postgres -d open_annotate > backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+2. **NEVER use `prisma db push --accept-data-loss` for renaming columns**
+   - It will DROP and recreate, not rename
+   - Data WILL be lost
+
+3. **For column renames, write manual migrations**
+   ```sql
+   -- Safe way to rename a column
+   ALTER TABLE "TableName" RENAME COLUMN "oldName" TO "newName";
+   
+   -- Or if changing type/adding new:
+   ALTER TABLE "TableName" ADD COLUMN "newName" TEXT;
+   UPDATE "TableName" SET "newName" = "oldName";
+   ALTER TABLE "TableName" DROP COLUMN "oldName";
+   ```
+
+4. **Test destructive operations on a copy first**
+   ```bash
+   # Create a test database
+   createdb -U postgres open_annotate_test
+   pg_dump -U postgres open_annotate | psql -U postgres open_annotate_test
+   # Test your migration on the copy
+   ```
+
+5. **Read warnings carefully**
+   - "accept-data-loss" means exactly that
+   - "There might be data loss" is not hypothetical
+
+### Database Safety Checklist
+- [ ] Is this operation potentially destructive?
+- [ ] Do I have a current backup?
+- [ ] Have I tested on a copy of the database?
+- [ ] Am I using the right tool for the job?
+- [ ] Have I read and understood all warnings?
+
 ## Key Learnings
 
 ### Git Commit Issues
@@ -45,7 +96,7 @@ When adding conditional features (like re-upload button):
 ### Core Architecture
 - **Documents**: Content items for analysis (with versioning)
 - **Agents**: AI evaluators (ASSESSOR, ADVISOR, ENRICHER, EXPLAINER) stored as TOML configs
-  - Note: Only agents with `gradeInstructions` provide grades - this is optional and intentional
+  - Note: Agent instructions are now consolidated into `primaryInstructions` and `selfCritiqueInstructions`
 - **Evaluations**: AI-generated analysis with comments and highlights
 - **Jobs**: Asynchronous processing queue for AI analysis with retry logic
 

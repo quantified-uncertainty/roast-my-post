@@ -82,9 +82,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           description: importedData
             ? importedData.description
             : data.description,
-          genericInstructions: importedData
-            ? (importedData.genericInstructions ?? "")
-            : data.genericInstructions || "",
+          primaryInstructions: importedData
+            ? (importedData.primaryInstructions ?? "")
+            : data.primaryInstructions || "",
           selfCritiqueInstructions: importedData
             ? (importedData.selfCritiqueInstructions ?? "")
             : data.selfCritiqueInstructions || "",

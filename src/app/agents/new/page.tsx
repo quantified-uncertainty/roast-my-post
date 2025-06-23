@@ -27,7 +27,7 @@ export default function NewAgentPage() {
       name: "",
       purpose: "ASSESSOR",
       description: "",
-      genericInstructions: "",
+      primaryInstructions: "",
       extendedCapabilityId: "",
     },
   });

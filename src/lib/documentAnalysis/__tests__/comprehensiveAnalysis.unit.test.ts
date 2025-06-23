@@ -29,7 +29,7 @@ describe("Comprehensive Analysis Unit Tests", () => {
     version: "1.0",
     purpose: "ADVISOR",
     description: "A test agent",
-    genericInstructions: "Test instructions",
+    primaryInstructions: "Test instructions",
   };
 
   const mockDocument: Document = {

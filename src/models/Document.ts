@@ -45,7 +45,7 @@ type DocumentWithRelations = {
         name: string;
         agentType: string;
         description: string;
-        genericInstructions: string;
+        primaryInstructions: string;
         selfCritiqueInstructions: string | null;
       }>;
     };
@@ -255,8 +255,8 @@ export class DocumentModel {
             version: evaluation.agent.versions[0].version.toString(),
             description: evaluation.agent.versions[0].description,
             purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
-            genericInstructions:
-              evaluation.agent.versions[0].genericInstructions,
+            primaryInstructions:
+              evaluation.agent.versions[0].primaryInstructions,
             selfCritiqueInstructions:
               evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
           },
@@ -436,8 +436,8 @@ export class DocumentModel {
               version: evaluation.agent.versions[0].version.toString(),
               description: evaluation.agent.versions[0].description,
               purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
-              genericInstructions:
-                evaluation.agent.versions[0].genericInstructions || undefined,
+              primaryInstructions:
+                evaluation.agent.versions[0].primaryInstructions || undefined,
               selfCritiqueInstructions:
                 evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
             },

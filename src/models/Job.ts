@@ -388,7 +388,7 @@ export class JobModel {
         purpose: agentVersion.agentType.toLowerCase(),
         version: agentVersion.version.toString(),
         description: agentVersion.description,
-        genericInstructions: agentVersion.genericInstructions || undefined,
+        primaryInstructions: agentVersion.primaryInstructions || undefined,
         selfCritiqueInstructions: agentVersion.selfCritiqueInstructions || undefined,
         extendedCapabilityId: agentVersion.extendedCapabilityId || undefined,
       };

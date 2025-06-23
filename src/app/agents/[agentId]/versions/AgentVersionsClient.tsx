@@ -190,7 +190,7 @@ export default function AgentVersionsClient({
                       </div>
                     </div>
 
-                    {selectedVersion.genericInstructions && (
+                    {selectedVersion.primaryInstructions && (
                       <div>
                         <h3 className="mb-2 text-lg font-medium text-gray-900">
                           Instructions
@@ -200,7 +200,7 @@ export default function AgentVersionsClient({
                             remarkPlugins={[remarkGfm]}
                             rehypePlugins={[rehypeRaw]}
                           >
-                            {selectedVersion.genericInstructions}
+                            {selectedVersion.primaryInstructions}
                           </ReactMarkdown>
                         </div>
                       </div>

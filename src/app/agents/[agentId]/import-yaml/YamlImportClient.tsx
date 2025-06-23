@@ -37,7 +37,7 @@ interface AgentData {
   name: string;
   purpose: string;
   description: string;
-  genericInstructions?: string;
+  primaryInstructions?: string;
   selfCritiqueInstructions?: string;
   extendedCapabilityId?: string;
   readme?: string;
@@ -45,7 +45,7 @@ interface AgentData {
 
 const REQUIRED_FIELDS = ["name", "purpose", "description"];
 const OPTIONAL_FIELDS = [
-  "genericInstructions",
+  "primaryInstructions",
   "selfCritiqueInstructions",
   "extendedCapabilityId",
   "readme",
@@ -268,7 +268,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
               placeholder="name: My Agent
 purpose: ASSESSOR
 description: A helpful agent that does amazing things
-genericInstructions: |
+primaryInstructions: |
   You are an expert assistant...
 selfCritiqueInstructions: |
   Score your evaluation quality 1-100 based on:
@@ -403,14 +403,14 @@ readme: |
                   </p>
                 </div>
 
-                {validation.parsedData.genericInstructions && (
+                {validation.parsedData.primaryInstructions && (
                   <div>
                     <span className="font-medium text-gray-700">
                       Instructions:
                     </span>
                     <p className="mt-1 max-h-24 overflow-y-auto rounded border bg-white p-2 text-gray-900">
-                      {validation.parsedData.genericInstructions.slice(0, 200)}
-                      {validation.parsedData.genericInstructions.length > 200 &&
+                      {validation.parsedData.primaryInstructions.slice(0, 200)}
+                      {validation.parsedData.primaryInstructions.length > 200 &&
                         "..."}
                     </p>
                   </div>

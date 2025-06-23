@@ -187,7 +187,7 @@ model AgentVersion {
   name        String
   agentType   AgentType
   description String
-  genericInstructions String?
+  primaryInstructions String?
   selfCritiqueInstructions String?
   extendedCapabilityId String?
   readme      String?  @db.Text

@@ -13,7 +13,7 @@ describe("Comprehensive Analysis E2E", () => {
     version: "1.0",
     purpose: "ADVISOR",
     description: "A test agent for providing writing feedback on blog posts and articles",
-    genericInstructions: "You are a helpful writing coach focused on improving clarity and engagement. Provide detailed analysis with specific examples.",
+    primaryInstructions: "You are a helpful writing coach focused on improving clarity and engagement. Provide detailed analysis with specific examples.",
   };
 
   const mockDocument: Document = {

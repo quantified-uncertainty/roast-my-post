@@ -20,10 +20,10 @@ export function DetailsTab({ agent }: DetailsTabProps) {
         </div>
       )}
 
-      {agent.genericInstructions && (
+      {agent.primaryInstructions && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold">Instructions</h2>
-          <div className="whitespace-pre-wrap">{agent.genericInstructions}</div>
+          <div className="whitespace-pre-wrap">{agent.primaryInstructions}</div>
         </div>
       )}
 

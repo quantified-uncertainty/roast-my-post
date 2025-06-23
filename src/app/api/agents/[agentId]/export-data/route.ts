@@ -252,7 +252,7 @@ export async function GET(request: NextRequest, context: any) {
         type: agent.versions[0].agentType,
         current_version: agent.versions[0].version,
         description: agent.versions[0].description,
-        instructions: agent.versions[0].genericInstructions,
+        instructions: agent.versions[0].primaryInstructions,
         self_critique_instructions: agent.versions[0].selfCritiqueInstructions,
         extended_capability: agent.versions[0].extendedCapabilityId,
       },

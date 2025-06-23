@@ -38,7 +38,7 @@ export const agentFormFields: FormFieldConfig[] = [
     placeholder: "Describe what this agent does",
   },
   {
-    name: "genericInstructions",
+    name: "primaryInstructions",
     label: "Analysis Instructions",
     required: true,
     type: "textarea",

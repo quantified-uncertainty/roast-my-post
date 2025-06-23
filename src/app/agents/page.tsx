@@ -23,7 +23,7 @@ export default async function AgentsPage() {
     purpose: dbAgent.versions[0].agentType,
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
-    genericInstructions: dbAgent.versions[0].genericInstructions || undefined,
+    primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
     extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
   }));
 

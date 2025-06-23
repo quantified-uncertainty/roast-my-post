@@ -226,9 +226,98 @@ Combine the best of Options 1 and 3:
 
 Using the same patterns, you could make evaluatable:
 
-### 1. **Evaluation Results**
-- Evaluate the quality of evaluations themselves
-- Meta-evaluation for quality control
+### 1. **Evaluation Results** (Meta-Evaluation)
+This is particularly powerful - evaluating the quality of evaluations themselves:
+
+```typescript
+// Convert EvaluationVersion to evaluatable Document
+class DocumentAdapter {
+  static async fromEvaluationVersion(evaluationVersionId: string): Promise<Document> {
+    const evalVersion = await prisma.evaluationVersion.findUnique({
+      where: { id: evaluationVersionId },
+      include: {
+        evaluation: {
+          include: {
+            agent: { include: { versions: true } },
+            document: { include: { versions: true } }
+          }
+        },
+        agentVersion: true,
+        documentVersion: true,
+        comments: { include: { highlight: true } },
+        job: { include: { tasks: true } }
+      }
+    });
+    
+    // Format evaluation as rich content
+    const content = `
+# Evaluation Analysis
+
+## Context
+- **Document**: ${evalVersion.documentVersion.title}
+- **Evaluator**: ${evalVersion.agentVersion.name} v${evalVersion.agentVersion.version}
+- **Date**: ${evalVersion.createdAt}
+
+## Evaluation Summary
+${evalVersion.summary || 'No summary provided'}
+
+## Analysis
+${evalVersion.analysis || 'No analysis provided'}
+
+## Grade
+${evalVersion.grade ? `Score: ${evalVersion.grade}/100` : 'No grade provided'}
+
+## Self-Critique
+${evalVersion.selfCritique || 'No self-critique provided'}
+
+## Comments (${evalVersion.comments.length})
+${evalVersion.comments.map(comment => `
+### ${comment.title}
+- **Importance**: ${comment.importance || 'N/A'}
+- **Quote**: "${comment.highlight.quotedText}"
+- **Description**: ${comment.description}
+`).join('\n')}
+
+## Performance Metrics
+- **Cost**: $${(evalVersion.job?.costInCents || 0) / 100}
+- **Duration**: ${evalVersion.job?.durationInSeconds || 0}s
+- **Tokens**: ${calculateTokens(evalVersion.job)}
+
+## Raw Thinking
+\`\`\`
+${evalVersion.job?.llmThinking || 'No thinking recorded'}
+\`\`\`
+`;
+    
+    return await DocumentModel.create({
+      title: `Evaluation: ${evalVersion.agentVersion.name} on "${evalVersion.documentVersion.title}"`,
+      content,
+      authors: 'System',
+      platforms: ['evaluation-meta'],
+      importUrl: `internal://evaluation-version/${evaluationVersionId}`,
+      metadata: {
+        sourceType: 'EVALUATION_VERSION',
+        evaluationId: evalVersion.evaluationId,
+        evaluationVersionId: evaluationVersionId,
+        agentId: evalVersion.agentVersion.agentId,
+        documentId: evalVersion.evaluation.documentId
+      }
+    });
+  }
+}
+```
+
+**Use Cases for Meta-Evaluation:**
+- **Quality Control**: Have a "Quality Auditor" agent evaluate other agents' evaluations
+- **Consistency Check**: Compare evaluations across different versions
+- **Improvement Analysis**: Identify patterns in low-quality evaluations
+- **Training Data**: Use high-quality evaluations as examples
+
+**Example Meta-Evaluation Agents:**
+- **Evaluation Quality Auditor**: Checks if evaluations are thorough, accurate, and helpful
+- **Consistency Checker**: Compares multiple evaluations for consistency
+- **Bias Detector**: Identifies potential biases in evaluations
+- **Comment Quality Reviewer**: Specifically evaluates the quality of inline comments
 
 ### 2. **User Prompts/Queries**
 - Evaluate prompt quality
@@ -246,22 +335,314 @@ Using the same patterns, you could make evaluatable:
 - Evaluate groups of documents
 - Aggregate analysis
 
+### 6. **Evaluation Comparisons**
+- Compare two evaluations side-by-side
+- Identify improvements or regressions
+
+## Key Consideration: AgentVersion Relationships
+
+When making AgentVersions evaluatable, we need to consider:
+
+1. **Version Specificity**: Evaluations should target specific AgentVersions, not just Agents
+2. **Storage Efficiency**: Creating full database rows for each AgentVersion as content would be expensive
+3. **Update Handling**: When new AgentVersions are created, they should be evaluatable without duplication
+
+### Lightweight Reference Approach
+
+Instead of converting entire AgentVersions to Documents, we could:
+
+```typescript
+// Option 1: Reference-based evaluation
+model Evaluation {
+  id          String   @id
+  
+  // Polymorphic reference
+  evaluatableType  String  // "DOCUMENT_VERSION", "AGENT_VERSION", etc.
+  evaluatableId    String  // ID of the specific version
+  
+  // Keep agent relationship for the evaluator
+  evaluatorAgentId String
+  evaluatorAgent   Agent
+}
+
+// Option 2: Lazy document creation
+// Only create Document when evaluation is requested
+async function evaluateAgentVersion(agentVersionId: string, evaluatorAgentId: string) {
+  // Check if document already exists for this version
+  const existingDoc = await prisma.document.findFirst({
+    where: { 
+      importUrl: `internal://agent-version/${agentVersionId}`
+    }
+  });
+  
+  if (!existingDoc) {
+    // Create document on-demand
+    await DocumentAdapter.fromAgentVersion(agentVersionId);
+  }
+  
+  // Proceed with evaluation
+}
+```
+
+This approach:
+- Avoids creating Documents for every AgentVersion
+- Only creates Documents when evaluation is actually needed
+- Maintains referential integrity
+- Keeps storage costs low
+
+## Architecture Refactoring: Document vs DocumentVersion
+
+The current architecture has unnecessary complexity with both Document and DocumentVersion tables. Here are detailed options for simplification:
+
+### Option A: Remove Document Table (Recommended)
+**Effort: Medium (16-24 hours)**
+
+Consolidate everything into DocumentVersion as the primary entity:
+
+```prisma
+model DocumentVersion {
+  id            String    @id @default(uuid())
+  documentId    String    @default(nanoid(16)) // Groups versions
+  version       Int       @default(1)
+  
+  // Core fields (moved from Document)
+  publishedDate DateTime
+  submittedById String
+  submittedBy   User      @relation(...)
+  
+  // Content fields (already here)
+  title         String
+  content       String
+  authors       String[]
+  urls          String[]
+  platforms     String[]
+  intendedAgents String[]
+  importUrl     String?
+  
+  // Relationships
+  evaluations   Evaluation[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+// Update Evaluation to point directly to version
+model Evaluation {
+  id          String   @id @default(uuid())
+  
+  documentVersion    DocumentVersion @relation(...)
+  documentVersionId  String
+  
+  agent       Agent @relation(...)
+  agentId     String
+  
+  // ... rest stays the same
+}
+```
+
+**Benefits:**
+- Simpler mental model
+- One less join in queries
+- Clearer versioning story
+- Easier to make other entities evaluatable
+
+**Migration Path:**
+1. Update schema to add fields to DocumentVersion
+2. Migrate data from Document to DocumentVersion
+3. Update all queries to use DocumentVersion
+4. Drop Document table
+
+### Option B: Generic Content Model
+**Effort: High (32-40 hours)**
+
+Create a unified content model for all evaluatable entities:
+
+```prisma
+enum ContentType {
+  DOCUMENT
+  AGENT_CONFIG
+  PROMPT
+  CONVERSATION
+}
+
+model Content {
+  id            String       @id @default(uuid())
+  contentId     String       @default(nanoid(16)) // Groups versions
+  version       Int          @default(1)
+  contentType   ContentType
+  
+  // Common metadata
+  title         String
+  body          String       // Main content (was "content")
+  publishedDate DateTime
+  submittedById String
+  submittedBy   User        @relation(...)
+  
+  // Type-specific data
+  metadata      Json        // Flexible field for type-specific data
+  
+  // Relationships
+  evaluations   Evaluation[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@unique([contentId, version])
+  @@index([contentType, contentId])
+}
+
+// Example metadata for different types:
+// DOCUMENT: { authors: [], urls: [], platforms: [], importUrl: "" }
+// AGENT_CONFIG: { agentId: "", purpose: "", instructions: {} }
+// PROMPT: { model: "", temperature: 0.7, systemPrompt: "" }
+```
+
+**Benefits:**
+- Ultimate flexibility
+- Single evaluation system for everything
+- Easy to add new content types
+- Unified querying and UI components
+
+**Drawbacks:**
+- Loss of type safety in database
+- More complex queries
+- Need careful validation
+- Significant refactoring
+
+### Option C: Parallel Entity Models
+**Effort: Low initially, Medium over time (8-16 hours per entity)**
+
+Keep current pattern but apply consistently:
+
+```prisma
+// Pattern: Entity + EntityVersion
+
+model Document {
+  id            String    @id
+  publishedDate DateTime
+  submittedBy   User
+  versions      DocumentVersion[]
+  evaluations   Evaluation[]
+}
+
+model Agent {
+  id            String    @id
+  createdAt     DateTime
+  submittedBy   User
+  versions      AgentVersion[]
+  evaluations   Evaluation[]  // Add this
+}
+
+model Prompt {
+  id            String    @id
+  createdAt     DateTime
+  submittedBy   User
+  versions      PromptVersion[]
+  evaluations   Evaluation[]
+}
+
+// Update Evaluation to be polymorphic
+model Evaluation {
+  id          String   @id
+  
+  // Polymorphic reference
+  entityType  String   // "DOCUMENT", "AGENT", "PROMPT"
+  entityId    String   // ID of the entity
+  
+  // Optional specific relations for type safety
+  document    Document? @relation(...)
+  documentId  String?
+  
+  agent       Agent?    @relation(...)
+  agentId     String?   // This would be the config being evaluated
+  
+  evaluatorAgentId String // The agent doing the evaluation
+  evaluatorAgent   Agent  @relation("EvaluatorAgent", ...)
+}
+```
+
+**Benefits:**
+- Type safety maintained
+- Gradual migration possible
+- Clear separation of concerns
+
+**Drawbacks:**
+- Continued complexity
+- Duplicate patterns
+- More tables to maintain
+
+### Option D: Document Adapters (Quick Win)
+**Effort: Very Low (2-4 hours)**
+
+Keep current structure but create adapters to convert other entities to documents:
+
+```typescript
+// Simple adapters that create Documents from other entities
+class DocumentAdapter {
+  static async fromAgentVersion(agentVersionId: string): Promise<Document> {
+    const agentVersion = await prisma.agentVersion.findUnique({
+      where: { id: agentVersionId },
+      include: { agent: true }
+    });
+    
+    return await DocumentModel.create({
+      title: `Agent Config: ${agentVersion.name} v${agentVersion.version}`,
+      content: formatAgentVersionAsMarkdown(agentVersion),
+      authors: agentVersion.agent.submittedBy.name,
+      platforms: ['agent-config'],
+      importUrl: `internal://agent-version/${agentVersionId}`, // Track source
+      metadata: {
+        sourceType: 'AGENT_VERSION',
+        agentId: agentVersion.agentId,
+        agentVersionId: agentVersionId,
+        version: agentVersion.version
+      }
+    });
+  }
+  
+  static async fromPrompt(prompt: Prompt): Promise<Document> {
+    // Similar conversion
+  }
+}
+
+// Usage
+const agentDoc = await DocumentAdapter.fromAgentVersion(agentVersionId);
+// Now can be evaluated like any document
+```
+
+**Benefits:**
+- No schema changes
+- Immediate functionality
+- Low risk
+- Can evolve later
+- Tracks specific version evaluated
+
+**Drawbacks:**
+- Data duplication
+- Sync issues
+- Not a long-term solution
+
 ## Recommended Implementation Path
 
-### Week 1: Quick Win
-1. **Day 1**: Implement "Convert Agent to Document" (2 hours)
-2. **Day 2**: Add special handling for agent-documents (2 hours)
-3. **Day 3**: Create "Agent Evaluator" agent specialized in reviewing agents
+### Phase 1: Quick Win (Week 1)
+1. **Day 1**: Implement DocumentAdapter pattern (2 hours)
+2. **Day 2**: Add "Convert to Document" UI for agents (2 hours)
+3. **Day 3**: Create specialized evaluation agents for different content types
 
-### Week 2: Enhance
-1. Add dedicated agent evaluation API
-2. Create simple results viewer
-3. Add batch evaluation for all agents
+### Phase 2: Simplify Architecture (Week 2-3)
+1. **Option A**: Remove Document table
+   - Most bang for buck
+   - Cleaner architecture
+   - Easier future extensions
 
-### Month 2: Generalize
-1. Implement generic Evaluatable interface
-2. Migrate existing code
-3. Add support for other entity types
+### Phase 3: Future Vision (Month 2+)
+1. Consider Option B (Generic Content) only if:
+   - Multiple new entity types needed
+   - Cross-type analysis required
+   - Team buy-in for major refactor
 
 ## Cost-Benefit Analysis
 
@@ -270,15 +651,19 @@ Using the same patterns, you could make evaluatable:
 - **Cost**: Some technical debt, limited features
 - **ROI**: High - enables new use cases quickly
 
-### Full Implementation (40-60 hours)
-- **Benefit**: Clean, extensible architecture
-- **Cost**: Significant refactoring
-- **ROI**: Good long-term, but delayed value
+### Architecture Simplification (16-24 hours)
+- **Benefit**: Cleaner codebase, easier maintenance, better foundation
+- **Cost**: Medium refactoring effort
+- **ROI**: Very high - pays dividends in development speed
+
+### Full Generic System (40-60 hours)
+- **Benefit**: Ultimate flexibility, unified system
+- **Cost**: Significant refactoring and testing
+- **ROI**: Good only if many entity types needed
 
 ### Recommendation
-Start with the **Hybrid Approach**:
-1. Get agent evaluation working today (2-4 hours)
-2. Gather user feedback
-3. Invest in proper architecture only if proven valuable
+1. **Immediate**: Use DocumentAdapter pattern (Option D) to unblock agent evaluation
+2. **Next Sprint**: Implement Option A (Remove Document table) for cleaner architecture
+3. **Future**: Consider Option B only if expanding to many entity types
 
-This provides immediate value while keeping options open for future expansion.
+This provides immediate value while setting up for a cleaner long-term architecture.

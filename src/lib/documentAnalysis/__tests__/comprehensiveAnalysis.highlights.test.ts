@@ -28,7 +28,7 @@ describe("Comprehensive Analysis Highlights to Comments E2E", () => {
     version: "1.0",
     purpose: "ASSESSOR",
     description: "A test agent",
-    genericInstructions: "Test instructions",
+    primaryInstructions: "Test instructions",
   };
 
   const mockDocument: Document = {

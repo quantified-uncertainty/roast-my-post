@@ -8,7 +8,7 @@ export function getLinkAnalysisPrompts(
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = `Context: ${agentInfo.name} - ${agentInfo.description}
 
-${agentInfo.genericInstructions}
+${agentInfo.primaryInstructions}
 
 This process analyzes links found in the document to determine which should be validated and what content is expected.
 
