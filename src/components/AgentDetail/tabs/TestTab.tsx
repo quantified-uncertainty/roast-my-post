@@ -137,10 +137,11 @@ export function TestTab({
             >
               <option value="">Select number of tests...</option>
               <option value="1">1 evaluation (Sanity check)</option>
-              <option value="5">5 evaluations (Quick test)</option>
-              <option value="10">10 evaluations (Standard test)</option>
-              <option value="20">20 evaluations (Comprehensive test)</option>
-              <option value="50">50 evaluations (Extensive benchmark)</option>
+              <option value="3">3 evaluations (Quick test)</option>
+              <option value="5">5 evaluations (Standard test)</option>
+              <option value="10">10 evaluations (Comprehensive test)</option>
+              <option value="20">20 evaluations (Extensive benchmark)</option>
+              <option value="50">50 evaluations (Extreme benchmark)</option>
             </select>
             <p className="mt-1 text-xs text-gray-500">
               Documents will be randomly selected from those previously
