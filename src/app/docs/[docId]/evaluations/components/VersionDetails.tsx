@@ -3,6 +3,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { GradeBadge } from "@/components/GradeBadge";
+import { ExportEvaluationButton } from "@/components/ExportEvaluationButton";
 import type { Evaluation } from "@/types/documentSchema";
 import {
   ChatBubbleLeftIcon,
@@ -36,13 +37,41 @@ export function VersionDetails({
       </div>
     );
   }
+  
+  // Prepare evaluation data for export button
+  const evaluationData = selectedReview ? {
+    evaluation: {
+      id: selectedReview.id,
+      evaluationId: selectedReview.id,
+      documentId: selectedReview.documentId,
+      documentTitle: selectedReview.document?.title || "",
+      agentId: selectedReview.agentId,
+      agentName: selectedReview.agent?.name || "",
+      agentVersion: selectedReview.agent?.versions?.[0]?.version || undefined,
+      evaluationVersion: selectedVersion.version,
+      grade: selectedVersion.grade,
+      jobStatus: selectedVersion.job?.status,
+      createdAt: selectedVersion.createdAt,
+      summary: selectedVersion.thinking,
+      analysis: selectedVersion.analysis,
+      selfCritique: selectedVersion.selfCritique,
+      comments: selectedVersion.comments,
+      job: selectedVersion.job ? {
+        llmThinking: selectedVersion.thinking,
+        costInCents: selectedVersion.job.costInCents,
+        tasks: selectedVersion.job.tasks
+      } : null,
+      testBatchId: null,
+      testBatchName: null
+    }
+  } : null;
 
   return (
     <div className="col-span-7 flex h-full w-full min-w-0 flex-col">
       {/* Header */}
       <div className="border-b border-gray-200 bg-white px-4 py-3">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h3 className="text-lg font-medium text-gray-900">
               Evaluation Details
             </h3>
@@ -53,19 +82,24 @@ export function VersionDetails({
               )}
             </p>
           </div>
-          <div className="text-right text-sm text-gray-500">
-            <div>Created: {formatDate(selectedVersion.createdAt)}</div>
-            {selectedVersion.job?.durationInSeconds && (
-              <div>
-                Completed:{" "}
-                {formatDate(
-                  new Date(
-                    selectedVersion.createdAt.getTime() +
-                      selectedVersion.job.durationInSeconds * 1000
-                  )
-                )}
-              </div>
+          <div className="flex items-center gap-4">
+            {evaluationData && (
+              <ExportEvaluationButton evaluationData={evaluationData} />
             )}
+            <div className="text-right text-sm text-gray-500">
+              <div>Created: {formatDate(selectedVersion.createdAt)}</div>
+              {selectedVersion.job?.durationInSeconds && (
+                <div>
+                  Completed:{" "}
+                  {formatDate(
+                    new Date(
+                      selectedVersion.createdAt.getTime() +
+                        selectedVersion.job.durationInSeconds * 1000
+                    )
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

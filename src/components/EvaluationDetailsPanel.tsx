@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationDetails, type EvaluationTab } from "@/components/EvaluationDetails";
+import { ExportEvaluationButton } from "@/components/ExportEvaluationButton";
 
 interface EvaluationDetailsPanelProps {
   evaluation: {
@@ -144,6 +145,7 @@ export function EvaluationDetailsPanel({
             >
               View Full Details →
             </Link>
+            <ExportEvaluationButton evaluationData={{ evaluation }} />
           </div>
         )}
       </div>
