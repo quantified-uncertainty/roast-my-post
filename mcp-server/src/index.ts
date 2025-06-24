@@ -6,9 +6,46 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { PrismaClient } from "@prisma/client";
+import type { Agent, AgentVersion, Evaluation, EvaluationVersion, Job, Document, DocumentVersion } from "@prisma/client";
 import { z } from "zod";
 
 const prisma = new PrismaClient();
+
+// Type definitions for Prisma queries with includes
+type AgentWithVersions = Agent & {
+  versions: AgentVersion[];
+};
+
+type EvaluationWithRelations = Evaluation & {
+  agent: AgentWithVersions;
+  document: Document;
+  versions: (EvaluationVersion & {
+    job: Job | null;
+  })[];
+};
+
+type JobWithRelations = Job & {
+  evaluation: Evaluation & {
+    agent: AgentWithVersions;
+    document: Document;
+  };
+};
+
+type DocumentWithRelations = Document & {
+  versions: DocumentVersion[];
+  evaluations: (Evaluation & {
+    versions: (EvaluationVersion & {
+      job: Job | null;
+    })[];
+  })[];
+};
+
+type EvaluationVersionWithRelations = EvaluationVersion & {
+  agentVersion: AgentVersion & {
+    agent: Agent;
+  };
+  job: Job | null;
+};
 
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
@@ -227,7 +264,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                agents.map((agent) => ({
+                agents.map((agent: AgentWithVersions) => ({
                   id: agent.id,
                   name: agent.versions[0]?.name || "Unknown",
                   type: agent.versions[0]?.agentType || "Unknown",
@@ -278,7 +315,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                evaluations.map((evaluation) => {
+                evaluations.map((evaluation: EvaluationWithRelations) => {
                   const latestVersion = evaluation.versions[0];
                   const job = latestVersion?.job;
                   const agentVersion = evaluation.agent.versions[0];
@@ -420,7 +457,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                failedJobs.map((job) => ({
+                failedJobs.map((job: JobWithRelations) => ({
                   id: job.id,
                   documentId: job.evaluation.documentId,
                   agentName: job.evaluation.agent.versions[0]?.name || "Unknown",
@@ -480,11 +517,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                documents.map((doc) => {
+                documents.map((doc: DocumentWithRelations) => {
                   const latestVersion = doc.versions[0];
                   const evaluationCount = doc.evaluations.length;
                   const completedEvaluations = doc.evaluations.filter(
-                    (e) => e.versions[0]?.job?.status === "COMPLETED"
+                    (e: EvaluationWithRelations) => e.versions[0]?.job?.status === "COMPLETED"
                   ).length;
                   
                   return {
@@ -588,16 +625,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         // Calculate per-agent statistics
         for (const [agentName, agentStats] of Object.entries(stats.byAgent)) {
-          const agentEvals = evaluations.filter(e => e.agentVersion.agent.id === agentName);
+          const agentEvals = evaluations.filter((e: EvaluationVersionWithRelations) => e.agentVersion.agent.id === agentName);
           const grades = agentEvals
-            .map(e => e.grade)
-            .filter((g): g is number => g !== null);
+            .map((e: EvaluationVersionWithRelations) => e.grade)
+            .filter((g: number | null): g is number => g !== null);
           
           if (grades.length > 0) {
-            agentStats.avgGrade = grades.reduce((a, b) => a + b, 0) / grades.length;
+            agentStats.avgGrade = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
           }
 
-          const failedCount = agentEvals.filter(e => e.job?.status === "FAILED").length;
+          const failedCount = agentEvals.filter((e: EvaluationVersionWithRelations) => e.job?.status === "FAILED").length;
           agentStats.failureRate = agentStats.count > 0 ? (failedCount / agentStats.count) * 100 : 0;
         }
 
@@ -761,7 +798,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
 
         if (includeDetails) {
-          (queueStatus as any).recentCompleted = recentCompleted.map(job => ({
+          (queueStatus as any).recentCompleted = recentCompleted.map((job: JobWithRelations) => ({
             id: job.id,
             completedAt: job.completedAt,
             duration: job.durationInSeconds,
@@ -770,7 +807,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             document: (job as any).evaluation?.document?.id,
           }));
 
-          (queueStatus as any).recentFailed = recentFailed.map(job => ({
+          (queueStatus as any).recentFailed = recentFailed.map((job: JobWithRelations) => ({
             id: job.id,
             failedAt: job.updatedAt,
             error: job.error?.split('\n')[0],
