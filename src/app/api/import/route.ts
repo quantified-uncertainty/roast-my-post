@@ -18,22 +18,13 @@ export async function POST(request: NextRequest) {
     
     if (apiAuth) {
       userId = apiAuth.userId;
-      console.log("🔑 Authenticated via API key for user:", userId);
     } else {
       // Fall back to session authentication
       const session = await auth();
-      console.log("🔐 Session debug:", {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        userEmail: session?.user?.email,
-      });
-      
       userId = session?.user?.id;
     }
 
     if (!userId) {
-      console.log("❌ No valid authentication found");
       return NextResponse.json(
         { error: "User must be logged in to import a document" },
         { status: 401 }

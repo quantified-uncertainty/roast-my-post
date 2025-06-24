@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
+import { hashApiKey } from "@/lib/crypto";
 
 export async function authenticateApiKey(request: NextRequest): Promise<{ userId: string } | null> {
   const authHeader = request.headers.get("authorization");
@@ -8,11 +9,19 @@ export async function authenticateApiKey(request: NextRequest): Promise<{ userId
     return null;
   }
   
-  const apiKey = authHeader.substring(7); // Remove "Bearer " prefix
+  const plainKey = authHeader.substring(7); // Remove "Bearer " prefix
+  
+  // Basic format validation
+  if (!plainKey.startsWith("oa_") || plainKey.length < 40) {
+    return null;
+  }
   
   try {
+    // Hash the provided key to compare with stored hash
+    const hashedKey = hashApiKey(plainKey);
+    
     const key = await prisma.apiKey.findUnique({
-      where: { key: apiKey },
+      where: { key: hashedKey },
       include: { user: true },
     });
     
@@ -25,11 +34,14 @@ export async function authenticateApiKey(request: NextRequest): Promise<{ userId
       return null;
     }
     
-    // Update last used timestamp
-    await prisma.apiKey.update({
-      where: { id: key.id },
-      data: { lastUsedAt: new Date() },
-    });
+    // Update last used timestamp (but not on every request to avoid DB load)
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (!key.lastUsedAt || key.lastUsedAt < hourAgo) {
+      await prisma.apiKey.update({
+        where: { id: key.id },
+        data: { lastUsedAt: new Date() },
+      });
+    }
     
     return { userId: key.userId };
   } catch (error) {

@@ -96,11 +96,6 @@ export default function ApiKeysPage() {
     return formatDistanceToNow(new Date(lastUsedAt), { addSuffix: true });
   };
 
-  const maskApiKey = (key: string) => {
-    if (key.length <= 10) return key;
-    return `${key.substring(0, 10)}...${key.substring(key.length - 4)}`;
-  };
-
   return (
     <div>
       <div className="mb-6">
@@ -176,7 +171,7 @@ export default function ApiKeysPage() {
                 filteredKeys.map((key) => (
                   <tr key={key.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                      oa_{maskApiKey(key.id)}
+                      oa_••••••••••••
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {key.name}
