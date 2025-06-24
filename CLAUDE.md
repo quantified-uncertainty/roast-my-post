@@ -177,6 +177,24 @@ Example usage in Claude:
 ### Direct Script Access
 For complex queries, you can still write TypeScript scripts using Prisma. See `/claude/README.md` for examples.
 
+## Documentation Structure
+
+### Organized Documentation
+Project documentation has been reorganized into `/docs/` with clear categories:
+
+- **[/docs/README.md](/docs/README.md)** - Documentation navigation and overview
+- **[/docs/development/agents.md](/docs/development/agents.md)** - Current agent system documentation (database/TOML approach)
+- **[/docs/operations/health-checks.md](/docs/operations/health-checks.md)** - Comprehensive codebase health check guide
+- **[/docs/security/authentication.md](/docs/security/authentication.md)** - Authentication systems and security best practices
+- **[/docs/security/pre-commit.md](/docs/security/pre-commit.md)** - Pre-commit security checklist
+
+### Migration Notes
+- Old scattered documentation files have been consolidated and updated
+- `AGENTS.md` → `/docs/development/agents.md` (updated with current database approach)
+- `COMPREHENSIVE_HEALTH_CHECKS.md` + `HEALTH_CHECKS.md` → `/docs/operations/health-checks.md`
+- `PRE_COMMIT_INVESTIGATION.md` → `/docs/security/pre-commit.md`
+- `TODO-CRITICAL-ISSUES.md` → removed (all items completed)
+
 ## Security Updates (2025-01-24)
 
 ### API Route Protection
