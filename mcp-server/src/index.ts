@@ -10,7 +10,6 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { PrismaClient } from "@prisma/client";
 import type {
   Agent,
   AgentVersion,
@@ -19,7 +18,8 @@ import type {
   Evaluation,
   EvaluationVersion,
   Job,
-} from "@prisma/client";
+} from "../../node_modules/@prisma/client/index.js";
+import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
 
 const prisma = new PrismaClient();
 

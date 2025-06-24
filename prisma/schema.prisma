@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,22 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NextAuth.js Models
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -40,27 +32,22 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
 }
 
-enum UserRole {
-  USER
-  ADMIN
-}
-
 model User {
-  id            String  @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole @default(USER)
+  role          UserRole   @default(USER)
   accounts      Account[]
-  sessions      Session[]
-  documents     Document[]
   agents        Agent[]
   apiKeys       ApiKey[]
+  documents     Document[]
+  sessions      Session[]
 }
 
 model VerificationToken {
@@ -69,6 +56,203 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Document {
+  id            String            @id
+  publishedDate DateTime
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  submittedById String
+  submittedBy   User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  versions      DocumentVersion[]
+  evaluations   Evaluation[]
+}
+
+model DocumentVersion {
+  id                 String              @id @default(uuid())
+  version            Int
+  title              String
+  authors            String[]
+  urls               String[]
+  platforms          String[]
+  intendedAgents     String[]
+  content            String
+  importUrl          String?
+  documentId         String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  document           Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  evaluationVersions EvaluationVersion[]
+
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+model Evaluation {
+  id         String              @id @default(uuid())
+  createdAt  DateTime            @default(now())
+  documentId String
+  agentId    String
+  agent      Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  document   Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versions   EvaluationVersion[]
+  jobs       Job[]
+
+  @@index([documentId])
+  @@index([agentId])
+}
+
+model EvaluationVersion {
+  id                String              @id @default(uuid())
+  version           Int                 @default(1)
+  agentId           String
+  createdAt         DateTime            @default(now())
+  summary           String?
+  analysis          String?
+  grade             Int?
+  selfCritique      String?
+  agentVersionId    String
+  evaluationId      String
+  documentVersionId String
+  comments          EvaluationComment[]
+  agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
+  documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id])
+  job               Job?
+
+  @@unique([evaluationId, version])
+  @@index([evaluationId])
+  @@index([agentVersionId])
+  @@index([documentVersionId])
+}
+
+model EvaluationComment {
+  id                  String              @id @default(uuid())
+  title               String
+  description         String
+  importance          Int?
+  grade               Int?
+  evaluationVersionId String
+  highlightId         String              @unique
+  evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+}
+
+model EvaluationHighlight {
+  id          String             @id @default(uuid())
+  startOffset Int
+  endOffset   Int
+  prefix      String?
+  quotedText  String
+  isValid     Boolean            @default(true)
+  error       String?
+  comment     EvaluationComment?
+}
+
+model Agent {
+  id            String           @id
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  submittedById String
+  submittedBy   User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  evalBatches   AgentEvalBatch[]
+  versions      AgentVersion[]
+  evaluations   Evaluation[]
+}
+
+model AgentVersion {
+  id                       String              @id @default(uuid())
+  version                  Int
+  name                     String
+  agentType                AgentType
+  description              String
+  primaryInstructions      String?
+  selfCritiqueInstructions String?
+  providesGrades           Boolean             @default(false)
+  extendedCapabilityId     String?
+  readme                   String?
+  agentId                  String
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  evaluations              EvaluationVersion[]
+
+  @@unique([agentId, version])
+}
+
+model AgentEvalBatch {
+  id          String   @id @default(uuid())
+  name        String?
+  agentId     String
+  targetCount Int
+  createdAt   DateTime @default(now())
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  jobs        Job[]
+}
+
+model Job {
+  id                  String             @id @default(uuid())
+  status              JobStatus          @default(PENDING)
+  attempts            Int                @default(0)
+  error               String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  llmThinking         String?
+  costInCents         Int?
+  durationInSeconds   Int?
+  logs                String?
+  originalJobId       String?
+  evaluationId        String
+  evaluationVersionId String?            @unique
+  agentEvalBatchId    String?
+  agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
+  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
+  originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
+  retryJobs           Job[]              @relation("JobRetries")
+  tasks               Task[]
+
+  @@index([evaluationId])
+  @@index([agentEvalBatchId])
+  @@index([originalJobId])
+}
+
+model Task {
+  id              String   @id @default(uuid())
+  name            String
+  modelName       String
+  priceInCents    Int
+  timeInSeconds   Int?
+  log             String?
+  llmInteractions Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  key        String    @unique
+  name       String
+  userId     String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 enum AgentType {
@@ -83,205 +267,4 @@ enum JobStatus {
   RUNNING
   COMPLETED
   FAILED
-}
-
-model Document {
-  id            String    @id
-  publishedDate DateTime
-  versions      DocumentVersion[]
-  evaluations   Evaluation[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  submittedBy   User      @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  submittedById String
-}
-
-model DocumentVersion {
-  id          String    @id @default(uuid())
-  version     Int
-  title       String
-  authors     String[]
-  urls        String[]
-  platforms   String[]
-  intendedAgents String[]
-  content     String
-  importUrl   String?
-  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  evaluationVersions EvaluationVersion[]
-
-  @@unique([documentId, version])
-  @@index([documentId])
-}
-
-model Evaluation {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  versions    EvaluationVersion[]
-  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  documentId  String
-  agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  agentId     String
-  jobs        Job[]
-
-  @@index([documentId])
-  @@index([agentId])
-}
-
-model EvaluationVersion {
-  id          String   @id @default(uuid())
-  version     Int      @default(1)
-  agentId     String
-  createdAt   DateTime @default(now())
-  summary     String?
-  analysis    String?
-  grade       Int?
-  selfCritique String?
-  agentVersion AgentVersion @relation(fields: [agentVersionId], references: [id])
-  agentVersionId String
-  evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
-  evaluationId  String
-  documentVersion DocumentVersion @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
-  documentVersionId String
-  comments    EvaluationComment[]
-  job        Job?
-
-  @@unique([evaluationId, version])
-  @@index([evaluationId])
-  @@index([agentVersionId])
-  @@index([documentVersionId])
-}
-
-model EvaluationComment {
-  id           String    @id @default(uuid())
-  title        String
-  description  String
-  importance   Int?
-  grade        Int?
-  evaluationVersion   EvaluationVersion    @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
-  evaluationVersionId     String
-  highlight    EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
-  highlightId  String    @unique
-}
-
-model EvaluationHighlight {
-  id          String   @id @default(uuid())
-  startOffset Int
-  endOffset   Int
-  prefix      String?
-  quotedText  String
-  isValid     Boolean   @default(true)
-  error       String?
-  comment     EvaluationComment?
-}
-
-model Agent {
-  id          String   @id
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  versions    AgentVersion[]
-  evaluations Evaluation[]
-  evalBatches AgentEvalBatch[]
-  submittedBy   User      @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  submittedById String
-}
-
-model AgentVersion {
-  id          String   @id @default(uuid())
-  version     Int
-  name        String
-  agentType   AgentType
-  description String
-  primaryInstructions String?
-  selfCritiqueInstructions String?
-  providesGrades Boolean @default(false)
-  extendedCapabilityId String?
-  readme      String?  @db.Text
-  agent       Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  agentId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  evaluations EvaluationVersion[]
-
-  @@unique([agentId, version])
-}
-
-model AgentEvalBatch {
-  id          String   @id @default(uuid())
-  name        String?
-  agentId     String
-  targetCount Int
-  createdAt   DateTime @default(now())
-  
-  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  jobs  Job[]
-}
-
-model Job {
-  id          String   @id @default(uuid())
-  status      JobStatus @default(PENDING)
-  attempts    Int      @default(0)
-  error       String?
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  llmThinking String?
-  costInCents Int?
-  durationInSeconds Int?
-  logs String?
-  
-  // Retry tracking
-  originalJobId   String?
-  originalJob     Job?     @relation("JobRetries", fields: [originalJobId], references: [id])
-  retryJobs       Job[]    @relation("JobRetries")
-  
-  evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
-  evaluationId  String
-  
-  evaluationVersion    EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
-  evaluationVersionId  String?  @unique
-
-  agentEvalBatch    AgentEvalBatch? @relation(fields: [agentEvalBatchId], references: [id])
-  agentEvalBatchId  String?
-
-  tasks Task[]
-
-  @@index([evaluationId])
-  @@index([agentEvalBatchId])
-  @@index([originalJobId])
-}
-
-model Task {
-  id          String   @id @default(uuid())
-  name        String
-  modelName   String
-  priceInCents Int
-  timeInSeconds Int?
-  log        String?
-  llmInteractions Json? // Array of LLMInteraction objects (messages + usage)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  job         Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  jobId       String
-
-  @@index([jobId])
-}
-
-model ApiKey {
-  id          String    @id @default(cuid())
-  key         String    @unique
-  name        String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
-  createdAt   DateTime  @default(now())
-  lastUsedAt  DateTime?
-  expiresAt   DateTime?
-  
-  @@index([key])
-  @@index([userId])
 }
