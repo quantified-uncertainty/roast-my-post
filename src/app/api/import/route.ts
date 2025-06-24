@@ -7,6 +7,7 @@ import { authenticateRequest } from "@/lib/auth-helpers";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/lib/prisma";
+import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
 
 
 export async function POST(request: NextRequest) {
@@ -15,20 +16,17 @@ export async function POST(request: NextRequest) {
     const userId = await authenticateRequest(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "User must be logged in to import a document" },
-        { status: 401 }
-      );
+      return errorResponse("User must be logged in to import a document", 401, "UNAUTHORIZED");
     }
 
     const { url, importUrl, agentIds } = await request.json();
     if (!url) {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+      return commonErrors.badRequest("URL is required");
     }
 
     // Validate agentIds if provided
     if (agentIds && !Array.isArray(agentIds)) {
-      return NextResponse.json({ error: "agentIds must be an array" }, { status: 400 });
+      return commonErrors.badRequest("agentIds must be an array");
     }
 
     // Use the shared article processing library
@@ -89,7 +87,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    return successResponse({
       success: true,
       documentId: document.id,
       document: {
@@ -101,12 +99,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     // Error importing document
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to import document",
-      },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : "Failed to import document",
+      500,
+      "IMPORT_ERROR"
     );
   }
 }

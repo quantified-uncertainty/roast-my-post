@@ -26,7 +26,8 @@ import { render, screen } from "@testing-library/react";
 import SlateEditor from "./SlateEditor";
 
 // Mock the Slate editor implementation
-let capturedDecorateFn: any = null;
+type DecorateFunction = (path: any) => any[];
+let capturedDecorateFn: DecorateFunction | null = null;
 jest.mock("slate-react", () => ({
   Slate: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="slate-wrapper">{children}</div>
@@ -38,9 +39,9 @@ jest.mock("slate-react", () => ({
     renderLeaf,
   }: {
     children: React.ReactNode;
-    decorate: any;
-    renderElement: any;
-    renderLeaf: any;
+    decorate: DecorateFunction;
+    renderElement: (props: any) => JSX.Element;
+    renderLeaf: (props: any) => JSX.Element;
   }) => {
     // Capture the decorate function for testing
     capturedDecorateFn = decorate;

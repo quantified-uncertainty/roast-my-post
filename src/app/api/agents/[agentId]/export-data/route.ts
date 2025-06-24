@@ -3,6 +3,8 @@ import * as yaml from 'js-yaml';
 
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
@@ -13,10 +15,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     const userId = await authenticateRequest(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
+      return commonErrors.unauthorized();
     }
     const agentId = params.agentId;
     const version = searchParams.get('version') ? Number(searchParams.get('version')) : undefined;
@@ -38,11 +37,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     });
 
     if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+      return commonErrors.notFound("Agent");
     }
 
     // Build the query conditions
-    const whereConditions: Record<string, any> = {
+    const whereConditions: EvaluationWhereConditions = {
       agentId: agentId,
     };
 

@@ -3,6 +3,63 @@
 ## Overview
 This guide provides systematic instructions for conducting deep health checks on the open-annotate codebase. Each section includes specific tasks, validation criteria, and expected outcomes to ensure code quality, security, and maintainability.
 
+## CRITICAL: Documentation Requirements for All Health Checks
+
+When documenting findings, **ALWAYS** include:
+
+1. **Exact File Paths**: Full paths from project root
+   - ✅ Good: `/src/app/api/agents/route.ts:45-67`
+   - ❌ Bad: "in the agents API route"
+
+2. **Line Numbers**: Specific lines or ranges
+   - ✅ Good: "Empty catch block at lines 84-87"
+   - ❌ Bad: "has empty catch blocks"
+
+3. **Code Examples**: Actual code snippets from files
+   ```typescript
+   // From /src/app/api/import/route.ts:103-106
+   return errorResponse(
+     error instanceof Error ? error.message : "Failed to import",
+     500
+   );
+   ```
+
+4. **Pattern Counts**: How many occurrences
+   - ✅ Good: "Found in 14 files: [list files]"
+   - ❌ Bad: "appears multiple times"
+
+5. **Actionable Items**: What to do and where
+   - ✅ Good: "Add auth check to `/src/app/api/monitor/stats/route.ts` using `authenticateRequest()` helper"
+   - ❌ Bad: "Add authentication to monitor routes"
+
+## Example Finding Format
+
+```markdown
+### Issue: Unprotected API Routes
+**Severity**: Critical
+**Files Affected**: 
+- `/src/app/api/monitor/evaluations/route.ts` (entire file)
+- `/src/app/api/monitor/jobs/route.ts` (entire file)
+- `/src/app/api/monitor/stats/route.ts` (entire file)
+
+**Pattern Found**:
+```typescript
+// From /src/app/api/monitor/stats/route.ts:8-15
+export async function GET() {
+  // No authentication check!
+  const stats = await prisma.evaluation.aggregate({...});
+  return NextResponse.json(stats);
+}
+```
+
+**Impact**: Exposes system metrics to unauthenticated users
+**Fix**: Add at line 8:
+```typescript
+const userId = await authenticateRequest(request);
+if (!userId) return commonErrors.unauthorized();
+```
+```
+
 ---
 
 ## 1. Architecture & Code Organization Audit

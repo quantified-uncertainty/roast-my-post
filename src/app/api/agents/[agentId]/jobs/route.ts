@@ -1,40 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
+import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { authenticateAndVerifyAgent } from "@/lib/auth-agent-helpers";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const resolvedParams = await params;
     const agentId = resolvedParams.agentId;
     const { searchParams } = new URL(request.url);
     const batchId = searchParams.get('batchId');
 
-    // Check if agent exists and user has access
-    const agent = await prisma.agent.findUnique({
-      where: { id: agentId },
-      include: {
-        submittedBy: true,
-      },
-    });
-
-    if (!agent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
-
-    if (agent.submittedById !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Authenticate and verify agent access (using session auth)
+    const authResult = await authenticateAndVerifyAgent(request, agentId, true);
+    
+    if (!authResult) {
+      return commonErrors.unauthorized();
     }
 
     // Build where clause for jobs
-    const whereClause: any = {
+    const whereClause: Prisma.JobWhereInput = {
       evaluation: {
         agentId: agentId,
       },
@@ -123,12 +111,9 @@ export async function GET(
       } : null,
     }));
 
-    return NextResponse.json({ jobs: transformedJobs });
+    return successResponse({ jobs: transformedJobs });
   } catch (error) {
     // Error is handled by returning error response
-    return NextResponse.json(
-      { error: "Failed to fetch jobs" },
-      { status: 500 }
-    );
+    return commonErrors.serverError("Failed to fetch jobs");
   }
 }
