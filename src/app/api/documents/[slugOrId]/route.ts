@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { DocumentModel } from "@/models/Document";
+import { authenticateRequest } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest, context: any) {
   const { params } = context;

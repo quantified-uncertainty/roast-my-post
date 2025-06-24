@@ -42,12 +42,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     }
 
     // Build the query conditions
-    const whereConditions: {
-      agentId: string;
-      agentVersionId?: string;
-      createdAt?: { gte: Date };
-      job?: { batchId: string };
-    } = {
+    const whereConditions: Record<string, any> = {
       agentId: agentId,
     };
 

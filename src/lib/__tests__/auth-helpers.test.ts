@@ -13,8 +13,8 @@ jest.mock("../auth-api", () => ({
 import { auth } from "../auth";
 import { authenticateApiKey } from "../auth-api";
 
-const mockAuth = auth as jest.MockedFunction<typeof auth>;
-const mockAuthenticateApiKey = authenticateApiKey as jest.MockedFunction<typeof authenticateApiKey>;
+const mockAuth = auth as any;
+const mockAuthenticateApiKey = authenticateApiKey as any;
 
 describe("auth-helpers", () => {
   beforeEach(() => {
@@ -46,10 +46,10 @@ describe("auth-helpers", () => {
           message: "Invalid key",
           statusCode: 401,
         },
-      } as any);
+      });
       mockAuth.mockResolvedValue({
         user: { id: "session-user-id" },
-      } as any);
+      });
 
       const result = await authenticateRequest(request);
 
@@ -67,8 +67,8 @@ describe("auth-helpers", () => {
           message: "Invalid key",
           statusCode: 401,
         },
-      } as any);
-      mockAuth.mockResolvedValue(null);
+      });
+      mockAuth.mockResolvedValue(null as any);
 
       const result = await authenticateRequest(request);
 
@@ -81,7 +81,7 @@ describe("auth-helpers", () => {
       const request = new NextRequest("http://localhost:3000");
       mockAuth.mockResolvedValue({
         user: { id: "session-user-id" },
-      } as any);
+      });
 
       const result = await authenticateRequestSessionFirst(request);
 
@@ -92,7 +92,7 @@ describe("auth-helpers", () => {
 
     it("should fall back to API key auth when session fails", async () => {
       const request = new NextRequest("http://localhost:3000");
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as any);
       mockAuthenticateApiKey.mockResolvedValue({
         success: true,
         userId: "api-user-id",
@@ -108,7 +108,7 @@ describe("auth-helpers", () => {
 
     it("should return undefined when both auth methods fail", async () => {
       const request = new NextRequest("http://localhost:3000");
-      mockAuth.mockResolvedValue(null);
+      mockAuth.mockResolvedValue(null as any);
       mockAuthenticateApiKey.mockResolvedValue({
         success: false,
         error: {
@@ -116,7 +116,7 @@ describe("auth-helpers", () => {
           message: "Invalid key",
           statusCode: 401,
         },
-      } as any);
+      });
 
       const result = await authenticateRequestSessionFirst(request);
 
