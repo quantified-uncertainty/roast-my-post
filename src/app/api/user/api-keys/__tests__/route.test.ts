@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
-import { GET, POST } from "../route";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { generateApiKey, hashApiKey } from "@/lib/crypto";
 
-// Mock dependencies
-jest.mock("@/lib/auth");
+// Mock dependencies before imports
+jest.mock("@/lib/auth", () => ({
+  auth: jest.fn(),
+}));
 jest.mock("@/lib/prisma", () => ({
   prisma: {
     apiKey: {
@@ -16,6 +15,11 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 jest.mock("@/lib/crypto");
+
+// Import after mocking
+const { GET, POST } = require("../route");
+const { auth } = require("@/lib/auth");
+const { prisma } = require("@/lib/prisma");
 
 describe("/api/user/api-keys", () => {
   const mockUserId = "user123";
@@ -60,7 +64,14 @@ describe("/api/user/api-keys", () => {
       const data = await response.json();
       
       expect(response.status).toBe(200);
-      expect(data.apiKeys).toEqual(mockKeys);
+      expect(data.apiKeys).toEqual(
+        mockKeys.map(key => ({
+          ...key,
+          createdAt: key.createdAt.toISOString(),
+          expiresAt: key.expiresAt?.toISOString() || null,
+          lastUsedAt: key.lastUsedAt?.toISOString() || null,
+        }))
+      );
       expect(prisma.apiKey.findMany).toHaveBeenCalledWith({
         where: { userId: mockUserId },
         select: {

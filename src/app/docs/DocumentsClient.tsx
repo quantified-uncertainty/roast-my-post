@@ -235,7 +235,7 @@ export default function DocumentsClient({
                                 {review?.agent.name}
                                 {hasGrade && (
                                     <GradeBadge
-                                      grade={grade}
+                                      grade={grade ?? null}
                                       className="ml-1 text-xs"
                                       variant="dark"
                                     />

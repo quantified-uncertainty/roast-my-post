@@ -88,7 +88,14 @@
       "Bash(/bin/sh -c \"cd mcp-server && npm run prisma:generate\")",
       "Bash(/bin/sh:*)",
       "mcp__open-annotate__import_article",
-      "mcp__open-annotate__get_agents"
+      "mcp__open-annotate__get_agents",
+      "mcp__open-annotate__validate_auth",
+      "Bash(/usr/bin/npm run build)",
+      "mcp__open-annotate__verify_setup",
+      "mcp__open-annotate__get_recent_evaluations",
+      "mcp__open-annotate__get_documents",
+      "Bash(/opt/homebrew/bin/npm run build)",
+      "Bash(/opt/homebrew/bin/npx tsc)"
     ],
     "deny": []
   },

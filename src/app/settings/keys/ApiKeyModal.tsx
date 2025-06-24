@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { XMarkIcon, ClipboardIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  CheckIcon,
+  ClipboardIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 interface ApiKeyModalProps {
   onClose: () => void;
@@ -9,7 +14,11 @@ interface ApiKeyModalProps {
   createdKey: { key: string; name: string } | null;
 }
 
-export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalProps) {
+export function ApiKeyModal({
+  onClose,
+  onCreateKey,
+  createdKey,
+}: ApiKeyModalProps) {
   const [name, setName] = useState("");
   const [expiresIn, setExpiresIn] = useState<number | undefined>(undefined);
   const [isCreating, setIsCreating] = useState(false);
@@ -55,9 +64,9 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div ref={modalRef} className="bg-white rounded-lg max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-75 p-4">
+      <div ref={modalRef} className="w-full max-w-md rounded-lg bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             {createdKey ? "API Key Created" : "Create API Key"}
           </h2>
@@ -71,21 +80,21 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
 
         {createdKey ? (
           <div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+            <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 p-4">
               <p className="text-sm text-yellow-800">
                 Save this API key securely. You won't be able to see it again.
               </p>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Name
               </label>
               <p className="text-sm text-gray-900">{createdKey.name}</p>
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 API Key
               </label>
               <div className="flex items-center space-x-2">
@@ -93,20 +102,20 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
                   type="text"
                   readOnly
                   value={createdKey.key}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm"
+                  className="flex-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 font-mono text-sm"
                 />
                 <button
                   onClick={copyToClipboard}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   {copied ? (
                     <>
-                      <CheckIcon className="h-4 w-4 mr-1 text-green-600" />
+                      <CheckIcon className="mr-1 h-4 w-4 text-green-600" />
                       Copied
                     </>
                   ) : (
                     <>
-                      <ClipboardIcon className="h-4 w-4 mr-1" />
+                      <ClipboardIcon className="mr-1 h-4 w-4" />
                       Copy
                     </>
                   )}
@@ -114,17 +123,17 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-md p-4 mb-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">
+            <div className="mb-6 rounded-md bg-gray-50 p-4">
+              <h4 className="mb-2 text-sm font-medium text-gray-900">
                 Add to your MCP configuration:
               </h4>
-              <pre className="text-xs bg-gray-800 text-gray-100 p-3 rounded overflow-x-auto">
-{`{
+              <pre className="overflow-x-auto rounded bg-gray-800 p-3 text-xs text-gray-100">
+                {`{
   "mcpServers": {
     "open-annotate": {
       "env": {
         "DATABASE_URL": "your-database-url",
-        "OPEN_ANNOTATE_API_KEY": "${createdKey.key}"
+        "ROAST_MY_POST_MCP_USER_API_KEY": "${createdKey.key}"
       }
     }
   }
@@ -134,7 +143,7 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
 
             <button
               onClick={onClose}
-              className="w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Done
             </button>
@@ -142,7 +151,10 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="name"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Key Name
               </label>
               <input
@@ -151,20 +163,27 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., MCP Server Key"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
 
             <div className="mb-6">
-              <label htmlFor="expires" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="expires"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Expiration (optional)
               </label>
               <select
                 id="expires"
                 value={expiresIn || ""}
-                onChange={(e) => setExpiresIn(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) =>
+                  setExpiresIn(
+                    e.target.value ? Number(e.target.value) : undefined
+                  )
+                }
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Never expires</option>
                 <option value="7">7 days</option>
@@ -178,14 +197,14 @@ export function ApiKeyModal({ onClose, onCreateKey, createdKey }: ApiKeyModalPro
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isCreating || !name.trim()}
-                className="flex-1 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isCreating ? "Creating..." : "Create Key"}
               </button>

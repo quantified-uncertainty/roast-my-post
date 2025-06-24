@@ -161,7 +161,7 @@ export async function GET(request: NextRequest, context: any) {
           title: docVersion?.title || "Untitled",
           author: evalVersion.evaluation.document.submittedBy.name,
           content: docVersion?.content || "",
-          url: evalVersion.evaluation.document.url,
+          url: docVersion?.urls?.[0] || docVersion?.importUrl || "",
           published_date: evalVersion.evaluation.document.publishedDate?.toISOString(),
           word_count: docVersion?.content?.split(/\s+/).length || 0,
         },
@@ -173,10 +173,12 @@ export async function GET(request: NextRequest, context: any) {
           self_critique: evalVersion.selfCritique,
           comment_count: evalVersion.comments.length,
           comments: evalVersion.comments.map((comment) => ({
-            text: comment.text,
+            title: comment.title,
+            description: comment.description,
             importance: comment.importance,
+            grade: comment.grade,
             highlight: comment.highlight ? {
-              text: comment.highlight.text,
+              quoted_text: comment.highlight.quotedText,
               start_offset: comment.highlight.startOffset,
               end_offset: comment.highlight.endOffset,
             } : null,

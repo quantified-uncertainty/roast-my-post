@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import Image from 'next/image';
 
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
@@ -142,11 +143,14 @@ const renderElement = ({ attributes, children, element }: any) => {
       );
     case "image":
       return (
-        <div {...attributes} contentEditable={false}>
-          <img
+        <div {...attributes} contentEditable={false} className="relative">
+          <Image
             src={element.url}
             alt={element.alt || ""}
+            width={800}
+            height={600}
             style={{ maxWidth: "100%", height: "auto", display: "block" }}
+            unoptimized // Since we don't know the dimensions of external images
           />
           {children}
         </div>

@@ -40,11 +40,12 @@ module.exports = {
   // Update transformIgnorePatterns to NOT ignore these ESM modules
   transformIgnorePatterns: [
     // Ignore node_modules EXCEPT the ones listed below
-    "/node_modules/(?!(remark-parse|remark-slate|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*)/)",
+    "/node_modules/(?!(remark-parse|remark-slate|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*|next-auth|@auth)/)",
   ],
   // Add this section to handle .js imports in ESM/TS projects
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^server-only$": "<rootDir>/src/__mocks__/server-only.js",
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],

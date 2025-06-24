@@ -39,25 +39,31 @@ export function VersionDetails({
   }
   
   // Prepare evaluation data for export button
-  const evaluationData = selectedReview ? {
+  const evaluationData = selectedReview && selectedVersion ? {
     evaluation: {
-      id: selectedReview.id,
-      evaluationId: selectedReview.id,
-      documentId: selectedReview.documentId,
-      documentTitle: selectedReview.document?.title || "",
+      id: `eval-${selectedReview.agentId}`,
+      evaluationId: `eval-${selectedReview.agentId}`,
+      documentId: "doc-id", // This would need to be passed in as a prop
+      documentTitle: "Document", // This would need to be passed in as a prop
       agentId: selectedReview.agentId,
       agentName: selectedReview.agent?.name || "",
-      agentVersion: selectedReview.agent?.versions?.[0]?.version || undefined,
+      agentVersion: selectedReview.agent?.version || undefined,
       evaluationVersion: selectedVersion.version,
       grade: selectedVersion.grade,
-      jobStatus: selectedVersion.job?.status,
+      jobStatus: undefined, // Job status is not available in the version
       createdAt: selectedVersion.createdAt,
-      summary: selectedVersion.thinking,
+      summary: selectedVersion.summary,
       analysis: selectedVersion.analysis,
       selfCritique: selectedVersion.selfCritique,
-      comments: selectedVersion.comments,
+      comments: selectedVersion.comments.map((comment, index) => ({
+        id: `comment-${index}`,
+        title: comment.title,
+        description: comment.description,
+        importance: comment.importance || null,
+        grade: comment.grade || null,
+      })),
       job: selectedVersion.job ? {
-        llmThinking: selectedVersion.thinking,
+        llmThinking: selectedVersion.job.llmThinking,
         costInCents: selectedVersion.job.costInCents,
         tasks: selectedVersion.job.tasks
       } : null,

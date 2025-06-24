@@ -54,6 +54,7 @@ export async function GET(
         id: true,
         status: true,
         createdAt: true,
+        startedAt: true,
         completedAt: true,
         error: true,
         costInCents: true,

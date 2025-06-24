@@ -138,16 +138,29 @@ When adding conditional features (like re-upload button):
 - Added safe-prisma.sh wrapper for dangerous database operations
 - Added import_article MCP tool that accepts URL and optional agentIds
 - Created automated backup scripts in /scripts/
+- **MCP Server Improvements**:
+  - Simplified database configuration - now uses standard DATABASE_URL
+  - Removed schema copying complexity
+  - Configure script now supports both ROAST_MY_POST_MCP_DATABASE_URL and DATABASE_URL
+  - No longer requires separate prisma:generate step
 
 ## Database Access
 
 ### MCP Server (Recommended for Claude Code)
 We have an MCP server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files. See `/mcp-server/README.md` for setup.
 
+**IMPORTANT: After making any changes to MCP server code, you MUST rebuild it:**
+```bash
+cd mcp-server
+npm run build
+# Then restart Claude Code to use the updated server
+```
+
 Example usage in Claude:
 - "Show me all agents with high failure rates"
 - "Get evaluation stats for the last 30 days"
 - "Find documents without any evaluations"
+- "Import article from URL with agent evaluations"
 
 ### Direct Script Access
 For complex queries, you can still write TypeScript scripts using Prisma. See `/claude/README.md` for examples.

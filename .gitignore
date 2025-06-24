@@ -53,3 +53,6 @@ src/data/agents/dist/
 mcp-server/prisma/
 mcp-server/node_modules/.bin/prisma
 mcp-server/.env
+
+# Database backups
+backups/

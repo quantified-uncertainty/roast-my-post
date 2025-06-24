@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server for fast database access to the Open Annot
 
 ## Features
 
-This MCP server provides direct database access to Open Annotate, enabling fast queries and analytics without writing scripts. 
+This MCP server provides direct database access to Open Annotate, enabling fast queries and analytics without writing scripts.
 
 For detailed documentation of all available tools and their parameters, see [FEATURES.md](./FEATURES.md).
 
@@ -18,10 +18,10 @@ npm run setup
 ```
 
 This will:
+
 1. Install dependencies
-2. Generate Prisma client
-3. Build the server
-4. Configure Claude Desktop automatically
+2. Build the server
+3. Configure Claude Desktop automatically
 
 After running setup, restart Claude Desktop to load the MCP server.
 
@@ -34,19 +34,13 @@ cd mcp-server
 npm install
 ```
 
-### 2. Generate Prisma Client
-
-```bash
-npm run prisma:generate
-```
-
-### 3. Build the Server
+### 2. Build the Server
 
 ```bash
 npm run build
 ```
 
-### 4. Configure Claude Desktop
+### 3. Configure Claude Desktop
 
 ```bash
 npm run configure
@@ -65,7 +59,7 @@ Or manually add to your Claude Desktop configuration:
       "args": ["/absolute/path/to/mcp-server/dist/index.js"],
       "env": {
         "DATABASE_URL": "your-database-url",
-        "OPEN_ANNOTATE_API_KEY": "oa_your-api-key-here"
+        "ROAST_MY_POST_MCP_USER_API_KEY": "oa_your-api-key-here"
       }
     }
   }
@@ -122,7 +116,7 @@ echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node dist/index.js
 ## Troubleshooting
 
 1. **Database Connection Issues**: Ensure DATABASE_URL is correct and the database is accessible
-2. **Prisma Client Errors**: Run `npm run prisma:generate` after any schema changes
+2. **Prisma Client Errors**: The MCP server uses the parent project's Prisma client - rebuild if you see import errors
 3. **Server Not Available in Claude**: Check the config file path and restart Claude Desktop
 4. **Permission Errors**: Ensure the built file has execute permissions
 

@@ -27,7 +27,7 @@ export default function AgentRatings({ reviews }: AgentRatingsProps) {
                   <StarIcon
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(review.grade / 20)
+                      i < Math.floor((review.grade ?? 0) / 20)
                         ? "text-yellow-400"
                         : "text-gray-300"
                     }`}

@@ -1,13 +1,25 @@
 #!/usr/bin/env node
+import { z } from "zod";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  StdioServerTransport,
+} from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+
+import type {
+  Agent,
+  AgentVersion,
+  Document,
+  DocumentVersion,
+  Evaluation,
+  EvaluationVersion,
+  Job,
+} from "../../node_modules/@prisma/client/index.js";
 import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
-import type { Agent, AgentVersion, Evaluation, EvaluationVersion, Job, Document, DocumentVersion } from "../../node_modules/@prisma/client/index.js";
-import { z } from "zod";
 
 const prisma = new PrismaClient();
 
@@ -122,29 +134,42 @@ const server = new Server(
 );
 
 // Get API base URL from environment or use default
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
-const API_KEY = process.env.OPEN_ANNOTATE_API_KEY;
+const ROAST_MY_POST_MCP_API_BASE_URL =
+  process.env.ROAST_MY_POST_MCP_API_BASE_URL || "http://localhost:3000";
+const API_KEY = process.env.ROAST_MY_POST_MCP_USER_API_KEY;
 
 // Helper function to make authenticated API calls
 async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
   if (!API_KEY) {
-    throw new Error("OPEN_ANNOTATE_API_KEY environment variable is not set");
+    throw new Error(
+      "ROAST_MY_POST_MCP_USER_API_KEY environment variable is not set"
+    );
   }
 
   const headers = {
     ...options.headers,
-    'Authorization': `Bearer ${API_KEY}`,
-    'Content-Type': 'application/json',
+    Authorization: `Bearer ${API_KEY}`,
+    "Content-Type": "application/json",
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const response = await fetch(`${ROAST_MY_POST_MCP_API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`API request failed: ${response.status} - ${error}`);
+    const errorText = await response.text();
+    let errorMessage = `API request failed: ${response.status}`;
+
+    // Try to parse error as JSON for better error messages
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage += ` - ${errorJson.error || errorText}`;
+    } catch {
+      errorMessage += ` - ${errorText}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -332,7 +357,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Readme/documentation for the agent (optional)",
             },
           },
-          required: ["agentId", "name", "purpose", "description", "primaryInstructions"],
+          required: [
+            "agentId",
+            "name",
+            "purpose",
+            "description",
+            "primaryInstructions",
+          ],
         },
       },
       {
@@ -359,7 +390,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "import_article",
-        description: "Import an article from a URL and optionally create evaluations with specified agents",
+        description:
+          "Import an article from a URL and optionally create evaluations with specified agents",
         inputSchema: {
           type: "object",
           properties: {
@@ -372,10 +404,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               items: {
                 type: "string",
               },
-              description: "Array of agent IDs to create evaluations for (optional)",
+              description:
+                "Array of agent IDs to create evaluations for (optional)",
             },
           },
           required: ["url"],
+        },
+      },
+      {
+        name: "verify_setup",
+        description:
+          "Verify MCP server setup: check DATABASE_URL and API key configuration",
+        inputSchema: {
+          type: "object",
+          properties: {},
         },
       },
     ],
@@ -389,7 +431,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       case "get_agents": {
         const { limit } = GetAgentsArgsSchema.parse(args);
-        
+
         const agents = await prisma.agent.findMany({
           include: {
             versions: {
@@ -424,7 +466,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_recent_evaluations": {
         const { agentId, limit } = GetRecentEvaluationsArgsSchema.parse(args);
-        
+
         const where: any = {};
         if (agentId) where.agentId = agentId;
 
@@ -461,7 +503,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   const latestVersion = evaluation.versions[0];
                   const job = latestVersion?.job;
                   const agentVersion = evaluation.agent.versions[0];
-                  
+
                   return {
                     id: evaluation.id,
                     documentId: evaluation.documentId,
@@ -484,7 +526,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_agent_stats": {
         const { agentId, days } = GetAgentStatsArgsSchema.parse(args);
-        
+
         const since = new Date();
         since.setDate(since.getDate() - days);
 
@@ -528,30 +570,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         for (const version of agent.versions) {
           for (const evaluationVersion of version.evaluations) {
             stats.evaluationsInPeriod++;
-            
+
             if (evaluationVersion.job) {
               stats.totalCost += (evaluationVersion.job.costInCents || 0) / 100;
-              
+
               if (evaluationVersion.job.status === "COMPLETED") {
                 successCount++;
                 if (evaluationVersion.grade !== null) {
                   totalGrades += evaluationVersion.grade;
                 }
               } else if (evaluationVersion.job.error) {
-                const errorKey = evaluationVersion.job.error.split('\n')[0].substring(0, 50);
-                stats.failureReasons[errorKey] = (stats.failureReasons[errorKey] || 0) + 1;
+                const errorKey = evaluationVersion.job.error
+                  .split("\n")[0]
+                  .substring(0, 50);
+                stats.failureReasons[errorKey] =
+                  (stats.failureReasons[errorKey] || 0) + 1;
               }
             }
           }
         }
 
-        stats.successRate = stats.evaluationsInPeriod > 0 
-          ? (successCount / stats.evaluationsInPeriod) * 100 
-          : 0;
-        
-        stats.averageGrade = successCount > 0 
-          ? totalGrades / successCount 
-          : 0;
+        stats.successRate =
+          stats.evaluationsInPeriod > 0
+            ? (successCount / stats.evaluationsInPeriod) * 100
+            : 0;
+
+        stats.averageGrade = successCount > 0 ? totalGrades / successCount : 0;
 
         return {
           content: [
@@ -565,7 +609,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_failed_jobs": {
         const { limit, agentId } = GetFailedJobsArgsSchema.parse(args);
-        
+
         const where: any = { status: "FAILED" };
         if (agentId) {
           where.evaluation = {
@@ -602,7 +646,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 failedJobs.map((job: JobWithRelations) => ({
                   id: job.id,
                   documentId: job.evaluation.documentId,
-                  agentName: job.evaluation.agent.versions[0]?.name || "Unknown",
+                  agentName:
+                    job.evaluation.agent.versions[0]?.name || "Unknown",
                   error: job.error,
                   attempts: job.attempts,
                   createdAt: job.createdAt,
@@ -618,7 +663,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_documents": {
         const { limit, searchTerm } = GetDocumentsArgsSchema.parse(args);
-        
+
         const where: any = {};
         if (searchTerm) {
           where.versions = {
@@ -665,7 +710,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   const completedEvaluations = doc.evaluations.filter(
                     (e) => e.versions[0]?.job?.status === "COMPLETED"
                   ).length;
-                  
+
                   return {
                     id: doc.id,
                     title: latestVersion?.title || "Untitled",
@@ -686,7 +731,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "analyze_recent_evals": {
         const { hours, limit } = AnalyzeRecentEvalsArgsSchema.parse(args);
-        
+
         const since = new Date();
         since.setHours(since.getHours() - hours);
 
@@ -716,7 +761,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           totalEvaluations: evaluations.length,
           timeRange: { from: since, to: new Date() },
           byStatus: {} as Record<string, number>,
-          byAgent: {} as Record<string, { count: number; avgGrade: number | null; failureRate: number }>,
+          byAgent: {} as Record<
+            string,
+            { count: number; avgGrade: number | null; failureRate: number }
+          >,
           avgProcessingTime: 0,
           totalCost: 0,
           gradeDistribution: {} as Record<number, number>,
@@ -736,7 +784,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Agent tracking
           if (!stats.byAgent[agentName]) {
-            stats.byAgent[agentName] = { count: 0, avgGrade: null, failureRate: 0 };
+            stats.byAgent[agentName] = {
+              count: 0,
+              avgGrade: null,
+              failureRate: 0,
+            };
           }
           stats.byAgent[agentName].count++;
 
@@ -750,34 +802,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
             // Error tracking
             if (job.status === "FAILED" && job.error) {
-              const errorKey = job.error.split('\n')[0].substring(0, 100);
+              const errorKey = job.error.split("\n")[0].substring(0, 100);
               stats.topErrors[errorKey] = (stats.topErrors[errorKey] || 0) + 1;
             }
           }
 
           // Grade distribution
           if (evalVersion.grade !== null) {
-            stats.gradeDistribution[evalVersion.grade] = 
+            stats.gradeDistribution[evalVersion.grade] =
               (stats.gradeDistribution[evalVersion.grade] || 0) + 1;
           }
         }
 
         // Calculate averages
-        stats.avgProcessingTime = processedCount > 0 ? totalProcessingTime / processedCount : 0;
+        stats.avgProcessingTime =
+          processedCount > 0 ? totalProcessingTime / processedCount : 0;
 
         // Calculate per-agent statistics
         for (const [agentName, agentStats] of Object.entries(stats.byAgent)) {
-          const agentEvals = evaluations.filter((e) => e.agentVersion.agent.id === agentName);
+          const agentEvals = evaluations.filter(
+            (e) => e.agentVersion.agent.id === agentName
+          );
           const grades = agentEvals
             .map((e) => e.grade)
             .filter((g): g is number => g !== null);
-          
+
           if (grades.length > 0) {
-            agentStats.avgGrade = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
+            agentStats.avgGrade =
+              grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
           }
 
-          const failedCount = agentEvals.filter((e) => e.job?.status === "FAILED").length;
-          agentStats.failureRate = agentStats.count > 0 ? (failedCount / agentStats.count) * 100 : 0;
+          const failedCount = agentEvals.filter(
+            (e) => e.job?.status === "FAILED"
+          ).length;
+          agentStats.failureRate =
+            agentStats.count > 0 ? (failedCount / agentStats.count) * 100 : 0;
         }
 
         return {
@@ -792,7 +851,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_batch_results": {
         const { batchId } = GetBatchResultsArgsSchema.parse(args);
-        
+
         const batch = await prisma.agentEvalBatch.findUnique({
           where: { id: batchId },
           include: {
@@ -850,10 +909,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         for (const job of batch.jobs) {
           const evalVersion = job.evaluation.versions[0];
-          
+
           if (job.status === "COMPLETED") {
             results.completedCount++;
-            if (evalVersion?.grade !== null && evalVersion?.grade !== undefined) {
+            if (
+              evalVersion?.grade !== null &&
+              evalVersion?.grade !== undefined
+            ) {
               totalGrades += evalVersion.grade;
               gradeCount++;
             }
@@ -867,7 +929,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           results.evaluations.push({
             jobId: job.id,
-            documentTitle: job.evaluation.document.versions?.[0]?.title || "Untitled",
+            documentTitle:
+              job.evaluation.document.versions?.[0]?.title || "Untitled",
             status: job.status,
             grade: evalVersion?.grade,
             error: job.error,
@@ -875,10 +938,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           });
         }
 
-        results.successRate = batch.jobs.length > 0 
-          ? (results.completedCount / batch.jobs.length) * 100 
-          : 0;
-        
+        results.successRate =
+          batch.jobs.length > 0
+            ? (results.completedCount / batch.jobs.length) * 100
+            : 0;
+
         results.avgGrade = gradeCount > 0 ? totalGrades / gradeCount : 0;
 
         return {
@@ -893,37 +957,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "get_job_queue_status": {
         const { includeDetails } = GetJobQueueStatusArgsSchema.parse(args);
-        
-        const [pendingJobs, runningJobs, recentCompleted, recentFailed] = await Promise.all([
-          prisma.job.count({ where: { status: "PENDING" } }),
-          prisma.job.count({ where: { status: "RUNNING" } }),
-          prisma.job.findMany({
-            where: { status: "COMPLETED" },
-            take: 10,
-            orderBy: { completedAt: "desc" },
-            include: includeDetails ? {
-              evaluation: {
-                include: {
-                  agent: true,
-                  document: true,
-                },
-              },
-            } : undefined,
-          }),
-          prisma.job.findMany({
-            where: { status: "FAILED" },
-            take: 10,
-            orderBy: { updatedAt: "desc" },
-            include: includeDetails ? {
-              evaluation: {
-                include: {
-                  agent: true,
-                  document: true,
-                },
-              },
-            } : undefined,
-          }),
-        ]);
+
+        const [pendingJobs, runningJobs, recentCompleted, recentFailed] =
+          await Promise.all([
+            prisma.job.count({ where: { status: "PENDING" } }),
+            prisma.job.count({ where: { status: "RUNNING" } }),
+            prisma.job.findMany({
+              where: { status: "COMPLETED" },
+              take: 10,
+              orderBy: { completedAt: "desc" },
+              include: includeDetails
+                ? {
+                    evaluation: {
+                      include: {
+                        agent: true,
+                        document: true,
+                      },
+                    },
+                  }
+                : undefined,
+            }),
+            prisma.job.findMany({
+              where: { status: "FAILED" },
+              take: 10,
+              orderBy: { updatedAt: "desc" },
+              include: includeDetails
+                ? {
+                    evaluation: {
+                      include: {
+                        agent: true,
+                        document: true,
+                      },
+                    },
+                  }
+                : undefined,
+            }),
+          ]);
 
         const queueStatus = {
           summary: {
@@ -952,7 +1021,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           (queueStatus as any).recentFailed = recentFailed.map((job) => ({
             id: job.id,
             failedAt: job.updatedAt,
-            error: job.error?.split('\n')[0],
+            error: job.error?.split("\n")[0],
             attempts: job.attempts,
             agent: (job as any).evaluation?.agent?.id,
             document: (job as any).evaluation?.document?.id,
@@ -970,28 +1039,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "create_agent_version": {
-        const args = CreateAgentVersionArgsSchema.parse(request.params.arguments);
-        
+        const args = CreateAgentVersionArgsSchema.parse(
+          request.params.arguments
+        );
+
         try {
           if (!API_KEY) {
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    error: "No API key configured",
-                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
-                    example: {
-                      "mcpServers": {
-                        "open-annotate": {
-                          "env": {
-                            "DATABASE_URL": "your-database-url",
-                            "OPEN_ANNOTATE_API_KEY": "oa_your-api-key-here"
-                          }
-                        }
-                      }
-                    }
-                  }, null, 2),
+                  text: JSON.stringify(
+                    {
+                      error: "No API key configured",
+                      instructions:
+                        "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
+                      example: {
+                        mcpServers: {
+                          "open-annotate": {
+                            env: {
+                              DATABASE_URL: "your-database-url",
+                              ROAST_MY_POST_MCP_USER_API_KEY:
+                                "oa_your-api-key-here",
+                            },
+                          },
+                        },
+                      },
+                    },
+                    null,
+                    2
+                  ),
                 },
               ],
             };
@@ -1011,8 +1088,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
 
           // Call the agent creation/update action through API
-          const result = await authenticatedFetch('/api/agents', {
-            method: 'PUT',
+          const result = await authenticatedFetch("/api/agents", {
+            method: "PUT",
             body: JSON.stringify(agentData),
           });
 
@@ -1020,11 +1097,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  success: true,
-                  agent: result.agent,
-                  message: `Successfully created version ${result.agent.version} of agent ${args.agentId}`,
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    agent: result.agent,
+                    message: `Successfully created version ${result.agent.version} of agent ${args.agentId}`,
+                  },
+                  null,
+                  2
+                ),
               },
             ],
           };
@@ -1033,10 +1114,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  error: error instanceof Error ? error.message : String(error),
-                  hint: "Make sure your API key is valid and has the necessary permissions",
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    hint: "Make sure your API key is valid and has the necessary permissions",
+                  },
+                  null,
+                  2
+                ),
               },
             ],
             isError: true,
@@ -1046,40 +1132,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "spawn_batch_jobs": {
         const args = SpawnBatchJobsArgsSchema.parse(request.params.arguments);
-        
+
         try {
           if (!API_KEY) {
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    error: "No API key configured",
-                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
-                  }, null, 2),
+                  text: JSON.stringify(
+                    {
+                      error: "No API key configured",
+                      instructions:
+                        "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
+                    },
+                    null,
+                    2
+                  ),
                 },
               ],
             };
           }
 
           // Call the batch creation endpoint
-          const result = await authenticatedFetch(`/api/agents/${args.agentId}/eval-batch`, {
-            method: 'POST',
-            body: JSON.stringify({
-              name: args.name,
-              targetCount: args.targetCount,
-            }),
-          });
+          const result = await authenticatedFetch(
+            `/api/agents/${args.agentId}/eval-batch`,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                name: args.name,
+                targetCount: args.targetCount,
+              }),
+            }
+          );
 
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  success: true,
-                  batch: result.batch,
-                  message: result.message,
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    batch: result.batch,
+                    message: result.message,
+                  },
+                  null,
+                  2
+                ),
               },
             ],
           };
@@ -1088,10 +1186,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  error: error instanceof Error ? error.message : String(error),
-                  hint: "Make sure your API key is valid and you own the agent",
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    hint: "Make sure your API key is valid and you own the agent",
+                  },
+                  null,
+                  2
+                ),
               },
             ],
             isError: true,
@@ -1101,25 +1204,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "import_article": {
         const args = ImportArticleArgsSchema.parse(request.params.arguments);
-        
+
         try {
           if (!API_KEY) {
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    error: "No API key configured",
-                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
-                  }, null, 2),
+                  text: JSON.stringify(
+                    {
+                      error: "No API key configured",
+                      instructions:
+                        "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
+                    },
+                    null,
+                    2
+                  ),
                 },
               ],
             };
           }
 
           // Call the import endpoint
-          const result = await authenticatedFetch('/api/import', {
-            method: 'POST',
+          const result = await authenticatedFetch("/api/import", {
+            method: "POST",
             body: JSON.stringify({
               url: args.url,
               importUrl: args.url,
@@ -1131,16 +1239,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  success: true,
-                  documentId: result.documentId,
-                  document: result.document,
-                  evaluations: result.evaluations,
-                  message: `Successfully imported article "${result.document.title}"` + 
-                    (result.evaluations && result.evaluations.length > 0 
-                      ? ` and created ${result.evaluations.length} evaluation(s)` 
-                      : ''),
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    documentId: result.documentId,
+                    document: result.document,
+                    evaluations: result.evaluations,
+                    message:
+                      `Successfully imported article "${result.document.title}"` +
+                      (result.evaluations && result.evaluations.length > 0
+                        ? ` and created ${result.evaluations.length} evaluation(s)`
+                        : ""),
+                  },
+                  null,
+                  2
+                ),
               },
             ],
           };
@@ -1149,15 +1262,164 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({
-                  error: error instanceof Error ? error.message : String(error),
-                  hint: "Make sure the URL is valid and accessible",
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    hint: "Make sure the URL is valid and accessible",
+                  },
+                  null,
+                  2
+                ),
               },
             ],
             isError: true,
           };
         }
+      }
+
+      case "verify_setup": {
+        // Environment variables
+        const databaseUrl = process.env.DATABASE_URL;
+        const apiKey = process.env.ROAST_MY_POST_MCP_USER_API_KEY;
+        const apiBaseUrl = process.env.ROAST_MY_POST_MCP_API_BASE_URL || "http://localhost:3000";
+
+        // Check environment variables
+        const envStatus = {
+          DATABASE_URL: databaseUrl ? "✓ Set" : "✗ Not set",
+          ROAST_MY_POST_MCP_USER_API_KEY: apiKey ? "✓ Set" : "✗ Not set",
+          ROAST_MY_POST_MCP_API_BASE_URL: `✓ ${apiBaseUrl}`,
+        };
+
+        // Initialize status object
+        const setupStatus = {
+          environment: envStatus,
+          database: {
+            configured: !!databaseUrl,
+            connected: false,
+            error: null as string | null,
+          },
+          apiKey: {
+            configured: !!apiKey,
+            valid: false,
+            error: null as string | null,
+            debug: null as any,
+            possibleReasons: null as string[] | null,
+          },
+          server: {
+            reachable: false,
+            error: null as string | null,
+          },
+          setup: {
+            complete: false,
+            instructions: null as any,
+          },
+          user: null as any,
+        };
+
+        // Test database connection
+        if (databaseUrl) {
+          try {
+            await prisma.$queryRaw`SELECT 1`;
+            setupStatus.database.connected = true;
+          } catch (error) {
+            setupStatus.database.error = error instanceof Error ? error.message : String(error);
+          }
+        } else {
+          setupStatus.database.error = "DATABASE_URL environment variable not set";
+        }
+
+        // Test API key and server connectivity
+        if (apiKey) {
+          // Add debug info
+          setupStatus.apiKey.debug = {
+            keyFormat: {
+              startsWithOa: apiKey.startsWith("oa_"),
+              length: apiKey.length,
+              validFormat: /^oa_[A-Za-z0-9_-]+$/.test(apiKey),
+            },
+            maskedKey: `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`,
+          };
+
+          // Test server reachability and API key validity
+          try {
+            const result = await authenticatedFetch("/api/validate-key", {
+              method: "GET",
+            });
+            setupStatus.apiKey.valid = true;
+            setupStatus.server.reachable = true;
+            setupStatus.user = result.user;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            
+            // Determine if it's a connectivity issue or auth issue
+            if (errorMessage.includes("fetch failed") || errorMessage.includes("ECONNREFUSED")) {
+              setupStatus.server.error = `Cannot reach server at ${apiBaseUrl}`;
+            } else {
+              setupStatus.server.reachable = true;
+              setupStatus.apiKey.error = errorMessage;
+              
+              if (errorMessage.includes("401")) {
+                setupStatus.apiKey.possibleReasons = [
+                  "API key format invalid (must start with 'oa_')",
+                  "API key doesn't exist in database",
+                  "API key might be expired or revoked",
+                ];
+              }
+            }
+          }
+        } else {
+          setupStatus.apiKey.error = "ROAST_MY_POST_MCP_USER_API_KEY environment variable not set";
+        }
+
+        // Overall status
+        setupStatus.setup.complete = 
+          setupStatus.database.connected && 
+          setupStatus.apiKey.valid && 
+          setupStatus.server.reachable;
+
+        // Add instructions if setup is incomplete
+        if (!setupStatus.setup.complete) {
+          setupStatus.setup.instructions = {
+            message: "To complete setup:",
+            steps: [],
+            example: {
+              mcpServers: {
+                "open-annotate": {
+                  command: "node",
+                  args: ["mcp-server/dist/index.js"],
+                  env: {
+                    DATABASE_URL: databaseUrl || "postgresql://user:pass@localhost:5432/open_annotate",
+                    ROAST_MY_POST_MCP_USER_API_KEY: apiKey || "oa_your-api-key-here",
+                    ROAST_MY_POST_MCP_API_BASE_URL: apiBaseUrl,
+                  },
+                },
+              },
+            },
+          };
+
+          // Add specific steps based on what's missing
+          if (!databaseUrl) {
+            setupStatus.setup.instructions.steps.push("1. Set DATABASE_URL to your PostgreSQL connection string");
+          }
+          if (!apiKey) {
+            setupStatus.setup.instructions.steps.push("2. Get your API key from Settings page and set ROAST_MY_POST_MCP_USER_API_KEY");
+          }
+          if (!setupStatus.server.reachable && apiKey) {
+            setupStatus.setup.instructions.steps.push("3. Ensure the server is running at " + apiBaseUrl);
+          }
+          setupStatus.setup.instructions.steps.push("4. Restart Claude Code for changes to take effect");
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(setupStatus, null, 2),
+            },
+          ],
+          isError: !setupStatus.setup.complete,
+        };
       }
 
       default:
@@ -1181,19 +1443,19 @@ async function main() {
     // Test database connection
     await prisma.$connect();
     console.error("✅ Database connected successfully");
-    
+
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("🚀 Open Annotate MCP server running on stdio");
-    
+
     // Handle graceful shutdown
-    process.on('SIGINT', async () => {
+    process.on("SIGINT", async () => {
       console.error("\n👋 Shutting down MCP server...");
       await prisma.$disconnect();
       process.exit(0);
     });
-    
-    process.on('SIGTERM', async () => {
+
+    process.on("SIGTERM", async () => {
       await prisma.$disconnect();
       process.exit(0);
     });
