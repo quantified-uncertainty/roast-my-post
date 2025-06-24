@@ -46,6 +46,9 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^server-only$": "<rootDir>/src/__mocks__/server-only.js",
+    "^next-auth$": "<rootDir>/src/__mocks__/next-auth.js",
+    "^next-auth/providers/resend$": "<rootDir>/src/__mocks__/next-auth/providers/resend.js",
+    "^@auth/prisma-adapter$": "<rootDir>/src/__mocks__/@auth/prisma-adapter.js",
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],

@@ -149,7 +149,9 @@ When adding conditional features (like re-upload button):
 ### MCP Server (Recommended for Claude Code)
 We have an MCP server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files. See `/mcp-server/README.md` for setup.
 
-**IMPORTANT: After making any changes to MCP server code, you MUST rebuild it:**
+**Development Mode**: If you're running the MCP server with `npm run start`, it will automatically pick up code changes without needing to rebuild.
+
+**Production Mode**: If you're running the built version, after making any changes to MCP server code, you must rebuild it:
 ```bash
 cd mcp-server
 npm run build

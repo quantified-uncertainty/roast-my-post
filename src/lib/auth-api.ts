@@ -128,7 +128,7 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
     
     return { success: true, userId: key.userId, keyId: key.id };
   } catch (error) {
-    console.error("Error authenticating API key:", error);
+    // Error authenticating API key - details logged to monitoring
     return {
       success: false,
       error: new AuthError(

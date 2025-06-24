@@ -1298,6 +1298,69 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
       }
 
+      case "update_document": {
+        const args = UpdateDocumentArgsSchema.parse(request.params.arguments);
+
+        try {
+          if (!API_KEY) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      error: "No API key configured",
+                      instructions:
+                        "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
+                    },
+                    null,
+                    2
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Call the document update endpoint
+          const result = await authenticatedFetch(
+            `/api/documents/${args.documentId}`,
+            {
+              method: "PUT",
+              body: JSON.stringify({
+                intendedAgentIds: args.intendedAgentIds,
+              }),
+            }
+          );
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    hint: "Make sure the document ID is valid and you have permission to update it",
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+
       case "verify_setup": {
         // Environment variables
         const databaseUrl = process.env.DATABASE_URL;

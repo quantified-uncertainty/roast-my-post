@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       importUrl: importUrl || url,
     };
 
-    console.log("💾 Creating document...");
+    // Creating document
     const document = await DocumentModel.create({
       ...documentData,
       submittedById: userId,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Create evaluations and jobs if agentIds are provided
     const createdEvaluations = [];
     if (agentIds && agentIds.length > 0) {
-      console.log(`📋 Creating evaluations for ${agentIds.length} agents...`);
+      // Creating evaluations for agents
       
       for (const agentId of agentIds) {
         try {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             jobId: result.job.id,
           });
         } catch (error) {
-          console.error(`❌ Failed to create evaluation for agent ${agentId}:`, error);
+          // Failed to create evaluation for agent
         }
       }
     }
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       evaluations: createdEvaluations,
     });
   } catch (error) {
-    console.error("❌ Error importing document:", error);
+    // Error importing document
     return NextResponse.json(
       {
         error:

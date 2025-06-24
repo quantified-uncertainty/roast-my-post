@@ -301,7 +301,5 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
       { error: "Failed to export agent data" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
