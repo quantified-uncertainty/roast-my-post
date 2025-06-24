@@ -10,6 +10,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+import { PrismaClient } from "@prisma/client";
 import type {
   Agent,
   AgentVersion,
@@ -18,8 +19,7 @@ import type {
   Evaluation,
   EvaluationVersion,
   Job,
-} from "../../node_modules/@prisma/client/index.js";
-import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -1482,7 +1482,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   env: {
                     DATABASE_URL:
                       databaseUrl ||
-                      "postgresql://user:pass@localhost:5432/open_annotate",
+                      "postgresql://user:pass@localhost:5432/roast_my_post",
                     ROAST_MY_POST_MCP_USER_API_KEY:
                       apiKey || "rmp_your-api-key-here",
                     ROAST_MY_POST_MCP_API_BASE_URL: apiBaseUrl,

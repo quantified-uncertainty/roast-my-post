@@ -29,10 +29,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
 # vercel
 .vercel
 
@@ -56,3 +52,9 @@ mcp-server/.env
 
 # Database backups
 backups/
+
+# Backup files
+*.backup
+*.bak
+.env.backup
+.env.bak
