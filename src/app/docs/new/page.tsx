@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import AgentCheckboxList from "@/components/AgentCheckboxList";
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
 
@@ -16,7 +15,7 @@ interface FormFieldConfig {
   name: keyof DocumentInput;
   label: string;
   required?: boolean;
-  type: "text" | "textarea" | "agentCheckboxList";
+  type: "text" | "textarea";
   placeholder: string;
 }
 
@@ -47,12 +46,6 @@ const formFields: FormFieldConfig[] = [
     type: "text",
     placeholder: "Platforms (e.g., LessWrong, EA Forum)",
   },
-  {
-    name: "intendedAgents",
-    label: "Intended Agents",
-    type: "agentCheckboxList",
-    placeholder: "Select agents",
-  },
 ];
 
 export default function NewDocumentPage() {
@@ -64,7 +57,6 @@ export default function NewDocumentPage() {
       content: "",
       urls: "",
       platforms: "",
-      intendedAgents: "",
     },
   });
 
@@ -122,22 +114,13 @@ export default function NewDocumentPage() {
                   required={field.required}
                   error={errors[field.name]}
                 >
-                  {field.type === "agentCheckboxList" ? (
-                    <AgentCheckboxList
-                      name={field.name}
-                      label={field.label}
-                      required={field.required}
-                      error={errors[field.name]}
-                    />
-                  ) : (
-                    <input
-                      {...methods.register(field.name)}
-                      type={field.type}
-                      id={field.name}
-                      className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
-                      placeholder={field.placeholder}
-                    />
-                  )}
+                  <input
+                    {...methods.register(field.name)}
+                    type={field.type}
+                    id={field.name}
+                    className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
+                    placeholder={field.placeholder}
+                  />
                 </FormField>
               ))}
 

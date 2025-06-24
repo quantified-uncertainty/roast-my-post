@@ -40,6 +40,7 @@ import {
   ListBulletIcon,
   PencilIcon,
   TrashIcon,
+  PlayIcon,
 } from "@heroicons/react/24/outline";
 import {
   CheckCircleIcon,
@@ -50,6 +51,7 @@ import {
 
 import { GradeBadge } from "./GradeBadge";
 import SlateEditor from "./SlateEditor";
+import { AgentSelector, QuickAgentButtons } from "./AgentSelector";
 
 function MarkdownRenderer({
   children,
@@ -338,6 +340,8 @@ interface UIState {
   showEvaluationSelector: boolean;
   deleteError: string | null;
   isReuploadingDocument: boolean;
+  evaluationCreationError: string | null;
+  successMessage: string | null;
 }
 
 interface HomeViewProps {
@@ -347,6 +351,8 @@ interface HomeViewProps {
   activeEvaluationIndex: number | null;
   isReuploadingDocument: boolean;
   onReupload: () => Promise<void>;
+  onCreateEvaluation: (agentId: string) => Promise<void>;
+  onCreateMultipleEvaluations: (agentIds: string[]) => Promise<void>;
 }
 
 function HomeView({
@@ -356,6 +362,8 @@ function HomeView({
   activeEvaluationIndex,
   isReuploadingDocument,
   onReupload,
+  onCreateEvaluation,
+  onCreateMultipleEvaluations,
 }: HomeViewProps) {
   const router = useRouter();
 
@@ -484,6 +492,49 @@ function HomeView({
         </div>
       </div>
 
+      {/* Run Evaluations Section */}
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900">
+          Run Evaluations
+        </h3>
+        
+        {/* Quick Actions */}
+        <div className="mb-4">
+          <h4 className="mb-2 text-sm font-medium text-gray-700">
+            Quick Actions
+          </h4>
+          <QuickAgentButtons
+            onSelect={onCreateEvaluation}
+            disabled={false}
+          />
+        </div>
+
+        {/* Agent Dropdown */}
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-700">
+            Choose Agent
+          </h4>
+          <AgentSelector
+            variant="dropdown"
+            onSelect={onCreateEvaluation}
+            disabled={false}
+          />
+        </div>
+
+        {/* Batch Operations */}
+        <div>
+          <h4 className="mb-3 text-sm font-medium text-gray-700">
+            Batch Operations
+          </h4>
+          <AgentSelector
+            variant="list"
+            onSelectMultiple={onCreateMultipleEvaluations}
+            showRunButton={true}
+            disabled={false}
+          />
+        </div>
+      </div>
+
       <EvaluationSelector
         document={document}
         activeEvaluationIndex={activeEvaluationIndex}
@@ -552,6 +603,7 @@ interface EvaluationViewProps {
   onBackToHome: () => void;
   onShowEvaluationSelector: () => void;
   commentColorMap: Record<number, { background: string; color: string }>;
+  onRerunEvaluation: (agentId: string) => Promise<void>;
 }
 
 function EvaluationView({
@@ -561,6 +613,7 @@ function EvaluationView({
   onBackToHome,
   onShowEvaluationSelector,
   commentColorMap,
+  onRerunEvaluation,
 }: EvaluationViewProps) {
   return (
     <div className="h-full">
@@ -579,13 +632,24 @@ function EvaluationView({
             <ChevronDownIcon className="h-5 w-5 text-gray-400" />
           </button>
         </div>
-        <button
-          onClick={onBackToHome}
-          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-        >
-          <ArrowLeftIcon className="h-5 w-5" />
-          Back
-        </button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => onRerunEvaluation(evaluation.agentId)}
+            variant="secondary"
+            disabled={false}
+            className="flex items-center gap-1 text-sm px-2 py-1"
+          >
+            <PlayIcon className="h-4 w-4" />
+            Re-run
+          </Button>
+          <button
+            onClick={onBackToHome}
+            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+            Back
+          </button>
+        </div>
       </div>
 
       <TabNavigation
@@ -825,6 +889,8 @@ export function DocumentWithEvaluations({
     showEvaluationSelector: false,
     deleteError: null,
     isReuploadingDocument: false,
+    evaluationCreationError: null,
+    successMessage: null,
   });
 
   const hasEvaluations = document.reviews && document.reviews.length > 0;
@@ -891,6 +957,106 @@ export function DocumentWithEvaluations({
     setUIState((prev) => ({ ...prev, isHomeView: true }));
   };
 
+  const handleCreateEvaluation = async (agentId: string) => {
+    try {
+      const response = await fetch(`/api/documents/${document.id}/evaluations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agentId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create evaluation');
+      }
+
+      const result = await response.json();
+      
+      // Show success notification
+      setUIState((prev) => ({ 
+        ...prev, 
+        evaluationCreationError: null,
+        successMessage: result.created 
+          ? 'Evaluation created and queued for processing'
+          : 'Evaluation re-queued for processing'
+      }));
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setUIState((prev) => ({ ...prev, successMessage: null }));
+      }, 5000);
+
+    } catch (error) {
+      console.error('Error creating evaluation:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create evaluation';
+      setUIState((prev) => ({ 
+        ...prev, 
+        evaluationCreationError: errorMessage
+      }));
+
+      // Clear error message after 8 seconds
+      setTimeout(() => {
+        setUIState((prev) => ({ ...prev, evaluationCreationError: null }));
+      }, 8000);
+    }
+  };
+
+  const handleCreateMultipleEvaluations = async (agentIds: string[]) => {
+    if (agentIds.length === 0) return;
+
+    try {
+      const response = await fetch(`/api/documents/${document.id}/evaluations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agentIds }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create evaluations');
+      }
+
+      const result = await response.json();
+      
+      // Show success notification
+      const createdCount = result.evaluations?.filter((e: any) => !e.error).length || 0;
+      const errorCount = result.evaluations?.filter((e: any) => e.error).length || 0;
+      
+      let message = `${createdCount} evaluation(s) queued for processing`;
+      if (errorCount > 0) {
+        message += `, ${errorCount} failed`;
+      }
+      
+      setUIState((prev) => ({ 
+        ...prev, 
+        evaluationCreationError: null,
+        successMessage: message
+      }));
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setUIState((prev) => ({ ...prev, successMessage: null }));
+      }, 5000);
+
+    } catch (error) {
+      console.error('Error creating evaluations:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create evaluations';
+      setUIState((prev) => ({ 
+        ...prev, 
+        evaluationCreationError: errorMessage
+      }));
+
+      // Clear error message after 8 seconds
+      setTimeout(() => {
+        setUIState((prev) => ({ ...prev, evaluationCreationError: null }));
+      }, 8000);
+    }
+  };
+
   const handleReupload = async () => {
     setUIState((prev) => ({ ...prev, isReuploadingDocument: true }));
 
@@ -948,6 +1114,8 @@ export function DocumentWithEvaluations({
             activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
             isReuploadingDocument={uiState.isReuploadingDocument}
             onReupload={handleReupload}
+            onCreateEvaluation={handleCreateEvaluation}
+            onCreateMultipleEvaluations={handleCreateMultipleEvaluations}
           />
         ) : activeEvaluation && evaluationState ? (
           <EvaluationView
@@ -959,6 +1127,7 @@ export function DocumentWithEvaluations({
               setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
             }
             commentColorMap={commentColorMap}
+            onRerunEvaluation={handleCreateEvaluation}
           />
         ) : null}
       </div>
@@ -976,6 +1145,56 @@ export function DocumentWithEvaluations({
         isOpen={uiState.isReuploadingDocument}
         message="Re-uploading document..."
       />
+      {uiState.successMessage && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-green-50 p-4 shadow-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <CheckCircleIcon className="h-5 w-5 text-green-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                Success
+              </h3>
+              <div className="mt-2 text-sm text-green-700">
+                {uiState.successMessage}
+              </div>
+              <div className="mt-3">
+                <button
+                  onClick={() => setUIState(prev => ({ ...prev, successMessage: null }))}
+                  className="text-sm font-medium text-green-800 hover:text-green-900"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {uiState.evaluationCreationError && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-red-50 p-4 shadow-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <XCircleIcon className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Evaluation Creation Failed
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                {uiState.evaluationCreationError}
+              </div>
+              <div className="mt-3">
+                <button
+                  onClick={() => setUIState(prev => ({ ...prev, evaluationCreationError: null }))}
+                  className="text-sm font-medium text-red-800 hover:text-red-900"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

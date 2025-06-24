@@ -7,7 +7,6 @@ export const documentSchema = z.object({
   content: z.string().min(50, "Content must be at least 50 characters"),
   urls: z.string().optional(),
   platforms: z.string().optional(),
-  intendedAgents: z.string().optional(),
   importUrl: z.string().optional(),
 });
 
