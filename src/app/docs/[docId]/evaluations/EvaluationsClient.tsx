@@ -220,6 +220,8 @@ export default function EvaluationsClient({
               activeTab={activeTab}
               onTabChange={setActiveTab}
               formatDate={formatDate}
+              documentId={document.id}
+              documentTitle={document.title}
             />
           )}
           {middleTab === "jobs" && selectedJob && (

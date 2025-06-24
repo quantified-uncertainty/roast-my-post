@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as yaml from 'js-yaml';
 
+import { auth } from "@/lib/auth";
+import { authenticateApiKey } from "@/lib/auth-api";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest, context: any) {
@@ -8,6 +10,24 @@ export async function GET(request: NextRequest, context: any) {
   const searchParams = request.nextUrl.searchParams;
   
   try {
+    // Try API key authentication first
+    const apiAuth = await authenticateApiKey(request);
+    let userId: string | undefined;
+    
+    if (apiAuth.success) {
+      userId = apiAuth.userId;
+    } else {
+      // Fall back to session authentication
+      const session = await auth();
+      userId = session?.user?.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
     const agentId = params.agentId;
     const version = searchParams.get('version') ? Number(searchParams.get('version')) : undefined;
     const startDateTime = searchParams.get('startDateTime') ? new Date(searchParams.get('startDateTime')!) : undefined;
@@ -279,7 +299,7 @@ export async function GET(request: NextRequest, context: any) {
       },
     });
   } catch (error) {
-    console.error("Error exporting agent data:", error);
+    // Error is handled by returning error response
     return NextResponse.json(
       { error: "Failed to export agent data" },
       { status: 500 }

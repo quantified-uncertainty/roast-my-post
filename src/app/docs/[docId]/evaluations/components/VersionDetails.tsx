@@ -21,6 +21,8 @@ interface VersionDetailsProps {
   activeTab: "analysis" | "comments" | "thinking" | "selfCritique" | "logs";
   onTabChange: (tab: "analysis" | "comments" | "thinking" | "selfCritique" | "logs") => void;
   formatDate: (date: Date) => string;
+  documentId: string;
+  documentTitle: string;
 }
 
 export function VersionDetails({
@@ -29,6 +31,8 @@ export function VersionDetails({
   activeTab,
   onTabChange,
   formatDate,
+  documentId,
+  documentTitle,
 }: VersionDetailsProps) {
   if (!selectedVersion) {
     return (
@@ -43,8 +47,8 @@ export function VersionDetails({
     evaluation: {
       id: `eval-${selectedReview.agentId}`,
       evaluationId: `eval-${selectedReview.agentId}`,
-      documentId: "doc-id", // This would need to be passed in as a prop
-      documentTitle: "Document", // This would need to be passed in as a prop
+      documentId: documentId,
+      documentTitle: documentTitle,
       agentId: selectedReview.agentId,
       agentName: selectedReview.agent?.name || "",
       agentVersion: selectedReview.agent?.version || undefined,

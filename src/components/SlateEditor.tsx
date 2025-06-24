@@ -378,7 +378,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       nodes = nodes.map(validateNode);
       return nodes as Descendant[];
     } catch (error) {
-      console.error("Error parsing markdown:", error);
+      // Error parsing markdown - return empty document
       // Return a simple default node if parsing fails
       return [
         {

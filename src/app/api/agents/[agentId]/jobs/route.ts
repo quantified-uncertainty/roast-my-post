@@ -125,7 +125,7 @@ export async function GET(
 
     return NextResponse.json({ jobs: transformedJobs });
   } catch (error) {
-    console.error("Error fetching agent jobs:", error);
+    // Error is handled by returning error response
     return NextResponse.json(
       { error: "Failed to fetch jobs" },
       { status: 500 }
