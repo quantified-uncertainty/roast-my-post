@@ -3,8 +3,7 @@ import {
   NextResponse,
 } from "next/server";
 
-import { auth } from "@/lib/auth";
-import { authenticateApiKey } from "@/lib/auth-api";
+import { authenticateRequest } from "@/lib/auth-helpers";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/lib/prisma";
@@ -12,17 +11,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
-    // Try API key authentication first
-    const apiAuth = await authenticateApiKey(request);
-    let userId: string | undefined;
-    
-    if (apiAuth) {
-      userId = apiAuth.userId;
-    } else {
-      // Fall back to session authentication
-      const session = await auth();
-      userId = session?.user?.id;
-    }
+    // Authenticate request (API key first, then session)
+    const userId = await authenticateRequest(request);
 
     if (!userId) {
       return NextResponse.json(

@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as yaml from 'js-yaml';
 
-import { auth } from "@/lib/auth";
-import { authenticateApiKey } from "@/lib/auth-api";
+import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest, context: any) {
+export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
   const searchParams = request.nextUrl.searchParams;
   
   try {
-    // Try API key authentication first
-    const apiAuth = await authenticateApiKey(request);
-    let userId: string | undefined;
-    
-    if (apiAuth.success) {
-      userId = apiAuth.userId;
-    } else {
-      // Fall back to session authentication
-      const session = await auth();
-      userId = session?.user?.id;
-    }
+    // Authenticate request (API key first, then session)
+    const userId = await authenticateRequest(request);
 
     if (!userId) {
       return NextResponse.json(
@@ -52,7 +42,12 @@ export async function GET(request: NextRequest, context: any) {
     }
 
     // Build the query conditions
-    const whereConditions: any = {
+    const whereConditions: {
+      agentId: string;
+      agentVersionId?: string;
+      createdAt?: { gte: Date };
+      job?: { batchId: string };
+    } = {
       agentId: agentId,
     };
 
@@ -214,7 +209,14 @@ export async function GET(request: NextRequest, context: any) {
           attempts: evalVersion.job.attempts,
           error: evalVersion.job.error,
           tasks: evalVersion.job.tasks.map((task) => {
-            const taskData: any = {
+            const taskData: {
+              name: string;
+              model: string | null;
+              price_in_cents: number | null;
+              time_in_seconds: number | null;
+              log: any;
+              llm_interactions?: any;
+            } = {
               name: task.name,
               model: task.modelName,
               price_in_cents: task.priceInCents,

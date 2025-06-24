@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { auth } from "@/lib/auth";
-import { authenticateApiKey } from "@/lib/auth-api";
+import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 import { agentSchema } from "@/models/Agent";
 
@@ -32,11 +31,8 @@ export async function GET() {
 // PUT /api/agents - Update an existing agent (create new version)
 export async function PUT(request: NextRequest) {
   try {
-    // Try session auth first, then API key auth
-    const session = await auth();
-    const apiAuth = !session ? await authenticateApiKey(request) : null;
-    
-    const userId = session?.user?.id || apiAuth?.userId;
+    // Authenticate request (session first for this route)
+    const userId = await authenticateRequestSessionFirst(request);
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

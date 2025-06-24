@@ -52,12 +52,6 @@ type DocumentWithRelations = Document & {
   })[];
 };
 
-// type EvaluationVersionWithRelations = EvaluationVersion & {
-//   agentVersion: AgentVersion & {
-//     agent: Agent;
-//   };
-//   job: Job | null;
-// };
 
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
@@ -119,6 +113,11 @@ const SpawnBatchJobsArgsSchema = z.object({
 const ImportArticleArgsSchema = z.object({
   url: z.string().url(),
   agentIds: z.array(z.string()).optional(),
+});
+
+const UpdateDocumentArgsSchema = z.object({
+  documentId: z.string(),
+  intendedAgentIds: z.array(z.string()).optional(),
 });
 
 const server = new Server(
@@ -409,6 +408,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ["url"],
+        },
+      },
+      {
+        name: "update_document",
+        description: "Update document properties like intended agents",
+        inputSchema: {
+          type: "object",
+          properties: {
+            documentId: {
+              type: "string",
+              description: "ID of the document to update",
+            },
+            intendedAgentIds: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "Array of agent IDs that should evaluate this document",
+            },
+          },
+          required: ["documentId"],
         },
       },
       {
