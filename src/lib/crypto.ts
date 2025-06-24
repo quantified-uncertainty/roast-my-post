@@ -16,5 +16,5 @@ export function generateApiKey(): string {
   const bytes = randomBytes(32);
   // Convert to base64url format (URL-safe, no padding)
   const key = bytes.toString("base64url");
-  return `oa_${key}`;
+  return `rmp_${key}`;
 }

@@ -1080,7 +1080,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                             env: {
                               DATABASE_URL: "your-database-url",
                               ROAST_MY_POST_MCP_USER_API_KEY:
-                                "oa_your-api-key-here",
+                                "rmp_your-api-key-here",
                             },
                           },
                         },
@@ -1420,9 +1420,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           // Add debug info
           setupStatus.apiKey.debug = {
             keyFormat: {
-              startsWithOa: apiKey.startsWith("oa_"),
+              startsWithRmp: apiKey.startsWith("rmp_"),
               length: apiKey.length,
-              validFormat: /^oa_[A-Za-z0-9_-]+$/.test(apiKey),
+              validFormat: /^rmp_[A-Za-z0-9_-]+$/.test(apiKey),
             },
             maskedKey: `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`,
           };
@@ -1451,7 +1451,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
               if (errorMessage.includes("401")) {
                 setupStatus.apiKey.possibleReasons = [
-                  "API key format invalid (must start with 'oa_')",
+                  "API key format invalid (must start with 'rmp_')",
                   "API key doesn't exist in database",
                   "API key might be expired or revoked",
                 ];
@@ -1484,7 +1484,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                       databaseUrl ||
                       "postgresql://user:pass@localhost:5432/open_annotate",
                     ROAST_MY_POST_MCP_USER_API_KEY:
-                      apiKey || "oa_your-api-key-here",
+                      apiKey || "rmp_your-api-key-here",
                     ROAST_MY_POST_MCP_API_BASE_URL: apiBaseUrl,
                   },
                 },

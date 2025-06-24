@@ -16,7 +16,7 @@ jest.mock("../prisma", () => ({
 // Mock crypto
 jest.mock("../crypto", () => ({
   hashApiKey: jest.fn(),
-  generateApiKey: jest.fn(() => "oa_test1234567890123456789012345678901234567890"),
+  generateApiKey: jest.fn(() => "rmp_test1234567890123456789012345678901234567890"),
 }));
 
 describe("authenticateApiKey", () => {
@@ -59,13 +59,13 @@ describe("authenticateApiKey", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.type).toBe(AuthErrorType.INVALID_KEY_FORMAT);
-        expect(result.error.message).toBe("API key must start with 'oa_'");
+        expect(result.error.message).toBe("API key must start with 'rmp_'");
       }
     });
 
     it("should return INVALID_KEY_FORMAT error for too short key", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_short" },
+        headers: { Authorization: "Bearer rmp_short" },
       });
       const result = await authenticateApiKey(request);
       
@@ -78,7 +78,7 @@ describe("authenticateApiKey", () => {
 
     it("should return KEY_NOT_FOUND error for non-existent key", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue(null);
@@ -94,7 +94,7 @@ describe("authenticateApiKey", () => {
 
     it("should return USER_NOT_FOUND error when user is missing", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
@@ -118,7 +118,7 @@ describe("authenticateApiKey", () => {
     it("should return KEY_EXPIRED error for expired key", async () => {
       const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
@@ -141,7 +141,7 @@ describe("authenticateApiKey", () => {
 
     it("should return DATABASE_ERROR for database failures", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockRejectedValue(new Error("DB Error"));
@@ -158,7 +158,7 @@ describe("authenticateApiKey", () => {
 
     it("should return success with userId and keyId for valid key", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
@@ -183,7 +183,7 @@ describe("authenticateApiKey", () => {
     it("should update lastUsedAt when key hasn't been used recently", async () => {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
@@ -207,7 +207,7 @@ describe("authenticateApiKey", () => {
     it("should not update lastUsedAt if recently used", async () => {
       const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
       const request = new NextRequest("http://localhost:3000/api/test", {
-        headers: { Authorization: "Bearer oa_test1234567890123456789012345678901234567890" },
+        headers: { Authorization: "Bearer rmp_test1234567890123456789012345678901234567890" },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
       (prisma.apiKey.findUnique as jest.Mock).mockResolvedValue({
@@ -255,7 +255,7 @@ describe("authenticateApiKey", () => {
     it("should return null when key not found in database", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: {
-          Authorization: "Bearer oa_test1234567890123456789012345678901234567890",
+          Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
@@ -268,7 +268,7 @@ describe("authenticateApiKey", () => {
     it("should return null for expired key", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: {
-          Authorization: "Bearer oa_test1234567890123456789012345678901234567890",
+          Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
@@ -288,7 +288,7 @@ describe("authenticateApiKey", () => {
     it("should authenticate valid key and update lastUsedAt", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: {
-          Authorization: "Bearer oa_test1234567890123456789012345678901234567890",
+          Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
@@ -313,7 +313,7 @@ describe("authenticateApiKey", () => {
     it("should not update lastUsedAt if recently used", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: {
-          Authorization: "Bearer oa_test1234567890123456789012345678901234567890",
+          Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");
@@ -335,7 +335,7 @@ describe("authenticateApiKey", () => {
     it("should handle database errors gracefully", async () => {
       const request = new NextRequest("http://localhost:3000/api/test", {
         headers: {
-          Authorization: "Bearer oa_test1234567890123456789012345678901234567890",
+          Authorization: "Bearer rmp_test1234567890123456789012345678901234567890",
         },
       });
       (hashApiKey as jest.Mock).mockReturnValue("hashed_key");

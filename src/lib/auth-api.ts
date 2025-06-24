@@ -55,12 +55,12 @@ export async function authenticateApiKey(request: NextRequest): Promise<AuthResu
   const plainKey = authHeader.substring(7); // Remove "Bearer " prefix
   
   // Basic format validation
-  if (!plainKey.startsWith("oa_")) {
+  if (!plainKey.startsWith("rmp_")) {
     return {
       success: false,
       error: new AuthError(
         AuthErrorType.INVALID_KEY_FORMAT,
-        "API key must start with 'oa_'"
+        "API key must start with 'rmp_'"
       ),
     };
   }

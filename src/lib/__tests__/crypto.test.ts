@@ -4,7 +4,7 @@ describe("crypto", () => {
   describe("generateApiKey", () => {
     it("should generate a key with correct format", () => {
       const key = generateApiKey();
-      expect(key).toMatch(/^oa_[A-Za-z0-9_-]{43}$/);
+      expect(key).toMatch(/^rmp_[A-Za-z0-9_-]{43}$/);
     });
 
     it("should generate unique keys", () => {
@@ -17,7 +17,7 @@ describe("crypto", () => {
 
     it("should generate keys with sufficient length", () => {
       const key = generateApiKey();
-      expect(key.length).toBeGreaterThanOrEqual(46); // "oa_" + 43 chars
+      expect(key.length).toBeGreaterThanOrEqual(47); // "rmp_" + 43 chars
     });
   });
 
@@ -29,7 +29,7 @@ describe("crypto", () => {
     });
 
     it("should produce consistent hashes", () => {
-      const key = "oa_test_key_12345";
+      const key = "rmp_test_key_12345";
       const hash1 = hashApiKey(key);
       const hash2 = hashApiKey(key);
       expect(hash1).toBe(hash2);
@@ -45,10 +45,10 @@ describe("crypto", () => {
 
     it("should handle various key formats", () => {
       const keys = [
-        "oa_simple",
-        "oa_with-dashes-and_underscores",
-        "oa_UPPERCASE_and_lowercase",
-        "oa_1234567890",
+        "rmp_simple",
+        "rmp_with-dashes-and_underscores",
+        "rmp_UPPERCASE_and_lowercase",
+        "rmp_1234567890",
       ];
       
       keys.forEach(key => {

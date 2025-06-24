@@ -18,7 +18,7 @@ The application uses NextAuth.js v5 (beta.28) with a dual authentication system 
    - No custom middleware file - authentication handled per-route
 
 2. **API Key Authentication**:
-   - Keys prefixed with `oa_` (e.g., `oa_xxxxx...`)
+   - Keys prefixed with `rmp_` (e.g., `rmp_xxxxx...`)
    - Stored as SHA-256 hashes in the database
    - Support for expiration dates and usage tracking
    - 32 bytes of entropy (256 bits) generated using `crypto.randomBytes`
@@ -39,7 +39,7 @@ Two standardized authentication helpers in `/src/lib/auth-helpers.ts`:
 1. ✅ API keys are properly hashed before storage (SHA-256)
 2. ✅ Strong entropy for API key generation (256 bits)
 3. ✅ Proper error handling with typed error enums
-4. ✅ API key format validation (`oa_` prefix, minimum length)
+4. ✅ API key format validation (`rmp_` prefix, minimum length)
 5. ✅ Support for key expiration
 6. ✅ Rate limiting on usage tracking (updates lastUsedAt only once per hour)
 7. ✅ Comprehensive auth error types for debugging

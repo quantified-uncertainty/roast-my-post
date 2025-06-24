@@ -34,7 +34,7 @@ describe("/api/validate-key", () => {
   it("should return 401 when API key is invalid", async () => {
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_invalid_key",
+        Authorization: "Bearer rmp_invalid_key",
       },
     });
     (authenticateApiKeySimple as jest.Mock).mockResolvedValue(null);
@@ -49,7 +49,7 @@ describe("/api/validate-key", () => {
   it("should return 500 when auth result has invalid structure", async () => {
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_valid_key",
+        Authorization: "Bearer rmp_valid_key",
       },
     });
     // Mock auth result with missing or invalid userId
@@ -66,7 +66,7 @@ describe("/api/validate-key", () => {
   it("should return 500 when auth result has wrong userId type", async () => {
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_valid_key",
+        Authorization: "Bearer rmp_valid_key",
       },
     });
     // Mock auth result with wrong userId type
@@ -83,7 +83,7 @@ describe("/api/validate-key", () => {
   it("should return 404 when authenticated but user not found", async () => {
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_valid_key",
+        Authorization: "Bearer rmp_valid_key",
       },
     });
     (authenticateApiKeySimple as jest.Mock).mockResolvedValue({ userId: "user123" });
@@ -105,7 +105,7 @@ describe("/api/validate-key", () => {
 
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_valid_key",
+        Authorization: "Bearer rmp_valid_key",
       },
     });
     (authenticateApiKeySimple as jest.Mock).mockResolvedValue({ userId: "user123" });
@@ -128,7 +128,7 @@ describe("/api/validate-key", () => {
   it("should handle database errors gracefully", async () => {
     const request = new NextRequest("http://localhost:3000/api/auth/validate", {
       headers: {
-        Authorization: "Bearer oa_valid_key",
+        Authorization: "Bearer rmp_valid_key",
       },
     });
     (authenticateApiKeySimple as jest.Mock).mockRejectedValue(

@@ -59,7 +59,7 @@ Or manually add to your Claude Desktop configuration:
       "args": ["/absolute/path/to/mcp-server/dist/index.js"],
       "env": {
         "DATABASE_URL": "your-database-url",
-        "ROAST_MY_POST_MCP_USER_API_KEY": "oa_your-api-key-here"
+        "ROAST_MY_POST_MCP_USER_API_KEY": "rmp_your-api-key-here"
       }
     }
   }

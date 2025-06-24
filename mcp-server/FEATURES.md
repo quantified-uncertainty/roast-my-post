@@ -213,7 +213,7 @@ For write operations, you need to:
     "roast-my-post": {
       "env": {
         "DATABASE_URL": "your-database-url",
-        "ROAST_MY_POST_MCP_USER_API_KEY": "oa_your-api-key-here"
+        "ROAST_MY_POST_MCP_USER_API_KEY": "rmp_your-api-key-here"
       }
     }
   }

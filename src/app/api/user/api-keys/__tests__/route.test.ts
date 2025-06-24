@@ -98,7 +98,7 @@ describe("/api/user/api-keys", () => {
   });
 
   describe("POST", () => {
-    const mockPlainKey = "oa_test_key_123";
+    const mockPlainKey = "rmp_test_key_123";
     const mockHashedKey = "hashed_key_123";
 
     beforeEach(() => {
