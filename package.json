@@ -21,7 +21,8 @@
     "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts",
     "process-jobs-parallel": "tsx src/scripts/process-jobs-parallel.ts",
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
-    "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts"
+    "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts",
+    "set-admin": "npx tsx scripts/set-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

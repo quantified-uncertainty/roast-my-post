@@ -3,11 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
+import { isAdmin } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequest(request);
   if (!userId) {
     return commonErrors.unauthorized();
+  }
+  
+  // Check if user is admin
+  const adminCheck = await isAdmin();
+  if (!adminCheck) {
+    return commonErrors.forbidden();
   }
   
   try {

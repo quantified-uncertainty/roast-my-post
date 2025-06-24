@@ -133,6 +133,16 @@ When adding conditional features (like re-upload button):
 - `npm run db:push` - Push schema changes (now uses safe wrapper)
 - `npm run process-jobs` - Manual job processing
 
+## Recent Updates (2025-01-24)
+
+### Admin User System
+- Added `UserRole` enum to User model with USER and ADMIN roles
+- Created `isAdmin()` helper function in auth.ts
+- Protected `/monitor/*` routes with server-side admin check via layout
+- Protected monitor API endpoints with admin checks
+- Added `npm run set-admin <email>` command to grant admin access
+- Note: Used layout-based protection instead of middleware due to Edge Runtime limitations with Prisma
+
 ## Recent Updates (2025-06-24)
 - Fixed MCP server Prisma version mismatch that caused data loss
 - Added safe-prisma.sh wrapper for dangerous database operations
