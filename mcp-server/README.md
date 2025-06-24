@@ -64,12 +64,25 @@ Or manually add to your Claude Desktop configuration:
       "command": "node",
       "args": ["/absolute/path/to/mcp-server/dist/index.js"],
       "env": {
-        "DATABASE_URL": "your-database-url"
+        "DATABASE_URL": "your-database-url",
+        "OPEN_ANNOTATE_API_KEY": "oa_your-api-key-here"
       }
     }
   }
 }
 ```
+
+### Setting Up API Key Authentication
+
+To enable mutation operations (creating agent versions and spawning batch jobs), you need to create an API key:
+
+1. Log into the Open Annotate web interface
+2. Navigate to your user settings or API keys page
+3. Create a new API key with a descriptive name
+4. Copy the API key (you won't be able to see it again)
+5. Add it to your Claude Desktop configuration as shown above
+
+The API key gives the MCP server the same permissions as your user account.
 
 ## Usage Examples
 

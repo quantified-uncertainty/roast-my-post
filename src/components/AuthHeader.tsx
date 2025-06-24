@@ -20,6 +20,12 @@ export default function AuthHeader() {
             {session.user?.name || session.user?.email}
           </Link>
           <Link
+            href="/settings/keys"
+            className="mr-4 text-white opacity-70 hover:underline"
+          >
+            Settings
+          </Link>
+          <Link
             href="/api/auth/signout"
             className="text-white hover:text-gray-200"
           >

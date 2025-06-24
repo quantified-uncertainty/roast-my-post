@@ -4,31 +4,50 @@ import {
 } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { authenticateApiKey } from "@/lib/auth-api";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
+import { prisma } from "@/lib/prisma";
 
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    console.log("🔐 Session debug:", {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userId: session?.user?.id,
-      userEmail: session?.user?.email,
-    });
+    // Try API key authentication first
+    const apiAuth = await authenticateApiKey(request);
+    let userId: string | undefined;
+    
+    if (apiAuth) {
+      userId = apiAuth.userId;
+      console.log("🔑 Authenticated via API key for user:", userId);
+    } else {
+      // Fall back to session authentication
+      const session = await auth();
+      console.log("🔐 Session debug:", {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        userEmail: session?.user?.email,
+      });
+      
+      userId = session?.user?.id;
+    }
 
-    if (!session?.user?.id) {
-      console.log("❌ No valid session found");
+    if (!userId) {
+      console.log("❌ No valid authentication found");
       return NextResponse.json(
         { error: "User must be logged in to import a document" },
         { status: 401 }
       );
     }
 
-    const { url, importUrl } = await request.json();
+    const { url, importUrl, agentIds } = await request.json();
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    // Validate agentIds if provided
+    if (agentIds && !Array.isArray(agentIds)) {
+      return NextResponse.json({ error: "agentIds must be an array" }, { status: 400 });
     }
 
     // Use the shared article processing library
@@ -46,10 +65,49 @@ export async function POST(request: NextRequest) {
     console.log("💾 Creating document...");
     const document = await DocumentModel.create({
       ...documentData,
-      submittedById: session.user.id,
+      submittedById: userId,
     });
 
     const latestVersion = document.versions[document.versions.length - 1];
+    
+    // Create evaluations and jobs if agentIds are provided
+    const createdEvaluations = [];
+    if (agentIds && agentIds.length > 0) {
+      console.log(`📋 Creating evaluations for ${agentIds.length} agents...`);
+      
+      for (const agentId of agentIds) {
+        try {
+          // Create evaluation and job in a transaction
+          const result = await prisma.$transaction(async (tx) => {
+            // Create the evaluation
+            const evaluation = await tx.evaluation.create({
+              data: {
+                documentId: document.id,
+                agentId: agentId,
+              },
+            });
+
+            // Create the job
+            const job = await tx.job.create({
+              data: {
+                evaluationId: evaluation.id,
+              },
+            });
+
+            return { evaluation, job };
+          });
+
+          createdEvaluations.push({
+            evaluationId: result.evaluation.id,
+            agentId: agentId,
+            jobId: result.job.id,
+          });
+        } catch (error) {
+          console.error(`❌ Failed to create evaluation for agent ${agentId}:`, error);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       documentId: document.id,
@@ -58,6 +116,7 @@ export async function POST(request: NextRequest) {
         title: latestVersion.title,
         authors: latestVersion.authors,
       },
+      evaluations: createdEvaluations,
     });
   } catch (error) {
     console.error("❌ Error importing document:", error);

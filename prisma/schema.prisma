@@ -54,6 +54,7 @@ model User {
   sessions      Session[]
   documents     Document[]
   agents        Agent[]
+  apiKeys       ApiKey[]
 }
 
 model VerificationToken {
@@ -263,4 +264,18 @@ model Task {
   jobId       String
 
   @@index([jobId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  name        String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  
+  @@index([key])
+  @@index([userId])
 }

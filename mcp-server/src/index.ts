@@ -5,8 +5,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { PrismaClient } from "@prisma/client";
-import type { Agent, AgentVersion, Evaluation, EvaluationVersion, Job, Document, DocumentVersion } from "@prisma/client";
+import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
+import type { Agent, AgentVersion, Evaluation, EvaluationVersion, Job, Document, DocumentVersion } from "../../node_modules/@prisma/client/index.js";
 import { z } from "zod";
 
 const prisma = new PrismaClient();
@@ -40,12 +40,12 @@ type DocumentWithRelations = Document & {
   })[];
 };
 
-type EvaluationVersionWithRelations = EvaluationVersion & {
-  agentVersion: AgentVersion & {
-    agent: Agent;
-  };
-  job: Job | null;
-};
+// type EvaluationVersionWithRelations = EvaluationVersion & {
+//   agentVersion: AgentVersion & {
+//     agent: Agent;
+//   };
+//   job: Job | null;
+// };
 
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
@@ -86,6 +86,29 @@ const GetJobQueueStatusArgsSchema = z.object({
   includeDetails: z.boolean().optional().default(false),
 });
 
+const CreateAgentVersionArgsSchema = z.object({
+  agentId: z.string(),
+  name: z.string(),
+  purpose: z.enum(["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"]),
+  description: z.string(),
+  primaryInstructions: z.string(),
+  selfCritiqueInstructions: z.string().optional(),
+  providesGrades: z.boolean().optional().default(false),
+  extendedCapabilityId: z.string().optional(),
+  readme: z.string().optional(),
+});
+
+const SpawnBatchJobsArgsSchema = z.object({
+  agentId: z.string(),
+  name: z.string().optional(),
+  targetCount: z.number().min(1).max(100),
+});
+
+const ImportArticleArgsSchema = z.object({
+  url: z.string().url(),
+  agentIds: z.array(z.string()).optional(),
+});
+
 const server = new Server(
   {
     name: "open-annotate-mcp",
@@ -97,6 +120,35 @@ const server = new Server(
     },
   }
 );
+
+// Get API base URL from environment or use default
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const API_KEY = process.env.OPEN_ANNOTATE_API_KEY;
+
+// Helper function to make authenticated API calls
+async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
+  if (!API_KEY) {
+    throw new Error("OPEN_ANNOTATE_API_KEY environment variable is not set");
+  }
+
+  const headers = {
+    ...options.headers,
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`API request failed: ${response.status} - ${error}`);
+  }
+
+  return response.json();
+}
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
@@ -234,6 +286,96 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Include detailed job information (default: false)",
             },
           },
+        },
+      },
+      {
+        name: "create_agent_version",
+        description: "Create a new version of an existing agent",
+        inputSchema: {
+          type: "object",
+          properties: {
+            agentId: {
+              type: "string",
+              description: "ID of the agent to update",
+            },
+            name: {
+              type: "string",
+              description: "Name of the agent",
+            },
+            purpose: {
+              type: "string",
+              enum: ["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"],
+              description: "Type/purpose of the agent",
+            },
+            description: {
+              type: "string",
+              description: "Description of what the agent does",
+            },
+            primaryInstructions: {
+              type: "string",
+              description: "Primary instructions for the agent",
+            },
+            selfCritiqueInstructions: {
+              type: "string",
+              description: "Self-critique instructions (optional)",
+            },
+            providesGrades: {
+              type: "boolean",
+              description: "Whether the agent provides grades (default: false)",
+            },
+            extendedCapabilityId: {
+              type: "string",
+              description: "Extended capability ID (optional)",
+            },
+            readme: {
+              type: "string",
+              description: "Readme/documentation for the agent (optional)",
+            },
+          },
+          required: ["agentId", "name", "purpose", "description", "primaryInstructions"],
+        },
+      },
+      {
+        name: "spawn_batch_jobs",
+        description: "Create a batch of evaluation jobs for an agent",
+        inputSchema: {
+          type: "object",
+          properties: {
+            agentId: {
+              type: "string",
+              description: "ID of the agent to run evaluations for",
+            },
+            name: {
+              type: "string",
+              description: "Name for the batch (optional)",
+            },
+            targetCount: {
+              type: "number",
+              description: "Number of evaluations to run (1-100)",
+            },
+          },
+          required: ["agentId", "targetCount"],
+        },
+      },
+      {
+        name: "import_article",
+        description: "Import an article from a URL and optionally create evaluations with specified agents",
+        inputSchema: {
+          type: "object",
+          properties: {
+            url: {
+              type: "string",
+              description: "URL of the article to import",
+            },
+            agentIds: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "Array of agent IDs to create evaluations for (optional)",
+            },
+          },
+          required: ["url"],
         },
       },
     ],
@@ -521,7 +663,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   const latestVersion = doc.versions[0];
                   const evaluationCount = doc.evaluations.length;
                   const completedEvaluations = doc.evaluations.filter(
-                    (e: EvaluationWithRelations) => e.versions[0]?.job?.status === "COMPLETED"
+                    (e) => e.versions[0]?.job?.status === "COMPLETED"
                   ).length;
                   
                   return {
@@ -625,16 +767,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         // Calculate per-agent statistics
         for (const [agentName, agentStats] of Object.entries(stats.byAgent)) {
-          const agentEvals = evaluations.filter((e: EvaluationVersionWithRelations) => e.agentVersion.agent.id === agentName);
+          const agentEvals = evaluations.filter((e) => e.agentVersion.agent.id === agentName);
           const grades = agentEvals
-            .map((e: EvaluationVersionWithRelations) => e.grade)
-            .filter((g: number | null): g is number => g !== null);
+            .map((e) => e.grade)
+            .filter((g): g is number => g !== null);
           
           if (grades.length > 0) {
             agentStats.avgGrade = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
           }
 
-          const failedCount = agentEvals.filter((e: EvaluationVersionWithRelations) => e.job?.status === "FAILED").length;
+          const failedCount = agentEvals.filter((e) => e.job?.status === "FAILED").length;
           agentStats.failureRate = agentStats.count > 0 ? (failedCount / agentStats.count) * 100 : 0;
         }
 
@@ -798,7 +940,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
 
         if (includeDetails) {
-          (queueStatus as any).recentCompleted = recentCompleted.map((job: JobWithRelations) => ({
+          (queueStatus as any).recentCompleted = recentCompleted.map((job) => ({
             id: job.id,
             completedAt: job.completedAt,
             duration: job.durationInSeconds,
@@ -807,7 +949,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             document: (job as any).evaluation?.document?.id,
           }));
 
-          (queueStatus as any).recentFailed = recentFailed.map((job: JobWithRelations) => ({
+          (queueStatus as any).recentFailed = recentFailed.map((job) => ({
             id: job.id,
             failedAt: job.updatedAt,
             error: job.error?.split('\n')[0],
@@ -825,6 +967,197 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             },
           ],
         };
+      }
+
+      case "create_agent_version": {
+        const args = CreateAgentVersionArgsSchema.parse(request.params.arguments);
+        
+        try {
+          if (!API_KEY) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "No API key configured",
+                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
+                    example: {
+                      "mcpServers": {
+                        "open-annotate": {
+                          "env": {
+                            "DATABASE_URL": "your-database-url",
+                            "OPEN_ANNOTATE_API_KEY": "oa_your-api-key-here"
+                          }
+                        }
+                      }
+                    }
+                  }, null, 2),
+                },
+              ],
+            };
+          }
+
+          // Use the agent update endpoint through the API
+          const agentData = {
+            agentId: args.agentId,
+            name: args.name,
+            purpose: args.purpose,
+            description: args.description,
+            primaryInstructions: args.primaryInstructions,
+            selfCritiqueInstructions: args.selfCritiqueInstructions,
+            providesGrades: args.providesGrades || false,
+            extendedCapabilityId: args.extendedCapabilityId,
+            readme: args.readme,
+          };
+
+          // Call the agent creation/update action through API
+          const result = await authenticatedFetch('/api/agents', {
+            method: 'PUT',
+            body: JSON.stringify(agentData),
+          });
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: true,
+                  agent: result.agent,
+                  message: `Successfully created version ${result.agent.version} of agent ${args.agentId}`,
+                }, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: error instanceof Error ? error.message : String(error),
+                  hint: "Make sure your API key is valid and has the necessary permissions",
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+
+      case "spawn_batch_jobs": {
+        const args = SpawnBatchJobsArgsSchema.parse(request.params.arguments);
+        
+        try {
+          if (!API_KEY) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "No API key configured",
+                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
+                  }, null, 2),
+                },
+              ],
+            };
+          }
+
+          // Call the batch creation endpoint
+          const result = await authenticatedFetch(`/api/agents/${args.agentId}/eval-batch`, {
+            method: 'POST',
+            body: JSON.stringify({
+              name: args.name,
+              targetCount: args.targetCount,
+            }),
+          });
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: true,
+                  batch: result.batch,
+                  message: result.message,
+                }, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: error instanceof Error ? error.message : String(error),
+                  hint: "Make sure your API key is valid and you own the agent",
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+
+      case "import_article": {
+        const args = ImportArticleArgsSchema.parse(request.params.arguments);
+        
+        try {
+          if (!API_KEY) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "No API key configured",
+                    instructions: "Set OPEN_ANNOTATE_API_KEY environment variable in your MCP server configuration",
+                  }, null, 2),
+                },
+              ],
+            };
+          }
+
+          // Call the import endpoint
+          const result = await authenticatedFetch('/api/import', {
+            method: 'POST',
+            body: JSON.stringify({
+              url: args.url,
+              importUrl: args.url,
+              agentIds: args.agentIds,
+            }),
+          });
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  success: true,
+                  documentId: result.documentId,
+                  document: result.document,
+                  evaluations: result.evaluations,
+                  message: `Successfully imported article "${result.document.title}"` + 
+                    (result.evaluations && result.evaluations.length > 0 
+                      ? ` and created ${result.evaluations.length} evaluation(s)` 
+                      : ''),
+                }, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: error instanceof Error ? error.message : String(error),
+                  hint: "Make sure the URL is valid and accessible",
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       default:

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { authenticateApiKey } from "@/lib/auth-api";
 
 interface CreateBatchRequest {
   name?: string;
@@ -12,8 +13,13 @@ export async function POST(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
+    // Try session auth first, then API key auth
     const session = await auth();
-    if (!session?.user?.id) {
+    const apiAuth = !session ? await authenticateApiKey(request) : null;
+    
+    const userId = session?.user?.id || apiAuth?.userId;
+    
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -41,7 +47,7 @@ export async function POST(
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    if (agent.submittedById !== session.user.id) {
+    if (agent.submittedById !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

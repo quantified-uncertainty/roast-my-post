@@ -130,8 +130,14 @@ When adding conditional features (like re-upload button):
 ## Commands
 - `npm run dev` - Development server
 - `npm run typecheck` - Type checking
-- `npm run db:push` - Push schema changes
+- `npm run db:push` - Push schema changes (now uses safe wrapper)
 - `npm run process-jobs` - Manual job processing
+
+## Recent Updates (2025-06-24)
+- Fixed MCP server Prisma version mismatch that caused data loss
+- Added safe-prisma.sh wrapper for dangerous database operations
+- Added import_article MCP tool that accepts URL and optional agentIds
+- Created automated backup scripts in /scripts/
 
 ## Database Access
 

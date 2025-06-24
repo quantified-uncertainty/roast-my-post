@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
-
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { auth } from "@/lib/auth";
+import { authenticateApiKey } from "@/lib/auth-api";
+import { AgentModel } from "@/models/Agent";
+import { agentSchema } from "@/models/Agent";
 
 export async function GET() {
   const prisma = new PrismaClient();
@@ -24,4 +27,60 @@ export async function GET() {
   }));
 
   return NextResponse.json({ agents });
+}
+
+// PUT /api/agents - Update an existing agent (create new version)
+export async function PUT(request: NextRequest) {
+  try {
+    // Try session auth first, then API key auth
+    const session = await auth();
+    const apiAuth = !session ? await authenticateApiKey(request) : null;
+    
+    const userId = session?.user?.id || apiAuth?.userId;
+    
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    
+    // Validate the request body
+    const validatedData = agentSchema.parse(body);
+    
+    if (!validatedData.agentId) {
+      return NextResponse.json(
+        { error: "agentId is required for updates" },
+        { status: 400 }
+      );
+    }
+
+    // Update the agent (creates a new version)
+    const agent = await AgentModel.updateAgent(
+      validatedData.agentId,
+      validatedData,
+      userId
+    );
+
+    return NextResponse.json({
+      success: true,
+      agent,
+      message: `Successfully created version ${agent.version} of agent ${agent.id}`,
+    });
+  } catch (error) {
+    console.error("Error updating agent:", error);
+    
+    if (error instanceof Error) {
+      if (error.message === "Agent not found") {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+      if (error.message === "You do not have permission to update this agent") {
+        return NextResponse.json({ error: error.message }, { status: 403 });
+      }
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to update agent" },
+      { status: 500 }
+    );
+  }
 }
