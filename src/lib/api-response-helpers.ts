@@ -31,3 +31,19 @@ export function badRequestResponse(message: string) {
 export function validationErrorResponse(errors: Record<string, string>) {
   return NextResponse.json({ error: "Validation failed", errors }, { status: 400 });
 }
+
+export function serverErrorResponse(message = "An error occurred. Please try again.") {
+  return errorResponse(message, 500);
+}
+
+/**
+ * Common error responses for consistency across API routes
+ */
+export const commonErrors = {
+  unauthorized: () => unauthorizedResponse(),
+  forbidden: () => forbiddenResponse(),
+  notFound: (resource?: string) => notFoundResponse(resource),
+  badRequest: (message: string) => badRequestResponse(message),
+  serverError: (message?: string) => serverErrorResponse(message),
+  validationError: (errors: Record<string, string>) => validationErrorResponse(errors),
+};

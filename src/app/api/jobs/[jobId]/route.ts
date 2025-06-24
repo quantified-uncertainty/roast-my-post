@@ -1,18 +1,49 @@
 import { NextRequest } from "next/server";
-
 import { prisma } from "@/lib/prisma";
+import { authenticateRequest } from "@/lib/auth-helpers";
+import { commonErrors } from "@/lib/api-response-helpers";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { jobId: string } }
 ) {
+  const userId = await authenticateRequest(req);
+  if (!userId) {
+    return commonErrors.unauthorized();
+  }
+  
   const { jobId } = params;
   if (!jobId) {
-    return new Response(JSON.stringify({ error: "Missing jobId" }), {
-      status: 400,
-    });
+    return commonErrors.badRequest("Missing jobId");
   }
+  
   try {
+    // First, check if the job exists and get the document owner
+    const jobWithOwner = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        evaluation: {
+          select: {
+            document: {
+              select: {
+                submittedById: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    
+    if (!jobWithOwner) {
+      return commonErrors.notFound("Job");
+    }
+    
+    // Check if the user owns the document associated with this job
+    if (jobWithOwner.evaluation.document.submittedById !== userId) {
+      return commonErrors.forbidden();
+    }
+    
+    // Now fetch the full job data
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       select: {
@@ -29,18 +60,10 @@ export async function GET(
         tasks: true,
       },
     });
-    if (!job) {
-      return new Response(JSON.stringify({ error: "Job not found" }), {
-        status: 404,
-      });
-    }
+    
     return new Response(JSON.stringify(job), { status: 200 });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
-      }),
-      { status: 500 }
-    );
+    console.error("Error fetching job:", error);
+    return commonErrors.serverError("Failed to fetch job");
   }
 }

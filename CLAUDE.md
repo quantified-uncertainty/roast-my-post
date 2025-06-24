@@ -167,3 +167,44 @@ Example usage in Claude:
 ### Direct Script Access
 For complex queries, you can still write TypeScript scripts using Prisma. See `/claude/README.md` for examples.
 
+## Security Updates (2025-01-24)
+
+### API Route Protection
+All monitor and job routes now require authentication:
+- `/api/monitor/stats` - Protected with auth check
+- `/api/monitor/evaluations` - Protected with auth check  
+- `/api/monitor/jobs` - Protected with auth check
+- `/api/jobs/[jobId]` - Protected with auth + ownership verification
+
+### Security Infrastructure Added
+- **Rate Limiting**: Basic in-memory rate limiter in `/lib/rate-limiter.ts`
+- **Security Middleware**: Reusable middleware in `/lib/security-middleware.ts` that combines:
+  - Authentication checks
+  - Rate limiting
+  - Input validation with Zod
+  - Ownership verification
+  - Security headers
+
+### Usage Example
+```typescript
+import { withSecurity } from '@/lib/security-middleware';
+import { z } from 'zod';
+
+const schema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().max(50000)
+});
+
+export const POST = withSecurity(
+  async (request) => {
+    const body = (request as any).validatedBody;
+    // Handler logic here
+  },
+  {
+    requireAuth: true,
+    rateLimit: true,
+    validateBody: schema
+  }
+);
+```
+

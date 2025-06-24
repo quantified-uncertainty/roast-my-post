@@ -1,7 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authenticateRequest } from "@/lib/auth-helpers";
+import { commonErrors } from "@/lib/api-response-helpers";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const userId = await authenticateRequest(request);
+  if (!userId) {
+    return commonErrors.unauthorized();
+  }
+  
   try {
     const jobs = await prisma.job.findMany({
       take: 20,
@@ -68,9 +75,6 @@ export async function GET() {
     return NextResponse.json({ jobs });
   } catch (error) {
     console.error("Error fetching jobs:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch jobs" },
-      { status: 500 }
-    );
+    return commonErrors.serverError("Failed to fetch jobs");
   }
 }

@@ -1,7 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authenticateRequest } from "@/lib/auth-helpers";
+import { commonErrors } from "@/lib/api-response-helpers";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const userId = await authenticateRequest(request);
+  if (!userId) {
+    return commonErrors.unauthorized();
+  }
+  
   try {
     // Get the 20 most recent evaluations with their latest versions
     const recentEvaluations = await prisma.evaluation.findMany({
@@ -122,9 +129,6 @@ export async function GET() {
     return NextResponse.json({ evaluations });
   } catch (error) {
     console.error("Error fetching evaluations:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch evaluations" },
-      { status: 500 }
-    );
+    return commonErrors.serverError("Failed to fetch evaluations");
   }
 }
