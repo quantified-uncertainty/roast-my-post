@@ -130,7 +130,7 @@ export function ApiKeyModal({
               <pre className="overflow-x-auto rounded bg-gray-800 p-3 text-xs text-gray-100">
                 {`{
   "mcpServers": {
-    "open-annotate": {
+    "roast-my-post": {
       "env": {
         "DATABASE_URL": "your-database-url",
         "ROAST_MY_POST_MCP_USER_API_KEY": "${createdKey.key}"

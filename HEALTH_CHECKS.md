@@ -1,6 +1,6 @@
 # Comprehensive Codebase Health Checks
 
-This document provides a systematic checklist for conducting thorough health checks on the open-annotate codebase. Each section contains specific items to verify, common issues to look for, and remediation steps.
+This document provides a systematic checklist for conducting thorough health checks on the roast-my-post codebase. Each section contains specific items to verify, common issues to look for, and remediation steps.
 
 ## 1. Authentication & Authorization
 

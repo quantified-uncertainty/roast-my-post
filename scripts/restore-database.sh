@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Database restore script for Open Annotate
+# Database restore script for Roast My Post
 # Usage: ./scripts/restore-database.sh <backup_file>
 
 set -e  # Exit on error
 
 # Configuration
-DB_NAME="open_annotate"
+DB_NAME="roast_my_post"
 DB_USER="postgres"
 
 # Check if backup file is provided

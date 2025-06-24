@@ -5,7 +5,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKUP_SCRIPT="$SCRIPT_DIR/automated-backup.sh"
 
-echo "Setting up automated daily backups for Open Annotate database..."
+echo "Setting up automated daily backups for Roast My Post database..."
 echo ""
 
 # Check if backup script exists
@@ -61,8 +61,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "To verify, run: crontab -l"
     echo "To remove, run: crontab -e and delete the line"
     echo ""
-    echo "Backups will be stored in: ~/open-annotate-backups/"
-    echo "Logs will be at: ~/open-annotate-backups/backup.log"
+    echo "Backups will be stored in: ~/roast-my-post-backups/"
+    echo "Logs will be at: ~/roast-my-post-backups/backup.log"
     
     # Test the backup script
     read -p "Would you like to test the backup script now? (y/N): " -n 1 -r

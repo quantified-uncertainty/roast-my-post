@@ -1,6 +1,6 @@
 # Comprehensive Analysis - January 24, 2025
 
-This directory contains a comprehensive health check analysis of the open-annotate codebase, focusing on security, performance, and code quality.
+This directory contains a comprehensive health check analysis of the roast-my-post codebase, focusing on security, performance, and code quality.
 
 ## Analysis Documents
 

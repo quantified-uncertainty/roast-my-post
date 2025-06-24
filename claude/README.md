@@ -1,6 +1,6 @@
 # Claude Code Operations Guide
 
-This directory contains scripts and documentation specifically for Claude Code to analyze and improve the Open Annotate system.
+This directory contains scripts and documentation specifically for Claude Code to analyze and improve the Roast My Post system.
 
 **Essential Reading**: Always refer to `/src/app/agents/readme/agent-schema-documentation.md` for the authoritative guide on agent configuration and requirements.
 
@@ -37,7 +37,7 @@ For detailed analysis of current issues, see: `/claude/analysis/2025-06-22-01-ev
 **Issue**: Lost all data in genericInstructions column (32 agent versions) by using `prisma db push --accept-data-loss` to "rename" a column.
 **Root Cause**: Misunderstood that `db push` with column name changes = DROP + ADD, not RENAME. Ignored the explicit data loss warning.
 **Solution**: 
-1. ALWAYS create a backup before ANY schema change: `pg_dump -U postgres -d open_annotate > backup_$(date +%Y%m%d_%H%M%S).sql`
+1. ALWAYS create a backup before ANY schema change: `pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql`
 2. Use proper migrations for column renames: `ALTER TABLE "TableName" RENAME COLUMN "old" TO "new";`
 3. Test destructive operations on a database copy first
 4. Take "--accept-data-loss" literally - it WILL lose data

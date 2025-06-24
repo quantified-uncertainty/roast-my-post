@@ -1,6 +1,6 @@
-# Open Annotate MCP Server Features
+# Roast My Post MCP Server Features
 
-This document provides detailed documentation of all available tools in the Open Annotate MCP server.
+This document provides detailed documentation of all available tools in the Roast My Post MCP server.
 
 ## Read Operations
 
@@ -204,13 +204,13 @@ Create a batch of evaluation jobs for an agent.
 
 For write operations, you need to:
 
-1. Create an API key in the Open Annotate web interface
+1. Create an API key in the RoastMyPost web interface
 2. Add it to your MCP server configuration:
 
 ```json
 {
   "mcpServers": {
-    "open-annotate": {
+    "roast-my-post": {
       "env": {
         "DATABASE_URL": "your-database-url",
         "ROAST_MY_POST_MCP_USER_API_KEY": "oa_your-api-key-here"

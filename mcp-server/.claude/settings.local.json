@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__open-annotate__import_article",
+      "mcp__roast-my-post__import_article",
       "Bash(npx tsx:*)",
       "Bash(npm run lint)",
       "Bash(npm run:*)",

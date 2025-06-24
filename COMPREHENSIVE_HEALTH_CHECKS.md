@@ -1,7 +1,7 @@
-# Comprehensive Codebase Health Check Guide for open-annotate
+# Comprehensive Codebase Health Check Guide for roast-my-post
 
 ## Overview
-This guide provides systematic instructions for conducting deep health checks on the open-annotate codebase. Each section includes specific tasks, validation criteria, and expected outcomes to ensure code quality, security, and maintainability.
+This guide provides systematic instructions for conducting deep health checks on the roast-my-post codebase. Each section includes specific tasks, validation criteria, and expected outcomes to ensure code quality, security, and maintainability.
 
 ## CRITICAL: Documentation Requirements for All Health Checks
 

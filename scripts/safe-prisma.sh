@@ -28,7 +28,7 @@ create_backup() {
 # Function to count database rows
 check_database_health() {
     echo -e "${YELLOW}Checking database health...${NC}"
-    local total_rows=$(psql -U postgres -d open_annotate -t -c "
+    local total_rows=$(psql -U postgres -d roast_my_post -t -c "
         SELECT SUM(count) FROM (
             SELECT COUNT(*) as count FROM \"Agent\"
             UNION ALL SELECT COUNT(*) FROM \"Document\"

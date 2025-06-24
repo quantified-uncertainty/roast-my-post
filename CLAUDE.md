@@ -16,7 +16,7 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 ### Lessons Learned
 1. **ALWAYS backup the database before schema changes**
    ```bash
-   pg_dump -U postgres -d open_annotate > backup_$(date +%Y%m%d_%H%M%S).sql
+   pg_dump -U postgres -d roast_my_post > backup_$(date +%Y%m%d_%H%M%S).sql
    ```
 
 2. **NEVER use `prisma db push --accept-data-loss` for renaming columns**
@@ -37,8 +37,8 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 4. **Test destructive operations on a copy first**
    ```bash
    # Create a test database
-   createdb -U postgres open_annotate_test
-   pg_dump -U postgres open_annotate | psql -U postgres open_annotate_test
+   createdb -U postgres roast_my_post_test
+   pg_dump -U postgres roast_my_post | psql -U postgres roast_my_post_test
    # Test your migration on the copy
    ```
 
@@ -84,7 +84,7 @@ When adding conditional features (like re-upload button):
 - If basic commands fail with `_safe_eval` errors, use full paths: `/bin/rm`, `/bin/ls`, `/bin/mv`
 
 ## Project Overview
-"RoastMyPost" (open-annotate) - AI-powered document annotation and evaluation platform
+"RoastMyPost" - AI-powered document annotation and evaluation platform
 
 ### Tech Stack
 - **Framework**: Next.js 15.3.2 with App Router, React 19, TypeScript

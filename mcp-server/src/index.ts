@@ -52,7 +52,6 @@ type DocumentWithRelations = Document & {
   })[];
 };
 
-
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
   includeArchived: z.boolean().optional().default(false),
@@ -122,7 +121,7 @@ const UpdateDocumentArgsSchema = z.object({
 
 const server = new Server(
   {
-    name: "open-annotate-mcp",
+    name: "roast-my-post-mcp",
     version: "0.1.0",
   },
   {
@@ -425,7 +424,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               items: {
                 type: "string",
               },
-              description: "Array of agent IDs that should evaluate this document",
+              description:
+                "Array of agent IDs that should evaluate this document",
             },
           },
           required: ["documentId"],
@@ -1076,7 +1076,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                         "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
                       example: {
                         mcpServers: {
-                          "open-annotate": {
+                          "roast-my-post": {
                             env: {
                               DATABASE_URL: "your-database-url",
                               ROAST_MY_POST_MCP_USER_API_KEY:
@@ -1365,7 +1365,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Environment variables
         const databaseUrl = process.env.DATABASE_URL;
         const apiKey = process.env.ROAST_MY_POST_MCP_USER_API_KEY;
-        const apiBaseUrl = process.env.ROAST_MY_POST_MCP_API_BASE_URL || "http://localhost:3000";
+        const apiBaseUrl =
+          process.env.ROAST_MY_POST_MCP_API_BASE_URL || "http://localhost:3000";
 
         // Check environment variables
         const envStatus = {
@@ -1406,10 +1407,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             await prisma.$queryRaw`SELECT 1`;
             setupStatus.database.connected = true;
           } catch (error) {
-            setupStatus.database.error = error instanceof Error ? error.message : String(error);
+            setupStatus.database.error =
+              error instanceof Error ? error.message : String(error);
           }
         } else {
-          setupStatus.database.error = "DATABASE_URL environment variable not set";
+          setupStatus.database.error =
+            "DATABASE_URL environment variable not set";
         }
 
         // Test API key and server connectivity
@@ -1433,15 +1436,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             setupStatus.server.reachable = true;
             setupStatus.user = result.user;
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
             // Determine if it's a connectivity issue or auth issue
-            if (errorMessage.includes("fetch failed") || errorMessage.includes("ECONNREFUSED")) {
+            if (
+              errorMessage.includes("fetch failed") ||
+              errorMessage.includes("ECONNREFUSED")
+            ) {
               setupStatus.server.error = `Cannot reach server at ${apiBaseUrl}`;
             } else {
               setupStatus.server.reachable = true;
               setupStatus.apiKey.error = errorMessage;
-              
+
               if (errorMessage.includes("401")) {
                 setupStatus.apiKey.possibleReasons = [
                   "API key format invalid (must start with 'oa_')",
@@ -1452,13 +1459,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
           }
         } else {
-          setupStatus.apiKey.error = "ROAST_MY_POST_MCP_USER_API_KEY environment variable not set";
+          setupStatus.apiKey.error =
+            "ROAST_MY_POST_MCP_USER_API_KEY environment variable not set";
         }
 
         // Overall status
-        setupStatus.setup.complete = 
-          setupStatus.database.connected && 
-          setupStatus.apiKey.valid && 
+        setupStatus.setup.complete =
+          setupStatus.database.connected &&
+          setupStatus.apiKey.valid &&
           setupStatus.server.reachable;
 
         // Add instructions if setup is incomplete
@@ -1468,12 +1476,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             steps: [],
             example: {
               mcpServers: {
-                "open-annotate": {
+                "roast-my-post": {
                   command: "node",
                   args: ["mcp-server/dist/index.js"],
                   env: {
-                    DATABASE_URL: databaseUrl || "postgresql://user:pass@localhost:5432/open_annotate",
-                    ROAST_MY_POST_MCP_USER_API_KEY: apiKey || "oa_your-api-key-here",
+                    DATABASE_URL:
+                      databaseUrl ||
+                      "postgresql://user:pass@localhost:5432/open_annotate",
+                    ROAST_MY_POST_MCP_USER_API_KEY:
+                      apiKey || "oa_your-api-key-here",
                     ROAST_MY_POST_MCP_API_BASE_URL: apiBaseUrl,
                   },
                 },
@@ -1483,15 +1494,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Add specific steps based on what's missing
           if (!databaseUrl) {
-            setupStatus.setup.instructions.steps.push("1. Set DATABASE_URL to your PostgreSQL connection string");
+            setupStatus.setup.instructions.steps.push(
+              "1. Set DATABASE_URL to your PostgreSQL connection string"
+            );
           }
           if (!apiKey) {
-            setupStatus.setup.instructions.steps.push("2. Get your API key from Settings page and set ROAST_MY_POST_MCP_USER_API_KEY");
+            setupStatus.setup.instructions.steps.push(
+              "2. Get your API key from Settings page and set ROAST_MY_POST_MCP_USER_API_KEY"
+            );
           }
           if (!setupStatus.server.reachable && apiKey) {
-            setupStatus.setup.instructions.steps.push("3. Ensure the server is running at " + apiBaseUrl);
+            setupStatus.setup.instructions.steps.push(
+              "3. Ensure the server is running at " + apiBaseUrl
+            );
           }
-          setupStatus.setup.instructions.steps.push("4. Restart Claude Code for changes to take effect");
+          setupStatus.setup.instructions.steps.push(
+            "4. Restart Claude Code for changes to take effect"
+          );
         }
 
         return {
@@ -1529,7 +1548,7 @@ async function main() {
 
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("🚀 Open Annotate MCP server running on stdio");
+    console.error("🚀 RoastMyPost MCP server running on stdio");
 
     // Handle graceful shutdown
     process.on("SIGINT", async () => {

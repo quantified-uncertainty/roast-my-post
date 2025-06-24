@@ -1,15 +1,18 @@
 # Error Handling Analysis
 
 ## Summary
+
 Critical security issues found with error messages leaking sensitive data and inconsistent error handling patterns throughout the codebase.
 
 ## Critical Security Issues
 
 ### 1. Sensitive Data Leakage
+
 **Location**: Multiple API routes
 **Risk**: Internal error details exposed to clients
 
 Example from `/src/app/api/import/route.ts:103-106`:
+
 ```typescript
 return errorResponse(
   error instanceof Error ? error.message : "Failed to import document",
@@ -19,20 +22,24 @@ return errorResponse(
 ```
 
 This pattern exposes:
+
 - Database connection errors
 - Internal service failures
 - Stack traces
 - File paths and system information
 
 ### 2. Empty Catch Blocks
+
 **Location**: `/src/app/api/import/route.ts:84-87`
+
 ```typescript
 } catch (error) {
   // Failed to create evaluation for agent
 }
 ```
 
-**Impact**: 
+**Impact**:
+
 - Silent failures hide critical errors
 - No logging for debugging
 - User operations fail without feedback
@@ -40,30 +47,37 @@ This pattern exposes:
 ## Inconsistent Patterns
 
 ### 1. Mixed Error Response Formats
+
 - Some routes use `errorResponse()` helper
 - Others use `NextResponse.json({ error: "..." })`
 - `/src/app/api/validate-key/route.ts` doesn't use standard helpers
 
 ### 2. Console Logging Instead of Proper Logging
+
 - **84 files** using console.log/error
 - No centralized logging system
 - Logs not useful in production
 - No log levels or structured data
 
 ### 3. Unhandled Promise Rejections
+
 Example from `/src/app/docs/[docId]/evaluations/EvaluationsClient.tsx:105-108`:
+
 ```typescript
 } catch (error) {
   console.error("Error fetching agents:", error);
 }
 ```
+
 - Error logged but user gets no feedback
 - UI remains in loading/broken state
 
 ## Problematic Areas by Priority
 
 ### High Priority (Security Risk)
+
 1. **API Routes Exposing Internal Errors**
+
    - `/src/app/api/import/route.ts`
    - `/src/app/api/agents/route.ts:63-74`
    - Raw error messages exposed to clients
@@ -73,7 +87,9 @@ Example from `/src/app/docs/[docId]/evaluations/EvaluationsClient.tsx:105-108`:
    - Some routes leak user existence information
 
 ### Medium Priority (Reliability)
+
 1. **Silent Failures**
+
    - Empty catch blocks
    - No user feedback for failures
    - Missing React error boundaries
@@ -83,6 +99,7 @@ Example from `/src/app/docs/[docId]/evaluations/EvaluationsClient.tsx:105-108`:
    - Client operations don't retry
 
 ### Low Priority (Code Quality)
+
 1. **Console Logging**
    - Should use structured logging
    - No useful production logs
@@ -91,6 +108,7 @@ Example from `/src/app/docs/[docId]/evaluations/EvaluationsClient.tsx:105-108`:
 ## Recommendations
 
 ### 1. Sanitize Error Messages
+
 ```typescript
 // Bad (current)
 } catch (error) {
@@ -100,22 +118,23 @@ Example from `/src/app/docs/[docId]/evaluations/EvaluationsClient.tsx:105-108`:
 
 // Good (recommended)
 } catch (error) {
-  logger.error("Import failed", { 
+  logger.error("Import failed", {
     error: error.message,
     stack: error.stack,
     userId,
-    url 
+    url
   });
-  
+
   if (error instanceof ValidationError) {
     return badRequestResponse("Invalid URL format");
   }
-  
+
   return serverErrorResponse("Failed to import document");
 }
 ```
 
 ### 2. Implement Error Boundaries
+
 ```typescript
 export function DocumentErrorBoundary({ children }) {
   return (
@@ -132,6 +151,7 @@ export function DocumentErrorBoundary({ children }) {
 ```
 
 ### 3. Standardize API Error Responses
+
 ```typescript
 // Extend api-response-helpers.ts
 export const errorTypes = {
@@ -140,7 +160,7 @@ export const errorTypes = {
   FORBIDDEN: { status: 403, code: "FORBIDDEN" },
   NOT_FOUND: { status: 404, code: "NOT_FOUND" },
   CONFLICT: { status: 409, code: "CONFLICT" },
-  SERVER_ERROR: { status: 500, code: "SERVER_ERROR" }
+  SERVER_ERROR: { status: 500, code: "SERVER_ERROR" },
 } as const;
 
 export function apiError(type: keyof typeof errorTypes, message: string) {
@@ -150,26 +170,28 @@ export function apiError(type: keyof typeof errorTypes, message: string) {
 ```
 
 ### 4. Add Structured Logging
+
 ```typescript
 // lib/logger.ts
-import winston from 'winston';
+import winston from "winston";
 
 export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.json(),
-  defaultMeta: { 
-    service: 'open-annotate',
-    environment: process.env.NODE_ENV 
+  defaultMeta: {
+    service: "roast-my-post",
+    environment: process.env.NODE_ENV,
   },
   transports: [
     new winston.transports.Console({
       format: winston.format.simple(),
-    })
-  ]
+    }),
+  ],
 });
 ```
 
 ### 5. Global Error Handler
+
 ```typescript
 // app/api/middleware.ts
 export async function withErrorHandler(
@@ -180,16 +202,17 @@ export async function withErrorHandler(
       return await handler(req);
     } catch (error) {
       const requestId = crypto.randomUUID();
-      
-      logger.error('Unhandled API error', {
+
+      logger.error("Unhandled API error", {
         error: error.message,
         stack: error.stack,
         requestId,
         url: req.url,
-        method: req.method
+        method: req.method,
       });
-      
-      return apiError('SERVER_ERROR', 
+
+      return apiError(
+        "SERVER_ERROR",
         `An error occurred. Reference: ${requestId}`
       );
     }
@@ -198,6 +221,7 @@ export async function withErrorHandler(
 ```
 
 ## Action Items
+
 1. [ ] Replace all raw error returns with sanitized messages
 2. [ ] Add error boundaries to all major UI sections
 3. [ ] Replace console.log with structured logging

@@ -1,13 +1,16 @@
 <!-- Created: 2025-06-22 11:34:57 -->
+
 # 2025-06-22 Background Agent Automation
 
 ## Concept
-A powerful background agent that can perform complex operations on the Open Annotate system through natural language requests. This would act as an intelligent assistant for managing agents, evaluations, and improvement cycles.
+
+A powerful background agent that can perform complex operations on the Roast My Post system through natural language requests. This would act as an intelligent assistant for managing agents, evaluations, and improvement cycles.
 
 ## Architecture Options
 
 ### Option 1: MCP Server Integration
-Use Claude Code with a custom MCP (Model Context Protocol) server that exposes Open Annotate operations as tools.
+
+Use Claude Code with a custom MCP (Model Context Protocol) server that exposes Roast My Post operations as tools.
 
 ```typescript
 // MCP server tools
@@ -41,14 +44,17 @@ Use Claude Code with a custom MCP (Model Context Protocol) server that exposes O
 ```
 
 ### Option 2: API-Based Agent
+
 A dedicated service that exposes these operations via API, callable by any LLM with function calling.
 
 ### Option 3: In-App Agent
+
 Built directly into the app with a chat interface in the UI.
 
 ## Example Workflows
 
 ### 1. Agent Improvement Loop
+
 ```
 User: "Improve the Research Assistant agent based on its last batch"
 
@@ -69,6 +75,7 @@ Agent:
 ```
 
 ### 2. Cross-Agent Analysis
+
 ```
 User: "Which agents are performing poorly on technical documents?"
 
@@ -85,6 +92,7 @@ Agent:
 ```
 
 ### 3. Automated A/B Testing
+
 ```
 User: "A/B test making the Safety Reviewer stricter"
 
@@ -106,38 +114,40 @@ Agent:
 ## Implementation with MCP
 
 ### 1. MCP Server Setup
+
 ```typescript
 // mcp-server/src/tools/openAnnotate.ts
 export const tools = {
   async runBatchEvaluation({ agentId, count }) {
     const response = await fetch(`${API_URL}/api/agents/${agentId}/batch`, {
-      method: 'POST',
-      body: JSON.stringify({ targetCount: count })
+      method: "POST",
+      body: JSON.stringify({ targetCount: count }),
     });
     return response.json();
   },
-  
+
   async editAgentInstructions({ agentId, changes }) {
     // Fetch current agent
     const agent = await getAgent(agentId);
-    
+
     // Apply changes
     const newInstructions = applyInstructionChanges(
       agent.instructions,
       changes
     );
-    
+
     // Create new version
     return createAgentVersion(agentId, newInstructions);
-  }
+  },
 };
 ```
 
 ### 2. Claude Code Configuration
+
 ```json
 {
   "mcpServers": {
-    "open-annotate": {
+    "roast-my-post": {
       "command": "node",
       "args": ["./mcp-server/dist/index.js"],
       "env": {
@@ -152,21 +162,25 @@ export const tools = {
 ## Advanced Capabilities
 
 ### 1. Proactive Monitoring
+
 - Watch for performance degradation
 - Alert on unusual patterns
 - Suggest improvements based on trends
 
 ### 2. Batch Orchestration
+
 - Run complex evaluation sequences
 - Coordinate multi-agent evaluations
 - Manage resource usage
 
 ### 3. Learning from History
+
 - Track which instruction changes work
 - Build a knowledge base of effective patterns
 - Suggest improvements based on past successes
 
 ### 4. Natural Language Querying
+
 ```
 "Show me all agents that gave grades above 90 for documents about AI safety"
 "Which comments from the Ethics Reviewer were most helpful?"
@@ -192,6 +206,7 @@ export const tools = {
 ## MVP Implementation
 
 Start with 5 core tools:
+
 1. `runBatch` - Start evaluation batch
 2. `readResults` - Get batch summary
 3. `editAgent` - Modify instructions

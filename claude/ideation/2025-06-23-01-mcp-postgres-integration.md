@@ -1,8 +1,11 @@
 <!-- Created: 2025-06-23 -->
+
 # MCP PostgreSQL Integration for Faster Database Access
 
 ## Problem Statement
+
 Currently, interacting with the PostgreSQL database through Claude Code requires writing individual TypeScript scripts for each operation. This process is slow and repetitive:
+
 1. Claude Code writes a new script file
 2. Handles imports and type definitions
 3. Saves the file
@@ -19,6 +22,7 @@ MCP provides a standardized way for AI assistants to interact with external tool
 ### Option 1: Use Existing PostgreSQL MCP Servers
 
 #### A. Official PostgreSQL MCP Server
+
 ```json
 {
   "mcpServers": {
@@ -27,24 +31,29 @@ MCP provides a standardized way for AI assistants to interact with external tool
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://localhost/open_annotate"
+        "postgresql://localhost/roast_my_post"
       ]
     }
   }
 }
 ```
+
 - **Pros**: Simple setup, official support
 - **Cons**: Read-only access, limited functionality
 
 #### B. Postgres MCP Pro (CrystalDBA)
+
 ```json
 {
   "mcpServers": {
     "postgres": {
       "command": "docker",
       "args": [
-        "run", "-i", "--rm",
-        "-e", "DATABASE_URI",
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "DATABASE_URI",
         "crystaldba/postgres-mcp",
         "--access-mode=unrestricted"
       ],
@@ -55,14 +64,16 @@ MCP provides a standardized way for AI assistants to interact with external tool
   }
 }
 ```
+
 - **Pros**: Full read/write access, performance analysis, index tuning
-- **Cons**: Generic tool, not tailored to Open Annotate needs
+- **Cons**: Generic tool, not tailored to RoastMyPost needs
 
-### Option 2: Custom MCP Server for Open Annotate
+### Option 2: Custom MCP Server for RoastMyPost
 
-Build a specialized MCP server that understands the Open Annotate domain and provides optimized tools for common operations.
+Build a specialized MCP server that understands the RoastMyPost domain and provides optimized tools for common operations.
 
 #### Architecture
+
 ```typescript
 // mcp-server/src/index.ts
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -71,8 +82,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const server = new Server({
-  name: "open-annotate-mcp",
-  version: "1.0.0"
+  name: "roast-my-post-mcp",
+  version: "1.0.0",
 });
 
 // Register specialized tools
@@ -85,9 +96,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: "object",
         properties: {
           agentId: { type: "string", description: "Agent ID" },
-          days: { type: "number", description: "Days to look back" }
-        }
-      }
+          days: { type: "number", description: "Days to look back" },
+        },
+      },
     },
     {
       name: "find_failed_evaluations",
@@ -96,9 +107,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: "object",
         properties: {
           limit: { type: "number", description: "Max results" },
-          agentId: { type: "string", description: "Filter by agent" }
-        }
-      }
+          agentId: { type: "string", description: "Filter by agent" },
+        },
+      },
     },
     {
       name: "get_evaluation_stats",
@@ -106,13 +117,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: {
         type: "object",
         properties: {
-          groupBy: { 
-            type: "string", 
+          groupBy: {
+            type: "string",
             enum: ["agent", "document", "day"],
-            description: "Grouping dimension" 
-          }
-        }
-      }
+            description: "Grouping dimension",
+          },
+        },
+      },
     },
     {
       name: "update_agent_instructions",
@@ -121,18 +132,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: "object",
         properties: {
           agentId: { type: "string" },
-          instructions: { type: "object" }
+          instructions: { type: "object" },
         },
-        required: ["agentId", "instructions"]
-      }
-    }
-  ]
+        required: ["agentId", "instructions"],
+      },
+    },
+  ],
 }));
 
 // Implement tool handlers
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-  
+
   switch (name) {
     case "analyze_agent_performance":
       const stats = await prisma.$queryRaw`
@@ -150,14 +161,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         GROUP BY av.version
         ORDER BY av.version DESC
       `;
-      
+
       return {
-        content: [{
-          type: "text",
-          text: JSON.stringify(stats, null, 2)
-        }]
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(stats, null, 2),
+          },
+        ],
       };
-      
+
     case "update_agent_instructions":
       // Use API for writes to maintain consistency
       const response = await fetch(
@@ -165,27 +178,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(args.instructions)
+          body: JSON.stringify(args.instructions),
         }
       );
-      
+
       return {
-        content: [{
-          type: "text",
-          text: await response.text()
-        }]
+        content: [
+          {
+            type: "text",
+            text: await response.text(),
+          },
+        ],
       };
-      
+
     // ... other tool implementations
   }
 });
 ```
 
 #### Configuration
+
 ```json
 {
   "mcpServers": {
-    "open-annotate": {
+    "roast-my-post": {
       "command": "node",
       "args": ["./mcp-server/dist/index.js"],
       "env": {
@@ -200,21 +216,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 ## Benefits of MCP Approach
 
 ### Speed Improvements
+
 - **Before**: 30-60 seconds to write and execute a script
 - **After**: 2-5 seconds for direct query execution
 - **10-20x faster** for database operations
 
 ### Workflow Improvements
+
 1. **Natural language queries**: "Show me agents with high failure rates"
 2. **Chained operations**: Analyze → Identify issues → Fix → Test
 3. **Stateful sessions**: Maintain context across multiple queries
 4. **Parallel execution**: Run multiple analyses simultaneously
 
 ### Example Interactions
+
 ```
 User: "Which agents are failing most often?"
 
-Claude (with MCP): 
+Claude (with MCP):
 [Instantly queries database]
 Here are the agents with highest failure rates:
 - research-scholar: 23% failure rate (18/78 evaluations)
@@ -234,21 +253,24 @@ The research-scholar failures are primarily due to:
 ## Implementation Plan
 
 ### Phase 1: Quick Win (1 day)
+
 1. Install Postgres MCP Pro
 2. Configure in Claude Desktop
 3. Test basic queries and operations
 4. Document common query patterns
 
 ### Phase 2: Minimal Custom Server (4-8 hours)
+
 1. Create basic MCP server project
 2. Implement 3-5 most-used tools:
    - `getAgentStats`: Quick performance check
-   - `findFailedJobs`: Debug evaluation failures  
+   - `findFailedJobs`: Debug evaluation failures
    - `runQuery`: Direct SQL for flexibility
 3. Start with read-only operations
 4. Add more tools as needed
 
 ### Phase 2b: Expanded Custom Tools (Optional, 3-5 days)
+
 1. Add write operations via API
 2. Implement advanced tools:
    - Batch evaluation management
@@ -258,6 +280,7 @@ The research-scholar failures are primarily due to:
 4. Polish based on usage patterns
 
 ### Phase 3: Advanced Features (1 week)
+
 1. Add streaming support for large result sets
 2. Implement caching for frequent queries
 3. Add visualization tools (generate charts/graphs)
@@ -267,18 +290,21 @@ The research-scholar failures are primarily due to:
 ## Technical Considerations
 
 ### Security
+
 - Use read-only credentials for analysis queries
 - Implement rate limiting
 - Log all operations for audit trail
 - Validate all inputs to prevent SQL injection
 
 ### Performance
+
 - Connection pooling for multiple concurrent queries
 - Query optimization hints
 - Result caching for expensive aggregations
 - Streaming for large result sets
 
 ### Maintenance
+
 - Schema change detection and adaptation
 - Version compatibility checks
 - Health monitoring endpoints
@@ -287,14 +313,17 @@ The research-scholar failures are primarily due to:
 ## Alternative Approaches Considered
 
 1. **Database GUI Tools** (TablePlus, DataGrip)
+
    - Pros: Immediate solution, powerful features
    - Cons: Context switching, manual operation
 
 2. **REST API Layer**
+
    - Pros: Clean abstraction, reusable
    - Cons: Still requires endpoint creation for each operation
 
 3. **Pre-built Query Library**
+
    - Pros: Type-safe, tested
    - Cons: Limited flexibility, still needs script execution
 
@@ -307,12 +336,15 @@ The research-scholar failures are primarily due to:
 ### Costs
 
 #### Development Costs
+
 - **Postgres MCP Pro Setup**: ~1-2 hours
+
   - Installing and configuring
   - Testing basic operations
   - Learning curve for MCP concepts
 
 - **Minimal Custom MCP Server**: ~4-8 hours
+
   - Initial setup with TypeScript SDK: 1 hour
   - Implementing 3-5 essential tools: 2-4 hours
   - Basic testing: 1 hour
@@ -325,6 +357,7 @@ The research-scholar failures are primarily due to:
   - Documentation: 4 hours
 
 #### Operational Costs
+
 - **Runtime overhead**: MCP server process (~50-100MB RAM)
 - **Maintenance time**: ~2-4 hours/month for updates
 - **Debugging complexity**: Harder to trace issues vs simple scripts
@@ -333,7 +366,9 @@ The research-scholar failures are primarily due to:
 ### Benefits
 
 #### Time Savings
+
 - **Current approach**: ~2 minutes per database operation
+
   - Write script: 45 seconds
   - Save and execute: 30 seconds
   - Parse results: 45 seconds
@@ -344,13 +379,16 @@ The research-scholar failures are primarily due to:
   - **12x faster per operation**
 
 #### Productivity Metrics
+
 Assuming 20 database operations per day:
+
 - **Daily time saved**: 30 minutes
 - **Weekly time saved**: 2.5 hours
 - **Monthly time saved**: 10 hours
 - **Break-even point**: 2-4 weeks for basic setup, 2-3 months for custom server
 
 #### Qualitative Benefits
+
 1. **Reduced context switching**: Stay in conversation flow
 2. **Lower cognitive load**: No need to remember Prisma syntax
 3. **Faster experimentation**: Test hypotheses immediately
@@ -360,17 +398,20 @@ Assuming 20 database operations per day:
 ### ROI Calculation
 
 #### Simple Setup (Postgres MCP Pro)
+
 - **Investment**: 2 hours setup
 - **Payback period**: 4 days
 - **Monthly ROI**: 500% (10 hours saved vs 2 hours invested)
 
 #### Minimal Custom MCP Server
+
 - **Investment**: 4-8 hours development
 - **Payback period**: 2-3 weeks
 - **Monthly ROI**: 125-250% (10 hours saved vs 4-8 hours invested)
 - **Key advantage**: Tailored to your exact workflow
 
 #### Full Custom MCP Server (if needed)
+
 - **Investment**: 40 hours development
 - **Payback period**: 4 months
 - **Annual ROI**: 300% (120 hours saved vs 40 hours invested)
@@ -379,16 +420,19 @@ Assuming 20 database operations per day:
 ### Risk Analysis
 
 #### Low Risk
+
 - **Postgres MCP Pro**: Minimal investment, immediate returns
 - **Reversibility**: Can switch back to scripts anytime
 - **Data safety**: Read-only mode available
 
 #### Medium Risk
+
 - **Dependency on MCP ecosystem**: Still evolving
 - **Learning curve**: New mental model required
 - **Integration complexity**: Custom server needs maintenance
 
 #### Mitigation Strategies
+
 1. Start with read-only access
 2. Keep script-based backup methods
 3. Implement comprehensive logging
@@ -396,7 +440,7 @@ Assuming 20 database operations per day:
 
 ## Recommendation
 
-Start with **Postgres MCP Pro** for immediate productivity gains while developing a **custom MCP server** tailored to Open Annotate's specific needs. This provides:
+Start with **Postgres MCP Pro** for immediate productivity gains while developing a **custom MCP server** tailored to RoastMyPost's specific needs. This provides:
 
 1. **Immediate value**: Start using natural language DB queries today
 2. **Future flexibility**: Build specialized tools for your workflow

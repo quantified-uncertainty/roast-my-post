@@ -2,6 +2,14 @@
  * Types for agent export data structure
  */
 
+export interface EvaluationWhereConditions {
+  agentId: string;
+  agentVersionId?: string;
+  createdAt?: {
+    gte?: Date;
+  };
+}
+
 export interface AgentExportTask {
   name: string;
   model: string | null;

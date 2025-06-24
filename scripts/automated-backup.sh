@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Automated backup script for Open Annotate database
+# Automated backup script for Roast My Post database
 # This script is designed to be run by cron for daily backups
 
 set -e  # Exit on error
 
 # Configuration
-DB_NAME="open_annotate"
+DB_NAME="roast_my_post"
 DB_USER="postgres"
-BACKUP_DIR="$HOME/open-annotate-backups"
+BACKUP_DIR="$HOME/roast-my-post-backups"
 BACKUP_RETENTION_DAYS=7  # Keep backups for 7 days
 LOG_FILE="$BACKUP_DIR/backup.log"
 

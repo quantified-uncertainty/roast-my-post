@@ -64,7 +64,7 @@ function loadConfig() {
 // Main configuration
 function configure() {
   console.log(
-    "🔧 Configuring Claude Desktop for Open Annotate MCP Server...\n"
+    "🔧 Configuring Claude Desktop for Roast My Post MCP Server...\n"
   );
 
   const databaseUrl = getDatabaseUrl();
@@ -80,7 +80,7 @@ function configure() {
   const serverPath = resolve(join(".", "dist", "index.js"));
 
   // Add our server configuration
-  config.mcpServers["open-annotate"] = {
+  config.mcpServers["roast-my-post"] = {
     command: "node",
     args: [serverPath],
     env: {
@@ -96,7 +96,7 @@ function configure() {
   console.log(`✅ Configuration written to: ${CONFIG_FILE}`);
   console.log("\n📋 Next steps:");
   console.log("1. Restart Claude Desktop");
-  console.log('2. Look for "open-annotate" in the MCP tools menu');
+  console.log('2. Look for "roast-my-post" in the MCP tools menu');
   console.log("3. Try commands like:");
   console.log('   - "Show me all agents"');
   console.log('   - "Get recent failed evaluations"');

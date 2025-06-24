@@ -1,7 +1,7 @@
 {
-  "name": "open-annotate-mcp",
+  "name": "roast-my-post-mcp",
   "version": "0.1.0",
-  "description": "MCP server for Open Annotate database operations",
+  "description": "MCP server for Roast My Post database operations",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

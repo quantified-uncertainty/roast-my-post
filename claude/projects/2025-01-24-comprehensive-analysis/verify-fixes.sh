@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Verification Script for open-annotate Health Check Fixes
+# Verification Script for roast-my-post Health Check Fixes
 # Run this after implementing fixes to verify issues are resolved
 
-echo "🔍 Open-Annotate Health Check Verification"
+echo "🔍 Roast My Post Health Check Verification"
 echo "=========================================="
 echo ""
 

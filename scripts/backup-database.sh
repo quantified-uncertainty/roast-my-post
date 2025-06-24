@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Database backup script for Open Annotate
+# Database backup script for Roast My Post
 # Usage: ./scripts/backup-database.sh [backup_name]
 
 set -e  # Exit on error
 
 # Configuration
-DB_NAME="open_annotate"
+DB_NAME="roast_my_post"
 DB_USER="postgres"
 BACKUP_DIR="./backups"
 

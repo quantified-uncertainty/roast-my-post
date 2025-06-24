@@ -1,8 +1,9 @@
-# Pre-Commit Investigation Guide for open-annotate
+# Pre-Commit Investigation Guide for roast-my-post
 
 ## Quick Checks (< 1 minute)
 
 ### 1. Build & Type Safety
+
 - [ ] **Next.js build succeeds**
   ```bash
   npm run build
@@ -17,6 +18,7 @@
   ```
 
 ### 2. Code Formatting
+
 - [ ] **Prettier formatting applied**
   ```bash
   npm run format:check
@@ -27,6 +29,7 @@
 - [ ] **No commented-out code** (except TODO/FIXME with issue numbers)
 
 ### 3. Git Hygiene
+
 - [ ] **Review all changes**
   ```bash
   git diff --cached
@@ -48,17 +51,19 @@
 ## Security Checks (2-3 minutes)
 
 ### 4. Authentication & Authorization
+
 - [ ] **All new API routes have auth checks**
   ```typescript
   // Check for patterns like:
-  const session = await getServerSession(authOptions)
-  if (!session) return new Response('Unauthorized', { status: 401 })
+  const session = await getServerSession(authOptions);
+  if (!session) return new Response("Unauthorized", { status: 401 });
   ```
 - [ ] **Client components don't expose sensitive data**
 - [ ] **API routes validate user permissions**
 - [ ] **No auth tokens in URLs or logs**
 
 ### 5. Data Security
+
 - [ ] **No hardcoded secrets or API keys**
   ```bash
   # Quick scan for common patterns
@@ -73,11 +78,12 @@
   // Ensure Zod schemas for all inputs
   const schema = z.object({
     title: z.string().min(1).max(200),
-    content: z.string().max(50000)
-  })
+    content: z.string().max(50000),
+  });
   ```
 
 ### 6. Database Security
+
 - [ ] **All queries use Prisma (no raw SQL)**
 - [ ] **No string concatenation in queries**
 - [ ] **Proper error handling doesn't leak schema**
@@ -85,8 +91,8 @@
   ```typescript
   // Good: Scoped to user
   await prisma.document.findMany({
-    where: { userId: session.user.id }
-  })
+    where: { userId: session.user.id },
+  });
   ```
 
 ---
@@ -94,6 +100,7 @@
 ## Functional Checks (3-5 minutes)
 
 ### 7. Test Coverage
+
 - [ ] **All tests pass**
   ```bash
   npm test
@@ -109,6 +116,7 @@
   - Boundary conditions
 
 ### 8. Agent System Integrity
+
 - [ ] **Agent TOML files are valid**
   ```bash
   # If modifying agents
@@ -121,6 +129,7 @@
 - [ ] **Version bumped if modifying agent**
 
 ### 9. Database Changes
+
 - [ ] **Schema changes reviewed**
   ```bash
   # Check for pending migrations
@@ -138,6 +147,7 @@
 ## Performance Checks (2-3 minutes)
 
 ### 10. Frontend Performance
+
 - [ ] **No unnecessary re-renders**
   - Proper key props in lists
   - useMemo/useCallback where needed
@@ -153,26 +163,30 @@
   ```
 
 ### 11. API Performance
+
 - [ ] **No N+1 queries**
+
   ```typescript
   // Bad: N+1 query
-  const docs = await prisma.document.findMany()
+  const docs = await prisma.document.findMany();
   for (const doc of docs) {
     const evals = await prisma.evaluation.findMany({
-      where: { documentId: doc.id }
-    })
+      where: { documentId: doc.id },
+    });
   }
-  
+
   // Good: Include related data
   const docs = await prisma.document.findMany({
-    include: { evaluations: true }
-  })
+    include: { evaluations: true },
+  });
   ```
+
 - [ ] **Large datasets paginated**
 - [ ] **Appropriate caching headers**
 - [ ] **No blocking operations in request handlers**
 
 ### 12. Job Processing
+
 - [ ] **New jobs have retry logic**
 - [ ] **Job payloads are reasonable size**
 - [ ] **Error handling includes context**
@@ -184,6 +198,7 @@
 ## Code Quality Checks (2-3 minutes)
 
 ### 13. Component Architecture
+
 - [ ] **Components follow established patterns**
   - Server vs Client components appropriate
   - Props properly typed
@@ -196,13 +211,14 @@
   - Focus management proper
 
 ### 14. Error Handling
+
 - [ ] **All async operations have error handling**
   ```typescript
   try {
-    const result = await riskyOperation()
+    const result = await riskyOperation();
   } catch (error) {
     // Proper error handling, not just console.log
-    logger.error('Operation failed', { error, context })
+    logger.error("Operation failed", { error, context });
     // User-friendly error message
   }
   ```
@@ -211,14 +227,16 @@
 - [ ] **No empty catch blocks**
 
 ### 15. Code Maintainability
+
 - [ ] **No obvious code duplication**
 - [ ] **Functions have single responsibility**
 - [ ] **Complex logic documented**
 - [ ] **Magic numbers replaced with constants**
+
   ```typescript
   // Bad
   if (retries > 5) { ... }
-  
+
   // Good
   const MAX_RETRY_ATTEMPTS = 5
   if (retries > MAX_RETRY_ATTEMPTS) { ... }
@@ -229,6 +247,7 @@
 ## Documentation Checks (1-2 minutes)
 
 ### 16. Code Documentation
+
 - [ ] **New functions have JSDoc**
   ```typescript
   /**
@@ -244,6 +263,7 @@
 - [ ] **Breaking changes noted**
 
 ### 17. Project Documentation
+
 - [ ] **README updated if needed**
 - [ ] **CLAUDE.md updated for AI context**
 - [ ] **API documentation current**
@@ -258,6 +278,7 @@
 ## Dependency Checks (1 minute)
 
 ### 18. Package Management
+
 - [ ] **No unnecessary dependencies**
 - [ ] **Dependencies vs devDependencies correct**
 - [ ] **Package versions locked**
@@ -290,16 +311,9 @@ npx husky add .husky/pre-commit "npx lint-staged"
 // package.json
 {
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ],
-    "*.prisma": [
-      "npx prisma format"
-    ]
+    "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,md,yml,yaml}": ["prettier --write"],
+    "*.prisma": ["npx prisma format"]
   }
 }
 ```
@@ -310,7 +324,7 @@ npx husky add .husky/pre-commit "npx lint-staged"
 #!/bin/sh
 # .husky/pre-commit
 
-echo "🔍 Running pre-commit checks for open-annotate..."
+echo "🔍 Running pre-commit checks for roast-my-post..."
 
 # 1. Type checking
 echo "📘 Checking TypeScript..."
@@ -372,6 +386,7 @@ echo "✅ All checks passed!"
 ## Quick Reference
 
 ### 🚫 Commit Blockers
+
 ```
 ❌ Build failures
 ❌ TypeScript errors
@@ -382,7 +397,8 @@ echo "✅ All checks passed!"
 ❌ Data loss migrations
 ```
 
-### ⚠️  Should Fix
+### ⚠️ Should Fix
+
 ```
 ⚠️  Missing tests
 ⚠️  No error handling
@@ -393,6 +409,7 @@ echo "✅ All checks passed!"
 ```
 
 ### 🎯 Project-Specific Checks
+
 - [ ] Agent TOML files valid
 - [ ] Highlight system performance checked
 - [ ] Job retry logic implemented
@@ -405,6 +422,7 @@ echo "✅ All checks passed!"
 ## Emergency Procedures
 
 ### Skip Hooks (Use Sparingly!)
+
 ```bash
 # When you absolutely must commit
 git commit --no-verify -m "EMERGENCY: [reason]"
@@ -414,6 +432,7 @@ echo "TODO: Fix pre-commit issues from emergency commit" >> TODO.md
 ```
 
 ### Quick Fixes
+
 ```bash
 # Auto-fix formatting
 npm run format
@@ -429,6 +448,7 @@ rm -rf .next
 ```
 
 ### Rollback Procedures
+
 ```bash
 # If you committed something bad
 git reset --soft HEAD~1  # Undo last commit, keep changes

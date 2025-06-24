@@ -1,10 +1,10 @@
-# Open Annotate MCP Server
+# Roast My Post MCP Server
 
-A Model Context Protocol (MCP) server for fast database access to the Open Annotate system.
+A Model Context Protocol (MCP) server for fast database access to the Roast My Post system.
 
 ## Features
 
-This MCP server provides direct database access to Open Annotate, enabling fast queries and analytics without writing scripts.
+This MCP server provides direct database access to Roast My Post, enabling fast queries and analytics without writing scripts.
 
 For detailed documentation of all available tools and their parameters, see [FEATURES.md](./FEATURES.md).
 
@@ -54,7 +54,7 @@ Or manually add to your Claude Desktop configuration:
 ```json
 {
   "mcpServers": {
-    "open-annotate": {
+    "roast-my-post": {
       "command": "node",
       "args": ["/absolute/path/to/mcp-server/dist/index.js"],
       "env": {
@@ -70,7 +70,7 @@ Or manually add to your Claude Desktop configuration:
 
 To enable mutation operations (creating agent versions and spawning batch jobs), you need to create an API key:
 
-1. Log into the Open Annotate web interface
+1. Log into the RoastMyPost web interface
 2. Navigate to your user settings or API keys page
 3. Create a new API key with a descriptive name
 4. Copy the API key (you won't be able to see it again)
