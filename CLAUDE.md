@@ -243,6 +243,12 @@ Project documentation has been reorganized into `/docs/` with clear categories:
 - `PRE_COMMIT_INVESTIGATION.md` → `/docs/security/pre-commit.md`
 - `TODO-CRITICAL-ISSUES.md` → removed (all items completed)
 
+### Claude Ideation Files
+When creating ideation/analysis files in `/claude/ideation/`, use this naming pattern:
+- Format: `YYYY-MM-DD-##-lowercase-hyphenated-name.md`
+- Example: `2025-01-25-03-flexible-scoring-system.md`
+- The `##` is a sequential number for that day (01, 02, 03, etc.)
+
 ## Security Updates (2025-01-24)
 
 ### API Route Protection

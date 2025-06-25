@@ -1,13 +1,14 @@
 {
   "extends": ["next/core-web-vitals"],
-  "plugins": ["@typescript-eslint", "react-hooks"],
+  "plugins": ["@typescript-eslint", "react-hooks", "local"],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "react/no-unescaped-entities": "off",
     "react-hooks/exhaustive-deps": "off",
     "@typescript-eslint/no-namespace": "off",
-    "react-hooks/rules-of-hooks": "error"
+    "react-hooks/rules-of-hooks": "error",
+    "local/auth-consistency": "error"
   },
   "ignorePatterns": [
     "**/*.test.ts",
