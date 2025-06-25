@@ -2,24 +2,13 @@ import { jest } from "@jest/globals";
 import {
   extractContent,
   convertToMarkdown,
-  cleanContentWithClaude,
   processArticle,
-  extractMetadataWithClaude,
   createCleanDOM,
 } from "../articleImport";
 import { JSDOM } from "jsdom";
 
 // Mock dependencies
 jest.mock("axios");
-jest.mock("@/types/openai", () => ({
-  anthropic: {
-    messages: {
-      create: jest.fn(),
-    },
-  },
-  ANALYSIS_MODEL: "claude-sonnet-4-20250514",
-  withTimeout: jest.fn((promise) => promise),
-}));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -177,82 +166,99 @@ describe("articleImport", () => {
     });
   });
 
-  describe("cleanContentWithClaude", () => {
-    it("should handle Claude API errors gracefully", async () => {
-      const { anthropic } = require("@/types/openai");
+  describe("processArticle with Diffbot", () => {
+    it("should process article with Diffbot API", async () => {
+      const axios = require("axios");
       
-      // Mock Claude to throw an error
-      anthropic.messages.create.mockRejectedValueOnce(new Error("API Error"));
-      
-      const content = "Test content";
-      const result = await cleanContentWithClaude(content);
-      
-      // Should return original content on error
-      expect(result).toBe(content);
-    });
-
-    it("should use fallback if cleaned content is too short", async () => {
-      const { anthropic } = require("@/types/openai");
-      
-      // Mock Claude to return very short content
-      const mockStream = {
-        [Symbol.asyncIterator]: async function* () {
-          yield { type: "content_block_start", content_block: { type: "tool_use", name: "clean_content" } };
-          yield { type: "content_block_delta", delta: { type: "input_json_delta", partial_json: '{"cleaned_content": "Too short"}' } };
-        }
-      };
-      
-      anthropic.messages.create.mockResolvedValueOnce(mockStream);
-      
-      const longContent = "This is a very long content. ".repeat(100);
-      const result = await cleanContentWithClaude(longContent);
-      
-      // Should return original content if cleaned is too short
-      expect(result).toBe(longContent);
-    });
-  });
-
-  describe("extractMetadataWithClaude", () => {
-    it("should extract metadata from common patterns", async () => {
-      const html = `
-        <html>
-          <head>
-            <meta property="og:title" content="Test Article">
-            <meta name="author" content="John Doe">
-            <meta property="article:published_time" content="2025-01-15">
-          </head>
-          <body>
-            <h1>Test Article</h1>
-            <p>By John Doe</p>
-          </body>
-        </html>
-      `;
-      
-      const { anthropic } = require("@/types/openai");
-      
-      // Clear any previous mocks
-      anthropic.messages.create.mockClear();
-      
-      // Mock Claude response
-      anthropic.messages.create.mockImplementation(() => 
-        Promise.resolve({
-          content: [{
-            type: "tool_use",
-            name: "extract_metadata",
-            input: {
-              title: "Test Article",
-              author: "John Doe",
-              date: "2025-01-15"
-            }
+      // Mock Diffbot API response
+      axios.get.mockResolvedValueOnce({
+        data: {
+          objects: [{
+            type: "article",
+            title: "Test Article",
+            text: "This is the article content",
+            html: "<p>This is the article content</p>",
+            date: "2025-01-15",
+            author: "John Doe",
+            pageUrl: "https://example.com/article"
           }]
-        })
-      );
+        }
+      });
       
-      const metadata = await extractMetadataWithClaude(html);
+      const result = await processArticle("https://example.com/article");
       
-      expect(metadata.title).toBe("Test Article");
-      expect(metadata.author).toBe("John Doe");
-      expect(metadata.date).toBe("2025-01-15");
+      expect(result.title).toBe("Test Article");
+      expect(result.author).toBe("John Doe");
+      expect(result.date).toBe("2025-01-15");
+      expect(result.content).toContain("This is the article content");
+      expect(result.url).toBe("https://example.com/article");
+    });
+
+    it("should fallback when Diffbot fails", async () => {
+      const axios = require("axios");
+      
+      // Mock Diffbot to fail
+      axios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      
+      // Then mock fallback HTML fetch
+      axios.get.mockResolvedValueOnce({
+        data: `
+          <html>
+            <head>
+              <title>Fallback Article</title>
+            </head>
+            <body>
+              <article>
+                <h1>Fallback Article</h1>
+                <p>Fallback content</p>
+              </article>
+            </body>
+          </html>
+        `
+      });
+      
+      const result = await processArticle("https://example.com/article");
+      
+      expect(result.title).toBe("Fallback Article");
+      expect(result.content).toContain("Fallback content");
+    });
+
+    it("should fallback when Diffbot returns short content", async () => {
+      const axios = require("axios");
+      
+      // Mock Diffbot to return very short content
+      axios.get.mockResolvedValueOnce({
+        data: {
+          objects: [{
+            type: "article",
+            title: "Short",
+            text: "Too short",
+            author: "Author",
+            date: "2025-01-15"
+          }]
+        }
+      });
+      
+      // Then mock fallback HTML fetch
+      axios.get.mockResolvedValueOnce({
+        data: `
+          <html>
+            <head>
+              <title>Longer Article</title>
+            </head>
+            <body>
+              <article>
+                <h1>Longer Article</h1>
+                <p>This is much longer content that should be used instead</p>
+              </article>
+            </body>
+          </html>
+        `
+      });
+      
+      const result = await processArticle("https://example.com/article");
+      
+      expect(result.content).toContain("much longer content");
     });
   });
 });

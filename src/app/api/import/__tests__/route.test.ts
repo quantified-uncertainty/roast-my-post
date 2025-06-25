@@ -87,8 +87,9 @@ describe("POST /api/import", () => {
       title: "Test Article",
       author: "Test Author",
       content: "Test content",
-      publishedAt: new Date("2024-01-01"),
-      importUrl: "https://example.com/article",
+      date: "2024-01-01",
+      platforms: [],
+      url: "https://example.com/article",
     });
     
     const mockDocument = {
@@ -97,7 +98,13 @@ describe("POST /api/import", () => {
       slug: "test-article",
     };
     
-    mockDocumentModel.createDocument = jest.fn().mockResolvedValue(mockDocument);
+    mockDocumentModel.create = jest.fn().mockResolvedValue({
+      ...mockDocument,
+      versions: [{
+        title: "Test Article",
+        authors: "Test Author",
+      }]
+    });
 
     const request = new NextRequest("http://localhost:3000/api/import", {
       method: "POST",
@@ -108,16 +115,22 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.document).toEqual(mockDocument);
+    expect(data.success).toBe(true);
+    expect(data.documentId).toBe("doc-123");
+    expect(data.document).toEqual({
+      id: "doc-123",
+      title: "Test Article",
+      authors: "Test Author"
+    });
     expect(data.evaluations).toEqual([]);
     expect(mockProcessArticle).toHaveBeenCalledWith("https://example.com/article");
-    expect(mockDocumentModel.createDocument).toHaveBeenCalledWith(
+    expect(mockDocumentModel.create).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Test Article",
         authors: "Test Author",
         content: "Test content",
-      }),
-      "test-user-id"
+        submittedById: "test-user-id"
+      })
     );
   });
 
@@ -127,8 +140,9 @@ describe("POST /api/import", () => {
       title: "Test Article",
       author: "Test Author",
       content: "Test content",
-      publishedAt: new Date("2024-01-01"),
-      importUrl: "https://example.com/article",
+      date: "2024-01-01",
+      platforms: [],
+      url: "https://example.com/article",
     });
     
     const mockDocument = {
@@ -137,7 +151,13 @@ describe("POST /api/import", () => {
       slug: "test-article",
     };
     
-    mockDocumentModel.createDocument = jest.fn().mockResolvedValue(mockDocument);
+    mockDocumentModel.create = jest.fn().mockResolvedValue({
+      ...mockDocument,
+      versions: [{
+        title: "Test Article",
+        authors: "Test Author",
+      }]
+    });
     
     const mockAgents = [
       { id: "agent-1", name: "Agent 1" },
@@ -195,8 +215,9 @@ describe("POST /api/import", () => {
       title: "Test Article",
       author: "Test Author",
       content: "Test content",
-      publishedAt: new Date("2024-01-01"),
-      importUrl: "https://example.com/article",
+      date: "2024-01-01",
+      platforms: [],
+      url: "https://example.com/article",
     });
     
     const mockDocument = {
@@ -205,7 +226,13 @@ describe("POST /api/import", () => {
       slug: "test-article",
     };
     
-    mockDocumentModel.createDocument = jest.fn().mockResolvedValue(mockDocument);
+    mockDocumentModel.create = jest.fn().mockResolvedValue({
+      ...mockDocument,
+      versions: [{
+        title: "Test Article",
+        authors: "Test Author",
+      }]
+    });
     
     const mockAgents = [
       { id: "agent-1", name: "Agent 1" },

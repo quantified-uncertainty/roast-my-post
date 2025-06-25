@@ -2,11 +2,7 @@ import axios from "axios";
 import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 
-import {
-  ANALYSIS_MODEL,
-  anthropic,
-  withTimeout,
-} from "@/types/openai";
+const DIFFBOT_TOKEN = "985ac8d02f58e04139a86a0196f26137";
 
 export interface ArticleData {
   html: string;
@@ -22,6 +18,36 @@ export interface ProcessedArticle {
   content: string;
   platforms: string[];
   url: string;
+}
+
+interface DiffbotResponse {
+  objects: Array<{
+    type: string;
+    title: string;
+    text: string;
+    html: string;
+    date: string;
+    author: string;
+    authorUrl?: string;
+    siteName?: string;
+    pageUrl: string;
+    resolvedPageUrl: string;
+    tags?: Array<{
+      label: string;
+      uri?: string;
+    }>;
+    images?: Array<{
+      url: string;
+      title?: string;
+      width?: number;
+      height?: number;
+    }>;
+  }>;
+  request: {
+    pageUrl: string;
+    api: string;
+    version: number;
+  };
 }
 
 export function transformEAForumUrl(url: string): string {
@@ -209,138 +235,6 @@ export function createCleanDOM(html: string): JSDOM {
   });
 }
 
-export async function extractMetadataWithClaude(
-  html: string
-): Promise<{ title: string; author: string; date: string }> {
-  try {
-    console.log("🤖 Calling Claude to extract metadata...");
-
-    // Create a DOM parser to extract relevant sections
-    const dom = createCleanDOM(html);
-    const document = dom.window.document;
-
-    // Extract potential metadata sections
-    const metaSections = [
-      // Meta tags
-      ...Array.from(
-        document.querySelectorAll(
-          'meta[property*="title"], meta[property*="author"], meta[property*="date"], meta[property*="published"], meta[name*="title"], meta[name*="author"], meta[name*="date"]'
-        )
-      )
-        .map(
-          (el) =>
-            `${el.getAttribute("property") || el.getAttribute("name")}: ${el.getAttribute("content")}`
-        )
-        .filter(Boolean),
-
-      // Title tag
-      document.querySelector("title")?.textContent,
-
-      // EA Forum specific elements
-      ...Array.from(
-        document.querySelectorAll(".PostsAuthors-author, .PostsTitle-root")
-      )
-        .map((el) => el.textContent)
-        .filter(Boolean),
-
-      // Article header sections
-      ...Array.from(
-        document.querySelectorAll("header, article h1, .article-header")
-      )
-        .slice(0, 3)
-        .map((el) => el.textContent)
-        .filter(Boolean),
-
-      // First few paragraphs for context
-      ...Array.from(document.querySelectorAll("p"))
-        .slice(0, 3)
-        .map((el) => el.textContent)
-        .filter(Boolean),
-    ].filter(Boolean);
-
-    const userMessage = `Extract the title, author name, and publication date from these text sections. 
-Pay special attention to finding the actual author - look for patterns like "[Name]'s Post" or a name followed by a colon in comments.
-If any field cannot be found, use "Unknown" for author, "Untitled Article" for title, or today's date for date.
-
-The date should be in YYYY-MM-DD format.
-
-Text sections:
-${metaSections.join("\n")}`;
-
-    const response = await withTimeout(
-      anthropic.messages.create({
-        model: ANALYSIS_MODEL,
-        max_tokens: 200,
-        temperature: 0.1,
-        messages: [
-          {
-            role: "user",
-            content: userMessage,
-          },
-        ],
-        tools: [
-          {
-            name: "extract_metadata",
-            description:
-              "Extract title, author, and publication date from the provided text sections",
-            input_schema: {
-              type: "object",
-              properties: {
-                title: {
-                  type: "string",
-                  description:
-                    "The article title, or 'Untitled Article' if not found",
-                },
-                author: {
-                  type: "string",
-                  description:
-                    "The author name, or 'Unknown Author' if not found",
-                },
-                date: {
-                  type: "string",
-                  description:
-                    "Publication date in YYYY-MM-DD format, or today's date if not found",
-                },
-              },
-              required: ["title", "author", "date"],
-            },
-          },
-        ],
-        tool_choice: { type: "tool", name: "extract_metadata" },
-      }),
-      30000, // 30 second timeout
-      "Claude API request timed out after 30 seconds"
-    );
-
-    console.log("🤖 Claude Response received");
-
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "extract_metadata") {
-      throw new Error(
-        "No tool use response from Claude for metadata extraction"
-      );
-    }
-
-    const metadata = toolUse.input as {
-      title: string;
-      author: string;
-      date: string;
-    };
-
-    return {
-      title: metadata.title || "Untitled Article",
-      author: metadata.author || "Unknown Author",
-      date: metadata.date || new Date().toISOString().split("T")[0],
-    };
-  } catch (error: any) {
-    console.error("❌ Error in extractMetadataWithClaude:", error);
-    return {
-      title: "Untitled Article",
-      author: "Unknown Author",
-      date: new Date().toISOString().split("T")[0],
-    };
-  }
-}
 
 export function extractMetadataSimple(dom: JSDOM, url: string) {
   const doc = dom.window.document;
@@ -541,7 +435,7 @@ export function convertToMarkdown(html: string): string {
     },
   });
 
-  // Add rule to handle linked images (common in Substack)
+  // Add rule to handle linked images (common in Substack) - must come BEFORE default link handling
   turndownService.addRule("linkedImages", {
     filter: (node) => {
       if (node.nodeName !== "A") return false;
@@ -551,8 +445,7 @@ export function convertToMarkdown(html: string): string {
 
       // Check if this is a link that just wraps an image
       const href = link.getAttribute("href") || "";
-      const imgSrc = img.getAttribute("src") || "";
-
+      
       // If the link points to an image URL (common in Substack), return true
       return (
         href.includes("substackcdn.com/image") ||
@@ -560,7 +453,9 @@ export function convertToMarkdown(html: string): string {
         href.includes(".jpeg") ||
         href.includes(".png") ||
         href.includes(".gif") ||
-        href.includes(".webp")
+        href.includes(".webp") ||
+        // Also check if the only child is an image
+        (link.childNodes.length === 1 && link.childNodes[0].nodeName === "IMG")
       );
     },
     replacement: (content, node) => {
@@ -571,7 +466,7 @@ export function convertToMarkdown(html: string): string {
       const src = img.getAttribute("src") || "";
 
       // Just return the image markdown without the link wrapper
-      return src && src.startsWith("http") ? `\n\n![${alt}](${src})\n\n` : "";
+      return src && src.startsWith("http") ? `![${alt}](${src})` : "";
     },
   });
 
@@ -587,110 +482,26 @@ export function convertToMarkdown(html: string): string {
   return turndownService.turndown(html);
 }
 
-export async function cleanContentWithClaude(
-  markdownContent: string
-): Promise<string> {
-  try {
-    console.log("🤖 Cleaning content with Claude...");
 
-    // For very long content, just take the first part to avoid token limits
-    const maxLength = 100000;
-    const contentToClean =
-      markdownContent.length > maxLength
-        ? markdownContent.substring(0, maxLength) +
-          `\n\n[Content truncated for processing - ${Math.round((1 - maxLength / markdownContent.length) * 100)}% of content removed]`
-        : markdownContent;
-
-    const userMessage = `Clean up this content by removing only obvious platform UI elements while preserving all meaningful content.
-
-IMPORTANT INSTRUCTIONS:
-- Keep ALL meaningful article content: text, paragraphs, lists, links, data, examples
-- Preserve ALL images in markdown format ![alt](url) 
-- Keep all headings, subheadings, and document structure
-- Remove only obvious UI elements: sharing buttons, navigation, subscription prompts, platform-specific widgets
-- When in doubt, keep the content rather than remove it
-- Focus on removing UI chrome, not article substance
-
-Content to clean:
-${contentToClean}`;
-
-    // Use streaming for long content to avoid timeout issues
-    const stream = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 64000, // Max allowed for Sonnet
-      temperature: 0.1,
-      stream: true,
-      messages: [
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
-      tools: [
-        {
-          name: "clean_content",
-          description:
-            "Clean and format content by removing platform-specific elements while preserving core message",
-          input_schema: {
-            type: "object",
-            properties: {
-              cleaned_content: {
-                type: "string",
-                description:
-                  "The cleaned content with platform-specific formatting and UI elements removed",
-              },
-            },
-            required: ["cleaned_content"],
-          },
-        },
-      ],
-      tool_choice: { type: "tool", name: "clean_content" },
-    });
-
-    let fullContent = "";
-    let toolUse: any = null;
-
-    for await (const chunk of stream) {
-      if (
-        chunk.type === "content_block_start" &&
-        chunk.content_block.type === "tool_use"
-      ) {
-        toolUse = { name: chunk.content_block.name, input: {} };
-      } else if (
-        chunk.type === "content_block_delta" &&
-        chunk.delta.type === "input_json_delta"
-      ) {
-        fullContent += chunk.delta.partial_json;
-      }
-    }
-
-    if (!toolUse || fullContent === "") {
-      throw new Error("No tool use response from Claude for content cleaning");
-    }
-
-    // Parse the accumulated JSON
-    const parsedInput = JSON.parse(fullContent);
-
-    const cleanedContent = parsedInput.cleaned_content?.trim();
-
-    if (!cleanedContent) {
-      throw new Error("Empty Claude response for content cleaning");
-    }
-
-    // Safety check: if cleaned content is much shorter than original, use original
-    const originalWordCount = markdownContent.split(/\s+/).length;
-    const cleanedWordCount = cleanedContent.split(/\s+/).length;
-
-    if (cleanedWordCount < originalWordCount * 0.3) {
-      console.warn("⚠️ Cleaned content too short, using original markdown");
-      return markdownContent;
-    }
-
-    return cleanedContent;
-  } catch (error) {
-    console.error("❌ Error cleaning content with Claude:", error);
-    return markdownContent; // Fallback to original content
-  }
+export function cleanMarkdownContent(content: string): string {
+  // Fix double-wrapped image links: [![alt](img)](link) -> ![alt](img)
+  content = content.replace(/\[\s*!\[([^\]]*)\]\(([^)]+)\)\s*\]\([^)]+\)/g, '![$1]($2)');
+  
+  // Fix images with extra whitespace or newlines
+  content = content.replace(/\[\s*\n*!\[/g, '[![');
+  content = content.replace(/\]\s*\n*\]/g, ']]');
+  
+  // Remove duplicate newlines around images
+  content = content.replace(/\n{3,}(!\[)/g, '\n\n$1');
+  content = content.replace(/(!\[[^\]]*\]\([^)]+\))\n{3,}/g, '$1\n\n');
+  
+  // Fix broken image markdown with newlines in the middle
+  content = content.replace(/!\[([^\]]*)\]\s*\n+\s*\(([^)]+)\)/g, '![$1]($2)');
+  
+  // Remove any remaining link wrappers around images that might have been missed
+  content = content.replace(/\[(?:\s|\n)*!\[([^\]]*)\](?:\s|\n)*\(([^)]+)\)(?:\s|\n)*\](?:\s|\n)*\([^)]+\)/g, '![$1]($2)');
+  
+  return content;
 }
 
 export function detectPlatforms(url: string): string[] {
@@ -707,20 +518,88 @@ export function detectPlatforms(url: string): string[] {
 }
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
-  console.log(`📥 Fetching article from ${url}...`);
+  console.log(`📥 Fetching article from ${url} with Diffbot...`);
+  
+  try {
+    // Use Diffbot Article API
+    const diffbotUrl = `https://api.diffbot.com/v3/article`;
+    const response = await axios.get<DiffbotResponse>(diffbotUrl, {
+      params: {
+        token: DIFFBOT_TOKEN,
+        url: url,
+        discussion: false, // We don't need comments
+      },
+      timeout: 30000, // 30 second timeout
+    });
+
+    if (!response.data.objects || response.data.objects.length === 0) {
+      throw new Error("No article content found by Diffbot");
+    }
+
+    const article = response.data.objects[0];
+    console.log("✅ Diffbot extraction successful");
+
+    // Extract metadata from Diffbot response
+    const title = article.title || "Untitled Article";
+    const author = article.author || "Unknown Author";
+    const date = article.date ? 
+      new Date(article.date).toISOString().split("T")[0] : 
+      new Date().toISOString().split("T")[0];
+
+    // Convert HTML to Markdown if html is provided, otherwise use text
+    let content: string;
+    if (article.html) {
+      console.log("🔄 Converting HTML to Markdown...");
+      content = convertToMarkdown(article.html);
+    } else if (article.text) {
+      // Check if text already contains markdown patterns (like from Substack)
+      if (article.text.includes('![') || article.text.includes('](')) {
+        console.log("📝 Text appears to already be in Markdown format");
+        // Clean up any double-wrapped image links
+        content = article.text.replace(/\[\s*!\[([^\]]*)\]\(([^)]+)\)\s*\]\([^)]+\)/g, '![$1]($2)');
+      } else {
+        content = article.text;
+      }
+    } else {
+      content = "";
+    }
+
+    // If content is still very short, try fallback to our original method
+    if (content.length < 100) {
+      console.log("⚠️ Diffbot content too short, falling back to manual extraction...");
+      return processArticleFallback(url);
+    }
+
+    // Additional cleanup for common markdown issues
+    content = cleanMarkdownContent(content);
+    
+    const platforms = detectPlatforms(url);
+
+    return {
+      title,
+      author,
+      date,
+      content,
+      platforms,
+      url,
+    };
+  } catch (error) {
+    console.error("❌ Diffbot extraction failed:", error);
+    console.log("⚠️ Falling back to manual extraction...");
+    return processArticleFallback(url);
+  }
+}
+
+// Fallback to original extraction method for special cases
+async function processArticleFallback(url: string): Promise<ProcessedArticle> {
+  console.log(`📥 Fallback: Fetching article from ${url}...`);
   const { html, title, author, date } = await fetchArticle(url);
 
   console.log("🔍 Parsing HTML...");
   const dom = createCleanDOM(html);
 
   console.log("📝 Extracting metadata...");
-  // Try simple extraction first, then fallback to Claude if needed
-  const simpleMetadata = extractMetadataSimple(dom, url);
-  const metadata =
-    simpleMetadata.title === "Untitled Article" ||
-    simpleMetadata.author === "Unknown Author"
-      ? await extractMetadataWithClaude(html)
-      : simpleMetadata;
+  const metadata = extractMetadataSimple(dom, url);
 
   console.log("📄 Extracting content...");
   const contentHtml = extractContent(dom);
@@ -728,15 +607,15 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
   console.log("🔄 Converting to Markdown...");
   const markdownContent = convertToMarkdown(contentHtml);
 
-  console.log("🧹 Cleaning content with Claude...");
-  const cleanedContent = await cleanContentWithClaude(markdownContent);
-
   // Use the best available title, author, and date
   const finalTitle = title || metadata.title || "Untitled Article";
   const finalAuthor = author || metadata.author || "Unknown Author";
   const finalDate =
     date || metadata.date || new Date().toISOString().split("T")[0];
 
+  // Clean up markdown content
+  const cleanedContent = cleanMarkdownContent(markdownContent);
+  
   const platforms = detectPlatforms(url);
 
   return {

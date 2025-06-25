@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const userId = await authenticateRequest(request);
 
     if (!userId) {
-      return errorResponse("User must be logged in to import a document", 401, "UNAUTHORIZED");
+      return errorResponse("User must be logged in to import a document", 401);
     }
 
     const { url, importUrl, agentIds } = await request.json();
@@ -101,8 +101,7 @@ export async function POST(request: NextRequest) {
     // Error importing document
     return errorResponse(
       error instanceof Error ? error.message : "Failed to import document",
-      500,
-      "IMPORT_ERROR"
+      500
     );
   }
 }
