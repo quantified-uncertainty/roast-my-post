@@ -45,6 +45,9 @@ src/data/agents/dist/
 # MCP configuration (contains sensitive data)
 .mcp.json
 
+# Claude settings (local to each developer)
+.claude/settings.local.json
+
 # MCP server safety - prevent accidental Prisma usage
 mcp-server/prisma/
 mcp-server/node_modules/.bin/prisma
