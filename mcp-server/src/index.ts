@@ -78,6 +78,13 @@ const GetDocumentsArgsSchema = z.object({
   searchTerm: z.string().optional(),
 });
 
+const SearchDocumentsArgsSchema = z.object({
+  query: z.string(),
+  limit: z.number().optional().default(50),
+  offset: z.number().optional().default(0),
+  searchContent: z.boolean().optional().default(false),
+});
+
 const AnalyzeRecentEvalsArgsSchema = z.object({
   hours: z.number().optional().default(24),
   limit: z.number().optional().default(200),
@@ -265,6 +272,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Search in document titles",
             },
           },
+        },
+      },
+      {
+        name: "search_documents",
+        description: "Search documents using the server's search API (searches in titles, authors, platforms, URLs, and optionally content)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Search query string",
+            },
+            limit: {
+              type: "number",
+              description: "Maximum number of results to return (default: 50)",
+            },
+            offset: {
+              type: "number",
+              description: "Number of results to skip for pagination (default: 0)",
+            },
+            searchContent: {
+              type: "boolean",
+              description: "Whether to search in document content in addition to metadata (default: false)",
+            },
+          },
+          required: ["query"],
         },
       },
       {
@@ -747,6 +780,93 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             },
           ],
         };
+      }
+
+      case "search_documents": {
+        const { query, limit, offset, searchContent } = SearchDocumentsArgsSchema.parse(args);
+
+        try {
+          if (!API_KEY) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      error: "No API key configured",
+                      instructions:
+                        "Set ROAST_MY_POST_MCP_USER_API_KEY environment variable in your MCP server configuration",
+                    },
+                    null,
+                    2
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Build query parameters
+          const params = new URLSearchParams({
+            q: query,
+            limit: limit.toString(),
+            offset: offset.toString(),
+          });
+          
+          if (searchContent) {
+            params.append("searchContent", "true");
+          }
+
+          // Call the search endpoint
+          const result = await authenticatedFetch(`/api/documents/search?${params.toString()}`, {
+            method: "GET",
+          });
+
+          // Format the results
+          const formattedResults = {
+            query,
+            total: result.total,
+            hasMore: result.hasMore,
+            documentsFound: result.documents.length,
+            searchType: searchContent ? "metadata + content" : "metadata only",
+            documents: result.documents.map((doc: any) => ({
+              id: doc.id,
+              title: doc.title,
+              author: doc.author,
+              platforms: doc.platforms,
+              url: doc.url,
+              publishedDate: doc.publishedDate,
+              evaluations: doc.reviews?.length || 0,
+              matchedIn: searchContent ? "metadata or content" : "metadata",
+            })),
+          };
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(formattedResults, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    hint: "Make sure your API key is valid and the server is running",
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       case "analyze_recent_evals": {

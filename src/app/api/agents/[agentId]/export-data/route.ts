@@ -41,8 +41,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     }
 
     // Build the query conditions
-    const whereConditions: EvaluationWhereConditions = {
-      agentId: agentId,
+    const whereConditions: any = {
+      evaluation: {
+        agentId: agentId,
+      }
     };
 
     if (version !== undefined) {
@@ -225,7 +227,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
                 taskData.llm_interactions = task.llmInteractions || null;
               } else if (index === Math.max(1, Math.ceil(evaluations.length * 0.1))) {
                 // Add a note on the first evaluation without LLM interactions
-                taskData.llm_interactions_note = "LLM interactions omitted for remaining evaluations to reduce export size";
+                (taskData as any).llm_interactions_note = "LLM interactions omitted for remaining evaluations to reduce export size";
               }
             }
             

@@ -12,96 +12,131 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const searchContent = searchParams.get("searchContent") === "true";
 
     // If no query, return recent documents
     if (!query || query.trim().length === 0) {
-      const documents = await DocumentModel.getAllDocumentsWithEvaluations();
-      const paginatedDocs = documents.slice(offset, offset + limit);
+      const documents = await DocumentModel.getRecentDocumentsWithEvaluations(limit);
+      const totalCount = await prisma.document.count();
       
       return NextResponse.json({
-        documents: paginatedDocs,
-        total: documents.length,
-        hasMore: documents.length > offset + limit,
+        documents,
+        total: totalCount,
+        hasMore: totalCount > offset + limit,
       });
     }
 
     // Search with ILIKE
     const searchPattern = `%${query}%`;
     
-    // Find matching document IDs through various fields
-    const matchingDocs = await prisma.document.findMany({
-      where: {
-        OR: [
-          {
-            versions: {
-              some: {
-                OR: [
-                  { title: { contains: query, mode: 'insensitive' } },
-                  { authors: { hasSome: [query] } },
-                  { platforms: { hasSome: [query] } },
-                  // Limit content search to first 500 chars for performance
-                  { content: { contains: query, mode: 'insensitive' } },
-                ],
-              },
-            },
+    // Build search conditions
+    const searchConditions: any[] = [
+      // Always search in metadata (searchableText)
+      {
+        versions: {
+          some: {
+            searchableText: { contains: query.toLowerCase() },
           },
-          {
-            evaluations: {
-              some: {
-                agent: {
-                  versions: {
-                    some: {
-                      name: { contains: query, mode: 'insensitive' },
-                    },
-                  },
+        },
+      },
+      // Always search agent names
+      {
+        evaluations: {
+          some: {
+            agent: {
+              versions: {
+                some: {
+                  name: { contains: query, mode: 'insensitive' },
                 },
               },
             },
           },
-        ],
+        },
       },
-      select: { id: true },
+    ];
+
+    // Optionally search in content
+    if (searchContent) {
+      searchConditions.push({
+        versions: {
+          some: {
+            content: { contains: query, mode: 'insensitive' },
+          },
+        },
+      });
+    }
+
+    // Find matching documents efficiently at the database level
+    const matchingDocs = await prisma.document.findMany({
+      where: {
+        OR: searchConditions,
+      },
       take: limit,
       skip: offset,
+      orderBy: { publishedDate: "desc" },
+      include: {
+        versions: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        evaluations: {
+          include: {
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+            agent: {
+              include: {
+                versions: {
+                  orderBy: {
+                    version: "desc",
+                  },
+                  take: 1,
+                },
+              },
+            },
+            versions: {
+              include: {
+                comments: {
+                  include: {
+                    highlight: true,
+                  },
+                },
+                job: {
+                  include: {
+                    tasks: true,
+                  },
+                },
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+          },
+        },
+      },
     });
 
-    // Get full documents with evaluations
-    const documentIds = matchingDocs.map(doc => doc.id);
-    const documents = await DocumentModel.getAllDocumentsWithEvaluations();
-    const filteredDocs = documents.filter(doc => documentIds.includes(doc.id));
+    // Format the documents using our existing formatter
+    const filteredDocs = matchingDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
 
     // Count total matches for pagination
     const totalCount = await prisma.document.count({
       where: {
-        OR: [
-          {
-            versions: {
-              some: {
-                OR: [
-                  { title: { contains: query, mode: 'insensitive' } },
-                  { authors: { hasSome: [query] } },
-                  { platforms: { hasSome: [query] } },
-                  { content: { contains: query, mode: 'insensitive' } },
-                ],
-              },
-            },
-          },
-          {
-            evaluations: {
-              some: {
-                agent: {
-                  versions: {
-                    some: {
-                      name: { contains: query, mode: 'insensitive' },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
+        OR: searchConditions,
       },
     });
 

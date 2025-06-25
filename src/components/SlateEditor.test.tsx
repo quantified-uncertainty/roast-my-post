@@ -20,6 +20,7 @@
 import "../setupTests";
 
 import React from "react";
+import type { JSX } from "react";
 
 import { render, screen } from "@testing-library/react";
 
@@ -272,7 +273,7 @@ describe("SlateEditor", () => {
       text: "Strongly Bounded AI: Definitions and Strategic Implications",
     };
     const path1 = [0, 0]; // Path to the text inside the first heading
-    const decorations1 = decorate([headingNode, path1]) || [];
+    const decorations1 = decorate?.([headingNode, path1]) || [];
 
     // Instead of testing that there are decorations, just ensure the function runs without errors
     expect(decorations1).toBeDefined();
@@ -281,7 +282,7 @@ describe("SlateEditor", () => {
       text: "**Ozzie Gooen \\- April 14 2025, Draft. Quick post for the EA Forum / LessWrong.**",
     };
     const path2 = [1, 0]; // Path to text in the first paragraph
-    const decorations2 = decorate([paragraphNode1, path2]) || [];
+    const decorations2 = decorate?.([paragraphNode1, path2]) || [];
 
     // Testing the content inclusion approach
     expect(decorations2).toBeDefined();
@@ -290,7 +291,7 @@ describe("SlateEditor", () => {
       text: "**Also, be sure to see this post. I just found [this](https://www.lesswrong.com/posts/Z5YGZwdABLChoAiHs/bounded-ai-might-be-viable), need to update this post.**",
     };
     const path3 = [2, 0]; // Path to text in the second paragraph
-    const decorations3 = decorate([paragraphNode2, path3]) || [];
+    const decorations3 = decorate?.([paragraphNode2, path3]) || [];
     expect(decorations3).toBeDefined();
   });
 

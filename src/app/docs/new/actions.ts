@@ -52,6 +52,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
     const document = await DocumentModel.create({
       ...data,
       title,
+      authors: data.authors || "Unknown",
       submittedById: session.user.id,
     });
 

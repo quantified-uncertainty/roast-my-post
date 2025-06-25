@@ -28,11 +28,8 @@ export default async function UserDocumentsPage({
     notFound();
   }
 
-  // Get all documents for this user
-  const allDocuments = await DocumentModel.getAllDocumentsWithEvaluations();
-  const userDocuments = allDocuments.filter(
-    (doc) => doc.submittedById === userId
-  );
+  // Get documents for this user efficiently
+  const userDocuments = await DocumentModel.getUserDocumentsWithEvaluations(userId);
 
   return (
     <div className="min-h-screen bg-white">

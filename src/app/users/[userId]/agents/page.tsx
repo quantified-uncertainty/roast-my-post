@@ -54,7 +54,7 @@ export default async function UserAgentsPage({
         purpose: latestVersion.agentType as Agent['purpose'],
         version: latestVersion.version.toString(),
         description: latestVersion.description,
-        primaryInstructions: latestVersion.primaryInstructions,
+        primaryInstructions: latestVersion.primaryInstructions || undefined,
         selfCritiqueInstructions: latestVersion.selfCritiqueInstructions || undefined,
         providesGrades: latestVersion.agentType === "ASSESSOR",
       };

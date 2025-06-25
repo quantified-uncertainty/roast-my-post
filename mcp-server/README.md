@@ -86,7 +86,18 @@ Once configured, you can use these tools in Claude:
 "Show me all active agents"
 "Get recent failed evaluations for agent-123"
 "What's the performance of the ASSESSOR agents over the last 30 days?"
+"Search for documents by ozzie"
+"Search for 'machine learning' in document content"
 ```
+
+### New Search Feature
+
+The MCP server now includes a powerful `search_documents` tool that uses the server's search API:
+
+- **Fast metadata search**: Searches in titles, authors, platforms, URLs using the optimized `searchableText` field
+- **Optional content search**: Enable `searchContent: true` to search within document content
+- **Pagination support**: Use `limit` and `offset` for paginated results
+- **No direct database access**: Uses the server's `/api/documents/search` endpoint for consistency
 
 ## Development
 

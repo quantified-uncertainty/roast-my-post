@@ -296,6 +296,252 @@ export class DocumentModel {
     return DocumentSchema.parse(document);
   }
 
+  static formatDocumentFromDB(dbDoc: any): Document {
+    if (!dbDoc.versions.length) {
+      throw new Error(`Document ${dbDoc.id} has no versions`);
+    }
+
+    const latestVersion = dbDoc.versions[0];
+
+    // Transform database document to frontend Document shape
+    const document: Document = {
+      id: dbDoc.id,
+      slug: dbDoc.id,
+      title: latestVersion.title,
+      content: latestVersion.content,
+      author: latestVersion.authors.join(", "),
+      publishedDate: dbDoc.publishedDate.toISOString(),
+      url: latestVersion.urls[0] || "", // Provide empty string as fallback
+      importUrl: latestVersion.importUrl || undefined,
+      platforms: latestVersion.platforms,
+      intendedAgents: latestVersion.intendedAgents,
+      submittedById: dbDoc.submittedById,
+      submittedBy: dbDoc.submittedBy
+        ? {
+            id: dbDoc.submittedBy.id,
+            name: dbDoc.submittedBy.name,
+            email: dbDoc.submittedBy.email,
+            image: dbDoc.submittedBy.image,
+          }
+        : undefined,
+      createdAt: dbDoc.createdAt,
+      updatedAt: dbDoc.updatedAt,
+      reviews: dbDoc.evaluations.map((evaluation: any) => {
+        // Map all evaluation versions
+        const evaluationVersions = evaluation.versions.map((version: any) => ({
+          createdAt: new Date(version.createdAt),
+          job: version.job
+            ? {
+                costInCents: version.job.costInCents || 0,
+                llmThinking: version.job.llmThinking || "",
+                durationInSeconds: version.job.durationInSeconds || undefined,
+                logs: version.job.logs || undefined,
+                tasks: version.job.tasks || [],
+              }
+            : undefined,
+          comments: version.comments.map((comment: any) => ({
+            title: comment.title,
+            description: comment.description,
+            importance: comment.importance || undefined,
+            grade: comment.grade || undefined,
+            highlight: {
+              startOffset: comment.highlight.startOffset,
+              endOffset: comment.highlight.endOffset,
+              quotedText: comment.highlight.quotedText,
+              isValid: comment.highlight.isValid,
+            },
+            isValid: comment.highlight.isValid,
+            error: comment.highlight.isValid
+              ? undefined
+              : "Invalid highlight",
+          })),
+          summary: version.summary || "",
+          analysis: version.analysis || undefined,
+          grade: version.grade ?? undefined,
+          selfCritique: version.selfCritique || undefined,
+          documentVersion: {
+            version: version.documentVersion.version,
+          },
+        }));
+
+        // Map jobs for this evaluation
+        const jobs = (evaluation.jobs || []).map((job: any) => ({
+          id: job.id,
+          status: job.status,
+          createdAt: job.createdAt,
+        }));
+
+        return {
+          agentId: evaluation.agent.id,
+          agent: {
+            id: evaluation.agent.id,
+            name: evaluation.agent.versions[0].name,
+            version: evaluation.agent.versions[0].version.toString(),
+            description: evaluation.agent.versions[0].description,
+            purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
+            primaryInstructions:
+              evaluation.agent.versions[0].primaryInstructions || undefined,
+            selfCritiqueInstructions:
+              evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
+          },
+          createdAt: new Date(
+            evaluation.versions[0]?.createdAt || evaluation.createdAt
+          ),
+          costInCents: evaluation.versions[0]?.job?.costInCents || 0,
+          comments:
+            evaluation.versions[0]?.comments.map((comment: any) => ({
+              title: comment.title,
+              description: comment.description,
+              importance: comment.importance || undefined,
+              grade: comment.grade || undefined,
+              highlight: {
+                startOffset: comment.highlight.startOffset,
+                endOffset: comment.highlight.endOffset,
+                quotedText: comment.highlight.quotedText,
+                isValid: comment.highlight.isValid,
+              },
+              isValid: comment.highlight.isValid,
+              error: comment.highlight.isValid
+                ? undefined
+                : "Invalid highlight",
+            })) || [],
+          thinking: evaluation.versions[0]?.job?.llmThinking || "",
+          summary: evaluation.versions[0]?.summary || "",
+          analysis: evaluation.versions[0]?.analysis || "",
+          grade: evaluation.versions[0]?.grade ?? undefined,
+          selfCritique: evaluation.versions[0]?.selfCritique || undefined,
+          versions: evaluationVersions,
+          jobs,
+        };
+      }),
+    };
+
+    // Validate the transformed document against the schema
+    return DocumentSchema.parse(document);
+  }
+
+  static async getUserDocumentsWithEvaluations(userId: string): Promise<Document[]> {
+    const dbDocs = await prisma.document.findMany({
+      where: { submittedById: userId },
+      orderBy: { publishedDate: "desc" },
+      include: {
+        versions: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        evaluations: {
+          include: {
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+            agent: {
+              include: {
+                versions: {
+                  orderBy: {
+                    version: "desc",
+                  },
+                  take: 1,
+                },
+              },
+            },
+            versions: {
+              include: {
+                comments: {
+                  include: {
+                    highlight: true,
+                  },
+                },
+                job: {
+                  include: {
+                    tasks: true,
+                  },
+                },
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
+  }
+
+  static async getRecentDocumentsWithEvaluations(limit: number = 50): Promise<Document[]> {
+    const dbDocs = await prisma.document.findMany({
+      take: limit,
+      orderBy: { publishedDate: "desc" },
+      include: {
+        versions: true,
+        submittedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        evaluations: {
+          include: {
+            jobs: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+            agent: {
+              include: {
+                versions: {
+                  orderBy: {
+                    version: "desc",
+                  },
+                  take: 1,
+                },
+              },
+            },
+            versions: {
+              include: {
+                comments: {
+                  include: {
+                    highlight: true,
+                  },
+                },
+                job: {
+                  include: {
+                    tasks: true,
+                  },
+                },
+                documentVersion: {
+                  select: {
+                    version: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
+  }
+
   static async getAllDocumentsWithEvaluations(): Promise<Document[]> {
     const dbDocs = await prisma.document.findMany({
       include: {
@@ -353,129 +599,7 @@ export class DocumentModel {
       orderBy: { publishedDate: "desc" },
     });
 
-    return dbDocs.map((dbDoc) => {
-      if (!dbDoc.versions.length) {
-        throw new Error(`Document ${dbDoc.id} has no versions`);
-      }
-
-      const latestVersion = dbDoc.versions[0];
-
-      // Transform database document to frontend Document shape
-      const document: Document = {
-        id: dbDoc.id,
-        slug: dbDoc.id,
-        title: latestVersion.title,
-        content: latestVersion.content,
-        author: latestVersion.authors.join(", "),
-        publishedDate: dbDoc.publishedDate.toISOString(),
-        url: latestVersion.urls[0] || "", // Provide empty string as fallback
-        importUrl: latestVersion.importUrl || undefined,
-        platforms: latestVersion.platforms,
-        intendedAgents: latestVersion.intendedAgents,
-        submittedById: dbDoc.submittedById,
-        submittedBy: dbDoc.submittedBy
-          ? {
-              id: dbDoc.submittedBy.id,
-              name: dbDoc.submittedBy.name,
-              email: dbDoc.submittedBy.email,
-              image: dbDoc.submittedBy.image,
-            }
-          : undefined,
-        createdAt: dbDoc.createdAt,
-        updatedAt: dbDoc.updatedAt,
-        reviews: dbDoc.evaluations.map((evaluation) => {
-          // Map all evaluation versions
-          const evaluationVersions = evaluation.versions.map((version) => ({
-            createdAt: new Date(version.createdAt),
-            job: version.job
-              ? {
-                  costInCents: version.job.costInCents || 0,
-                  llmThinking: version.job.llmThinking || "",
-                  durationInSeconds: version.job.durationInSeconds || undefined,
-                  logs: version.job.logs || undefined,
-                  tasks: version.job.tasks || [],
-                }
-              : undefined,
-            comments: version.comments.map((comment) => ({
-              title: comment.title,
-              description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
-              highlight: {
-                startOffset: comment.highlight.startOffset,
-                endOffset: comment.highlight.endOffset,
-                quotedText: comment.highlight.quotedText,
-                isValid: comment.highlight.isValid,
-              },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid
-                ? undefined
-                : "Invalid highlight",
-            })),
-            summary: version.summary || "",
-            analysis: version.analysis || undefined,
-            grade: version.grade ?? undefined,
-            selfCritique: version.selfCritique || undefined,
-            documentVersion: {
-              version: version.documentVersion.version,
-            },
-          }));
-
-          // Map jobs for this evaluation
-          const jobs = (evaluation.jobs || []).map((job) => ({
-            id: job.id,
-            status: job.status,
-            createdAt: job.createdAt,
-          }));
-
-          return {
-            agentId: evaluation.agent.id,
-            agent: {
-              id: evaluation.agent.id,
-              name: evaluation.agent.versions[0].name,
-              version: evaluation.agent.versions[0].version.toString(),
-              description: evaluation.agent.versions[0].description,
-              purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
-              primaryInstructions:
-                evaluation.agent.versions[0].primaryInstructions || undefined,
-              selfCritiqueInstructions:
-                evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
-            },
-            createdAt: new Date(
-              evaluation.versions[0]?.createdAt || evaluation.createdAt
-            ),
-            costInCents: evaluation.versions[0]?.job?.costInCents || 0,
-            comments:
-              evaluation.versions[0]?.comments.map((comment) => ({
-                title: comment.title,
-                description: comment.description,
-                importance: comment.importance || undefined,
-                grade: comment.grade || undefined,
-                highlight: {
-                  startOffset: comment.highlight.startOffset,
-                  endOffset: comment.highlight.endOffset,
-                  quotedText: comment.highlight.quotedText,
-                  isValid: comment.highlight.isValid,
-                },
-                isValid: comment.highlight.isValid,
-                error: comment.highlight.isValid
-                  ? undefined
-                  : "Invalid highlight",
-              })) || [],
-            thinking: evaluation.versions[0]?.job?.llmThinking || "",
-            summary: evaluation.versions[0]?.summary || "",
-            analysis: evaluation.versions[0]?.analysis || "",
-            grade: evaluation.versions[0]?.grade ?? undefined,
-            selfCritique: evaluation.versions[0]?.selfCritique || undefined,
-            versions: evaluationVersions,
-            jobs,
-          };
-        }),
-      };
-
-      // Validate the transformed document against the schema
-      return DocumentSchema.parse(document);
-    });
+    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
   }
 
   static async create(data: {
@@ -521,6 +645,7 @@ export class DocumentModel {
               : [],
             content: data.content,
             importUrl: data.importUrl || null,
+            // searchableText is automatically generated by PostgreSQL
           },
         },
         // Create evaluations for each intended agent

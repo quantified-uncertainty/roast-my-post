@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
-import { authenticateAndVerifyAgent } from "@/lib/auth-agent-helpers";
+import { authenticateAndVerifyAgentAccess } from "@/lib/auth-agent-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function GET(
     const batchId = searchParams.get('batchId');
 
     // Authenticate and verify agent access (using session auth)
-    const authResult = await authenticateAndVerifyAgent(request, agentId, true);
+    const authResult = await authenticateAndVerifyAgentAccess(request, agentId, true);
     
     if (!authResult) {
       return commonErrors.unauthorized();

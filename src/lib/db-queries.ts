@@ -85,7 +85,6 @@ export async function isDocumentOwner(documentId: string, userId: string): Promi
  */
 export async function getActiveAgents(limit = 10) {
   return prisma.agent.findMany({
-    where: { archived: false },
     include: {
       versions: {
         orderBy: { version: "desc" },
@@ -113,7 +112,6 @@ export async function getRecentAgentEvaluations(agentId: string, limit = 20) {
           document: {
             select: {
               id: true,
-              slug: true,
             },
           },
         },

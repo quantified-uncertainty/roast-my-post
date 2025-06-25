@@ -4,9 +4,8 @@ import { DocumentModel } from "@/models/Document";
 import DocumentsClient from "./DocumentsClient";
 
 export default async function DocumentsPage() {
-  // Load only recent 20 documents by default
-  const allDocuments = await DocumentModel.getAllDocumentsWithEvaluations();
-  const recentDocuments = allDocuments.slice(0, 20);
+  // Load recent 50 documents efficiently (only fetches what's needed)
+  const recentDocuments = await DocumentModel.getRecentDocumentsWithEvaluations(50);
   
   const session = await auth();
   const currentUserId = session?.user?.id;

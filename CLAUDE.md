@@ -154,6 +154,54 @@ When adding conditional features (like re-upload button):
   - Configure script now supports both ROAST_MY_POST_MCP_DATABASE_URL and DATABASE_URL
   - No longer requires separate prisma:generate step
 
+## Critical Prisma/Database Debugging Guide (2025-06-25)
+
+### Common Prisma Issues and Solutions
+
+**IMPORTANT: If you see "Unknown argument" errors from Prisma (e.g., "Unknown argument `searchableText`"), the solution is usually just:**
+```bash
+npx prisma generate
+```
+
+### Understanding Prisma's Two States
+Prisma has two separate states that can get out of sync:
+1. **Database schema** - What's actually in PostgreSQL
+2. **Generated client** - What TypeScript/Prisma knows about
+
+When these are out of sync, you'll see errors like:
+- "Unknown argument `fieldName`"
+- Type errors in TypeScript
+- Fields that exist in database but not in Prisma client
+
+### Quick Debugging Steps
+1. **Check actual database state**:
+   ```bash
+   npx prisma db pull  # Shows what's really in the database
+   ```
+
+2. **Regenerate client if needed**:
+   ```bash
+   npx prisma generate  # Syncs Prisma client with schema.prisma
+   ```
+
+3. **For direct SQL queries** (DATABASE_URL includes `?schema=public` which breaks psql):
+   ```bash
+   DATABASE_URL_CLEAN=$(echo $DATABASE_URL | sed 's/?schema=public//')
+   psql "$DATABASE_URL_CLEAN"
+   ```
+
+4. **Test with scripts instead of complex SQL**:
+   ```typescript
+   // scripts/test-db.ts
+   import { prisma } from '../src/lib/prisma';
+   const result = await prisma.documentVersion.count();
+   ```
+
+### Common Pitfalls
+- Don't spend time debugging migrations that are already applied
+- Don't use `prisma db push` if you just need to regenerate the client
+- Remember that `psql "$DATABASE_URL"` might connect to wrong database due to schema parameter
+
 ## Database Access
 
 ### MCP Server (Recommended for Claude Code)

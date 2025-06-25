@@ -76,18 +76,22 @@ export default function DocumentsClient({
   };
 
   // Filter documents based on search query (for instant local search)
+  // Match server search behavior for consistency
   const filteredDocuments = allDocuments.filter((document) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
 
-    // Check title, author, and platforms
-    if (
-      document.title.toLowerCase().includes(query) ||
-      document.author.toLowerCase().includes(query) ||
-      document.platforms?.some((platform: string) =>
-        platform.toLowerCase().includes(query)
-      )
-    ) {
+    // Build searchable text from all metadata (mimics server searchableText)
+    const searchableText = [
+      document.title,
+      document.author, // This is already joined authors
+      ...(document.platforms || []),
+      document.url,
+      document.importUrl || ''
+    ].join(' ').toLowerCase();
+
+    // Check searchable text
+    if (searchableText.includes(query)) {
       return true;
     }
 
@@ -113,7 +117,7 @@ export default function DocumentsClient({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleServerSearch()}
-                  placeholder="Search by title, author, platform, or agent name..."
+                  placeholder="Search by title or agent name..."
                   className="block w-full rounded-md border-0 py-2 pl-10 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 />
                 {initialLoad && (

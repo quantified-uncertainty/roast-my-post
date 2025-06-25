@@ -70,20 +70,22 @@ model Document {
 }
 
 model DocumentVersion {
-  id                 String              @id @default(uuid())
-  version            Int
-  title              String
-  authors            String[]
-  urls               String[]
-  platforms          String[]
-  intendedAgents     String[]
-  content            String
-  importUrl          String?
-  documentId         String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  document           Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  evaluationVersions EvaluationVersion[]
+  id                    String                   @id @default(uuid())
+  version               Int
+  title                 String
+  authors               String[]
+  urls                  String[]
+  platforms             String[]
+  intendedAgents        String[]
+  content               String
+  importUrl             String?
+  searchableText        String?             @db.Text
+  contentSearchVector   Unsupported("tsvector")?
+  documentId            String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  document              Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  evaluationVersions    EvaluationVersion[]
 
   @@unique([documentId, version])
   @@index([documentId])
@@ -161,6 +163,7 @@ model Agent {
   evaluations   Evaluation[]
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model AgentVersion {
   id                       String              @id @default(uuid())
   version                  Int

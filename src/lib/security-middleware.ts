@@ -58,9 +58,12 @@ export function withSecurity(
         const parsed = options.validateBody.safeParse(body);
         
         if (!parsed.success) {
-          return commonErrors.validationError(
-            parsed.error.flatten().fieldErrors as Record<string, string>
-          );
+          const fieldErrors = parsed.error.flatten().fieldErrors;
+          const errorMessages: Record<string, string> = {};
+          for (const [field, errors] of Object.entries(fieldErrors)) {
+            errorMessages[field] = Array.isArray(errors) ? errors[0] : '';
+          }
+          return commonErrors.validationError(errorMessages);
         }
         
         // Replace request body with validated data

@@ -96,6 +96,44 @@ Get documents with optional search.
 }
 ```
 
+### search_documents
+
+Search documents using the server's search API with full-text search capabilities.
+
+**Parameters:**
+
+- `query` (string, required): Search query string
+- `limit` (number, optional): Maximum number of results to return (default: 50)
+- `offset` (number, optional): Number of results to skip for pagination (default: 0)
+- `searchContent` (boolean, optional): Whether to search in document content in addition to metadata (default: false)
+
+**Features:**
+- Searches in titles, authors, platforms, URLs, and importUrl by default
+- Uses the new `searchableText` field for fast substring matching
+- Optionally searches document content with full-text search
+- Returns paginated results with total count
+
+**Example:**
+
+```json
+{
+  "query": "ozzie",
+  "limit": 20,
+  "searchContent": false
+}
+```
+
+**Example with content search:**
+
+```json
+{
+  "query": "machine learning",
+  "limit": 50,
+  "offset": 0,
+  "searchContent": true
+}
+```
+
 ### analyze_recent_evals
 
 Analyze recent evaluations with comprehensive statistics.
