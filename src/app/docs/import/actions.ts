@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export async function importDocument(url: string) {
+export async function importDocument(url: string, agentIds: string[] = []) {
   try {
     const cookieHeader = (await cookies()).toString();
     const response = await fetch(
@@ -15,7 +15,7 @@ export async function importDocument(url: string) {
           "Content-Type": "application/json",
           Cookie: cookieHeader,
         },
-        body: JSON.stringify({ url, importUrl: url }),
+        body: JSON.stringify({ url, importUrl: url, agentIds }),
       }
     );
 
