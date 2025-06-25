@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Link from "next/link";
 
@@ -24,13 +24,23 @@ export default function DocumentsClient({
   documents,
   currentUserId,
   showNewButton = true,
+  initialLoad = false,
 }: {
   documents: Document[];
   currentUserId?: string;
   showNewButton?: boolean;
+  initialLoad?: boolean;
 }) {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [searchQuery, setSearchQuery] = useState("");
+  const [allDocuments, setAllDocuments] = useState<Document[]>(documents);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Update documents when prop changes
+  useEffect(() => {
+    setAllDocuments(documents);
+  }, [documents]);
 
   // Get unique evaluator names from all documents
   const evaluators = Array.from(
@@ -44,8 +54,29 @@ export default function DocumentsClient({
     )
   );
 
-  // Filter documents based on search query
-  const filteredDocuments = documents.filter((document) => {
+  // Server search function
+  const handleServerSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setHasSearched(true);
+    
+    try {
+      const response = await fetch(`/api/documents/search?q=${encodeURIComponent(searchQuery)}&limit=50`);
+      if (!response.ok) throw new Error('Search failed');
+      
+      const data = await response.json();
+      setAllDocuments(data.documents);
+    } catch (error) {
+      console.error('Search error:', error);
+      // Keep current documents on error
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Filter documents based on search query (for instant local search)
+  const filteredDocuments = allDocuments.filter((document) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
 
@@ -72,7 +103,7 @@ export default function DocumentsClient({
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-8 flex flex-col items-center gap-4">
-            <div className="flex w-full max-w-md justify-between">
+            <div className="flex w-full max-w-2xl justify-between">
               <div className="relative flex-grow">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -81,9 +112,19 @@ export default function DocumentsClient({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleServerSearch()}
                   placeholder="Search by title, author, platform, or agent name..."
-                  className="block w-full rounded-md border-0 py-2 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-2 pl-10 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 />
+                {initialLoad && (
+                  <button
+                    onClick={handleServerSearch}
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400"
+                  >
+                    {isSearching ? 'Searching...' : 'Search All'}
+                  </button>
+                )}
               </div>
               {showNewButton && (
                 <Link
@@ -121,6 +162,13 @@ export default function DocumentsClient({
           </div>
         </div>
       </div>
+
+      {/* Status message */}
+      {initialLoad && !hasSearched && (
+        <div className="text-center py-2 text-sm text-gray-600">
+          Showing {allDocuments.length} most recent documents. Use "Search All" to find older documents.
+        </div>
+      )}
 
       {/* Content Section */}
       {viewMode === "cards" ? (

@@ -4,11 +4,18 @@ import { DocumentModel } from "@/models/Document";
 import DocumentsClient from "./DocumentsClient";
 
 export default async function DocumentsPage() {
-  const documents = await DocumentModel.getAllDocumentsWithEvaluations();
+  // Load only recent 20 documents by default
+  const allDocuments = await DocumentModel.getAllDocumentsWithEvaluations();
+  const recentDocuments = allDocuments.slice(0, 20);
+  
   const session = await auth();
   const currentUserId = session?.user?.id;
 
   return (
-    <DocumentsClient documents={documents} currentUserId={currentUserId} />
+    <DocumentsClient 
+      documents={recentDocuments} 
+      currentUserId={currentUserId}
+      initialLoad={true}
+    />
   );
 }
