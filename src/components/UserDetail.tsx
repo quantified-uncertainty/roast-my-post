@@ -72,29 +72,39 @@ export default function UserDetail({ user }: UserDetailProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-2 text-lg font-medium">Documents</h3>
-          {loading ? (
-            <p className="text-gray-500">Loading...</p>
-          ) : (
-            <p className="text-3xl font-bold">{documentsCount}</p>
-          )}
-          <p className="mt-2 text-sm text-gray-500">
-            Documents created by this user
-          </p>
-        </div>
+        <Link href={`/users/${user.id}/documents`} className="block">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md">
+            <h3 className="mb-2 text-lg font-medium">Documents</h3>
+            {loading ? (
+              <p className="text-gray-500">Loading...</p>
+            ) : (
+              <p className="text-3xl font-bold">{documentsCount}</p>
+            )}
+            <p className="mt-2 text-sm text-gray-500">
+              Documents created by this user
+            </p>
+            <p className="mt-3 text-sm font-medium text-blue-600">
+              View all →
+            </p>
+          </div>
+        </Link>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="mb-2 text-lg font-medium">Agents</h3>
-          {loading ? (
-            <p className="text-gray-500">Loading...</p>
-          ) : (
-            <p className="text-3xl font-bold">{agentsCount}</p>
-          )}
-          <p className="mt-2 text-sm text-gray-500">
-            Agents created by this user
-          </p>
-        </div>
+        <Link href={`/users/${user.id}/agents`} className="block">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md">
+            <h3 className="mb-2 text-lg font-medium">Agents</h3>
+            {loading ? (
+              <p className="text-gray-500">Loading...</p>
+            ) : (
+              <p className="text-3xl font-bold">{agentsCount}</p>
+            )}
+            <p className="mt-2 text-sm text-gray-500">
+              Agents created by this user
+            </p>
+            <p className="mt-3 text-sm font-medium text-blue-600">
+              View all →
+            </p>
+          </div>
+        </Link>
       </div>
     </div>
   );
