@@ -30,7 +30,52 @@ export async function POST(request: NextRequest) {
     }
 
     // Use the shared article processing library
-    const processedArticle = await processArticle(url);
+    let processedArticle;
+    try {
+      processedArticle = await processArticle(url);
+    } catch (processError) {
+      console.error("Article processing failed:", processError);
+      
+      // Provide platform-specific error messages
+      if (url.includes("facebook.com")) {
+        return errorResponse(
+          "Failed to import from Facebook. Facebook often blocks automated content extraction. Please copy and paste the content manually using the 'Submit Text' option.",
+          400
+        );
+      } else if (url.includes("twitter.com") || url.includes("x.com")) {
+        return errorResponse(
+          "Failed to import from Twitter/X. This platform may block automated content extraction. Please copy and paste the content manually using the 'Submit Text' option.",
+          400
+        );
+      } else if (url.includes("linkedin.com")) {
+        return errorResponse(
+          "Failed to import from LinkedIn. LinkedIn requires authentication for content access. Please copy and paste the content manually using the 'Submit Text' option.",
+          400
+        );
+      }
+      
+      // Generic error message
+      return errorResponse(
+        `Failed to extract content from this URL. The website may be blocking automated access or the content may be behind a paywall. Please try copying and pasting the content manually using the 'Submit Text' option. Error: ${processError instanceof Error ? processError.message : 'Unknown error'}`,
+        400
+      );
+    }
+
+    // Validate content length
+    if (!processedArticle.content || processedArticle.content.length < 30) {
+      return errorResponse(
+        "Article content must be at least 30 characters. The automatic import may not have extracted content properly from this URL. Try copying and pasting the content manually using the 'Submit Text' option.", 
+        400
+      );
+    }
+
+    const wordCount = processedArticle.content.trim().split(/\s+/).length;
+    if (wordCount > 50000) {
+      return errorResponse(
+        `Article content exceeds the maximum limit of 50,000 words (found ${wordCount.toLocaleString()} words). Please use a shorter document or split it into multiple parts.`, 
+        400
+      );
+    }
 
     const documentData = {
       title: processedArticle.title,

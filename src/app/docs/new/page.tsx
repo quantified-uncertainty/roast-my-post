@@ -30,16 +30,16 @@ const formFields: FormFieldConfig[] = [
   {
     name: "title",
     label: "Title",
-    required: true,
+    required: false,
     type: "text",
-    placeholder: "Document title",
+    placeholder: "Document title (optional - will be generated if empty)",
   },
   {
     name: "authors",
     label: "Authors",
-    required: true,
+    required: false,
     type: "text",
-    placeholder: "Author names (comma separated)",
+    placeholder: "Author names (comma separated, optional)",
   },
   {
     name: "urls",
@@ -97,8 +97,8 @@ export default function NewDocumentPage() {
         if (!response.ok) throw new Error("Failed to fetch agents");
         const data = await response.json();
         setAgents(data.agents || []);
-        // Select all agents by default
-        setSelectedAgentIds((data.agents || []).map((agent: Agent) => agent.id));
+        // Start with no agents selected
+        // Users can manually select which evaluations they want to run
       } catch (error) {
         console.error("Error fetching agents:", error);
       } finally {
@@ -140,8 +140,7 @@ export default function NewDocumentPage() {
   const onSubmit = async (data: DocumentInput) => {
     try {
       const result = documentSchema.parse(data);
-      // TODO: Add agent selection support for manual creation
-      await createDocument(result);
+      await createDocument(result, selectedAgentIds);
     } catch (error) {
       // Ignore Next.js redirect errors
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
@@ -275,7 +274,14 @@ export default function NewDocumentPage() {
                 )}
               </div>
 
-              {importError && <div className="text-sm text-red-600">{importError}</div>}
+              {importError && (
+                <div className="rounded-md bg-red-50 p-4">
+                  <div className="text-sm text-red-700">
+                    <p className="font-medium">Import failed</p>
+                    <p className="mt-1">{importError}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end gap-3">
                 <Link href="/docs">
@@ -320,6 +326,21 @@ export default function NewDocumentPage() {
             // Manual Mode
             <FormProvider {...methods}>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  name="content"
+                  label="Content"
+                  required
+                  error={errors.content}
+                >
+                  <textarea
+                    {...methods.register("content")}
+                    id="content"
+                    rows={15}
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors.content ? "border-red-500" : ""}`}
+                    placeholder="Document content in Markdown format"
+                  />
+                </FormField>
+
                 {formFields.map((field) => (
                   <FormField
                     key={field.name}
@@ -332,26 +353,54 @@ export default function NewDocumentPage() {
                       {...methods.register(field.name)}
                       type={field.type}
                       id={field.name}
-                      className={`form-input ${errors[field.name] ? "border-red-500" : ""}`}
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${errors[field.name] ? "border-red-500" : ""}`}
                       placeholder={field.placeholder}
                     />
                   </FormField>
                 ))}
 
-                <FormField
-                  name="content"
-                  label="Content"
-                  required
-                  error={errors.content}
-                >
-                  <textarea
-                    {...methods.register("content")}
-                    id="content"
-                    rows={15}
-                    className={`form-input ${errors.content ? "border-red-500" : ""}`}
-                    placeholder="Document content in Markdown format"
-                  />
-                </FormField>
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Evaluations to run after creation
+                  </h3>
+                  
+                  {loadingAgents ? (
+                    <div className="flex items-center justify-center p-4">
+                      <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-600"></div>
+                    </div>
+                  ) : agents.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">No evaluations available</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {agents.map((agent) => (
+                        <label
+                          key={agent.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAgentIds.includes(agent.id)}
+                            onChange={() => toggleAgent(agent.id)}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900">{agent.name}</div>
+                            <div className="text-sm text-gray-600 mt-1">{agent.description}</div>
+                          </div>
+                          {selectedAgentIds.includes(agent.id) && (
+                            <CheckIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {selectedAgentIds.length > 0 && (
+                    <p className="text-sm text-gray-600">
+                      {selectedAgentIds.length} evaluation{selectedAgentIds.length !== 1 ? 's' : ''} will be queued after creation
+                    </p>
+                  )}
+                </div>
 
                 {errors.root && (
                   <div className="rounded-md bg-red-50 p-4">
@@ -373,7 +422,11 @@ export default function NewDocumentPage() {
                     <Button variant="secondary">Cancel</Button>
                   </Link>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Document"}
+                    {isSubmitting ? "Saving..." : (
+                      selectedAgentIds.length > 0 
+                        ? `Save & Run ${selectedAgentIds.length} Evaluation${selectedAgentIds.length !== 1 ? 's' : ''}`
+                        : "Save Document"
+                    )}
                   </Button>
                 </div>
               </form>

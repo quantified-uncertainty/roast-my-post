@@ -488,6 +488,16 @@ export class DocumentModel {
     importUrl?: string;
     submittedById: string;
   }) {
+    // Validate content length
+    if (!data.content || data.content.length < 30) {
+      throw new Error("Content must be at least 30 characters");
+    }
+
+    const wordCount = data.content.trim().split(/\s+/).length;
+    if (wordCount > 50000) {
+      throw new Error("Content must not exceed 50,000 words");
+    }
+
     // Generate a nanoid for the document id
     const id = nanoid(16);
 
