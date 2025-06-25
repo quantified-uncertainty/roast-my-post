@@ -1,19 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { generateApiKey, hashApiKey } from "@/lib/crypto";
-import { z } from "zod";
+import crypto from "crypto";
 
-// GET /api/user/api-keys - List user's API keys
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const apiKeys = await prisma.apiKey.findMany({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+      },
       select: {
         id: true,
         name: true,
@@ -21,12 +22,14 @@ export async function GET() {
         lastUsedAt: true,
         expiresAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return NextResponse.json({ apiKeys });
   } catch (error) {
-    console.error("Error fetching API keys:", error);
+    console.error('Error fetching API keys:', error);
     return NextResponse.json(
       { error: "Failed to fetch API keys" },
       { status: 500 }
@@ -34,82 +37,61 @@ export async function GET() {
   }
 }
 
-// Input validation schema
-const createApiKeySchema = z.object({
-  name: z.string().min(1).max(50),
-  expiresIn: z.number().int().positive().max(365).optional(),
-});
+export async function POST(request: Request) {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-// POST /api/user/api-keys - Create a new API key
-export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const body = await request.json();
+    const { name, expiresIn } = body;
 
-    // Check API key limit (max 10 per user)
-    const keyCount = await prisma.apiKey.count({
-      where: { userId: session.user.id }
-    });
-    
-    if (keyCount >= 10) {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: "Maximum API key limit reached (10 keys)" },
+        { error: "Name is required" },
         { status: 400 }
       );
     }
 
-    const body = await request.json();
-    
-    // Validate input
-    const validatedData = createApiKeySchema.parse(body);
-    const { name, expiresIn } = validatedData;
-
     // Generate a secure API key
-    const plainKey = generateApiKey();
-    const hashedKey = hashApiKey(plainKey);
+    const key = `rmp_${crypto.randomBytes(32).toString('hex')}`;
+    const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
 
-    // Calculate expiration date if provided (in days)
+    // Calculate expiration date if provided
     let expiresAt = null;
-    if (expiresIn) {
+    if (expiresIn && typeof expiresIn === 'number') {
       expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + expiresIn);
     }
 
     const apiKey = await prisma.apiKey.create({
       data: {
-        key: hashedKey, // Store the hashed version
+        key: hashedKey,
         name,
         userId: session.user.id,
         expiresAt,
       },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        expiresAt: true,
+      },
     });
 
-    // Return the plain key only once (user must save it)
-    return NextResponse.json({
+    return NextResponse.json({ 
       apiKey: {
-        id: apiKey.id,
-        key: plainKey, // Return the plain key, not the hash
-        name: apiKey.name,
-        createdAt: apiKey.createdAt,
-        expiresAt: apiKey.expiresAt,
-      },
-      message: "Save this API key securely. You won't be able to see it again.",
+        ...apiKey,
+        key, // Return the unhashed key only on creation
+      }
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid input", details: error.errors },
-        { status: 400 }
-      );
-    }
-    
-    console.error("Error creating API key:", error);
+    console.error('Error creating API key:', error);
     return NextResponse.json(
       { error: "Failed to create API key" },
       { status: 500 }
     );
   }
 }
-

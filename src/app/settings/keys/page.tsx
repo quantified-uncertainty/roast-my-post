@@ -188,9 +188,9 @@ export default function ApiKeysPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleDeleteKey(key.id)}
-                        className="text-gray-400 hover:text-gray-500"
+                        className="text-red-600 hover:text-red-900"
                       >
-                        <EllipsisVerticalIcon className="h-5 w-5" />
+                        Delete
                       </button>
                     </td>
                   </tr>

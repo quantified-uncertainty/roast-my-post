@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { 
   KeyIcon,
   UserIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Profile", href: "/settings/profile", icon: UserIcon },
   { name: "API Keys", href: "/settings/keys", icon: KeyIcon },
+  { name: "Costs", href: "/settings/costs", icon: CurrencyDollarIcon },
 ];
 
 export function SettingsNav() {

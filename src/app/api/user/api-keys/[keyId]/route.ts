@@ -1,32 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// DELETE /api/user/api-keys/[keyId] - Delete an API key
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ keyId: string }> }
+  request: Request,
+  { params }: { params: { keyId: string } }
 ) {
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const resolvedParams = await params;
-    const keyId = resolvedParams.keyId;
-
-    if (!keyId) {
-      return NextResponse.json(
-        { error: "Key ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Verify the key belongs to the user
+    // First check if the API key belongs to the user
     const apiKey = await prisma.apiKey.findFirst({
       where: {
-        id: keyId,
+        id: params.keyId,
         userId: session.user.id,
       },
     });
@@ -38,13 +28,16 @@ export async function DELETE(
       );
     }
 
+    // Delete the API key
     await prisma.apiKey.delete({
-      where: { id: keyId },
+      where: {
+        id: params.keyId,
+      },
     });
 
-    return NextResponse.json({ message: "API key deleted successfully" });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting API key:", error);
+    console.error('Error deleting API key:', error);
     return NextResponse.json(
       { error: "Failed to delete API key" },
       { status: 500 }
