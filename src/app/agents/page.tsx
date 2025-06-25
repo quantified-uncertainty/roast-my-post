@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 import AgentsList from "@/components/AgentsList";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export default async function AgentsPage() {
-  const prisma = new PrismaClient();
   const dbAgents = await prisma.agent.findMany({
+    take: 100, // Reasonable limit for agents list
     include: {
       versions: {
         orderBy: {
@@ -13,6 +13,9 @@ export default async function AgentsPage() {
         },
         take: 1,
       },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { spawn, ChildProcess } from "child_process";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 
@@ -36,7 +37,7 @@ class AdaptiveJobProcessor {
       this.isShuttingDown = true;
       
       if (this.activeWorkers.size > 0) {
-        console.log("\n🛑 Shutting down workers...");
+        logger.info('\n🛑 Shutting down workers...');
         
         // Kill all worker processes
         for (const [id, worker] of this.activeWorkers) {
@@ -56,7 +57,7 @@ class AdaptiveJobProcessor {
         }
       }
       
-      console.log("\n👋 Shutting down. Goodbye!");
+      logger.info('\n👋 Shutting down. Goodbye!');
       process.exit(0);
     };
 
@@ -158,7 +159,7 @@ class AdaptiveJobProcessor {
 
   async start() {
     console.log(`🚀 Starting adaptive job processor (max workers: ${this.maxWorkers})`);
-    console.log("Press Ctrl+C to stop\n");
+    logger.info('Press Ctrl+C to stop\n');
 
     while (!this.isShuttingDown) {
       try {
@@ -297,6 +298,6 @@ process.on('warning', (warning) => {
 // Start the processor
 const processor = new AdaptiveJobProcessor(maxWorkers);
 processor.start().catch((error) => {
-  console.error("Fatal error:", error);
+  logger.error('Fatal error:', error);
   process.exit(1);
 });

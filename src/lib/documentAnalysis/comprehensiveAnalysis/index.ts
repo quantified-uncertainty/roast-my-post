@@ -1,4 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
+import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
 import type {
   LLMInteraction,
@@ -215,7 +216,7 @@ export async function generateComprehensiveAnalysis(
 
     rawResponse = JSON.stringify(validationResult);
   } catch (error) {
-    console.error("❌ Failed to parse or validate Anthropic response:", error);
+    logger.error('❌ Failed to parse or validate Anthropic response:', error);
     throw new Error(
       `Failed to process Anthropic response: ${error instanceof Error ? error.message : error}`
     );

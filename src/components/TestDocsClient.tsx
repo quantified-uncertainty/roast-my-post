@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { logger } from "@/lib/logger";
 
 import SlateEditor from "./SlateEditor";
 

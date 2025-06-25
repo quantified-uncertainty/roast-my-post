@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 
@@ -127,7 +128,7 @@ export async function POST(
       message: `Created batch with ${jobsToCreate.length} jobs`,
     });
   } catch (error) {
-    console.error("Error creating agent eval batch:", error);
+    logger.error('Error creating agent eval batch:', error);
     return NextResponse.json(
       { error: "Failed to create eval batch" },
       { status: 500 }

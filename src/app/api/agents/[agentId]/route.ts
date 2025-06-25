@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest, context: any) {
   const params = await context.params;
   try {
     const agentId = params.agentId;
-    const session = await auth();
+    const userId = await authenticateRequest(request);
     const agent = await AgentModel.getAgentWithOwner(
       agentId,
-      session?.user?.id
+      userId
     );
 
     if (!agent) {
@@ -19,7 +20,11 @@ export async function GET(request: NextRequest, context: any) {
 
     return NextResponse.json(agent);
   } catch (error) {
-    console.error("Error fetching agent:", error);
+    logger.error("Error fetching agent", error, { 
+      endpoint: "/api/agents/[agentId]",
+      agentId: params.agentId,
+      userId: await authenticateRequest(request)
+    });
     return NextResponse.json(
       { error: "Failed to fetch agent data" },
       { status: 500 }

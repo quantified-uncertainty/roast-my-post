@@ -1,8 +1,9 @@
 import { spawn } from "child_process";
+import { logger } from "@/lib/logger";
 
 async function runProcessJobs(silentMode = false) {
   if (!silentMode) {
-    console.log("🔄 Running process-jobs...");
+    logger.info('🔄 Running process-jobs...');
   }
   
   const childProcess = spawn("npm", ["run", "process-jobs"], {
@@ -16,11 +17,11 @@ async function runProcessJobs(silentMode = false) {
     // Set a timeout to force-kill hanging processes
     const timeout = setTimeout(() => {
       if (!isResolved) {
-        console.log("⏰ Child process timeout - force killing...");
+        logger.info('⏰ Child process timeout - force killing...');
         childProcess.kill('SIGTERM');
         setTimeout(() => {
           if (!isResolved) {
-            console.log("💀 Force killing with SIGKILL...");
+            logger.info('💀 Force killing with SIGKILL...');
             childProcess.kill('SIGKILL');
           }
         }, 5000);
@@ -31,7 +32,7 @@ async function runProcessJobs(silentMode = false) {
       if (!isResolved) {
         isResolved = true;
         clearTimeout(timeout);
-        console.error("❌ Child process error:", error);
+        logger.error('❌ Child process error:', error);
         reject(error);
       }
     });
@@ -103,8 +104,8 @@ async function loop() {
 }
 
 // Start the loop
-console.log("Starting process-jobs loop...");
+logger.info('Starting process-jobs loop...');
 loop().catch((error) => {
-  console.error("Fatal error in loop:", error);
+  logger.error('Fatal error in loop:', error);
   process.exit(1);
 });

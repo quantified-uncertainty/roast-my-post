@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
@@ -989,7 +990,7 @@ export function DocumentWithEvaluations({
       }, 5000);
 
     } catch (error) {
-      console.error('Error creating evaluation:', error);
+      logger.error('Error creating evaluation:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create evaluation';
       setUIState((prev) => ({ 
         ...prev, 
@@ -1043,7 +1044,7 @@ export function DocumentWithEvaluations({
       }, 5000);
 
     } catch (error) {
-      console.error('Error creating evaluations:', error);
+      logger.error('Error creating evaluations:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create evaluations';
       setUIState((prev) => ({ 
         ...prev, 

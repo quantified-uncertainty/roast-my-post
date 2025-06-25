@@ -1,13 +1,14 @@
 #!/usr/bin/env tsx
 
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { JobStatus } from "@prisma/client";
 
 const STALE_JOB_TIMEOUT_MINUTES = 30;
 
 async function cleanupStaleJobs() {
   try {
-    console.log("🔍 Looking for stale running jobs...");
+    logger.info('🔍 Looking for stale running jobs...');
     
     // Calculate the cutoff time (30 minutes ago)
     const cutoffTime = new Date();
@@ -32,7 +33,7 @@ async function cleanupStaleJobs() {
     });
     
     if (staleJobs.length === 0) {
-      console.log("✅ No stale jobs found.");
+      logger.info('✅ No stale jobs found.');
       return;
     }
     
@@ -65,7 +66,7 @@ async function cleanupStaleJobs() {
     console.log(`✅ Cleaned up ${staleJobs.length} stale job(s).`);
     
   } catch (error) {
-    console.error("❌ Error cleaning up stale jobs:", error);
+    logger.error('❌ Error cleaning up stale jobs:', error);
     throw error;
   } finally {
     await prisma.$disconnect();

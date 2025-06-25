@@ -1,6 +1,7 @@
 "use server";
 
 import { createSafeActionClient } from "next-safe-action";
+import { logger } from "@/lib/logger";
 
 import { auth } from "@/lib/auth";
 import { AgentModel, agentSchema } from "@/models/Agent";
@@ -16,7 +17,7 @@ const createSuccessResponse = (agent: Agent): AgentResponse => ({
 });
 
 const createErrorResponse = (error: unknown): AgentResponse => {
-  console.error("Error handling agent:", error);
+  logger.error('Error handling agent:', error);
   if (error instanceof Error) {
     console.error("Error details:", {
       name: error.name,

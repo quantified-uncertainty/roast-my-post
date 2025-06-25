@@ -1,4 +1,5 @@
 import * as yaml from "js-yaml";
+import { logger } from "@/lib/logger";
 
 import type { Agent } from "@/types/agentSchema";
 import { AGENT_TYPE_INFO } from "@/types/agentTypes";
@@ -86,7 +87,7 @@ export const exportAgentAsJson = async (
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   } catch (err) {
-    console.error("Failed to copy to clipboard:", err);
+    logger.error('Failed to copy to clipboard:', err);
   }
 };
 
@@ -152,7 +153,7 @@ ${agent.selfCritiqueInstructions}`;
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   } catch (err) {
-    console.error("Failed to copy to clipboard:", err);
+    logger.error('Failed to copy to clipboard:', err);
   }
 };
 
@@ -196,6 +197,6 @@ export const exportAgentAsYaml = async (
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   } catch (err) {
-    console.error("Failed to copy to clipboard:", err);
+    logger.error('Failed to copy to clipboard:', err);
   }
 };

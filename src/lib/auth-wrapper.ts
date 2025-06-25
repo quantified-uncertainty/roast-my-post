@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
 
 /**
@@ -40,7 +41,7 @@ export function withAuth<T = any>(
 
       return handler(request, context, userId!);
     } catch (error) {
-      console.error("[AUTH_WRAPPER] Authentication error:", error);
+      logger.error('[AUTH_WRAPPER] Authentication error:', error);
       return NextResponse.json(
         { error: "Authentication failed" },
         { status: 500 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 import { AgentModel } from "@/models/Agent";
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest, context: any) {
     
     return NextResponse.json({ evaluations });
   } catch (error) {
-    console.error("Error fetching agent evaluations:", error);
+    logger.error('Error fetching agent evaluations:', error);
     return NextResponse.json(
       { error: "Failed to fetch evaluations" },
       { status: 500 }

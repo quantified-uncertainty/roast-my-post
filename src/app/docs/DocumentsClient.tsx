@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 import Link from "next/link";
 
@@ -68,7 +69,7 @@ export default function DocumentsClient({
       const data = await response.json();
       setAllDocuments(data.documents);
     } catch (error) {
-      console.error('Search error:', error);
+      logger.error('Search error:', error);
       // Keep current documents on error
     } finally {
       setIsSearching(false);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 import { UserModel } from "@/models/User";
 
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest, context: any) {
 
     return NextResponse.json({ count });
   } catch (error) {
-    console.error("Error fetching document count:", error);
+    logger.error('Error fetching document count:', error);
     return NextResponse.json(
       { error: "Failed to fetch document count" },
       { status: 500 }

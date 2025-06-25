@@ -1,6 +1,7 @@
 "use client";
 
 import { User, Pencil } from "lucide-react";
+import { logger } from "@/lib/logger";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -30,7 +31,7 @@ export default function UserDetail({ user }: UserDetailProps) {
         setDocumentsCount(docsResponse.count);
         setAgentsCount(agentsResponse.count);
       } catch (error) {
-        console.error("Error fetching user stats:", error);
+        logger.error('Error fetching user stats:', error);
         // Set defaults in case API is not yet available
         setDocumentsCount(0);
         setAgentsCount(0);

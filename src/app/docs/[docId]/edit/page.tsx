@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import {
   FormProvider,
@@ -124,7 +125,7 @@ export default function EditDocumentPage({ params }: Props) {
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching document:", err);
+        logger.error('Error fetching document:', err);
         setError(
           err instanceof Error ? err.message : "Failed to load document data"
         );
@@ -164,7 +165,7 @@ export default function EditDocumentPage({ params }: Props) {
           }
         });
       } else {
-        console.error("Error submitting form:", error);
+        logger.error('Error submitting form:', error);
         setFormError("root", { message: "An unexpected error occurred" });
       }
     }

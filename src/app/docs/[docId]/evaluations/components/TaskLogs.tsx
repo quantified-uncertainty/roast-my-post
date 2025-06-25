@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { logger } from "@/lib/logger";
 
 import type { Evaluation } from "@/types/documentSchema";
 import type { LLMInteraction } from "@/types/llm";
@@ -72,7 +73,7 @@ function TaskItem({ task, index }: { task: Task; index: number }) {
         ? dbInteractions
         : [];
     } catch (e) {
-      console.error("Failed to parse LLM interactions:", e);
+      logger.error('Failed to parse LLM interactions:', e);
     }
   }
 

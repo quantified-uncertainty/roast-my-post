@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -63,7 +64,7 @@ export default function NewAgentPage() {
           }
         });
       } else {
-        console.error("Error submitting form:", error);
+        logger.error('Error submitting form:', error);
         setError("root", { message: "An unexpected error occurred" });
       }
     }

@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { Command } from "commander";
+import { logger } from "@/lib/logger";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 
@@ -244,7 +245,7 @@ async function verifyFile(filePath: string) {
 async function main() {
   try {
     if (!options.file && !options.dir) {
-      console.error("❌ Error: Either --file or --dir must be specified");
+      logger.error('❌ Error: Either --file or --dir must be specified');
       process.exit(1);
     }
 
@@ -272,7 +273,7 @@ async function main() {
       totalStats.invalidHighlights += stats.invalidHighlights;
     }
 
-    console.log("\n📊 Overall Summary:");
+    logger.info('\n📊 Overall Summary:');
     console.log(`   Total highlights: ${totalStats.totalHighlights}`);
     console.log(`   Valid highlights: ${totalStats.validHighlights}`);
     console.log(`   Invalid highlights: ${totalStats.invalidHighlights}`);
@@ -280,7 +281,7 @@ async function main() {
       `   Success rate: ${((totalStats.validHighlights / totalStats.totalHighlights) * 100).toFixed(1)}%`
     );
   } catch (error) {
-    console.error("❌ Error:", error);
+    logger.error('❌ Error:', error);
     process.exit(1);
   }
 }

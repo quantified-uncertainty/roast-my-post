@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logger } from "@/lib/logger";
 import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 
@@ -106,7 +107,7 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       );
 
       if (!response.data.data?.post?.result) {
-        console.error("API Response:", JSON.stringify(response.data, null, 2));
+        logger.error('API Response:', JSON.stringify(response.data, null, 2));
         throw new Error("Post not found in LessWrong API response");
       }
 
@@ -167,7 +168,7 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       );
 
       if (!response.data.data?.post?.result) {
-        console.error("API Response:", JSON.stringify(response.data, null, 2));
+        logger.error('API Response:', JSON.stringify(response.data, null, 2));
         throw new Error("Post not found in EA Forum API response");
       }
 
@@ -212,7 +213,7 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       date: null,
     };
   } catch (error) {
-    console.error("Error fetching article:", error);
+    logger.error('Error fetching article:', error);
     throw new Error("Failed to fetch article from URL");
   }
 }
@@ -537,7 +538,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     }
 
     const article = response.data.objects[0];
-    console.log("✅ Diffbot extraction successful");
+    logger.info('✅ Diffbot extraction successful');
 
     // Extract metadata from Diffbot response
     const title = article.title || "Untitled Article";
@@ -549,12 +550,12 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     // Convert HTML to Markdown if html is provided, otherwise use text
     let content: string;
     if (article.html) {
-      console.log("🔄 Converting HTML to Markdown...");
+      logger.info('🔄 Converting HTML to Markdown...');
       content = convertToMarkdown(article.html);
     } else if (article.text) {
       // Check if text already contains markdown patterns (like from Substack)
       if (article.text.includes('![') || article.text.includes('](')) {
-        console.log("📝 Text appears to already be in Markdown format");
+        logger.info('📝 Text appears to already be in Markdown format');
         // Clean up any double-wrapped image links
         content = article.text.replace(/\[\s*!\[([^\]]*)\]\(([^)]+)\)\s*\]\([^)]+\)/g, '![$1]($2)');
       } else {
@@ -566,7 +567,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
 
     // If content is still very short, try fallback to our original method
     if (content.length < 100) {
-      console.log("⚠️ Diffbot content too short, falling back to manual extraction...");
+      logger.info('⚠️ Diffbot content too short, falling back to manual extraction...');
       return processArticleFallback(url);
     }
 
@@ -584,8 +585,8 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
       url,
     };
   } catch (error) {
-    console.error("❌ Diffbot extraction failed:", error);
-    console.log("⚠️ Falling back to manual extraction...");
+    logger.error('❌ Diffbot extraction failed:', error);
+    logger.info('⚠️ Falling back to manual extraction...');
     return processArticleFallback(url);
   }
 }
@@ -595,16 +596,16 @@ async function processArticleFallback(url: string): Promise<ProcessedArticle> {
   console.log(`📥 Fallback: Fetching article from ${url}...`);
   const { html, title, author, date } = await fetchArticle(url);
 
-  console.log("🔍 Parsing HTML...");
+  logger.info('🔍 Parsing HTML...');
   const dom = createCleanDOM(html);
 
-  console.log("📝 Extracting metadata...");
+  logger.info('📝 Extracting metadata...');
   const metadata = extractMetadataSimple(dom, url);
 
-  console.log("📄 Extracting content...");
+  logger.info('📄 Extracting content...');
   const contentHtml = extractContent(dom);
 
-  console.log("🔄 Converting to Markdown...");
+  logger.info('🔄 Converting to Markdown...');
   const markdownContent = convertToMarkdown(contentHtml);
 
   // Use the best available title, author, and date

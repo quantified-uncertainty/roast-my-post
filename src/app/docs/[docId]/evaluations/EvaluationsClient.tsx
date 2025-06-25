@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
@@ -103,7 +104,7 @@ export default function EvaluationsClient({
 
         setAgentsWithEvaluations(combined);
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        logger.error('Error fetching agents:', error);
       }
     };
 

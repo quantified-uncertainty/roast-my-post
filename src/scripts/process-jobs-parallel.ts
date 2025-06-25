@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { spawn, ChildProcess } from "child_process";
+import { logger } from "@/lib/logger";
 
 // Configuration
 const DEFAULT_WORKERS = 5;
@@ -33,7 +34,7 @@ class ParallelJobProcessor {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
       
-      console.log("\n🛑 Shutting down workers...");
+      logger.info('\n🛑 Shutting down workers...');
       
       // Kill all worker processes
       for (const [id, worker] of this.workers) {
@@ -54,7 +55,7 @@ class ParallelJobProcessor {
         }
       }
       
-      console.log("👋 All workers shut down. Exiting...");
+      logger.info('👋 All workers shut down. Exiting...');
       process.exit(0);
     };
 
@@ -185,7 +186,7 @@ class ParallelJobProcessor {
 
   async start() {
     console.log(`🚀 Starting parallel job processor with ${this.workerCount} workers...`);
-    console.log("Press Ctrl+C to stop\n");
+    logger.info('Press Ctrl+C to stop\n');
 
     let iteration = 0;
 
@@ -263,6 +264,6 @@ Example:
 // Start the processor
 const processor = new ParallelJobProcessor(workerCount);
 processor.start().catch((error) => {
-  console.error("Fatal error:", error);
+  logger.error('Fatal error:', error);
   process.exit(1);
 });

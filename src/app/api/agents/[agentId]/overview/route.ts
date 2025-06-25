@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -139,7 +140,7 @@ export async function GET(
 
     return NextResponse.json({ stats });
   } catch (error) {
-    console.error("Error fetching agent overview:", error);
+    logger.error('Error fetching agent overview:', error);
     return NextResponse.json(
       { error: "Failed to fetch overview statistics" },
       { status: 500 }

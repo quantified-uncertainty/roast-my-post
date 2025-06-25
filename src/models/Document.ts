@@ -420,10 +420,11 @@ export class DocumentModel {
     return DocumentSchema.parse(document);
   }
 
-  static async getUserDocumentsWithEvaluations(userId: string): Promise<Document[]> {
+  static async getUserDocumentsWithEvaluations(userId: string, limit: number = 50): Promise<Document[]> {
     const dbDocs = await prisma.document.findMany({
       where: { submittedById: userId },
       orderBy: { publishedDate: "desc" },
+      take: limit,
       include: {
         versions: true,
         submittedBy: {

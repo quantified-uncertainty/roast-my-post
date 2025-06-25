@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 
 export default async function JobsPage() {
-  const prisma = new PrismaClient();
   const jobs = await prisma.job.findMany({
+    take: 50, // Reasonable limit for jobs list
     include: {
       evaluation: {
         include: {

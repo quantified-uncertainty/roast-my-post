@@ -1,6 +1,7 @@
 "use server";
 
 import { createSafeActionClient } from "next-safe-action";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
@@ -59,7 +60,7 @@ export const updateUser = actionClient
         },
       };
     } catch (error) {
-      console.error("Error updating user:", error);
+      logger.error('Error updating user:', error);
       if (error instanceof Error) {
         console.error("Error details:", {
           name: error.name,

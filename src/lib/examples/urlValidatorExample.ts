@@ -8,9 +8,10 @@
  */
 
 import { validateUrl } from "../urlValidator";
+import { logger } from "@/lib/logger";
 
 async function main() {
-  console.log("🔍 URL Validator Example\n");
+  logger.info('🔍 URL Validator Example\n');
 
   // Test cases to demonstrate different scenarios
   const testCases = [
@@ -31,7 +32,7 @@ async function main() {
   for (const testCase of testCases) {
     console.log(`\n${testCase.name}`);
     console.log(`URL: ${testCase.url}`);
-    console.log("Validating...");
+    logger.info('Validating...');
 
     try {
       const result = await validateUrl({
@@ -62,7 +63,7 @@ async function main() {
     console.log("─".repeat(60));
   }
 
-  console.log("\n✨ URL validation examples completed!");
+  logger.info('\n✨ URL validation examples completed!');
 }
 
 if (require.main === module) {

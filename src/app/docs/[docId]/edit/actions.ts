@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
@@ -56,7 +57,7 @@ export async function updateDocument(
     // Return success
     return { success: true };
   } catch (error) {
-    console.error("Error updating document:", error);
+    logger.error('Error updating document:', error);
     return {
       success: false,
       error:

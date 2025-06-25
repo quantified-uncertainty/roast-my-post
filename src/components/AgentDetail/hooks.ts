@@ -4,6 +4,7 @@ import {
 } from "react";
 
 import type { Agent } from "@/types/agentSchema";
+import { logger } from "@/lib/logger";
 import type { AgentReview } from "@/types/evaluationSchema";
 import type { EvaluationTab } from "@/components/EvaluationDetails";
 
@@ -65,7 +66,7 @@ export function useAgentDetail(agent: Agent) {
           });
         }
       } catch (error) {
-        console.error("Error fetching agent review:", error);
+        logger.error('Error fetching agent review:', error);
       } finally {
         setLoading(false);
       }
@@ -86,7 +87,7 @@ export function useAgentDetail(agent: Agent) {
         setDocuments(data.documents);
       }
     } catch (error) {
-      console.error("Error fetching agent documents:", error);
+      logger.error('Error fetching agent documents:', error);
     } finally {
       setDocumentsLoading(false);
     }
@@ -105,7 +106,7 @@ export function useAgentDetail(agent: Agent) {
         setEvaluations(data.evaluations);
       }
     } catch (error) {
-      console.error("Error fetching agent evaluations:", error);
+      logger.error('Error fetching agent evaluations:', error);
     } finally {
       setEvalsLoading(false);
     }
@@ -123,7 +124,7 @@ export function useAgentDetail(agent: Agent) {
         setBatches(data.batches);
       }
     } catch (error) {
-      console.error("Error fetching batches:", error);
+      logger.error('Error fetching batches:', error);
     } finally {
       setBatchesLoading(false);
     }
@@ -142,7 +143,7 @@ export function useAgentDetail(agent: Agent) {
         setJobs(data.jobs);
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      logger.error('Error fetching jobs:', error);
     } finally {
       setJobsLoading(false);
     }
@@ -160,7 +161,7 @@ export function useAgentDetail(agent: Agent) {
         setOverviewStats(data.stats);
       }
     } catch (error) {
-      console.error("Error fetching overview stats:", error);
+      logger.error('Error fetching overview stats:', error);
     } finally {
       setOverviewLoading(false);
     }

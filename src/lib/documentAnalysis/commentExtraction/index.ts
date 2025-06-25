@@ -1,4 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
+import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { LLMInteraction, LLMMessage } from "../../../types/llm";
@@ -244,7 +245,7 @@ export async function extractCommentsFromAnalysis(
     comments = await validateAndConvertComments(result.comments, document.content);
 
   } catch (error: any) {
-    console.error("Error in comment extraction:", error);
+    logger.error('Error in comment extraction:', error);
     throw error;
   }
 

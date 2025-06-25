@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 import { auth } from "@/lib/auth";
 import { processArticle } from "@/lib/articleImport";
@@ -35,7 +36,7 @@ export async function deleteDocument(docId: string) {
     // Return success response (will cause client-side redirect)
     return { success: true, redirectTo: "/docs" };
   } catch (error) {
-    console.error("Error deleting document:", error);
+    logger.error('Error deleting document:', error);
     return { success: false, error: "Failed to delete document" };
   }
 }
@@ -99,7 +100,7 @@ export async function reuploadDocument(docId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error re-uploading document:", error);
+    logger.error('Error re-uploading document:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Failed to re-upload document" 

@@ -4,6 +4,7 @@ import {
 } from "next/server";
 
 import { authenticateRequest } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
 import { prisma } from "@/lib/prisma";
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     try {
       processedArticle = await processArticle(url);
     } catch (processError) {
-      console.error("Article processing failed:", processError);
+      logger.error('Article processing failed:', processError);
       
       // Provide platform-specific error messages
       if (url.includes("facebook.com")) {

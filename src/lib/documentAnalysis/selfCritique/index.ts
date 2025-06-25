@@ -1,4 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
+import { logger } from "@/lib/logger";
 import type {
   LLMInteraction,
   LLMMessage,
@@ -117,7 +118,7 @@ ${evaluationText}`;
       `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
     )) as any; // Type assertion to avoid complex union type issues
   } catch (error: any) {
-    console.error("❌ Anthropic API error in self-critique generation:", error);
+    logger.error('❌ Anthropic API error in self-critique generation:', error);
 
     if (error?.status === 429) {
       throw new Error(
@@ -170,7 +171,7 @@ ${evaluationText}`;
 
     rawResponse = JSON.stringify(validationResult);
   } catch (error) {
-    console.error("❌ Failed to parse or validate Anthropic response:", error);
+    logger.error('❌ Failed to parse or validate Anthropic response:', error);
     throw new Error(
       `Failed to process Anthropic response: ${error instanceof Error ? error.message : error}`
     );

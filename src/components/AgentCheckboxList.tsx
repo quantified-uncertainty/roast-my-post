@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { useFormContext } from "react-hook-form";
+import { logger } from "@/lib/logger";
 
 import type { Agent } from "@/types/agentSchema";
 
@@ -39,7 +40,7 @@ export default function AgentCheckboxList({
         const data = await response.json();
         setAgents(data.agents);
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        logger.error('Error fetching agents:', error);
       } finally {
         setLoading(false);
       }

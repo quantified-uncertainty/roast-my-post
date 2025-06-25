@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from "@/lib/logger";
 import { authenticateRequest } from './auth-helpers';
 import { commonErrors } from './api-response-helpers';
 import { standardRateLimit, getClientIdentifier } from './rate-limiter';
@@ -86,7 +87,7 @@ export function withSecurity(
       
       return response;
     } catch (error) {
-      console.error('Security middleware error:', error);
+      logger.error('Security middleware error:', error);
       return commonErrors.serverError();
     }
   };

@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
+import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { keyId: string } }
 ) {
-  const session = await auth();
+  const userId = await authenticateRequestSessionFirst(request);
   
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,7 +18,7 @@ export async function DELETE(
     const apiKey = await prisma.apiKey.findFirst({
       where: {
         id: params.keyId,
-        userId: session.user.id,
+        userId: userId,
       },
     });
 
@@ -37,7 +38,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting API key:', error);
+    logger.error('Error deleting API key:', error);
     return NextResponse.json(
       { error: "Failed to delete API key" },
       { status: 500 }

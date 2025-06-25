@@ -1,19 +1,20 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
 
-export async function GET(request: Request) {
-  const session = await auth();
+export async function GET(request: NextRequest) {
+  const userId = await authenticateRequestSessionFirst(request);
   
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const apiKeys = await prisma.apiKey.findMany({
       where: {
-        userId: session.user.id,
+        userId: userId,
       },
       select: {
         id: true,
@@ -29,7 +30,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ apiKeys });
   } catch (error) {
-    console.error('Error fetching API keys:', error);
+    logger.error('Error fetching API keys', error, {
+      endpoint: '/api/user/api-keys',
+      userId,
+    });
     return NextResponse.json(
       { error: "Failed to fetch API keys" },
       { status: 500 }
@@ -37,10 +41,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  const session = await auth();
+export async function POST(request: NextRequest) {
+  const userId = await authenticateRequestSessionFirst(request);
   
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -70,7 +74,7 @@ export async function POST(request: Request) {
       data: {
         key: hashedKey,
         name,
-        userId: session.user.id,
+        userId: userId,
         expiresAt,
       },
       select: {
@@ -88,7 +92,11 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Error creating API key:', error);
+    logger.error('Error creating API key', error, {
+      endpoint: '/api/user/api-keys',
+      method: 'POST',
+      userId,
+    });
     return NextResponse.json(
       { error: "Failed to create API key" },
       { status: 500 }

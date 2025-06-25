@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 import { DocumentModel } from "@/models/Document";
 import { authenticateRequest } from "@/lib/auth-helpers";
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest, context: any) {
 
     return NextResponse.json(document);
   } catch (error) {
-    console.error("Error fetching document:", error);
+    logger.error('Error fetching document:', error);
     return NextResponse.json(
       { error: "Failed to fetch document" },
       { status: 500 }
@@ -139,7 +140,7 @@ export async function PUT(req: NextRequest, context: any) {
       message: "No updates provided",
     });
   } catch (error) {
-    console.error("Error updating document:", error);
+    logger.error('Error updating document:', error);
     return NextResponse.json(
       { error: "Failed to update document" },
       { status: 500 }

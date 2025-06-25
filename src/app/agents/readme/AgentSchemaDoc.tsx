@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 import {
   ArrowLeft,
@@ -23,7 +24,7 @@ export function AgentSchemaDoc() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy to clipboard:", err);
+      logger.error('Failed to copy to clipboard:', err);
     }
   };
 

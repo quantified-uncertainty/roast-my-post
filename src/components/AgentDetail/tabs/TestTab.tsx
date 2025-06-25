@@ -1,4 +1,5 @@
 import { Play } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
@@ -93,7 +94,7 @@ export function TestTab({
               setBatches([]);
               fetchBatches();
             } catch (error) {
-              console.error("Test creation failed:", error);
+              logger.error('Test creation failed:', error);
               setTestSuccess(
                 `Error: ${error instanceof Error ? error.message : "Unknown error"}`
               );

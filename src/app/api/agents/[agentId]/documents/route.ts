@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
+import { authenticateRequest } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(
@@ -7,8 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const userId = await authenticateRequest(request);
+    if (!userId) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -16,7 +17,7 @@ export async function GET(
     const { agentId } = resolvedParams;
 
     // Verify agent exists and user has access
-    const agent = await AgentModel.getAgentWithOwner(agentId, session.user.id);
+    const agent = await AgentModel.getAgentWithOwner(agentId, userId);
     if (!agent) {
       return Response.json({ error: "Agent not found" }, { status: 404 });
     }
@@ -30,7 +31,7 @@ export async function GET(
 
     return Response.json({ documents });
   } catch (error) {
-    console.error("Error fetching agent documents:", error);
+    logger.error('Error fetching agent documents:', error);
     return Response.json(
       { error: "Internal server error" },
       { status: 500 }

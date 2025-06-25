@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 import { agentSchema } from "@/models/Agent";
@@ -60,7 +61,7 @@ export async function PUT(request: NextRequest) {
       message: `Successfully created version ${agent.version} of agent ${agent.id}`,
     });
   } catch (error) {
-    console.error("Error updating agent:", error);
+    logger.error('Error updating agent:', error);
     
     if (error instanceof Error) {
       if (error.message === "Agent not found") {

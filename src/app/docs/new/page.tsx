@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
@@ -100,7 +101,7 @@ export default function NewDocumentPage() {
         // Start with no agents selected
         // Users can manually select which evaluations they want to run
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        logger.error('Error fetching agents:', error);
       } finally {
         setLoadingAgents(false);
       }
@@ -156,7 +157,7 @@ export default function NewDocumentPage() {
           }
         });
       } else {
-        console.error("Error submitting form:", error);
+        logger.error('Error submitting form:', error);
         setError("root", { message: "An unexpected error occurred" });
       }
     }

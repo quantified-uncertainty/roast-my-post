@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
 type ProfileFormProps = {
@@ -41,7 +42,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       // Hide success message after 3 seconds
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error('Error updating profile:', error);
       alert("Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);

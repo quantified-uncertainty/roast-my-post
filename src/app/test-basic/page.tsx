@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { logger } from "@/lib/logger";
 
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";

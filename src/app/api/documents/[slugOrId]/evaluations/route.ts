@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/auth-helpers";
@@ -173,7 +174,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       total: status ? filteredEvaluations.length : total,
     });
   } catch (error) {
-    console.error('Error fetching evaluations:', error);
+    logger.error('Error fetching evaluations:', error);
     return NextResponse.json(
       { error: "Failed to fetch evaluations" },
       { status: 500 }
@@ -326,7 +327,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           created: result.created,
         });
       } catch (error) {
-        console.error('Failed to create evaluation:', error);
+        logger.error('Failed to create evaluation:', error);
         return NextResponse.json(
           { error: "Failed to create evaluation" },
           { status: 500 }
@@ -334,7 +335,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
     }
   } catch (error) {
-    console.error('Error in POST /evaluations:', error);
+    logger.error('Error in POST /evaluations:', error);
     return NextResponse.json(
       { error: "An error occurred. Please try again." },
       { status: 500 }

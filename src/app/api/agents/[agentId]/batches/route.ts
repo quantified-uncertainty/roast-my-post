@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/auth-helpers";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await authenticateRequest(request);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    if (agent.submittedById !== session.user.id) {
+    if (agent.submittedById !== userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -95,7 +96,7 @@ export async function GET(
 
     return NextResponse.json({ batches: batchesWithStats });
   } catch (error) {
-    console.error("Error fetching agent batches:", error);
+    logger.error('Error fetching agent batches:', error);
     return NextResponse.json(
       { error: "Failed to fetch batches" },
       { status: 500 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
@@ -34,7 +35,7 @@ export async function rerunEvaluation(
 
     return { success: true };
   } catch (error) {
-    console.error("Error creating job for evaluation:", error);
+    logger.error('Error creating job for evaluation:', error);
     return {
       success: false,
       error:
@@ -73,7 +74,7 @@ export async function createOrRerunEvaluation(
 
     return { success: true };
   } catch (error) {
-    console.error("Error creating or rerunning evaluation:", error);
+    logger.error('Error creating or rerunning evaluation:', error);
     return {
       success: false,
       error:

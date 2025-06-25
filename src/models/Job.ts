@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import {
   Job as PrismaJob,
   JobStatus,
@@ -20,7 +21,7 @@ export class JobModel {
    * Find the oldest pending job (skips retries if original is still pending/running)
    */
   async findNextPendingJob() {
-    // Get all pending jobs ordered by creation time
+    // Get pending jobs ordered by creation time, with reasonable limit
     const pendingJobs = await prisma.job.findMany({
       where: {
         status: JobStatus.PENDING,
@@ -28,6 +29,7 @@ export class JobModel {
       orderBy: {
         createdAt: "asc",
       },
+      take: 100, // Process up to 100 pending jobs at a time
       select: {
         id: true,
         originalJobId: true,
@@ -577,11 +579,11 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
    */
   async run() {
     try {
-      console.log("🔍 Looking for pending jobs...");
+      logger.info('🔍 Looking for pending jobs...');
       const job = await this.claimNextPendingJob();
 
       if (!job) {
-        console.log("✅ No pending jobs found.");
+        logger.info('✅ No pending jobs found.');
         return false;
       }
 

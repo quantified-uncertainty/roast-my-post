@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 interface ExportEvaluationData {
   evaluation: {
     id: string;
@@ -170,7 +172,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error("Failed to copy to clipboard:", error);
+    logger.error('Failed to copy to clipboard:', error);
     return false;
   }
 }

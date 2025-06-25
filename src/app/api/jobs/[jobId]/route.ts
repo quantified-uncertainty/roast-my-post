@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
@@ -63,7 +64,7 @@ export async function GET(
     
     return new Response(JSON.stringify(job), { status: 200 });
   } catch (error) {
-    console.error("Error fetching job:", error);
+    logger.error('Error fetching job:', error);
     return commonErrors.serverError("Failed to fetch job");
   }
 }

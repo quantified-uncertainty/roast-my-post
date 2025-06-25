@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";

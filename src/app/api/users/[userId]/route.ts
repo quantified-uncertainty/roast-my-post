@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
-import { auth } from "@/lib/auth";
+import { authenticateRequest } from "@/lib/auth-helpers";
 import { UserModel } from "@/models/User";
 
 export async function GET(req: NextRequest, context: any) {
@@ -15,8 +16,7 @@ export async function GET(req: NextRequest, context: any) {
       );
     }
 
-    const session = await auth();
-    const currentUserId = session?.user?.id;
+    const currentUserId = await authenticateRequest(req);
 
     const user = await UserModel.getUser(userId, currentUserId);
 
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, context: any) {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
+    logger.error('Error fetching user:', error);
     return NextResponse.json(
       { error: "Failed to fetch user" },
       { status: 500 }

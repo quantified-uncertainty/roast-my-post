@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
@@ -70,14 +71,14 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
       );
 
       if (!response.ok) {
-        console.error("Failed to queue evaluations:", await response.text());
+        logger.error('Failed to queue evaluations:', await response.text());
       }
     }
 
     revalidatePath("/docs");
     redirect(`/docs/${document.id}`);
   } catch (error) {
-    console.error("Error creating document:", error);
+    logger.error('Error creating document:', error);
     throw error;
   }
 }

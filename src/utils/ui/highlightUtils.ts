@@ -1,4 +1,5 @@
 import type { Comment, Evaluation, Highlight } from "../../types/documentSchema";
+import { logger } from "@/lib/logger";
 
 /**
  * Checks if two highlights overlap

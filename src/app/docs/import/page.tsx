@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/Button";
 import { CheckIcon } from "@heroicons/react/24/solid";
@@ -33,7 +34,7 @@ export default function ImportPage() {
         // Select all agents by default
         setSelectedAgentIds((data.agents || []).map((agent: Agent) => agent.id));
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        logger.error('Error fetching agents:', error);
       } finally {
         setLoadingAgents(false);
       }

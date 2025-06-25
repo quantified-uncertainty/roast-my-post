@@ -3,6 +3,7 @@
 import "dotenv/config";
 
 import { Command } from "commander";
+import { logger } from "@/lib/logger";
 import { writeFile } from "fs/promises";
 import path from "path";
 
@@ -77,12 +78,12 @@ async function main() {
       reviews: [],
     };
 
-    console.log("💾 Saving article...");
+    logger.info('💾 Saving article...');
     await saveArticle(articleData);
 
-    console.log("✨ Done!");
+    logger.info('✨ Done!');
   } catch (error) {
-    console.error("❌ Error:", error);
+    logger.error('❌ Error:', error);
     process.exit(1);
   }
 }

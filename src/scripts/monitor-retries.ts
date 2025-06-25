@@ -1,10 +1,11 @@
 #!/usr/bin/env tsx
 
 import { prisma } from "../lib/prisma";
+import { logger } from "@/lib/logger";
 import { JobStatus } from "@prisma/client";
 
 async function monitorRetries() {
-  console.log("📊 Job Retry Monitor\n");
+  logger.info('📊 Job Retry Monitor\n');
 
   // Get all jobs with retries
   const jobsWithRetries = await prisma.job.findMany({
@@ -49,7 +50,7 @@ async function monitorRetries() {
   });
 
   if (jobsWithRetries.length === 0) {
-    console.log("No jobs with retries found.");
+    logger.info('No jobs with retries found.');
     return;
   }
 
@@ -105,7 +106,7 @@ async function monitorRetries() {
   `;
 
   const stat = stats[0];
-  console.log("📈 Retry Statistics:");
+  logger.info('📈 Retry Statistics:');
   console.log(`- Total retries: ${stat.total_retries}`);
   console.log(`- Successful: ${stat.successful_retries} (${Math.round(Number(stat.successful_retries) / Number(stat.total_retries) * 100)}%)`);
   console.log(`- Failed: ${stat.failed_retries}`);
@@ -114,7 +115,7 @@ async function monitorRetries() {
 
 monitorRetries()
   .catch((error) => {
-    console.error("Error:", error);
+    logger.error('Error:', error);
     process.exit(1);
   })
   .finally(() => {

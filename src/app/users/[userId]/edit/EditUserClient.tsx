@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -47,7 +48,7 @@ export function EditUserClient({ userId }: { userId: string }) {
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching user:", err);
+        logger.error('Error fetching user:', err);
         setError(
           err instanceof Error ? err.message : "Failed to load user data"
         );
@@ -89,7 +90,7 @@ export function EditUserClient({ userId }: { userId: string }) {
           }
         });
       } else {
-        console.error("Error submitting form:", err);
+        logger.error('Error submitting form:', err);
         setFormError("root", { message: "An unexpected error occurred" });
       }
     }

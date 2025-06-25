@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { 
   EllipsisVerticalIcon, 
@@ -38,7 +39,7 @@ export default function ApiKeysPage() {
       const data = await response.json();
       setApiKeys(data.apiKeys);
     } catch (error) {
-      console.error("Error fetching API keys:", error);
+      logger.error('Error fetching API keys:', error);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ export default function ApiKeysPage() {
       setCreatedKey({ key: data.apiKey.key, name: data.apiKey.name });
       await fetchApiKeys();
     } catch (error) {
-      console.error("Error creating API key:", error);
+      logger.error('Error creating API key:', error);
       alert("Failed to create API key");
     }
   };
@@ -77,7 +78,7 @@ export default function ApiKeysPage() {
       
       await fetchApiKeys();
     } catch (error) {
-      console.error("Error deleting API key:", error);
+      logger.error('Error deleting API key:', error);
       alert("Failed to delete API key");
     }
   };

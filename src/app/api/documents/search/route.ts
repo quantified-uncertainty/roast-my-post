@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { DocumentModel } from "@/models/Document";
@@ -147,7 +148,7 @@ export async function GET(request: NextRequest) {
       query,
     });
   } catch (error) {
-    console.error("Search error:", error);
+    logger.error('Search error:', error);
     return NextResponse.json(
       { error: "Failed to search documents" },
       { status: 500 }

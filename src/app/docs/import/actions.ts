@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -28,7 +29,7 @@ export async function importDocument(url: string, agentIds: string[] = []) {
     revalidatePath("/docs");
     redirect(`/docs/${data.documentId}`);
   } catch (error) {
-    console.error("❌ Error importing document:", error);
+    logger.error('❌ Error importing document:', error);
     throw error;
   }
 }

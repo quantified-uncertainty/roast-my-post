@@ -1,18 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth();
+    const userId = await authenticateRequestSessionFirst(request);
 
-    if (!session?.user?.id) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,7 +21,7 @@ export async function PATCH(request: Request) {
     const validatedData = updateProfileSchema.parse(body);
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: { name: validatedData.name },
       select: {
         id: true,
@@ -38,7 +39,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    console.error("Error updating profile:", error);
+    logger.error('Error updating profile:', error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

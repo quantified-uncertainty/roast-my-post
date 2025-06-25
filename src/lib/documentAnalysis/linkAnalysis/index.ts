@@ -1,4 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
+import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
@@ -51,7 +52,7 @@ No URLs were found in this document. This analysis focuses on link validation, s
   try {
     validationResults = await validateUrls(validationInputs);
   } catch (error) {
-    console.error("❌ URL validation failed:", error);
+    logger.error('❌ URL validation failed:', error);
     // Create fallback results
     validationResults = validationInputs.map(input => ({
       url: input.url,

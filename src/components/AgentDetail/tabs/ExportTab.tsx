@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 import {
   CheckCircle,
@@ -83,7 +84,7 @@ export function ExportTab({
       // Reset success message after 3 seconds
       setTimeout(() => setCopySuccess(false), 3000);
     } catch (err) {
-      console.error("Export error:", err);
+      logger.error('Export error:', err);
       setError(err instanceof Error ? err.message : "Export failed");
     } finally {
       setIsExporting(false);

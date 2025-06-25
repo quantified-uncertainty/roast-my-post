@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { logger } from "@/lib/logger";
 
 import { Editor, Element, Node, Path, Text } from "slate";
 
@@ -120,7 +121,7 @@ export function usePlainTextOffsets(
       return index;
     } catch (error) {
       // Handle potential errors during iteration if editor state is invalid
-      console.error("Error calculating text offsets:", error);
+      logger.error('Error calculating text offsets:', error);
       return new Map<string, NodeOffsetInfo>();
     }
   }, [editor.children]);

@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/Button";
+import { logger } from "@/lib/logger";
 import type { Agent } from "@/types/agentSchema";
 import {
   ChevronDownIcon,
@@ -48,7 +49,7 @@ export function AgentSelector({
         const data = await response.json();
         setAgents(data.agents || []);
       } catch (error) {
-        console.error("Error fetching agents:", error);
+        logger.error('Error fetching agents:', error);
         setError("Failed to load agents");
       } finally {
         setLoading(false);
@@ -255,7 +256,7 @@ export function QuickAgentButtons({ onSelect, disabled = false, className = "" }
         // Take the first 3 agents as "popular" ones
         setPopularAgents((data.agents || []).slice(0, 3));
       } catch (error) {
-        console.error("Error fetching popular agents:", error);
+        logger.error('Error fetching popular agents:', error);
       } finally {
         setLoading(false);
       }
