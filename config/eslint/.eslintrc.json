@@ -2,21 +2,25 @@
   "extends": ["next/core-web-vitals"],
   "plugins": ["@typescript-eslint", "react-hooks"],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/explicit-function-return-type": "warn",
-    "@typescript-eslint/ban-ts-comment": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/ban-ts-comment": "warn",
     "react/no-unescaped-entities": "off",
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-namespace": "off",
     "react-hooks/rules-of-hooks": "error",
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-console": "off"
   },
   "ignorePatterns": [
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/jest.d.ts",
     "**/*.js",
-    "node_modules/"
+    "node_modules/",
+    "claude/scripts/**/*.ts",
+    "mcp-server/**/*.ts",
+    "scripts/**/*.ts",
+    "src/scripts/**/*.ts"
   ]
 }

@@ -7,7 +7,11 @@ export const WORD_COUNT_LEVELS = [
   { threshold: Infinity, color: "text-gray-700" },
 ] as const;
 
-export function getWordCountInfo(content: string) {
+export function getWordCountInfo(content: string): {
+  level: number;
+  color: string;
+  wordCount: number;
+} {
   const wordCount = content.split(/\s+/).length;
   const level = WORD_COUNT_LEVELS.findIndex(
     ({ threshold }) => wordCount < threshold
@@ -25,7 +29,7 @@ export function formatWordCount(wordCount: number): string {
     : `${wordCount}`;
 }
 
-export function WordCountIndicator({ content }: { content: string }) {
+export function WordCountIndicator({ content }: { content: string }): React.ReactElement {
   const { level } = getWordCountInfo(content);
   const bars = Array.from({ length: level }, (_, i) => (
     <div
@@ -38,7 +42,7 @@ export function WordCountIndicator({ content }: { content: string }) {
   return <div className="flex items-end gap-0.5">{bars}</div>;
 }
 
-export function WordCountDisplay({ content }: { content: string }) {
+export function WordCountDisplay({ content }: { content: string }): React.ReactElement {
   const { wordCount, color } = getWordCountInfo(content);
   const formatted = formatWordCount(wordCount);
   return (

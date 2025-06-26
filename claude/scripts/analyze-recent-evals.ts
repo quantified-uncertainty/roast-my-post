@@ -54,7 +54,6 @@ async function analyzeRecentEvals() {
 
   for (const evaluation of recentEvals) {
     const agentId = evaluation.agentVersion.agentId;
-    const agent = evaluation.agentVersion.agent;
     
     if (!agentStats.has(agentId)) {
       agentStats.set(agentId, {

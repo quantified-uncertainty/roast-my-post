@@ -3,6 +3,7 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  rootDir: "../../",
   // Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
   // Indicates whether the coverage information should be collected while executing the test
