@@ -1,14 +1,15 @@
-name: Run Tests
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, github-actions ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
   test:
+    name: Test, Lint, and Build
     runs-on: ubuntu-latest
     
     steps:
@@ -24,5 +25,15 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Run TypeScript type checking
+      run: npm run typecheck
+      continue-on-error: true  # Known issues with Next.js types
+    
+    - name: Run linting
+      run: npm run lint
+    
     - name: Run tests (skip problematic ones)
       run: npm test -- --testPathIgnorePatterns="SlateEditor.test.tsx|comprehensiveAnalysis.e2e.test.ts|route.test.ts|useHighlightMapper.test.ts|articleImport.test.ts|linkAnalysis.e2e.test.ts|auth.test.ts|selfCritique.test.ts"
+    
+    - name: Build application
+      run: npm run build
