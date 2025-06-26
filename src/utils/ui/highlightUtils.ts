@@ -48,7 +48,7 @@ function findTextNodes(
   }> = [];
   let globalOffset = 0;
 
-  function traverse(node: Node) {
+  function traverse(node: Node): void {
     if (node.nodeType === Node.TEXT_NODE) {
       const textNode = node as Text;
       const content = textNode.textContent || "";
@@ -101,9 +101,7 @@ export function applyHighlightToNode(
     endOffset > content.length ||
     startOffset >= endOffset
   ) {
-    console.warn(
-      `Invalid highlight range: ${startOffset}-${endOffset} for text of length ${content.length}`
-    );
+    // Invalid highlight range
     return null;
   }
 
@@ -158,7 +156,7 @@ export function applyHighlightsToContainer(
     .filter((comment) => comment.highlight.isValid && comment.isValid)
     .sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
 
-  console.log(`Applying ${validHighlights.length} valid highlights`);
+  // Apply valid highlights
 
   for (const comment of validHighlights) {
     const { quotedText } = comment.highlight;
@@ -185,9 +183,9 @@ export function applyHighlightsToContainer(
         color
       );
 
-      console.log(`Applied highlight for "${comment.title}"`);
+      // Applied highlight successfully
     } catch (error) {
-      console.error(`Error applying highlight for "${comment.title}":`, error);
+      // Error applying highlight
     }
   }
 }
