@@ -11,6 +11,18 @@ Development guides and technical documentation
 - **[database.md](development/database.md)** - Database operations, safety procedures, and best practices *(coming soon)*
 - **[architecture.md](development/architecture.md)** - System architecture overview *(coming soon)*
 
+### 📁 [`deployment/`](deployment/)
+Deployment guides and production configuration
+
+- **[checklist.md](deployment/checklist.md)** - Production deployment checklist
+- **[index-migration-summary.md](deployment/index-migration-summary.md)** - Database index migration guide
+- **[production-launch.md](deployment/production-launch.md)** - Production launch procedures
+- **[docker/](deployment/docker/)** - Docker containerization documentation
+  - **[README.md](deployment/docker/README.md)** - Docker Compose guide and quick start
+  - **[ci-cd.md](deployment/docker/ci-cd.md)** - CI/CD pipeline with GitHub Actions
+  - **[production.md](deployment/docker/production.md)** - Production deployment notes
+  - **[troubleshooting.md](deployment/docker/troubleshooting.md)** - Docker build troubleshooting
+
 ### 📁 [`operations/`](operations/)
 Operational procedures and health monitoring
 
@@ -36,6 +48,8 @@ Security documentation and procedures
 - **Health Monitoring**: [operations/health-checks.md](operations/health-checks.md)
 - **Security Procedures**: [security/pre-commit.md](security/pre-commit.md)
 - **Database Safety**: [development/agents.md#database-storage](development/agents.md#database-storage)
+- **Docker Deployment**: [deployment/docker/](deployment/docker/)
+- **Production Checklist**: [deployment/checklist.md](deployment/checklist.md)
 
 ### For Security Reviews
 - **Authentication Guide**: [security/authentication.md](security/authentication.md)
@@ -65,5 +79,10 @@ This documentation structure consolidates several previously scattered files:
 - `COMPREHENSIVE_HEALTH_CHECKS.md` + `HEALTH_CHECKS.md` → `operations/health-checks.md`
 - `PRE_COMMIT_INVESTIGATION.md` → `security/pre-commit.md`
 - `TODO-CRITICAL-ISSUES.md` → *removed (all items completed)*
+- `DOCKER_CI_CD.md` → `deployment/docker/ci-cd.md`
+- `DOCKER_COMPOSE_GUIDE.md` → `deployment/docker/README.md`
+- `DOCKER_PRODUCTION_NOTES.md` → `deployment/docker/production.md`
+- `FIX_STATIC_GENERATION.md` → `deployment/docker/troubleshooting.md`
+- `PRODUCTION_DEPLOYMENT_CHECKLIST.md` → `deployment/checklist.md`
 
 The main `CLAUDE.md` file remains at the project root as it contains critical development notes specific to Claude Code operations.
