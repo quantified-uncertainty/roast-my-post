@@ -28,7 +28,7 @@ module.exports = {
       },
     ],
     // Keep this transform for the specific ESM modules
-    "node_modules/(remark-parse|remark-slate|remark-gfm|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*)/.*\\.js$":
+    "node_modules/(remark-parse|remark-slate|remark-gfm|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*|nanoid|ccount)/.*\\.js$":
       [
         "babel-jest",
         {
@@ -40,7 +40,7 @@ module.exports = {
   // Update transformIgnorePatterns to NOT ignore these ESM modules
   transformIgnorePatterns: [
     // Ignore node_modules EXCEPT the ones listed below
-    "/node_modules/(?!(remark-parse|remark-slate|remark-gfm|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*|next-auth|@auth)/)",
+    "/node_modules/(?!(remark-parse|remark-slate|remark-gfm|unified|micromark.*|mdast-util-.*|decode-named-character-reference|character-entities|bail|unist-util-.*|next-auth|@auth|nanoid|ccount)/)",
   ],
   // Add this section to handle .js imports in ESM/TS projects
   moduleNameMapper: {

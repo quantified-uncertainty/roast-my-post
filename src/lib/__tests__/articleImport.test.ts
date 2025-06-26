@@ -185,6 +185,23 @@ describe("articleImport", () => {
         }
       });
       
+      // Second call for fallback HTML fetch (in case Diffbot content is too short)
+      axios.get.mockResolvedValueOnce({
+        data: `
+          <html>
+            <head>
+              <title>Test Article</title>
+            </head>
+            <body>
+              <article>
+                <h1>Test Article</h1>
+                <p>This is the article content</p>
+              </article>
+            </body>
+          </html>
+        `
+      });
+      
       const result = await processArticle("https://example.com/article");
       
       expect(result.title).toBe("Test Article");

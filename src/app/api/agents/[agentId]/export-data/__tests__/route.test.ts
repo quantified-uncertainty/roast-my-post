@@ -63,7 +63,13 @@ describe("GET /api/agents/[agentId]/export-data", () => {
       versions: [{
         id: "version-1",
         version: 1,
+        name: "Test Agent",
+        agentType: "ASSESSOR",
+        description: "Test description",
         primaryInstructions: "Test instructions",
+        selfCritiqueInstructions: "Test self critique",
+        providesGrades: true,
+        extendedCapabilityId: null,
       }],
       submittedBy: {
         id: "user-1",
@@ -98,6 +104,10 @@ describe("GET /api/agents/[agentId]/export-data", () => {
 
     const response = await GET(request, context);
     const data = await response.json();
+
+    if (response.status !== 200) {
+      console.error('Response error:', data);
+    }
 
     expect(response.status).toBe(200);
     expect(data.agent.name).toBe("Test Agent");

@@ -79,3 +79,8 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Test Docker build
+        run: |
+          docker build -t roastmypost:ci-test .
+          docker run --rm roastmypost:ci-test node -e "console.log('Docker build test passed')"
