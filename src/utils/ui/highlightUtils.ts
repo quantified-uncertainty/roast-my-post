@@ -184,7 +184,7 @@ export function applyHighlightsToContainer(
       );
 
       // Applied highlight successfully
-    } catch (error) {
+    } catch {
       // Error applying highlight
     }
   }
