@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
   webpack: (config) => {

@@ -6,14 +6,14 @@ import { commonErrors } from "@/lib/api-response-helpers";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   const userId = await authenticateRequest(req);
   if (!userId) {
     return commonErrors.unauthorized();
   }
   
-  const { jobId } = params;
+  const { jobId } = await params;
   if (!jobId) {
     return commonErrors.badRequest("Missing jobId");
   }
