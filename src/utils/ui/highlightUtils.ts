@@ -1,5 +1,4 @@
 import type { Comment, Evaluation, Highlight } from "../../types/documentSchema";
-import { logger } from "@/lib/logger";
 
 /**
  * Checks if two highlights overlap
@@ -96,7 +95,6 @@ export function applyHighlightToNode(
   color: string
 ): HTMLSpanElement | null {
   const content = node.textContent || "";
-  const highlightLength = endOffset - startOffset;
 
   if (
     startOffset < 0 ||
@@ -163,7 +161,7 @@ export function applyHighlightsToContainer(
   console.log(`Applying ${validHighlights.length} valid highlights`);
 
   for (const comment of validHighlights) {
-    const { startOffset, endOffset, quotedText } = comment.highlight;
+    const { quotedText } = comment.highlight;
     const color = colorMap[comment.title] || "#ffeb3b";
 
     try {

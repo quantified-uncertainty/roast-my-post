@@ -17,6 +17,8 @@
     "**/*.test.tsx",
     "**/jest.d.ts",
     "**/*.js",
-    "node_modules/"
+    "node_modules/",
+    "claude/scripts/**/*.ts",
+    "mcp-server/**/*.ts"
   ]
 }

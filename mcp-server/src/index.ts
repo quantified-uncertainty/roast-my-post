@@ -520,7 +520,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_recent_evaluations": {
         const { agentId, limit } = GetRecentEvaluationsArgsSchema.parse(args);
 
-        const where: any = {};
+        const where: { agentId?: string } = {};
         if (agentId) where.agentId = agentId;
 
         const evaluations = await prisma.evaluation.findMany({
@@ -663,7 +663,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_failed_jobs": {
         const { limit, agentId } = GetFailedJobsArgsSchema.parse(args);
 
-        const where: any = { status: "FAILED" };
+        const where: { status: string; evaluation?: { agentId: string } } = { status: "FAILED" };
         if (agentId) {
           where.evaluation = {
             agentId: agentId,
@@ -717,7 +717,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_documents": {
         const { limit, searchTerm } = GetDocumentsArgsSchema.parse(args);
 
-        const where: any = {};
+        const where: { versions?: { some: { title: { contains: string; mode: string } } } } = {};
         if (searchTerm) {
           where.versions = {
             some: {
@@ -828,7 +828,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             hasMore: result.hasMore,
             documentsFound: result.documents.length,
             searchType: searchContent ? "metadata + content" : "metadata only",
-            documents: result.documents.map((doc: any) => ({
+            documents: result.documents.map((doc: {
+              id: string;
+              title?: string;
+              author?: string;
+              platforms?: string[];
+              url?: string;
+              publishedDate?: string;
+              evaluations?: Array<{ agentName: string; agentId: string; grade?: number | null }>;
+              versions?: Array<{ content?: string }>;
+            }) => ({
               id: doc.id,
               title: doc.title,
               author: doc.author,
@@ -1041,7 +1050,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           successRate: 0,
           avgGrade: 0,
           totalCost: 0,
-          evaluations: [] as any[],
+          evaluations: [] as Array<{
+            jobId: string;
+            documentTitle: string;
+            status: string;
+            grade?: number | null;
+            error?: string | null;
+            duration?: number | null;
+          }>,
         };
 
         let totalGrades = 0;

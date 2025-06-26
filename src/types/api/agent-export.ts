@@ -15,8 +15,8 @@ export interface AgentExportTask {
   model: string | null;
   price_in_cents: number | null;
   time_in_seconds: number | null;
-  log: any;
-  llm_interactions?: any;
+  log: unknown;
+  llm_interactions?: unknown;
 }
 
 export interface AgentExportJob {
