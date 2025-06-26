@@ -170,36 +170,19 @@ describe("articleImport", () => {
     it("should process article with Diffbot API", async () => {
       const axios = require("axios");
       
-      // Mock Diffbot API response
+      // Mock Diffbot API response with longer content to avoid fallback
       axios.get.mockResolvedValueOnce({
         data: {
           objects: [{
             type: "article",
             title: "Test Article",
-            text: "This is the article content",
-            html: "<p>This is the article content</p>",
+            text: "This is the article content. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.",
+            html: "<p>This is the article content. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.</p>",
             date: "2025-01-15",
             author: "John Doe",
             pageUrl: "https://example.com/article"
           }]
         }
-      });
-      
-      // Second call for fallback HTML fetch (in case Diffbot content is too short)
-      axios.get.mockResolvedValueOnce({
-        data: `
-          <html>
-            <head>
-              <title>Test Article</title>
-            </head>
-            <body>
-              <article>
-                <h1>Test Article</h1>
-                <p>This is the article content</p>
-              </article>
-            </body>
-          </html>
-        `
       });
       
       const result = await processArticle("https://example.com/article");

@@ -41,7 +41,7 @@ const testCases = [
     name: "Valid working link",
     document: createTestDocument(
       "Valid Link Test",
-      "Check out this great AI research resource: [OpenAI Research](https://openai.com/research) for the latest papers and findings."
+      "Check out this great AI research resource: [Google](https://www.google.com) for the latest papers and findings."
     ),
     expectedComments: 1,
     expectedLinkStatus: "working",

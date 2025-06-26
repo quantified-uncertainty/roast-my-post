@@ -1,4 +1,7 @@
 /**
+ * @jest-environment jsdom
+ */
+/**
  * SlateEditor component tests
  *
  * Note: The SlateEditor component was enhanced to better handle highlights with various offsets.

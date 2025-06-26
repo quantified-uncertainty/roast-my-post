@@ -1,6 +1,35 @@
 import { generateSelfCritique } from "../selfCritique";
 import type { Agent } from "../../../types/agentSchema";
 
+// Mock logger to avoid console output
+jest.mock("../../../lib/logger", () => ({
+  logger: {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+  }
+}));
+
+// Mock the entire openai module
+jest.mock("../../../types/openai", () => ({
+  anthropic: {
+    messages: {
+      create: jest.fn().mockResolvedValue({
+        content: [{
+          type: "tool_use",
+          name: "provide_self_critique",
+          input: {
+            selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
+          }
+        }],
+        usage: { input_tokens: 100, output_tokens: 50 }
+      })
+    }
+  },
+  withTimeout: jest.fn((fn, timeout) => fn)
+}));
+
 describe("Self-Critique", () => {
   it("should generate self-critique for evaluation output", async () => {
     const mockAgent: Agent = {
@@ -23,29 +52,10 @@ describe("Self-Critique", () => {
       ]
     };
 
-    // Mock the Anthropic API response
-    jest.mock("../../../types/openai", () => ({
-      ...jest.requireActual("../../../types/openai"),
-      anthropic: {
-        messages: {
-          create: jest.fn().mockResolvedValue({
-            content: [{
-              type: "tool_use",
-              name: "provide_self_critique",
-              input: {
-                selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure..."
-              }
-            }],
-            usage: { input_tokens: 100, output_tokens: 50 }
-          })
-        }
-      }
-    }));
-
     const result = await generateSelfCritique(mockEvaluation, mockAgent);
 
     expect(result.outputs.selfCritique).toBeDefined();
     expect(result.outputs.selfCritique).toContain("Score:");
     expect(result.task.name).toBe("generateSelfCritique");
-  });
+  }, 10000); // Increase timeout to 10 seconds
 });

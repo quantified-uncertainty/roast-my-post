@@ -8,6 +8,10 @@ jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
+jest.mock('@/lib/auth', () => ({
+  isAdmin: jest.fn(),
+}));
+
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     job: { groupBy: jest.fn(), findMany: jest.fn(), aggregate: jest.fn(), count: jest.fn() },
@@ -21,6 +25,7 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 import { authenticateRequest } from '@/lib/auth-helpers';
+import { isAdmin } from '@/lib/auth';
 
 describe('Monitor Routes Authentication', () => {
   const mockRequest = new NextRequest('http://localhost:3000/api/monitor/test');
@@ -42,6 +47,7 @@ describe('Monitor Routes Authentication', () => {
 
     it('should return data when authenticated', async () => {
       (authenticateRequest as jest.Mock).mockResolvedValue('user-123');
+      (isAdmin as jest.Mock).mockResolvedValue(true);
       
       // Mock all the required database calls
       const { prisma } = require('@/lib/prisma');

@@ -75,7 +75,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests (skip problematic ones)
-        run: npm test -- --testPathIgnorePatterns="SlateEditor.test.tsx|comprehensiveAnalysis.e2e.test.ts|route.test.ts|useHighlightMapper.test.ts|articleImport.test.ts|linkAnalysis.e2e.test.ts|auth.test.ts|selfCritique.test.ts" --coverage --coverageReporters=text-summary
+        run: npm test -- --testPathIgnorePatterns="export-data/__tests__/route.test.ts|import/__tests__/route.test.ts" --coverage --coverageReporters=text-summary
 
       - name: Build application
         run: npm run build

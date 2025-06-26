@@ -55,13 +55,21 @@ describe("useHighlightMapper (Phase 2)", () => {
     const { mdToSlateOffset } = result.current;
 
     // Test specific mappings
-    expect(mdToSlateOffset.get(5)).toBeUndefined(); // First * is skipped
-    expect(mdToSlateOffset.get(6)).toBeUndefined(); // Second * is skipped
+    expect(mdToSlateOffset.get(0)).toBe(0); // 'S'
+    expect(mdToSlateOffset.get(1)).toBe(1); // 'o'
+    expect(mdToSlateOffset.get(2)).toBe(2); // 'm'
+    expect(mdToSlateOffset.get(3)).toBe(3); // 'e'
+    expect(mdToSlateOffset.get(4)).toBe(4); // ' '
+    expect(mdToSlateOffset.get(5)).toBeUndefined(); // First *
+    expect(mdToSlateOffset.get(6)).toBeUndefined(); // Second *
     expect(mdToSlateOffset.get(7)).toBe(5); // 'b' in "bold"
-    expect(mdToSlateOffset.get(11)).toBe(9); // 'd' in "bold"
-    expect(mdToSlateOffset.get(12)).toBeUndefined(); // First closing * is skipped
-    expect(mdToSlateOffset.get(13)).toBeUndefined(); // Second closing * is skipped
-    expect(mdToSlateOffset.get(14)).toBe(10); // ' ' after "bold"
+    expect(mdToSlateOffset.get(8)).toBe(6); // 'o' in "bold"
+    expect(mdToSlateOffset.get(9)).toBe(7); // 'l' in "bold"
+    expect(mdToSlateOffset.get(10)).toBe(8); // 'd' in "bold"
+    expect(mdToSlateOffset.get(11)).toBeUndefined(); // First closing *
+    expect(mdToSlateOffset.get(12)).toBeUndefined(); // Second closing *
+    expect(mdToSlateOffset.get(13)).toBe(9); // ' ' after "bold"
+    expect(mdToSlateOffset.get(14)).toBe(10); // 't' in "text"
   });
 
   it("should handle complex markdown with lists and formatting", () => {
@@ -133,11 +141,10 @@ Boring AI`;
     );
     const { mdToSlateOffset } = result.current;
 
-    // Position of 'i' in "important"
-    const mdLinkTextStart = markdown.indexOf("[important");
-    expect(mdToSlateOffset.get(mdLinkTextStart + 1)).toBe(
-      markdown.indexOf("important") - 8
-    );
+    // Position of 'i' in "important" 
+    const mdImportantPos = markdown.indexOf("important");
+    const slateImportantPos = slateText.indexOf("important");
+    expect(mdToSlateOffset.get(mdImportantPos)).toBe(slateImportantPos);
 
     // Position of 't' in "details"
     const mdDetailsPos = markdown.indexOf("details");
