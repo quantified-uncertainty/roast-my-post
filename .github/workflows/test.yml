@@ -46,6 +46,17 @@ jobs:
           node-version: "20"
           cache: "npm"
 
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            node_modules/.cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-
+
       - name: Install dependencies
         run: npm ci
 
@@ -62,7 +73,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests (skip problematic ones)
-        run: npm test -- --testPathIgnorePatterns="SlateEditor.test.tsx|comprehensiveAnalysis.e2e.test.ts|route.test.ts|useHighlightMapper.test.ts|articleImport.test.ts|linkAnalysis.e2e.test.ts|auth.test.ts|selfCritique.test.ts"
+        run: npm test -- --testPathIgnorePatterns="SlateEditor.test.tsx|comprehensiveAnalysis.e2e.test.ts|route.test.ts|useHighlightMapper.test.ts|articleImport.test.ts|linkAnalysis.e2e.test.ts|auth.test.ts|selfCritique.test.ts" --coverage --coverageReporters=text-summary
 
       - name: Build application
         run: npm run build
