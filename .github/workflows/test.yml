@@ -28,16 +28,13 @@ jobs:
         ports:
           - 5432:5432
 
-    # Use GitHub secrets for environment variables
+    # Minimal environment variables for CI
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
       NEXTAUTH_URL: http://localhost:3000
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'test-secret-for-ci' }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY || 'dummy-key-for-ci' }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      SENDGRID_KEY: ${{ secrets.SENDGRID_KEY }}
-      EMAIL_FROM: ${{ secrets.EMAIL_FROM || 'test@example.com' }}
-      AUTH_RESEND_KEY: ${{ secrets.AUTH_RESEND_KEY }}
+      AUTH_SECRET: test-secret-for-ci-only
+      ANTHROPIC_API_KEY: dummy-key-for-ci  # Required at build time
+      OPENROUTER_API_KEY: dummy-key-for-ci # Required at build time
 
     steps:
       - name: Checkout code

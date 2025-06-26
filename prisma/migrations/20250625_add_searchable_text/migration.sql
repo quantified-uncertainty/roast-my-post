@@ -18,7 +18,7 @@ ADD COLUMN "searchableText" TEXT GENERATED ALWAYS AS (
 ) STORED;
 
 -- Create index for fast substring searches on metadata
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "idx_document_versions_searchable_text" 
+CREATE INDEX IF NOT EXISTS "idx_document_versions_searchable_text" 
   ON "DocumentVersion" ("searchableText");
 
 -- Optional: Add full-text search vector for content
@@ -29,7 +29,7 @@ ADD COLUMN content_search_vector tsvector GENERATED ALWAYS AS (
 ) STORED;
 
 -- Create GIN index for full-text content search
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "idx_document_versions_content_fts" 
+CREATE INDEX IF NOT EXISTS "idx_document_versions_content_fts" 
   ON "DocumentVersion" USING GIN (content_search_vector);
 
 -- Note: Generated columns automatically compute values for existing rows
