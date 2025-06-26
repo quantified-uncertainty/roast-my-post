@@ -3,6 +3,8 @@ import Link from "next/link";
 import AgentsList from "@/components/AgentsList";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AgentsPage() {
   const dbAgents = await prisma.agent.findMany({
     take: 100, // Reasonable limit for agents list

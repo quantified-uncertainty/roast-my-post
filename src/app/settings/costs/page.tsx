@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { formatCost } from "@/utils/costCalculator";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 async function getDailySpending(userId: string, days: number = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);

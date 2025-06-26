@@ -23,6 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Provide dummy DATABASE_URL for build
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 
+# Build Next.js application
 RUN npm run build
 
 # Production stage
@@ -39,27 +40,13 @@ RUN apk add --no-cache libc6-compat
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
-# Copy standalone build
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy only the standalone build (includes necessary node_modules)
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma files for migrations
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-
-# Copy scripts for worker processes
-COPY --from=builder /app/src/scripts ./src/scripts
-COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/package.json ./package.json
-
-# Install tsx for worker processes
-RUN npm install --production tsx
-
-# Change ownership
-RUN chown -R nextjs:nodejs /app
+# Copy Prisma schema for reference (migrations handled separately)
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 USER nextjs
 

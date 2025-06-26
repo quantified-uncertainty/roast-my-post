@@ -1,0 +1,138 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: roastmypost-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: roastmypost
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Web Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roastmypost-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/roastmypost?schema=public
+      
+      # NextAuth (generate your own secrets for production!)
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_SECRET: development-secret-change-in-production
+      
+      # AI/LLM Keys (add your actual keys)
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      
+      # Email (optional for local testing)
+      SENDGRID_KEY: ${SENDGRID_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@localhost}
+      
+      # Node settings
+      NODE_ENV: production
+      NODE_OPTIONS: "--max-old-space-size=1024"
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   # Mount for hot reload in development (optional)
+    #   # - ./src:/app/src
+    #   # - ./public:/app/public
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Background Worker Process
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roastmypost-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["npm", "run", "process-jobs-adaptive"]
+    environment:
+      # Same environment as web service
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/roastmypost?schema=public
+      AUTH_SECRET: development-secret-change-in-production
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      NODE_ENV: production
+      
+      # Worker-specific settings
+      WORKER_CONCURRENCY: 2
+      JOB_BATCH_SIZE: 10
+      JOB_RETRY_ATTEMPTS: 3
+
+  # Database migrations (one-time runner)
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: roastmypost-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["npm", "run", "db:deploy"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/roastmypost?schema=public
+    restart: "no"
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: roastmypost-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@localhost
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    profiles:
+      - debug
+
+  # Optional: Redis for caching/sessions (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: roastmypost-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  postgres_data:
+  # redis_data:
+
+networks:
+  default:
+    name: roastmypost-network

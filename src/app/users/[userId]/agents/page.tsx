@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import AgentsList from "@/components/AgentsList";
 import type { Agent } from "@/types/agentSchema";
 
+export const dynamic = 'force-dynamic';
+
 export default async function UserAgentsPage({
   params,
 }: {

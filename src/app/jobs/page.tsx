@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 
+export const dynamic = 'force-dynamic';
+
 export default async function JobsPage() {
   const jobs = await prisma.job.findMany({
     take: 50, // Reasonable limit for jobs list

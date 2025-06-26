@@ -5,6 +5,8 @@ import DocumentsClient from "@/app/docs/DocumentsClient";
 import { DocumentModel } from "@/models/Document";
 import type { Document } from "@/types/documentSchema";
 
+export const dynamic = 'force-dynamic';
+
 export default async function UserDocumentsPage({
   params,
 }: {
