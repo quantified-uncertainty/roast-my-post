@@ -10,7 +10,7 @@
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-namespace": "off",
     "react-hooks/rules-of-hooks": "error",
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
   },
   "ignorePatterns": [
     "**/*.test.ts",

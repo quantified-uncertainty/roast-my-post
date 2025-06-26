@@ -1,33 +1,6 @@
-# docker-compose.override.yml
-# This file contains development-specific overrides
-# It's automatically loaded by docker-compose and should NOT be used in production
+# This file has been moved to /config/docker/docker-compose.override.yml
+# To use the override file, run:
+# docker-compose -f docker-compose.yml -f config/docker/docker-compose.override.yml up
 
-services:
-  web:
-    # Development overrides for hot reload
-    volumes:
-      - ./src:/app/src:delegated
-      - ./public:/app/public:delegated
-      - ./prisma:/app/prisma:delegated
-    environment:
-      # Development-specific settings
-      NODE_ENV: development
-      NEXT_TELEMETRY_DISABLED: 1
-      # Faster rebuilds in development
-      WATCHPACK_POLLING: true
-    # Use development command instead
-    command: ["npm", "run", "dev"]
-
-  worker:
-    # In development, you might want to disable the worker
-    # or run it with different settings
-    profiles:
-      - with-worker
-    environment:
-      NODE_ENV: development
-      WORKER_CONCURRENCY: 1
-      JOB_BATCH_SIZE: 5
-
-  # Always run pgAdmin in development
-  pgadmin:
-    profiles: []
+# Or create a symlink:
+# ln -s config/docker/docker-compose.override.yml docker-compose.override.yml

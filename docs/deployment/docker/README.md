@@ -13,6 +13,8 @@ This guide explains how to use Docker Compose for local development and testing 
 2. **Build and start all services**:
    ```bash
    docker-compose up -d
+   # Or with the development override file:
+   docker-compose -f docker-compose.yml -f config/docker/docker-compose.override.yml up -d
    ```
 
 3. **Run database migrations**:
@@ -90,7 +92,7 @@ docker-compose exec web npm run db:studio
 ## Development vs Production
 
 ### Development Mode (default)
-The `docker-compose.override.yml` file automatically:
+The `/config/docker/docker-compose.override.yml` file automatically:
 - Enables hot reload for Next.js
 - Mounts source code for live updates
 - Runs in development mode
