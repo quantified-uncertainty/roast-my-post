@@ -188,7 +188,11 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.document).toEqual(mockDocument);
+    expect(data.document).toEqual({
+      id: "doc-123",
+      title: "Test Article",
+      authors: "Test Author",
+    });
     expect(data.evaluations).toHaveLength(2);
     expect(data.evaluations[0].agentId).toBe("agent-1");
     expect(data.evaluations[1].agentId).toBe("agent-2");
@@ -267,7 +271,11 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.document).toEqual(mockDocument);
+    expect(data.document).toEqual({
+      id: "doc-123",
+      title: "Test Article",
+      authors: "Test Author",
+    });
     expect(data.evaluations).toHaveLength(1);
     expect(data.evaluations[0].agentId).toBe("agent-1");
   });

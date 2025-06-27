@@ -13,6 +13,9 @@ jest.mock("@/lib/prisma", () => ({
     evaluationVersion: {
       findMany: jest.fn(),
     },
+    agentVersion: {
+      findFirst: jest.fn(),
+    },
     $disconnect: jest.fn(),
   },
 }));
@@ -20,6 +23,7 @@ jest.mock("@/lib/prisma", () => ({
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockPrismaAgent = prisma.agent as jest.Mocked<typeof prisma.agent>;
 const mockPrismaEvalVersion = prisma.evaluationVersion as jest.Mocked<typeof prisma.evaluationVersion>;
+const mockPrismaAgentVersion = prisma.agentVersion as jest.Mocked<typeof prisma.agentVersion>;
 
 describe("GET /api/agents/[agentId]/export-data", () => {
   beforeEach(() => {
@@ -136,11 +140,23 @@ describe("GET /api/agents/[agentId]/export-data", () => {
       versions: [{
         id: "version-1",
         version: 1,
+        name: "Test Agent",
+        agentType: "ASSESSOR",
+        description: "Test description",
+        primaryInstructions: "Test instructions",
+        selfCritiqueInstructions: "Test self critique",
+        providesGrades: true,
+        extendedCapabilityId: null,
       }],
       submittedBy: null,
     };
 
     mockPrismaAgent.findUnique.mockResolvedValue(mockAgent as any);
+    mockPrismaAgentVersion.findFirst.mockResolvedValue({
+      id: "version-1",
+      agentId: "test-agent",
+      version: 1,
+    } as any);
     mockPrismaEvalVersion.findMany.mockResolvedValue([]);
 
     const request = new NextRequest("http://localhost:3000/api/agents/test-agent/export-data?version=1");
@@ -152,7 +168,10 @@ describe("GET /api/agents/[agentId]/export-data", () => {
     expect(mockPrismaEvalVersion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          agentId: "test-agent",
+          agentVersionId: "version-1",
+          evaluation: expect.objectContaining({
+            agentId: "test-agent",
+          }),
         }),
       })
     );
