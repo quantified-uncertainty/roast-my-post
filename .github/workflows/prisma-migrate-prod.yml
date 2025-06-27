@@ -1,0 +1,42 @@
+name: Prisma Migrate Production DB
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'prisma/schema.prisma'
+      - 'prisma/migrations/**'
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Deploy Database Migrations
+    runs-on: ubuntu-latest
+    environment: Production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Verify migration status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate status
