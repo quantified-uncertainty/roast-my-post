@@ -79,16 +79,19 @@ model DocumentVersion {
   intendedAgents        String[]
   content               String
   importUrl             String?
-  searchableText        String?             @db.Text
-  contentSearchVector   Unsupported("tsvector")?
   documentId            String
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  document              Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  contentSearchVector   Unsupported("tsvector")?
+  content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
+  searchableText        String?                  @default(dbgenerated("lower(((((((((COALESCE(title, ''::text) || ' '::text) || COALESCE(immutable_array_to_string(authors, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(platforms, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(urls, ' '::text), ''::text)) || ' '::text) || COALESCE(\"importUrl\", ''::text)))"))
+  document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
   evaluationVersions    EvaluationVersion[]
 
   @@unique([documentId, version])
   @@index([documentId])
+  @@index([content_search_vector], map: "idx_document_versions_content_fts", type: Gin)
+  @@index([searchableText], map: "idx_document_versions_searchable_text")
 }
 
 model Evaluation {
