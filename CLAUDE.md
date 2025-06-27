@@ -53,6 +53,62 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 - [ ] Am I using the right tool for the job?
 - [ ] Have I read and understood all warnings?
 
+## Critical Test Debugging Pattern (2025-06-27)
+
+### The False Success Anti-Pattern
+**What Happened**: During test debugging, I repeatedly fell into a pattern where:
+1. Tests appeared to pass locally (but I was misreading truncated output)
+2. Tests failed in CI with the same errors
+3. I'd "fix" them without actually verifying locally first
+4. Push to CI, tests fail again with same errors
+5. Repeat cycle 3-4 times
+
+### Root Cause
+- **Truncated output**: `npm run test:ci` output was very long, I was only seeing coverage reports at the end
+- **Assumption bias**: Assumed tests passed because I saw coverage data, not the actual test results
+- **Rushed debugging**: Didn't take time to verify the actual test status locally before pushing
+
+### Lessons Learned
+1. **ALWAYS verify test results with clear, focused output**
+   ```bash
+   # Get clear test summary only
+   npm run test:ci 2>&1 | grep -E "(PASS|FAIL|Test Suites:|Tests:)" | tail -10
+   
+   # Or just the final summary
+   npm run test:ci 2>&1 | tail -5
+   ```
+
+2. **If tests fail in CI, they MUST fail locally too (unless environment-specific)**
+   - CI failures usually indicate real test issues
+   - Environment differences are rare for unit/integration tests
+   - Don't assume "it works locally" without proof
+
+3. **Test debugging checklist**:
+   - [ ] Do tests actually pass locally? (verify with clear output)
+   - [ ] What's the specific failure message?
+   - [ ] Does the fix address the root cause or just symptoms?
+   - [ ] Re-run tests locally after fix to confirm
+
+4. **Read the actual error messages**
+   - Don't just look at status codes
+   - Check what the test expected vs received
+   - Mock data structure mismatches are common
+
+### Example: Agent Export Test Fix
+The real issue was test expectations didn't match implementation:
+```javascript
+// Expected (wrong)
+where: { agentId: "test-agent" }
+
+// Actual implementation (correct)  
+where: { 
+  agentVersionId: "version-1",
+  evaluation: { agentId: "test-agent" }
+}
+```
+
+**Key Insight**: Tests that pass locally but fail in CI usually indicate the local tests weren't actually passing - just misread output.
+
 ## Key Learnings
 
 ### Git Commit Issues
@@ -248,6 +304,40 @@ When creating ideation/analysis files in `/claude/ideation/`, use this naming pa
 - Format: `YYYY-MM-DD-##-lowercase-hyphenated-name.md`
 - Example: `2025-01-25-03-flexible-scoring-system.md`
 - The `##` is a sequential number for that day (01, 02, 03, etc.)
+
+## Testing Strategy (2025-06-27)
+
+### Test Categories and Cost Management
+
+**CRITICAL**: We have organized tests by cost and external dependencies to avoid expensive LLM usage in CI.
+
+#### Test Category Naming Convention:
+- `*.test.ts` = Unit tests (fast, no external deps)
+- `*.integration.test.ts` = Integration tests (database, internal APIs)
+- `*.e2e.test.ts` = End-to-end tests (external APIs like Firecrawl, LessWrong)
+- `*.llm.test.ts` = LLM tests (Anthropic, OpenAI - EXPENSIVE!)
+
+#### Available Test Scripts:
+```bash
+npm run test:unit          # Fast unit tests only
+npm run test:integration   # Database/internal API tests
+npm run test:e2e          # External API tests (requires API keys)
+npm run test:llm          # LLM tests (expensive, requires API keys)
+npm run test:fast         # Unit + integration (good for development)
+npm run test:without-llms # Everything except expensive LLM calls
+npm run test:ci           # CI-safe tests (no external deps)
+```
+
+#### For New Tests:
+- **Writing new tests**: Use appropriate suffix based on dependencies
+- **External APIs**: Add environment guards like `if (!process.env.FIRECRAWL_KEY) return`
+- **LLM tests**: Always use `.llm.test.ts` suffix and API key guards
+- **CI failures**: Use `npm run test:ci` to test what runs in GitHub Actions
+
+#### GitHub Actions:
+- Runs `npm run test:ci` (no external dependencies)
+- E2E and LLM tests are excluded from CI to avoid costs and flakiness
+- Developers can run full test suite locally when needed
 
 ## Security Updates (2025-01-24)
 

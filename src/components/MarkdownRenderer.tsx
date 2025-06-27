@@ -19,14 +19,17 @@ function MarkdownRenderer({
     disallowedElements: isInline ? ["p"] : [],
     unwrapDisallowed: isInline,
     components: {
-      a: ({ node, ...props }: any) => (
-        <a
-          {...props}
-          className="text-blue-600 hover:text-blue-800 hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        />
-      ),
+      a: ({ node, href, className, ...props }: any) => {
+        return (
+          <a
+            href={href}
+            {...props}
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          />
+        );
+      },
     },
   };
 

@@ -86,7 +86,7 @@ describe("POST /api/import", () => {
     mockProcessArticle.mockResolvedValue({
       title: "Test Article",
       author: "Test Author",
-      content: "Test content",
+      content: "This is a test article with sufficient content to pass validation checks",
       date: "2024-01-01",
       platforms: [],
       url: "https://example.com/article",
@@ -128,7 +128,10 @@ describe("POST /api/import", () => {
       expect.objectContaining({
         title: "Test Article",
         authors: "Test Author",
-        content: "Test content",
+        content: "This is a test article with sufficient content to pass validation checks",
+        urls: "https://example.com/article",
+        platforms: "",
+        importUrl: "https://example.com/article",
         submittedById: "test-user-id"
       })
     );
@@ -139,7 +142,7 @@ describe("POST /api/import", () => {
     mockProcessArticle.mockResolvedValue({
       title: "Test Article",
       author: "Test Author",
-      content: "Test content",
+      content: "This is a test article with sufficient content to pass validation checks",
       date: "2024-01-01",
       platforms: [],
       url: "https://example.com/article",
@@ -185,7 +188,11 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.document).toEqual(mockDocument);
+    expect(data.document).toEqual({
+      id: "doc-123",
+      title: "Test Article",
+      authors: "Test Author",
+    });
     expect(data.evaluations).toHaveLength(2);
     expect(data.evaluations[0].agentId).toBe("agent-1");
     expect(data.evaluations[1].agentId).toBe("agent-2");
@@ -205,8 +212,8 @@ describe("POST /api/import", () => {
     const response = await POST(request);
     const data = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(data.error).toContain("Failed to import");
+    expect(response.status).toBe(400);
+    expect(data.error).toContain("Failed to extract content");
   });
 
   it("should continue creating evaluations even if one fails", async () => {
@@ -214,7 +221,7 @@ describe("POST /api/import", () => {
     mockProcessArticle.mockResolvedValue({
       title: "Test Article",
       author: "Test Author",
-      content: "Test content",
+      content: "This is a test article with sufficient content to pass validation checks",
       date: "2024-01-01",
       platforms: [],
       url: "https://example.com/article",
@@ -264,7 +271,11 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.document).toEqual(mockDocument);
+    expect(data.document).toEqual({
+      id: "doc-123",
+      title: "Test Article",
+      authors: "Test Author",
+    });
     expect(data.evaluations).toHaveLength(1);
     expect(data.evaluations[0].agentId).toBe("agent-1");
   });

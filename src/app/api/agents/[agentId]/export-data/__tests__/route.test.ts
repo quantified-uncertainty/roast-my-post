@@ -13,6 +13,9 @@ jest.mock("@/lib/prisma", () => ({
     evaluationVersion: {
       findMany: jest.fn(),
     },
+    agentVersion: {
+      findFirst: jest.fn(),
+    },
     $disconnect: jest.fn(),
   },
 }));
@@ -20,6 +23,7 @@ jest.mock("@/lib/prisma", () => ({
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
 const mockPrismaAgent = prisma.agent as jest.Mocked<typeof prisma.agent>;
 const mockPrismaEvalVersion = prisma.evaluationVersion as jest.Mocked<typeof prisma.evaluationVersion>;
+const mockPrismaAgentVersion = prisma.agentVersion as jest.Mocked<typeof prisma.agentVersion>;
 
 describe("GET /api/agents/[agentId]/export-data", () => {
   beforeEach(() => {
@@ -84,16 +88,25 @@ describe("GET /api/agents/[agentId]/export-data", () => {
       summary: "Test summary",
       grade: 4.5,
       comments: [],
-      documentVersion: {
+      evaluation: {
         document: {
           id: "doc-1",
-          title: "Test Document",
+          versions: [{
+            title: "Test Document",
+            content: "Test content",
+            urls: ["https://example.com"],
+          }],
+          submittedBy: {
+            name: "Test Author",
+          },
+          publishedDate: new Date("2024-01-01"),
         },
       },
       agentVersion: {
         version: 1,
       },
       job: null,
+      createdAt: new Date("2024-01-01"),
     }];
 
     mockPrismaAgent.findUnique.mockResolvedValue(mockAgent as any);
@@ -103,16 +116,19 @@ describe("GET /api/agents/[agentId]/export-data", () => {
     const context = { params: Promise.resolve({ agentId: "test-agent" }) };
 
     const response = await GET(request, context);
-    const data = await response.json();
 
     if (response.status !== 200) {
-      console.error('Response error:', data);
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
     }
 
     expect(response.status).toBe(200);
-    expect(data.agent.name).toBe("Test Agent");
-    expect(data.evaluations).toHaveLength(1);
-    expect(data.evaluations[0].summary).toBe("Test summary");
+    expect(response.headers.get('Content-Type')).toBe('text/yaml');
+    
+    const yamlText = await response.text();
+    expect(yamlText).toContain('agent_name: Test Agent');
+    expect(yamlText).toContain('summary: Test summary');
+    expect(yamlText).toContain('total_evaluations: 1');
   });
 
   it("should filter by version when provided", async () => {
@@ -124,11 +140,23 @@ describe("GET /api/agents/[agentId]/export-data", () => {
       versions: [{
         id: "version-1",
         version: 1,
+        name: "Test Agent",
+        agentType: "ASSESSOR",
+        description: "Test description",
+        primaryInstructions: "Test instructions",
+        selfCritiqueInstructions: "Test self critique",
+        providesGrades: true,
+        extendedCapabilityId: null,
       }],
       submittedBy: null,
     };
 
     mockPrismaAgent.findUnique.mockResolvedValue(mockAgent as any);
+    mockPrismaAgentVersion.findFirst.mockResolvedValue({
+      id: "version-1",
+      agentId: "test-agent",
+      version: 1,
+    } as any);
     mockPrismaEvalVersion.findMany.mockResolvedValue([]);
 
     const request = new NextRequest("http://localhost:3000/api/agents/test-agent/export-data?version=1");
@@ -140,7 +168,10 @@ describe("GET /api/agents/[agentId]/export-data", () => {
     expect(mockPrismaEvalVersion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          agentId: "test-agent",
+          agentVersionId: "version-1",
+          evaluation: expect.objectContaining({
+            agentId: "test-agent",
+          }),
         }),
       })
     );
