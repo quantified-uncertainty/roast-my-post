@@ -3,6 +3,14 @@ import { processArticle } from '../articleImport';
 describe('Article Import End-to-End Tests', () => {
   jest.setTimeout(30000); // 30 second timeout for network requests
 
+  // Skip if required API keys are not available
+  beforeAll(() => {
+    if (!process.env.FIRECRAWL_KEY) {
+      console.log("Skipping E2E tests - FIRECRAWL_KEY not set");
+      return;
+    }
+  });
+
   describe('EA Forum Import', () => {
     const url = 'https://forum.effectivealtruism.org/posts/RPYnR7c6ZmZKBoeLG/you-should-update-on-how-dc-is-talking-about-ai';
     

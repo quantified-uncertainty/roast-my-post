@@ -74,8 +74,8 @@ jobs:
       - name: Run linting
         run: npm run lint
 
-      - name: Run tests (skip problematic ones)
-        run: npm test -- --testPathIgnorePatterns="export-data/__tests__/route.test.ts|import/__tests__/route.test.ts|comprehensiveAnalysis.e2e.test.ts" --coverage --coverageReporters=text-summary
+      - name: Run CI tests (unit + integration, no external deps)
+        run: npm run test:ci -- --coverage --coverageReporters=text-summary
 
       - name: Build application
         run: npm run build

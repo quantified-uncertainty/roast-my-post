@@ -249,6 +249,40 @@ When creating ideation/analysis files in `/claude/ideation/`, use this naming pa
 - Example: `2025-01-25-03-flexible-scoring-system.md`
 - The `##` is a sequential number for that day (01, 02, 03, etc.)
 
+## Testing Strategy (2025-06-27)
+
+### Test Categories and Cost Management
+
+**CRITICAL**: We have organized tests by cost and external dependencies to avoid expensive LLM usage in CI.
+
+#### Test Category Naming Convention:
+- `*.test.ts` = Unit tests (fast, no external deps)
+- `*.integration.test.ts` = Integration tests (database, internal APIs)
+- `*.e2e.test.ts` = End-to-end tests (external APIs like Firecrawl, LessWrong)
+- `*.llm.test.ts` = LLM tests (Anthropic, OpenAI - EXPENSIVE!)
+
+#### Available Test Scripts:
+```bash
+npm run test:unit          # Fast unit tests only
+npm run test:integration   # Database/internal API tests
+npm run test:e2e          # External API tests (requires API keys)
+npm run test:llm          # LLM tests (expensive, requires API keys)
+npm run test:fast         # Unit + integration (good for development)
+npm run test:without-llms # Everything except expensive LLM calls
+npm run test:ci           # CI-safe tests (no external deps)
+```
+
+#### For New Tests:
+- **Writing new tests**: Use appropriate suffix based on dependencies
+- **External APIs**: Add environment guards like `if (!process.env.FIRECRAWL_KEY) return`
+- **LLM tests**: Always use `.llm.test.ts` suffix and API key guards
+- **CI failures**: Use `npm run test:ci` to test what runs in GitHub Actions
+
+#### GitHub Actions:
+- Runs `npm run test:ci` (no external dependencies)
+- E2E and LLM tests are excluded from CI to avoid costs and flakiness
+- Developers can run full test suite locally when needed
+
 ## Security Updates (2025-01-24)
 
 ### API Route Protection
