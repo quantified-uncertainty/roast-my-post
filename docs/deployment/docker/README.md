@@ -113,8 +113,8 @@ Required in your `.env` file:
 ANTHROPIC_API_KEY=sk-ant-api03-...
 OPENROUTER_API_KEY=sk-or-v1-...
 
-# Optional: Email
-SENDGRID_KEY=SG.actual_key_here
+# Email (for authentication with Resend)
+AUTH_RESEND_KEY=re_actual_key_here
 EMAIL_FROM=noreply@yourdomain.com
 ```
 

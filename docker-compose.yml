@@ -40,8 +40,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       
-      # Email (optional for local testing)
-      SENDGRID_KEY: ${SENDGRID_KEY:-}
+      # Email (for authentication)
       EMAIL_FROM: ${EMAIL_FROM:-noreply@localhost}
       
       # Node settings
