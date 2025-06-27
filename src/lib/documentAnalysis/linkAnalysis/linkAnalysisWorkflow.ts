@@ -81,10 +81,7 @@ This document was analyzed specifically for link quality and accuracy. The analy
 
 ${
   metrics.brokenLinks > 0
-    ? `**⚠️ Broken Links Detected**
-Found ${metrics.brokenLinks} broken or non-existent URLs. These may be hallucinated links or references to content that has moved or been deleted.
-
-`
+    ? generateBrokenLinksMessage(metrics)
     : ""
 }${
     metrics.workingLinks === metrics.totalLinks && metrics.totalLinks > 0
@@ -95,9 +92,7 @@ All links in the document are working and correctly cited. This demonstrates goo
       : ""
   }### Document Reliability Score
 
-Based on link analysis, this document has a **${calculateLinkGradeFromMetrics(metrics)}% reliability score** for external references.
-
-${generateRecommendationsFromMetrics(metrics)}`;
+Based on link analysis, this document has a **${calculateLinkGradeFromMetrics(metrics)}% reliability score** for external references.`;
 
   const summary =
     metrics.totalLinks === 0
@@ -220,10 +215,31 @@ function calculateLinkMetrics(linkAnalysisResults: LinkAnalysis[]) {
   const totalLinks = linkAnalysisResults.length;
   let workingLinks = 0;
   let brokenLinks = 0;
+  let accessDeniedLinks = 0;
+  let notFoundLinks = 0;
+  let timeoutLinks = 0;
+  let networkErrorLinks = 0;
+  let otherErrorLinks = 0;
 
   linkAnalysisResults.forEach((result) => {
     if (result.accessError) {
       brokenLinks++;
+      switch (result.accessError.type) {
+        case "Forbidden":
+          accessDeniedLinks++;
+          break;
+        case "NotFound":
+          notFoundLinks++;
+          break;
+        case "Timeout":
+          timeoutLinks++;
+          break;
+        case "NetworkError":
+          networkErrorLinks++;
+          break;
+        default:
+          otherErrorLinks++;
+      }
     } else {
       workingLinks++;
     }
@@ -233,13 +249,70 @@ function calculateLinkMetrics(linkAnalysisResults: LinkAnalysis[]) {
     totalLinks,
     workingLinks,
     brokenLinks,
+    accessDeniedLinks,
+    notFoundLinks,
+    timeoutLinks,
+    networkErrorLinks,
+    otherErrorLinks,
   };
+}
+
+function generateBrokenLinksMessage(metrics: {
+  brokenLinks: number;
+  accessDeniedLinks: number;
+  notFoundLinks: number;
+  timeoutLinks: number;
+  networkErrorLinks: number;
+  otherErrorLinks: number;
+}): string {
+  let message = "";
+  const issues: string[] = [];
+
+  // Create specific messages based on error types
+  if (metrics.accessDeniedLinks > 0) {
+    issues.push(`${metrics.accessDeniedLinks} blocked by access restrictions (403 Forbidden)`);
+  }
+  if (metrics.notFoundLinks > 0) {
+    issues.push(`${metrics.notFoundLinks} not found (404)`);
+  }
+  if (metrics.timeoutLinks > 0) {
+    issues.push(`${metrics.timeoutLinks} timed out`);
+  }
+  if (metrics.networkErrorLinks > 0) {
+    issues.push(`${metrics.networkErrorLinks} network connection failed`);
+  }
+  if (metrics.otherErrorLinks > 0) {
+    issues.push(`${metrics.otherErrorLinks} other errors`);
+  }
+
+  // Choose appropriate header based on predominant issue type
+  if (metrics.accessDeniedLinks > metrics.brokenLinks / 2) {
+    message += `**🚫 Links Blocked by Access Restrictions**\n`;
+    message += `Found ${metrics.brokenLinks} inaccessible URLs, primarily due to access restrictions. `;
+    message += `Many websites block automated access, even though the content exists.\n\n`;
+  } else if (metrics.notFoundLinks > metrics.brokenLinks / 2) {
+    message += `**❌ Broken Links Detected**\n`;
+    message += `Found ${metrics.brokenLinks} broken or non-existent URLs. These may be hallucinated links or references to content that has moved or been deleted.\n\n`;
+  } else {
+    message += `**⚠️ Link Issues Detected**\n`;
+    message += `Found ${metrics.brokenLinks} problematic URLs with various access issues.\n\n`;
+  }
+
+  // Add breakdown of issue types
+  message += `**Issue breakdown:** ${issues.join(", ")}\n\n`;
+
+  return message;
 }
 
 function calculateLinkGradeFromMetrics(metrics: {
   totalLinks: number;
   workingLinks: number;
   brokenLinks: number;
+  accessDeniedLinks?: number;
+  notFoundLinks?: number;
+  timeoutLinks?: number;
+  networkErrorLinks?: number;
+  otherErrorLinks?: number;
 }): number {
   if (metrics.totalLinks === 0) return 80; // No links is neutral
 
@@ -255,30 +328,6 @@ function calculateLinkGradeFromMetrics(metrics: {
   return Math.round(finalScore);
 }
 
-function generateRecommendationsFromMetrics(metrics: {
-  totalLinks: number;
-  workingLinks: number;
-  brokenLinks: number;
-}): string {
-  if (metrics.totalLinks === 0) {
-    return "**Recommendation:** Consider adding relevant external references to support key claims and provide additional context for readers.";
-  }
-
-  if (metrics.brokenLinks === 0) {
-    return "**Recommendation:** Excellent link hygiene! All references are working and accessible. Continue this high standard of link maintenance.";
-  }
-
-  let recommendations = "**Recommendations:**\n";
-
-  if (metrics.brokenLinks > 0) {
-    recommendations += `- **Fix ${metrics.brokenLinks} broken link(s):** Verify URLs and replace with working alternatives or archived versions\n`;
-  }
-
-  recommendations +=
-    "- **Regular maintenance:** Periodically check links to prevent link rot over time";
-
-  return recommendations;
-}
 
 
 export function findUrlPosition(
