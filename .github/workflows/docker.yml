@@ -15,11 +15,18 @@ env:
 
 jobs:
   build-and-push:
-    name: Build and Push Docker Image
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - dockerfile: Dockerfile
+            suffix: ""
+          - dockerfile: Dockerfile.worker
+            suffix: "-worker"
 
     steps:
       - name: Checkout code
@@ -40,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -52,6 +59,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
@@ -64,7 +72,7 @@ jobs:
             VCS_REF=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.revision'] }}
 
       - name: Test Docker image
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.suffix == ''
         run: |
           docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-${{ github.event.number }} node -e "console.log('Docker image test passed')"
 

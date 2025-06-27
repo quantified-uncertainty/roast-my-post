@@ -1,0 +1,28 @@
+# Worker Dockerfile - includes full Node.js environment for running scripts
+FROM node:20-alpine
+WORKDIR /app
+
+# Install dependencies for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies (including dev dependencies for tsx)
+RUN npm ci
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy source code
+COPY . .
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+USER nextjs
+
+# Run the adaptive job processor
+CMD ["npm", "run", "process-jobs-adaptive"]

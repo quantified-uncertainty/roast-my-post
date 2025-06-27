@@ -64,7 +64,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: roastmypost-worker
     restart: unless-stopped
     depends_on:
@@ -88,7 +88,7 @@ services:
   migrate:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: roastmypost-migrate
     depends_on:
       postgres:
