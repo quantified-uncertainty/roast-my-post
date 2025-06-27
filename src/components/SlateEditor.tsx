@@ -130,30 +130,6 @@ const renderElement = ({ attributes, children, element }: any) => {
         </li>
       );
     case "link":
-      // Check if this is a footnote reference
-      const isFootnoteRef = element.url?.startsWith('#footnote-');
-      
-      if (isFootnoteRef) {
-        return (
-          <a
-            {...attributes}
-            href={element.url}
-            className="text-blue-600 hover:text-blue-800 text-xs align-super no-underline"
-            onClick={(e) => {
-              e.preventDefault();
-              // Scroll to footnote at the bottom
-              const footnoteId = element.url.replace('#', '');
-              const footnoteEl = document.getElementById(footnoteId);
-              if (footnoteEl) {
-                footnoteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }}
-          >
-            {children}
-          </a>
-        );
-      }
-      
       return (
         <a
           {...attributes}
@@ -214,11 +190,6 @@ const renderLeaf = ({
   // Handle both strong/bold properties
   if (leaf.strong || leaf.bold) {
     el = <strong style={{ fontWeight: "bold" }}>{el}</strong>;
-  }
-
-  // Handle superscript for footnotes
-  if (leaf.sup) {
-    el = <sup>{el}</sup>;
   }
 
   // Apply highlight styling if this is a highlighted section

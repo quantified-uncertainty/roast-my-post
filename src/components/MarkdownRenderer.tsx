@@ -20,44 +20,6 @@ function MarkdownRenderer({
     unwrapDisallowed: isInline,
     components: {
       a: ({ node, href, className, ...props }: any) => {
-        // Handle footnote references (forward links like [1])
-        if (href?.startsWith('#footnote-') && !href.includes('ref')) {
-          return (
-            <a
-              href={href}
-              {...props}
-              className="text-blue-600 hover:text-blue-800 text-xs align-super no-underline"
-              onClick={(e) => {
-                e.preventDefault();
-                const footnoteId = href.replace('#', '');
-                const footnoteEl = document.getElementById(footnoteId);
-                if (footnoteEl) {
-                  footnoteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
-            />
-          );
-        }
-        
-        // Handle footnote back-references
-        if (href?.startsWith('#footnote-ref-')) {
-          return (
-            <a
-              href={href}
-              {...props}
-              className="text-blue-600 hover:text-blue-800 text-xs align-super no-underline ml-1"
-              onClick={(e) => {
-                e.preventDefault();
-                const refId = href.replace('#', '');
-                const refEl = document.getElementById(refId);
-                if (refEl) {
-                  refEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
-            />
-          );
-        }
-        
         return (
           <a
             href={href}
@@ -67,13 +29,6 @@ function MarkdownRenderer({
             rel="noopener noreferrer"
           />
         );
-      },
-      span: ({ node, id, ...props }: any) => {
-        // Render spans with IDs (for footnote targets)
-        if (id) {
-          return <span id={id} {...props} />;
-        }
-        return <span {...props} />;
       },
     },
   };
