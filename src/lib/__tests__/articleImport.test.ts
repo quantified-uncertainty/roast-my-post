@@ -166,22 +166,23 @@ describe("articleImport", () => {
     });
   });
 
-  describe("processArticle with Diffbot", () => {
-    it("should process article with Diffbot API", async () => {
+  describe("processArticle with Firecrawl", () => {
+    it("should process article with Firecrawl API", async () => {
       const axios = require("axios");
       
-      // Mock Diffbot API response with longer content to avoid fallback
-      axios.get.mockResolvedValueOnce({
+      // Mock Firecrawl API response with longer content to avoid fallback
+      axios.post.mockResolvedValueOnce({
         data: {
-          objects: [{
-            type: "article",
-            title: "Test Article",
-            text: "This is the article content. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.",
-            html: "<p>This is the article content. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.</p>",
-            date: "2025-01-15",
-            author: "John Doe",
-            pageUrl: "https://example.com/article"
-          }]
+          success: true,
+          data: {
+            markdown: "This is the article content in markdown. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.",
+            html: "<p>This is the article content. It needs to be much longer to avoid the fallback mechanism.</p>",
+            metadata: {
+              title: "Test Article",
+              author: "John Doe",
+              publishedDate: "2025-01-15T00:00:00Z"
+            }
+          }
         }
       });
       
@@ -190,15 +191,15 @@ describe("articleImport", () => {
       expect(result.title).toBe("Test Article");
       expect(result.author).toBe("John Doe");
       expect(result.date).toBe("2025-01-15");
-      expect(result.content).toContain("This is the article content");
+      expect(result.content).toContain("This is the article content in markdown");
       expect(result.url).toBe("https://example.com/article");
     });
 
-    it("should fallback when Diffbot fails", async () => {
+    it("should fallback when Firecrawl fails", async () => {
       const axios = require("axios");
       
-      // Mock Diffbot to fail
-      axios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      // Mock Firecrawl to fail
+      axios.post.mockRejectedValueOnce(new Error("Firecrawl API Error"));
       
       // Then mock fallback HTML fetch
       axios.get.mockResolvedValueOnce({
@@ -223,19 +224,21 @@ describe("articleImport", () => {
       expect(result.content).toContain("Fallback content");
     });
 
-    it("should fallback when Diffbot returns short content", async () => {
+    it("should fallback when Firecrawl returns short content", async () => {
       const axios = require("axios");
       
-      // Mock Diffbot to return very short content
-      axios.get.mockResolvedValueOnce({
+      // Mock Firecrawl to return very short content
+      axios.post.mockResolvedValueOnce({
         data: {
-          objects: [{
-            type: "article",
-            title: "Short",
-            text: "Too short",
-            author: "Author",
-            date: "2025-01-15"
-          }]
+          success: true,
+          data: {
+            markdown: "Too short",
+            metadata: {
+              title: "Short",
+              author: "Author",
+              publishedDate: "2025-01-15T00:00:00Z"
+            }
+          }
         }
       });
       
