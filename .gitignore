@@ -36,7 +36,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Environment variables
 .env
+.env.local
+.env.*.local
 /logs
 
 # Generated agent JSON files

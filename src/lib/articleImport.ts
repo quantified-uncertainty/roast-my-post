@@ -3,10 +3,11 @@ import { logger } from "@/lib/logger";
 import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 
-const DIFFBOT_TOKEN = "985ac8d02f58e04139a86a0196f26137";
+const FIRECRAWL_API_KEY = process.env.FIRECRAWL_KEY;
 
 export interface ArticleData {
   html: string;
+  markdown?: string;
   title: string | null;
   author: string | null;
   date: string | null;
@@ -21,34 +22,23 @@ export interface ProcessedArticle {
   url: string;
 }
 
-interface DiffbotResponse {
-  objects: Array<{
-    type: string;
-    title: string;
-    text: string;
-    html: string;
-    date: string;
-    author: string;
-    authorUrl?: string;
-    siteName?: string;
-    pageUrl: string;
-    resolvedPageUrl: string;
-    tags?: Array<{
-      label: string;
-      uri?: string;
-    }>;
-    images?: Array<{
-      url: string;
+interface FirecrawlResponse {
+  success: boolean;
+  data?: {
+    markdown?: string;
+    html?: string;
+    metadata?: {
       title?: string;
-      width?: number;
-      height?: number;
-    }>;
-  }>;
-  request: {
-    pageUrl: string;
-    api: string;
-    version: number;
+      description?: string;
+      author?: string;
+      publishedDate?: string;
+      sourceURL?: string;
+      language?: string;
+      statusCode?: number;
+    };
+    links?: string[];
   };
+  error?: string;
 }
 
 export function transformEAForumUrl(url: string): string {
@@ -81,6 +71,7 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
               _id
               title
               contents {
+                markdown
                 html
               }
               user {
@@ -116,10 +107,12 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         title: post.title,
         author: post.user.displayName,
         date: post.postedAt,
+        hasMarkdown: !!post.contents.markdown,
       });
 
       return {
         html: post.contents.html,
+        markdown: post.contents.markdown,
         title: post.title,
         author: post.user.displayName || post.user.username,
         date: post.postedAt,
@@ -142,6 +135,7 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
               _id
               title
               contents {
+                markdown
                 html
               }
               user {
@@ -177,10 +171,12 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         title: post.title,
         author: post.user.displayName,
         date: post.postedAt,
+        hasMarkdown: !!post.contents.markdown,
       });
 
       return {
         html: post.contents.html,
+        markdown: post.contents.markdown,
         title: post.title,
         author: post.user.displayName || post.user.username,
         date: post.postedAt,
@@ -312,6 +308,16 @@ export function extractContent(dom: JSDOM): string {
   }
 
   if (!contentElement) {
+    // Check if this is already clean content (e.g., from LessWrong/EA Forum API)
+    // Clean content typically has no wrapper divs and starts directly with p/h1/h2 tags
+    const hasWrapperElements = doc.querySelectorAll('div, article, main, section').length > 0;
+    const hasParagraphs = doc.querySelectorAll('p').length > 0;
+    
+    if (!hasWrapperElements && hasParagraphs) {
+      // This is already clean content, just return it as-is
+      return doc.body.innerHTML;
+    }
+    
     console.warn(
       "Could not find main content element. Using body as fallback."
     );
@@ -348,6 +354,9 @@ export function extractContent(dom: JSDOM): string {
 
   unwantedSelectors.forEach((selector) => {
     const elements = contentElement?.querySelectorAll(selector);
+    if (elements && elements.length > 0) {
+      console.log(`Removing ${elements.length} elements matching: ${selector}`);
+    }
     elements?.forEach((el) => el.remove());
   });
 
@@ -360,6 +369,28 @@ export function convertToMarkdown(html: string): string {
     codeBlockStyle: "fenced",
   });
 
+  // Add rule to properly handle footnotes sections
+  turndownService.addRule("handleFootnotesSection", {
+    filter: (node) => {
+      return node.nodeName === "SECTION" && 
+             (node.className === "footnotes" || node.id === "footnotes");
+    },
+    replacement: (content, node) => {
+      // Add a clear footnotes header if there isn't one already
+      const hasHeader = content.trim().startsWith('#');
+      if (!hasHeader) {
+        return `\n\n## Footnotes\n\n${content}`;
+      }
+      return `\n\n${content}`;
+    },
+  });
+
+  // Add rule to handle HR tags properly (ensure content after them is preserved)
+  turndownService.addRule("preserveHR", {
+    filter: "hr",
+    replacement: () => "\n\n* * *\n\n",
+  });
+
   // Add rule to remove share/social elements
   turndownService.addRule("removeShareElements", {
     filter: (node) => {
@@ -367,19 +398,30 @@ export function convertToMarkdown(html: string): string {
       const element = node as Element;
       const text = element.textContent?.toLowerCase() || "";
       const className = element.className?.toLowerCase() || "";
-
-      // Remove elements that contain sharing/social text
-      return (
-        text.includes("share this post") ||
-        text.includes("copy link") ||
-        text.includes("facebook") ||
-        text.includes("subscribe") ||
-        text.includes("notes") ||
-        text.includes("more") ||
+      
+      // Skip if this is part of actual content (has substantial text)
+      if (text.length > 200) return false;
+      
+      // More specific checks for share/social elements
+      const isShareElement = (
         className.includes("share") ||
         className.includes("social") ||
-        className.includes("subscribe")
+        className.includes("subscribe") ||
+        className.includes("facebook") ||
+        className.includes("twitter")
       );
+      
+      // Check for specific share-related text patterns
+      const hasShareText = (
+        text === "share this post" ||
+        text === "copy link" ||
+        text === "share" ||
+        text === "subscribe" ||
+        (text.includes("share") && text.includes("post")) ||
+        (text.includes("copy") && text.includes("link"))
+      );
+
+      return isShareElement || hasShareText;
     },
     replacement: () => "",
   });
@@ -505,6 +547,94 @@ export function cleanMarkdownContent(content: string): string {
   return content;
 }
 
+export function reorganizeFootnotes(content: string): string {
+  // Split content into lines
+  const lines = content.split('\n');
+  const footnoteDefPattern = /^\[(\^[^\]]+)\]:\s(.*)$/;
+  const footnoteRefPattern = /\[(\^[^\]]+)\]/g;
+  
+  const mainContent: string[] = [];
+  const footnotes = new Map<string, { content: string; number: number }>();
+  let footnoteCounter = 0;
+  
+  // First pass: collect all footnote references to assign numbers
+  const fullText = lines.join('\n');
+  const refs = Array.from(fullText.matchAll(footnoteRefPattern));
+  const refNumberMap = new Map<string, number>();
+  
+  for (const match of refs) {
+    const ref = match[1];
+    if (!refNumberMap.has(ref)) {
+      footnoteCounter++;
+      refNumberMap.set(ref, footnoteCounter);
+    }
+  }
+  
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const match = line.match(footnoteDefPattern);
+    
+    if (match) {
+      // This is a footnote definition
+      const [, ref, startContent] = match;
+      let footnoteContent = startContent;
+      
+      // Collect multi-line footnote content
+      i++;
+      while (i < lines.length && lines[i].trim() && !footnoteDefPattern.test(lines[i])) {
+        footnoteContent += '\n' + lines[i];
+        i++;
+      }
+      
+      // Store footnote with its number if we haven't seen it before
+      if (!footnotes.has(ref)) {
+        const number = refNumberMap.get(ref) || 0;
+        footnotes.set(ref, { content: footnoteContent, number });
+      }
+      
+      // Skip empty lines after footnote
+      while (i < lines.length && !lines[i].trim()) {
+        i++;
+      }
+    } else {
+      // Regular content line - replace footnote references with simple numbered citations
+      let processedLine = line;
+      for (const [ref, number] of refNumberMap.entries()) {
+        const refPattern = new RegExp(`\\[\\${ref}\\]`, 'g');
+        processedLine = processedLine.replace(refPattern, `[${number}]`);
+      }
+      mainContent.push(processedLine);
+      i++;
+    }
+  }
+  
+  // Remove trailing empty lines from main content
+  while (mainContent.length > 0 && !mainContent[mainContent.length - 1].trim()) {
+    mainContent.pop();
+  }
+  
+  // If we have footnotes, add them at the bottom with simple format
+  if (footnotes.size > 0) {
+    mainContent.push(''); // Empty line
+    mainContent.push('---'); // Separator
+    mainContent.push(''); // Empty line
+    
+    // Sort footnotes by their number
+    const sortedFootnotes = Array.from(footnotes.entries())
+      .sort((a, b) => a[1].number - b[1].number);
+    
+    // Add footnotes in simple numbered format
+    for (const [ref, { content, number }] of sortedFootnotes) {
+      mainContent.push(`${number}. ${content}`);
+    }
+    
+    mainContent.push(''); // Empty line at end
+  }
+  
+  return mainContent.join('\n');
+}
+
 export function detectPlatforms(url: string): string[] {
   const platforms: string[] = [];
   if (url.includes("facebook.com")) platforms.push("Facebook");
@@ -519,55 +649,63 @@ export function detectPlatforms(url: string): string[] {
 }
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
-  console.log(`📥 Fetching article from ${url} with Diffbot...`);
+  // Check if this is a LessWrong or EA Forum URL - use their APIs directly
+  if (url.includes("lesswrong.com") || url.includes("forum.effectivealtruism.org")) {
+    return processArticleFallback(url);
+  }
+  
+  console.log(`📥 Fetching article from ${url} with Firecrawl...`);
   
   try {
-    // Use Diffbot Article API
-    const diffbotUrl = `https://api.diffbot.com/v3/article`;
-    const response = await axios.get<DiffbotResponse>(diffbotUrl, {
-      params: {
-        token: DIFFBOT_TOKEN,
+    // Use Firecrawl Scrape API
+    const response = await axios.post<FirecrawlResponse>(
+      'https://api.firecrawl.dev/v1/scrape',
+      {
         url: url,
-        discussion: false, // We don't need comments
+        formats: ['markdown', 'html'],
+        onlyMainContent: true,
+        excludeTags: [
+          'nav',
+          '[role="navigation"]',
+          '.sidebar',
+          'aside'
+        ],
       },
-      timeout: 30000, // 30 second timeout
-    });
+      {
+        headers: {
+          'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000, // 30 second timeout
+      }
+    );
 
-    if (!response.data.objects || response.data.objects.length === 0) {
-      throw new Error("No article content found by Diffbot");
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.error || "No article content found by Firecrawl");
     }
 
-    const article = response.data.objects[0];
-    logger.info('✅ Diffbot extraction successful');
+    const { data } = response.data;
+    logger.info('✅ Firecrawl extraction successful');
 
-    // Extract metadata from Diffbot response
-    const title = article.title || "Untitled Article";
-    const author = article.author || "Unknown Author";
-    const date = article.date ? 
-      new Date(article.date).toISOString().split("T")[0] : 
+    // Extract metadata from Firecrawl response
+    const title = data.metadata?.title || "Untitled Article";
+    const author = data.metadata?.author || "Unknown Author";
+    const date = data.metadata?.publishedDate ? 
+      new Date(data.metadata.publishedDate).toISOString().split("T")[0] : 
       new Date().toISOString().split("T")[0];
 
-    // Convert HTML to Markdown if html is provided, otherwise use text
-    let content: string;
-    if (article.html) {
+    // Use markdown content directly from Firecrawl
+    let content: string = data.markdown || "";
+
+    // If no markdown but HTML is available, convert it
+    if (!content && data.html) {
       logger.info('🔄 Converting HTML to Markdown...');
-      content = convertToMarkdown(article.html);
-    } else if (article.text) {
-      // Check if text already contains markdown patterns (like from Substack)
-      if (article.text.includes('![') || article.text.includes('](')) {
-        logger.info('📝 Text appears to already be in Markdown format');
-        // Clean up any double-wrapped image links
-        content = article.text.replace(/\[\s*!\[([^\]]*)\]\(([^)]+)\)\s*\]\([^)]+\)/g, '![$1]($2)');
-      } else {
-        content = article.text;
-      }
-    } else {
-      content = "";
+      content = convertToMarkdown(data.html);
     }
 
     // If content is still very short, try fallback to our original method
     if (content.length < 100) {
-      logger.info('⚠️ Diffbot content too short, falling back to manual extraction...');
+      logger.info('⚠️ Firecrawl content too short, falling back to manual extraction...');
       return processArticleFallback(url);
     }
 
@@ -585,7 +723,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
       url,
     };
   } catch (error) {
-    logger.error('❌ Diffbot extraction failed:', error);
+    logger.error('❌ Firecrawl extraction failed:', error);
     logger.info('⚠️ Falling back to manual extraction...');
     return processArticleFallback(url);
   }
@@ -594,28 +732,46 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
 // Fallback to original extraction method for special cases
 async function processArticleFallback(url: string): Promise<ProcessedArticle> {
   console.log(`📥 Fallback: Fetching article from ${url}...`);
-  const { html, title, author, date } = await fetchArticle(url);
+  const { html, markdown, title, author, date } = await fetchArticle(url);
 
-  logger.info('🔍 Parsing HTML...');
-  const dom = createCleanDOM(html);
+  let finalContent: string;
+  
+  // If markdown is already available from the API, use it directly
+  if (markdown) {
+    logger.info('✅ Using markdown directly from API');
+    // Reorganize footnotes to be at the end
+    finalContent = reorganizeFootnotes(markdown);
+  } else {
+    // Otherwise, convert HTML to markdown
+    logger.info('🔍 Parsing HTML...');
+    const dom = createCleanDOM(html);
 
-  logger.info('📝 Extracting metadata...');
-  const metadata = extractMetadataSimple(dom, url);
+    logger.info('📝 Extracting metadata...');
+    const metadata = extractMetadataSimple(dom, url);
 
-  logger.info('📄 Extracting content...');
-  const contentHtml = extractContent(dom);
+    logger.info('📄 Extracting content...');
+    const contentHtml = extractContent(dom);
 
-  logger.info('🔄 Converting to Markdown...');
-  const markdownContent = convertToMarkdown(contentHtml);
+    logger.info('🔄 Converting to Markdown...');
+    const markdownContent = convertToMarkdown(contentHtml);
+    
+    // Clean up markdown content
+    finalContent = cleanMarkdownContent(markdownContent);
+  }
 
   // Use the best available title, author, and date
-  const finalTitle = title || metadata.title || "Untitled Article";
-  const finalAuthor = author || metadata.author || "Unknown Author";
-  const finalDate =
-    date || metadata.date || new Date().toISOString().split("T")[0];
-
-  // Clean up markdown content
-  const cleanedContent = cleanMarkdownContent(markdownContent);
+  let finalTitle = title || "Untitled Article";
+  let finalAuthor = author || "Unknown Author";
+  let finalDate = date || new Date().toISOString().split("T")[0];
+  
+  // Only parse HTML for metadata if we don't have all the info from the API
+  if (!title || !author || !date) {
+    const dom = createCleanDOM(html);
+    const metadata = extractMetadataSimple(dom, url);
+    finalTitle = title || metadata.title || "Untitled Article";
+    finalAuthor = author || metadata.author || "Unknown Author";
+    finalDate = date || metadata.date || new Date().toISOString().split("T")[0];
+  }
   
   const platforms = detectPlatforms(url);
 
@@ -623,7 +779,7 @@ async function processArticleFallback(url: string): Promise<ProcessedArticle> {
     title: finalTitle,
     author: finalAuthor,
     date: finalDate,
-    content: cleanedContent,
+    content: finalContent,
     platforms,
     url,
   };

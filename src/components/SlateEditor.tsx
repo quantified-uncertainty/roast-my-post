@@ -130,6 +130,30 @@ const renderElement = ({ attributes, children, element }: any) => {
         </li>
       );
     case "link":
+      // Check if this is a footnote reference
+      const isFootnoteRef = element.url?.startsWith('#footnote-');
+      
+      if (isFootnoteRef) {
+        return (
+          <a
+            {...attributes}
+            href={element.url}
+            className="text-blue-600 hover:text-blue-800 text-xs align-super no-underline"
+            onClick={(e) => {
+              e.preventDefault();
+              // Scroll to footnote at the bottom
+              const footnoteId = element.url.replace('#', '');
+              const footnoteEl = document.getElementById(footnoteId);
+              if (footnoteEl) {
+                footnoteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }}
+          >
+            {children}
+          </a>
+        );
+      }
+      
       return (
         <a
           {...attributes}
@@ -190,6 +214,11 @@ const renderLeaf = ({
   // Handle both strong/bold properties
   if (leaf.strong || leaf.bold) {
     el = <strong style={{ fontWeight: "bold" }}>{el}</strong>;
+  }
+
+  // Handle superscript for footnotes
+  if (leaf.sup) {
+    el = <sup>{el}</sup>;
   }
 
   // Apply highlight styling if this is a highlighted section
@@ -261,7 +290,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Create a processor with remark-parse and remark-gfm for markdown support
       const processor = unified()
         .use(remarkParse)
-        .use(remarkGfm) // Add GitHub-Flavored Markdown support
+        .use(remarkGfm) // Add GitHub-Flavored Markdown support (includes footnotes)
         .use(remarkToSlate as any, {
           // Configure node types for proper formatting
           nodeTypes: {
@@ -275,6 +304,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Process the markdown content
       const result = processor.processSync(content);
       let nodes = result.result as Descendant[];
+
 
       // Apply a custom processor for handling markdown formatting
       const processNode = (node: any): any => {
@@ -319,6 +349,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               children: node.children.map(processNode),
             };
 
+
           default:
             // Process any children of other node types
             if (Array.isArray(node?.children)) {
@@ -331,8 +362,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         }
       };
 
-      // Process all nodes in the tree
-      nodes = nodes.map(processNode);
+      // Process all nodes in the tree and filter out nulls
+      nodes = nodes.map(processNode).filter(node => node !== null);
       
       // Validate and fix nodes to ensure they have proper text content
       const validateNode = (node: any): any => {
