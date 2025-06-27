@@ -6,9 +6,11 @@ import {
   createCleanDOM,
 } from "../articleImport";
 import { JSDOM } from "jsdom";
+import axios from "axios";
 
 // Mock dependencies
 jest.mock("axios");
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -168,10 +170,8 @@ describe("articleImport", () => {
 
   describe("processArticle with Firecrawl", () => {
     it("should process article with Firecrawl API", async () => {
-      const axios = require("axios");
-      
       // Mock Firecrawl API response with longer content to avoid fallback
-      axios.post.mockResolvedValueOnce({
+      mockedAxios.post.mockResolvedValueOnce({
         data: {
           success: true,
           data: {
@@ -196,13 +196,11 @@ describe("articleImport", () => {
     });
 
     it("should fallback when Firecrawl fails", async () => {
-      const axios = require("axios");
-      
       // Mock Firecrawl to fail
-      axios.post.mockRejectedValueOnce(new Error("Firecrawl API Error"));
+      mockedAxios.post.mockRejectedValueOnce(new Error("Firecrawl API Error"));
       
       // Then mock fallback HTML fetch
-      axios.get.mockResolvedValueOnce({
+      mockedAxios.get.mockResolvedValueOnce({
         data: `
           <html>
             <head>
@@ -225,10 +223,8 @@ describe("articleImport", () => {
     });
 
     it("should fallback when Firecrawl returns short content", async () => {
-      const axios = require("axios");
-      
       // Mock Firecrawl to return very short content
-      axios.post.mockResolvedValueOnce({
+      mockedAxios.post.mockResolvedValueOnce({
         data: {
           success: true,
           data: {
@@ -243,7 +239,7 @@ describe("articleImport", () => {
       });
       
       // Then mock fallback HTML fetch
-      axios.get.mockResolvedValueOnce({
+      mockedAxios.get.mockResolvedValueOnce({
         data: `
           <html>
             <head>
