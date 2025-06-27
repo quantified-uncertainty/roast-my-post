@@ -31,6 +31,7 @@ function buildAuthConfig(): NextAuthConfig {
     session: {
       strategy: "database",
     },
+    trustHost: true,
     callbacks: {
       session: async ({ session, user }) => {
         if (session?.user) {
