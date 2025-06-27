@@ -1,6 +1,9 @@
 #!/usr/bin/env tsx
+import {
+  ChildProcess,
+  spawn,
+} from "child_process";
 
-import { spawn, ChildProcess } from "child_process";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
@@ -24,7 +27,7 @@ class AdaptiveJobProcessor {
   private consecutiveEmptyChecks = 0;
   private totalJobsProcessed = 0;
   private nextWorkerId = 1;
-  private lastState: 'idle' | 'working' | 'waiting' = 'idle';
+  private lastState: "idle" | "working" | "waiting" = "idle";
 
   constructor(maxWorkers: number = DEFAULT_MAX_WORKERS) {
     this.maxWorkers = maxWorkers;
@@ -35,46 +38,46 @@ class AdaptiveJobProcessor {
     const shutdown = async () => {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
-      
+
       if (this.activeWorkers.size > 0) {
-        logger.info('\n🛑 Shutting down workers...');
-        
+        logger.info("\n🛑 Shutting down workers...");
+
         // Kill all worker processes
         for (const [id, worker] of this.activeWorkers) {
           console.log(`  Terminating worker ${id}...`);
-          worker.process.kill('SIGTERM');
+          worker.process.kill("SIGTERM");
         }
-        
+
         // Give them time to exit gracefully
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         // Force kill any remaining processes
         for (const [id, worker] of this.activeWorkers) {
           if (!worker.process.killed) {
             console.log(`  Force killing worker ${id}...`);
-            worker.process.kill('SIGKILL');
+            worker.process.kill("SIGKILL");
           }
         }
       }
-      
-      logger.info('\n👋 Shutting down. Goodbye!');
+
+      logger.info("\n👋 Shutting down. Goodbye!");
       process.exit(0);
     };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   }
 
   private async checkPendingJobs(): Promise<number> {
     const count = await prisma.job.count({
-      where: { status: JobStatus.PENDING }
+      where: { status: JobStatus.PENDING },
     });
     return count;
   }
 
   private async spawnWorker(): Promise<void> {
     const workerId = this.nextWorkerId++;
-    
+
     return new Promise((resolve, reject) => {
       console.log(`🚀 Spawning worker ${workerId}...`);
 
@@ -96,11 +99,11 @@ class AdaptiveJobProcessor {
       let isResolved = false;
 
       // Capture output
-      childProcess.stdout?.on('data', (data) => {
+      childProcess.stdout?.on("data", (data) => {
         stdout += data.toString();
       });
-      
-      childProcess.stderr?.on('data', (data) => {
+
+      childProcess.stderr?.on("data", (data) => {
         stderr += data.toString();
       });
 
@@ -108,11 +111,11 @@ class AdaptiveJobProcessor {
       const timeout = setTimeout(() => {
         if (!isResolved && !this.isShuttingDown) {
           console.log(`⏰ Worker ${workerId} timeout - terminating...`);
-          childProcess.kill('SIGTERM');
+          childProcess.kill("SIGTERM");
           setTimeout(() => {
             if (!isResolved && childProcess.pid && !childProcess.killed) {
               console.log(`💀 Force killing worker ${workerId}...`);
-              childProcess.kill('SIGKILL');
+              childProcess.kill("SIGKILL");
             }
           }, KILL_GRACE_PERIOD_MS);
         }
@@ -135,14 +138,19 @@ class AdaptiveJobProcessor {
           this.activeWorkers.delete(workerId);
 
           // Check if any work was done
-          const hadWork = stdout.includes("Processing job") || 
-                         stderr.includes("Processing job") ||
-                         !stdout.includes("No pending jobs");
+          const hadWork =
+            stdout.includes("Processing job") ||
+            stderr.includes("Processing job") ||
+            !stdout.includes("No pending jobs");
 
           if (hadWork) {
             this.totalJobsProcessed++;
-            const duration = Math.round((Date.now() - worker.startTime.getTime()) / 1000);
-            console.log(`✅ Worker ${workerId} completed job in ${duration}s (Total processed: ${this.totalJobsProcessed})`);
+            const duration = Math.round(
+              (Date.now() - worker.startTime.getTime()) / 1000
+            );
+            console.log(
+              `✅ Worker ${workerId} completed job in ${duration}s (Total processed: ${this.totalJobsProcessed})`
+            );
           } else {
             console.log(`💤 Worker ${workerId} found no jobs`);
           }
@@ -158,55 +166,63 @@ class AdaptiveJobProcessor {
   }
 
   async start() {
-    console.log(`🚀 Starting adaptive job processor (max workers: ${this.maxWorkers})`);
-    logger.info('Press Ctrl+C to stop\n');
+    console.log(
+      `🚀 Starting adaptive job processor (max workers: ${this.maxWorkers})`
+    );
+    logger.info("Press Ctrl+C to stop\n");
 
     while (!this.isShuttingDown) {
       try {
         // Check for pending jobs
         const pendingCount = await this.checkPendingJobs();
         const currentWorkers = this.activeWorkers.size;
-        
+
         if (pendingCount > 0) {
           // We have pending jobs
-          if (this.lastState === 'idle') {
+          if (this.lastState === "idle") {
             // Transitioning from idle to working
             if (this.consecutiveEmptyChecks > 0) {
-              console.log(''); // New line after dots
+              console.log(""); // New line after dots
             }
-            console.log(`\n🎯 Found ${pendingCount} pending job${pendingCount > 1 ? 's' : ''}!`);
+            console.log(
+              `\n🎯 Found ${pendingCount} pending job${pendingCount > 1 ? "s" : ""}!`
+            );
             this.consecutiveEmptyChecks = 0;
           }
-          
+
           // Calculate how many workers to spawn
           const workersToSpawn = Math.min(
             pendingCount - currentWorkers,
             this.maxWorkers - currentWorkers
           );
-          
+
           if (workersToSpawn > 0) {
-            this.lastState = 'working';
-            console.log(`🔧 Active workers: ${currentWorkers}, spawning ${workersToSpawn} more...`);
-            
+            this.lastState = "working";
+            console.log(
+              `🔧 Active workers: ${currentWorkers}, spawning ${workersToSpawn} more...`
+            );
+
             // Spawn workers in parallel
             const workerPromises: Promise<void>[] = [];
             for (let i = 0; i < workersToSpawn; i++) {
               workerPromises.push(
-                this.spawnWorker().catch(error => {
+                this.spawnWorker().catch((error) => {
                   console.error(`Failed to spawn worker:`, error.message);
                 })
               );
             }
-            
+
             // Don't wait for workers to complete, just spawn them
             Promise.all(workerPromises).then(() => {
               // Workers completed, loop will check again
             });
           } else if (currentWorkers > 0) {
             // We have workers but don't need more
-            if (this.lastState !== 'waiting') {
-              console.log(`⏳ ${currentWorkers} worker${currentWorkers > 1 ? 's' : ''} processing ${pendingCount} job${pendingCount > 1 ? 's' : ''}...`);
-              this.lastState = 'waiting';
+            if (this.lastState !== "waiting") {
+              console.log(
+                `⏳ ${currentWorkers} worker${currentWorkers > 1 ? "s" : ""} processing ${pendingCount} job${pendingCount > 1 ? "s" : ""}...`
+              );
+              this.lastState = "waiting";
             }
             // Otherwise stay quiet while workers are processing
           }
@@ -214,37 +230,38 @@ class AdaptiveJobProcessor {
           // No pending jobs
           if (currentWorkers === 0) {
             // No workers and no jobs - we're idle
-            if (this.lastState !== 'idle') {
+            if (this.lastState !== "idle") {
               console.log(`\n💤 No pending jobs found`);
-              this.lastState = 'idle';
+              this.lastState = "idle";
             }
             this.consecutiveEmptyChecks++;
-            
+
             if (this.consecutiveEmptyChecks > 1) {
               if (this.consecutiveEmptyChecks % 60 === 0) {
                 // Print newline every minute to show we're still alive
-                process.stdout.write('\n💤 Still waiting for jobs...\n');
+                process.stdout.write("\n💤 Still waiting for jobs...\n");
               } else {
-                process.stdout.write('.');
+                process.stdout.write(".");
               }
             }
           } else {
             // Workers still running but no new jobs
-            if (this.lastState !== 'waiting') {
-              console.log(`⏳ ${currentWorkers} worker${currentWorkers > 1 ? 's' : ''} finishing up...`);
-              this.lastState = 'waiting';
+            if (this.lastState !== "waiting") {
+              console.log(
+                `⏳ ${currentWorkers} worker${currentWorkers > 1 ? "s" : ""} finishing up...`
+              );
+              this.lastState = "waiting";
             }
           }
         }
-        
+
         // Brief pause before next check
-        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
-        
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       } catch (error) {
         console.error(`\n❌ Error in main loop:`, error);
         this.consecutiveEmptyChecks = 0;
-        this.lastState = 'idle';
-        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+        this.lastState = "idle";
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       }
     }
   }
@@ -255,16 +272,18 @@ const args = process.argv.slice(2);
 let maxWorkers = DEFAULT_MAX_WORKERS;
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '-n' || args[i] === '--max-workers') {
+  if (args[i] === "-n" || args[i] === "--max-workers") {
     const count = parseInt(args[i + 1], 10);
     if (!isNaN(count) && count > 0 && count <= 20) {
       maxWorkers = count;
     } else {
-      console.error(`Invalid worker count: ${args[i + 1]}. Must be between 1 and 20.`);
+      console.error(
+        `Invalid worker count: ${args[i + 1]}. Must be between 1 and 20.`
+      );
       process.exit(1);
     }
   }
-  if (args[i] === '-h' || args[i] === '--help') {
+  if (args[i] === "-h" || args[i] === "--help") {
     console.log(`
 Usage: npm run process-jobs-adaptive [options]
 
@@ -287,9 +306,12 @@ This adaptive processor:
 }
 
 // Suppress the punycode deprecation warning
-process.removeAllListeners('warning');
-process.on('warning', (warning) => {
-  if (warning.name === 'DeprecationWarning' && warning.message.includes('punycode')) {
+process.removeAllListeners("warning");
+process.on("warning", (warning) => {
+  if (
+    warning.name === "DeprecationWarning" &&
+    warning.message.includes("punycode")
+  ) {
     return;
   }
   console.warn(warning);
@@ -298,6 +320,6 @@ process.on('warning', (warning) => {
 // Start the processor
 const processor = new AdaptiveJobProcessor(maxWorkers);
 processor.start().catch((error) => {
-  logger.error('Fatal error:', error);
+  logger.error("Fatal error:", error);
   process.exit(1);
 });
