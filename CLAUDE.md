@@ -53,6 +53,62 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 - [ ] Am I using the right tool for the job?
 - [ ] Have I read and understood all warnings?
 
+## Critical Test Debugging Pattern (2025-06-27)
+
+### The False Success Anti-Pattern
+**What Happened**: During test debugging, I repeatedly fell into a pattern where:
+1. Tests appeared to pass locally (but I was misreading truncated output)
+2. Tests failed in CI with the same errors
+3. I'd "fix" them without actually verifying locally first
+4. Push to CI, tests fail again with same errors
+5. Repeat cycle 3-4 times
+
+### Root Cause
+- **Truncated output**: `npm run test:ci` output was very long, I was only seeing coverage reports at the end
+- **Assumption bias**: Assumed tests passed because I saw coverage data, not the actual test results
+- **Rushed debugging**: Didn't take time to verify the actual test status locally before pushing
+
+### Lessons Learned
+1. **ALWAYS verify test results with clear, focused output**
+   ```bash
+   # Get clear test summary only
+   npm run test:ci 2>&1 | grep -E "(PASS|FAIL|Test Suites:|Tests:)" | tail -10
+   
+   # Or just the final summary
+   npm run test:ci 2>&1 | tail -5
+   ```
+
+2. **If tests fail in CI, they MUST fail locally too (unless environment-specific)**
+   - CI failures usually indicate real test issues
+   - Environment differences are rare for unit/integration tests
+   - Don't assume "it works locally" without proof
+
+3. **Test debugging checklist**:
+   - [ ] Do tests actually pass locally? (verify with clear output)
+   - [ ] What's the specific failure message?
+   - [ ] Does the fix address the root cause or just symptoms?
+   - [ ] Re-run tests locally after fix to confirm
+
+4. **Read the actual error messages**
+   - Don't just look at status codes
+   - Check what the test expected vs received
+   - Mock data structure mismatches are common
+
+### Example: Agent Export Test Fix
+The real issue was test expectations didn't match implementation:
+```javascript
+// Expected (wrong)
+where: { agentId: "test-agent" }
+
+// Actual implementation (correct)  
+where: { 
+  agentVersionId: "version-1",
+  evaluation: { agentId: "test-agent" }
+}
+```
+
+**Key Insight**: Tests that pass locally but fail in CI usually indicate the local tests weren't actually passing - just misread output.
+
 ## Key Learnings
 
 ### Git Commit Issues
