@@ -84,16 +84,25 @@ describe("GET /api/agents/[agentId]/export-data", () => {
       summary: "Test summary",
       grade: 4.5,
       comments: [],
-      documentVersion: {
+      evaluation: {
         document: {
           id: "doc-1",
-          title: "Test Document",
+          versions: [{
+            title: "Test Document",
+            content: "Test content",
+            urls: ["https://example.com"],
+          }],
+          submittedBy: {
+            name: "Test Author",
+          },
+          publishedDate: new Date("2024-01-01"),
         },
       },
       agentVersion: {
         version: 1,
       },
       job: null,
+      createdAt: new Date("2024-01-01"),
     }];
 
     mockPrismaAgent.findUnique.mockResolvedValue(mockAgent as any);
@@ -103,16 +112,19 @@ describe("GET /api/agents/[agentId]/export-data", () => {
     const context = { params: Promise.resolve({ agentId: "test-agent" }) };
 
     const response = await GET(request, context);
-    const data = await response.json();
 
     if (response.status !== 200) {
-      console.error('Response error:', data);
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
     }
 
     expect(response.status).toBe(200);
-    expect(data.agent.name).toBe("Test Agent");
-    expect(data.evaluations).toHaveLength(1);
-    expect(data.evaluations[0].summary).toBe("Test summary");
+    expect(response.headers.get('Content-Type')).toBe('text/yaml');
+    
+    const yamlText = await response.text();
+    expect(yamlText).toContain('agent_name: Test Agent');
+    expect(yamlText).toContain('summary: Test summary');
+    expect(yamlText).toContain('total_evaluations: 1');
   });
 
   it("should filter by version when provided", async () => {

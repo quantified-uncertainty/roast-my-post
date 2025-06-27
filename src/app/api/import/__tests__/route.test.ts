@@ -128,7 +128,10 @@ describe("POST /api/import", () => {
       expect.objectContaining({
         title: "Test Article",
         authors: "Test Author",
-        content: "Test content",
+        content: "This is a test article with sufficient content to pass validation checks",
+        urls: "https://example.com/article",
+        platforms: "",
+        importUrl: "https://example.com/article",
         submittedById: "test-user-id"
       })
     );
