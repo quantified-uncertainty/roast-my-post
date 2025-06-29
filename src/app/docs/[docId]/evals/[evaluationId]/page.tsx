@@ -266,7 +266,7 @@ export default async function EvaluationPage({
             <EvaluationNavigation items={navItems} />
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div id="evaluation-content" className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="max-w-4xl">
                 {/* Header */}
                 <div className="mb-8">
