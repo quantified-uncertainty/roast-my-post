@@ -11,7 +11,7 @@ import { DocumentModel } from "@/models/Document";
  * with the latest agent version
  */
 export async function rerunEvaluation(
-  evaluationId: string,
+  agentId: string,
   documentId: string
 ) {
   try {
@@ -25,13 +25,15 @@ export async function rerunEvaluation(
     }
 
     await DocumentModel.rerunEvaluation(
-      evaluationId,
+      agentId,
       documentId,
       session.user.id
     );
 
-    // Revalidate the evaluations page
+    // Revalidate multiple pages that might be affected
     revalidatePath(`/docs/${documentId}/evaluations`);
+    revalidatePath(`/docs/${documentId}/evals/${agentId}`);
+    revalidatePath(`/docs/${documentId}/evals/${agentId}/logs`);
 
     return { success: true };
   } catch (error) {

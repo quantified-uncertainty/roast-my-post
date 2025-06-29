@@ -11,7 +11,7 @@ import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
-import { PageHeader } from "@/components/PageHeader";
+import { VersionPageHeader } from "@/components/VersionPageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { VersionTabs } from "@/components/VersionTabs";
 
@@ -281,13 +281,15 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
         
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
-          <PageHeader 
-          title={`${agentName} Evaluation (v${versionNum})`}
-          layout="with-sidebar"
-        />
+          <VersionPageHeader 
+            title={`${agentName} Evaluation (v${versionNum})`}
+            layout="with-sidebar"
+            docId={docId}
+            agentId={agentId}
+          />
 
-        {/* Tab Navigation */}
-        <VersionTabs docId={docId} agentId={agentId} versionNumber={versionNum} />
+          {/* Tab Navigation */}
+          <VersionTabs docId={docId} agentId={agentId} versionNumber={versionNum} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">

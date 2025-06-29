@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
-import { EvaluationTabs } from "@/components/EvaluationTabs";
+import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { TaskDisplayClient } from "../versions/[versionNumber]/logs/TaskDisplayClient";
 
 interface PageProps {
@@ -99,7 +99,7 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
               title={`${agentName} Evaluation`}
               layout="with-sidebar"
             />
-            <EvaluationTabs docId={docId} agentId={agentId} />
+            <EvaluationTabsWrapper docId={docId} agentId={agentId} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <div className="bg-white rounded-lg shadow p-6 text-center">
                 <p className="text-gray-500">No job data available for the current evaluation version.</p>
@@ -135,7 +135,11 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
           />
 
           {/* Tab Navigation */}
-          <EvaluationTabs docId={docId} agentId={agentId} />
+          <EvaluationTabsWrapper 
+            docId={docId} 
+            agentId={agentId} 
+            latestVersionNumber={currentVersion?.version || 1}
+          />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="bg-white rounded-lg shadow">

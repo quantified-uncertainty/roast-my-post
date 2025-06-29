@@ -13,7 +13,7 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
-import { EvaluationTabs } from "@/components/EvaluationTabs";
+import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -274,22 +274,16 @@ export default async function EvaluationPage({
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
           <PageHeader 
-          title={`${agentName} Evaluation`}
-          layout="with-sidebar"
-        >
-          <Link
-            href={`/docs/${docId}/evals/${agentId}/versions/${latestVersion?.version || 1}`}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium inline-flex items-center gap-1"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            Versions
-          </Link>
-        </PageHeader>
+            title={`${agentName} Evaluation`}
+            layout="with-sidebar"
+          />
 
-        {/* Tab Navigation */}
-        <EvaluationTabs docId={docId} agentId={agentId} />
+          {/* Tab Navigation */}
+          <EvaluationTabsWrapper 
+            docId={docId} 
+            agentId={agentId} 
+            latestVersionNumber={latestVersion?.version || 1}
+          />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">

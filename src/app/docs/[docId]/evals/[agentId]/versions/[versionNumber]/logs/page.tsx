@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
-import { PageHeader } from "@/components/PageHeader";
+import { VersionPageHeader } from "@/components/VersionPageHeader";
 import { VersionTabs } from "@/components/VersionTabs";
 import { TaskDisplayClient } from "./TaskDisplayClient";
 
@@ -122,9 +122,11 @@ export default async function VersionLogsPage({ params }: PageProps) {
         
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
-          <PageHeader 
+          <VersionPageHeader 
             title={`${agentName} Evaluation (v${versionNum})`}
             layout="with-sidebar"
+            docId={docId}
+            agentId={agentId}
           />
 
           {/* Tab Navigation */}
