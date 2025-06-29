@@ -49,8 +49,9 @@ export function EvaluationNavigation({ items }: EvaluationNavigationProps) {
     // Initial check
     handleScroll();
 
-    // Find the scrollable container
-    const scrollContainer = document.getElementById('evaluation-content');
+    // Find the scrollable container - now it's the parent with overflow-y-auto
+    const scrollContainers = document.querySelectorAll('.overflow-y-auto');
+    const scrollContainer = scrollContainers[scrollContainers.length - 1]; // Get the last one (main content area)
     
     if (scrollContainer) {
       scrollContainer.addEventListener('scroll', handleScroll);
@@ -68,9 +69,8 @@ export function EvaluationNavigation({ items }: EvaluationNavigationProps) {
   };
 
   return (
-    <nav className="hidden lg:block w-64 flex-shrink-0 h-full overflow-y-auto">
+    <nav className="w-64">
       <div className="p-4">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">Contents</h3>
         <ul className="space-y-2">
           {items.map((item) => {
             const isItemActive = activeSection === item.id || 

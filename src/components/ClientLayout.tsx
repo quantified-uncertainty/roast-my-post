@@ -15,31 +15,31 @@ export default function ClientLayout({
   return (
     <div className="h-full flex flex-col">
       {/* Header (always visible at the top) */}
-      <header className="border-b border-gray-200 bg-blue-500 px-6 py-3 flex-shrink-0">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Roast My Post</h1>
+      <header className="border-b border-gray-200 bg-white px-6 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Roast My Post</h1>
           <div className="flex items-center justify-between space-x-6">
             <nav className="flex items-center space-x-6">
               <Link
                 href="/docs"
-                className="flex items-center gap-1 text-white hover:text-gray-200"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
               >
                 <DocumentTextIcon className="inline-block h-5 w-5 align-text-bottom" />
                 Documents
               </Link>
               <Link
                 href="/agents"
-                className="flex items-center gap-1 text-white hover:text-gray-200"
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
               >
                 <Bot className="inline-block h-5 w-5 align-text-bottom" />
                 Agents
               </Link>
-              <Link href="/users" className="text-white hover:text-gray-200">
+              <Link href="/users" className="text-gray-600 hover:text-gray-900">
                 Users
               </Link>
               <Link
                 href="/self-ranking"
-                className="text-white hover:text-gray-200"
+                className="text-gray-600 hover:text-gray-900"
               >
                 Self-Ranking
               </Link>

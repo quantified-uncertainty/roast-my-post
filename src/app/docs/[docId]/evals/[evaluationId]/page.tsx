@@ -259,24 +259,23 @@ export default async function EvaluationPage({
         evaluations={allEvaluations}
       />
       
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex">
-          <div className="flex gap-8 w-full">
-            {/* Sticky Navigation Sidebar */}
-            <EvaluationNavigation items={navItems} />
+      <div className="flex-1 overflow-y-auto">
+        {/* Full-width Header */}
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto py-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {agentName} Evaluation
+            </h1>
+            <p className="text-gray-600">
+              Analysis of "{documentTitle}"
+            </p>
+          </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex gap-8">
             {/* Main Content */}
-            <div id="evaluation-content" className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="max-w-4xl">
-                {/* Header */}
-                <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {agentName} Evaluation
-                  </h1>
-                  <p className="text-gray-600">
-                    Analysis of "{documentTitle}"
-                  </p>
-                </div>
+            <div id="evaluation-content" className="flex-1 max-w-4xl">
 
         {/* Summary Section */}
         {summary && (
@@ -405,6 +404,12 @@ export default async function EvaluationPage({
             </div>
           </div>
         )}
+            </div>
+
+            {/* Sticky Navigation Sidebar */}
+            <div className="hidden lg:block">
+              <div className="sticky top-8">
+                <EvaluationNavigation items={navItems} />
               </div>
             </div>
           </div>

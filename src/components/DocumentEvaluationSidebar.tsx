@@ -43,14 +43,14 @@ export function DocumentEvaluationSidebar({
   const isDocumentPage = pathname === `/docs/${docId}`;
   
   return (
-    <nav className="w-64 flex-shrink-0 bg-gray-50 border-r border-gray-200 h-full overflow-y-auto">
+    <nav className="w-64 flex-shrink-0 bg-white border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-6">
         {/* Document Link */}
         <Link
           href={`/docs/${docId}`}
           className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isDocumentPage
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-blue-50 text-gray-900'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           }`}
         >
@@ -98,7 +98,7 @@ export function DocumentEvaluationSidebar({
                       href={`/docs/${docId}/evals/${evaluationId}`}
                       className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                         isActive
-                          ? 'bg-white text-gray-900 shadow-sm'
+                          ? 'bg-blue-50 text-gray-900'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }`}
                     >
