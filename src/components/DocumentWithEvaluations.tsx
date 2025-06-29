@@ -19,7 +19,7 @@ import remarkGfm from "remark-gfm";
 import {
   deleteDocument,
   reuploadDocument,
-} from "@/app/docs/[docId]/actions";
+} from "@/app/docs/[docId]/preview/actions";
 import { Button } from "@/components/Button";
 import type {
   Comment,
