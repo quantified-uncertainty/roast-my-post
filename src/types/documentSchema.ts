@@ -65,6 +65,7 @@ export type EvaluationVersion = z.infer<typeof EvaluationVersionSchema>;
 
 // Schema for evaluation
 export const EvaluationSchema = z.object({
+  id: z.string().optional(),
   agentId: z.string(),
   agent: z.object({
     id: z.string(),

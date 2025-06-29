@@ -248,6 +248,7 @@ export class DocumentModel {
         }));
 
         return {
+          id: evaluation.id,
           agentId: evaluation.agent.id,
           agent: {
             id: evaluation.agent.id,
@@ -372,6 +373,7 @@ export class DocumentModel {
         }));
 
         return {
+          id: evaluation.id,
           agentId: evaluation.agent.id,
           agent: {
             id: evaluation.agent.id,
