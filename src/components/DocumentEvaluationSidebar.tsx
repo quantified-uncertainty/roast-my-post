@@ -29,6 +29,9 @@ interface Evaluation {
       status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
     } | null;
   }>;
+  jobs?: Array<{
+    status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+  }>;
   grade?: number | null;
 }
 
@@ -99,8 +102,10 @@ export function DocumentEvaluationSidebar({
                   const grade = getEvaluationGrade(evaluation);
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;
-                  const latestJob = evaluation.versions?.[0]?.job;
-                  const jobStatus = latestJob?.status;
+                  
+                  // Get the latest job status - this will be the most recent job
+                  // regardless of whether it has a version (completed) or not (pending/running)
+                  const latestJobStatus = evaluation.jobs?.[0]?.status;
                   
                   return (
                     <Link
@@ -114,8 +119,8 @@ export function DocumentEvaluationSidebar({
                     >
                       <span className="truncate flex-1">{agentName}</span>
                       <div className="flex items-center gap-2">
-                        {isOwner && jobStatus && jobStatus !== "COMPLETED" && (
-                          <JobStatusIndicator status={jobStatus} size="sm" />
+                        {isOwner && latestJobStatus && latestJobStatus !== "COMPLETED" && (
+                          <JobStatusIndicator status={latestJobStatus} size="sm" />
                         )}
                         <GradeBadge grade={grade} variant="light" size="xs" />
                       </div>

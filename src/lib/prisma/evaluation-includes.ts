@@ -23,6 +23,15 @@ export const evaluationWithGrade = {
       job: true,
     },
   },
+  // Include ALL jobs to get the latest job status (including pending ones without versions)
+  jobs: {
+    orderBy: { createdAt: 'desc' as const },
+    take: 1,
+    select: {
+      status: true,
+      createdAt: true,
+    },
+  },
 } as const;
 
 // Include for document with all evaluations (for sidebar)
@@ -51,6 +60,15 @@ export const fullEvaluationInclude = {
     orderBy: { version: 'desc' as const },
     include: {
       job: true,
+    },
+  },
+  // Include ALL jobs to get the latest job status (including pending ones without versions)
+  jobs: {
+    orderBy: { createdAt: 'desc' as const },
+    take: 1,
+    select: {
+      status: true,
+      createdAt: true,
     },
   },
 } as const;

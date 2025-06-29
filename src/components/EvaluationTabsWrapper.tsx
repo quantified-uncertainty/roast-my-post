@@ -31,15 +31,11 @@ export async function EvaluationTabsWrapper({
       },
       select: { 
         id: true,
-        versions: {
-          orderBy: { version: 'desc' },
+        jobs: {
+          orderBy: { createdAt: 'desc' },
           take: 1,
-          include: {
-            job: {
-              select: {
-                status: true
-              }
-            }
+          select: {
+            status: true
           }
         }
       }
@@ -48,7 +44,7 @@ export async function EvaluationTabsWrapper({
   
   const isOwner = session?.user?.id === document?.submittedById;
   const hasExistingEvaluation = !!evaluation;
-  const latestJobStatus = evaluation?.versions[0]?.job?.status;
+  const latestJobStatus = evaluation?.jobs?.[0]?.status;
 
   return (
     <div className="border-b border-gray-200">
