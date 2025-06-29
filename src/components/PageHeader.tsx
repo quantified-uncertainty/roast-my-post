@@ -14,6 +14,28 @@ export function PageHeader({ title, subtitle, children, layout = 'default' }: Pa
         {layout === 'with-sidebar' ? (
           <div className="flex gap-8">
             <div className="flex-1 max-w-4xl">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    {title}
+                  </h1>
+                  {subtitle && (
+                    <p className="text-gray-600">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+                {children && (
+                  <div className="ml-4">
+                    {children}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between">
+            <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {title}
               </h1>
@@ -22,21 +44,13 @@ export function PageHeader({ title, subtitle, children, layout = 'default' }: Pa
                   {subtitle}
                 </p>
               )}
-              {children}
             </div>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-gray-600">
-                {subtitle}
-              </p>
+            {children && (
+              <div className="ml-4">
+                {children}
+              </div>
             )}
-            {children}
-          </>
+          </div>
         )}
       </div>
     </div>

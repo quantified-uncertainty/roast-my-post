@@ -339,6 +339,44 @@ npm run test:ci           # CI-safe tests (no external deps)
 - E2E and LLM tests are excluded from CI to avoid costs and flakiness
 - Developers can run full test suite locally when needed
 
+## Puppeteer Debugging Tips (2025-06-29)
+
+### Wide Screen Layout Issues
+When debugging layout issues on wide screens with Puppeteer:
+
+1. **Puppeteer MCP has a 2000px width limit** - Screenshots are capped at 2000px wide
+2. **Use zoom to see wide screen layouts**:
+   ```javascript
+   // Zoom out to 50% to see more content
+   document.body.style.zoom = '0.5';
+   ```
+
+3. **Example debugging pattern**:
+   ```javascript
+   // Navigate with wider viewport
+   await puppeteer_navigate({
+     url: "http://localhost:3000/page",
+     launchOptions: { headless: true, args: ["--window-size=2000,1200"] }
+   });
+   
+   // Zoom out to see layout issues
+   await puppeteer_evaluate({
+     script: "document.body.style.zoom = '0.5';"
+   });
+   
+   // Take screenshot at max width
+   await puppeteer_screenshot({
+     name: "wide-layout-debug",
+     width: 2000,
+     height: 1200
+   });
+   ```
+
+4. **Common wide screen issues**:
+   - Container alignment mismatches (e.g., header vs main content)
+   - Missing `max-w-*` wrappers causing full-width sprawl
+   - Padding applied at wrong container level
+
 ## Security Updates (2025-01-24)
 
 ### API Route Protection

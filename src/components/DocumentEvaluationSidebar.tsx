@@ -89,7 +89,7 @@ export function DocumentEvaluationSidebar({
                   const agentName = evaluation.agent?.name || 
                                   evaluation.agent?.versions?.[0]?.name || 
                                   "Unknown Agent";
-                  const grade = evaluation.grade ?? evaluation.versions?.[0]?.grade;
+                  const grade = evaluation.grade ?? evaluation.versions?.[0]?.grade ?? null;
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;
                   

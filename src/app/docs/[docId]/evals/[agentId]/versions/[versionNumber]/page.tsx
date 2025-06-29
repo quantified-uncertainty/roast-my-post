@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -10,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import { prisma } from "@/lib/prisma";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
+import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -99,52 +99,48 @@ function createMarkdownComponents(sectionPrefix: string) {
         {children}
       </pre>
     ),
-    code: ({ children, ...props }: any) => {
-      const isInline = !props.className;
-      return isInline ? (
-        <code className="bg-gray-100 px-1 py-0.5 rounded text-sm text-gray-800">
-          {children}
-        </code>
-      ) : (
-        <code className="text-sm">{children}</code>
-      );
-    },
+    code: ({ children }: any) => (
+      <code className="bg-gray-100 rounded px-1 py-0.5 text-sm">
+        {children}
+      </code>
+    ),
     // Style links
-    a: ({ children, href }: any) => (
-      <a
-        href={href}
-        className="text-blue-600 hover:text-blue-800 underline"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+    a: ({ href, children }: any) => (
+      <a href={href} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">
         {children}
       </a>
+    ),
+    // Style horizontal rules
+    hr: () => (
+      <hr className="my-8 border-gray-200" />
     ),
   };
 }
 
-async function getEvaluation(docId: string, agentId: string) {
+interface PageProps {
+  params: Promise<{ 
+    docId: string; 
+    agentId: string;
+    versionNumber: string;
+  }>;
+}
+
+export default async function EvaluationVersionPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const { docId, agentId, versionNumber } = resolvedParams;
+  const versionNum = parseInt(versionNumber);
+
+  if (!docId || !agentId || isNaN(versionNum)) {
+    notFound();
+  }
+
+  // Fetch the evaluation with all versions
   const evaluation = await prisma.evaluation.findFirst({
     where: {
-      agentId: agentId,
       documentId: docId,
+      agentId: agentId,
     },
     include: {
-      agent: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-        },
-      },
-      versions: {
-        orderBy: { version: 'desc' },
-        take: 1,
-        include: {
-          job: true,
-        },
-      },
       document: {
         include: {
           versions: {
@@ -161,49 +157,52 @@ async function getEvaluation(docId: string, agentId: string) {
                   },
                 },
               },
-              versions: {
-                orderBy: { version: 'desc' },
-                take: 1,
-              },
-            },
-            orderBy: {
-              createdAt: 'desc',
             },
           },
+        },
+      },
+      agent: {
+        include: {
+          versions: {
+            orderBy: { version: 'desc' },
+            take: 1,
+          },
+        },
+      },
+      versions: {
+        orderBy: { version: 'desc' },
+        include: {
+          job: true,
         },
       },
     },
   });
 
-  return evaluation;
-}
-
-export default async function EvaluationPage({
-  params,
-}: {
-  params: Promise<{ docId: string; agentId: string }>;
-}) {
-  const resolvedParams = await params;
-  const { docId, agentId } = resolvedParams;
-
-  const evaluation = await getEvaluation(docId, agentId);
-
   if (!evaluation) {
     notFound();
   }
 
-  const latestVersion = evaluation.versions[0];
-  const analysis = latestVersion?.analysis || "";
-  const thinking = latestVersion?.job?.llmThinking || "";
-  const selfCritique = latestVersion?.selfCritique || "";
-  const summary = latestVersion?.summary || "";
-  const grade = latestVersion?.grade;
+  // Find the specific version
+  const selectedVersion = evaluation.versions.find(v => v.version === versionNum);
+  
+  if (!selectedVersion) {
+    notFound();
+  }
+
+  // Extract content from the selected version
+  const analysis = selectedVersion.analysis || "No analysis available";
+  const summary = selectedVersion.summary || "";
+  const thinking = selectedVersion.job?.llmThinking || "";
+  const selfCritique = selectedVersion.selfCritique || "";
+  const grade = selectedVersion.grade;
+
+  // Agent information
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const agentType = evaluation.agent.versions[0]?.agentType || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
-  const costInCents = latestVersion?.job?.costInCents;
-  const durationInSeconds = latestVersion?.job?.durationInSeconds;
+  const costInCents = selectedVersion.job?.costInCents;
+  const durationInSeconds = selectedVersion.job?.durationInSeconds;
   
   // Get all evaluations for the sidebar
   const allEvaluations = evaluation.document.evaluations || [];
@@ -262,23 +261,21 @@ export default async function EvaluationPage({
         evaluations={allEvaluations}
       />
       
+      {/* Version Sidebar */}
+      <EvaluationVersionSidebar
+        docId={docId}
+        agentId={agentId}
+        versions={evaluation.versions}
+        currentVersion={versionNum}
+      />
+      
       <div className="flex-1 overflow-y-auto">
         {/* Full-width Header */}
         <PageHeader 
-          title={`${agentName} Evaluation`}
+          title={`${agentName} Evaluation (v${versionNum})`}
           subtitle={`Analysis of "${documentTitle}"`}
           layout="with-sidebar"
-        >
-          <Link
-            href={`/docs/${docId}/evals/${agentId}/versions`}
-            className="text-sm text-gray-600 hover:text-gray-900 font-medium inline-flex items-center gap-1"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            Versions
-          </Link>
-        </PageHeader>
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">
@@ -309,12 +306,9 @@ export default async function EvaluationPage({
                 </span>
               )}
             </div>
-            {grade !== undefined && grade !== null && (
-              <div className="ml-6 text-right">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Grade</p>
-                <div className="mt-1">
-                  <GradeBadge grade={grade} variant="dark" size="md" className="text-2xl px-4 py-1" />
-                </div>
+            {grade && (
+              <div className="ml-4">
+                <GradeBadge grade={grade} variant="dark" size="md" />
               </div>
             )}
           </div>
@@ -325,33 +319,29 @@ export default async function EvaluationPage({
           <div className="border-b border-gray-200 pb-4 mb-6">
             <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Analysis</h2>
           </div>
-          {analysis ? (
-            <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
+          <div className="prose prose-gray max-w-none">
+            {analysis ? (
+              <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={createMarkdownComponents('analysis')}
               >
                 {analysis}
               </ReactMarkdown>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
-                No analysis available for this evaluation.
-              </p>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500 italic">No analysis available</p>
+            )}
+          </div>
         </div>
 
-        {/* Thinking Section */}
+        {/* Thinking Process Section */}
         {thinking && (
           <div id="thinking" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
             <div className="border-b border-gray-200 pb-4 mb-6">
               <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Thinking Process</h2>
             </div>
             <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
+              <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={createMarkdownComponents('thinking')}
@@ -369,7 +359,7 @@ export default async function EvaluationPage({
               <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Self-Critique</h2>
             </div>
             <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
+              <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={createMarkdownComponents('self-critique')}
@@ -382,45 +372,38 @@ export default async function EvaluationPage({
 
         {/* Run Stats Section */}
         {(costInCents || durationInSeconds) && (
-          <div id="run-stats" className="bg-slate-50 rounded-lg shadow-sm border border-slate-200 p-8 scroll-mt-8">
-            <div className="border-b border-slate-200 pb-4 mb-6">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Run Stats</h2>
+          <div id="run-stats" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 scroll-mt-8">
+            <div className="border-b border-gray-200 pb-4 mb-4">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Run Statistics</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {durationInSeconds !== undefined && durationInSeconds !== null && (
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {costInCents && (
                 <div>
-                  <p className="text-sm text-gray-500">Duration</p>
-                  <p className="text-lg font-medium text-gray-900">
-                    {durationInSeconds < 60 
-                      ? `${Math.round(durationInSeconds)}s`
-                      : `${Math.floor(durationInSeconds / 60)}m ${Math.round(durationInSeconds % 60)}s`}
-                  </p>
-                </div>
-              )}
-              {costInCents !== undefined && costInCents !== null && (
-                <div>
-                  <p className="text-sm text-gray-500">Cost</p>
-                  <p className="text-lg font-medium text-gray-900">
+                  <dt className="text-sm font-medium text-gray-500">Cost</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-gray-900">
                     ${(costInCents / 100).toFixed(3)}
-                  </p>
+                  </dd>
                 </div>
               )}
-              <div>
-                <p className="text-sm text-gray-500">Created</p>
-                <p className="text-lg font-medium text-gray-900">
-                  {new Date(latestVersion.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
+              {durationInSeconds && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Duration</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-gray-900">
+                    {durationInSeconds < 60 
+                      ? `${durationInSeconds}s`
+                      : `${Math.floor(durationInSeconds / 60)}m ${durationInSeconds % 60}s`
+                    }
+                  </dd>
+                </div>
+              )}
+            </dl>
           </div>
         )}
-            </div>
+      </div>
 
-            {/* Sticky Navigation Sidebar */}
-            <div className="hidden lg:block">
-              <div className="sticky top-8">
-                <EvaluationNavigation items={navItems} />
-              </div>
+            {/* Right Navigation Sidebar */}
+            <div className="hidden xl:block">
+              <EvaluationNavigation items={navItems} />
             </div>
           </div>
         </div>

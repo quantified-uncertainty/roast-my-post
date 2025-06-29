@@ -131,15 +131,22 @@ export default async function DocumentPage({
                     >
                       <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-1">
-                            {evaluation.agent?.name || "Unknown Agent"}
-                          </h3>
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="font-medium text-gray-900">
+                              {evaluation.agent?.name || "Unknown Agent"}
+                            </h3>
+                            {evaluation.versions && evaluation.versions.length > 1 && (
+                              <span className="text-xs text-gray-500">
+                                {evaluation.versions.length} versions
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600 line-clamp-2">
                             {evaluation.summary || "No summary available"}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <GradeBadge grade={evaluation.grade} variant="light" size="sm" />
+                          <GradeBadge grade={evaluation.grade ?? null} variant="light" size="sm" />
                           <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                         </div>
                       </div>
