@@ -6,6 +6,7 @@ import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 import { formatDistanceToNow } from "date-fns";
+import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 
 export default async function DocumentPage({
   params,
@@ -42,9 +43,16 @@ export default async function DocumentPage({
     : `${Math.round(fileSizeKB)} KB`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="h-full bg-gray-50 flex overflow-hidden">
+      {/* Document/Evaluation Switcher Sidebar */}
+      <DocumentEvaluationSidebar 
+        docId={docId}
+        evaluations={document.reviews || []}
+      />
+      
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Document Preview Card */}
@@ -252,6 +260,7 @@ export default async function DocumentPage({
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

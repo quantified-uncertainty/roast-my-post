@@ -8,9 +8,10 @@ import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
+import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 
 // Function to extract headings from markdown
-function extractHeadings(markdown: string): { id: string; label: string; level: number }[] {
+function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
   const headings: { id: string; label: string; level: number }[] = [];
   const lines = markdown.split('\n');
   
@@ -26,7 +27,7 @@ function extractHeadings(markdown: string): { id: string; label: string; level: 
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
       
-      if (level <= 2) { // Only h1 and h2
+      if (level >= minLevel && level <= 2) { // Only include headings at minLevel or higher
         headings.push({
           id,
           label: text,
@@ -147,6 +148,25 @@ async function getEvaluation(docId: string, evaluationId: string) {
             orderBy: { version: 'desc' },
             take: 1,
           },
+          evaluations: {
+            include: {
+              agent: {
+                include: {
+                  versions: {
+                    orderBy: { version: 'desc' },
+                    take: 1,
+                  },
+                },
+              },
+              versions: {
+                orderBy: { version: 'desc' },
+                take: 1,
+              },
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
         },
       },
     },
@@ -173,19 +193,31 @@ export default async function EvaluationPage({
   const analysis = latestVersion?.analysis || "";
   const thinking = latestVersion?.job?.llmThinking || "";
   const selfCritique = latestVersion?.selfCritique || "";
+  const summary = latestVersion?.summary || "";
   const grade = latestVersion?.grade;
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const agentType = evaluation.agent.versions[0]?.agentType || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
+  const costInCents = latestVersion?.job?.costInCents;
+  const durationInSeconds = latestVersion?.job?.durationInSeconds;
+  
+  // Get all evaluations for the sidebar
+  const allEvaluations = evaluation.document.evaluations || [];
 
   // Extract headings from each section
-  const analysisHeadings = analysis ? extractHeadings(analysis) : [];
-  const thinkingHeadings = thinking ? extractHeadings(thinking) : [];
-  const selfCritiqueHeadings = selfCritique ? extractHeadings(selfCritique) : [];
+  const analysisHeadings = analysis ? extractHeadings(analysis, 2) : []; // Only H2 for analysis
+  const thinkingHeadings = thinking ? extractHeadings(thinking) : []; // H1 and H2 for thinking
+  const selfCritiqueHeadings = selfCritique ? extractHeadings(selfCritique) : []; // H1 and H2 for self-critique
 
   // Create navigation items with sub-items
   const navItems = [
+    { 
+      id: 'summary', 
+      label: 'Summary', 
+      show: !!summary,
+      subItems: []
+    },
     { 
       id: 'agent-info', 
       label: 'Agent Information', 
@@ -210,26 +242,51 @@ export default async function EvaluationPage({
       show: !!selfCritique,
       subItems: selfCritiqueHeadings.map(h => ({ ...h, id: `self-critique-${h.id}` }))
     },
+    { 
+      id: 'run-stats', 
+      label: 'Run Stats', 
+      show: !!(costInCents || durationInSeconds),
+      subItems: []
+    },
   ].filter(item => item.show);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
-          {/* Sticky Navigation Sidebar */}
-          <EvaluationNavigation items={navItems} />
+    <div className="h-full bg-gray-50 flex overflow-hidden">
+      {/* Document/Evaluation Switcher Sidebar */}
+      <DocumentEvaluationSidebar 
+        docId={docId}
+        currentEvaluationId={evaluationId}
+        evaluations={allEvaluations}
+      />
+      
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex">
+          <div className="flex gap-8 w-full">
+            {/* Sticky Navigation Sidebar */}
+            <EvaluationNavigation items={navItems} />
 
-          {/* Main Content */}
-          <div className="flex-1 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {agentName} Evaluation
-          </h1>
-          <p className="text-gray-600">
-            Analysis of "{documentTitle}"
-          </p>
-        </div>
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div className="max-w-4xl">
+                {/* Header */}
+                <div className="mb-8">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    {agentName} Evaluation
+                  </h1>
+                  <p className="text-gray-600">
+                    Analysis of "{documentTitle}"
+                  </p>
+                </div>
+
+        {/* Summary Section */}
+        {summary && (
+          <div id="summary" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Summary</h2>
+            </div>
+            <p className="text-gray-700 leading-relaxed">{summary}</p>
+          </div>
+        )}
 
         {/* Agent Info Card */}
         <div id="agent-info" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 scroll-mt-8">
@@ -256,7 +313,9 @@ export default async function EvaluationPage({
 
         {/* Analysis Section */}
         <div id="analysis" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Analysis</h2>
+          <div className="border-b border-gray-200 pb-4 mb-6">
+            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Analysis</h2>
+          </div>
           {analysis ? (
             <div className="prose prose-gray max-w-none">
               <ReactMarkdown
@@ -279,7 +338,9 @@ export default async function EvaluationPage({
         {/* Thinking Section */}
         {thinking && (
           <div id="thinking" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Thinking Process</h2>
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Thinking Process</h2>
+            </div>
             <div className="prose prose-gray max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -295,7 +356,9 @@ export default async function EvaluationPage({
         {/* Self-Critique Section */}
         {selfCritique && (
           <div id="self-critique" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Self-Critique</h2>
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Self-Critique</h2>
+            </div>
             <div className="prose prose-gray max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -308,19 +371,42 @@ export default async function EvaluationPage({
           </div>
         )}
 
-        {/* Metadata */}
-        {latestVersion && (
-          <div className="mt-6 flex justify-between text-sm text-gray-600">
-            <div>
-              Created: {new Date(latestVersion.createdAt).toLocaleDateString()}
+        {/* Run Stats Section */}
+        {(costInCents || durationInSeconds) && (
+          <div id="run-stats" className="bg-slate-50 rounded-lg shadow-sm border border-slate-200 p-8 scroll-mt-8">
+            <div className="border-b border-slate-200 pb-4 mb-6">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Run Stats</h2>
             </div>
-            {latestVersion.job?.costInCents && (
+            <div className="grid grid-cols-2 gap-4">
+              {durationInSeconds !== undefined && durationInSeconds !== null && (
+                <div>
+                  <p className="text-sm text-gray-500">Duration</p>
+                  <p className="text-lg font-medium text-gray-900">
+                    {durationInSeconds < 60 
+                      ? `${Math.round(durationInSeconds)}s`
+                      : `${Math.floor(durationInSeconds / 60)}m ${Math.round(durationInSeconds % 60)}s`}
+                  </p>
+                </div>
+              )}
+              {costInCents !== undefined && costInCents !== null && (
+                <div>
+                  <p className="text-sm text-gray-500">Cost</p>
+                  <p className="text-lg font-medium text-gray-900">
+                    ${(costInCents / 100).toFixed(3)}
+                  </p>
+                </div>
+              )}
               <div>
-                Cost: ${(latestVersion.job.costInCents / 100).toFixed(2)}
+                <p className="text-sm text-gray-500">Created</p>
+                <p className="text-lg font-medium text-gray-900">
+                  {new Date(latestVersion.createdAt).toLocaleDateString()}
+                </p>
               </div>
-            )}
+            </div>
           </div>
         )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

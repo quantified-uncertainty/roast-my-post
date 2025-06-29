@@ -13,9 +13,9 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="h-full flex flex-col">
       {/* Header (always visible at the top) */}
-      <header className="border-b border-gray-200 bg-blue-500 px-6 py-3">
+      <header className="border-b border-gray-200 bg-blue-500 px-6 py-3 flex-shrink-0">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <h1 className="text-2xl font-bold text-white">Roast My Post</h1>
           <div className="flex items-center justify-between space-x-6">
@@ -50,7 +50,7 @@ export default function ClientLayout({
       </header>
 
       {/* Main Content Area */}
-      <main>{children}</main>
-    </>
+      <main className="flex-1 overflow-hidden">{children}</main>
+    </div>
   );
 }

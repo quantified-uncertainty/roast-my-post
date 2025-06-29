@@ -23,8 +23,8 @@ export function EvaluationNavigation({ items }: EvaluationNavigationProps) {
   };
 
   return (
-    <nav className="hidden lg:block w-64 flex-shrink-0">
-      <div className="sticky top-8">
+    <nav className="hidden lg:block w-64 flex-shrink-0 h-full overflow-y-auto">
+      <div className="p-4">
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Contents</h3>
         <ul className="space-y-2">
           {items.map((item) => (
