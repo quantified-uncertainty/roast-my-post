@@ -185,6 +185,8 @@ When adding conditional features (like re-upload button):
 
 ## Commands
 - `npm run dev` - Development server
+  - **IMPORTANT**: Always check if dev server is already running on port 3000 first (use `lsof -i :3000` or try http://localhost:3000)
+  - The user often has the dev server already running, so check before starting a new instance
 - `npm run typecheck` - Type checking
 - `npm run db:push` - Push schema changes (now uses safe wrapper)
 - `npm run process-jobs` - Manual job processing

@@ -12,6 +12,8 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { VersionTabs } from "@/components/VersionTabs";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -253,29 +255,39 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   ].filter(item => item.show);
 
   return (
-    <div className="h-full bg-gray-50 flex overflow-hidden">
-      {/* Document/Evaluation Switcher Sidebar */}
-      <DocumentEvaluationSidebar 
-        docId={docId}
-        currentAgentId={agentId}
-        evaluations={allEvaluations}
+    <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
+      {/* Breadcrumb Navigation - Full Width */}
+      <BreadcrumbHeader 
+        documentTitle={documentTitle}
+        agentName={agentName}
+        versionNumber={versionNum}
       />
       
-      {/* Version Sidebar */}
-      <EvaluationVersionSidebar
-        docId={docId}
-        agentId={agentId}
-        versions={evaluation.versions}
-        currentVersion={versionNum}
-      />
-      
-      <div className="flex-1 overflow-y-auto">
-        {/* Full-width Header */}
-        <PageHeader 
+      <div className="flex-1 flex overflow-hidden">
+        {/* Document/Evaluation Switcher Sidebar */}
+        <DocumentEvaluationSidebar 
+          docId={docId}
+          currentAgentId={agentId}
+          evaluations={allEvaluations}
+        />
+        
+        {/* Version Sidebar */}
+        <EvaluationVersionSidebar
+          docId={docId}
+          agentId={agentId}
+          versions={evaluation.versions}
+          currentVersion={versionNum}
+        />
+        
+        <div className="flex-1 overflow-y-auto">
+          {/* Full-width Header */}
+          <PageHeader 
           title={`${agentName} Evaluation (v${versionNum})`}
-          subtitle={`Analysis of "${documentTitle}"`}
           layout="with-sidebar"
         />
+
+        {/* Tab Navigation */}
+        <VersionTabs docId={docId} agentId={agentId} versionNumber={versionNum} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">
@@ -406,6 +418,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
               <EvaluationNavigation items={navItems} />
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

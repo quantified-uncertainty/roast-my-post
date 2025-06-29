@@ -12,6 +12,8 @@ import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { EvaluationTabs } from "@/components/EvaluationTabs";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -254,23 +256,29 @@ export default async function EvaluationPage({
   ].filter(item => item.show);
 
   return (
-    <div className="h-full bg-gray-50 flex overflow-hidden">
-      {/* Document/Evaluation Switcher Sidebar */}
-      <DocumentEvaluationSidebar 
-        docId={docId}
-        currentAgentId={agentId}
-        evaluations={allEvaluations}
+    <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
+      {/* Breadcrumb Navigation - Full Width */}
+      <BreadcrumbHeader 
+        documentTitle={documentTitle}
+        agentName={agentName}
       />
       
-      <div className="flex-1 overflow-y-auto">
-        {/* Full-width Header */}
-        <PageHeader 
+      <div className="flex-1 flex overflow-hidden">
+        {/* Document/Evaluation Switcher Sidebar */}
+        <DocumentEvaluationSidebar 
+          docId={docId}
+          currentAgentId={agentId}
+          evaluations={allEvaluations}
+        />
+        
+        <div className="flex-1 overflow-y-auto">
+          {/* Full-width Header */}
+          <PageHeader 
           title={`${agentName} Evaluation`}
-          subtitle={`Analysis of "${documentTitle}"`}
           layout="with-sidebar"
         >
           <Link
-            href={`/docs/${docId}/evals/${agentId}/versions`}
+            href={`/docs/${docId}/evals/${agentId}/versions/${latestVersion?.version || 1}`}
             className="text-sm text-gray-600 hover:text-gray-900 font-medium inline-flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,6 +287,9 @@ export default async function EvaluationPage({
             Versions
           </Link>
         </PageHeader>
+
+        {/* Tab Navigation */}
+        <EvaluationTabs docId={docId} agentId={agentId} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">
@@ -423,6 +434,7 @@ export default async function EvaluationPage({
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
