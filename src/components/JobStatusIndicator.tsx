@@ -23,36 +23,38 @@ export function JobStatusIndicator({
     lg: "text-base"
   };
 
-  if (status === "PENDING" || status === "RUNNING") {
+  if (status === "PENDING") {
     return (
-      <div className="flex items-center gap-2">
-        <svg 
-          className={`animate-spin ${sizeClasses[size]} ${
-            status === "PENDING" ? "text-yellow-500" : "text-blue-500"
-          }`} 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="none" 
-          viewBox="0 0 24 24"
-        >
-          <circle 
-            className="opacity-25" 
-            cx="12" 
-            cy="12" 
-            r="10" 
-            stroke="currentColor" 
-            strokeWidth="4"
-          />
-          <path 
-            className="opacity-75" 
-            fill="currentColor" 
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
+      <div className="group relative flex items-center gap-2">
+        <div className="relative">
+          <div className={`${sizeClasses[size]} rounded-full bg-yellow-400`} />
+          <div className="invisible group-hover:visible absolute z-10 -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+            Queued
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900" />
+          </div>
+        </div>
         {showLabel && (
-          <span className={`${labelSizeClasses[size]} ${
-            status === "PENDING" ? "text-yellow-600" : "text-blue-600"
-          } font-medium`}>
-            {status === "PENDING" ? "Queued" : "Running"}
+          <span className={`${labelSizeClasses[size]} text-yellow-600 font-medium`}>
+            Queued
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (status === "RUNNING") {
+    return (
+      <div className="group relative flex items-center gap-2">
+        <div className="relative">
+          <div className={`${sizeClasses[size]} rounded-full bg-blue-400`} />
+          <div className="invisible group-hover:visible absolute z-10 -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+            Running
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900" />
+          </div>
+        </div>
+        {showLabel && (
+          <span className={`${labelSizeClasses[size]} text-blue-600 font-medium`}>
+            Running
           </span>
         )}
       </div>
@@ -61,20 +63,14 @@ export function JobStatusIndicator({
 
   if (status === "FAILED") {
     return (
-      <div className="flex items-center gap-2">
-        <svg 
-          className={`${sizeClasses[size]} text-red-500`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-          />
-        </svg>
+      <div className="group relative flex items-center gap-2">
+        <div className="relative">
+          <div className={`${sizeClasses[size]} rounded-full bg-red-500`} />
+          <div className="invisible group-hover:visible absolute z-10 -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap">
+            Failed
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900" />
+          </div>
+        </div>
         {showLabel && (
           <span className={`${labelSizeClasses[size]} text-red-600 font-medium`}>
             Failed
