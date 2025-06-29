@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
 import { VersionPageHeader } from "@/components/VersionPageHeader";
 import { VersionTabs } from "@/components/VersionTabs";
 import { TaskDisplayClient } from "./TaskDisplayClient";
+import { CopyButton } from "@/components/CopyButton";
 
 interface PageProps {
   params: Promise<{ 
@@ -32,48 +34,7 @@ export default async function VersionLogsPage({ params }: PageProps) {
       documentId: docId,
       agentId: agentId,
     },
-    include: {
-      document: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-          evaluations: {
-            include: {
-              agent: {
-                include: {
-                  versions: {
-                    orderBy: { version: 'desc' },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      agent: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-        },
-      },
-      versions: {
-        orderBy: { version: 'desc' },
-        include: {
-          job: {
-            include: {
-              tasks: {
-                orderBy: { createdAt: 'asc' },
-              },
-            },
-          },
-        },
-      },
-    },
+    include: evaluationWithAllVersions,
   });
 
   if (!evaluation) {
@@ -157,9 +118,34 @@ export default async function VersionLogsPage({ params }: PageProps) {
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-1">Job ID</h3>
-                    <p className="text-sm text-gray-900 font-mono">{job.id}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-gray-900 font-mono">{job.id}</p>
+                      <CopyButton text={job.id} />
+                    </div>
                   </div>
                 </div>
+
+                {/* Timestamps */}
+                {(job.startedAt || job.completedAt) && (
+                  <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {job.startedAt && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-1">Started</h3>
+                        <p className="text-sm text-gray-900">
+                          {new Date(job.startedAt).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                    {job.completedAt && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-1">Completed</h3>
+                        <p className="text-sm text-gray-900">
+                          {new Date(job.completedAt).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Error Message */}
                 {job.error && (

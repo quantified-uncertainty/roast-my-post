@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { GradeBadge } from "./GradeBadge";
+import { getEvaluationGrade } from "@/lib/type-guards";
 
 interface Evaluation {
   id?: string;
@@ -89,7 +90,7 @@ export function DocumentEvaluationSidebar({
                   const agentName = evaluation.agent?.name || 
                                   evaluation.agent?.versions?.[0]?.name || 
                                   "Unknown Agent";
-                  const grade = evaluation.grade ?? evaluation.versions?.[0]?.grade ?? null;
+                  const grade = getEvaluationGrade(evaluation);
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;
                   

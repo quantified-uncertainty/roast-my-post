@@ -72,18 +72,35 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
                 <h4 className="font-medium text-gray-900">{task.name}</h4>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span className="rounded bg-gray-200 px-2 py-1">
+                <span className={`rounded px-2 py-1 text-xs font-medium ${
+                  task.modelName.includes('gpt-4') ? 'bg-green-100 text-green-800' :
+                  task.modelName.includes('gpt-3.5') ? 'bg-blue-100 text-blue-800' :
+                  task.modelName.includes('claude') ? 'bg-purple-100 text-purple-800' :
+                  task.modelName.includes('gemini') ? 'bg-orange-100 text-orange-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
                   {task.modelName}
                 </span>
                 <span>${(task.priceInCents / 100).toFixed(4)}</span>
-                {task.timeInSeconds && <span>{task.timeInSeconds}s</span>}
+                {task.timeInSeconds && (
+                  <span className="text-gray-600">
+                    {task.timeInSeconds < 60 
+                      ? `${task.timeInSeconds}s`
+                      : `${Math.floor(task.timeInSeconds / 60)}m ${task.timeInSeconds % 60}s`
+                    }
+                  </span>
+                )}
                 <svg 
-                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                  className="w-5 h-5 transition-transform" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  {isExpanded ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  )}
                 </svg>
               </div>
             </div>
@@ -322,7 +339,12 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
         </div>
         <div className="mt-1 flex items-center justify-between text-sm">
           <span className="font-medium text-blue-900">Total Time:</span>
-          <span className="text-blue-700">{totalTime}s</span>
+          <span className="text-blue-700">
+            {totalTime < 60 
+              ? `${totalTime}s`
+              : `${Math.floor(totalTime / 60)}m ${totalTime % 60}s`
+            }
+          </span>
         </div>
       </div>
     </div>

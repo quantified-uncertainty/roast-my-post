@@ -8,6 +8,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";
+import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -131,50 +132,7 @@ async function getEvaluation(docId: string, agentId: string) {
       agentId: agentId,
       documentId: docId,
     },
-    include: {
-      agent: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-        },
-      },
-      versions: {
-        orderBy: { version: 'desc' },
-        take: 1,
-        include: {
-          job: true,
-        },
-      },
-      document: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-          evaluations: {
-            include: {
-              agent: {
-                include: {
-                  versions: {
-                    orderBy: { version: 'desc' },
-                    take: 1,
-                  },
-                },
-              },
-              versions: {
-                orderBy: { version: 'desc' },
-                take: 1,
-              },
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
-        },
-      },
-    },
+    include: fullEvaluationInclude,
   });
 
   return evaluation;

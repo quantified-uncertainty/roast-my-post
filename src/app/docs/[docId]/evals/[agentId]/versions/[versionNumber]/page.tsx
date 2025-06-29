@@ -7,6 +7,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";
+import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
@@ -142,42 +143,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
       documentId: docId,
       agentId: agentId,
     },
-    include: {
-      document: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-          evaluations: {
-            include: {
-              agent: {
-                include: {
-                  versions: {
-                    orderBy: { version: 'desc' },
-                    take: 1,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      agent: {
-        include: {
-          versions: {
-            orderBy: { version: 'desc' },
-            take: 1,
-          },
-        },
-      },
-      versions: {
-        orderBy: { version: 'desc' },
-        include: {
-          job: true,
-        },
-      },
-    },
+    include: evaluationWithAllVersions,
   });
 
   if (!evaluation) {
