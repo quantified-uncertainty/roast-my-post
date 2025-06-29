@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/lib/document-auth";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -167,6 +168,9 @@ export default async function EvaluationPage({
   
   // Get all evaluations for the sidebar
   const allEvaluations = evaluation.document.evaluations || [];
+  
+  // Check if current user owns the document
+  const isOwner = await checkDocumentOwnership(docId);
 
   // Extract headings from each section
   const analysisHeadings = analysis ? extractHeadings(analysis, 2) : []; // Only H2 for analysis
@@ -227,6 +231,7 @@ export default async function EvaluationPage({
           docId={docId}
           currentAgentId={agentId}
           evaluations={allEvaluations}
+          isOwner={isOwner}
         />
         
         <div className="flex-1 overflow-y-auto">

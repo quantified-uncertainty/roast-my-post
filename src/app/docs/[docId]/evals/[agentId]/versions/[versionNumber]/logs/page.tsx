@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/lib/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
@@ -54,6 +55,9 @@ export default async function VersionLogsPage({ params }: PageProps) {
   
   // Get all evaluations for the sidebar
   const allEvaluations = evaluation.document.evaluations || [];
+  
+  // Check if current user owns the document
+  const isOwner = await checkDocumentOwnership(docId);
 
   return (
     <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
@@ -71,6 +75,7 @@ export default async function VersionLogsPage({ params }: PageProps) {
           docId={docId}
           currentAgentId={agentId}
           evaluations={allEvaluations}
+          isOwner={isOwner}
         />
         
         {/* Version Sidebar */}
@@ -79,6 +84,7 @@ export default async function VersionLogsPage({ params }: PageProps) {
           agentId={agentId}
           versions={evaluation.versions}
           currentVersion={versionNum}
+          isOwner={isOwner}
         />
         
         <div className="flex-1 overflow-y-auto">

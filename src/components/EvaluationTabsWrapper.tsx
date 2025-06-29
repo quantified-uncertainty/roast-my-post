@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { EvaluationTabs } from "./EvaluationTabs";
 import { RerunButton } from "./RerunButton";
+import { JobStatusIndicator } from "./JobStatusIndicator";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
 
 interface EvaluationTabsWrapperProps {
@@ -28,12 +29,26 @@ export async function EvaluationTabsWrapper({
         documentId: docId,
         agentId: agentId
       },
-      select: { id: true }
+      select: { 
+        id: true,
+        versions: {
+          orderBy: { version: 'desc' },
+          take: 1,
+          include: {
+            job: {
+              select: {
+                status: true
+              }
+            }
+          }
+        }
+      }
     })
   ]);
   
   const isOwner = session?.user?.id === document?.submittedById;
   const hasExistingEvaluation = !!evaluation;
+  const latestJobStatus = evaluation?.versions[0]?.job?.status;
 
   return (
     <div className="border-b border-gray-200">
@@ -44,7 +59,10 @@ export async function EvaluationTabsWrapper({
             agentId={agentId} 
             latestVersionNumber={latestVersionNumber}
           />
-          <div className="py-3">
+          <div className="py-3 flex items-center gap-4">
+            {isOwner && latestJobStatus && latestJobStatus !== "COMPLETED" && (
+              <JobStatusIndicator status={latestJobStatus} size="md" showLabel />
+            )}
             <RerunButton 
               agentId={agentId}
               documentId={docId}

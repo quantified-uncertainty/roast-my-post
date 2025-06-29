@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { evaluationWithCurrentJob } from "@/lib/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/lib/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
@@ -37,6 +38,9 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
   const allEvaluations = evaluation.document.evaluations || [];
   
+  // Check if current user owns the document
+  const isOwner = await checkDocumentOwnership(docId);
+  
   // Get the current version and its job
   const currentVersion = evaluation.versions[0];
   const currentJob = currentVersion?.job;
@@ -53,6 +57,7 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
             docId={docId}
             currentAgentId={agentId}
             evaluations={allEvaluations}
+            isOwner={isOwner}
           />
           <div className="flex-1 overflow-y-auto">
             <PageHeader 
@@ -85,6 +90,7 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
           docId={docId}
           currentAgentId={agentId}
           evaluations={allEvaluations}
+          isOwner={isOwner}
         />
         
         <div className="flex-1 overflow-y-auto">

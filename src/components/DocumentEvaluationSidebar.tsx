@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { GradeBadge } from "./GradeBadge";
 import { getEvaluationGrade } from "@/lib/type-guards";
+import { JobStatusIndicator } from "./JobStatusIndicator";
 
 interface Evaluation {
   id?: string;
@@ -24,6 +25,9 @@ interface Evaluation {
   };
   versions?: Array<{
     grade?: number | null;
+    job?: {
+      status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+    } | null;
   }>;
   grade?: number | null;
 }
@@ -32,12 +36,14 @@ interface DocumentEvaluationSidebarProps {
   docId: string;
   currentAgentId?: string;
   evaluations: Evaluation[];
+  isOwner?: boolean;
 }
 
 export function DocumentEvaluationSidebar({ 
   docId, 
   currentAgentId,
-  evaluations 
+  evaluations,
+  isOwner = false 
 }: DocumentEvaluationSidebarProps) {
   const pathname = usePathname();
   const [isEvaluationsOpen, setIsEvaluationsOpen] = useState(true);
@@ -93,6 +99,8 @@ export function DocumentEvaluationSidebar({
                   const grade = getEvaluationGrade(evaluation);
                   const agentId = evaluation.agentId;
                   const isActive = currentAgentId === agentId;
+                  const latestJob = evaluation.versions?.[0]?.job;
+                  const jobStatus = latestJob?.status;
                   
                   return (
                     <Link
@@ -104,8 +112,13 @@ export function DocumentEvaluationSidebar({
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }`}
                     >
-                      <span className="truncate">{agentName}</span>
-                      <GradeBadge grade={grade} variant="light" size="xs" />
+                      <span className="truncate flex-1">{agentName}</span>
+                      <div className="flex items-center gap-2">
+                        {isOwner && jobStatus && jobStatus !== "COMPLETED" && (
+                          <JobStatusIndicator status={jobStatus} size="sm" />
+                        )}
+                        <GradeBadge grade={grade} variant="light" size="xs" />
+                      </div>
                     </Link>
                   );
                 })}

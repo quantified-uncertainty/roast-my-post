@@ -58,6 +58,7 @@ export default async function DocumentPage({
         <DocumentEvaluationSidebar
           docId={docId}
           evaluations={document.reviews || []}
+          isOwner={isOwner}
         />
 
         <div className="flex-1 overflow-y-auto">

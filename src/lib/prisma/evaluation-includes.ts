@@ -19,6 +19,9 @@ export const evaluationWithGrade = {
   versions: {
     orderBy: { version: 'desc' as const },
     take: 1,
+    include: {
+      job: true,
+    },
   },
 } as const;
 

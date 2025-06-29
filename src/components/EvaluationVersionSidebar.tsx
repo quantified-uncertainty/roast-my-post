@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ClockIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
+import { JobStatusIndicator } from "./JobStatusIndicator";
 
 interface Version {
   id: string;
@@ -22,6 +23,7 @@ interface EvaluationVersionSidebarProps {
   agentId: string;
   versions: Version[];
   currentVersion: number;
+  isOwner?: boolean;
 }
 
 export function EvaluationVersionSidebar({
@@ -29,6 +31,7 @@ export function EvaluationVersionSidebar({
   agentId,
   versions,
   currentVersion,
+  isOwner = false,
 }: EvaluationVersionSidebarProps) {
   return (
     <div className="w-80 border-r border-gray-200 bg-gray-50 overflow-y-auto">
@@ -38,8 +41,8 @@ export function EvaluationVersionSidebar({
         <div className="space-y-1">
           {versions.map((version) => {
             const isActive = version.version === currentVersion;
-            const isFailed = version.job?.status === 'failed';
-            const isPending = version.job?.status === 'pending' || version.job?.status === 'running';
+            const isFailed = version.job?.status === 'FAILED';
+            const jobStatus = version.job?.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | undefined;
             
             return (
               <Link
@@ -65,6 +68,9 @@ export function EvaluationVersionSidebar({
                       <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
                         Latest
                       </span>
+                    )}
+                    {isOwner && jobStatus && jobStatus !== "COMPLETED" && (
+                      <JobStatusIndicator status={jobStatus} size="sm" />
                     )}
                   </div>
                   
