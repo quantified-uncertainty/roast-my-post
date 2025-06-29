@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 import { formatDistanceToNow } from "date-fns";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
+import { GradeBadge } from "@/components/GradeBadge";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function DocumentPage({
   params,
@@ -51,21 +53,21 @@ export default async function DocumentPage({
       />
       
       <div className="flex-1 overflow-y-auto">
+        {/* Full-width Header */}
+        <PageHeader 
+          title={document.title || "Untitled Document"}
+          subtitle="Document Preview"
+        />
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Document Preview Card */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Document Preview</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Executive Summary</h2>
               
               <div className="prose prose-gray max-w-none">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                  {document.title || "Untitled Document"}
-                </h1>
-                
-                <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Executive Summary</h2>
-                
                 <div className="text-gray-700 leading-relaxed">
                   {document.content ? (
                     <p>{document.content.substring(0, 500)}...</p>
@@ -123,8 +125,8 @@ export default async function DocumentPage({
                 <div className="space-y-3">
                   {document.reviews.map((evaluation, index) => (
                     <Link
-                      key={evaluation.id || `${evaluation.agentId}-${index}`}
-                      href={`/docs/${docId}/evals/${evaluation.id || evaluation.agentId}`}
+                      key={evaluation.agentId || `agent-${index}`}
+                      href={`/docs/${docId}/evals/${evaluation.agentId}`}
                       className="block group"
                     >
                       <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all">
@@ -137,9 +139,7 @@ export default async function DocumentPage({
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-900">
-                            {evaluation.grade ? `${Math.round(evaluation.grade)}%` : "B+"}
-                          </span>
+                          <GradeBadge grade={evaluation.grade} variant="light" size="sm" />
                           <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                         </div>
                       </div>

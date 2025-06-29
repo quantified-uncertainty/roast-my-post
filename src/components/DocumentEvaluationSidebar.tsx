@@ -10,6 +10,7 @@ import {
   ChevronRightIcon 
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { GradeBadge } from "./GradeBadge";
 
 interface Evaluation {
   id?: string;
@@ -28,13 +29,13 @@ interface Evaluation {
 
 interface DocumentEvaluationSidebarProps {
   docId: string;
-  currentEvaluationId?: string;
+  currentAgentId?: string;
   evaluations: Evaluation[];
 }
 
 export function DocumentEvaluationSidebar({ 
   docId, 
-  currentEvaluationId,
+  currentAgentId,
   evaluations 
 }: DocumentEvaluationSidebarProps) {
   const pathname = usePathname();
@@ -89,13 +90,13 @@ export function DocumentEvaluationSidebar({
                                   evaluation.agent?.versions?.[0]?.name || 
                                   "Unknown Agent";
                   const grade = evaluation.grade ?? evaluation.versions?.[0]?.grade;
-                  const evaluationId = evaluation.id || evaluation.agentId;
-                  const isActive = currentEvaluationId === evaluationId;
+                  const agentId = evaluation.agentId;
+                  const isActive = currentAgentId === agentId;
                   
                   return (
                     <Link
-                      key={evaluationId}
-                      href={`/docs/${docId}/evals/${evaluationId}`}
+                      key={agentId}
+                      href={`/docs/${docId}/evals/${agentId}`}
                       className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                         isActive
                           ? 'bg-blue-50 text-gray-900'
@@ -103,15 +104,7 @@ export function DocumentEvaluationSidebar({
                       }`}
                     >
                       <span className="truncate">{agentName}</span>
-                      {grade !== undefined && grade !== null && (
-                        <span className={`text-xs font-medium ${
-                          grade >= 80 ? 'text-green-600' : 
-                          grade >= 60 ? 'text-yellow-600' : 
-                          'text-red-600'
-                        }`}>
-                          {Math.round(grade)}%
-                        </span>
-                      )}
+                      <GradeBadge grade={grade} variant="light" size="xs" />
                     </Link>
                   );
                 })}

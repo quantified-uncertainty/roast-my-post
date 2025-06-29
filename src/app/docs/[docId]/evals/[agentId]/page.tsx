@@ -9,6 +9,8 @@ import remarkGfm from "remark-gfm";
 import { prisma } from "@/lib/prisma";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
+import { GradeBadge } from "@/components/GradeBadge";
+import { PageHeader } from "@/components/PageHeader";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -120,10 +122,10 @@ function createMarkdownComponents(sectionPrefix: string) {
   };
 }
 
-async function getEvaluation(docId: string, evaluationId: string) {
+async function getEvaluation(docId: string, agentId: string) {
   const evaluation = await prisma.evaluation.findFirst({
     where: {
-      id: evaluationId,
+      agentId: agentId,
       documentId: docId,
     },
     include: {
@@ -178,12 +180,12 @@ async function getEvaluation(docId: string, evaluationId: string) {
 export default async function EvaluationPage({
   params,
 }: {
-  params: Promise<{ docId: string; evaluationId: string }>;
+  params: Promise<{ docId: string; agentId: string }>;
 }) {
   const resolvedParams = await params;
-  const { docId, evaluationId } = resolvedParams;
+  const { docId, agentId } = resolvedParams;
 
-  const evaluation = await getEvaluation(docId, evaluationId);
+  const evaluation = await getEvaluation(docId, agentId);
 
   if (!evaluation) {
     notFound();
@@ -255,22 +257,17 @@ export default async function EvaluationPage({
       {/* Document/Evaluation Switcher Sidebar */}
       <DocumentEvaluationSidebar 
         docId={docId}
-        currentEvaluationId={evaluationId}
+        currentAgentId={agentId}
         evaluations={allEvaluations}
       />
       
       <div className="flex-1 overflow-y-auto">
         {/* Full-width Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto py-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {agentName} Evaluation
-            </h1>
-            <p className="text-gray-600">
-              Analysis of "{documentTitle}"
-            </p>
-          </div>
-        </div>
+        <PageHeader 
+          title={`${agentName} Evaluation`}
+          subtitle={`Analysis of "${documentTitle}"`}
+          layout="with-sidebar"
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex gap-8">
@@ -304,7 +301,9 @@ export default async function EvaluationPage({
             {grade !== undefined && grade !== null && (
               <div className="ml-6 text-right">
                 <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Grade</p>
-                <p className="text-3xl font-bold text-gray-900">{Math.round(grade)}%</p>
+                <div className="mt-1">
+                  <GradeBadge grade={grade} variant="dark" size="md" className="text-2xl px-4 py-1" />
+                </div>
               </div>
             )}
           </div>

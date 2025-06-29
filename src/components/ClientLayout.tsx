@@ -15,7 +15,7 @@ export default function ClientLayout({
   return (
     <div className="h-full flex flex-col">
       {/* Header (always visible at the top) */}
-      <header className="border-b border-gray-200 bg-white px-6 py-3 flex-shrink-0">
+      <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Roast My Post</h1>
           <div className="flex items-center justify-between space-x-6">
