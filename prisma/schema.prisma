@@ -107,6 +107,7 @@ model Evaluation {
 
   @@index([documentId])
   @@index([agentId])
+  @@index([documentId, agentId])
 }
 
 model EvaluationVersion {
@@ -143,6 +144,8 @@ model EvaluationComment {
   highlightId         String              @unique
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
   highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationVersionId])
 }
 
 model EvaluationHighlight {
