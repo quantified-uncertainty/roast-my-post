@@ -8,7 +8,8 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  EyeIcon 
+  EyeIcon,
+  Cog6ToothIcon
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { GradeBadge } from "./GradeBadge";
@@ -54,6 +55,7 @@ export function DocumentEvaluationSidebar({
   
   const isDocumentPage = pathname === `/docs/${docId}`;
   const isPreviewPage = pathname === `/docs/${docId}/preview`;
+  const isManagePage = pathname === `/docs/${docId}/manage`;
   
   return (
     <nav className="w-64 flex-shrink-0 bg-white border-r border-gray-200 h-full overflow-y-auto">
@@ -83,6 +85,21 @@ export function DocumentEvaluationSidebar({
           <EyeIcon className="h-4 w-4" />
           Preview
         </Link>
+        
+        {/* Manage Evaluations Link - Only show for owners */}
+        {isOwner && (
+          <Link
+            href={`/docs/${docId}/manage`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors mt-1 ${
+              isManagePage
+                ? 'bg-blue-50 text-gray-900'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Cog6ToothIcon className="h-4 w-4" />
+            Manage Evals
+          </Link>
+        )}
         
         {/* Evaluations Section */}
         <div className="mt-6">
