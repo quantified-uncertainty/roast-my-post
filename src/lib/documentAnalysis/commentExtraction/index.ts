@@ -20,7 +20,7 @@ import { getCommentExtractionPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { validateAndConvertComments } from "../commentGeneration/commentValidator";
 import type { LineBasedComment } from "../commentGeneration/lineBasedHighlighter";
-import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
  * Extract and format comments from the comprehensive analysis
@@ -40,13 +40,7 @@ export async function extractCommentsFromAnalysis(
     const lineBasedComments: LineBasedComment[] = [];
     
     // Get the full content with prepend (same as what was shown to the LLM)
-    const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
-      title: document.title,
-      author: document.author,
-      platforms: (document as any).platforms,
-      publishedDate: document.publishedDate
-    });
-    const fullContent = markdownPrepend + document.content;
+    const { content: fullContent } = getDocumentFullContent(document);
     const lines = fullContent.split('\n');
     
     // Take up to targetComments insights

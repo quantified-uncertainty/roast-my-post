@@ -1,7 +1,8 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractCommentsFromAnalysis } from "../commentExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
-import { createTestDocument, getPrependLineCount } from "../testUtils";
+import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { Agent } from "../../../types/agentSchema";
 
 // Mock the Anthropic client
@@ -73,10 +74,17 @@ And some more content on the final line.`;
 
     // Calculate how many lines the prepend adds
     const prependLineCount = getPrependLineCount(mockDocument);
-    expect(prependLineCount).toBe(10); // Verify our assumption
+    
+    // Create line references for the actual content lines
+    const contentLineRefs = [
+      "Line 1", // First line of content
+      "Line 3", // Line with the link
+    ];
+    
+    // Adjust references to account for prepend
+    const adjustedRefs = adjustLineReferences(contentLineRefs, prependLineCount);
 
     // Mock comprehensive analysis response
-    // The LLM should see lines 11-14 for the actual content
     const mockAnalysisResponse = {
       content: [
         {
@@ -90,7 +98,7 @@ And some more content on the final line.`;
               {
                 id: "insight-1",
                 title: "Main Content Observation",
-                location: `Line ${11}`, // First line of actual content
+                location: adjustedRefs[0], // Dynamically calculated
                 observation: "The document starts with main content",
                 significance: "Sets the tone",
                 suggestedComment: "Good opening statement"
@@ -98,7 +106,7 @@ And some more content on the final line.`;
               {
                 id: "insight-2",
                 title: "Link Reference",
-                location: `Line ${13}`, // Line with the link
+                location: adjustedRefs[1], // Dynamically calculated
                 observation: "Contains an example link",
                 significance: "External reference",
                 suggestedComment: "Link to example.com"
@@ -201,7 +209,8 @@ And some more content on the final line.`;
     if (result.comments.length > 0) {
       const linkComment = result.comments[0];
       // The offset should account for the prepend
-      expect(linkComment.highlight.startOffset).toBeGreaterThan(100); // Prepend is ~200 chars
+      const { prependCharCount } = getDocumentFullContent(mockDocument);
+      expect(linkComment.highlight.startOffset).toBeGreaterThanOrEqual(prependCharCount);
     }
   });
 

@@ -32,7 +32,7 @@ import {
 } from "@/utils/ui/commentUtils";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { formatWordCount } from "@/utils/ui/documentUtils";
-import { generateMarkdownPrepend } from "@/utils/documentMetadata";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -621,25 +621,11 @@ function DocumentContentPanel({
     }
   }, [evaluationState?.expandedCommentId]);
 
-  // Get markdownPrepend from database if available, otherwise generate it
-  const markdownPrepend = useMemo(() => {
-    // Check if document has markdownPrepend in its versions
-    const storedPrepend = (doc as any).versions?.[0]?.markdownPrepend;
-    if (storedPrepend) {
-      return storedPrepend;
-    }
-    
-    // Fallback: generate prepend for backward compatibility
-    return generateMarkdownPrepend({
-      title: doc.title,
-      author: doc.author || undefined,
-      platforms: doc.platforms,
-      publishedDate: doc.publishedDate || undefined
-    });
+  // Get the full content with prepend using the centralized helper
+  const contentWithMetadata = useMemo(() => {
+    const { content } = getDocumentFullContent(doc);
+    return content;
   }, [doc]);
-
-  // Prepend metadata to content
-  const contentWithMetadata = markdownPrepend + doc.content;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">

@@ -1,6 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
-import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 export function getComprehensiveAnalysisPrompts(
   agentInfo: Agent,
@@ -33,16 +33,8 @@ Important formatting notes:
 
 ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 
-  // Check if document has markdownPrepend (for backward compatibility)
-  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
-    title: document.title,
-    author: document.author,
-    platforms: (document as any).platforms,
-    publishedDate: document.publishedDate
-  });
-
-  // Combine prepend with content
-  const fullContent = markdownPrepend + document.content;
+  // Get the full content with prepend using the centralized helper
+  const { content: fullContent } = getDocumentFullContent(document);
 
   // Number the lines exactly like in comment extraction
   const numberedContent = fullContent

@@ -2,7 +2,7 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractCommentsFromAnalysis } from "../commentExtraction";
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
-import { createTestDocument, adjustLineReferences, getPrependLineCount } from "../testUtils";
+import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
@@ -57,8 +57,17 @@ Line 5 has the final content.`;
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
     
+    // Use helper to adjust line references dynamically
+    const contentLineRefs = [
+      "Line 1",
+      "Lines 2-3", 
+      "Line 3",
+      "Line 4",
+      "Line 5"
+    ];
+    const adjustedRefs = adjustLineReferences(contentLineRefs, prependLineCount);
+    
     // Mock comprehensive analysis response with 5 highlights
-    // Adjust line numbers to account for prepend
     const mockAnalysisResponse = {
       content: [
         {
@@ -72,7 +81,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-1",
                 title: "First Important Point",
-                location: `Line ${11}`, // Line 1 + 10 prepend lines
+                location: adjustedRefs[0], // Dynamically calculated
                 observation: "This is the first observation",
                 significance: "This matters because...",
                 suggestedComment: "Comment 1 text"
@@ -80,7 +89,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-2", 
                 title: "Second Key Finding",
-                location: `Lines ${12}-${13}`, // Lines 2-3 + 10
+                location: adjustedRefs[1], // Dynamically calculated
                 observation: "This spans multiple lines",
                 significance: "Important for understanding",
                 suggestedComment: "Comment 2 text"
@@ -88,7 +97,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-3",
                 title: "Third Observation",
-                location: `Line ${13}`, // Line 3 + 10
+                location: adjustedRefs[2], // Dynamically calculated
                 observation: "Found on line 3",
                 significance: "Critical insight",
                 suggestedComment: "Comment 3 text"
@@ -96,7 +105,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-4",
                 title: "Fourth Note",
-                location: `Line ${14}`, // Line 4 + 10
+                location: adjustedRefs[3], // Dynamically calculated
                 observation: "Filler analysis",
                 significance: "Shows pattern",
                 suggestedComment: "Comment 4 text"
@@ -104,7 +113,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-5",
                 title: "Final Point",
-                location: `Line ${15}`, // Line 5 + 10
+                location: adjustedRefs[4], // Dynamically calculated
                 observation: "Concluding observation",
                 significance: "Wraps up the analysis",
                 suggestedComment: "Comment 5 text"
@@ -159,6 +168,12 @@ Line 5 has the final content.`;
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
     
+    // Create line references with intentional off-by-one errors
+    const wrongRefs = [
+      adjustLineReference("Line 2", prependLineCount), // Actually line 1
+      adjustLineReference("Line 3", prependLineCount)  // For case mismatch test
+    ];
+    
     // Mock response with intentionally wrong line numbers
     const mockAnalysisResponse = {
       content: [
@@ -173,7 +188,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-1",
                 title: "Off by One Error",
-                location: `Line ${12}`, // Actually line 11 (line 1 of content + 10 prepend)
+                location: wrongRefs[0], // Dynamically calculated wrong line
                 observation: "Looking for content from line 1",
                 significance: "Testing fuzzy line matching",
                 suggestedComment: "Should find 'line 1' text"
@@ -181,7 +196,7 @@ Line 5 has the final content.`;
               {
                 id: "insight-2",
                 title: "Case Mismatch",
-                location: `Line ${13}`, // Line 3 of content + 10 prepend
+                location: wrongRefs[1], // Dynamically calculated
                 observation: "Testing case sensitivity",
                 significance: "Should match despite case",
                 suggestedComment: "Should find 'IMPORTANT' as 'important'"
