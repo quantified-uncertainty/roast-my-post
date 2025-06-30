@@ -5,6 +5,7 @@ import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
 import { extractUrls } from "./urlExtractor";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
  * Complete link analysis workflow that produces thinking, analysis, summary, and comments
@@ -39,12 +40,16 @@ export async function analyzeLinkDocument(
   );
 
   // Step 3: Generate comments from link issues (no LLM needed)
-  const urls = extractUrls(document.content);
+  // Get the full content with prepend for URL extraction
+  const { content: fullContent } = getDocumentFullContent(document);
+  const urls = extractUrls(fullContent);
+  
   const comments = generateLinkComments(
     document,
     linkAnalysisResult.linkAnalysisResults,
     targetComments,
-    urls
+    urls,
+    fullContent // Pass the full content for correct position finding
   );
 
   return {
@@ -113,7 +118,8 @@ function generateLinkComments(
   document: Document,
   linkAnalysisResults: LinkAnalysis[],
   targetComments: number,
-  originalUrls: string[]
+  originalUrls: string[],
+  fullContent: string
 ): Comment[] {
   const comments: Comment[] = [];
 
@@ -128,7 +134,7 @@ function generateLinkComments(
 
   // Process all URLs in the order they appear in the document
   for (const url of originalUrls) {
-    const urlPosition = findUrlPosition(document.content, url);
+    const urlPosition = findUrlPosition(fullContent, url);
 
     if (urlPosition) {
       // Create a unique key for this position to prevent duplicates

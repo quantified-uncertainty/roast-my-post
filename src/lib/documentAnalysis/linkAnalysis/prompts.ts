@@ -1,5 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 export function getLinkAnalysisPrompts(
   agentInfo: Agent,
@@ -21,13 +22,13 @@ For each numbered link:
 
 The analysis focuses on understanding authorial intent and identifying genuine references.`;
 
+  // Get the full content with prepend using the centralized helper
+  const { content: fullContent } = getDocumentFullContent(document);
+
   const userMessage = `Please analyze the links found in this document:
 
-**Document Title:** ${document.title}
-**Author:** ${document.author}
-
 **Document Content:**
-${document.content}
+${fullContent}
 
 **Links Found (numbered for reference):**
 ${urls.map((url, index) => `${index + 1}. ${url}`).join('\n')}

@@ -2,9 +2,13 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedHighlighter } from "../commentGeneration/lineBasedHighlighter";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 const documentInformationSection = (document: Document) => {
-  const highlighter = new LineBasedHighlighter(document.content);
+  // Get the full content with prepend using the centralized helper
+  const { content: fullContent } = getDocumentFullContent(document);
+  
+  const highlighter = new LineBasedHighlighter(fullContent);
   return `<document>
   <metadata>
     <title>${document.title}</title>

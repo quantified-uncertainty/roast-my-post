@@ -2,6 +2,7 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractCommentsFromAnalysis } from "../commentExtraction";
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
@@ -32,20 +33,19 @@ describe("Comprehensive Analysis Highlights to Comments E2E", () => {
     providesGrades: false,
   };
 
-  const mockDocument: Document = {
-    id: "test-doc-1",
-    slug: "test-doc",
-    title: "Test Document",
-    content: `This is line 1 with some content.
+  const mockDocumentContent = `This is line 1 with some content.
 Line 2 has different text here.
 Line 3 contains important information.
 Line 4 is just filler text.
-Line 5 has the final content.`,
+Line 5 has the final content.`;
+
+  const mockDocument: Document = createTestDocument(mockDocumentContent, {
+    id: "test-doc-1",
+    title: "Test Document",
     author: "Test Author",
     publishedDate: "2024-01-01",
-    reviews: [],
-    intendedAgents: [],
-  };
+    includePrepend: true
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -53,6 +53,19 @@ Line 5 has the final content.`,
 
   test("all highlights from comprehensive analysis should become comments", async () => {
     const { anthropic } = require("../../../types/openai");
+    
+    // Get the number of lines added by prepend
+    const prependLineCount = getPrependLineCount(mockDocument);
+    
+    // Use helper to adjust line references dynamically
+    const contentLineRefs = [
+      "Line 1",
+      "Lines 2-3", 
+      "Line 3",
+      "Line 4",
+      "Line 5"
+    ];
+    const adjustedRefs = adjustLineReferences(contentLineRefs, prependLineCount);
     
     // Mock comprehensive analysis response with 5 highlights
     const mockAnalysisResponse = {
@@ -68,7 +81,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-1",
                 title: "First Important Point",
-                location: "Line 1",
+                location: adjustedRefs[0], // Dynamically calculated
                 observation: "This is the first observation",
                 significance: "This matters because...",
                 suggestedComment: "Comment 1 text"
@@ -76,7 +89,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-2", 
                 title: "Second Key Finding",
-                location: "Lines 2-3",
+                location: adjustedRefs[1], // Dynamically calculated
                 observation: "This spans multiple lines",
                 significance: "Important for understanding",
                 suggestedComment: "Comment 2 text"
@@ -84,7 +97,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-3",
                 title: "Third Observation",
-                location: "Line 3",
+                location: adjustedRefs[2], // Dynamically calculated
                 observation: "Found on line 3",
                 significance: "Critical insight",
                 suggestedComment: "Comment 3 text"
@@ -92,7 +105,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-4",
                 title: "Fourth Note",
-                location: "Line 4", 
+                location: adjustedRefs[3], // Dynamically calculated
                 observation: "Filler analysis",
                 significance: "Shows pattern",
                 suggestedComment: "Comment 4 text"
@@ -100,7 +113,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-5",
                 title: "Final Point",
-                location: "Line 5",
+                location: adjustedRefs[4], // Dynamically calculated
                 observation: "Concluding observation",
                 significance: "Wraps up the analysis",
                 suggestedComment: "Comment 5 text"
@@ -152,6 +165,15 @@ Line 5 has the final content.`,
   test("handles line number mismatches with fuzzy matching", async () => {
     const { anthropic } = require("../../../types/openai");
     
+    // Get the number of lines added by prepend
+    const prependLineCount = getPrependLineCount(mockDocument);
+    
+    // Create line references with intentional off-by-one errors
+    const wrongRefs = [
+      adjustLineReference("Line 2", prependLineCount), // Actually line 1
+      adjustLineReference("Line 3", prependLineCount)  // For case mismatch test
+    ];
+    
     // Mock response with intentionally wrong line numbers
     const mockAnalysisResponse = {
       content: [
@@ -166,7 +188,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-1",
                 title: "Off by One Error",
-                location: "Line 2", // Actually line 1
+                location: wrongRefs[0], // Dynamically calculated wrong line
                 observation: "Looking for content from line 1",
                 significance: "Testing fuzzy line matching",
                 suggestedComment: "Should find 'line 1' text"
@@ -174,7 +196,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-2",
                 title: "Case Mismatch",
-                location: "Line 3",
+                location: wrongRefs[1], // Dynamically calculated
                 observation: "Testing case sensitivity",
                 significance: "Should match despite case",
                 suggestedComment: "Should find 'IMPORTANT' as 'important'"

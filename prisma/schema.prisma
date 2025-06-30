@@ -78,6 +78,7 @@ model DocumentVersion {
   platforms             String[]
   intendedAgents        String[]
   content               String
+  markdownPrepend       String?
   importUrl             String?
   documentId            String
   createdAt             DateTime                 @default(now())

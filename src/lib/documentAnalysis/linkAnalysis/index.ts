@@ -4,6 +4,7 @@ import type { Document } from "../../../types/documents";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 export async function generateLinkAnalysis(
   document: Document,
@@ -12,9 +13,9 @@ export async function generateLinkAnalysis(
   const startTime = Date.now();
   
   // Step 1: Extract URLs from document
-  const urls = extractUrls(document.content);
-  console.log(`🔗 Found ${urls.length} URLs to analyze`);
-  
+  // Get the full content with prepend for URL extraction
+  const { content: fullContent } = getDocumentFullContent(document);
+  const urls = extractUrls(fullContent);
   if (urls.length === 0) {
     // If no URLs found, return a simple analysis
     const noLinksThinking = `# Link Analysis Report
@@ -44,8 +45,6 @@ No URLs were found in this document. This analysis focuses on link validation, s
   }
 
   // Step 2: Validate all URLs (no LLM filtering)
-  console.log(`🔍 Validating ${urls.length} out of ${urls.length} links...`);
-  
   const validationInputs: UrlValidationInput[] = urls.map(url => ({ url }));
 
   let validationResults: LinkAnalysis[];

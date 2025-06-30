@@ -32,6 +32,7 @@ import {
 } from "@/utils/ui/commentUtils";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { formatWordCount } from "@/utils/ui/documentUtils";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -620,11 +621,17 @@ function DocumentContentPanel({
     }
   }, [evaluationState?.expandedCommentId]);
 
+  // Get the full content with prepend using the centralized helper
+  const contentWithMetadata = useMemo(() => {
+    const { content } = getDocumentFullContent(doc);
+    return content;
+  }, [doc]);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
-          content={doc.content}
+          content={contentWithMetadata}
           onHighlightHover={(commentId) => {
             if (!evaluationState) return;
             setEvaluationState({
