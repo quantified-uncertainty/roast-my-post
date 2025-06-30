@@ -4,6 +4,7 @@ import {
   ClockIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
+import { JobStatusIndicator } from "@/components/JobStatusIndicator";
 
 import type { AgentWithEvaluation } from "../types";
 
@@ -16,10 +17,10 @@ interface AgentListProps {
 }
 
 // Helper function to get the latest job status
-function getLatestJobStatus(agentWithEval: AgentWithEvaluation) {
+function getLatestJobStatus(agentWithEval: AgentWithEvaluation): "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | null {
   if (!agentWithEval.evaluation?.jobs?.length) return null;
   return agentWithEval.evaluation.jobs[agentWithEval.evaluation.jobs.length - 1]
-    .status;
+    .status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
 }
 
 export function AgentList({
@@ -69,12 +70,13 @@ export function AgentList({
                         {agentWithEval.evaluation.versions.length} versions
                       </div>
                     )}
-                  {getLatestJobStatus(agentWithEval) === "RUNNING" && (
-                    <PlayIcon className="h-4 w-4 animate-pulse text-blue-500" />
-                  )}
-                  {getLatestJobStatus(agentWithEval) === "PENDING" && (
-                    <ClockIcon className="h-4 w-4 text-yellow-500" />
-                  )}
+                  {(() => {
+                    const status = getLatestJobStatus(agentWithEval);
+                    if (status && status !== "COMPLETED") {
+                      return <JobStatusIndicator status={status} size="sm" />;
+                    }
+                    return null;
+                  })()}
                   {isOwner && (
                     <Button
                       variant="secondary"

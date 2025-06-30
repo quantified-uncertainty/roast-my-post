@@ -153,7 +153,7 @@ export default function EditDocumentPage({ params }: Props) {
       }
 
       // Redirect to document page
-      router.push(`/docs/${docId}`);
+      router.push(`/docs/${docId}/preview`);
       router.refresh(); // Force a refresh to show the updated data
     } catch (error) {
       if (error instanceof z.ZodError) {

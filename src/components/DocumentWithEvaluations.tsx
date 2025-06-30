@@ -19,7 +19,7 @@ import remarkGfm from "remark-gfm";
 import {
   deleteDocument,
   reuploadDocument,
-} from "@/app/docs/[docId]/actions";
+} from "@/app/docs/[docId]/preview/actions";
 import { Button } from "@/components/Button";
 import type {
   Comment,
@@ -32,6 +32,7 @@ import {
 } from "@/utils/ui/commentUtils";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { formatWordCount } from "@/utils/ui/documentUtils";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -370,172 +371,6 @@ function HomeView({
 
   return (
     <div className="h-full p-8">
-      <div className="mb-8">
-        {isOwner && (
-          <div className="mt-4 flex items-center gap-2">
-            <Link href={`/docs/${document.id}/evaluations`}>
-              <Button variant="secondary" className="flex items-center gap-2">
-                <ListBulletIcon className="h-4 w-4" />
-                Details
-              </Button>
-            </Link>
-            <Link href={`/docs/${document.id}/edit`}>
-              <Button className="flex items-center gap-2">
-                <PencilIcon className="h-4 w-4" />
-                Edit
-              </Button>
-            </Link>
-            {document.importUrl && (
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (
-                    confirm(
-                      "This will fetch the latest content from the original URL and create a new version. Continue?"
-                    )
-                  ) {
-                    await onReupload();
-                  }
-                }}
-              >
-                <Button
-                  type="submit"
-                  variant="secondary"
-                  className="flex items-center gap-2"
-                  disabled={isReuploadingDocument}
-                >
-                  <ArrowPathIcon
-                    className={`h-4 w-4 ${isReuploadingDocument ? "animate-spin" : ""}`}
-                  />
-                  {isReuploadingDocument ? "Re-uploading..." : "Re-upload"}
-                </Button>
-              </form>
-            )}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (
-                  confirm(
-                    "Are you sure you want to delete this document? This action cannot be undone."
-                  )
-                ) {
-                  const result = await deleteDocument(document.id);
-
-                  if (result.success) {
-                    router.push("/docs");
-                  } else {
-                    // Handle error
-                  }
-                }
-              }}
-            >
-              <Button
-                type="submit"
-                variant="danger"
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Delete
-              </Button>
-            </form>
-          </div>
-        )}
-      </div>
-      {/* Document Details Section */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 className="mb-3 text-sm font-semibold text-gray-900">
-          Document Details
-        </h3>
-        <div className="grid grid-cols-1 gap-2 text-sm text-gray-600 sm:grid-cols-2">
-          <div>
-            <span className="font-medium text-gray-400">Updated:</span>{" "}
-            {new Date(document.updatedAt).toLocaleDateString()}
-          </div>
-          <div>
-            <span className="font-medium text-gray-400">Length:</span>{" "}
-            {formatWordCount(
-              document.content.split(/\s+/).filter((w) => w.length > 0).length
-            ) + " words"}
-          </div>
-          {document.platforms && document.platforms.length > 0 && (
-            <div>
-              <span className="font-medium text-gray-400">Platforms:</span>{" "}
-              {document.platforms.join(", ")}
-            </div>
-          )}
-          {document.submittedBy && (
-            <div>
-              <span className="font-medium text-gray-400">Submitter:</span>{" "}
-              <Link
-                href={`/users/${document.submittedById}`}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                {document.submittedBy.name}
-              </Link>
-            </div>
-          )}
-          {document.importUrl && (
-            <div className="sm:col-span-2">
-              <span className="font-medium text-gray-400">Uploaded from:</span>{" "}
-              <a
-                href={document.importUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-700 hover:underline"
-              >
-                {(() => {
-                  const url = document.importUrl.replace(/^https?:\/\//, "");
-                  return url.length > 30 ? url.slice(0, 30) + "…" : url;
-                })()}
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Run Evaluations Section */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          Run Evaluations
-        </h3>
-        
-        {/* Quick Actions */}
-        <div className="mb-4">
-          <h4 className="mb-2 text-sm font-medium text-gray-700">
-            Quick Actions
-          </h4>
-          <QuickAgentButtons
-            onSelect={onCreateEvaluation}
-            disabled={false}
-          />
-        </div>
-
-        {/* Agent Dropdown */}
-        <div className="mb-4 flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-700">
-            Choose Agent
-          </h4>
-          <AgentSelector
-            variant="dropdown"
-            onSelect={onCreateEvaluation}
-            disabled={false}
-          />
-        </div>
-
-        {/* Batch Operations */}
-        <div>
-          <h4 className="mb-3 text-sm font-medium text-gray-700">
-            Batch Operations
-          </h4>
-          <AgentSelector
-            variant="list"
-            onSelectMultiple={onCreateMultipleEvaluations}
-            showRunButton={true}
-            disabled={false}
-          />
-        </div>
-      </div>
-
       <EvaluationSelector
         document={document}
         activeEvaluationIndex={activeEvaluationIndex}
@@ -572,26 +407,6 @@ function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         onClick={() => onTabChange("comments")}
       >
         Comments
-      </button>
-      <button
-        className={`px-4 py-2 text-sm font-medium ${
-          activeTab === "thinking"
-            ? "border-b-2 border-blue-500 text-blue-600"
-            : "text-gray-500 hover:text-blue-600"
-        }`}
-        onClick={() => onTabChange("thinking")}
-      >
-        Thinking
-      </button>
-      <button
-        className={`px-4 py-2 text-sm font-medium ${
-          activeTab === "selfCritique"
-            ? "border-b-2 border-blue-500 text-blue-600"
-            : "text-gray-500 hover:text-blue-600"
-        }`}
-        onClick={() => onTabChange("selfCritique")}
-      >
-        Self-Critique
       </button>
     </div>
   );
@@ -634,15 +449,6 @@ function EvaluationView({
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            onClick={() => onRerunEvaluation(evaluation.agentId)}
-            variant="secondary"
-            disabled={false}
-            className="flex items-center gap-1 text-sm px-2 py-1"
-          >
-            <PlayIcon className="h-4 w-4" />
-            Re-run
-          </Button>
           <button
             onClick={onBackToHome}
             className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
@@ -815,34 +621,17 @@ function DocumentContentPanel({
     }
   }, [evaluationState?.expandedCommentId]);
 
+  // Get the full content with prepend using the centralized helper
+  const contentWithMetadata = useMemo(() => {
+    const { content } = getDocumentFullContent(doc);
+    return content;
+  }, [doc]);
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="mb-2 text-3xl font-extrabold text-gray-900">
-          {doc.title}
-        </h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-          <span>By {doc.author}</span>
-          <span>•</span>
-          <span>{new Date(doc.publishedDate).toLocaleDateString()}</span>
-          {doc.url && (
-            <>
-              <span>•</span>
-              <a
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                View Original
-              </a>
-            </>
-          )}
-        </div>
-      </div>
       <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
-          content={doc.content}
+          content={contentWithMetadata}
           onHighlightHover={(commentId) => {
             if (!evaluationState) return;
             setEvaluationState({

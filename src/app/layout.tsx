@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${merriweather.variable} ${libreBaskerville.variable}`}>
-      <body className="antialiased" suppressHydrationWarning>
+    <html lang="en" className={`${merriweather.variable} ${libreBaskerville.variable} h-full`}>
+      <body className="antialiased h-full" suppressHydrationWarning>
         <SessionProvider>
           <ClientLayout>{children}</ClientLayout>
         </SessionProvider>

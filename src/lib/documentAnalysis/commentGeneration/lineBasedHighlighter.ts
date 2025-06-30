@@ -42,7 +42,7 @@ export class LineBasedHighlighter {
    * Get the numbered lines content for the LLM prompt
    */
   getNumberedLines(): string {
-    return this.lines.map((line, index) => `Line ${index}: ${line}`).join("\n");
+    return this.lines.map((line, index) => `Line ${index + 1}: ${line}`).join("\n");
   }
 
   /**

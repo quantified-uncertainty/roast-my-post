@@ -96,7 +96,7 @@ export async function reuploadDocument(docId: string) {
     );
 
     // Revalidate the document path
-    revalidatePath(`/docs/${docId}`);
+    revalidatePath(`/docs/${docId}/preview`);
 
     return { success: true };
   } catch (error) {
