@@ -7,7 +7,8 @@ import {
   BeakerIcon,
   CheckCircleIcon,
   ChevronDownIcon,
-  ChevronRightIcon 
+  ChevronRightIcon,
+  EyeIcon 
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { GradeBadge } from "./GradeBadge";
@@ -52,6 +53,7 @@ export function DocumentEvaluationSidebar({
   const [isEvaluationsOpen, setIsEvaluationsOpen] = useState(true);
   
   const isDocumentPage = pathname === `/docs/${docId}`;
+  const isPreviewPage = pathname === `/docs/${docId}/preview`;
   
   return (
     <nav className="w-64 flex-shrink-0 bg-white border-r border-gray-200 h-full overflow-y-auto">
@@ -67,6 +69,19 @@ export function DocumentEvaluationSidebar({
         >
           <DocumentTextIcon className="h-4 w-4" />
           Document
+        </Link>
+        
+        {/* Preview Link */}
+        <Link
+          href={`/docs/${docId}/preview`}
+          className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors mt-1 ${
+            isPreviewPage
+              ? 'bg-blue-50 text-gray-900'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          }`}
+        >
+          <EyeIcon className="h-4 w-4" />
+          Preview
         </Link>
         
         {/* Evaluations Section */}

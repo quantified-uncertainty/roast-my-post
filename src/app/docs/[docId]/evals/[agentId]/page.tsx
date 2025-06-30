@@ -221,8 +221,10 @@ export default async function EvaluationPage({
     <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
       {/* Breadcrumb Navigation - Full Width */}
       <BreadcrumbHeader 
-        documentTitle={documentTitle}
-        agentName={agentName}
+        items={[
+          { label: documentTitle, href: `/docs/${docId}` },
+          { label: agentName }
+        ]}
       />
       
       <div className="flex-1 flex overflow-hidden">

@@ -49,8 +49,11 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
     return (
       <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
         <BreadcrumbHeader 
-          documentTitle={documentTitle}
-          agentName={agentName}
+          items={[
+            { label: documentTitle, href: `/docs/${docId}` },
+            { label: agentName, href: `/docs/${docId}/evals/${agentId}` },
+            { label: 'Logs' }
+          ]}
         />
         <div className="flex-1 flex overflow-hidden">
           <DocumentEvaluationSidebar 
@@ -80,8 +83,11 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
     <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
       {/* Breadcrumb Navigation - Full Width */}
       <BreadcrumbHeader 
-        documentTitle={documentTitle}
-        agentName={agentName}
+        items={[
+          { label: documentTitle, href: `/docs/${docId}` },
+          { label: agentName, href: `/docs/${docId}/evals/${agentId}` },
+          { label: 'Logs' }
+        ]}
       />
       
       <div className="flex-1 flex overflow-hidden">

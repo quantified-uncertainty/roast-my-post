@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 
@@ -47,10 +49,28 @@ export default async function DocumentPage({
     : false;
 
   return (
-    <main>
-      <div className="mx-auto max-w-full">
-        <DocumentWithEvaluations document={document} isOwner={isOwner} />
+    <div className="flex h-full flex-col overflow-hidden bg-gray-50">
+      {/* Full-width breadcrumbs */}
+      <BreadcrumbHeader 
+        items={[
+          { label: document.title, href: `/docs/${docId}` },
+          { label: "Preview" }
+        ]}
+      />
+      
+      {/* Sidebar and content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Document/Evaluation Switcher Sidebar */}
+        <DocumentEvaluationSidebar
+          docId={docId}
+          evaluations={document.reviews || []}
+          isOwner={isOwner}
+        />
+
+        <div className="flex-1 overflow-y-auto">
+          <DocumentWithEvaluations document={document} isOwner={isOwner} />
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
