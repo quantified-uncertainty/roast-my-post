@@ -30,8 +30,8 @@ When I started this blog in high school, I did not imagine that I would cause [_
     const highlighter = new LineBasedHighlighter(sampleContent);
     const numberedLines = highlighter.getNumberedLines();
 
-    expect(numberedLines).toContain("Line 0:");
     expect(numberedLines).toContain("Line 1:");
+    expect(numberedLines).toContain("Line 2:");
     expect(numberedLines.split("\n").length).toBe(
       sampleContent.split("\n").length
     );

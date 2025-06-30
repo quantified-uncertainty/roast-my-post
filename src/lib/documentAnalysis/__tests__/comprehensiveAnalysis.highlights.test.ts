@@ -2,6 +2,7 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractCommentsFromAnalysis } from "../commentExtraction";
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { createTestDocument, adjustLineReferences, getPrependLineCount } from "../testUtils";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
@@ -32,20 +33,19 @@ describe("Comprehensive Analysis Highlights to Comments E2E", () => {
     providesGrades: false,
   };
 
-  const mockDocument: Document = {
-    id: "test-doc-1",
-    slug: "test-doc",
-    title: "Test Document",
-    content: `This is line 1 with some content.
+  const mockDocumentContent = `This is line 1 with some content.
 Line 2 has different text here.
 Line 3 contains important information.
 Line 4 is just filler text.
-Line 5 has the final content.`,
+Line 5 has the final content.`;
+
+  const mockDocument: Document = createTestDocument(mockDocumentContent, {
+    id: "test-doc-1",
+    title: "Test Document",
     author: "Test Author",
     publishedDate: "2024-01-01",
-    reviews: [],
-    intendedAgents: [],
-  };
+    includePrepend: true
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -54,7 +54,11 @@ Line 5 has the final content.`,
   test("all highlights from comprehensive analysis should become comments", async () => {
     const { anthropic } = require("../../../types/openai");
     
+    // Get the number of lines added by prepend
+    const prependLineCount = getPrependLineCount(mockDocument);
+    
     // Mock comprehensive analysis response with 5 highlights
+    // Adjust line numbers to account for prepend
     const mockAnalysisResponse = {
       content: [
         {
@@ -68,7 +72,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-1",
                 title: "First Important Point",
-                location: "Line 1",
+                location: `Line ${11}`, // Line 1 + 10 prepend lines
                 observation: "This is the first observation",
                 significance: "This matters because...",
                 suggestedComment: "Comment 1 text"
@@ -76,7 +80,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-2", 
                 title: "Second Key Finding",
-                location: "Lines 2-3",
+                location: `Lines ${12}-${13}`, // Lines 2-3 + 10
                 observation: "This spans multiple lines",
                 significance: "Important for understanding",
                 suggestedComment: "Comment 2 text"
@@ -84,7 +88,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-3",
                 title: "Third Observation",
-                location: "Line 3",
+                location: `Line ${13}`, // Line 3 + 10
                 observation: "Found on line 3",
                 significance: "Critical insight",
                 suggestedComment: "Comment 3 text"
@@ -92,7 +96,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-4",
                 title: "Fourth Note",
-                location: "Line 4", 
+                location: `Line ${14}`, // Line 4 + 10
                 observation: "Filler analysis",
                 significance: "Shows pattern",
                 suggestedComment: "Comment 4 text"
@@ -100,7 +104,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-5",
                 title: "Final Point",
-                location: "Line 5",
+                location: `Line ${15}`, // Line 5 + 10
                 observation: "Concluding observation",
                 significance: "Wraps up the analysis",
                 suggestedComment: "Comment 5 text"
@@ -152,6 +156,9 @@ Line 5 has the final content.`,
   test("handles line number mismatches with fuzzy matching", async () => {
     const { anthropic } = require("../../../types/openai");
     
+    // Get the number of lines added by prepend
+    const prependLineCount = getPrependLineCount(mockDocument);
+    
     // Mock response with intentionally wrong line numbers
     const mockAnalysisResponse = {
       content: [
@@ -166,7 +173,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-1",
                 title: "Off by One Error",
-                location: "Line 2", // Actually line 1
+                location: `Line ${12}`, // Actually line 11 (line 1 of content + 10 prepend)
                 observation: "Looking for content from line 1",
                 significance: "Testing fuzzy line matching",
                 suggestedComment: "Should find 'line 1' text"
@@ -174,7 +181,7 @@ Line 5 has the final content.`,
               {
                 id: "insight-2",
                 title: "Case Mismatch",
-                location: "Line 3",
+                location: `Line ${13}`, // Line 3 of content + 10 prepend
                 observation: "Testing case sensitivity",
                 significance: "Should match despite case",
                 suggestedComment: "Should find 'IMPORTANT' as 'important'"
