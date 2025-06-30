@@ -4,6 +4,7 @@ import type { Document } from "../../../types/documents";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
+import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
 
 export async function generateLinkAnalysis(
   document: Document,
@@ -12,7 +13,17 @@ export async function generateLinkAnalysis(
   const startTime = Date.now();
   
   // Step 1: Extract URLs from document
-  const urls = extractUrls(document.content);
+  // Check if document has markdownPrepend (for backward compatibility)
+  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: (document as any).platforms,
+    publishedDate: document.publishedDate
+  });
+
+  // Combine prepend with content for URL extraction
+  const fullContent = markdownPrepend + document.content;
+  const urls = extractUrls(fullContent);
   console.log(`🔗 Found ${urls.length} URLs to analyze`);
   
   if (urls.length === 0) {

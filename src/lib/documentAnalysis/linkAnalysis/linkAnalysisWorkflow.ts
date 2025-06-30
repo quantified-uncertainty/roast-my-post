@@ -5,6 +5,7 @@ import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
 import { extractUrls } from "./urlExtractor";
+import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
 
 /**
  * Complete link analysis workflow that produces thinking, analysis, summary, and comments
@@ -39,7 +40,18 @@ export async function analyzeLinkDocument(
   );
 
   // Step 3: Generate comments from link issues (no LLM needed)
-  const urls = extractUrls(document.content);
+  // Check if document has markdownPrepend (for backward compatibility)
+  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: (document as any).platforms,
+    publishedDate: document.publishedDate
+  });
+
+  // Combine prepend with content for URL extraction
+  const fullContent = markdownPrepend + document.content;
+  const urls = extractUrls(fullContent);
+  
   const comments = generateLinkComments(
     document,
     linkAnalysisResult.linkAnalysisResults,

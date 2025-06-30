@@ -1,5 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
 
 export function getComprehensiveAnalysisPrompts(
   agentInfo: Agent,
@@ -32,17 +33,24 @@ Important formatting notes:
 
 ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 
+  // Check if document has markdownPrepend (for backward compatibility)
+  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: (document as any).platforms,
+    publishedDate: document.publishedDate
+  });
+
+  // Combine prepend with content
+  const fullContent = markdownPrepend + document.content;
+
   // Number the lines exactly like in comment extraction
-  const numberedContent = document.content
+  const numberedContent = fullContent
     .split("\n")
     .map((line, i) => `${(i + 1).toString().padStart(4, " ")} ${line}`)
     .join("\n");
 
   const userMessage = `Document to process:
-
-Title: ${document.title}
-Author: ${document.author}
-Published: ${new Date(document.publishedDate).toLocaleDateString()}
 
 ${numberedContent}`;
 

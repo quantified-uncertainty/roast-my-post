@@ -1,5 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
+import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
 
 export function getLinkAnalysisPrompts(
   agentInfo: Agent,
@@ -21,13 +22,21 @@ For each numbered link:
 
 The analysis focuses on understanding authorial intent and identifying genuine references.`;
 
+  // Check if document has markdownPrepend (for backward compatibility)
+  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: (document as any).platforms,
+    publishedDate: document.publishedDate
+  });
+
+  // Combine prepend with content
+  const fullContent = markdownPrepend + document.content;
+
   const userMessage = `Please analyze the links found in this document:
 
-**Document Title:** ${document.title}
-**Author:** ${document.author}
-
 **Document Content:**
-${document.content}
+${fullContent}
 
 **Links Found (numbered for reference):**
 ${urls.map((url, index) => `${index + 1}. ${url}`).join('\n')}

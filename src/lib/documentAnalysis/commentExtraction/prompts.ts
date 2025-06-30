@@ -2,9 +2,21 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedHighlighter } from "../commentGeneration/lineBasedHighlighter";
+import { generateMarkdownPrepend } from "../../../utils/documentMetadata";
 
 const documentInformationSection = (document: Document) => {
-  const highlighter = new LineBasedHighlighter(document.content);
+  // Check if document has markdownPrepend (for backward compatibility)
+  const markdownPrepend = (document as any).versions?.[0]?.markdownPrepend || generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: (document as any).platforms,
+    publishedDate: document.publishedDate
+  });
+
+  // Combine prepend with content
+  const fullContent = markdownPrepend + document.content;
+  
+  const highlighter = new LineBasedHighlighter(fullContent);
   return `<document>
   <metadata>
     <title>${document.title}</title>
