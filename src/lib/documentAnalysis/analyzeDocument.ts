@@ -25,47 +25,47 @@ export async function analyzeDocument(
 }> {
   // Choose workflow based on agent's extended capability
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
-    console.log(`🔗 Using link analysis workflow for agent ${agentInfo.name}`);
+    logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);
     return await analyzeLinkDocument(document, agentInfo, targetComments);
   }
 
-  console.log(
-    `📝 Using comprehensive analysis workflow for agent ${agentInfo.name}`
+  logger.info(
+    `Using comprehensive analysis workflow for agent ${agentInfo.name}`
   );
 
   const tasks: TaskResult[] = [];
 
   try {
     // Step 1: Generate comprehensive analysis (includes everything)
-    console.log(`🚀 Starting comprehensive analysis generation...`);
+    logger.info(`Starting comprehensive analysis generation...`);
     const analysisResult = await generateComprehensiveAnalysis(
       document,
       agentInfo,
       targetWordCount,
       targetComments
     );
-    console.log(
-      `✅ Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.commentInsights.length}`
+    logger.info(
+      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.commentInsights.length}`
     );
     tasks.push(analysisResult.task);
 
     // Step 2: Extract and format comments from the analysis
-    console.log(`🔍 Extracting comments from analysis...`);
+    logger.info(`Extracting comments from analysis...`);
     const commentResult = await extractCommentsFromAnalysis(
       document,
       agentInfo,
       analysisResult.outputs,
       targetComments
     );
-    console.log(
-      `✅ Extracted ${commentResult.outputs.comments.length} comments`
+    logger.info(
+      `Extracted ${commentResult.outputs.comments.length} comments`
     );
     tasks.push(commentResult.task);
 
     // Step 3: Generate self-critique if instructions are provided and randomly selected (10% chance)
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
-      console.log(`🔍 Generating self-critique...`);
+      logger.info(`Generating self-critique...`);
       const critiqueResult = await generateSelfCritique(
         {
           summary: analysisResult.outputs.summary,
@@ -78,7 +78,7 @@ export async function analyzeDocument(
         },
         agentInfo
       );
-      console.log(`✅ Generated self-critique`);
+      logger.info(`Generated self-critique`);
       selfCritique = critiqueResult.outputs.selfCritique;
       tasks.push(critiqueResult.task);
     }
@@ -93,7 +93,7 @@ export async function analyzeDocument(
       tasks,
     };
   } catch (error) {
-    console.error(`❌ Error in comprehensive analysis workflow:`, error);
+    logger.error(`Error in comprehensive analysis workflow:`, error);
     throw error;
   }
 }
