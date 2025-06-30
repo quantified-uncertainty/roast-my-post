@@ -68,7 +68,9 @@ export default async function DocumentPage({
         status: review.jobs[0].status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
       } : undefined
     })),
-    jobs: review.jobs
+    jobs: review.jobs?.map(job => ({
+      status: job.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+    }))
   })) || [];
 
   return (
