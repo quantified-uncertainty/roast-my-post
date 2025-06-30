@@ -95,8 +95,9 @@ export async function reuploadDocument(docId: string) {
       session.user.id
     );
 
-    // Revalidate the document path
+    // Revalidate the document paths
     revalidatePath(`/docs/${docId}/preview`);
+    revalidatePath(`/docs/${docId}`);
 
     return { success: true };
   } catch (error) {

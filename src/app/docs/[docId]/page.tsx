@@ -7,10 +7,10 @@ import {
 } from "@/components/DocumentEvaluationSidebar";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
+import { ReuploadButton } from "@/components/ReuploadButton";
 import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 import {
-  ArrowUpTrayIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
@@ -362,10 +362,7 @@ export default async function DocumentPage({
                       </h3>
                       <div className="space-y-2">
                         {document.importUrl && (
-                          <button className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                            <ArrowUpTrayIcon className="mr-2 h-4 w-4" />
-                            Re-upload Document
-                          </button>
+                          <ReuploadButton docId={docId} />
                         )}
                         <Link
                           href={`/docs/${docId}/evaluations`}
