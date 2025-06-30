@@ -12,8 +12,11 @@ import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 import {
   PlusIcon,
+  PencilIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
+import { DocumentActions } from "@/components/DocumentActions";
 
 export default async function DocumentPage({
   params,
@@ -87,7 +90,14 @@ export default async function DocumentPage({
           <PageHeader
             title={document.title || "Untitled Document"}
             subtitle="Document Preview"
-          />
+          >
+            {isOwner && (
+              <DocumentActions 
+                docId={docId} 
+                document={{ importUrl: document.importUrl }}
+              />
+            )}
+          </PageHeader>
 
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

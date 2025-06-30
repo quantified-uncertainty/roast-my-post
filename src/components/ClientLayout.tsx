@@ -50,7 +50,7 @@ export default function ClientLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }
