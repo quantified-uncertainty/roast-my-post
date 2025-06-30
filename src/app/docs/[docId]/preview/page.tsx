@@ -63,7 +63,23 @@ export default async function DocumentPage({
         {/* Document/Evaluation Switcher Sidebar */}
         <DocumentEvaluationSidebar
           docId={docId}
-          evaluations={document.reviews || []}
+          evaluations={document.reviews?.map(review => ({
+            id: review.id,
+            agentId: review.agent.id,
+            agent: {
+              name: review.agent.name,
+              versions: [{
+                name: review.agent.name
+              }]
+            },
+            versions: review.versions?.map(version => ({
+              grade: version.grade,
+              job: review.jobs?.[0] ? {
+                status: review.jobs[0].status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+              } : undefined
+            })),
+            jobs: review.jobs
+          })) || []}
           isOwner={isOwner}
         />
 

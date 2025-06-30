@@ -52,12 +52,31 @@ export default async function DocumentPage({
       ? `${(fileSizeKB / 1024).toFixed(1)} MB`
       : `${Math.round(fileSizeKB)} KB`;
 
+  // Transform reviews to match the expected Evaluation interface
+  const evaluations = document.reviews?.map(review => ({
+    id: review.id,
+    agentId: review.agent.id,
+    agent: {
+      name: review.agent.name,
+      versions: [{
+        name: review.agent.name
+      }]
+    },
+    versions: review.versions?.map(version => ({
+      grade: version.grade,
+      job: review.jobs?.[0] ? {
+        status: review.jobs[0].status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+      } : undefined
+    })),
+    jobs: review.jobs
+  })) || [];
+
   return (
     <div className="flex h-full overflow-hidden bg-gray-50">
         {/* Document/Evaluation Switcher Sidebar */}
         <DocumentEvaluationSidebar
           docId={docId}
-          evaluations={document.reviews || []}
+          evaluations={evaluations}
           isOwner={isOwner}
         />
 
