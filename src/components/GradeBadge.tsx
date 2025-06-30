@@ -163,6 +163,19 @@ function getGradeColorLight(grade: number): {
   };
 }
 
+function getGradeColorGrayscale(grade: number): {
+  style: { backgroundColor: string; color: string };
+  className: string;
+} {
+  return {
+    style: {
+      backgroundColor: "#F3F4F6", // light gray (gray-100)
+      color: "#374151", // dark gray (gray-700)
+    },
+    className: "",
+  };
+}
+
 const SIZE_CLASSES = {
   xs: "text-xs",
   sm: "text-sm",
@@ -177,7 +190,7 @@ const PADDING_CLASSES = {
 
 interface GradeBadgeProps {
   grade: number | null;
-  variant?: "light" | "dark";
+  variant?: "light" | "dark" | "grayscale";
   size?: "xs" | "sm" | "md";
   className?: string;
 }
@@ -195,7 +208,9 @@ export function GradeBadge({
 
   const baseClasses = `rounded ${PADDING_CLASSES[size]} py-0.5 font-semibold ${SIZE_CLASSES[size]} ${className}`;
   const style =
-    variant === "dark" ? getGradeColorDark(grade) : getGradeColorLight(grade);
+    variant === "dark" ? getGradeColorDark(grade) : 
+    variant === "grayscale" ? getGradeColorGrayscale(grade) :
+    getGradeColorLight(grade);
 
   return (
     <span className={`${baseClasses} ${style.className}`} style={style.style}>

@@ -45,20 +45,13 @@ export default async function ManageEvaluationsPage({
 
   const session = await auth();
   const currentUserId = session?.user?.id;
-  
-  if (!currentUserId) {
-    notFound();
-  }
 
   const document = await DocumentModel.getDocumentWithEvaluations(docId);
   if (!document) {
     notFound();
   }
 
-  const isOwner = document.submittedById === currentUserId;
-  if (!isOwner) {
-    notFound();
-  }
+  const isOwner = currentUserId ? document.submittedById === currentUserId : false;
 
   const availableAgents = await getAvailableAgents(docId);
   const documentTitle = document.title || "Untitled Document";
