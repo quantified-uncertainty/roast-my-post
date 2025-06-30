@@ -620,11 +620,27 @@ function DocumentContentPanel({
     }
   }, [evaluationState?.expandedCommentId]);
 
+  // Create metadata markdown with better formatting
+  const metadataMarkdown = `# ${doc.title}
+
+**Author:** ${doc.author || 'Unknown'}
+
+**Publication:** ${doc.platforms?.join(', ') || 'N/A'}
+
+**Date Published:** ${doc.publishedDate ? new Date(doc.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}
+
+---
+
+`;
+
+  // Prepend metadata to content
+  const contentWithMetadata = metadataMarkdown + doc.content;
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <article className="prose prose-lg prose-slate max-w-none">
         <SlateEditor
-          content={doc.content}
+          content={contentWithMetadata}
           onHighlightHover={(commentId) => {
             if (!evaluationState) return;
             setEvaluationState({
