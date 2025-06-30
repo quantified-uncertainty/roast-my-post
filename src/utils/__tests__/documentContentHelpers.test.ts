@@ -1,8 +1,4 @@
-import { 
-  getDocumentFullContent, 
-  isValidPrepend,
-  PREPEND_FORMAT 
-} from '../documentContentHelpers';
+import { getDocumentFullContent } from '../documentContentHelpers';
 import type { Document } from '../../types/documents';
 import type { DocumentWithVersions } from '../../types/documentWithVersions';
 
@@ -35,7 +31,7 @@ describe('documentContentHelpers', () => {
       expect(result.prepend).toBeTruthy();
       expect(result.content).toContain('# Test Document');
       expect(result.content).toContain('This is the main content.');
-      expect(result.prependLineCount).toBe(PREPEND_FORMAT.STANDARD_LINE_COUNT);
+      expect(result.prependLineCount).toBe(10); // Standard prepend has 10 lines
       expect(result.prependWasGenerated).toBe(true);
     });
 
@@ -146,88 +142,6 @@ describe('documentContentHelpers', () => {
       const lines = result.prepend!.split('\n');
       expect(result.prependLineCount).toBe(lines.length - 1); // -1 for trailing newline
       expect(result.prependCharCount).toBe(result.prepend!.length);
-    });
-  });
-
-  describe('isValidPrepend', () => {
-    it('validates correct prepend format', () => {
-      const validPrepend = `# Test Title
-
-**Author:** Test Author
-
-**Publication:** Test Platform
-
-**Date Published:** January 15, 2024
-
----
-
-`;
-      
-      expect(isValidPrepend(validPrepend)).toBe(true);
-    });
-
-    it('rejects prepend without title', () => {
-      const noTitle = `**Author:** Test
-
-**Publication:** Test
-
-**Date Published:** Test
-
----
-
-`;
-      
-      expect(isValidPrepend(noTitle)).toBe(false);
-    });
-
-    it('rejects prepend without required fields', () => {
-      expect(isValidPrepend('# Title\n\n')).toBe(false);
-      expect(isValidPrepend('# Title\n\n**Author:** Test\n\n')).toBe(false);
-    });
-
-    it('rejects prepend without separator', () => {
-      const noSeparator = `# Title
-
-**Author:** Test
-
-**Publication:** Test
-
-**Date Published:** Test
-
-`;
-      
-      expect(isValidPrepend(noSeparator)).toBe(false);
-    });
-
-    it('rejects empty or invalid inputs', () => {
-      expect(isValidPrepend('')).toBe(false);
-      expect(isValidPrepend(null as any)).toBe(false);
-      expect(isValidPrepend(undefined as any)).toBe(false);
-      expect(isValidPrepend(123 as any)).toBe(false);
-    });
-
-    it('rejects prepend that is too short', () => {
-      const tooShort = '# T\n\n---\n\n';
-      expect(isValidPrepend(tooShort)).toBe(false);
-    });
-
-    it('rejects prepend that is too long', () => {
-      const tooLong = '# ' + 'A'.repeat(1000) + '\n\n**Author:** Test\n\n**Publication:** Test\n\n**Date Published:** Test\n\n---\n\n';
-      expect(isValidPrepend(tooLong)).toBe(false);
-    });
-
-    it('rejects prepend without trailing newline', () => {
-      const noTrailingNewline = `# Title
-
-**Author:** Test
-
-**Publication:** Test
-
-**Date Published:** Test
-
----`;
-      
-      expect(isValidPrepend(noTrailingNewline)).toBe(false);
     });
   });
 

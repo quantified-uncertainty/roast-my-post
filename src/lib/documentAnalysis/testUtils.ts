@@ -26,9 +26,12 @@ export function createTestDocument(
     intendedAgents: [],
   };
 
+  // Create extended document type if needed
+  let extendedDoc: Document & { platforms?: string[]; versions?: Array<{ markdownPrepend: string }> } = doc;
+
   // Add platforms if provided
   if (options.platforms) {
-    (doc as any).platforms = options.platforms;
+    extendedDoc.platforms = options.platforms;
   }
 
   // Add markdownPrepend if requested
@@ -40,12 +43,12 @@ export function createTestDocument(
       publishedDate: doc.publishedDate
     });
     
-    (doc as any).versions = [{
+    extendedDoc.versions = [{
       markdownPrepend: prepend
     }];
   }
 
-  return doc;
+  return extendedDoc;
 }
 
 /**
@@ -85,7 +88,8 @@ export function adjustLineReferences(lineRefs: string[], prependLineCount: numbe
  * Gets the number of lines that would be added by prepend for a document
  */
 export function getPrependLineCount(doc: Document): number {
-  const prepend = (doc as any).versions?.[0]?.markdownPrepend;
+  const extendedDoc = doc as Document & { platforms?: string[]; versions?: Array<{ markdownPrepend?: string }> };
+  const prepend = extendedDoc.versions?.[0]?.markdownPrepend;
   if (prepend) {
     return countPrependLines(prepend);
   }
@@ -94,38 +98,10 @@ export function getPrependLineCount(doc: Document): number {
   const generatedPrepend = generateMarkdownPrepend({
     title: doc.title,
     author: doc.author,
-    platforms: (doc as any).platforms,
+    platforms: extendedDoc.platforms,
     publishedDate: doc.publishedDate
   });
   
   return countPrependLines(generatedPrepend);
 }
 
-/**
- * Adjusts character offsets to account for prepended content
- */
-export function adjustCharacterOffset(offset: number, prependLength: number): number {
-  return offset + prependLength;
-}
-
-/**
- * Helper to create comment insights with adjusted line references
- */
-export function createCommentInsight(
-  id: string,
-  title: string,
-  location: string,
-  observation: string,
-  significance: string,
-  suggestedComment: string,
-  prependLineCount: number = 0
-) {
-  return {
-    id,
-    title,
-    location: adjustLineReference(location, prependLineCount),
-    observation,
-    significance,
-    suggestedComment
-  };
-}

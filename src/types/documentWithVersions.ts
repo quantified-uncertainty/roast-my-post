@@ -26,25 +26,10 @@ export function hasVersions(doc: Document): doc is DocumentWithVersions {
 }
 
 /**
- * Type guard to check if a document has markdownPrepend
- */
-export function hasMarkdownPrepend(doc: Document): boolean {
-  if (!hasVersions(doc)) return false;
-  const versions = (doc as DocumentWithVersions).versions;
-  return !!(versions?.[0]?.markdownPrepend);
-}
-
-/**
- * Get the current version of a document (latest version)
- */
-export function getCurrentVersion(doc: DocumentWithVersions): DocumentVersion | undefined {
-  return doc.versions?.[0];
-}
-
-/**
  * Get markdownPrepend from a document if it exists
  */
 export function getMarkdownPrepend(doc: Document): string | undefined {
   if (!hasVersions(doc)) return undefined;
-  return getCurrentVersion(doc as DocumentWithVersions)?.markdownPrepend;
+  const versions = (doc as DocumentWithVersions).versions;
+  return versions?.[0]?.markdownPrepend;
 }

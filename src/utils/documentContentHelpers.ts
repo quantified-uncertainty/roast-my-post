@@ -68,7 +68,7 @@ export function getDocumentFullContent(
       prepend = generateMarkdownPrepend({
         title: document.title,
         author: document.author || undefined,
-        platforms: 'platforms' in document ? (document as any).platforms : undefined,
+        platforms: 'platforms' in document ? (document as DocumentWithVersions & { platforms?: string[] }).platforms : undefined,
         publishedDate: document.publishedDate || undefined
       });
       prependWasGenerated = true;
@@ -101,38 +101,3 @@ export function getDocumentFullContent(
   };
 }
 
-/**
- * Constants for prepend format
- */
-export const PREPEND_FORMAT = {
-  /** Expected number of lines in a standard prepend */
-  STANDARD_LINE_COUNT: 10,
-  /** Minimum expected character count */
-  MIN_CHAR_COUNT: 50,
-  /** Maximum reasonable character count */
-  MAX_CHAR_COUNT: 1000
-} as const;
-
-/**
- * Validate that a prepend is well-formed
- */
-export function isValidPrepend(prepend: string): boolean {
-  if (!prepend || typeof prepend !== 'string') return false;
-  
-  // Check basic structure
-  if (!prepend.includes('# ')) return false; // Should have title
-  if (!prepend.includes('**Author:**')) return false;
-  if (!prepend.includes('**Publication:**')) return false;
-  if (!prepend.includes('**Date Published:**')) return false;
-  if (!prepend.includes('---')) return false;
-  
-  // Check reasonable size
-  const charCount = prepend.length;
-  if (charCount < PREPEND_FORMAT.MIN_CHAR_COUNT) return false;
-  if (charCount > PREPEND_FORMAT.MAX_CHAR_COUNT) return false;
-  
-  // Check it ends with newlines
-  if (!prepend.endsWith('\n')) return false;
-  
-  return true;
-}

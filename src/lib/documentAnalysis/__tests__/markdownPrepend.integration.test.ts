@@ -233,8 +233,8 @@ And some more content on the final line.`;
     });
 
     // The full content should be different
-    const fullContentWith = (docWithPrepend as any).versions?.[0]?.markdownPrepend + content;
-    const fullContentWithout = content;
+    const { content: fullContentWith } = getDocumentFullContent(docWithPrepend);
+    const { content: fullContentWithout } = getDocumentFullContent(docWithoutPrepend, { generateIfMissing: false });
 
     expect(fullContentWith.length).toBeGreaterThan(fullContentWithout.length);
     expect(fullContentWith).toContain("# Position Test");

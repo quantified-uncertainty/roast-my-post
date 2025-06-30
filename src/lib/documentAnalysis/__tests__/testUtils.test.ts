@@ -2,9 +2,7 @@ import {
   createTestDocument,
   adjustLineReference,
   adjustLineReferences,
-  getPrependLineCount,
-  adjustCharacterOffset,
-  createCommentInsight
+  getPrependLineCount
 } from "../testUtils";
 
 describe("testUtils", () => {
@@ -79,43 +77,6 @@ describe("testUtils", () => {
       const lineCount = getPrependLineCount(doc);
       
       expect(lineCount).toBe(10);
-    });
-  });
-
-  describe("adjustCharacterOffset", () => {
-    it("adjusts character offsets", () => {
-      expect(adjustCharacterOffset(100, 50)).toBe(150);
-      expect(adjustCharacterOffset(0, 200)).toBe(200);
-    });
-  });
-
-  describe("createCommentInsight", () => {
-    it("creates insight with adjusted location", () => {
-      const insight = createCommentInsight(
-        "test-1",
-        "Test Title",
-        "Line 5",
-        "Test observation",
-        "Test significance",
-        "Test comment",
-        10
-      );
-      
-      expect(insight.location).toBe("Line 15");
-      expect(insight.title).toBe("Test Title");
-    });
-
-    it("creates insight without adjustment when prependLineCount is 0", () => {
-      const insight = createCommentInsight(
-        "test-1",
-        "Test Title",
-        "Lines 1-3",
-        "Test observation",
-        "Test significance",
-        "Test comment"
-      );
-      
-      expect(insight.location).toBe("Lines 1-3");
     });
   });
 });

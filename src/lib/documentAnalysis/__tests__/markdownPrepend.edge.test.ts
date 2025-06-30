@@ -195,7 +195,7 @@ describe("markdownPrepend Edge Cases", () => {
 
       // Should not throw
       await expect(
-        generateComprehensiveAnalysis(mockDocument as any, mockAgent, 500, 0)
+        generateComprehensiveAnalysis(mockDocument, mockAgent, 500, 0)
       ).resolves.toBeTruthy();
     });
 
@@ -231,7 +231,7 @@ describe("markdownPrepend Edge Cases", () => {
       anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
 
       await expect(
-        generateComprehensiveAnalysis(mockDocument as any, mockAgent, 500, 0)
+        generateComprehensiveAnalysis(mockDocument, mockAgent, 500, 0)
       ).resolves.toBeTruthy();
     });
   });
