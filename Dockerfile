@@ -22,6 +22,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Provide dummy DATABASE_URL for build
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+# Increase timeout for font fetching
+ENV NEXT_FONT_GOOGLE_TIMEOUT=60000
 
 # Build Next.js application
 RUN npm run build
