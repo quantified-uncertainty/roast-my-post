@@ -161,7 +161,7 @@ function CommentsSidebar({
                         className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
                       >
                         <MarkdownRenderer className="inline">
-                          {comment.description}
+                          {comment.description.split('\n').slice(0, 2).join('\n')}
                         </MarkdownRenderer>
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
@@ -195,11 +195,13 @@ function CommentsSidebar({
                         />
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <MarkdownRenderer className="text-sm text-gray-700">
-                        {comment.description}
-                      </MarkdownRenderer>
-                    </div>
+                    {expandedTag === tag && comment.description.split('\n').length > 2 && (
+                      <div className="mt-1 text-gray-800">
+                        <MarkdownRenderer className="text-sm">
+                          {comment.description.split('\n').slice(2).join('\n')}
+                        </MarkdownRenderer>
+                      </div>
+                    )}
                     {expandedTag === tag && (
                       <div className="mt-2 text-xs text-gray-400">
                         {comment.grade !== undefined && (
