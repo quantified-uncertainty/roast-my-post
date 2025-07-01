@@ -54,6 +54,7 @@ import {
 import { GradeBadge } from "./GradeBadge";
 import SlateEditor from "./SlateEditor";
 import { AgentSelector, QuickAgentButtons } from "./AgentSelector";
+import { EvaluationAnalysisModal } from "./EvaluationAnalysisModal";
 
 function MarkdownRenderer({
   children,
@@ -334,7 +335,6 @@ interface EvaluationState {
   selectedReviewIndex: number;
   hoveredCommentId: string | null;
   expandedCommentId: string | null;
-  activeTab: "analysis" | "comments" | "thinking" | "selfCritique";
 }
 
 interface UIState {
@@ -380,37 +380,6 @@ function HomeView({
   );
 }
 
-interface TabNavigationProps {
-  activeTab: "analysis" | "comments" | "thinking" | "selfCritique";
-  onTabChange: (tab: "analysis" | "comments" | "thinking" | "selfCritique") => void;
-}
-
-function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
-  return (
-    <div className="flex border-b border-gray-200">
-      <button
-        className={`px-4 py-2 text-sm font-medium ${
-          activeTab === "analysis"
-            ? "border-b-2 border-blue-500 text-blue-600"
-            : "text-gray-500 hover:text-blue-600"
-        }`}
-        onClick={() => onTabChange("analysis")}
-      >
-        Analysis
-      </button>
-      <button
-        className={`px-4 py-2 text-sm font-medium ${
-          activeTab === "comments"
-            ? "border-b-2 border-blue-500 text-blue-600"
-            : "text-gray-500 hover:text-blue-600"
-        }`}
-        onClick={() => onTabChange("comments")}
-      >
-        Comments
-      </button>
-    </div>
-  );
-}
 
 interface EvaluationViewProps {
   evaluation: Evaluation;
@@ -420,6 +389,8 @@ interface EvaluationViewProps {
   onShowEvaluationSelector: () => void;
   commentColorMap: Record<number, { background: string; color: string }>;
   onRerunEvaluation: (agentId: string) => Promise<void>;
+  document: Document;
+  onEvaluationSelect: (index: number) => void;
 }
 
 function EvaluationView({
@@ -430,79 +401,62 @@ function EvaluationView({
   onShowEvaluationSelector,
   commentColorMap,
   onRerunEvaluation,
+  document,
+  onEvaluationSelect,
 }: EvaluationViewProps) {
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  
   return (
-    <div className="h-full">
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4">
-        <div className="flex items-center gap-2">
-          <button
-            className="inline-flex h-full items-center gap-2 px-3 py-0 text-base font-medium transition hover:bg-gray-100 focus:outline-none"
-            onClick={onShowEvaluationSelector}
-          >
-            {evaluation.grade && (
-              <GradeBadge grade={evaluation.grade} variant="light" />
-            )}
-            <span className="ml-2 mr-1 font-semibold text-gray-900">
-              {evaluation.agent.name}
-            </span>
-            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onBackToHome}
-            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-            Back
-          </button>
+    <div className="h-full flex flex-col">
+      {/* Evaluation pills selector */}
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="flex flex-wrap gap-2">
+          {document.reviews.map((review, index) => {
+            const isActive = index === evaluationState.selectedReviewIndex;
+            return (
+              <button
+                key={review.agentId}
+                onClick={() => onEvaluationSelect(index)}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-blue-100 text-blue-700 ring-1 ring-blue-600"
+                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                }`}
+              >
+                {review.agent.name}
+                {review.grade !== undefined && (
+                  <GradeBadge grade={review.grade} variant="light" size="xs" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <TabNavigation
-        activeTab={evaluationState.activeTab}
-        onTabChange={(tab) =>
-          onEvaluationStateChange({ ...evaluationState, activeTab: tab })
-        }
-      />
+      {/* Agent info section at top */}
+      <div className="p-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-900">{evaluation.agent.name}</h3>
+              {evaluation.agent.description && (
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {evaluation.agent.description}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setShowAnalysisModal(true)}
+              className="ml-4 inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Analysis
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {evaluationState.activeTab === "analysis" && (
-        <div className="prose-md prose max-w-none px-8 py-0.5">
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-semibold text-gray-900">
-              Summary
-            </h2>
-            <MarkdownRenderer>{evaluation.summary}</MarkdownRenderer>
-          </div>
-          {evaluation.analysis && (
-            <>
-              <div className="my-6 h-px bg-gray-200" />
-              <div>
-                <h2 className="mb-3 text-lg font-semibold text-gray-900">
-                  Analysis
-                </h2>
-                <MarkdownRenderer>{evaluation.analysis}</MarkdownRenderer>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-      {evaluationState.activeTab === "thinking" && evaluation.thinking && (
-        <div className="prose-md prose max-w-none px-8 py-0.5">
-          <MarkdownRenderer>{evaluation.thinking}</MarkdownRenderer>
-        </div>
-      )}
-      {evaluationState.activeTab === "selfCritique" && evaluation.selfCritique && (
-        <div className="prose-md prose max-w-none px-8 py-0.5">
-          <div className="mb-6">
-            <h2 className="mb-3 text-lg font-semibold text-gray-900">
-              Self-Critique
-            </h2>
-            <MarkdownRenderer>{evaluation.selfCritique}</MarkdownRenderer>
-          </div>
-        </div>
-      )}
-      {evaluationState.activeTab === "comments" && (
+      {/* Comments section */}
+      <div className="flex-1 overflow-y-auto">
         <CommentsSidebar
           comments={evaluation.comments}
           activeTag={evaluationState.hoveredCommentId}
@@ -517,13 +471,20 @@ function EvaluationView({
             onEvaluationStateChange({
               ...evaluationState,
               expandedCommentId: commentId,
-              activeTab: "comments",
             });
           }}
           evaluation={evaluation}
           commentColorMap={commentColorMap}
         />
-      )}
+      </div>
+      
+      {/* Analysis Modal */}
+      <EvaluationAnalysisModal
+        isOpen={showAnalysisModal}
+        onClose={() => setShowAnalysisModal(false)}
+        evaluation={evaluation}
+        documentId={document.id}
+      />
     </div>
   );
 }
@@ -644,7 +605,6 @@ function DocumentContentPanel({
             setEvaluationState({
               ...evaluationState,
               expandedCommentId: commentId,
-              activeTab: "comments",
             });
           }}
           highlights={
@@ -688,6 +648,13 @@ export function DocumentWithEvaluations({
     hasEvaluations && evaluationState !== null
       ? document.reviews[evaluationState.selectedReviewIndex]
       : null;
+
+  // Automatically select the first evaluation on mount
+  useEffect(() => {
+    if (hasEvaluations && evaluationState === null && uiState.isHomeView) {
+      handleEvaluationSelect(0);
+    }
+  }, [hasEvaluations]);
 
   // Create a stable color map for all comments
   const commentColorMap = useMemo(() => {
@@ -737,14 +704,13 @@ export function DocumentWithEvaluations({
       selectedReviewIndex: index,
       hoveredCommentId: null,
       expandedCommentId: null,
-      activeTab: "analysis",
     });
     setUIState((prev) => ({ ...prev, isHomeView: false }));
   };
 
   const handleBackToHome = () => {
     setEvaluationState(null);
-    setUIState((prev) => ({ ...prev, isHomeView: true }));
+    setUIState((prev) => ({ ...prev, isHomeView: true, showEvaluationSelector: false }));
   };
 
   const handleCreateEvaluation = async (agentId: string) => {
@@ -918,6 +884,8 @@ export function DocumentWithEvaluations({
             }
             commentColorMap={commentColorMap}
             onRerunEvaluation={handleCreateEvaluation}
+            document={document}
+            onEvaluationSelect={handleEvaluationSelect}
           />
         ) : null}
       </div>
