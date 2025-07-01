@@ -12,6 +12,7 @@ import {
   ListBulletIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 
 import { TaskLogs } from "./TaskLogs";
 
@@ -61,7 +62,7 @@ export function VersionDetails({
       selfCritique: selectedVersion.selfCritique,
       comments: selectedVersion.comments.map((comment, index) => ({
         id: `comment-${index}`,
-        title: comment.title,
+        title: extractTitleFromDescription(comment.description).title,
         description: comment.description,
         importance: comment.importance || null,
         grade: comment.grade || null,
@@ -215,14 +216,14 @@ export function VersionDetails({
                 className="rounded-lg border border-gray-200 bg-white p-4"
               >
                 <div className="mb-2 flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">{comment.title}</h4>
+                  <h4 className="font-medium text-gray-900">{extractTitleFromDescription(comment.description).title}</h4>
                 </div>
                 <div className="prose max-w-none">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
                   >
-                    {comment.description}
+                    {extractTitleFromDescription(comment.description).remainingDescription || comment.description}
                   </ReactMarkdown>
                 </div>
                 {comment.highlight && (

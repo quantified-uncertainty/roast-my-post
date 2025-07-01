@@ -55,7 +55,6 @@ export function filterValidComments(comments: Comment[]): Comment[] {
   return comments.filter(
     (comment) =>
       comment.highlight &&
-      comment.title &&
       comment.description &&
       (comment.isValid === undefined || comment.isValid === true)
   );

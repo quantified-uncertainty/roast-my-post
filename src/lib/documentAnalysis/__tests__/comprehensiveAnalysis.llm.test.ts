@@ -86,14 +86,13 @@ What are your thoughts on AI in education? How can we balance innovation with th
     // Check comments
     expect(result.comments).toHaveLength(targetComments);
     result.comments.forEach((comment, i) => {
-      expect(comment.title).toBeDefined();
       expect(comment.description).toBeDefined();
       expect(comment.highlight).toBeDefined();
       expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
       expect(comment.highlight.endOffset).toBeGreaterThan(comment.highlight.startOffset);
       
       console.log(`Comment ${i + 1}: {
-      title: '${comment.title}',
+      description: '${comment.description.slice(0, 50)}...',
       importance: ${comment.importance},
       quotedText: '${comment.highlight.quotedText.slice(0, 50)}...'
     }`);

@@ -148,7 +148,6 @@ function generateLinkComments(
       const linkResult = linkResultMap.get(url);
 
       if (linkResult) {
-        let title: string;
         let grade: number;
         let importance: number;
         let description: string;
@@ -157,43 +156,37 @@ function generateLinkComments(
           // Handle different error types
           switch (linkResult.accessError.type) {
             case "NotFound":
-              title = `❌ Broken link`;
               grade = 0;
               importance = 100;
-              description = `${url} - Page not found (HTTP 404)`;
+              description = `❌ Broken link: ${url} - Page not found (HTTP 404)`;
               break;
             case "Forbidden":
-              title = `🚫 Access denied`;
               grade = 0;
               importance = 100;
-              description = `${url} - Access forbidden (HTTP 403)`;
+              description = `🚫 Access denied: ${url} - Access forbidden (HTTP 403)`;
               break;
             case "Timeout":
-              title = `⏱️ Link timeout`;
               grade = 0;
               importance = 100;
-              description = `${url} - Request timed out`;
+              description = `⏱️ Link timeout: ${url} - Request timed out`;
               break;
             default:
-              title = `❌ Link error`;
               grade = 0;
               importance = 100;
               const errorMsg =
                 "message" in linkResult.accessError
                   ? linkResult.accessError.message
                   : "Unknown error";
-              description = `${url} - ${errorMsg}`;
+              description = `❌ Link error: ${url} - ${errorMsg}`;
           }
         } else {
           // URL is accessible - simple verification
-          title = `✅ Link verified`;
           grade = 90;
           importance = 10;
-          description = `${url} - Server responded successfully (HTTP 200)`;
+          description = `✅ Link verified: ${url} - Server responded successfully (HTTP 200)`;
         }
 
         comments.push({
-          title,
           description,
           highlight: urlPosition,
           importance,

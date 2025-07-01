@@ -14,7 +14,6 @@ export function normalizeComments(
   rawComments: RawLLMComment[]
 ): LineBasedComment[] {
   return rawComments.map((comment) => ({
-    title: comment.title,
     description: comment.description,
     highlight: comment.highlight,
     importance: comment.importance ?? 50,
@@ -35,9 +34,6 @@ export async function validateAndConvertComments(
 
   // Validate the raw comment structure
   const rawComments: LineBasedComment[] = comments.map((comment, index) => {
-    if (!comment.title || typeof comment.title !== "string") {
-      throw new Error(`Comment ${index} missing or invalid title`);
-    }
     if (!comment.description || typeof comment.description !== "string") {
       throw new Error(`Comment ${index} missing or invalid description`);
     }
@@ -96,7 +92,6 @@ export async function validateAndConvertComments(
     }
 
     return {
-      title: comment.title,
       description: comment.description,
       highlight: highlight as LineSnippetHighlight,
       importance: comment.importance,
@@ -120,7 +115,7 @@ export async function validateAndConvertComments(
 
       if (!comment.isValid) {
         throw new Error(
-          `Comment ${index} failed highlight processing: ${comment.title}`
+          `Comment ${index} failed highlight processing`
         );
       }
 

@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
 import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
+import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
@@ -184,7 +185,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
           self_critique: evalVersion.selfCritique,
           comment_count: evalVersion.comments.length,
           comments: evalVersion.comments.map((comment) => ({
-            title: comment.title,
+            title: extractTitleFromDescription(comment.description).title,
             description: comment.description,
             importance: comment.importance,
             grade: comment.grade,

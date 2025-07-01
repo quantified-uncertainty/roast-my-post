@@ -76,9 +76,8 @@ When I started this blog in high school, I did not imagine that I would cause [_
 
     const lineComments: LineBasedComment[] = [
       {
-        title: "Opening Hook",
         description:
-          "Great opening that connects personal story to broader impact",
+          "Opening Hook. Great opening that connects personal story to broader impact",
         importance: 8,
         highlight: {
           startLineIndex: 0,
@@ -93,7 +92,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
 
     expect(processedComments).toHaveLength(1);
     expect(processedComments[0].isValid).toBe(true);
-    expect(processedComments[0].title).toBe("Opening Hook");
+    expect(processedComments[0].description).toContain("Opening Hook");
     expect(processedComments[0].highlight.isValid).toBe(true);
     expect(processedComments[0].highlight.quotedText).toContain("Crossposted");
   });

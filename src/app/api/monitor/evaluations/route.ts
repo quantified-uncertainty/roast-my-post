@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: "desc",
       },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
         document: {
           select: {
             id: true,
@@ -58,7 +60,14 @@ export async function GET(request: NextRequest) {
             createdAt: "desc",
           },
           take: 1,
-          include: {
+          select: {
+            id: true,
+            version: true,
+            summary: true,
+            analysis: true,
+            grade: true,
+            selfCritique: true,
+            createdAt: true,
             agentVersion: {
               select: {
                 name: true,
@@ -68,7 +77,6 @@ export async function GET(request: NextRequest) {
             comments: {
               select: {
                 id: true,
-                title: true,
                 description: true,
                 importance: true,
                 grade: true,

@@ -136,7 +136,6 @@ model EvaluationVersion {
 
 model EvaluationComment {
   id                  String              @id @default(uuid())
-  title               String
   description         String
   importance          Int?
   grade               Int?

@@ -86,19 +86,17 @@ Overall, this is a well-structured test document.
               commentInsights: [
                 {
                   id: "insight-1",
-                  title: "Opening Line Analysis",
                   location: "Lines 1",
                   observation: "The opening line clearly states the document's purpose",
                   significance: "Sets expectations for the reader",
-                  suggestedComment: "The opening line effectively establishes context",
+                  suggestedComment: "Opening Line Analysis. The opening line effectively establishes context",
                 },
                 {
                   id: "insight-2",
-                  title: "Structure Review",
                   location: "Lines 2-3",
                   observation: "The document maintains consistent structure",
                   significance: "Easy to follow and understand",
-                  suggestedComment: "The structural consistency aids readability",
+                  suggestedComment: "Structure Review. The structural consistency aids readability",
                 },
               ],
             },
@@ -134,19 +132,17 @@ Overall, this is a well-structured test document.
         commentInsights: [
           {
             id: "insight-1",
-            title: "Test Comment 1",
             location: "Lines 1",
             observation: "First observation",
             significance: "Why it matters",
-            suggestedComment: "This is the first comment text",
+            suggestedComment: "Test Comment 1. This is the first comment text",
           },
           {
             id: "insight-2",
-            title: "Test Comment 2",
             location: "Lines 2-3",
             observation: "Second observation",
             significance: "Also important",
-            suggestedComment: "This is the second comment text",
+            suggestedComment: "Test Comment 2. This is the second comment text",
           },
         ],
       };
@@ -159,8 +155,7 @@ Overall, this is a well-structured test document.
       );
 
       expect(result.outputs.comments).toHaveLength(2);
-      expect(result.outputs.comments[0].title).toBe("Test Comment 1");
-      expect(result.outputs.comments[0].description).toBe("This is the first comment text");
+      expect(result.outputs.comments[0].description).toBe("Test Comment 1. This is the first comment text");
       expect(result.outputs.comments[0].highlight.startOffset).toBeDefined();
       expect(result.outputs.comments[0].highlight.endOffset).toBeDefined();
       expect(result.task.name).toBe("extractCommentsFromAnalysis");
@@ -182,8 +177,7 @@ Overall, this is a well-structured test document.
             input: {
               comments: [
                 {
-                  title: "Extracted Comment",
-                  description: "Comment extracted via LLM",
+                  description: "Extracted Comment. Comment extracted via LLM",
                   importance: 5,
                   highlight: {
                     startLineIndex: 0,
@@ -213,7 +207,7 @@ Overall, this is a well-structured test document.
       );
 
       expect(result.outputs.comments).toHaveLength(1);
-      expect(result.outputs.comments[0].title).toBe("Extracted Comment");
+      expect(result.outputs.comments[0].description).toContain("Extracted Comment");
       expect(result.task.priceInCents).toBeGreaterThan(0); // Should have cost for LLM
     });
   });
