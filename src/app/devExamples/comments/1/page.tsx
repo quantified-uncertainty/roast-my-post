@@ -150,7 +150,7 @@ export default function CommentsExamplePage() {
   }, []);
   
   const handleHighlightHover = useCallback((tag: string | null) => {
-    // Optional: sync highlight hover with comment hover
+    setHoveredComment(tag);
   }, []);
   
   return (
@@ -178,6 +178,7 @@ export default function CommentsExamplePage() {
                 onHighlightClick={handleHighlightClick}
                 onHighlightHover={handleHighlightHover}
                 activeTag={selectedComment}
+                hoveredTag={hoveredComment}
               />
             </div>
             
@@ -199,35 +200,20 @@ export default function CommentsExamplePage() {
                         top: `${position}px`,
                         left: '20px',
                         right: '20px',
-                        padding: '8px 0',
+                        padding: '8px',
                         transition: 'all 0.2s ease-out',
                         cursor: 'pointer',
                         zIndex: isHovered ? 20 : 10,
                         opacity: positionsCalculated ? 1 : 0,
                         visibility: positionsCalculated ? 'visible' : 'hidden',
+                        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.9)' : 'transparent',
+                        boxShadow: isHovered ? '0 2px 8px rgba(0, 0, 0, 0.1)' : 'none',
+                        borderRadius: isHovered ? '4px' : '0',
                       }}
                       onClick={() => setSelectedComment(comment.id)}
                       onMouseEnter={() => setHoveredComment(comment.id)}
                       onMouseLeave={() => setHoveredComment(null)}
                     >
-                      <div style={{ 
-                        fontSize: '13px', 
-                        color: '#666', 
-                        marginBottom: '6px',
-                        fontWeight: 600,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        {comment.author}
-                        <span style={{ 
-                          fontSize: '11px', 
-                          color: '#999',
-                          fontWeight: 'normal'
-                        }}>
-                          {new Date(comment.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
                       <div style={{ 
                         fontSize: '14px', 
                         color: '#333',
@@ -255,16 +241,6 @@ export default function CommentsExamplePage() {
                           borderTop: '1px solid #E8E8E8'
                         }}>
                           {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-                        </div>
-                      )}
-                      {needsTruncation && !isHovered && (
-                        <div style={{
-                          fontSize: '12px',
-                          color: '#999',
-                          marginTop: '6px',
-                          fontStyle: 'italic'
-                        }}>
-                          ↑ Hover to expand
                         </div>
                       )}
                     </div>
