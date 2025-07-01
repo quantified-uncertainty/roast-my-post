@@ -69,9 +69,6 @@ export function PositionedComment({
         
         {/* Comment text */}
         <div className="flex-1 min-w-0 text-sm leading-relaxed text-gray-700">
-          {comment.title && isHovered && (
-            <div className="mb-1 font-medium text-gray-900 break-words">{comment.title}</div>
-          )}
           <div className="break-words">{displayText}</div>
           
           {/* Additional metadata when expanded */}
