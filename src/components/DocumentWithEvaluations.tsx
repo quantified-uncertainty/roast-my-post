@@ -33,7 +33,6 @@ import {
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { formatWordCount } from "@/utils/ui/documentUtils";
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
-import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 import {
   ArrowLeftIcon,
   ArrowPathIcon,
@@ -162,7 +161,7 @@ function CommentsSidebar({
                         className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
                       >
                         <MarkdownRenderer className="inline">
-                          {extractTitleFromDescription(comment.description).title}
+                          {comment.description}
                         </MarkdownRenderer>
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
@@ -196,44 +195,28 @@ function CommentsSidebar({
                         />
                       </div>
                     </div>
-                    {(() => {
-                      const { remainingDescription } = extractTitleFromDescription(comment.description);
-                      return remainingDescription ? (
-                        <div
-                          className={`mt-1 ${
-                            expandedTag === tag
-                              ? "text-gray-800"
-                              : "line-clamp-1 text-gray-600"
-                          }`}
-                        >
-                          <MarkdownRenderer>
-                            {remainingDescription}
-                          </MarkdownRenderer>
-                          {expandedTag === tag && (
-                            <div className="mt-2 text-xs text-gray-400">
-                              {comment.grade !== undefined && (
-                                <span className="mr-4">
-                                  Grade:{" "}
-                                  <GradeBadge
-                                    grade={comment.grade}
-                                    variant="light"
-                                    size="xs"
-                                  />
-                                </span>
-                              )}
-                              {comment.importance !== undefined && (
-                                <span>
-                                  Importance:{" "}
-                                  <span>
-                                    {getImportancePhrase(comment.importance)}
-                                  </span>
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : null;
-                    })()}
+                    {expandedTag === tag && (
+                      <div className="mt-2 text-xs text-gray-400">
+                        {comment.grade !== undefined && (
+                          <span className="mr-4">
+                            Grade:{" "}
+                            <GradeBadge
+                              grade={comment.grade}
+                              variant="light"
+                              size="xs"
+                            />
+                          </span>
+                        )}
+                        {comment.importance !== undefined && (
+                          <span>
+                            Importance:{" "}
+                            <span>
+                              {getImportancePhrase(comment.importance)}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

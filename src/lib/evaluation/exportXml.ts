@@ -1,5 +1,4 @@
 import { logger } from "@/lib/logger";
-import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 
 interface ExportEvaluationData {
   evaluation: {
@@ -116,8 +115,7 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
     evaluation.comments.forEach(comment => {
       xml += '    <comment>\n';
       xml += `      <id>${comment.id}</id>\n`;
-      const { title } = extractTitleFromDescription(comment.description);
-      xml += `      <title>${escapeXml(title)}</title>\n`;
+      xml += `      <title>${escapeXml(comment.title || '')}</title>\n`;
       xml += `      <description><![CDATA[${comment.description}]]></description>\n`;
       if (comment.importance !== null && comment.importance !== undefined) {
         xml += `      <importance>${comment.importance}</importance>\n`;

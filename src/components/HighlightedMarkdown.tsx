@@ -16,7 +16,6 @@ import {
   resetContainer,
   testFindTextInContainer,
 } from "@/utils/ui/highlightUtils";
-import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 
 interface HighlightedMarkdownProps {
   content: string;
@@ -80,9 +79,8 @@ export function HighlightedMarkdown({
         // Enhanced debugging for highlights
         highlights.forEach((highlight, index) => {
           const { startOffset, endOffset, quotedText } = highlight.highlight;
-          const { title } = extractTitleFromDescription(highlight.description);
           console.log(`[HighlightedMarkdown] Highlight ${index}:`, {
-            title,
+            description: highlight.description,
             startOffset,
             endOffset,
             quotedTextPreview: quotedText

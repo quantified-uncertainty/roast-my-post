@@ -1,5 +1,4 @@
 import type { Comment, Evaluation, Highlight } from "../../types/documentSchema";
-import { extractTitleFromDescription } from "./extractTitle";
 
 /**
  * Checks if two highlights overlap
@@ -161,8 +160,8 @@ export function applyHighlightsToContainer(
 
   for (const comment of validHighlights) {
     const { quotedText } = comment.highlight;
-    const { title } = extractTitleFromDescription(comment.description);
-    const color = colorMap[title] || "#ffeb3b";
+    const description = comment.description;
+    const color = colorMap[description] || "#ffeb3b";
 
     try {
       // Find text nodes that contain our highlight
@@ -181,7 +180,7 @@ export function applyHighlightsToContainer(
         node,
         nodeOffset,
         nodeOffset + highlightLength,
-        title,
+        description,
         color
       );
 
@@ -247,8 +246,7 @@ export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
     if (!hasOverlap) {
       fixed.push(comment);
     } else {
-      const { title } = extractTitleFromDescription(comment.description);
-      console.warn(`Removing overlapping highlight: ${title}`);
+      console.warn(`Removing overlapping highlight: ${comment.description}`);
     }
   }
 
@@ -266,8 +264,7 @@ export function validateHighlights(review: Evaluation): {
 
   for (const comment of review.comments) {
     if (!comment.highlight.isValid) {
-      const { title } = extractTitleFromDescription(comment.description);
-      errors.push(`Invalid highlight for comment: ${title}`);
+      errors.push(`Invalid highlight for comment: ${comment.description}`);
     }
   }
 

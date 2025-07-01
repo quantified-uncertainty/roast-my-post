@@ -4,7 +4,6 @@ import { Command } from "commander";
 import { logger } from "@/lib/logger";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
-import { extractTitleFromDescription } from "../utils/ui/extractTitle";
 
 const program = new Command();
 
@@ -201,8 +200,7 @@ async function verifyFile(filePath: string) {
 
       for (const comment of review.comments) {
         totalHighlights++;
-        const { title } = extractTitleFromDescription(comment.description || "");
-        const displayTitle = title || comment.highlight?.quotedText?.substring(0, 50) || "Untitled";
+        const displayTitle = comment.description || comment.highlight?.quotedText?.substring(0, 50) || "Untitled";
         const result = verifyHighlight(
           document.content,
           comment.highlight,

@@ -7,7 +7,6 @@ import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
-import { extractTitleFromDescription } from "../../utils/ui/extractTitle";
 
 export async function analyzeDocument(
   document: Document,
@@ -73,9 +72,8 @@ export async function analyzeDocument(
           analysis: analysisResult.outputs.analysis,
           grade: analysisResult.outputs.grade,
           comments: commentResult.outputs.comments.map((c) => {
-            const { title } = extractTitleFromDescription(c.description);
             return {
-              title: title || c.highlight?.quotedText?.substring(0, 50) || "Comment",
+              title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Comment",
               text: c.description,
             };
           }),

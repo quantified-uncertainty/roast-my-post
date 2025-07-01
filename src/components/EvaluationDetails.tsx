@@ -11,7 +11,6 @@ import {
 
 import { GradeBadge } from "@/components/GradeBadge";
 import { TaskLogs } from "@/app/docs/[docId]/evaluations/components/TaskLogs";
-import { extractTitleFromDescription } from "@/utils/ui/extractTitle";
 
 export type EvaluationTab = "analysis" | "summary" | "comments" | "selfCritique" | "logs";
 
@@ -149,9 +148,6 @@ export function EvaluationDetails({
                   className="rounded-lg border border-gray-200 p-4"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <h4 className="font-medium text-gray-900">
-                      {extractTitleFromDescription(comment.description).title}
-                    </h4>
                     <div className="flex items-center space-x-2">
                       {comment.grade && <GradeBadge grade={comment.grade} />}
                       {comment.importance && (
@@ -166,7 +162,7 @@ export function EvaluationDetails({
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
                     >
-                      {extractTitleFromDescription(comment.description).remainingDescription || comment.description}
+                      {comment.description}
                     </ReactMarkdown>
                   </div>
                 </div>
