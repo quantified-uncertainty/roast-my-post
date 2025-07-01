@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 
 import Link from "next/link";
@@ -55,6 +56,7 @@ import { GradeBadge } from "./GradeBadge";
 import SlateEditor from "./SlateEditor";
 import { AgentSelector, QuickAgentButtons } from "./AgentSelector";
 import { EvaluationAnalysisModal } from "./EvaluationAnalysisModal";
+import { CommentsColumn } from "./CommentsColumn";
 
 function MarkdownRenderer({
   children,
@@ -385,6 +387,7 @@ interface EvaluationViewProps {
   onRerunEvaluation: (agentId: string) => Promise<void>;
   document: Document;
   onEvaluationSelect: (index: number) => void;
+  contentWithMetadata: string;
 }
 
 function EvaluationView({
@@ -397,11 +400,25 @@ function EvaluationView({
   onRerunEvaluation,
   document,
   onEvaluationSelect,
+  contentWithMetadata,
 }: EvaluationViewProps) {
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  const highlights = useMemo(() => 
+    getValidAndSortedComments(evaluation.comments).map(
+      (comment: Comment, index: number) => ({
+        startOffset: comment.highlight.startOffset,
+        endOffset: comment.highlight.endOffset,
+        tag: index.toString(),
+        color: commentColorMap[index]?.background.substring(1) ?? "#3b82f6",
+      })
+    ),
+    [evaluation.comments, commentColorMap]
+  );
   
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-x-hidden">
       {/* Evaluation pills selector */}
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
         <div className="flex flex-wrap gap-2">
@@ -428,8 +445,8 @@ function EvaluationView({
       </div>
 
       {/* Agent info section at top */}
-      <div className="p-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="border-b border-gray-200 bg-white px-4 py-3">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-gray-900">{evaluation.agent.name}</h3>
@@ -449,27 +466,54 @@ function EvaluationView({
         </div>
       </div>
 
-      {/* Comments section */}
-      <div className="flex-1 overflow-y-auto">
-        <CommentsSidebar
-          comments={evaluation.comments}
-          activeTag={evaluationState.hoveredCommentId}
-          expandedTag={evaluationState.expandedCommentId}
-          onCommentHover={(commentId) =>
-            onEvaluationStateChange({
-              ...evaluationState,
-              hoveredCommentId: commentId,
-            })
-          }
-          onCommentClick={(commentId) => {
-            onEvaluationStateChange({
-              ...evaluationState,
-              expandedCommentId: commentId,
-            });
-          }}
-          evaluation={evaluation}
-          commentColorMap={commentColorMap}
-        />
+      {/* Unified scroll container for content and comments */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
+        <div className="flex min-h-full">
+          {/* Main content area */}
+          <div ref={contentRef} className="flex-1 relative p-4">
+            <article className="prose prose-lg prose-slate max-w-3xl mx-auto">
+              <SlateEditor
+                content={contentWithMetadata}
+                onHighlightHover={(commentId) => {
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    hoveredCommentId: commentId,
+                  });
+                }}
+                onHighlightClick={(commentId) => {
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    expandedCommentId: commentId,
+                  });
+                }}
+                highlights={highlights}
+                activeTag={evaluationState.hoveredCommentId}
+              />
+            </article>
+          </div>
+          
+          {/* Comments column with positioned comments */}
+          <CommentsColumn
+            comments={evaluation.comments}
+            evaluation={evaluation}
+            contentRef={contentRef}
+            selectedCommentId={evaluationState.expandedCommentId}
+            hoveredCommentId={evaluationState.hoveredCommentId}
+            commentColorMap={commentColorMap}
+            onCommentHover={(commentId) =>
+              onEvaluationStateChange({
+                ...evaluationState,
+                hoveredCommentId: commentId,
+              })
+            }
+            onCommentClick={(commentId) => {
+              onEvaluationStateChange({
+                ...evaluationState,
+                expandedCommentId: commentId,
+              });
+            }}
+          />
+        </div>
       </div>
       
       {/* Analysis Modal */}
@@ -642,6 +686,12 @@ export function DocumentWithEvaluations({
     hasEvaluations && evaluationState !== null
       ? document.reviews[evaluationState.selectedReviewIndex]
       : null;
+      
+  // Get the full content with prepend using the centralized helper
+  const contentWithMetadata = useMemo(() => {
+    const { content } = getDocumentFullContent(document);
+    return content;
+  }, [document]);
 
   // Automatically select the first evaluation on mount
   useEffect(() => {
@@ -839,50 +889,50 @@ export function DocumentWithEvaluations({
   }, [uiState.showEvaluationSelector]);
 
   return (
-    <div className="flex">
-      <div
-        className="flex-1 overflow-y-auto"
-        style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
-      >
-        <DocumentContentPanel
-          document={document}
+    <div 
+      className="h-full bg-gray-50"
+      style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+    >
+      {uiState.isHomeView ? (
+        <div className="flex h-full">
+          <div className="flex-1 overflow-y-auto">
+            <DocumentContentPanel
+              document={document}
+              evaluationState={evaluationState}
+              setEvaluationState={setEvaluationState}
+              activeEvaluation={activeEvaluation}
+              commentColorMap={commentColorMap}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto border-l border-gray-200">
+            <HomeView
+              document={document}
+              isOwner={isOwner}
+              onEvaluationSelect={handleEvaluationSelect}
+              activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
+              isReuploadingDocument={uiState.isReuploadingDocument}
+              onReupload={handleReupload}
+              onCreateEvaluation={handleCreateEvaluation}
+              onCreateMultipleEvaluations={handleCreateMultipleEvaluations}
+            />
+          </div>
+        </div>
+      ) : activeEvaluation && evaluationState ? (
+        <EvaluationView
+          evaluation={activeEvaluation}
           evaluationState={evaluationState}
-          setEvaluationState={setEvaluationState}
-          activeEvaluation={activeEvaluation}
+          onEvaluationStateChange={setEvaluationState}
+          onBackToHome={handleBackToHome}
+          onShowEvaluationSelector={() =>
+            setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
+          }
           commentColorMap={commentColorMap}
+          onRerunEvaluation={handleCreateEvaluation}
+          document={document}
+          onEvaluationSelect={handleEvaluationSelect}
+          contentWithMetadata={contentWithMetadata}
         />
-      </div>
-      <div
-        className="flex-1 overflow-y-auto border-l border-gray-200"
-        style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
-      >
-        {uiState.isHomeView ? (
-          <HomeView
-            document={document}
-            isOwner={isOwner}
-            onEvaluationSelect={handleEvaluationSelect}
-            activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
-            isReuploadingDocument={uiState.isReuploadingDocument}
-            onReupload={handleReupload}
-            onCreateEvaluation={handleCreateEvaluation}
-            onCreateMultipleEvaluations={handleCreateMultipleEvaluations}
-          />
-        ) : activeEvaluation && evaluationState ? (
-          <EvaluationView
-            evaluation={activeEvaluation}
-            evaluationState={evaluationState}
-            onEvaluationStateChange={setEvaluationState}
-            onBackToHome={handleBackToHome}
-            onShowEvaluationSelector={() =>
-              setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
-            }
-            commentColorMap={commentColorMap}
-            onRerunEvaluation={handleCreateEvaluation}
-            document={document}
-            onEvaluationSelect={handleEvaluationSelect}
-          />
-        ) : null}
-      </div>
+      ) : null}
       {uiState.showEvaluationSelector && (
         <EvaluationSelectorModal
           document={document}
