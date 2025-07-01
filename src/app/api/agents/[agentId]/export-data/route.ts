@@ -184,7 +184,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
           self_critique: evalVersion.selfCritique,
           comment_count: evalVersion.comments.length,
           comments: evalVersion.comments.map((comment) => ({
-            title: "", // Empty title - no longer extracting from description
             description: comment.description,
             importance: comment.importance,
             grade: comment.grade,

@@ -158,17 +158,17 @@ function generateLinkComments(
             case "NotFound":
               grade = 0;
               importance = 100;
-              description = `❌ Broken link: ${url} - Page not found (HTTP 404)`;
+              description = `❌ Broken link\n${url} - Page not found (HTTP 404)`;
               break;
             case "Forbidden":
               grade = 0;
               importance = 100;
-              description = `🚫 Access denied: ${url} - Access forbidden (HTTP 403)`;
+              description = `🚫 Access denied\n${url} - Access forbidden (HTTP 403)`;
               break;
             case "Timeout":
               grade = 0;
               importance = 100;
-              description = `⏱️ Link timeout: ${url} - Request timed out`;
+              description = `⏱️ Link timeout\n${url} - Request timed out`;
               break;
             default:
               grade = 0;
@@ -177,13 +177,13 @@ function generateLinkComments(
                 "message" in linkResult.accessError
                   ? linkResult.accessError.message
                   : "Unknown error";
-              description = `❌ Link error: ${url} - ${errorMsg}`;
+              description = `❌ Link error\n${url} - ${errorMsg}`;
           }
         } else {
           // URL is accessible - simple verification
           grade = 90;
           importance = 10;
-          description = `✅ Link verified: ${url} - Server responded successfully (HTTP 200)`;
+          description = `✅ Link verified\n${url} - Server responded successfully (HTTP 200)`;
         }
 
         comments.push({

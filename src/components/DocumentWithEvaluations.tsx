@@ -195,6 +195,11 @@ function CommentsSidebar({
                         />
                       </div>
                     </div>
+                    <div className="mt-2">
+                      <MarkdownRenderer className="text-sm text-gray-700">
+                        {comment.description}
+                      </MarkdownRenderer>
+                    </div>
                     {expandedTag === tag && (
                       <div className="mt-2 text-xs text-gray-400">
                         {comment.grade !== undefined && (

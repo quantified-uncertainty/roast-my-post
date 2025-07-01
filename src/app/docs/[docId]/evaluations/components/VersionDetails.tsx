@@ -61,7 +61,6 @@ export function VersionDetails({
       selfCritique: selectedVersion.selfCritique,
       comments: selectedVersion.comments.map((comment, index) => ({
         id: `comment-${index}`,
-        title: "", // No longer extracting title
         description: comment.description,
         importance: comment.importance || null,
         grade: comment.grade || null,
