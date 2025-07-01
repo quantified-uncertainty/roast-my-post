@@ -85,7 +85,7 @@ export function PositionedComment({
                     rel="noopener noreferrer"
                   />
                 ),
-                p: ({ children }) => <span>{children}</span>,
+                p: ({ children }) => <div className="mb-1 last:mb-0">{children}</div>,
               }}
             >
               {displayText}

@@ -23,7 +23,7 @@ function formatUrlForDisplay(url: string, maxLength: number = 60): string {
     
     if (domain.length + 10 >= maxLength) {
       // Domain itself is too long, just truncate the whole URL
-      return `[${url.substring(0, maxLength - 3)}...](${url})`;
+      return url.substring(0, maxLength - 3) + "...";
     }
     
     // Calculate how much path we can show
@@ -32,11 +32,10 @@ function formatUrlForDisplay(url: string, maxLength: number = 60): string {
       ? path.substring(0, remainingLength) + "..."
       : path;
     
-    const displayUrl = `${urlObj.protocol}//${domain}${truncatedPath}`;
-    return `[${displayUrl}](${url})`;
+    return `${urlObj.protocol}//${domain}${truncatedPath}`;
   } catch {
     // If URL parsing fails, just truncate normally
-    return `[${url.substring(0, maxLength - 3)}...](${url})`;
+    return url.substring(0, maxLength - 3) + "...";
   }
 }
 
