@@ -58,6 +58,7 @@ interface SlateEditorProps {
   onHighlightClick?: (tag: string) => void;
   onHighlightHover?: (tag: string | null) => void;
   activeTag?: string | null;
+  hoveredTag?: string | null;
 }
 
 const renderElement = ({ attributes, children, element }: any) => {
@@ -169,6 +170,7 @@ const renderLeaf = ({
   children,
   leaf,
   activeTag,
+  hoveredTag,
   onHighlightClick,
   onHighlightHover,
 }: any) => {
@@ -205,6 +207,8 @@ const renderLeaf = ({
           boxShadow:
             leaf.tag === activeTag
               ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
+              : leaf.tag === hoveredTag
+              ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
               : "none",
           transform: leaf.tag === activeTag ? "scale(1.01)" : "scale(1)",
           transformOrigin: "center",
@@ -248,6 +252,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   onHighlightClick,
   onHighlightHover,
   activeTag,
+  hoveredTag,
 }) => {
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
   const [initialized, setInitialized] = useState(false);
@@ -642,6 +647,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             renderLeaf({
               ...props,
               activeTag,
+              hoveredTag,
               onHighlightClick,
               onHighlightHover,
             })
