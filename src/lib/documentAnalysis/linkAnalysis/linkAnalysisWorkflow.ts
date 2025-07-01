@@ -8,6 +8,39 @@ import { extractUrls } from "./urlExtractor";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
+ * Truncate URL for display while keeping it clickable
+ */
+function formatUrlForDisplay(url: string, maxLength: number = 60): string {
+  if (url.length <= maxLength) {
+    return url;
+  }
+  
+  // Try to keep the domain and some path
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname;
+    const path = urlObj.pathname + urlObj.search;
+    
+    if (domain.length + 10 >= maxLength) {
+      // Domain itself is too long, just truncate the whole URL
+      return `[${url.substring(0, maxLength - 3)}...](${url})`;
+    }
+    
+    // Calculate how much path we can show
+    const remainingLength = maxLength - domain.length - 10; // 10 for "https://" + "..."
+    const truncatedPath = path.length > remainingLength 
+      ? path.substring(0, remainingLength) + "..."
+      : path;
+    
+    const displayUrl = `${urlObj.protocol}//${domain}${truncatedPath}`;
+    return `[${displayUrl}](${url})`;
+  } catch {
+    // If URL parsing fails, just truncate normally
+    return `[${url.substring(0, maxLength - 3)}...](${url})`;
+  }
+}
+
+/**
  * Complete link analysis workflow that produces thinking, analysis, summary, and comments
  * without additional LLM calls after the initial link analysis step
  */
@@ -158,17 +191,17 @@ function generateLinkComments(
             case "NotFound":
               grade = 0;
               importance = 100;
-              description = `❌ Broken link\n\n${url} - Page not found (HTTP 404)`;
+              description = `❌ Broken link\n\n${formatUrlForDisplay(url)} - Page not found (HTTP 404)`;
               break;
             case "Forbidden":
               grade = 0;
               importance = 100;
-              description = `🚫 Access denied\n\n${url} - Access forbidden (HTTP 403)`;
+              description = `🚫 Access denied\n\n${formatUrlForDisplay(url)} - Access forbidden (HTTP 403)`;
               break;
             case "Timeout":
               grade = 0;
               importance = 100;
-              description = `⏱️ Link timeout\n\n${url} - Request timed out`;
+              description = `⏱️ Link timeout\n\n${formatUrlForDisplay(url)} - Request timed out`;
               break;
             default:
               grade = 0;
@@ -177,13 +210,13 @@ function generateLinkComments(
                 "message" in linkResult.accessError
                   ? linkResult.accessError.message
                   : "Unknown error";
-              description = `❌ Link error\n\n${url} - ${errorMsg}`;
+              description = `❌ Link error\n\n${formatUrlForDisplay(url)} - ${errorMsg}`;
           }
         } else {
           // URL is accessible - simple verification
           grade = 90;
           importance = 10;
-          description = `✅ Link verified\n\n${url} - Server responded successfully (HTTP 200)`;
+          description = `✅ Link verified\n\n${formatUrlForDisplay(url)} - Server responded successfully (HTTP 200)`;
         }
 
         comments.push({
