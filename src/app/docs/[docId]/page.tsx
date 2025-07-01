@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { DocumentActions } from "@/components/DocumentActions";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 
 export default async function DocumentPage({
   params,
@@ -77,7 +78,17 @@ export default async function DocumentPage({
   })) || [];
 
   return (
-    <div className="flex h-full overflow-hidden bg-gray-50">
+    <div className="flex h-full flex-col overflow-hidden bg-gray-50">
+      {/* Full-width breadcrumbs */}
+      <BreadcrumbHeader 
+        items={[
+          { label: "Home", href: "/" },
+          { label: document.title || "Untitled Document" }
+        ]}
+      />
+      
+      {/* Sidebar and content */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Document/Evaluation Switcher Sidebar */}
         <DocumentEvaluationSidebar
           docId={docId}
@@ -389,6 +400,7 @@ export default async function DocumentPage({
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }
