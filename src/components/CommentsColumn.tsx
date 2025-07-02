@@ -11,6 +11,7 @@ import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
 import { PositionedComment } from "./PositionedComment";
 import { GradeBadge } from "./GradeBadge";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 interface CommentsColumnProps {
   comments: (Comment & { agentName?: string })[];
@@ -165,9 +166,17 @@ export function CommentsColumn({
                   }`}
                 >
                   {review.agent.name}
-                  {review.grade !== undefined && (
-                    <GradeBadge grade={review.grade} variant="light" size="xs" />
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {review.grade !== undefined && (
+                      <GradeBadge grade={review.grade} variant="light" size="xs" />
+                    )}
+                    <div className={`flex items-center gap-0.5 text-xs ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}>
+                      <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+                      <span>{review.comments?.length || 0}</span>
+                    </div>
+                  </div>
                 </button>
               );
             })}
@@ -176,6 +185,12 @@ export function CommentsColumn({
       )}
       
       <div className="relative overflow-hidden" style={{ minHeight: "100%" }}>
+        {!highlightsReady && sortedComments.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mb-3"></div>
+            <div className="text-sm text-gray-500">Loading comments...</div>
+          </div>
+        )}
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
           const position = commentPositions[tag] || 0;
@@ -191,7 +206,7 @@ export function CommentsColumn({
               comment={comment}
               index={index}
               position={position}
-              isVisible={highlightsReady && hasInitialized}
+              isVisible={highlightsReady && hasInitialized && position > 0}
               isSelected={isSelected}
               isHovered={isHovered}
               colorMap={
