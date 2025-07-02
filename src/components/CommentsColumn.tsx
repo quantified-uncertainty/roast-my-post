@@ -12,7 +12,7 @@ import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { PositionedComment } from "./PositionedComment";
 
 interface CommentsColumnProps {
-  comments: Comment[];
+  comments: (Comment & { agentName?: string })[];
   evaluation: Evaluation;
   contentRef: React.RefObject<HTMLDivElement | null>;
   selectedCommentId: string | null;
@@ -36,6 +36,7 @@ export function CommentsColumn({
     Record<string, number>
   >({});
   const [highlightsReady, setHighlightsReady] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
@@ -60,6 +61,10 @@ export function CommentsColumn({
   useEffect(() => {
     if (!contentRef.current) return;
 
+    // Reset states when comments change
+    setHighlightsReady(false);
+    setHasInitialized(false);
+
     let attempts = 0;
     const maxAttempts = 10;
 
@@ -80,16 +85,20 @@ export function CommentsColumn({
     };
 
     // Initial delay to allow SlateEditor to render
-    setTimeout(checkHighlights, 200);
+    setTimeout(checkHighlights, 500);
   }, [sortedComments.length, contentRef]);
 
-  // Calculate positions when highlights are ready or hover changes
+  // Calculate positions when highlights are ready
   useEffect(() => {
     if (highlightsReady) {
       calculatePositions(hoveredCommentId);
+      // Mark as initialized after first position calculation
+      if (!hasInitialized) {
+        setTimeout(() => setHasInitialized(true), 50);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoveredCommentId, highlightsReady]);
+  }, [highlightsReady, sortedComments.length]);
 
   // Handle scroll events to recalculate if needed
   useEffect(() => {
@@ -117,13 +126,16 @@ export function CommentsColumn({
           const isSelected = selectedCommentId === tag;
           const isHovered = hoveredCommentId === tag;
 
+          // Use a stable key based on comment content and agent
+          const stableKey = `${(comment as any).agentId || 'default'}-${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+          
           return (
             <PositionedComment
-              key={tag}
+              key={stableKey}
               comment={comment}
               index={index}
               position={position}
-              isVisible={highlightsReady}
+              isVisible={highlightsReady && hasInitialized}
               isSelected={isSelected}
               isHovered={isHovered}
               colorMap={
@@ -131,6 +143,8 @@ export function CommentsColumn({
               }
               onHover={onCommentHover}
               onClick={onCommentClick}
+              agentName={(comment as any).agentName || evaluation.agent.name}
+              skipAnimation={!hasInitialized}
             />
           );
         })}
