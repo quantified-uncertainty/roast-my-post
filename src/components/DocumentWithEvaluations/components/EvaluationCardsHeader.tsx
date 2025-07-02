@@ -4,6 +4,7 @@ import {
   ChatBubbleLeftIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
+  CommandLineIcon,
 } from "@heroicons/react/24/outline";
 
 import { GradeBadge } from "../../GradeBadge";
@@ -53,7 +54,7 @@ export function EvaluationCardsHeader({
     onToggleAgent: (agentId: string) => void;
   }) {
     return (
-      <div className="scrollbar-thin scrollbar-thumb-gray-200 ml-2 flex h-full flex-1 items-center justify-end gap-2 overflow-x-auto">
+      <div className="scrollbar-thin scrollbar-thumb-gray-200 ml-2 flex flex-1 items-center justify-end gap-2 overflow-x-auto py-0.5">
         {document.reviews.map((review: any) => {
           const isActive = evaluationState.selectedAgentIds.has(review.agentId);
           return (
@@ -65,7 +66,6 @@ export function EvaluationCardsHeader({
                   ? "bg-blue-100 text-blue-700 ring-1 ring-blue-600"
                   : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
               }`}
-              style={{ height: "2rem" }}
             >
               {review.agent.name}
               <div className="flex items-center gap-1.5">
@@ -96,13 +96,13 @@ export function EvaluationCardsHeader({
     return (
       <button
         onClick={onClick}
-        className="flex items-center justify-center rounded-full bg-gray-200 p-0.5 transition-colors hover:bg-gray-300"
+        className="flex items-center justify-center rounded-full bg-gray-200 p-0.5 transition-colors duration-500 hover:bg-gray-300 hover:text-gray-900 group-hover:bg-gray-300 group-hover:text-gray-900"
         aria-label="Toggle card size"
         type="button"
         style={{ width: "1.8rem", height: "1.8rem" }}
       >
         <ChevronLeftIcon
-          className={`h-5 w-5 transform text-gray-500 transition-transform duration-200 ${isLargeMode ? "-rotate-90" : "rotate-0"}`}
+          className={`h-5 w-5 transform text-gray-500 transition-transform duration-500 ${isLargeMode ? "-rotate-90" : "rotate-0"}`}
         />
       </button>
     );
@@ -113,16 +113,42 @@ export function EvaluationCardsHeader({
       <div className="flex w-full flex-col gap-1">
         {/* Header row: always one line */}
         <div
-          className={`flex w-full items-center border-b border-gray-100 ${isLargeMode ? "mb-1 pb-1" : "mb-0 pb-0"} h-10`}
+          className={`group flex w-full items-center rounded-t-lg ${isLargeMode ? "h-12 cursor-pointer px-6 py-6 transition-colors hover:bg-gray-200" : "mb-0 px-3 py-2"}`}
+          onClick={isLargeMode ? onToggleMode : undefined}
         >
-          <h2 className="mr-2 whitespace-nowrap text-sm font-medium text-gray-500">
-            Document Evals
-          </h2>
+          {isLargeMode && (
+            <div className="ml-1 flex items-center gap-4">
+              <div className="text-md font-semibold text-gray-500">
+                {document.reviews.length} AI Evaluation
+                {document.reviews.length === 1 ? "" : "s"}
+              </div>
+              <div className="text-sm text-gray-500">
+                Toggle evaluations to show their comments alongside the document
+              </div>
+            </div>
+          )}
+          {!isLargeMode && (
+            <div className="text-md flex items-center gap-2 font-medium text-gray-500">
+              <ChatBubbleLeftIcon className="h-4 w-4" />
+              Showing{" "}
+              {document.reviews
+                .filter((r: any) =>
+                  evaluationState.selectedAgentIds.has(r.agentId)
+                )
+                .reduce(
+                  (total: number, review: any) =>
+                    total + (review.comments?.length || 0),
+                  0
+                )}{" "}
+              comments by {evaluationState.selectedAgentIds.size} Evaluation
+              {evaluationState.selectedAgentIds.size === 1 ? "" : "s"}
+            </div>
+          )}
           {isLargeMode ? (
             <div className="ml-auto flex-shrink-0">
               <EvaluationModeToggleButton
                 isLargeMode={isLargeMode}
-                onClick={onToggleMode || (() => {})}
+                onClick={() => {}}
               />
             </div>
           ) : (
@@ -143,7 +169,7 @@ export function EvaluationCardsHeader({
         </div>
         {/* Cards grid only in large mode, below header */}
         {isLargeMode && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 px-4 pb-2 sm:grid-cols-2 lg:grid-cols-3">
             {document.reviews.map((review: any) => {
               const isActive = evaluationState.selectedAgentIds.has(
                 review.agentId
@@ -159,7 +185,7 @@ export function EvaluationCardsHeader({
                   className={`flex min-h-[100px] flex-col justify-between rounded-md bg-white p-3`}
                 >
                   {/* Header Row */}
-                  <div className="mb-2 flex items-start justify-between">
+                  <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       {review.grade !== undefined && (
                         <GradeBadge
@@ -187,24 +213,42 @@ export function EvaluationCardsHeader({
                           className={`absolute left-1 top-1 h-2 w-2 rounded-full bg-white shadow transition-transform duration-200 ${isActive ? "translate-x-4" : ""}`}
                         />
                       </span>
-                      <span className="text-sm font-medium text-gray-700">
+                      <span
+                        className={`text-sm font-medium ${isActive ? "text-gray-700" : "text-gray-400"}`}
+                      >
                         Comments ({review.comments?.length || 0})
                       </span>
                     </label>
                   </div>
                   {/* Summary */}
-                  <div className="mb-2 min-h-[40px] text-sm text-gray-700">
+                  <div className="mb-3 min-h-[40px] text-sm text-gray-700">
                     {truncatedSummary}
                   </div>
                   {/* Footer */}
-                  <div className="mt-auto">
+                  <div className="mt-auto flex flex-row items-center justify-between">
                     <a
                       href="#"
                       className="flex items-center text-xs font-medium text-purple-600 hover:underline"
                     >
-                      more
+                      Full Evaluation
                       <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </a>
+                    <div className="flex items-center gap-4">
+                      <a
+                        href={`http://localhost:3001/docs/${document.id}/evals/${review.agentId}`}
+                        className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        <CommandLineIcon className="mr-1 h-4 w-4" />
+                        Details
+                      </a>
+                      <a
+                        href={`http://localhost:3001/docs/${document.id}/evals/${review.agentId}/versions`}
+                        className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
+                      >
+                        v4
+                      </a>
+                    </div>
                   </div>
                 </div>
               );

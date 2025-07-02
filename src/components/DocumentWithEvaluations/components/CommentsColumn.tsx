@@ -157,10 +157,7 @@ export function CommentsColumn({
   }, [highlightsReady, calculatePositions, hoveredCommentId]);
 
   return (
-    <div
-      className="border-l border-gray-200 bg-gray-50"
-      style={{ width: "600px", flexShrink: 0 }}
-    >
+    <div style={{ width: "600px", flexShrink: 0 }}>
       <div className="relative overflow-hidden" style={{ minHeight: "100%" }}>
         {!highlightsReady && sortedComments.length > 0 && (
           <div className="flex flex-col items-center justify-center py-12">

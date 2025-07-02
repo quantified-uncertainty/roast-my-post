@@ -15,6 +15,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import SlateEditor from "@/components/SlateEditor";
 import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
 
 import { EvaluationViewProps } from "../types";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
@@ -67,7 +68,7 @@ export function EvaluationView({
   return (
     <>
       {/* Sticky Evaluation Cards Header Bar - Outside height-constrained container */}
-      <div className="sticky top-0 z-50 mx-5 mt-1 rounded-lg border border-gray-200 bg-slate-100 px-4 py-3 shadow-sm">
+      <div className="sticky top-0 z-50 mx-5 mt-1 rounded-lg border border-gray-200 bg-slate-100 shadow-sm">
         <EvaluationCardsHeader
           document={document}
           evaluationState={evaluationState}
@@ -80,12 +81,50 @@ export function EvaluationView({
       {/* Main content container */}
       <div className="flex h-full flex-col overflow-x-hidden">
         {/* Unified scroll container for all content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white pt-2">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pt-2">
           {/* Document content and comments section */}
-          <div className="flex">
+          <div className="flex min-h-screen justify-center py-5">
             {/* Main content area */}
-            <div ref={contentRef} className="relative flex-1 p-4">
-              <article className="prose prose-lg prose-slate mx-auto max-w-3xl">
+            <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
+              {/* Document metadata section */}
+              <div className="flex items-center justify-between px-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600">
+                  {document.submittedBy && (
+                    <span>
+                      Uploaded from{" "}
+                      <Link
+                        href={`/users/${document.submittedBy.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {document.submittedBy.name ||
+                          document.submittedBy.email ||
+                          "Unknown"}
+                      </Link>{" "}
+                      on {new Date(document.updatedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/docs/${document.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                  >
+                    Detailed Analysis
+                  </Link>
+                  {(document.importUrl || document.url) && (
+                    <Link
+                      href={document.importUrl || document.url}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                    >
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                      Source
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
                 <SlateEditor
                   content={contentWithMetadataPrepend}
                   onHighlightHover={(commentId) => {
@@ -105,7 +144,6 @@ export function EvaluationView({
                 />
               </article>
             </div>
-
             {/* Comments column with positioned comments */}
             <CommentsColumn
               comments={displayComments}
@@ -131,10 +169,10 @@ export function EvaluationView({
           </div>
 
           {/* Evaluation Analysis Section */}
-          <div className="border-t border-gray-200 bg-gray-50">
+          <div>
             <div className="mx-auto max-w-7xl px-4 py-8">
               <h2 className="mb-6 text-2xl font-bold text-gray-900">
-                Evaluation Analysis
+                Full AI Evaluations
               </h2>
               <div className="flex gap-8">
                 {/* Main content */}
@@ -145,9 +183,8 @@ export function EvaluationView({
                       id={`eval-${evaluation.agentId}`}
                       className="rounded-lg bg-white p-6 shadow"
                     >
-                      <div className="mb-4 flex items-start justify-between">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {evaluation.agent.name}
+                      <div className="mb-4 flex items-start justify-between border-b border-gray-200 pb-4">
+                        <div className="flex items-center gap-2">
                           {evaluation.grade !== undefined && (
                             <span className="ml-3">
                               <GradeBadge
@@ -156,7 +193,13 @@ export function EvaluationView({
                               />
                             </span>
                           )}
-                        </h3>
+                          <Link
+                            href={`http://localhost:3001/agents/${evaluation.agentId}`}
+                            className="text-gray-700 hover:underline"
+                          >
+                            {evaluation.agent.name}
+                          </Link>
+                        </div>
                         <Link
                           href={`/docs/${document.id}/evals/${evaluation.agentId}`}
                           className="inline-flex items-center rounded-md border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
