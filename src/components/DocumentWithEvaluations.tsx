@@ -334,7 +334,6 @@ interface EvaluationState {
 }
 
 interface UIState {
-  isHomeView: boolean;
   showEvaluationSelector: boolean;
   deleteError: string | null;
   isReuploadingDocument: boolean;
@@ -342,46 +341,12 @@ interface UIState {
   successMessage: string | null;
 }
 
-interface HomeViewProps {
-  document: Document;
-  isOwner?: boolean;
-  onEvaluationSelect: (index: number) => void;
-  activeEvaluationIndex: number | null;
-  isReuploadingDocument: boolean;
-  onReupload: () => Promise<void>;
-  onCreateEvaluation: (agentId: string) => Promise<void>;
-  onCreateMultipleEvaluations: (agentIds: string[]) => Promise<void>;
-}
-
-function HomeView({
-  document,
-  isOwner = false,
-  onEvaluationSelect,
-  activeEvaluationIndex,
-  isReuploadingDocument,
-  onReupload,
-  onCreateEvaluation,
-  onCreateMultipleEvaluations,
-}: HomeViewProps) {
-  const router = useRouter();
-
-  return (
-    <div className="h-full p-8">
-      <EvaluationSelector
-        document={document}
-        activeEvaluationIndex={activeEvaluationIndex}
-        onEvaluationSelect={onEvaluationSelect}
-      />
-    </div>
-  );
-}
 
 
 interface EvaluationViewProps {
   evaluation: Evaluation;
   evaluationState: EvaluationState;
   onEvaluationStateChange: (newState: EvaluationState) => void;
-  onBackToHome: () => void;
   onShowEvaluationSelector: () => void;
   commentColorMap: Record<number, { background: string; color: string }>;
   onRerunEvaluation: (agentId: string) => Promise<void>;
@@ -394,7 +359,6 @@ function EvaluationView({
   evaluation,
   evaluationState,
   onEvaluationStateChange,
-  onBackToHome,
   onShowEvaluationSelector,
   commentColorMap,
   onRerunEvaluation,
@@ -595,76 +559,6 @@ function EvaluationSelectorModal({
   );
 }
 
-function DocumentContentPanel({
-  document: doc,
-  evaluationState,
-  setEvaluationState,
-  activeEvaluation,
-  commentColorMap,
-}: {
-  document: Document;
-  evaluationState: EvaluationState | null;
-  setEvaluationState: (state: EvaluationState) => void;
-  activeEvaluation: Evaluation | null;
-  commentColorMap: Record<number, { background: string; color: string }>;
-}) {
-  // Add effect to scroll to selected comment
-  useEffect(() => {
-    if (evaluationState?.expandedCommentId) {
-      const element = document.getElementById(
-        `highlight-${evaluationState.expandedCommentId}`
-      );
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  }, [evaluationState?.expandedCommentId]);
-
-  // Get the full content with prepend using the centralized helper
-  const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(doc);
-    return content;
-  }, [doc]);
-
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <article className="prose prose-lg prose-slate max-w-none">
-        <SlateEditor
-          content={contentWithMetadata}
-          onHighlightHover={(commentId) => {
-            if (!evaluationState) return;
-            setEvaluationState({
-              ...evaluationState,
-              hoveredCommentId: commentId,
-            });
-          }}
-          onHighlightClick={(commentId) => {
-            if (!evaluationState) return;
-            setEvaluationState({
-              ...evaluationState,
-              expandedCommentId: commentId,
-            });
-          }}
-          highlights={
-            activeEvaluation
-              ? getValidAndSortedComments(activeEvaluation.comments).map(
-                  (comment: Comment, index: number) => ({
-                    startOffset: comment.highlight.startOffset,
-                    endOffset: comment.highlight.endOffset,
-                    tag: index.toString(),
-                    color:
-                      commentColorMap[index]?.background.substring(1) ??
-                      "#3b82f6",
-                  })
-                )
-              : []
-          }
-          activeTag={evaluationState?.hoveredCommentId ?? null}
-        />
-      </article>
-    </div>
-  );
-}
 
 export function DocumentWithEvaluations({
   document,
@@ -673,7 +567,6 @@ export function DocumentWithEvaluations({
   const [evaluationState, setEvaluationState] =
     useState<EvaluationState | null>(null);
   const [uiState, setUIState] = useState<UIState>({
-    isHomeView: true,
     showEvaluationSelector: false,
     deleteError: null,
     isReuploadingDocument: false,
@@ -695,7 +588,7 @@ export function DocumentWithEvaluations({
 
   // Automatically select the first evaluation on mount
   useEffect(() => {
-    if (hasEvaluations && evaluationState === null && uiState.isHomeView) {
+    if (hasEvaluations && evaluationState === null) {
       handleEvaluationSelect(0);
     }
   }, [hasEvaluations]);
@@ -749,13 +642,8 @@ export function DocumentWithEvaluations({
       hoveredCommentId: null,
       expandedCommentId: null,
     });
-    setUIState((prev) => ({ ...prev, isHomeView: false }));
   };
 
-  const handleBackToHome = () => {
-    setEvaluationState(null);
-    setUIState((prev) => ({ ...prev, isHomeView: true, showEvaluationSelector: false }));
-  };
 
   const handleCreateEvaluation = async (agentId: string) => {
     try {
@@ -893,36 +781,11 @@ export function DocumentWithEvaluations({
       className="h-full bg-gray-50"
       style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
     >
-      {uiState.isHomeView ? (
-        <div className="flex h-full">
-          <div className="flex-1 overflow-y-auto">
-            <DocumentContentPanel
-              document={document}
-              evaluationState={evaluationState}
-              setEvaluationState={setEvaluationState}
-              activeEvaluation={activeEvaluation}
-              commentColorMap={commentColorMap}
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto border-l border-gray-200">
-            <HomeView
-              document={document}
-              isOwner={isOwner}
-              onEvaluationSelect={handleEvaluationSelect}
-              activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
-              isReuploadingDocument={uiState.isReuploadingDocument}
-              onReupload={handleReupload}
-              onCreateEvaluation={handleCreateEvaluation}
-              onCreateMultipleEvaluations={handleCreateMultipleEvaluations}
-            />
-          </div>
-        </div>
-      ) : activeEvaluation && evaluationState ? (
+      {activeEvaluation && evaluationState ? (
         <EvaluationView
           evaluation={activeEvaluation}
           evaluationState={evaluationState}
           onEvaluationStateChange={setEvaluationState}
-          onBackToHome={handleBackToHome}
           onShowEvaluationSelector={() =>
             setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
           }
@@ -932,7 +795,16 @@ export function DocumentWithEvaluations({
           onEvaluationSelect={handleEvaluationSelect}
           contentWithMetadata={contentWithMetadata}
         />
-      ) : null}
+      ) : (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+            No evaluations available
+          </h1>
+          <p className="mb-8 text-gray-600">
+            This document hasn't been evaluated yet.
+          </p>
+        </div>
+      )}
       {uiState.showEvaluationSelector && (
         <EvaluationSelectorModal
           document={document}
