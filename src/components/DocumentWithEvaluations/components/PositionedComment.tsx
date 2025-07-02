@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
+
 import type { Comment } from "@/types/documentSchema";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
 
@@ -14,7 +14,6 @@ interface PositionedCommentProps {
   isVisible: boolean;
   isSelected: boolean;
   isHovered: boolean;
-  colorMap: { background: string; color: string };
   onHover: (tag: string | null) => void;
   onClick: (tag: string) => void;
   agentName: string;
@@ -28,7 +27,6 @@ export function PositionedComment({
   isVisible,
   isSelected,
   isHovered,
-  colorMap,
   onHover,
   onClick,
   agentName,
@@ -48,13 +46,17 @@ export function PositionedComment({
         left: "20px",
         right: "20px",
         padding: "8px",
-        transition: skipAnimation ? "none" : "opacity 0.2s ease-out, background-color 0.2s ease-out",
+        transition: skipAnimation
+          ? "none"
+          : "opacity 0.2s ease-out, background-color 0.2s ease-out",
         cursor: "pointer",
         zIndex: isHovered ? 20 : 10,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
         backgroundColor: "white",
-        boxShadow: isHovered ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "0 1px 2px rgba(0, 0, 0, 0.05)",
+        boxShadow: isHovered
+          ? "0 2px 8px rgba(0, 0, 0, 0.1)"
+          : "0 1px 2px rgba(0, 0, 0, 0.05)",
         borderRadius: "6px",
         border: isHovered ? "1px solid #e5e7eb" : "1px solid #f3f4f6",
       }}
@@ -64,19 +66,13 @@ export function PositionedComment({
     >
       <div className="flex items-start gap-2">
         {/* Comment number indicator */}
-        <div
-          className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: colorMap.background,
-            color: colorMap.color,
-          }}
-        >
+        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
           {index + 1}
         </div>
-        
+
         {/* Comment text */}
-        <div className="flex-1 min-w-0 text-sm leading-relaxed text-gray-700">
-          <div className="break-words prose prose-sm max-w-none">
+        <div className="min-w-0 flex-1 text-sm leading-relaxed text-gray-700">
+          <div className="prose prose-sm max-w-none break-words">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
@@ -89,18 +85,18 @@ export function PositionedComment({
                     rel="noopener noreferrer"
                   />
                 ),
-                p: ({ children }) => <div className="mb-1 last:mb-0">{children}</div>,
+                p: ({ children }) => (
+                  <div className="mb-1 last:mb-0">{children}</div>
+                ),
               }}
             >
               {displayText}
             </ReactMarkdown>
           </div>
-          
+
           {/* Agent name */}
-          <div className="mt-1 text-xs text-gray-500">
-            {agentName}
-          </div>
-          
+          <div className="mt-1 text-xs text-gray-500">{agentName}</div>
+
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
