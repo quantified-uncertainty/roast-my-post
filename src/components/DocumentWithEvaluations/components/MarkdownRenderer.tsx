@@ -1,9 +1,10 @@
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
-// @ts-ignore - ESM modules are handled by Next.js
-import rehypeRaw from "rehype-raw";
-// @ts-ignore - ESM modules are handled by Next.js
-import remarkGfm from "remark-gfm";
+import {
+  MARKDOWN_PLUGINS,
+  MARKDOWN_COMPONENTS,
+  INLINE_MARKDOWN_COMPONENTS,
+} from "../config/markdown";
 
 interface MarkdownRendererProps {
   children: string;
@@ -15,22 +16,12 @@ export function MarkdownRenderer({
   className = "",
 }: MarkdownRendererProps) {
   const isInline = className.includes("inline");
+  
   return (
     <div className={`${className} ${isInline ? "[&_p]:m-0 [&_p]:inline" : ""}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          a: ({ node, ...props }) => (
-            <a
-              {...props}
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            />
-          ),
-          p: ({ children }) => (isInline ? <>{children}</> : <p>{children}</p>),
-        }}
+        {...MARKDOWN_PLUGINS}
+        components={isInline ? INLINE_MARKDOWN_COMPONENTS : MARKDOWN_COMPONENTS}
       >
         {children}
       </ReactMarkdown>

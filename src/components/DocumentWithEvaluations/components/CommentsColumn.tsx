@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { Comment } from "@/types/documentSchema";
+import type { Comment, Document } from "@/types/documentSchema";
 import {
   calculateCommentPositions,
   checkHighlightsReady,
 } from "@/utils/ui/commentPositioning";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
+import { COMMENT_MIN_GAP } from "../constants";
+import type { EvaluationState } from "../types";
 
 import { PositionedComment } from "./PositionedComment";
 
@@ -18,10 +20,10 @@ interface CommentsColumnProps {
   hoveredCommentId: string | null;
   onCommentHover: (commentId: string | null) => void;
   onCommentClick: (commentId: string) => void;
-  // New props for agent pills
-  document?: any;
-  evaluationState?: any;
-  onEvaluationStateChange?: (newState: any) => void;
+  // Props for agent pills
+  document?: Document;
+  evaluationState?: EvaluationState;
+  onEvaluationStateChange?: (newState: EvaluationState) => void;
 }
 
 export function CommentsColumn({
@@ -54,7 +56,7 @@ export function CommentsColumn({
         contentRef.current,
         {
           hoveredCommentId: currentHoveredId,
-          minGap: 10,
+          minGap: COMMENT_MIN_GAP,
         }
       );
 

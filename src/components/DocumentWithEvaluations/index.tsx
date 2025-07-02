@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
@@ -11,10 +11,18 @@ import type { DocumentWithReviewsProps, EvaluationState } from "./types";
 export function DocumentWithEvaluations({
   document,
 }: DocumentWithReviewsProps) {
-  const [evaluationState, setEvaluationState] =
-    useState<EvaluationState | null>(null);
-
   const hasEvaluations = document.reviews && document.reviews.length > 0;
+  
+  // Initialize evaluation state immediately if we have evaluations
+  const [evaluationState, setEvaluationState] = useState<EvaluationState | null>(
+    hasEvaluations
+      ? {
+          selectedAgentIds: new Set(document.reviews.map((r) => r.agentId)),
+          hoveredCommentId: null,
+          expandedCommentId: null,
+        }
+      : null
+  );
 
   // Get the full content with prepend using the centralized helper
   const contentWithMetadata = useMemo(() => {
@@ -22,24 +30,12 @@ export function DocumentWithEvaluations({
     return content;
   }, [document]);
 
-  // Automatically select the first evaluation on mount
-  useEffect(() => {
-    if (hasEvaluations && evaluationState === null) {
-      const allAgentIds = new Set(document.reviews.map((r) => r.agentId));
-      setEvaluationState({
-        selectedAgentIds: allAgentIds,
-        hoveredCommentId: null,
-        expandedCommentId: null,
-      });
-    }
-  }, []);
-
   return (
     <div
       className="flex h-full flex-col"
       style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
     >
-      {evaluationState ? (
+      {hasEvaluations && evaluationState ? (
         <EvaluationView
           evaluationState={evaluationState}
           onEvaluationStateChange={setEvaluationState}

@@ -1,11 +1,21 @@
 "use client";
 
+// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
 
 import type { Comment } from "@/types/documentSchema";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
+import { MARKDOWN_PLUGINS, MARKDOWN_COMPONENTS } from "../config/markdown";
+import {
+  COMMENT_PADDING,
+  COMMENT_MARGIN_LEFT,
+  COMMENT_MARGIN_RIGHT,
+  COMMENT_BG_DEFAULT,
+  COMMENT_BG_HOVERED,
+  COMMENT_BORDER_HOVERED,
+  Z_INDEX_COMMENT,
+  Z_INDEX_COMMENT_HOVERED,
+} from "../constants";
 
 interface PositionedCommentProps {
   comment: Comment;
@@ -43,19 +53,19 @@ export function PositionedComment({
       style={{
         position: "absolute",
         top: `${position}px`,
-        left: "20px",
-        right: "20px",
-        padding: "14px",
+        left: `${COMMENT_MARGIN_LEFT}px`,
+        right: `${COMMENT_MARGIN_RIGHT}px`,
+        padding: `${COMMENT_PADDING}px`,
         transition: skipAnimation
           ? "none"
           : "opacity 0.2s ease-out, background-color 0.2s ease-out",
         cursor: "pointer",
-        zIndex: isHovered ? 20 : 10,
+        zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: isHovered ? "white" : "#edf2fa",
+        backgroundColor: isHovered ? COMMENT_BG_HOVERED : COMMENT_BG_DEFAULT,
         borderRadius: "8px",
-        border: isHovered ? "1px solid #e5e7eb" : "none",
+        border: isHovered ? `1px solid ${COMMENT_BORDER_HOVERED}` : "none",
         boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
       }}
       onClick={() => onClick(tag)}
@@ -67,21 +77,8 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           <div className="prose prose-sm max-w-none break-words">
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
-              components={{
-                a: ({ node, ...props }) => (
-                  <a
-                    {...props}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  />
-                ),
-                p: ({ children }) => (
-                  <div className="mb-1 last:mb-0">{children}</div>
-                ),
-              }}
+              {...MARKDOWN_PLUGINS}
+              components={MARKDOWN_COMPONENTS}
             >
               {displayText}
             </ReactMarkdown>

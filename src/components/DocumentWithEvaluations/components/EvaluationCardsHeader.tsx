@@ -8,11 +8,14 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { GradeBadge } from "../../GradeBadge";
+import type { Document } from "@/types/documentSchema";
+import type { EvaluationState } from "../types";
+import { TRANSITION_DURATION, TRANSITION_DURATION_SLOW, CARDS_GRID_MAX_HEIGHT } from "../constants";
 
 interface EvaluationCardsHeaderProps {
-  document: any;
-  evaluationState: any;
-  onEvaluationStateChange?: (newState: any) => void;
+  document: Document;
+  evaluationState: EvaluationState;
+  onEvaluationStateChange?: (newState: EvaluationState) => void;
   isLargeMode?: boolean;
   onToggleMode?: () => void;
 }
@@ -110,7 +113,7 @@ export function EvaluationCardsHeader({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex w-full flex-col gap-1 transition-all duration-300 ease-in-out">
+      <div className={`flex w-full flex-col gap-1 transition-all ease-in-out`} style={{ transitionDuration: `${TRANSITION_DURATION}ms` }}>
         {/* Header row: always one line */}
         <div
           className={`group flex w-full items-center rounded-t-lg transition-all duration-300 ease-in-out ${isLargeMode ? "h-12 cursor-pointer px-6 py-6 hover:bg-gray-200" : "mb-0 px-3 py-2"}`}
@@ -169,9 +172,10 @@ export function EvaluationCardsHeader({
         </div>
         {/* Cards grid container with smooth height transition */}
         <div
-          className={`grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-500 ease-in-out ${
-            isLargeMode ? "max-h-[1000px] opacity-100 pb-2" : "max-h-0 opacity-0 overflow-hidden"
+          className={`grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3 transition-all ease-in-out ${
+            isLargeMode ? `max-h-[${CARDS_GRID_MAX_HEIGHT}px] opacity-100 pb-2` : "max-h-0 opacity-0 overflow-hidden"
           }`}
+          style={{ transitionDuration: `${TRANSITION_DURATION_SLOW}ms` }}
         >
             {document.reviews.map((review: any) => {
               const isActive = evaluationState.selectedAgentIds.has(
