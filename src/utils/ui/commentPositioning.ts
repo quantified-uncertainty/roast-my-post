@@ -27,7 +27,7 @@ export function calculateCommentPositions(
     minGap = 10,
     hoveredCommentId = null,
     baseHeight = 60,
-    charsPerLine = 45,
+    charsPerLine = 50,
     lineHeight = 20,
   } = options;
 
@@ -62,16 +62,22 @@ export function calculateCommentPositions(
   // Estimate heights based on text length and hover state
   const getCommentHeight = (commentIndex: number) => {
     const comment = comments[commentIndex];
-    if (!comment) return 80;
+    if (!comment) return baseHeight;
 
     const isExpanded = hoveredCommentId === commentIndex.toString();
     const text = comment.description || "";
-    const displayLength = (!isExpanded && text.length > 200) ? 200 : text.length;
-
-    const lines = Math.ceil(displayLength / charsPerLine);
-    const extraHeight = text.length > 200 ? 25 : 0; // For "..." and hover effect
     
-    return baseHeight + (lines * lineHeight) + extraHeight;
+    // For short comments, use a more compact calculation
+    if (text.length < 100) {
+      return baseHeight + 20; // baseHeight + agent name
+    }
+    
+    const displayLength = (!isExpanded && text.length > 200) ? 200 : text.length;
+    const lines = Math.ceil(displayLength / charsPerLine);
+    const extraHeight = isExpanded ? 30 : 0; // Extra height when expanded
+    const agentNameHeight = 20; // Additional height for agent name
+    
+    return baseHeight + ((lines - 1) * lineHeight) + extraHeight + agentNameHeight;
   };
 
   // Adjust overlapping positions

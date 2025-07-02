@@ -407,49 +407,6 @@ function EvaluationView({
   
   return (
     <div className="h-full flex flex-col overflow-x-hidden">
-      {/* Evaluation pills selector */}
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-        <div className="flex flex-wrap gap-2">
-          {document.reviews.map((review, index) => {
-            const isActive = evaluationState.isMultiAgentMode 
-              ? evaluationState.selectedAgentIds.has(review.agentId)
-              : index === evaluationState.selectedReviewIndex;
-            return (
-              <button
-                key={review.agentId}
-                onClick={() => {
-                  if (evaluationState.isMultiAgentMode) {
-                    // Toggle agent selection in multi-agent mode
-                    const newSelectedIds = new Set(evaluationState.selectedAgentIds);
-                    if (newSelectedIds.has(review.agentId)) {
-                      newSelectedIds.delete(review.agentId);
-                    } else {
-                      newSelectedIds.add(review.agentId);
-                    }
-                    onEvaluationStateChange({
-                      ...evaluationState,
-                      selectedAgentIds: newSelectedIds,
-                    });
-                  } else {
-                    // Single agent selection
-                    onEvaluationSelect(index);
-                  }
-                }}
-                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-blue-100 text-blue-700 ring-1 ring-blue-600"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-                }`}
-              >
-                {review.agent.name}
-                {review.grade !== undefined && (
-                  <GradeBadge grade={review.grade} variant="light" size="xs" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Agent info section at top */}
       {!evaluationState.isMultiAgentMode && (
@@ -521,6 +478,10 @@ function EvaluationView({
                 expandedCommentId: commentId,
               });
             }}
+            document={document}
+            evaluationState={evaluationState}
+            onEvaluationStateChange={onEvaluationStateChange}
+            onEvaluationSelect={onEvaluationSelect}
           />
         </div>
       </div>

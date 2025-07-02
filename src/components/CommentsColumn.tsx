@@ -10,6 +10,7 @@ import {
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
 import { PositionedComment } from "./PositionedComment";
+import { GradeBadge } from "./GradeBadge";
 
 interface CommentsColumnProps {
   comments: (Comment & { agentName?: string })[];
@@ -20,6 +21,11 @@ interface CommentsColumnProps {
   commentColorMap: Record<number, { background: string; color: string }>;
   onCommentHover: (commentId: string | null) => void;
   onCommentClick: (commentId: string) => void;
+  // New props for agent pills
+  document?: any;
+  evaluationState?: any;
+  onEvaluationStateChange?: (newState: any) => void;
+  onEvaluationSelect?: (index: number) => void;
 }
 
 export function CommentsColumn({
@@ -31,6 +37,10 @@ export function CommentsColumn({
   commentColorMap,
   onCommentHover,
   onCommentClick,
+  document,
+  evaluationState,
+  onEvaluationStateChange,
+  onEvaluationSelect,
 }: CommentsColumnProps) {
   const [commentPositions, setCommentPositions] = useState<
     Record<string, number>
@@ -119,6 +129,52 @@ export function CommentsColumn({
       className="border-l border-gray-200 bg-gray-50"
       style={{ width: "600px", flexShrink: 0 }}
     >
+      {/* Agent pills sticky header */}
+      {document && evaluationState && (
+        <div className="sticky top-0 z-20 border-b border-gray-200 bg-white px-4 py-3">
+          <div className="flex flex-wrap gap-2">
+            {document.reviews.map((review: any, index: number) => {
+              const isActive = evaluationState.isMultiAgentMode 
+                ? evaluationState.selectedAgentIds.has(review.agentId)
+                : index === evaluationState.selectedReviewIndex;
+              return (
+                <button
+                  key={review.agentId}
+                  onClick={() => {
+                    if (evaluationState.isMultiAgentMode && onEvaluationStateChange) {
+                      // Toggle agent selection in multi-agent mode
+                      const newSelectedIds = new Set(evaluationState.selectedAgentIds);
+                      if (newSelectedIds.has(review.agentId)) {
+                        newSelectedIds.delete(review.agentId);
+                      } else {
+                        newSelectedIds.add(review.agentId);
+                      }
+                      onEvaluationStateChange({
+                        ...evaluationState,
+                        selectedAgentIds: newSelectedIds,
+                      });
+                    } else if (onEvaluationSelect) {
+                      // Single agent selection
+                      onEvaluationSelect(index);
+                    }
+                  }}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-600"
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                  }`}
+                >
+                  {review.agent.name}
+                  {review.grade !== undefined && (
+                    <GradeBadge grade={review.grade} variant="light" size="xs" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
       <div className="relative overflow-hidden" style={{ minHeight: "100%" }}>
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
