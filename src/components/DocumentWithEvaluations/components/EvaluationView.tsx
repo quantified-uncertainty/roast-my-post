@@ -151,11 +151,6 @@ export function EvaluationView({
               {/* Document metadata section */}
               <div className="flex items-center justify-between px-6">
                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                  {selectedEvaluations.length > 0 && (
-                    <span className="font-medium">
-                      v{selectedEvaluations[0].versions?.[0]?.version || "1"}
-                    </span>
-                  )}
                   {document.submittedBy && (
                     <span>
                       Uploaded from{" "}

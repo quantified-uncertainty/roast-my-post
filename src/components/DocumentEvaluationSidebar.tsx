@@ -8,11 +8,11 @@ import { usePathname } from "next/navigation";
 import { getEvaluationGrade } from "@/lib/type-guards";
 import {
   BeakerIcon,
+  BookOpenIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  Cog6ToothIcon,
+  CommandLineIcon,
   DocumentTextIcon,
-  BookOpenIcon,
 } from "@heroicons/react/24/outline";
 
 import { GradeBadge } from "./GradeBadge";
@@ -57,23 +57,28 @@ export function DocumentEvaluationSidebar({
 
   const isDocumentPage = pathname === `/docs/${docId}`;
   const isReaderPage = pathname === `/docs/${docId}/reader`;
-  const isManagePage = pathname === `/docs/${docId}/manage`;
 
   return (
     <nav className="h-full w-64 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-white">
       <div className="p-6">
+        {/* Inspector View Header */}
+        <div className="mb-6 ml-2 flex cursor-default select-none items-center gap-2 text-sm font-semibold text-gray-500">
+          <CommandLineIcon className="h-5 w-5 text-gray-400" />
+          INSPECTOR VIEW
+        </div>
         {/* Document Link */}
         <Link
           href={`/docs/${docId}`}
           className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
             isDocumentPage
               ? "bg-blue-50 text-gray-900"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
           <DocumentTextIcon className="h-4 w-4" />
           Overview
         </Link>
+
 
         {/* Reader View Link */}
         <Link
@@ -81,24 +86,11 @@ export function DocumentEvaluationSidebar({
           className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
             isReaderPage
               ? "bg-blue-50 text-gray-900"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
           <BookOpenIcon className="h-4 w-4" />
           Reader View
-        </Link>
-
-        {/* Manage Evaluations Link */}
-        <Link
-          href={`/docs/${docId}/manage`}
-          className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            isManagePage
-              ? "bg-blue-50 text-gray-900"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-          }`}
-        >
-          <Cog6ToothIcon className="h-4 w-4" />
-          Eval Dashboard
         </Link>
 
         {/* Evaluations Section */}
@@ -149,7 +141,7 @@ export function DocumentEvaluationSidebar({
                       className={`flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                         isActive
                           ? "bg-blue-50 text-gray-900"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
                       <span className="flex-1 truncate">{agentName}</span>
