@@ -10,9 +10,11 @@ import {
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
 import { PositionedComment } from "./PositionedComment";
+import { GradeBadge } from "./GradeBadge";
+import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 interface CommentsColumnProps {
-  comments: Comment[];
+  comments: (Comment & { agentName?: string })[];
   evaluation: Evaluation;
   contentRef: React.RefObject<HTMLDivElement | null>;
   selectedCommentId: string | null;
@@ -20,6 +22,11 @@ interface CommentsColumnProps {
   commentColorMap: Record<number, { background: string; color: string }>;
   onCommentHover: (commentId: string | null) => void;
   onCommentClick: (commentId: string) => void;
+  // New props for agent pills
+  document?: any;
+  evaluationState?: any;
+  onEvaluationStateChange?: (newState: any) => void;
+  onEvaluationSelect?: (index: number) => void;
 }
 
 export function CommentsColumn({
@@ -31,11 +38,16 @@ export function CommentsColumn({
   commentColorMap,
   onCommentHover,
   onCommentClick,
+  document,
+  evaluationState,
+  onEvaluationStateChange,
+  onEvaluationSelect,
 }: CommentsColumnProps) {
   const [commentPositions, setCommentPositions] = useState<
     Record<string, number>
   >({});
   const [highlightsReady, setHighlightsReady] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
@@ -60,6 +72,10 @@ export function CommentsColumn({
   useEffect(() => {
     if (!contentRef.current) return;
 
+    // Reset states when comments change
+    setHighlightsReady(false);
+    setHasInitialized(false);
+
     let attempts = 0;
     const maxAttempts = 10;
 
@@ -80,16 +96,20 @@ export function CommentsColumn({
     };
 
     // Initial delay to allow SlateEditor to render
-    setTimeout(checkHighlights, 200);
+    setTimeout(checkHighlights, 500);
   }, [sortedComments.length, contentRef]);
 
-  // Calculate positions when highlights are ready or hover changes
+  // Calculate positions when highlights are ready
   useEffect(() => {
     if (highlightsReady) {
       calculatePositions(hoveredCommentId);
+      // Mark as initialized after first position calculation
+      if (!hasInitialized) {
+        setTimeout(() => setHasInitialized(true), 50);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoveredCommentId, highlightsReady]);
+  }, [highlightsReady, sortedComments.length]);
 
   // Handle scroll events to recalculate if needed
   useEffect(() => {
@@ -105,25 +125,124 @@ export function CommentsColumn({
     return () => container.removeEventListener("scroll", handleScroll);
   }, [contentRef, highlightsReady]);
 
+  // Handle resize/zoom events
+  useEffect(() => {
+    if (!highlightsReady) return;
+
+    let resizeTimeout: NodeJS.Timeout;
+    let lastDevicePixelRatio = window.devicePixelRatio;
+    
+    const handleResize = () => {
+      // Debounce resize events
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        calculatePositions(hoveredCommentId);
+      }, 100);
+    };
+
+    // Check for zoom changes
+    const checkZoom = () => {
+      if (window.devicePixelRatio !== lastDevicePixelRatio) {
+        lastDevicePixelRatio = window.devicePixelRatio;
+        handleResize();
+      }
+    };
+
+    // Listen for resize events
+    window.addEventListener("resize", handleResize);
+    
+    // Poll for zoom changes (since there's no native zoom event)
+    const zoomInterval = setInterval(checkZoom, 500);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearInterval(zoomInterval);
+      clearTimeout(resizeTimeout);
+    };
+  }, [highlightsReady, calculatePositions, hoveredCommentId]);
+
   return (
     <div
       className="border-l border-gray-200 bg-gray-50"
       style={{ width: "600px", flexShrink: 0 }}
     >
+      {/* Agent pills sticky header */}
+      {document && evaluationState && (
+        <div className="sticky top-0 z-20 border-b border-gray-200 bg-white px-4 py-3">
+          <div className="flex flex-wrap gap-2">
+            {document.reviews.map((review: any, index: number) => {
+              const isActive = evaluationState.isMultiAgentMode 
+                ? evaluationState.selectedAgentIds.has(review.agentId)
+                : index === evaluationState.selectedReviewIndex;
+              return (
+                <button
+                  key={review.agentId}
+                  onClick={() => {
+                    if (evaluationState.isMultiAgentMode && onEvaluationStateChange) {
+                      // Toggle agent selection in multi-agent mode
+                      const newSelectedIds = new Set(evaluationState.selectedAgentIds);
+                      if (newSelectedIds.has(review.agentId)) {
+                        newSelectedIds.delete(review.agentId);
+                      } else {
+                        newSelectedIds.add(review.agentId);
+                      }
+                      onEvaluationStateChange({
+                        ...evaluationState,
+                        selectedAgentIds: newSelectedIds,
+                      });
+                    } else if (onEvaluationSelect) {
+                      // Single agent selection
+                      onEvaluationSelect(index);
+                    }
+                  }}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-blue-100 text-blue-700 ring-1 ring-blue-600"
+                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                  }`}
+                >
+                  {review.agent.name}
+                  <div className="flex items-center gap-1.5">
+                    {review.grade !== undefined && (
+                      <GradeBadge grade={review.grade} variant="light" size="xs" />
+                    )}
+                    <div className={`flex items-center gap-0.5 text-xs ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}>
+                      <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+                      <span>{review.comments?.length || 0}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
       <div className="relative overflow-hidden" style={{ minHeight: "100%" }}>
+        {!highlightsReady && sortedComments.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mb-3"></div>
+            <div className="text-sm text-gray-500">Loading comments...</div>
+          </div>
+        )}
         {sortedComments.map((comment, index) => {
           const tag = index.toString();
           const position = commentPositions[tag] || 0;
           const isSelected = selectedCommentId === tag;
           const isHovered = hoveredCommentId === tag;
 
+          // Use a stable key based on comment content and agent
+          const stableKey = `${(comment as any).agentId || 'default'}-${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+          
           return (
             <PositionedComment
-              key={tag}
+              key={stableKey}
               comment={comment}
               index={index}
               position={position}
-              isVisible={highlightsReady}
+              isVisible={highlightsReady && hasInitialized && position > 0}
               isSelected={isSelected}
               isHovered={isHovered}
               colorMap={
@@ -131,6 +250,8 @@ export function CommentsColumn({
               }
               onHover={onCommentHover}
               onClick={onCommentClick}
+              agentName={(comment as any).agentName || evaluation.agent.name}
+              skipAnimation={!hasInitialized}
             />
           );
         })}

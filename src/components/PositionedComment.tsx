@@ -17,6 +17,8 @@ interface PositionedCommentProps {
   colorMap: { background: string; color: string };
   onHover: (tag: string | null) => void;
   onClick: (tag: string) => void;
+  agentName: string;
+  skipAnimation?: boolean;
 }
 
 export function PositionedComment({
@@ -29,6 +31,8 @@ export function PositionedComment({
   colorMap,
   onHover,
   onClick,
+  agentName,
+  skipAnimation = false,
 }: PositionedCommentProps) {
   const tag = index.toString();
   const { text: displayText, isTruncated } = getCommentDisplayText(
@@ -44,15 +48,15 @@ export function PositionedComment({
         left: "20px",
         right: "20px",
         padding: "8px",
-        transition: "all 0.2s ease-out",
+        transition: skipAnimation ? "none" : "opacity 0.2s ease-out, background-color 0.2s ease-out",
         cursor: "pointer",
         zIndex: isHovered ? 20 : 10,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: isHovered ? "rgba(255, 255, 255, 0.95)" : "transparent",
-        boxShadow: isHovered ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none",
-        borderRadius: isHovered ? "6px" : "0",
-        border: isHovered ? "1px solid #e5e7eb" : "1px solid transparent",
+        backgroundColor: "white",
+        boxShadow: isHovered ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "0 1px 2px rgba(0, 0, 0, 0.05)",
+        borderRadius: "6px",
+        border: isHovered ? "1px solid #e5e7eb" : "1px solid #f3f4f6",
       }}
       onClick={() => onClick(tag)}
       onMouseEnter={() => onHover(tag)}
@@ -90,6 +94,11 @@ export function PositionedComment({
             >
               {displayText}
             </ReactMarkdown>
+          </div>
+          
+          {/* Agent name */}
+          <div className="mt-1 text-xs text-gray-500">
+            {agentName}
           </div>
           
           {/* Additional metadata when expanded */}
