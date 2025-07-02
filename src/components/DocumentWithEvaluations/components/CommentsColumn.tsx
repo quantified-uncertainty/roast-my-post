@@ -44,7 +44,7 @@ export function CommentsColumn({
   const [hasInitialized, setHasInitialized] = useState(false);
 
   // Get valid and sorted comments
-  const sortedComments = getValidAndSortedComments(comments);
+  const sortedComments = getValidAndSortedComments(comments) as (Comment & { agentName?: string })[];
 
   // Calculate comment positions
   const calculatePositions = useCallback(
@@ -174,7 +174,7 @@ export function CommentsColumn({
           const isHovered = hoveredCommentId === tag;
 
           // Use a stable key based on comment content and agent
-          const stableKey = `${(comment as any).agentId || "default"}-${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+          const stableKey = `${comment.agentName || "default"}-${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
 
           return (
             <PositionedComment
@@ -187,7 +187,7 @@ export function CommentsColumn({
               isHovered={isHovered}
               onHover={onCommentHover}
               onClick={onCommentClick}
-              agentName={(comment as any).agentName}
+              agentName={comment.agentName || "Unknown"}
               skipAnimation={!hasInitialized}
             />
           );

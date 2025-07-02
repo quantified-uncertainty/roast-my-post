@@ -7,7 +7,7 @@ import {
 } from "../constants";
 
 interface UseScrollBehaviorProps {
-  evaluationsSectionRef: React.RefObject<HTMLDivElement>;
+  evaluationsSectionRef: React.RefObject<HTMLDivElement | null>;
   isLargeMode: boolean;
 }
 

@@ -9,8 +9,14 @@ export const MARKDOWN_PLUGINS = {
   rehypePlugins: [rehypeRaw],
 };
 
+interface MarkdownComponentProps {
+  node?: any;
+  children?: React.ReactNode;
+  [key: string]: any;
+}
+
 export const MARKDOWN_COMPONENTS = {
-  a: ({ node, ...props }: any) => (
+  a: ({ node, ...props }: MarkdownComponentProps) => (
     <a
       {...props}
       className="text-blue-600 hover:text-blue-800 hover:underline"
@@ -18,12 +24,12 @@ export const MARKDOWN_COMPONENTS = {
       rel="noopener noreferrer"
     />
   ),
-  p: ({ children }: any) => (
+  p: ({ children }: MarkdownComponentProps) => (
     <div className="mb-1 last:mb-0">{children}</div>
   ),
 };
 
 export const INLINE_MARKDOWN_COMPONENTS = {
   ...MARKDOWN_COMPONENTS,
-  p: ({ children }: any) => <>{children}</>,
+  p: ({ children }: MarkdownComponentProps) => <>{children}</>,
 };

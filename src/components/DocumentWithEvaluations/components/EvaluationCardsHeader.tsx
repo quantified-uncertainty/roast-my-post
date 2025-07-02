@@ -52,13 +52,13 @@ export function EvaluationCardsHeader({
     evaluationState,
     onToggleAgent,
   }: {
-    document: any;
-    evaluationState: any;
+    document: Document;
+    evaluationState: EvaluationState;
     onToggleAgent: (agentId: string) => void;
   }) {
     return (
       <div className="scrollbar-thin scrollbar-thumb-gray-200 ml-2 flex flex-1 items-center justify-end gap-2 overflow-x-auto py-0.5">
-        {document.reviews.map((review: any) => {
+        {document.reviews.map((review) => {
           const isActive = evaluationState.selectedAgentIds.has(review.agentId);
           return (
             <button
@@ -135,11 +135,11 @@ export function EvaluationCardsHeader({
               <ChatBubbleLeftIcon className="h-4 w-4" />
               Showing{" "}
               {document.reviews
-                .filter((r: any) =>
+                .filter((r) =>
                   evaluationState.selectedAgentIds.has(r.agentId)
                 )
                 .reduce(
-                  (total: number, review: any) =>
+                  (total: number, review) =>
                     total + (review.comments?.length || 0),
                   0
                 )}{" "}
@@ -177,7 +177,7 @@ export function EvaluationCardsHeader({
           }`}
           style={{ transitionDuration: `${TRANSITION_DURATION_SLOW}ms` }}
         >
-            {document.reviews.map((review: any) => {
+            {document.reviews.map((review) => {
               const isActive = evaluationState.selectedAgentIds.has(
                 review.agentId
               );
@@ -249,7 +249,7 @@ export function EvaluationCardsHeader({
                     </a>
                     <div className="flex items-center gap-4">
                       <a
-                        href={`http://localhost:3001/docs/${document.id}/evals/${review.agentId}`}
+                        href={`/docs/${document.id}/evals/${review.agentId}`}
                         className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
                         rel="noopener noreferrer"
                       >
@@ -257,10 +257,10 @@ export function EvaluationCardsHeader({
                         Details
                       </a>
                       <a
-                        href={`http://localhost:3001/docs/${document.id}/evals/${review.agentId}/versions`}
+                        href={`/docs/${document.id}/evals/${review.agentId}/versions`}
                         className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
                       >
-                        v{review.versions?.[0]?.version || review.version || "1"}
+                        v{review.versions?.[0]?.version || "1"}
                       </a>
                     </div>
                   </div>

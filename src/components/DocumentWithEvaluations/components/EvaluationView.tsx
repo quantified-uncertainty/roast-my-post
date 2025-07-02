@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 import { CommentsColumn } from "@/components/DocumentWithEvaluations/components/CommentsColumn";
 import { GradeBadge } from "@/components/GradeBadge";
 import SlateEditor from "@/components/SlateEditor";
+import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
@@ -27,64 +28,24 @@ export function EvaluationView({
   contentWithMetadataPrepend,
 }: EvaluationViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isLargeMode, setIsLargeMode] = useState(true);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Use the scroll behavior hook
+  const {
+    scrollContainerRef,
+    headerVisible,
+    isLargeMode,
+    setIsLargeMode,
+  } = useScrollBehavior({
+    evaluationsSectionRef,
+    isLargeMode: true,
+  });
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
     evaluationState.selectedAgentIds.has(r.agentId)
   );
 
-  // Add scroll detection
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer) return;
-
-    let lastScrollTop = 0;
-    let scrollTimeout: NodeJS.Timeout;
-
-    const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop;
-
-      // Clear any existing timeout
-      clearTimeout(scrollTimeout);
-
-      // Check if evaluations section is in view
-      if (evaluationsSectionRef.current) {
-        const evalSection = evaluationsSectionRef.current;
-        const evalSectionTop = evalSection.offsetTop;
-        const scrollBottom = scrollTop + scrollContainer.clientHeight;
-
-        // Hide header when evaluations section comes into view
-        if (scrollTop >= evalSectionTop - 100) {
-          setHeaderVisible(false);
-        } else {
-          setHeaderVisible(true);
-        }
-      }
-
-      // If at the very top, show large mode with a slight delay
-      if (scrollTop <= 10) {
-        scrollTimeout = setTimeout(() => {
-          setIsLargeMode(true);
-        }, 200);
-      }
-      // If scrolling down from near the top, hide large mode
-      else if (scrollTop > lastScrollTop && scrollTop > 50 && isLargeMode) {
-        setIsLargeMode(false);
-      }
-
-      lastScrollTop = scrollTop;
-    };
-
-    scrollContainer.addEventListener("scroll", handleScroll);
-    return () => {
-      scrollContainer.removeEventListener("scroll", handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [isLargeMode]);
 
   // Merge comments from all selected evaluations
   const displayComments = useMemo(() => {
@@ -103,7 +64,7 @@ export function EvaluationView({
 
   const highlights = useMemo(
     () =>
-      displayComments.map((comment: any, index: number) => ({
+      displayComments.map((comment, index) => ({
         startOffset: comment.highlight.startOffset,
         endOffset: comment.highlight.endOffset,
         tag: index.toString(),
@@ -256,7 +217,7 @@ export function EvaluationView({
                             </span>
                           )}
                           <Link
-                            href={`http://localhost:3001/agents/${evaluation.agentId}`}
+                            href={`/agents/${evaluation.agentId}`}
                             className="text-gray-700 hover:underline"
                           >
                             {evaluation.agent.name}
