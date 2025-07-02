@@ -125,6 +125,42 @@ export function CommentsColumn({
     return () => container.removeEventListener("scroll", handleScroll);
   }, [contentRef, highlightsReady]);
 
+  // Handle resize/zoom events
+  useEffect(() => {
+    if (!highlightsReady) return;
+
+    let resizeTimeout: NodeJS.Timeout;
+    let lastDevicePixelRatio = window.devicePixelRatio;
+    
+    const handleResize = () => {
+      // Debounce resize events
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        calculatePositions(hoveredCommentId);
+      }, 100);
+    };
+
+    // Check for zoom changes
+    const checkZoom = () => {
+      if (window.devicePixelRatio !== lastDevicePixelRatio) {
+        lastDevicePixelRatio = window.devicePixelRatio;
+        handleResize();
+      }
+    };
+
+    // Listen for resize events
+    window.addEventListener("resize", handleResize);
+    
+    // Poll for zoom changes (since there's no native zoom event)
+    const zoomInterval = setInterval(checkZoom, 500);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearInterval(zoomInterval);
+      clearTimeout(resizeTimeout);
+    };
+  }, [highlightsReady, calculatePositions, hoveredCommentId]);
+
   return (
     <div
       className="border-l border-gray-200 bg-gray-50"

@@ -405,6 +405,11 @@ function EvaluationView({
     [displayComments, commentColorMap]
   );
   
+  // Get only selected evaluations for the analysis section
+  const selectedEvaluationsForAnalysis = evaluationState.isMultiAgentMode
+    ? document.reviews.filter(r => evaluationState.selectedAgentIds.has(r.agentId))
+    : document.reviews;
+
   return (
     <div className="h-full flex flex-col overflow-x-hidden">
 
@@ -432,9 +437,10 @@ function EvaluationView({
         </div>
       )}
 
-      {/* Unified scroll container for content and comments */}
+      {/* Unified scroll container for all content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
-        <div className="flex min-h-full">
+        {/* Document content and comments section */}
+        <div className="flex">
           {/* Main content area */}
           <div ref={contentRef} className="flex-1 relative p-4">
             <article className="prose prose-lg prose-slate max-w-3xl mx-auto">
@@ -483,6 +489,105 @@ function EvaluationView({
             onEvaluationStateChange={onEvaluationStateChange}
             onEvaluationSelect={onEvaluationSelect}
           />
+        </div>
+        
+        {/* Evaluation Analysis Section */}
+        <div className="border-t border-gray-200 bg-gray-50">
+          <div className="mx-auto max-w-7xl px-4 py-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Evaluation Analysis</h2>
+            <div className="flex gap-8">
+              {/* Main content */}
+              <div className="flex-1 space-y-8">
+                {selectedEvaluationsForAnalysis.map((evaluation) => (
+                  <div key={evaluation.agentId} id={`eval-${evaluation.agentId}`} className="bg-white rounded-lg shadow p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {evaluation.agent.name}
+                        {evaluation.grade !== undefined && (
+                          <span className="ml-3">
+                            <GradeBadge grade={evaluation.grade} variant="light" />
+                          </span>
+                        )}
+                      </h3>
+                      <Link
+                        href={`/docs/${document.id}/evals/${evaluation.agentId}`}
+                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+                      >
+                        Details
+                      </Link>
+                    </div>
+                    
+                    {/* Summary Section */}
+                    {evaluation.summary && (
+                      <div className="mb-6" id={`eval-${evaluation.agentId}-summary`}>
+                        <h4 className="text-lg font-medium text-gray-700 mb-2">Summary</h4>
+                        <div className="prose prose-sm max-w-none text-gray-600">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            {evaluation.summary}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Analysis Section */}
+                    {evaluation.analysis && (
+                      <div id={`eval-${evaluation.agentId}-analysis`}>
+                        <h4 className="text-lg font-medium text-gray-700 mb-2">Analysis</h4>
+                        <div className="prose prose-sm max-w-none text-gray-600">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            {evaluation.analysis}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Table of Contents */}
+              <div className="w-64 flex-shrink-0">
+                <div className="sticky top-20">
+                  <nav className="space-y-1">
+                    <h3 className="font-semibold text-gray-900 mb-3">On this page</h3>
+                    <ul className="space-y-3">
+                      {selectedEvaluationsForAnalysis.map((evaluation) => (
+                        <li key={evaluation.agentId}>
+                          <a
+                            href={`#eval-${evaluation.agentId}`}
+                            className="text-sm text-gray-700 hover:text-gray-900 font-medium"
+                          >
+                            {evaluation.agent.name}
+                          </a>
+                          <ul className="mt-2 ml-4 space-y-1">
+                            {evaluation.summary && (
+                              <li>
+                                <a
+                                  href={`#eval-${evaluation.agentId}-summary`}
+                                  className="text-sm text-gray-600 hover:text-gray-900"
+                                >
+                                  Summary
+                                </a>
+                              </li>
+                            )}
+                            {evaluation.analysis && (
+                              <li>
+                                <a
+                                  href={`#eval-${evaluation.agentId}-analysis`}
+                                  className="text-sm text-gray-600 hover:text-gray-900"
+                                >
+                                  Analysis
+                                </a>
+                              </li>
+                            )}
+                          </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       

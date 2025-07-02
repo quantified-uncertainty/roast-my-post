@@ -26,7 +26,7 @@ export function calculateCommentPositions(
   const {
     minGap = 10,
     hoveredCommentId = null,
-    baseHeight = 60,
+    baseHeight = 50,
     charsPerLine = 50,
     lineHeight = 20,
   } = options;
@@ -43,8 +43,12 @@ export function calculateCommentPositions(
       const highlightElement = highlightElements[0];
       const rect = highlightElement.getBoundingClientRect();
       // Position relative to content container, accounting for scroll
+      // Adjust to align with the vertical center of the highlight
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
-      newPositions[tag] = relativeTop;
+      const highlightCenter = relativeTop + (rect.height / 2);
+      // Offset slightly up to better align with the highlighted text
+      const adjustedPosition = highlightCenter - 15; // Adjust this value as needed
+      newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
       newPositions[tag] = 100 + (index * 150);
