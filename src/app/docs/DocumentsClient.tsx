@@ -197,7 +197,7 @@ export default function DocumentsClient({
                 return (
                   <Link
                     key={document.id}
-                    href={`/docs/${document.slug}/preview`}
+                    href={`/docs/${document.slug}/reader`}
                     className="rounded-lg border border-gray-200 p-4 transition-colors duration-150 hover:bg-gray-50"
                   >
                     <div className="min-w-0 flex-1">
@@ -373,7 +373,7 @@ export default function DocumentsClient({
                     <tr key={document.id} className="hover:bg-gray-50">
                       <td className="max-w-[300px] whitespace-nowrap border-b border-gray-200 px-4 py-4">
                         <Link
-                          href={`/docs/${document.slug}/preview`}
+                          href={`/docs/${document.slug}/reader`}
                           className="block truncate text-blue-600 hover:text-blue-900"
                         >
                           {document.title}

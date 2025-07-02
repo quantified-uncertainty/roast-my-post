@@ -76,7 +76,7 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
     }
 
     revalidatePath("/docs");
-    redirect(`/docs/${document.id}/preview`);
+    redirect(`/docs/${document.id}/reader`);
   } catch (error) {
     logger.error('Error creating document:', error);
     throw error;

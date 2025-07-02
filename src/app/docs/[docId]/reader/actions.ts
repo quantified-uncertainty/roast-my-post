@@ -96,7 +96,7 @@ export async function reuploadDocument(docId: string) {
     );
 
     // Revalidate the document paths
-    revalidatePath(`/docs/${docId}/preview`);
+    revalidatePath(`/docs/${docId}/reader`);
     revalidatePath(`/docs/${docId}`);
 
     return { success: true };

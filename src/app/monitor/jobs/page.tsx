@@ -232,7 +232,7 @@ export default function JobsMonitorPage() {
                     <dt className="font-medium text-gray-900">Document</dt>
                     <dd className="space-y-1">
                       <div className="text-blue-600 hover:text-blue-800">
-                        <Link href={`/docs/${selectedJob.evaluation.document.id}/preview`}>
+                        <Link href={`/docs/${selectedJob.evaluation.document.id}/reader`}>
                           {selectedJob.evaluation.document.versions[0]?.title || 'Unknown Document'}
                         </Link>
                       </div>

@@ -14,7 +14,7 @@ import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,
-  EyeIcon,
+  BookOpenIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
@@ -161,19 +161,19 @@ export default async function DocumentPage({
                       </a>
                     ) : (
                       <Link
-                        href={`/docs/${docId}/preview`}
+                        href={`/docs/${docId}/reader`}
                         className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
                       >
-                        <EyeIcon className="mr-2 h-4 w-4" />
+                        <BookOpenIcon className="mr-2 h-4 w-4" />
                         View full document
                       </Link>
                     )}
                     <Link
-                      href={`/docs/${docId}/preview`}
+                      href={`/docs/${docId}/reader`}
                       className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
                     >
-                      <EyeIcon className="mr-2 h-4 w-4" />
-                      Preview
+                      <BookOpenIcon className="mr-2 h-4 w-4" />
+                      Reader View
                     </Link>
                   </div>
                 </div>

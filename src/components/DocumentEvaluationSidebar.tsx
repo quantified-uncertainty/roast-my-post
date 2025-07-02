@@ -12,7 +12,7 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   DocumentTextIcon,
-  EyeIcon,
+  BookOpenIcon,
 } from "@heroicons/react/24/outline";
 
 import { GradeBadge } from "./GradeBadge";
@@ -56,7 +56,7 @@ export function DocumentEvaluationSidebar({
   const [isEvaluationsOpen, setIsEvaluationsOpen] = useState(true);
 
   const isDocumentPage = pathname === `/docs/${docId}`;
-  const isPreviewPage = pathname === `/docs/${docId}/preview`;
+  const isReaderPage = pathname === `/docs/${docId}/reader`;
   const isManagePage = pathname === `/docs/${docId}/manage`;
 
   return (
@@ -75,17 +75,17 @@ export function DocumentEvaluationSidebar({
           Overview
         </Link>
 
-        {/* Preview Link */}
+        {/* Reader View Link */}
         <Link
-          href={`/docs/${docId}/preview`}
+          href={`/docs/${docId}/reader`}
           className={`mt-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            isPreviewPage
+            isReaderPage
               ? "bg-blue-50 text-gray-900"
               : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
           }`}
         >
-          <EyeIcon className="h-4 w-4" />
-          Preview
+          <BookOpenIcon className="h-4 w-4" />
+          Reader View
         </Link>
 
         {/* Manage Evaluations Link */}
