@@ -2,6 +2,7 @@
 
 import {
   ChatBubbleLeftIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
 
@@ -98,10 +99,10 @@ export function EvaluationCardsHeader({
         className="flex items-center justify-center rounded-full bg-gray-200 p-0.5 transition-colors hover:bg-gray-300"
         aria-label="Toggle card size"
         type="button"
-        style={{ width: "1.4rem", height: "1.4rem" }}
+        style={{ width: "1.8rem", height: "1.8rem" }}
       >
         <ChevronLeftIcon
-          className={`h-3 w-3 transform text-gray-500 transition-transform duration-200 ${isLargeMode ? "-rotate-90" : "rotate-0"}`}
+          className={`h-5 w-5 transform text-gray-500 transition-transform duration-200 ${isLargeMode ? "-rotate-90" : "rotate-0"}`}
         />
       </button>
     );
@@ -192,16 +193,17 @@ export function EvaluationCardsHeader({
                     </label>
                   </div>
                   {/* Summary */}
-                  <div className="mb-2 min-h-[40px] text-sm text-gray-600">
+                  <div className="mb-2 min-h-[40px] text-sm text-gray-700">
                     {truncatedSummary}
                   </div>
                   {/* Footer */}
                   <div className="mt-auto">
                     <a
                       href="#"
-                      className="text-xs font-medium text-purple-600 hover:underline"
+                      className="flex items-center text-xs font-medium text-purple-600 hover:underline"
                     >
-                      Analysis
+                      more
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </a>
                   </div>
                 </div>
