@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -17,7 +17,7 @@ import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
 import { EvaluationViewProps } from "../types";
-import { AgentPillsHeader } from "./AgentPillsHeader";
+import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 
 export function EvaluationView({
   evaluationState,
@@ -26,6 +26,7 @@ export function EvaluationView({
   contentWithMetadataPrepend,
 }: EvaluationViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isLargeMode, setIsLargeMode] = useState(true);
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
@@ -65,15 +66,15 @@ export function EvaluationView({
 
   return (
     <>
-      {/* Sticky Agent Pills Header Bar - Outside height-constrained container */}
-      <div className="sticky top-0 z-50 mx-5 mt-1 rounded-full border border-gray-200 bg-slate-100 px-2 shadow-sm">
-        <div className="flex items-center justify-end px-3 py-2">
-          <AgentPillsHeader
-            document={document}
-            evaluationState={evaluationState}
-            onEvaluationStateChange={onEvaluationStateChange}
-          />
-        </div>
+      {/* Sticky Evaluation Cards Header Bar - Outside height-constrained container */}
+      <div className="sticky top-0 z-50 mx-5 mt-1 rounded-lg border border-gray-200 bg-slate-100 px-4 py-3 shadow-sm">
+        <EvaluationCardsHeader
+          document={document}
+          evaluationState={evaluationState}
+          onEvaluationStateChange={onEvaluationStateChange}
+          isLargeMode={isLargeMode}
+          onToggleMode={() => setIsLargeMode((v) => !v)}
+        />
       </div>
 
       {/* Main content container */}
