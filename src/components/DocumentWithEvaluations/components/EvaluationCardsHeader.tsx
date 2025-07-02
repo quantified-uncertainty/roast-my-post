@@ -110,10 +110,10 @@ export function EvaluationCardsHeader({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex w-full flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 transition-all duration-300 ease-in-out">
         {/* Header row: always one line */}
         <div
-          className={`group flex w-full items-center rounded-t-lg ${isLargeMode ? "h-12 cursor-pointer px-6 py-6 transition-colors hover:bg-gray-200" : "mb-0 px-3 py-2"}`}
+          className={`group flex w-full items-center rounded-t-lg transition-all duration-300 ease-in-out ${isLargeMode ? "h-12 cursor-pointer px-6 py-6 hover:bg-gray-200" : "mb-0 px-3 py-2"}`}
           onClick={isLargeMode ? onToggleMode : undefined}
         >
           {isLargeMode && (
@@ -167,9 +167,12 @@ export function EvaluationCardsHeader({
             </>
           )}
         </div>
-        {/* Cards grid only in large mode, below header */}
-        {isLargeMode && (
-          <div className="grid grid-cols-1 gap-4 px-4 pb-2 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Cards grid container with smooth height transition */}
+        <div
+          className={`grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-500 ease-in-out ${
+            isLargeMode ? "max-h-[1000px] opacity-100 pb-2" : "max-h-0 opacity-0 overflow-hidden"
+          }`}
+        >
             {document.reviews.map((review: any) => {
               const isActive = evaluationState.selectedAgentIds.has(
                 review.agentId
@@ -227,8 +230,15 @@ export function EvaluationCardsHeader({
                   {/* Footer */}
                   <div className="mt-auto flex flex-row items-center justify-between">
                     <a
-                      href="#"
+                      href={`#eval-${review.agentId}`}
                       className="flex items-center text-xs font-medium text-purple-600 hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const element = window.document.getElementById(`eval-${review.agentId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
                     >
                       Full Evaluation
                       <ChevronDownIcon className="ml-1 h-3 w-3" />
@@ -246,15 +256,14 @@ export function EvaluationCardsHeader({
                         href={`http://localhost:3001/docs/${document.id}/evals/${review.agentId}/versions`}
                         className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-700 hover:underline"
                       >
-                        v4
+                        v{review.versions?.[0]?.version || review.version || "1"}
                       </a>
                     </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

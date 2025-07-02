@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -28,11 +28,63 @@ export function EvaluationView({
 }: EvaluationViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isLargeMode, setIsLargeMode] = useState(true);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const evaluationsSectionRef = useRef<HTMLDivElement>(null);
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
     evaluationState.selectedAgentIds.has(r.agentId)
   );
+
+  // Add scroll detection
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = 0;
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      const scrollTop = scrollContainer.scrollTop;
+
+      // Clear any existing timeout
+      clearTimeout(scrollTimeout);
+
+      // Check if evaluations section is in view
+      if (evaluationsSectionRef.current) {
+        const evalSection = evaluationsSectionRef.current;
+        const evalSectionTop = evalSection.offsetTop;
+        const scrollBottom = scrollTop + scrollContainer.clientHeight;
+
+        // Hide header when evaluations section comes into view
+        if (scrollTop >= evalSectionTop - 100) {
+          setHeaderVisible(false);
+        } else {
+          setHeaderVisible(true);
+        }
+      }
+
+      // If at the very top, show large mode with a slight delay
+      if (scrollTop <= 10) {
+        scrollTimeout = setTimeout(() => {
+          setIsLargeMode(true);
+        }, 200);
+      }
+      // If scrolling down from near the top, hide large mode
+      else if (scrollTop > lastScrollTop && scrollTop > 50 && isLargeMode) {
+        setIsLargeMode(false);
+      }
+
+      lastScrollTop = scrollTop;
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll);
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isLargeMode]);
 
   // Merge comments from all selected evaluations
   const displayComments = useMemo(() => {
@@ -67,21 +119,31 @@ export function EvaluationView({
 
   return (
     <>
-      {/* Sticky Evaluation Cards Header Bar - Outside height-constrained container */}
-      <div className="sticky top-0 z-50 mx-5 mt-1 rounded-lg border border-gray-200 bg-slate-100 shadow-sm">
-        <EvaluationCardsHeader
-          document={document}
-          evaluationState={evaluationState}
-          onEvaluationStateChange={onEvaluationStateChange}
-          isLargeMode={isLargeMode}
-          onToggleMode={() => setIsLargeMode((v) => !v)}
-        />
+      {/* Header wrapper that collapses when hidden */}
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          headerVisible ? "max-h-[1000px]" : "max-h-0 overflow-hidden"
+        }`}
+      >
+        {/* Sticky Evaluation Cards Header Bar */}
+        <div className="sticky top-0 z-50 mx-5 mt-3 rounded-lg border border-gray-200 bg-slate-100 shadow-sm">
+          <EvaluationCardsHeader
+            document={document}
+            evaluationState={evaluationState}
+            onEvaluationStateChange={onEvaluationStateChange}
+            isLargeMode={isLargeMode}
+            onToggleMode={() => setIsLargeMode((v) => !v)}
+          />
+        </div>
       </div>
 
       {/* Main content container */}
       <div className="flex h-full flex-col overflow-x-hidden">
         {/* Unified scroll container for all content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden pt-2">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
+        >
           {/* Document content and comments section */}
           <div className="flex min-h-screen justify-center py-5">
             {/* Main content area */}
@@ -89,6 +151,11 @@ export function EvaluationView({
               {/* Document metadata section */}
               <div className="flex items-center justify-between px-6">
                 <div className="flex items-center gap-4 text-sm text-gray-600">
+                  {selectedEvaluations.length > 0 && (
+                    <span className="font-medium">
+                      v{selectedEvaluations[0].versions?.[0]?.version || "1"}
+                    </span>
+                  )}
                   {document.submittedBy && (
                     <span>
                       Uploaded from{" "}
@@ -169,7 +236,7 @@ export function EvaluationView({
           </div>
 
           {/* Evaluation Analysis Section */}
-          <div>
+          <div ref={evaluationsSectionRef}>
             <div className="mx-auto max-w-7xl px-4 py-8">
               <h2 className="mb-6 text-2xl font-bold text-gray-900">
                 Full AI Evaluations
