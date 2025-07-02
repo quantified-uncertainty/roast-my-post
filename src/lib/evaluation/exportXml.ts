@@ -18,7 +18,6 @@ interface ExportEvaluationData {
     selfCritique?: string | null;
     comments?: Array<{
       id: string;
-      title: string;
       description: string;
       importance?: number | null;
       grade?: number | null;
@@ -115,7 +114,6 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
     evaluation.comments.forEach(comment => {
       xml += '    <comment>\n';
       xml += `      <id>${comment.id}</id>\n`;
-      xml += `      <title>${escapeXml(comment.title)}</title>\n`;
       xml += `      <description><![CDATA[${comment.description}]]></description>\n`;
       if (comment.importance !== null && comment.importance !== undefined) {
         xml += `      <importance>${comment.importance}</importance>\n`;

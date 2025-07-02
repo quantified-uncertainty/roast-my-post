@@ -96,7 +96,6 @@ export async function extractCommentsFromAnalysis(
       }
       
       const lineBasedComment: LineBasedComment = {
-        title: insight.title,
         description: insight.suggestedComment,
         importance: 5, // Default importance
         highlight: {
@@ -193,13 +192,9 @@ export async function extractCommentsFromAnalysis(
                   items: {
                     type: "object",
                     properties: {
-                      title: {
-                        type: "string",
-                        description: "Clear, descriptive title (max 80 characters)",
-                      },
                       description: {
                         type: "string",
-                        description: "Comment body text (100-300 words)",
+                        description: "Comment text (100-300 words) starting with a clear, concise statement of the main point",
                       },
                       highlight: {
                         type: "object",
@@ -224,7 +219,7 @@ export async function extractCommentsFromAnalysis(
                         required: ["startLineIndex", "endLineIndex", "startCharacters", "endCharacters"],
                       },
                     },
-                    required: ["title", "description", "highlight"],
+                    required: ["description", "highlight"],
                   },
                 },
               },
@@ -246,7 +241,9 @@ export async function extractCommentsFromAnalysis(
     const result = toolUse.input as { comments: LineBasedComment[] };
     
     // Convert line-based to character-based comments
-    comments = await validateAndConvertComments(result.comments, document.content);
+    // Get the full content with prepend (same as what was shown to the LLM)
+    const { content: fullContent } = getDocumentFullContent(document);
+    comments = await validateAndConvertComments(result.comments, fullContent);
 
   } catch (error: any) {
     logger.error('Error in comment extraction:', error);

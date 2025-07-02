@@ -465,7 +465,6 @@ export class JobModel {
           // Create comment linked to highlight
           await prisma.evaluationComment.create({
             data: {
-              title: comment.title,
               description: comment.description,
               importance: comment.importance || null,
               grade: comment.grade || null,

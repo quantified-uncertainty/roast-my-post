@@ -36,27 +36,25 @@ export function CommentsColumn({
     Record<string, number>
   >({});
   const [highlightsReady, setHighlightsReady] = useState(false);
-  const [positionsCalculated, setPositionsCalculated] = useState(false);
 
   // Get valid and sorted comments
   const sortedComments = getValidAndSortedComments(comments);
 
   // Calculate comment positions
-  const calculatePositions = useCallback(() => {
+  const calculatePositions = useCallback((currentHoveredId?: string | null) => {
     if (!contentRef.current) return;
 
     const positions = calculateCommentPositions(
       sortedComments,
       contentRef.current,
       {
-        hoveredCommentId,
+        hoveredCommentId: currentHoveredId,
         minGap: 10,
       }
     );
 
     setCommentPositions(positions);
-    setPositionsCalculated(true);
-  }, [sortedComments, contentRef, hoveredCommentId]);
+  }, [sortedComments]);
 
   // Check if highlights are ready
   useEffect(() => {
@@ -85,24 +83,13 @@ export function CommentsColumn({
     setTimeout(checkHighlights, 200);
   }, [sortedComments.length, contentRef]);
 
-  // Calculate positions when highlights are ready
+  // Calculate positions when highlights are ready or hover changes
   useEffect(() => {
     if (highlightsReady) {
-      setTimeout(calculatePositions, 100);
+      calculatePositions(hoveredCommentId);
     }
-  }, [highlightsReady, calculatePositions]);
-
-  // Recalculate positions when hover changes
-  useEffect(() => {
-    if (highlightsReady && positionsCalculated) {
-      calculatePositions();
-    }
-  }, [
-    hoveredCommentId,
-    calculatePositions,
-    highlightsReady,
-    positionsCalculated,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredCommentId, highlightsReady]);
 
   // Handle scroll events to recalculate if needed
   useEffect(() => {
@@ -136,7 +123,7 @@ export function CommentsColumn({
               comment={comment}
               index={index}
               position={position}
-              isVisible={positionsCalculated}
+              isVisible={highlightsReady}
               isSelected={isSelected}
               isHovered={isHovered}
               colorMap={

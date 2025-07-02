@@ -61,7 +61,6 @@ type DocumentWithRelations = {
       selfCritique: string | null;
       comments: Array<{
         id: string;
-        title: string;
         description: string;
         importance: number | null;
         grade: number | null;
@@ -220,7 +219,6 @@ export class DocumentModel {
               }
             : undefined,
           comments: version.comments.map((comment) => ({
-            title: comment.title,
             description: comment.description,
             importance: comment.importance || undefined,
             grade: comment.grade || undefined,
@@ -269,7 +267,6 @@ export class DocumentModel {
           costInCents: evaluation.versions[0]?.job?.costInCents || 0,
           comments:
             evaluation.versions[0]?.comments.map((comment) => ({
-              title: comment.title,
               description: comment.description,
               importance: comment.importance || undefined,
               grade: comment.grade || undefined,
@@ -343,7 +340,6 @@ export class DocumentModel {
               }
             : undefined,
           comments: version.comments.map((comment: any) => ({
-            title: comment.title,
             description: comment.description,
             importance: comment.importance || undefined,
             grade: comment.grade || undefined,
@@ -394,7 +390,6 @@ export class DocumentModel {
           costInCents: evaluation.versions[0]?.job?.costInCents || 0,
           comments:
             evaluation.versions[0]?.comments.map((comment: any) => ({
-              title: comment.title,
               description: comment.description,
               importance: comment.importance || undefined,
               grade: comment.grade || undefined,

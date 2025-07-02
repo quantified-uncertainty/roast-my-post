@@ -30,7 +30,6 @@ export interface ComprehensiveAnalysisOutputs {
 
 export interface CommentInsight {
   id: string;
-  title: string;
   location: string; // Line reference like "Lines 45-52" or "Line 78"
   observation: string;
   significance: string;

@@ -4,7 +4,6 @@ import type { LineSnippetHighlight } from "./lineBasedHighlighter";
 
 // Response from Anthropic API
 export interface RawLLMComment {
-  title: string;
   description: string;
   highlight: LineSnippetHighlight;
   importance?: number;
@@ -13,7 +12,6 @@ export interface RawLLMComment {
 
 // Validated comment with line-based highlight
 export interface LineBasedComment {
-  title: string;
   description: string;
   importance: number;
   grade?: number;

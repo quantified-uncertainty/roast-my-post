@@ -403,7 +403,6 @@ export class AgentModel {
           comments: {
             select: {
               id: true,
-              title: true,
               description: true,
               importance: true,
               grade: true,

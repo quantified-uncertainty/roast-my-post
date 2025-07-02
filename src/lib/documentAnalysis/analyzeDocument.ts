@@ -71,10 +71,12 @@ export async function analyzeDocument(
           summary: analysisResult.outputs.summary,
           analysis: analysisResult.outputs.analysis,
           grade: analysisResult.outputs.grade,
-          comments: commentResult.outputs.comments.map((c) => ({
-            title: c.highlight?.quotedText || "Comment",
-            text: c.description,
-          })),
+          comments: commentResult.outputs.comments.map((c) => {
+            return {
+              title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Comment",
+              text: c.description,
+            };
+          }),
         },
         agentInfo
       );

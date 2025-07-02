@@ -20,15 +20,16 @@ Structure your response as a markdown document (${targetWordCount}+ words) with:
 
 For the Key Highlights section, use this format for each comment:
 
-### Highlight [#]: [Title]
+### Highlight [#]
 - **Location**: Line X or Lines X-Y
 - **Context**: What this passage is about
-- **Your Contribution**: Your specific comment/insight/resource (100-300 words)
+- **Your Contribution**: Your specific comment/insight/resource (100-300 words). Start with a clear summary sentence that captures the main point, then provide your detailed analysis.
 
 Important formatting notes:
 - Use single line numbers like "Line 42" or ranges like "Lines 156-162"
 - Number highlights sequentially (Highlight 1, Highlight 2, etc.)
 - Make your contributions specific and actionable
+- Begin each contribution with a strong opening sentence that summarizes the key point
 - Use markdown formatting (headers, lists, emphasis, code blocks) throughout
 
 ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;

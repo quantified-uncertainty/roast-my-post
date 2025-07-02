@@ -415,7 +415,6 @@ export class LineBasedHighlighter {
 
       if (highlightResult) {
         const processedComment: Comment = {
-          title: comment.title,
           description: comment.description,
           importance: comment.importance || 5,
           grade: comment.grade,
@@ -432,7 +431,6 @@ export class LineBasedHighlighter {
       } else {
         // Create invalid comment for debugging
         const invalidComment: Comment = {
-          title: comment.title,
           description: comment.description,
           importance: comment.importance || 5,
           grade: comment.grade,

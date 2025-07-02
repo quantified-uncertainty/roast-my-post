@@ -24,7 +24,6 @@ interface ExportEvaluationButtonProps {
       selfCritique?: string | null;
       comments?: Array<{
         id: string;
-        title: string;
         description: string;
         importance?: number | null;
         grade?: number | null;

@@ -1,4 +1,6 @@
 import type { Comment } from "@/types/documentSchema";
+// @ts-ignore - No types available for markdown-truncate
+import truncateMarkdown from "markdown-truncate";
 
 interface CommentPosition {
   id: string;
@@ -117,8 +119,14 @@ export function getCommentDisplayText(
     return { text, isTruncated: false };
   }
   
+  // Use markdown-truncate to properly handle markdown syntax
+  const truncatedText = truncateMarkdown(text, {
+    limit: maxLength,
+    ellipsis: true
+  });
+  
   return { 
-    text: text.substring(0, maxLength) + "...",
+    text: truncatedText,
     isTruncated: true
   };
 }

@@ -9,7 +9,6 @@ import {
 
 import Link from "next/link";
 import { logger } from "@/lib/logger";
-import { useRouter } from "next/navigation";
 // @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -17,10 +16,6 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import {
-  deleteDocument,
-  reuploadDocument,
-} from "@/app/docs/[docId]/preview/actions";
 import { Button } from "@/components/Button";
 import type {
   Comment,
@@ -32,17 +27,13 @@ import {
   getValidAndSortedComments,
 } from "@/utils/ui/commentUtils";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
-import { formatWordCount } from "@/utils/ui/documentUtils";
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import {
-  ArrowLeftIcon,
   ArrowPathIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
   ListBulletIcon,
-  PencilIcon,
-  TrashIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -54,7 +45,7 @@ import {
 
 import { GradeBadge } from "./GradeBadge";
 import SlateEditor from "./SlateEditor";
-import { AgentSelector, QuickAgentButtons } from "./AgentSelector";
+import { QuickAgentButtons } from "./AgentSelector";
 import { EvaluationAnalysisModal } from "./EvaluationAnalysisModal";
 import { CommentsColumn } from "./CommentsColumn";
 
@@ -163,7 +154,7 @@ function CommentsSidebar({
                         className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
                       >
                         <MarkdownRenderer className="inline">
-                          {comment.title}
+                          {comment.description.split('\n').slice(0, 2).join('\n')}
                         </MarkdownRenderer>
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
@@ -197,38 +188,32 @@ function CommentsSidebar({
                         />
                       </div>
                     </div>
-                    {comment.description && (
-                      <div
-                        className={`mt-1 ${
-                          expandedTag === tag
-                            ? "text-gray-800"
-                            : "line-clamp-1 text-gray-600"
-                        }`}
-                      >
-                        <MarkdownRenderer>
-                          {comment.description}
+                    {expandedTag === tag && comment.description.split('\n').length > 2 && (
+                      <div className="mt-1 text-gray-800">
+                        <MarkdownRenderer className="text-sm">
+                          {comment.description.split('\n').slice(2).join('\n')}
                         </MarkdownRenderer>
-                        {expandedTag === tag && (
-                          <div className="mt-2 text-xs text-gray-400">
-                            {comment.grade !== undefined && (
-                              <span className="mr-4">
-                                Grade:{" "}
-                                <GradeBadge
-                                  grade={comment.grade}
-                                  variant="light"
-                                  size="xs"
-                                />
-                              </span>
-                            )}
-                            {comment.importance !== undefined && (
-                              <span>
-                                Importance:{" "}
-                                <span>
-                                  {getImportancePhrase(comment.importance)}
-                                </span>
-                              </span>
-                            )}
-                          </div>
+                      </div>
+                    )}
+                    {expandedTag === tag && (
+                      <div className="mt-2 text-xs text-gray-400">
+                        {comment.grade !== undefined && (
+                          <span className="mr-4">
+                            Grade:{" "}
+                            <GradeBadge
+                              grade={comment.grade}
+                              variant="light"
+                              size="xs"
+                            />
+                          </span>
+                        )}
+                        {comment.importance !== undefined && (
+                          <span>
+                            Importance:{" "}
+                            <span>
+                              {getImportancePhrase(comment.importance)}
+                            </span>
+                          </span>
                         )}
                       </div>
                     )}
@@ -340,54 +325,18 @@ interface EvaluationState {
 }
 
 interface UIState {
-  isHomeView: boolean;
   showEvaluationSelector: boolean;
   deleteError: string | null;
-  isReuploadingDocument: boolean;
   evaluationCreationError: string | null;
   successMessage: string | null;
 }
 
-interface HomeViewProps {
-  document: Document;
-  isOwner?: boolean;
-  onEvaluationSelect: (index: number) => void;
-  activeEvaluationIndex: number | null;
-  isReuploadingDocument: boolean;
-  onReupload: () => Promise<void>;
-  onCreateEvaluation: (agentId: string) => Promise<void>;
-  onCreateMultipleEvaluations: (agentIds: string[]) => Promise<void>;
-}
-
-function HomeView({
-  document,
-  isOwner = false,
-  onEvaluationSelect,
-  activeEvaluationIndex,
-  isReuploadingDocument,
-  onReupload,
-  onCreateEvaluation,
-  onCreateMultipleEvaluations,
-}: HomeViewProps) {
-  const router = useRouter();
-
-  return (
-    <div className="h-full p-8">
-      <EvaluationSelector
-        document={document}
-        activeEvaluationIndex={activeEvaluationIndex}
-        onEvaluationSelect={onEvaluationSelect}
-      />
-    </div>
-  );
-}
 
 
 interface EvaluationViewProps {
   evaluation: Evaluation;
   evaluationState: EvaluationState;
   onEvaluationStateChange: (newState: EvaluationState) => void;
-  onBackToHome: () => void;
   onShowEvaluationSelector: () => void;
   commentColorMap: Record<number, { background: string; color: string }>;
   onRerunEvaluation: (agentId: string) => Promise<void>;
@@ -400,7 +349,6 @@ function EvaluationView({
   evaluation,
   evaluationState,
   onEvaluationStateChange,
-  onBackToHome,
   onShowEvaluationSelector,
   commentColorMap,
   onRerunEvaluation,
@@ -533,31 +481,6 @@ function EvaluationView({
   );
 }
 
-interface LoadingModalProps {
-  isOpen: boolean;
-  message: string;
-}
-
-function LoadingModal({ isOpen, message }: LoadingModalProps) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black bg-opacity-50" />
-      <div className="relative z-50 rounded-lg bg-white p-8 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">{message}</h2>
-            <p className="text-sm text-gray-600">
-              This may take a few moments...
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 interface EvaluationSelectorModalProps {
   document: Document;
@@ -601,76 +524,6 @@ function EvaluationSelectorModal({
   );
 }
 
-function DocumentContentPanel({
-  document: doc,
-  evaluationState,
-  setEvaluationState,
-  activeEvaluation,
-  commentColorMap,
-}: {
-  document: Document;
-  evaluationState: EvaluationState | null;
-  setEvaluationState: (state: EvaluationState) => void;
-  activeEvaluation: Evaluation | null;
-  commentColorMap: Record<number, { background: string; color: string }>;
-}) {
-  // Add effect to scroll to selected comment
-  useEffect(() => {
-    if (evaluationState?.expandedCommentId) {
-      const element = document.getElementById(
-        `highlight-${evaluationState.expandedCommentId}`
-      );
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  }, [evaluationState?.expandedCommentId]);
-
-  // Get the full content with prepend using the centralized helper
-  const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(doc);
-    return content;
-  }, [doc]);
-
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <article className="prose prose-lg prose-slate max-w-none">
-        <SlateEditor
-          content={contentWithMetadata}
-          onHighlightHover={(commentId) => {
-            if (!evaluationState) return;
-            setEvaluationState({
-              ...evaluationState,
-              hoveredCommentId: commentId,
-            });
-          }}
-          onHighlightClick={(commentId) => {
-            if (!evaluationState) return;
-            setEvaluationState({
-              ...evaluationState,
-              expandedCommentId: commentId,
-            });
-          }}
-          highlights={
-            activeEvaluation
-              ? getValidAndSortedComments(activeEvaluation.comments).map(
-                  (comment: Comment, index: number) => ({
-                    startOffset: comment.highlight.startOffset,
-                    endOffset: comment.highlight.endOffset,
-                    tag: index.toString(),
-                    color:
-                      commentColorMap[index]?.background.substring(1) ??
-                      "#3b82f6",
-                  })
-                )
-              : []
-          }
-          activeTag={evaluationState?.hoveredCommentId ?? null}
-        />
-      </article>
-    </div>
-  );
-}
 
 export function DocumentWithEvaluations({
   document,
@@ -679,10 +532,8 @@ export function DocumentWithEvaluations({
   const [evaluationState, setEvaluationState] =
     useState<EvaluationState | null>(null);
   const [uiState, setUIState] = useState<UIState>({
-    isHomeView: true,
     showEvaluationSelector: false,
     deleteError: null,
-    isReuploadingDocument: false,
     evaluationCreationError: null,
     successMessage: null,
   });
@@ -701,7 +552,7 @@ export function DocumentWithEvaluations({
 
   // Automatically select the first evaluation on mount
   useEffect(() => {
-    if (hasEvaluations && evaluationState === null && uiState.isHomeView) {
+    if (hasEvaluations && evaluationState === null) {
       handleEvaluationSelect(0);
     }
   }, [hasEvaluations]);
@@ -755,13 +606,8 @@ export function DocumentWithEvaluations({
       hoveredCommentId: null,
       expandedCommentId: null,
     });
-    setUIState((prev) => ({ ...prev, isHomeView: false }));
   };
 
-  const handleBackToHome = () => {
-    setEvaluationState(null);
-    setUIState((prev) => ({ ...prev, isHomeView: true, showEvaluationSelector: false }));
-  };
 
   const handleCreateEvaluation = async (agentId: string) => {
     try {
@@ -809,78 +655,7 @@ export function DocumentWithEvaluations({
     }
   };
 
-  const handleCreateMultipleEvaluations = async (agentIds: string[]) => {
-    if (agentIds.length === 0) return;
 
-    try {
-      const response = await fetch(`/api/documents/${document.id}/evaluations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ agentIds }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create evaluations');
-      }
-
-      const result = await response.json();
-      
-      // Show success notification
-      const createdCount = result.evaluations?.filter((e: any) => !e.error).length || 0;
-      const errorCount = result.evaluations?.filter((e: any) => e.error).length || 0;
-      
-      let message = `${createdCount} evaluation(s) queued for processing`;
-      if (errorCount > 0) {
-        message += `, ${errorCount} failed`;
-      }
-      
-      setUIState((prev) => ({ 
-        ...prev, 
-        evaluationCreationError: null,
-        successMessage: message
-      }));
-
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        setUIState((prev) => ({ ...prev, successMessage: null }));
-      }, 5000);
-
-    } catch (error) {
-      logger.error('Error creating evaluations:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create evaluations';
-      setUIState((prev) => ({ 
-        ...prev, 
-        evaluationCreationError: errorMessage
-      }));
-
-      // Clear error message after 8 seconds
-      setTimeout(() => {
-        setUIState((prev) => ({ ...prev, evaluationCreationError: null }));
-      }, 8000);
-    }
-  };
-
-  const handleReupload = async () => {
-    setUIState((prev) => ({ ...prev, isReuploadingDocument: true }));
-
-    try {
-      const result = await reuploadDocument(document.id);
-
-      if (result.success) {
-        // Refresh the page to show the updated content
-        window.location.reload();
-      } else {
-        setUIState((prev) => ({ ...prev, isReuploadingDocument: false }));
-        alert(result.error || "Failed to re-upload document");
-      }
-    } catch (error) {
-      setUIState((prev) => ({ ...prev, isReuploadingDocument: false }));
-      alert("An unexpected error occurred while re-uploading");
-    }
-  };
 
   // Close modal on Esc
   useEffect(() => {
@@ -899,36 +674,11 @@ export function DocumentWithEvaluations({
       className="h-full bg-gray-50"
       style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
     >
-      {uiState.isHomeView ? (
-        <div className="flex h-full">
-          <div className="flex-1 overflow-y-auto">
-            <DocumentContentPanel
-              document={document}
-              evaluationState={evaluationState}
-              setEvaluationState={setEvaluationState}
-              activeEvaluation={activeEvaluation}
-              commentColorMap={commentColorMap}
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto border-l border-gray-200">
-            <HomeView
-              document={document}
-              isOwner={isOwner}
-              onEvaluationSelect={handleEvaluationSelect}
-              activeEvaluationIndex={evaluationState?.selectedReviewIndex ?? null}
-              isReuploadingDocument={uiState.isReuploadingDocument}
-              onReupload={handleReupload}
-              onCreateEvaluation={handleCreateEvaluation}
-              onCreateMultipleEvaluations={handleCreateMultipleEvaluations}
-            />
-          </div>
-        </div>
-      ) : activeEvaluation && evaluationState ? (
+      {activeEvaluation && evaluationState ? (
         <EvaluationView
           evaluation={activeEvaluation}
           evaluationState={evaluationState}
           onEvaluationStateChange={setEvaluationState}
-          onBackToHome={handleBackToHome}
           onShowEvaluationSelector={() =>
             setUIState((prev) => ({ ...prev, showEvaluationSelector: true }))
           }
@@ -938,7 +688,16 @@ export function DocumentWithEvaluations({
           onEvaluationSelect={handleEvaluationSelect}
           contentWithMetadata={contentWithMetadata}
         />
-      ) : null}
+      ) : (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+            No evaluations available
+          </h1>
+          <p className="mb-8 text-gray-600">
+            This document hasn't been evaluated yet.
+          </p>
+        </div>
+      )}
       {uiState.showEvaluationSelector && (
         <EvaluationSelectorModal
           document={document}
@@ -949,10 +708,6 @@ export function DocumentWithEvaluations({
           }
         />
       )}
-      <LoadingModal
-        isOpen={uiState.isReuploadingDocument}
-        message="Re-uploading document..."
-      />
       {uiState.successMessage && (
         <div className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-green-50 p-4 shadow-lg">
           <div className="flex">

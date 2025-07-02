@@ -54,11 +54,13 @@ Look for the "Key Insights for Commentary" section in the analysis, which contai
 - Suggested comment text
 
 Convert these insights into properly formatted comments with:
-- Clear, descriptive titles (max 80 characters)
-- Well-written body text (100-300 words)
+- Well-written descriptions (100-300 words) that begin with a clear, concise statement of the main point
 - Correct line number references (startLine and endLine)
+- The description should be self-contained and include all necessary context
 
-If the analysis doesn't have a clear "Key Insights" section, identify the most important observations from the analysis and create comments for those.`;
+If the analysis doesn't have a clear "Key Highlights" section, identify the most important observations from the analysis and create comments for those.
+
+IMPORTANT: Start each description with a strong, clear statement that summarizes the key point (like a title would), then expand with details.`;
 
   return { systemMessage, userMessage };
 }

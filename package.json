@@ -59,6 +59,7 @@
     "jsonic": "^2.16.0",
     "jsonrepair": "^3.12.0",
     "lucide-react": "^0.488.0",
+    "markdown-truncate": "^1.1.1",
     "metascraper": "^5.47.1",
     "metascraper-author": "^5.47.1",
     "metascraper-date": "^5.47.1",

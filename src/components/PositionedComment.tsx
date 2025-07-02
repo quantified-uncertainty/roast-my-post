@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import type { Comment } from "@/types/documentSchema";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
 
@@ -69,10 +72,25 @@ export function PositionedComment({
         
         {/* Comment text */}
         <div className="flex-1 min-w-0 text-sm leading-relaxed text-gray-700">
-          {comment.title && isHovered && (
-            <div className="mb-1 font-medium text-gray-900 break-words">{comment.title}</div>
-          )}
-          <div className="break-words">{displayText}</div>
+          <div className="break-words prose prose-sm max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              components={{
+                a: ({ node, ...props }) => (
+                  <a
+                    {...props}
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                ),
+                p: ({ children }) => <div className="mb-1 last:mb-0">{children}</div>,
+              }}
+            >
+              {displayText}
+            </ReactMarkdown>
+          </div>
           
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (

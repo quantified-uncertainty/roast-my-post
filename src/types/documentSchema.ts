@@ -13,7 +13,6 @@ export type Highlight = z.infer<typeof HighlightSchema>;
 
 // Schema for document comment
 export const CommentSchema = z.object({
-  title: z.string(),
   description: z.string(),
   importance: z.number().optional(),
   grade: z.number().optional(),

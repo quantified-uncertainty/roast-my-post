@@ -153,8 +153,7 @@ Line 5 has the final content.`;
 
     // Verify comment details
     commentResult.outputs.comments.forEach((comment, index) => {
-      console.log(`Comment ${index + 1}: "${comment.title}"`);
-      expect(comment.title).toBe(analysisResult.outputs.commentInsights[index].title);
+      console.log(`Comment ${index + 1}: "${comment.description.substring(0, 50)}..."`);
       expect(comment.description).toBe(analysisResult.outputs.commentInsights[index].suggestedComment);
       expect(comment.highlight).toBeDefined();
       expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
@@ -293,7 +292,7 @@ Line 5 has the final content.`;
 
     // Should get 2 valid comments, skipping the invalid one
     expect(commentResult.outputs.comments).toHaveLength(2);
-    expect(commentResult.outputs.comments[0].title).toBe("Valid Comment");
-    expect(commentResult.outputs.comments[1].title).toBe("Another Valid");
+    expect(commentResult.outputs.comments[0].description).toBe("Good comment");
+    expect(commentResult.outputs.comments[1].description).toBe("Another good comment");
   });
 });

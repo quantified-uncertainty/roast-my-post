@@ -80,7 +80,7 @@ export function HighlightedMarkdown({
         highlights.forEach((highlight, index) => {
           const { startOffset, endOffset, quotedText } = highlight.highlight;
           console.log(`[HighlightedMarkdown] Highlight ${index}:`, {
-            title: highlight.title,
+            description: highlight.description,
             startOffset,
             endOffset,
             quotedTextPreview: quotedText

@@ -160,7 +160,8 @@ export function applyHighlightsToContainer(
 
   for (const comment of validHighlights) {
     const { quotedText } = comment.highlight;
-    const color = colorMap[comment.title] || "#ffeb3b";
+    const description = comment.description;
+    const color = colorMap[description] || "#ffeb3b";
 
     try {
       // Find text nodes that contain our highlight
@@ -179,7 +180,7 @@ export function applyHighlightsToContainer(
         node,
         nodeOffset,
         nodeOffset + highlightLength,
-        comment.title,
+        description,
         color
       );
 
@@ -245,7 +246,7 @@ export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
     if (!hasOverlap) {
       fixed.push(comment);
     } else {
-      console.warn(`Removing overlapping highlight: ${comment.title}`);
+      console.warn(`Removing overlapping highlight: ${comment.description}`);
     }
   }
 
@@ -263,7 +264,7 @@ export function validateHighlights(review: Evaluation): {
 
   for (const comment of review.comments) {
     if (!comment.highlight.isValid) {
-      errors.push(`Invalid highlight for comment: ${comment.title}`);
+      errors.push(`Invalid highlight for comment: ${comment.description}`);
     }
   }
 

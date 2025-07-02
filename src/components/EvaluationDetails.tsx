@@ -16,7 +16,6 @@ export type EvaluationTab = "analysis" | "summary" | "comments" | "selfCritique"
 
 interface Comment {
   id: string;
-  title: string;
   description: string;
   importance?: number | null;
   grade?: number | null;
@@ -149,9 +148,6 @@ export function EvaluationDetails({
                   className="rounded-lg border border-gray-200 p-4"
                 >
                   <div className="mb-2 flex items-center justify-between">
-                    <h4 className="font-medium text-gray-900">
-                      {comment.title}
-                    </h4>
                     <div className="flex items-center space-x-2">
                       {comment.grade && <GradeBadge grade={comment.grade} />}
                       {comment.importance && (

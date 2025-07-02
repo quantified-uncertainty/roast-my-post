@@ -192,6 +192,12 @@ Before deploying a new agent:
 - Check that text ranges are valid
 - Review sample documents for highlighting examples
 
+**Comment structure note:**
+- Comments no longer have separate title fields
+- Each comment's description should begin with a clear, concise statement
+- This opening statement serves as a summary (like a title would)
+- Follow with detailed explanation in the rest of the description
+
 **Grades are inconsistent:**
 - Refine grading rubric with specific criteria
 - Add examples of different grade levels

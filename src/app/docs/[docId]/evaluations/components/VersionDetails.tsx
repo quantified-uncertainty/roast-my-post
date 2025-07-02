@@ -61,7 +61,6 @@ export function VersionDetails({
       selfCritique: selectedVersion.selfCritique,
       comments: selectedVersion.comments.map((comment, index) => ({
         id: `comment-${index}`,
-        title: comment.title,
         description: comment.description,
         importance: comment.importance || null,
         grade: comment.grade || null,
@@ -214,9 +213,6 @@ export function VersionDetails({
                 key={index}
                 className="rounded-lg border border-gray-200 bg-white p-4"
               >
-                <div className="mb-2 flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">{comment.title}</h4>
-                </div>
                 <div className="prose max-w-none">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}

@@ -1,7 +1,4 @@
-import type {
-  Comment,
-  Highlight,
-} from "../../../types/documentSchema";
+import type { Comment, Highlight } from "../../../types/documentSchema";
 import {
   fixOverlappingHighlights,
   highlightsOverlap,
@@ -63,7 +60,6 @@ describe("UI Helper Functions", () => {
   test("fixes overlapping highlights", () => {
     const comments: Comment[] = [
       {
-        title: "First",
         description: "First comment",
         importance: 5,
         highlight: {
@@ -75,7 +71,6 @@ describe("UI Helper Functions", () => {
         isValid: true,
       },
       {
-        title: "Overlapping",
         description: "Overlapping comment",
         importance: 5,
         highlight: {
@@ -87,7 +82,6 @@ describe("UI Helper Functions", () => {
         isValid: true,
       },
       {
-        title: "Separate",
         description: "Separate comment",
         importance: 5,
         highlight: {
@@ -103,7 +97,7 @@ describe("UI Helper Functions", () => {
     const fixed = fixOverlappingHighlights(comments);
 
     expect(fixed).toHaveLength(2);
-    expect(fixed[0].title).toBe("First");
-    expect(fixed[1].title).toBe("Separate");
+    expect(fixed[0].description).toBe("First comment");
+    expect(fixed[1].description).toBe("Separate comment");
   });
 });
