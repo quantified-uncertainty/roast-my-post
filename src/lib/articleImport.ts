@@ -649,15 +649,28 @@ export function detectPlatforms(url: string): string[] {
 }
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
-  // Check if this is a LessWrong or EA Forum URL - use their APIs directly
-  if (url.includes("lesswrong.com") || url.includes("forum.effectivealtruism.org")) {
+  // Check if Firecrawl API key is available
+  if (!FIRECRAWL_API_KEY) {
+    logger.warn('⚠️ FIRECRAWL_KEY not found, using fallback method');
     return processArticleFallback(url);
   }
   
-  console.log(`📥 Fetching article from ${url} with Firecrawl...`);
+  // For LessWrong and EA Forum, try direct API first since it's faster
+  if (url.includes("lesswrong.com") || url.includes("forum.effectivealtruism.org")) {
+    try {
+      logger.info(`📚 Trying LessWrong/EA Forum direct API first...`);
+      return await processArticleFallback(url);
+    } catch (error) {
+      logger.warn('⚠️ Direct API failed, will try Firecrawl');
+      // Continue to Firecrawl below
+    }
+  }
+  
+  logger.info(`📥 Fetching article from ${url} with Firecrawl...`);
   
   try {
     // Use Firecrawl Scrape API
+    logger.info(`🔧 Calling Firecrawl API...`);
     const response = await axios.post<FirecrawlResponse>(
       'https://api.firecrawl.dev/v1/scrape',
       {
