@@ -7,6 +7,9 @@ export function middleware(request: NextRequest) {
   // Check if we're in development
   const isDev = process.env.NODE_ENV === 'development';
   
+  // Skip CSP for API routes to avoid interfering with server-side requests
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+  
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
@@ -15,20 +18,22 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()');
   
   // Content Security Policy - More restrictive for production
-  const cspDirectives = [
-    "default-src 'self'",
-    `script-src 'self' https://plausible.io ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ""}`,
-    "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Next.js
-    "img-src 'self' data: https: blob:",
-    "font-src 'self'",
-    "connect-src 'self' https://plausible.io",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "upgrade-insecure-requests"
-  ];
-  
-  response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+  if (!isApiRoute) {
+    const cspDirectives = [
+      "default-src 'self'",
+      `script-src 'self' https://plausible.io ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ""}`,
+      "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Next.js
+      "img-src 'self' data: https: blob:",
+      "font-src 'self'",
+      `connect-src 'self' https://plausible.io ${isDev ? "http://localhost:* ws://localhost:*" : ""}`,
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "upgrade-insecure-requests"
+    ];
+    
+    response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
+  }
   
   // Strict Transport Security (for HTTPS) - Extended max-age as per best practices
   if (request.nextUrl.protocol === 'https:' || !isDev) {
