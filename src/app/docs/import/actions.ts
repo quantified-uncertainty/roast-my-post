@@ -1,33 +1,29 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { importDocumentService } from "@/lib/services/documentImport";
+import { logger } from "@/lib/logger";
 
 export async function importDocument(url: string, agentIds: string[] = []) {
   try {
-    const cookieHeader = (await cookies()).toString();
-    const response = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/import`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: cookieHeader,
-        },
-        body: JSON.stringify({ url, importUrl: url, agentIds }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to import document");
+    // Get the current user session
+    const session = await auth();
+    
+    if (!session?.user?.id) {
+      throw new Error("User must be logged in to import a document");
+    }
+    
+    // Use the shared import service
+    const result = await importDocumentService(url, session.user.id, agentIds);
+    
+    if (!result.success) {
+      throw new Error(result.error || "Failed to import document");
     }
 
     revalidatePath("/docs");
-    redirect(`/docs/${data.documentId}/reader`);
+    redirect(`/docs/${result.documentId}/reader`);
   } catch (error) {
     logger.error('❌ Error importing document:', error);
     throw error;

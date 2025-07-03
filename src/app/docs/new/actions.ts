@@ -59,19 +59,33 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     // Queue evaluations if agents are selected
     if (agentIds.length > 0) {
-      const response = await fetch(
-        `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/documents/${document.id}/evaluate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ agentIds }),
-        }
-      );
+      // Get the host from the request headers to work with any port
+      const { headers } = await import("next/headers");
+      const headersList = await headers();
+      const host = headersList.get("host");
+      
+      // Construct the base URL dynamically
+      const baseUrl = process.env.NEXTAUTH_URL || 
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+        (host ? `http://${host}` : null);
+      
+      if (!baseUrl) {
+        logger.error('Unable to determine base URL for API call');
+      } else {
+        const response = await fetch(
+          `${baseUrl}/api/documents/${document.id}/evaluate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ agentIds }),
+          }
+        );
 
-      if (!response.ok) {
-        logger.error('Failed to queue evaluations:', await response.text());
+        if (!response.ok) {
+          logger.error('Failed to queue evaluations:', await response.text());
+        }
       }
     }
 
