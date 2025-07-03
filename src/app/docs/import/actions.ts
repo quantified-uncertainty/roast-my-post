@@ -27,7 +27,7 @@ export async function importDocument(url: string, agentIds: string[] = []) {
     }
 
     revalidatePath("/docs");
-    redirect(`/docs/${data.documentId}/preview`);
+    redirect(`/docs/${data.documentId}/reader`);
   } catch (error) {
     logger.error('❌ Error importing document:', error);
     throw error;

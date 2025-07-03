@@ -17,13 +17,14 @@ import { Button } from "@/components/Button";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
 
-interface ManagePageClientProps {
+interface EvaluationManagementProps {
   docId: string;
   evaluations: any[];
   availableAgents: any[];
+  isOwner: boolean;
 }
 
-export function ManagePageClient({ docId, evaluations, availableAgents }: ManagePageClientProps) {
+export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner }: EvaluationManagementProps) {
   const router = useRouter();
   const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
@@ -155,14 +156,16 @@ export function ManagePageClient({ docId, evaluations, availableAgents }: Manage
 
                       {/* Right side - Actions */}
                       <div className="flex items-center gap-2 ml-4">
-                        <button
-                          onClick={() => handleRerun(agentId)}
-                          disabled={isRunning || latestJobStatus === "PENDING" || latestJobStatus === "RUNNING"}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <ArrowPathIcon className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-                          {isRunning ? 'Running...' : 'Rerun'}
-                        </button>
+                        {isOwner && (
+                          <button
+                            onClick={() => handleRerun(agentId)}
+                            disabled={isRunning || latestJobStatus === "PENDING" || latestJobStatus === "RUNNING"}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ArrowPathIcon className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
+                            {isRunning ? 'Running...' : 'Rerun'}
+                          </button>
+                        )}
                         <Link
                           href={`/docs/${docId}/evals/${agentId}`}
                           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
@@ -254,7 +257,7 @@ export function ManagePageClient({ docId, evaluations, availableAgents }: Manage
       </div>
 
       {/* Add More Agents */}
-      {availableAgents.length > 0 && (
+      {isOwner && availableAgents.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
             Add More Agents

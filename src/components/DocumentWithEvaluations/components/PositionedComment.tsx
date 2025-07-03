@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
+
 import type { Comment } from "@/types/documentSchema";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
+import { MARKDOWN_PLUGINS, MARKDOWN_COMPONENTS } from "../config/markdown";
+import {
+  COMMENT_PADDING,
+  COMMENT_MARGIN_LEFT,
+  COMMENT_MARGIN_RIGHT,
+  COMMENT_BG_DEFAULT,
+  COMMENT_BG_HOVERED,
+  COMMENT_BORDER_HOVERED,
+  Z_INDEX_COMMENT,
+  Z_INDEX_COMMENT_HOVERED,
+} from "../constants";
 
 interface PositionedCommentProps {
   comment: Comment;
@@ -14,7 +24,6 @@ interface PositionedCommentProps {
   isVisible: boolean;
   isSelected: boolean;
   isHovered: boolean;
-  colorMap: { background: string; color: string };
   onHover: (tag: string | null) => void;
   onClick: (tag: string) => void;
   agentName: string;
@@ -28,7 +37,6 @@ export function PositionedComment({
   isVisible,
   isSelected,
   isHovered,
-  colorMap,
   onHover,
   onClick,
   agentName,
@@ -45,62 +53,40 @@ export function PositionedComment({
       style={{
         position: "absolute",
         top: `${position}px`,
-        left: "20px",
-        right: "20px",
-        padding: "8px",
-        transition: skipAnimation ? "none" : "opacity 0.2s ease-out, background-color 0.2s ease-out",
+        left: `${COMMENT_MARGIN_LEFT}px`,
+        right: `${COMMENT_MARGIN_RIGHT}px`,
+        padding: `${COMMENT_PADDING}px`,
+        transition: skipAnimation
+          ? "none"
+          : "opacity 0.2s ease-out, background-color 0.2s ease-out",
         cursor: "pointer",
-        zIndex: isHovered ? 20 : 10,
+        zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: "white",
-        boxShadow: isHovered ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "0 1px 2px rgba(0, 0, 0, 0.05)",
-        borderRadius: "6px",
-        border: isHovered ? "1px solid #e5e7eb" : "1px solid #f3f4f6",
+        backgroundColor: isHovered ? COMMENT_BG_HOVERED : COMMENT_BG_DEFAULT,
+        borderRadius: "8px",
+        border: isHovered ? `1px solid ${COMMENT_BORDER_HOVERED}` : "none",
+        boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
       }}
       onClick={() => onClick(tag)}
       onMouseEnter={() => onHover(tag)}
       onMouseLeave={() => onHover(null)}
     >
-      <div className="flex items-start gap-2">
-        {/* Comment number indicator */}
-        <div
-          className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: colorMap.background,
-            color: colorMap.color,
-          }}
-        >
-          {index + 1}
-        </div>
-        
+      <div className="flex items-start">
         {/* Comment text */}
-        <div className="flex-1 min-w-0 text-sm leading-relaxed text-gray-700">
-          <div className="break-words prose prose-sm max-w-none">
+        <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
+          <div className="prose prose-sm max-w-none break-words">
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
-              components={{
-                a: ({ node, ...props }) => (
-                  <a
-                    {...props}
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  />
-                ),
-                p: ({ children }) => <div className="mb-1 last:mb-0">{children}</div>,
-              }}
+              {...MARKDOWN_PLUGINS}
+              components={MARKDOWN_COMPONENTS}
             >
               {displayText}
             </ReactMarkdown>
           </div>
-          
+
           {/* Agent name */}
-          <div className="mt-1 text-xs text-gray-500">
-            {agentName}
-          </div>
-          
+          <div className="mt-1 text-xs text-gray-400">{agentName}</div>
+
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">

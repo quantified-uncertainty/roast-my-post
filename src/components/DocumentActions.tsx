@@ -8,7 +8,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "./Button";
-import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/preview/actions";
+import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/reader/actions";
 
 interface DocumentActionsProps {
   docId: string;

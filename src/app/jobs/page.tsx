@@ -87,7 +87,7 @@ export default async function JobsPage() {
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   <Link
-                    href={`/docs/${job.evaluation.document.id}/preview`}
+                    href={`/docs/${job.evaluation.document.id}/reader`}
                     className="text-blue-600 hover:text-blue-800"
                   >
                     {job.evaluation.document.id.substring(0, 8)}...

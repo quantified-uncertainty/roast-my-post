@@ -1,23 +1,55 @@
 import { formatDistanceToNow } from "date-fns";
+// @ts-ignore - No types available for markdown-truncate
+import truncateMarkdown from "markdown-truncate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import {
-  DocumentEvaluationSidebar,
-} from "@/components/DocumentEvaluationSidebar";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { DocumentActions } from "@/components/DocumentActions";
+import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
+import { MarkdownRenderer } from "@/components/DocumentWithEvaluations/components/MarkdownRenderer";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
-import { ReuploadButton } from "@/components/ReuploadButton";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { DocumentModel } from "@/models/Document";
 import {
+  ArrowTopRightOnSquareIcon,
+  BookOpenIcon,
   PlusIcon,
-  PencilIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronRightIcon } from "@heroicons/react/24/solid";
-import { DocumentActions } from "@/components/DocumentActions";
-import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { EvaluationManagement } from "./components/EvaluationManagement";
+
+async function getAvailableAgents(docId: string) {
+  // Get all agents that don't have evaluations for this document yet
+  const existingEvaluations = await prisma.evaluation.findMany({
+    where: { documentId: docId },
+    select: { agentId: true },
+  });
+
+  const existingAgentIds = existingEvaluations.map((e) => e.agentId);
+
+  const agents = await prisma.agent.findMany({
+    where: {
+      id: { notIn: existingAgentIds },
+    },
+    include: {
+      versions: {
+        orderBy: { version: "desc" },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return agents.map((agent) => ({
+    id: agent.id,
+    name: agent.versions[0]?.name || "Unknown Agent",
+    description: agent.versions[0]?.description || undefined,
+    purpose: undefined,
+  }));
+}
 
 export default async function DocumentPage({
   params,
@@ -57,36 +89,47 @@ export default async function DocumentPage({
       : `${Math.round(fileSizeKB)} KB`;
 
   // Transform reviews to match the expected Evaluation interface
-  const evaluations = document.reviews?.map(review => ({
-    id: review.id,
-    agentId: review.agent.id,
-    agent: {
-      name: review.agent.name,
-      versions: [{
-        name: review.agent.name
-      }]
-    },
-    versions: review.versions?.map(version => ({
-      grade: version.grade,
-      job: review.jobs?.[0] ? {
-        status: review.jobs[0].status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
-      } : undefined
-    })),
-    jobs: review.jobs?.map(job => ({
-      status: job.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
-    }))
-  })) || [];
+  const evaluations =
+    document.reviews?.map((review) => ({
+      id: review.id,
+      agentId: review.agent.id,
+      agent: {
+        name: review.agent.name,
+        versions: [
+          {
+            name: review.agent.name,
+          },
+        ],
+      },
+      versions: review.versions?.map((version) => ({
+        grade: version.grade,
+        job: review.jobs?.[0]
+          ? {
+              status: review.jobs[0].status as
+                | "PENDING"
+                | "RUNNING"
+                | "COMPLETED"
+                | "FAILED",
+            }
+          : undefined,
+      })),
+      jobs: review.jobs?.map((job) => ({
+        status: job.status as "PENDING" | "RUNNING" | "COMPLETED" | "FAILED",
+      })),
+    })) || [];
+
+  const availableAgents = await getAvailableAgents(docId);
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
       {/* Full-width breadcrumbs */}
-      <BreadcrumbHeader 
+      <BreadcrumbHeader
         items={[
-          { label: "Home", href: "/" },
-          { label: document.title || "Untitled Document" }
+          { label: document.title || "Untitled Document" },
+          { label: "Overview" },
         ]}
       />
-      
+
       {/* Sidebar and content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Document/Evaluation Switcher Sidebar */}
@@ -100,11 +143,11 @@ export default async function DocumentPage({
           {/* Full-width Header */}
           <PageHeader
             title={document.title || "Untitled Document"}
-            subtitle="Document Preview"
+            subtitle="Document Overview"
           >
             {isOwner && (
-              <DocumentActions 
-                docId={docId} 
+              <DocumentActions
+                docId={docId}
                 document={{ importUrl: document.importUrl }}
               />
             )}
@@ -117,19 +160,22 @@ export default async function DocumentPage({
                 {/* Document Preview Card */}
                 <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-6 text-lg font-semibold text-gray-900">
-                    Executive Summary
+                    Document Opening
                   </h2>
 
                   <div className="prose prose-gray max-w-none">
-                    <div className="leading-relaxed text-gray-700">
-                      {document.content ? (
-                        <p>{document.content.substring(0, 500)}...</p>
-                      ) : (
-                        <p className="italic text-gray-500">
-                          No content available
-                        </p>
-                      )}
-                    </div>
+                    {document.content ? (
+                      <MarkdownRenderer className="leading-relaxed text-gray-700">
+                        {truncateMarkdown(document.content, {
+                          limit: 500,
+                          ellipsis: true,
+                        })}
+                      </MarkdownRenderer>
+                    ) : (
+                      <p className="italic text-gray-500">
+                        No content available
+                      </p>
+                    )}
 
                     <p className="mt-4 text-sm text-gray-500">
                       Blog Post • First paragraph preview
@@ -144,139 +190,32 @@ export default async function DocumentPage({
                         rel="noopener noreferrer"
                         className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
                       >
-                        <svg
-                          className="mr-2 h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
+                        <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
                         Go to source
                       </a>
                     ) : (
                       <Link
-                        href={`/docs/${docId}/preview`}
+                        href={`/docs/${docId}/reader`}
                         className="inline-flex items-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
                       >
-                        <svg
-                          className="mr-2 h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
+                        <BookOpenIcon className="mr-2 h-4 w-4" />
                         View full document
                       </Link>
                     )}
-                    <button className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                      <svg
-                        className="mr-2 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      Preview
-                    </button>
+                    <Link
+                      href={`/docs/${docId}/reader`}
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      <BookOpenIcon className="mr-2 h-4 w-4" />
+                      Reader View
+                    </Link>
                   </div>
-                </div>
-
-                {/* AI Evaluations Card */}
-                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                    AI Evaluations
-                  </h2>
-                  <p className="mb-6 text-sm text-gray-600">
-                    Analysis results from different AI evaluation models
-                  </p>
-
-                  {document.reviews && document.reviews.length > 0 ? (
-                    <div className="space-y-3">
-                      {document.reviews.map((evaluation, index) => (
-                        <Link
-                          key={evaluation.agentId || `agent-${index}`}
-                          href={`/docs/${docId}/evals/${evaluation.agentId}`}
-                          className="group block"
-                        >
-                          <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-all hover:border-gray-300 hover:shadow-sm">
-                            <div className="flex-1">
-                              <div className="mb-1 flex items-center gap-3">
-                                <h3 className="font-medium text-gray-900">
-                                  {evaluation.agent?.name || "Unknown Agent"}
-                                </h3>
-                                {evaluation.versions &&
-                                  evaluation.versions.length > 1 && (
-                                    <span className="text-xs text-gray-500">
-                                      {evaluation.versions.length} versions
-                                    </span>
-                                  )}
-                              </div>
-                              <p className="line-clamp-2 text-sm text-gray-600">
-                                {evaluation.summary || "No summary available"}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <GradeBadge
-                                grade={evaluation.grade ?? null}
-                                variant="light"
-                                size="sm"
-                              />
-                              <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center">
-                      <p className="mb-4 text-gray-500">No evaluations yet</p>
-                      {isOwner && (
-                        <Link
-                          href={`/docs/${docId}/evaluations`}
-                          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          <PlusIcon className="mr-2 h-4 w-4" />
-                          Add Evaluation
-                        </Link>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Right Sidebar */}
               <div className="lg:col-span-1">
-                <div className="sticky top-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                   <h2 className="mb-6 text-lg font-semibold text-gray-900">
                     Document Information
                   </h2>
@@ -375,28 +314,18 @@ export default async function DocumentPage({
                       </div>
                     )}
                   </dl>
-
-                  {isOwner && (
-                    <div className="mt-6 border-t border-gray-200 pt-6">
-                      <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                        Editor Actions
-                      </h3>
-                      <div className="space-y-2">
-                        {document.importUrl && (
-                          <ReuploadButton docId={docId} />
-                        )}
-                        <Link
-                          href={`/docs/${docId}/evaluations`}
-                          className="inline-flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                        >
-                          <PlusIcon className="mr-2 h-4 w-4" />
-                          Add Evaluation
-                        </Link>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
+            </div>
+
+            {/* Evaluation Management Section */}
+            <div className="mt-8">
+              <EvaluationManagement
+                docId={docId}
+                evaluations={document.reviews || []}
+                availableAgents={availableAgents}
+                isOwner={isOwner}
+              />
             </div>
           </div>
         </div>

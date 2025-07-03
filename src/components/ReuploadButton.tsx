@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
-import { reuploadDocument } from "@/app/docs/[docId]/preview/actions";
+import { reuploadDocument } from "@/app/docs/[docId]/reader/actions";
 
 interface ReuploadButtonProps {
   docId: string;
