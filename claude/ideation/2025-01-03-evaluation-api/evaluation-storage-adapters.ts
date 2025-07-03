@@ -441,7 +441,10 @@ export function createStorageMiddleware(
   evaluator: Evaluator,
   storage: StorageAdapter
 ) {
-  return async (req: any, res: any) => {
+  return async (req: { body: { documentId: string; agentId: string } }, res: {
+    status: (code: number) => { json: (data: any) => void };
+    json: (data: any) => void;
+  }) => {
     const { documentId, agentId } = req.body;
     
     // Load from storage
