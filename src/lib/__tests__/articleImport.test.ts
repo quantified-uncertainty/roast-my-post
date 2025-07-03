@@ -1,10 +1,4 @@
 import { jest } from "@jest/globals";
-import {
-  extractContent,
-  convertToMarkdown,
-  processArticle,
-  createCleanDOM,
-} from "../articleImport";
 import { JSDOM } from "jsdom";
 import axios from "axios";
 
@@ -12,8 +6,29 @@ import axios from "axios";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+// Set environment variable before importing the module
+const originalEnv = process.env.FIRECRAWL_KEY;
+process.env.FIRECRAWL_KEY = 'test-firecrawl-key';
+
+// Import after setting env var
+import {
+  extractContent,
+  convertToMarkdown,
+  processArticle,
+  createCleanDOM,
+} from "../articleImport";
+
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+afterAll(() => {
+  // Restore original environment
+  if (originalEnv !== undefined) {
+    process.env.FIRECRAWL_KEY = originalEnv;
+  } else {
+    delete process.env.FIRECRAWL_KEY;
+  }
 });
 
 describe("articleImport", () => {

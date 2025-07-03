@@ -136,8 +136,37 @@ When adding conditional features (like re-upload button):
 - Ensure the feature logic uses the correct field
 - Update error messages to be descriptive of the actual requirement
 
-## Shell Issues
-- If basic commands fail with `_safe_eval` errors, use full paths: `/bin/rm`, `/bin/ls`, `/bin/mv`
+## Shell Issues (SCM Breeze Conflicts)
+
+### The Problem
+The user has SCM Breeze installed which causes `exec_scmb_expand_args:3: command not found: _safe_eval` errors when:
+- Using heredoc syntax (`<< 'EOF'`)
+- Creating multi-line strings
+- Using command substitution with complex commands
+- Writing to files with echo/cat
+
+### Workarounds
+1. **For file operations**: Use full paths: `/bin/rm`, `/bin/ls`, `/bin/mv`, `/bin/cat`, `/bin/echo`
+2. **For git commits**: Use single-line `-m` flag with escaped newlines or direct multi-line strings
+3. **NEVER use**:
+   - Heredoc syntax: `cat << 'EOF'`
+   - Command substitution with heredoc: `$(cat << 'EOF')`
+   - Temp files for commit messages
+
+### Git Commit Best Practice
+Always use direct git commit with the full message:
+```bash
+/usr/bin/git commit -m "Title here
+
+- Bullet point 1
+- Bullet point 2
+
+Detailed explanation.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
 
 ## Project Overview
 "RoastMyPost" - AI-powered document annotation and evaluation platform

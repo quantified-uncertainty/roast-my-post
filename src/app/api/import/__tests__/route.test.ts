@@ -213,7 +213,7 @@ describe("POST /api/import", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain("Failed to extract content");
+    expect(data.error).toContain("Failed to fetch article");
   });
 
   it("should continue creating evaluations even if one fails", async () => {
