@@ -21,7 +21,9 @@ export function middleware(request: NextRequest) {
   if (!isApiRoute) {
     const cspDirectives = [
       "default-src 'self'",
-      `script-src 'self' https://plausible.io ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ""}`,
+      // Next.js requires 'unsafe-inline' and 'unsafe-eval' for its runtime
+      // In production, we still need these for Next.js to function properly
+      `script-src 'self' https://plausible.io 'unsafe-inline' 'unsafe-eval'`,
       "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Next.js
       "img-src 'self' data: https: blob:",
       "font-src 'self'",
