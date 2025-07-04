@@ -34,10 +34,10 @@ export default function HelpLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="sticky top-0 h-screen w-64 overflow-y-auto bg-white shadow-sm">
+    <div className="flex flex-1 bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0">
+        <div className="sticky top-0 h-full overflow-y-auto bg-white shadow-sm">
           <div className="flex h-full flex-col">
             <div className="flex h-16 items-center px-4">
               <Link href="/" className="text-lg font-semibold text-gray-900">
@@ -73,15 +73,15 @@ export default function HelpLayout({
             </nav>
           </div>
         </div>
+      </div>
 
-        {/* Main content */}
-        <div className="flex-1 pl-64">
-          <main className="py-8">
-            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
-          </main>
-        </div>
+      {/* Main content */}
+      <div className="flex-1">
+        <main className="py-8">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
