@@ -45,7 +45,6 @@ type DocumentWithRelations = {
         id: string;
         version: number;
         name: string;
-        agentType: string;
         description: string;
         primaryInstructions: string;
         selfCritiqueInstructions: string | null;
@@ -255,7 +254,6 @@ export class DocumentModel {
             name: evaluation.agent.versions[0].name,
             version: evaluation.agent.versions[0].version.toString(),
             description: evaluation.agent.versions[0].description,
-            purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
             primaryInstructions:
               evaluation.agent.versions[0].primaryInstructions,
             selfCritiqueInstructions:
@@ -378,7 +376,6 @@ export class DocumentModel {
             name: evaluation.agent.versions[0].name,
             version: evaluation.agent.versions[0].version.toString(),
             description: evaluation.agent.versions[0].description,
-            purpose: evaluation.agent.versions[0].agentType.toLowerCase(),
             primaryInstructions:
               evaluation.agent.versions[0].primaryInstructions || undefined,
             selfCritiqueInstructions:
