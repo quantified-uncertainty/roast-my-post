@@ -93,12 +93,12 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a
+                <Link
                   href="/agents/readme"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   Agent Documentation
-                </a>
+                </Link>
               </li>
               <li>
                 <a
