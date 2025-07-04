@@ -61,7 +61,9 @@ export default function ClientLayout({
         ) : (
           <div className="min-h-full flex flex-col">
             <div className="flex-1">{children}</div>
-            <Footer />
+            <div className="bg-gray-100 pt-12">
+              <Footer />
+            </div>
           </div>
         )}
       </main>

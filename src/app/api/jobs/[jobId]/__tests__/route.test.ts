@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -12,7 +12,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -25,10 +25,10 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -36,11 +36,11 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return 404 if job not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(404);
     const data = await response.json();
@@ -48,7 +48,7 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return 403 if user does not own the job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockJob = {
       id: mockJobId,
@@ -60,7 +60,7 @@ describe('GET /api/jobs/[jobId]', () => {
     (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(403);
     const data = await response.json();
@@ -68,7 +68,7 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for pending job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockJob = {
       id: mockJobId,
@@ -85,7 +85,7 @@ describe('GET /api/jobs/[jobId]', () => {
     (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -98,7 +98,7 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for completed job with evaluation', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockJob = {
       id: mockJobId,
@@ -119,7 +119,7 @@ describe('GET /api/jobs/[jobId]', () => {
     (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -133,7 +133,7 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should return job details for failed job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockJob = {
       id: mockJobId,
@@ -150,7 +150,7 @@ describe('GET /api/jobs/[jobId]', () => {
     (prisma.job.findUnique as jest.Mock).mockResolvedValueOnce(mockJob);
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -164,11 +164,11 @@ describe('GET /api/jobs/[jobId]', () => {
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.job.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/jobs/${mockJobId}`);
-    const response = await GET(request, { params: { jobId: mockJobId } });
+    const response = await GET(request, { params: Promise.resolve({ jobId: mockJobId }) });
     
     expect(response.status).toBe(500);
     const data = await response.json();

@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -12,7 +12,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -25,10 +25,10 @@ describe('GET /api/agents/[agentId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -36,7 +36,7 @@ describe('GET /api/agents/[agentId]', () => {
   });
 
   it('should return agent details when agent exists', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockAgent = {
       id: mockAgentId,
@@ -66,7 +66,7 @@ describe('GET /api/agents/[agentId]', () => {
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -101,11 +101,11 @@ describe('GET /api/agents/[agentId]', () => {
   });
 
   it('should return 404 when agent not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(404);
     const data = await response.json();
@@ -113,7 +113,7 @@ describe('GET /api/agents/[agentId]', () => {
   });
 
   it('should handle archived agents', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const archivedAgent = {
       id: mockAgentId,
@@ -125,7 +125,7 @@ describe('GET /api/agents/[agentId]', () => {
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(archivedAgent);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     // Should still return archived agents
     expect(response.status).toBe(200);
@@ -134,11 +134,11 @@ describe('GET /api/agents/[agentId]', () => {
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.agent.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(500);
     const data = await response.json();

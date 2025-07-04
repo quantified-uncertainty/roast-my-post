@@ -1,7 +1,7 @@
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -19,7 +19,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -31,10 +31,10 @@ describe('GET /api/agents', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/agents');
-    const response = await GET(request);
+    const response = await GET();
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -42,7 +42,7 @@ describe('GET /api/agents', () => {
   });
 
   it('should return all non-archived agents', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockAgents = [
       {
@@ -80,7 +80,7 @@ describe('GET /api/agents', () => {
     (prisma.agent.findMany as jest.Mock).mockResolvedValueOnce(mockAgents);
 
     const request = new NextRequest('http://localhost:3000/api/agents');
-    const response = await GET(request);
+    const response = await GET();
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -114,7 +114,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
@@ -127,7 +127,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest('http://localhost:3000/api/agents', {
       method: 'PUT',
@@ -140,7 +140,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should create a new agent when no ID provided', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const newAgent = {
       id: 'new-agent-id',
@@ -177,7 +177,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should update existing agent and create new version', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const existingAgent = {
       id: 'agent-123',
@@ -226,7 +226,7 @@ describe('PUT /api/agents', () => {
   });
 
   it('should prevent updating agents owned by other users', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const existingAgent = {
       id: 'agent-123',

@@ -1,7 +1,7 @@
 import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -16,7 +16,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -29,7 +29,7 @@ describe('GET /api/documents/[slugOrId]', () => {
   });
 
   it('should not require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
     
     const mockDocument = {
       id: mockDocId,
@@ -48,7 +48,7 @@ describe('GET /api/documents/[slugOrId]', () => {
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
-    const response = await GET(request, { params: { slugOrId: mockDocId } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -67,7 +67,7 @@ describe('GET /api/documents/[slugOrId]', () => {
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
-    const response = await GET(request, { params: { slugOrId: mockDocId } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
     expect(prisma.document.findFirst).toHaveBeenCalledWith({
@@ -106,7 +106,7 @@ describe('GET /api/documents/[slugOrId]', () => {
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockSlug}`);
-    const response = await GET(request, { params: { slugOrId: mockSlug } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockSlug }) });
     
     expect(response.status).toBe(200);
     expect(prisma.document.findFirst).toHaveBeenCalledWith({
@@ -124,7 +124,7 @@ describe('GET /api/documents/[slugOrId]', () => {
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/non-existent`);
-    const response = await GET(request, { params: { slugOrId: 'non-existent' } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: 'non-existent' }) });
     
     expect(response.status).toBe(404);
     const data = await response.json();
@@ -141,7 +141,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -149,12 +149,12 @@ describe('PUT /api/documents/[slugOrId]', () => {
       body: JSON.stringify({ title: 'Updated Title' }),
     });
     
-    const response = await PUT(request, { params: { slugOrId: mockDocId } });
+    const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(401);
   });
 
   it('should update document and create new version', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const existingDoc = {
       id: mockDocId,
@@ -194,7 +194,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
       }),
     });
     
-    const response = await PUT(request, { params: { slugOrId: mockDocId } });
+    const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(200);
     
     expect(prisma.documentVersion.create).toHaveBeenCalledWith({
@@ -216,7 +216,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should prevent updating documents owned by others', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const existingDoc = {
       id: mockDocId,
@@ -232,7 +232,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
       body: JSON.stringify({ title: 'Updated Title' }),
     });
     
-    const response = await PUT(request, { params: { slugOrId: mockDocId } });
+    const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(403);
     
     const data = await response.json();

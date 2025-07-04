@@ -1,7 +1,7 @@
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -18,7 +18,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
@@ -31,27 +31,27 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
-    const response = await GET(request, { params: { slugOrId: mockDocId } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(401);
   });
 
   it('should return 404 if document not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
-    const response = await GET(request, { params: { slugOrId: mockDocId } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'Document not found' });
   });
 
   it('should return evaluations for document', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: mockDocId });
     
     const mockEvaluations = [
@@ -84,7 +84,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
     (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce(mockEvaluations);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
-    const response = await GET(request, { params: { slugOrId: mockDocId } });
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(mockEvaluations);
@@ -113,7 +113,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
@@ -121,12 +121,12 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       body: JSON.stringify({ agentId: 'agent-123' }),
     });
     
-    const response = await POST(request, { params: { slugOrId: mockDocId } });
+    const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(401);
   });
 
   it('should validate request body', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
@@ -134,12 +134,12 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       body: JSON.stringify({ invalidField: 'value' }),
     });
     
-    const response = await POST(request, { params: { slugOrId: mockDocId } });
+    const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(400);
   });
 
   it('should create evaluation job', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ 
       id: mockDocId,
       currentVersionId: 'version-123',
@@ -159,7 +159,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       body: JSON.stringify({ agentId: 'agent-123' }),
     });
     
-    const response = await POST(request, { params: { slugOrId: mockDocId } });
+    const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(201);
     
     const data = await response.json();

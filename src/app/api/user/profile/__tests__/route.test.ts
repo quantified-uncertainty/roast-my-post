@@ -1,7 +1,7 @@
 import { PATCH } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '../../../../../auth';
+import { auth } from '@/lib/auth';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -12,7 +12,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('../../../../../auth', () => ({
+jest.mock('@/lib/auth', () => ({
   auth: jest.fn(),
 }));
 

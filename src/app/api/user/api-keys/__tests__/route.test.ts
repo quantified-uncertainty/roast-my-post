@@ -1,7 +1,7 @@
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequestSessionFirst } from '@/lib/auth';
+import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
 import crypto from 'crypto';
 
 // Mock dependencies
@@ -14,7 +14,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
@@ -32,10 +32,10 @@ describe('GET /api/user/api-keys', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
-    const response = await GET(request);
+    const response = await GET();
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -43,7 +43,7 @@ describe('GET /api/user/api-keys', () => {
   });
 
   it('should return user API keys', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockApiKeys = [
       {
@@ -65,7 +65,7 @@ describe('GET /api/user/api-keys', () => {
     (prisma.apiKey.findMany as jest.Mock).mockResolvedValueOnce(mockApiKeys);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
-    const response = await GET(request);
+    const response = await GET();
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -94,7 +94,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: null });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
@@ -107,7 +107,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
@@ -120,7 +120,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should create a new API key', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockKey = 'rmp_sk_live_1234567890';
     const mockHashedKey = 'hashed_key_value';
@@ -177,7 +177,7 @@ describe('POST /api/user/api-keys', () => {
   });
 
   it('should create API key with expiration date', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: mockUser });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     (crypto.randomBytes as jest.Mock).mockReturnValueOnce({
       toString: () => '1234567890',
