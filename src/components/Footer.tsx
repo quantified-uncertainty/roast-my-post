@@ -137,19 +137,16 @@ export default function Footer() {
                 </div>
               </a>
             </div>
-            <div className="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
-              <p className="text-sm text-gray-500">
-                {new Date().getFullYear()} Quantified Uncertainty Research Institute
-              </p>
-              <div className="flex space-x-4 text-sm text-gray-500">
-                <Link href="/privacy" className="hover:text-gray-700">
-                  Privacy Policy
-                </Link>
-                <span>·</span>
-                <Link href="/terms" className="hover:text-gray-700">
-                  Terms of Service
-                </Link>
-              </div>
+            <div className="text-sm text-gray-500">
+              <span>{new Date().getFullYear()} Quantified Uncertainty Research Institute</span>
+              <span className="mx-2">·</span>
+              <Link href="/privacy" className="hover:text-gray-700">
+                Privacy Policy
+              </Link>
+              <span className="mx-2">·</span>
+              <Link href="/terms" className="hover:text-gray-700">
+                Terms of Service
+              </Link>
             </div>
           </div>
         </div>

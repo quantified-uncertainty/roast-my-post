@@ -2,6 +2,7 @@
 
 import { Bot } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
@@ -13,6 +14,9 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isReaderPage = pathname?.includes('/reader');
+
   return (
     <div className="h-full flex flex-col">
       {/* Header (always visible at the top) */}
@@ -52,10 +56,14 @@ export default function ClientLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto">
-        <div className="min-h-full flex flex-col">
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </div>
+        {isReaderPage ? (
+          children
+        ) : (
+          <div className="min-h-full flex flex-col">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        )}
       </main>
     </div>
   );
