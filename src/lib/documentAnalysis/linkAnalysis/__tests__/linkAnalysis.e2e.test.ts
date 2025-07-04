@@ -15,7 +15,6 @@ const mockAgent: Agent = {
   id: "test-agent",
   name: "Test Link Analyzer",
   version: "1",
-  purpose: "ASSESSOR",
   description: "A test agent for analyzing links in documents to validate their accessibility and correctness",
   primaryInstructions: "Analyze the provided document focusing on link validation and accessibility",
   providesGrades: true,

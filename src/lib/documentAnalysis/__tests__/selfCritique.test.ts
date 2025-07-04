@@ -35,7 +35,6 @@ describe("Self-Critique", () => {
     const mockAgent: Agent = {
       id: "test-agent",
       name: "Test Critic",
-      purpose: "ASSESSOR",
       description: "A test agent for critiquing",
       version: "1",
       selfCritiqueInstructions: "Focus on accuracy and completeness of the evaluation.",

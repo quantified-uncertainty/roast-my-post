@@ -39,7 +39,6 @@ describe('GET /api/agents', () => {
         id: 'agent-1',
         versions: [{
           name: 'Agent One',
-          agentType: 'ASSESSOR',
           description: 'First agent',
           version: 1,
         }],
@@ -143,7 +142,6 @@ describe('PUT /api/agents', () => {
     const { agentSchema } = require('@/models/Agent');
     agentSchema.parse.mockReturnValueOnce({
       name: 'New Agent',
-      purpose: 'ASSESSOR',
       description: 'A new agent',
       primaryInstructions: 'Instructions...',
       // No agentId provided
@@ -154,7 +152,6 @@ describe('PUT /api/agents', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: 'New Agent',
-        purpose: 'ASSESSOR',
         description: 'A new agent',
         primaryInstructions: 'Instructions...',
       }),

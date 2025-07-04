@@ -166,10 +166,6 @@ export default function AgentVersionsClient({
                         <span className="font-medium">Updated:</span>{" "}
                         {formatDate(selectedVersion.updatedAt)}
                       </div>
-                      <div>
-                        <span className="font-medium">Type:</span>{" "}
-                        {selectedVersion.agentType}
-                      </div>
                     </div>
                   </div>
                 </div>

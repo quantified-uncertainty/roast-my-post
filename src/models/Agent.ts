@@ -26,7 +26,6 @@ export class AgentModel {
             create: {
               version: 1,
               name: data.name,
-              agentType: "ASSESSOR", // TODO: Remove after DB migration
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
@@ -97,7 +96,6 @@ export class AgentModel {
             create: {
               version: latestVersion + 1,
               name: data.name,
-              agentType: "ASSESSOR", // TODO: Remove after DB migration
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
