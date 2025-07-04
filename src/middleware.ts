@@ -2,13 +2,25 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+  // Generate a unique nonce for each request
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   
   // Check if we're in development
   const isDev = process.env.NODE_ENV === 'development';
   
   // Skip CSP for API routes to avoid interfering with server-side requests
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/');
+  
+  // Clone the request headers and add the nonce
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  
+  // Create response with the modified request
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
   
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -17,14 +29,15 @@ export function middleware(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()');
   
-  // Content Security Policy - More restrictive for production
+  // Content Security Policy with nonce
   if (!isApiRoute) {
     const cspDirectives = [
       "default-src 'self'",
-      // Next.js requires 'unsafe-inline' and 'unsafe-eval' for its runtime
-      // In production, we still need these for Next.js to function properly
-      `script-src 'self' https://plausible.io 'unsafe-inline' 'unsafe-eval'`,
-      "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Next.js
+      // Use nonce for scripts with strict-dynamic for Next.js
+      // strict-dynamic allows scripts loaded by trusted scripts
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://plausible.io ${isDev ? "'unsafe-eval'" : ""}`,
+      // Style still needs unsafe-inline for Next.js styled-jsx and CSS modules
+      `style-src 'self' 'unsafe-inline'`,
       "img-src 'self' data: https: blob:",
       "font-src 'self'",
       `connect-src 'self' https://plausible.io ${isDev ? "http://localhost:* ws://localhost:*" : ""}`,
