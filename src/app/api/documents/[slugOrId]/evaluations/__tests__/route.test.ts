@@ -7,14 +7,22 @@ import { authenticateRequest } from '@/lib/auth-helpers';
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     document: {
-      findFirst: jest.fn(),
+      findUnique: jest.fn(),
     },
     evaluation: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      count: jest.fn(),
+    },
+    agent: {
+      findUnique: jest.fn(),
       findMany: jest.fn(),
     },
     job: {
       create: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -58,48 +66,133 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
       {
         id: 'eval-1',
         agentId: 'agent-1',
-        summary: 'First evaluation',
-        analysis: 'Detailed analysis...',
-        overallGrade: 85,
-        createdAt: new Date('2024-01-01').toISOString(),
+        createdAt: new Date('2024-01-01'),
         agent: {
-          name: 'Agent One',
-          purpose: 'ASSESSOR',
+          versions: [{
+            name: 'Agent One',
+            description: 'First agent description',
+          }],
         },
+        versions: [{
+          id: 'eval-version-1',
+          summary: 'First evaluation',
+          analysis: 'Detailed analysis...',
+          grade: 85,
+          createdAt: new Date('2024-01-01'),
+        }],
+        jobs: [{
+          status: 'COMPLETED',
+          createdAt: new Date('2024-01-01'),
+        }],
       },
       {
         id: 'eval-2',
         agentId: 'agent-2',
-        summary: 'Second evaluation',
-        analysis: 'Different analysis...',
-        overallGrade: null,
-        createdAt: new Date('2024-01-02').toISOString(),
+        createdAt: new Date('2024-01-02'),
         agent: {
-          name: 'Agent Two',
-          purpose: 'ADVISOR',
+          versions: [{
+            name: 'Agent Two',
+            description: 'Second agent description',
+          }],
         },
+        versions: [{
+          id: 'eval-version-2',
+          summary: 'Second evaluation',
+          analysis: 'Different analysis...',
+          grade: null,
+          createdAt: new Date('2024-01-02'),
+        }],
+        jobs: [{
+          status: 'PENDING',
+          createdAt: new Date('2024-01-02'),
+        }],
       },
     ];
     
     (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce(mockEvaluations);
+    (prisma.evaluation.count as jest.Mock).mockResolvedValueOnce(2);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(mockEvaluations);
+    const data = await response.json();
+    expect(data).toEqual({
+      evaluations: [
+        {
+          id: 'eval-1',
+          agentId: 'agent-1',
+          agent: {
+            name: 'Agent One',
+            description: 'First agent description',
+          },
+          status: 'completed',
+          createdAt: '2024-01-01T00:00:00.000Z',
+          latestVersion: {
+            summary: 'First evaluation',
+            analysis: 'Detailed analysis...',
+            grade: 85,
+            createdAt: '2024-01-01T00:00:00.000Z',
+          },
+        },
+        {
+          id: 'eval-2',
+          agentId: 'agent-2',
+          agent: {
+            name: 'Agent Two',
+            description: 'Second agent description',
+          },
+          status: 'pending',
+          createdAt: '2024-01-02T00:00:00.000Z',
+          latestVersion: {
+            summary: 'Second evaluation',
+            analysis: 'Different analysis...',
+            grade: null,
+            createdAt: '2024-01-02T00:00:00.000Z',
+          },
+        },
+      ],
+      total: 2,
+    });
     
     expect(prisma.evaluation.findMany).toHaveBeenCalledWith({
       where: { documentId: mockDocId },
       include: {
         agent: {
+          include: {
+            versions: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: {
+                name: true,
+                description: true,
+              },
+            },
+          },
+        },
+        versions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
           select: {
-            name: true,
-            purpose: true,
+            id: true,
+            summary: true,
+            analysis: true,
+            grade: true,
+            createdAt: true,
+          },
+        },
+        jobs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            status: true,
+            createdAt: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
     });
   });
 });
@@ -142,16 +235,35 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce({ 
       id: mockDocId,
-      currentVersionId: 'version-123',
     });
+    
+    const mockAgent = {
+      id: 'agent-123',
+    };
+    
+    const mockEvaluation = {
+      id: 'eval-123',
+    };
     
     const mockJob = {
       id: 'job-123',
-      status: 'pending',
+      status: 'PENDING',
       createdAt: new Date(),
     };
     
-    (prisma.job.create as jest.Mock).mockResolvedValueOnce(mockJob);
+    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
+    (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+      const mockTx = {
+        evaluation: {
+          findFirst: jest.fn().mockResolvedValueOnce(null),
+          create: jest.fn().mockResolvedValueOnce(mockEvaluation),
+        },
+        job: {
+          create: jest.fn().mockResolvedValueOnce(mockJob),
+        },
+      };
+      return await callback(mockTx);
+    });
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`, {
       method: 'POST',
@@ -164,21 +276,10 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     
     const data = await response.json();
     expect(data).toEqual({
+      evaluationId: mockEvaluation.id,
       jobId: mockJob.id,
-      status: mockJob.status,
-    });
-    
-    expect(prisma.job.create).toHaveBeenCalledWith({
-      data: {
-        type: 'evaluation',
-        status: 'pending',
-        payload: {
-          documentId: mockDocId,
-          documentVersionId: 'version-123',
-          agentId: 'agent-123',
-        },
-        ownerId: mockUser.id,
-      },
+      status: 'pending',
+      created: true,
     });
   });
 });

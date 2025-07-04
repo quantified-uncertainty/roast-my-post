@@ -114,9 +114,9 @@ describe('GET /api/agents/[agentId]/jobs', () => {
         {
           id: 'job-1',
           status: 'completed',
-          createdAt: new Date('2024-01-01'),
-          completedAt: new Date('2024-01-01T00:05:00Z'),
-          startedAt: new Date('2024-01-01T00:01:00Z'),
+          createdAt: '2024-01-01T00:00:00.000Z',
+          completedAt: '2024-01-01T00:05:00.000Z',
+          startedAt: '2024-01-01T00:01:00.000Z',
           error: null,
           costInCents: 10,
           durationInSeconds: 240,
@@ -142,7 +142,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
         {
           id: 'job-2',
           status: 'pending',
-          createdAt: new Date('2024-01-02'),
+          createdAt: '2024-01-02T00:00:00.000Z',
           completedAt: null,
           startedAt: null,
           error: null,

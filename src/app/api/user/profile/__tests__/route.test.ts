@@ -93,6 +93,11 @@ describe('PATCH /api/user/profile', () => {
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: mockUserId },
       data: { name: 'Updated Name' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
     });
   });
 
@@ -112,6 +117,6 @@ describe('PATCH /api/user/profile', () => {
     expect(response.status).toBe(500);
     
     const data = await response.json();
-    expect(data.error).toBe('Failed to update user profile');
+    expect(data.error).toBe('Internal server error');
   });
 });

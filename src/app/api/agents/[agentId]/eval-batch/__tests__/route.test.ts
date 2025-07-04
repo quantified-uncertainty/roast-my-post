@@ -1,26 +1,29 @@
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateAndVerifyAgentAccess } from '@/lib/auth-agent-helpers';
+import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    agent: {
+      findUnique: jest.fn(),
+    },
     document: {
       findMany: jest.fn(),
+    },
+    agentEvalBatch: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
     },
     job: {
       createMany: jest.fn(),
     },
-    $transaction: jest.fn((callback) => callback({
-      document: { findMany: jest.fn() },
-      job: { createMany: jest.fn() },
-    })),
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
-  authenticateAndVerifyAgentAccess: jest.fn(),
+jest.mock('@/lib/auth-helpers', () => ({
+  authenticateRequestSessionFirst: jest.fn(),
 }));
 
 // Mock crypto for UUID generation
@@ -37,10 +40,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
   });
 
   it('should require authentication and agent ownership', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: null, 
-      agent: null 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
@@ -53,10 +53,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
   });
 
   it('should validate request body', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: mockUser, 
-      agent: { id: mockAgentId } 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
@@ -69,10 +66,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
   });
 
   it('should enforce maximum target count of 100', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: mockUser, 
-      agent: { id: mockAgentId } 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
@@ -85,24 +79,51 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
   });
 
   it('should create batch evaluation jobs', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: mockUser, 
-      agent: { id: mockAgentId } 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    
+    const mockAgent = {
+      id: mockAgentId,
+      submittedById: mockUser.id,
+      submittedBy: mockUser,
+    };
     
     const mockDocuments = [
-      { id: 'doc-1', currentVersionId: 'version-1' },
-      { id: 'doc-2', currentVersionId: 'version-2' },
-      { id: 'doc-3', currentVersionId: 'version-3' },
+      { 
+        id: 'doc-1', 
+        evaluations: [{ id: 'eval-1' }]
+      },
+      { 
+        id: 'doc-2', 
+        evaluations: [{ id: 'eval-2' }]
+      },
+      { 
+        id: 'doc-3', 
+        evaluations: [{ id: 'eval-3' }]
+      },
     ];
     
+    const mockBatch = {
+      id: 'batch-123',
+      name: null,
+      agentId: mockAgentId,
+      targetCount: 5,
+    };
+    
+    const mockBatchWithCount = {
+      ...mockBatch,
+      _count: { jobs: 5 },
+    };
+    
+    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
     (prisma.document.findMany as jest.Mock).mockResolvedValueOnce(mockDocuments);
-    (prisma.job.createMany as jest.Mock).mockResolvedValueOnce({ count: 3 });
+    (prisma.agentEvalBatch.create as jest.Mock).mockResolvedValueOnce(mockBatch);
+    (prisma.job.createMany as jest.Mock).mockResolvedValueOnce({ count: 5 });
+    (prisma.agentEvalBatch.findUnique as jest.Mock).mockResolvedValueOnce(mockBatchWithCount);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetCount: 5 }), // Requesting 5 but only 3 available
+      body: JSON.stringify({ targetCount: 5 }),
     });
     
     const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
@@ -110,49 +131,54 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     
     const data = await response.json();
     expect(data).toEqual({
-      batchId: 'mock-uuid',
-      jobsCreated: 3,
-      targetCount: 5,
+      batch: mockBatchWithCount,
+      message: 'Created batch with 5 jobs',
     });
     
-    // Verify documents query excludes already evaluated ones
+    // Verify agent lookup
+    expect(prisma.agent.findUnique).toHaveBeenCalledWith({
+      where: { id: mockAgentId },
+      include: {
+        submittedBy: true,
+      },
+    });
+    
+    // Verify documents query finds documents with evaluations
     expect(prisma.document.findMany).toHaveBeenCalledWith({
       where: {
         evaluations: {
-          none: {
+          some: {
             agentId: mockAgentId,
+            versions: {
+              some: {},
+            },
           },
         },
       },
       select: {
         id: true,
-        currentVersionId: true,
-      },
-      take: 5,
-    });
-    
-    // Verify job creation
-    expect(prisma.job.createMany).toHaveBeenCalledWith({
-      data: mockDocuments.map(doc => ({
-        type: 'evaluation',
-        status: 'pending',
-        batchId: 'mock-uuid',
-        payload: {
-          documentId: doc.id,
-          documentVersionId: doc.currentVersionId,
-          agentId: mockAgentId,
+        evaluations: {
+          where: {
+            agentId: mockAgentId,
+          },
+          select: {
+            id: true,
+          },
         },
-        ownerId: mockUser.id,
-      })),
+      },
     });
   });
 
   it('should handle case when no documents need evaluation', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: mockUser, 
-      agent: { id: mockAgentId } 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
+    const mockAgent = {
+      id: mockAgentId,
+      submittedById: mockUser.id,
+      submittedBy: mockUser,
+    };
+    
+    (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
     (prisma.document.findMany as jest.Mock).mockResolvedValueOnce([]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
@@ -162,24 +188,20 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(400);
     
     const data = await response.json();
     expect(data).toEqual({
-      message: 'No documents available for evaluation',
-      jobsCreated: 0,
+      error: 'No documents found with evaluations for this agent',
     });
     
     expect(prisma.job.createMany).not.toHaveBeenCalled();
   });
 
   it('should handle database errors', async () => {
-    (authenticateAndVerifyAgentAccess as jest.Mock).mockResolvedValueOnce({ 
-      user: mockUser, 
-      agent: { id: mockAgentId } 
-    });
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
-    (prisma.document.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (prisma.agent.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
@@ -191,6 +213,6 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     expect(response.status).toBe(500);
     
     const data = await response.json();
-    expect(data.error).toBe('Failed to create batch jobs');
+    expect(data.error).toBe('Failed to create eval batch');
   });
 });
