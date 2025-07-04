@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { UserModel } from "@/models/User";
 import UsersClient from "./UsersClient";
+import { PageLayout } from "@/components/PageLayout";
 
 export default async function UsersPage() {
   const session = await auth();
@@ -15,8 +16,10 @@ export default async function UsersPage() {
   }));
 
   return (
-    <div className="space-y-8">
-      <UsersClient users={usersWithAuth} />
-    </div>
+    <PageLayout>
+      <div className="space-y-8">
+        <UsersClient users={usersWithAuth} />
+      </div>
+    </PageLayout>
   );
 }

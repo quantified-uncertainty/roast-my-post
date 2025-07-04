@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
-import { authenticateRequest } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 
 export async function GET(
@@ -8,16 +7,11 @@ export async function GET(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
-    const userId = await authenticateRequest(request);
-    if (!userId) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const resolvedParams = await params;
     const { agentId } = resolvedParams;
 
-    // Verify agent exists and user has access
-    const agent = await AgentModel.getAgentWithOwner(agentId, userId);
+    // Verify agent exists (allow public access)
+    const agent = await AgentModel.getAgentWithOwner(agentId);
     if (!agent) {
       return Response.json({ error: "Agent not found" }, { status: 404 });
     }

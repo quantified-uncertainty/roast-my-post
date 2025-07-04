@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { formatDistanceToNow } from "date-fns";
 import { ApiKeyModal } from "./ApiKeyModal";
+import { PageLayout } from "@/components/PageLayout";
 
 interface ApiKey {
   id: string;
@@ -98,7 +99,7 @@ export default function ApiKeysPage() {
   };
 
   return (
-    <div>
+    <PageLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">API Keys</h1>
         <p className="mt-2 text-sm text-gray-600 flex items-center">
@@ -212,6 +213,6 @@ export default function ApiKeysPage() {
           createdKey={createdKey}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }

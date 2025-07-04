@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 
 import Link from "next/link";
+import { PageLayout } from "@/components/PageLayout";
 
 import { GradeBadge } from "@/components/GradeBadge";
 import {
@@ -103,7 +104,7 @@ export default function DocumentsClient({
   });
 
   return (
-    <div className="min-h-screen bg-white">
+    <PageLayout>
       {/* Search and View Toggle - Keep in container */}
       <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
@@ -453,6 +454,6 @@ export default function DocumentsClient({
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

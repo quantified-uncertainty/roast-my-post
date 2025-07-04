@@ -5,6 +5,7 @@ import { AgentModel } from "@/models/Agent";
 import { agentSchema } from "@/models/Agent";
 import { prisma } from "@/lib/prisma";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { ZodError } from "zod";
 
 export async function GET() {
   const dbAgents = await prisma.agent.findMany({
@@ -62,6 +63,10 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Error updating agent:', error);
+    
+    if (error instanceof ZodError) {
+      return commonErrors.badRequest("Invalid request data");
+    }
     
     if (error instanceof Error) {
       if (error.message === "Agent not found") {
