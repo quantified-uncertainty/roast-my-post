@@ -11,13 +11,10 @@ export default async function AgentPage({
 }) {
   const resolvedParams = await params;
   const session = await auth();
-  if (!session?.user) {
-    return notFound();
-  }
 
   const agent = await AgentModel.getAgentWithOwner(
     resolvedParams.agentId,
-    session.user.id
+    session?.user?.id
   );
   if (!agent) {
     return notFound();
