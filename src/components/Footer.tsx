@@ -81,6 +81,19 @@ export default function Footer() {
               </li>
               <li>
                 <a
+                  href="https://quantifieduncertainty.org/donate/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span>Donate</span>
+                </a>
+              </li>
+              <li>
+                <a
                   href="/agents/readme"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
@@ -124,9 +137,20 @@ export default function Footer() {
                 </div>
               </a>
             </div>
-            <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} Quantified Uncertainty Research Institute. All rights reserved.
-            </p>
+            <div className="flex flex-col items-center space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
+              <p className="text-sm text-gray-500">
+                {new Date().getFullYear()} Quantified Uncertainty Research Institute
+              </p>
+              <div className="flex space-x-4 text-sm text-gray-500">
+                <Link href="/privacy" className="hover:text-gray-700">
+                  Privacy Policy
+                </Link>
+                <span>·</span>
+                <Link href="/terms" className="hover:text-gray-700">
+                  Terms of Service
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
