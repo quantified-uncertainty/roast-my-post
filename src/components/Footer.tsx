@@ -35,6 +35,16 @@ export default function Footer() {
                   Settings
                 </Link>
               </li>
+              <li>
+                <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link href="/help" className="text-sm text-gray-600 hover:text-gray-900">
+                  Help & Docs
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -94,10 +104,26 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/agents/readme"
+                  href="/help/agents-humans"
                   className="text-sm text-gray-600 hover:text-gray-900"
                 >
                   Agent Documentation
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/help/api"
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  API Documentation
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/help/roadmap"
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  Roadmap
                 </Link>
               </li>
               <li>
