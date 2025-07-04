@@ -17,8 +17,8 @@ export async function GET(
     // Authenticate and verify agent access (using session auth)
     const authResult = await authenticateAndVerifyAgentAccess(request, agentId, true);
     
-    if (!authResult) {
-      return commonErrors.unauthorized();
+    if (authResult.error) {
+      return authResult.error;
     }
 
     // Build where clause for jobs

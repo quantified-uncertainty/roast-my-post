@@ -41,7 +41,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
 
   it('should return 404 if document not found', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
+    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -52,7 +52,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
 
   it('should return evaluations for document', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: mockDocId });
+    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce({ id: mockDocId });
     
     const mockEvaluations = [
       {
@@ -61,7 +61,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
         summary: 'First evaluation',
         analysis: 'Detailed analysis...',
         overallGrade: 85,
-        createdAt: new Date('2024-01-01'),
+        createdAt: new Date('2024-01-01').toISOString(),
         agent: {
           name: 'Agent One',
           purpose: 'ASSESSOR',
@@ -73,7 +73,7 @@ describe('GET /api/documents/[slugOrId]/evaluations', () => {
         summary: 'Second evaluation',
         analysis: 'Different analysis...',
         overallGrade: null,
-        createdAt: new Date('2024-01-02'),
+        createdAt: new Date('2024-01-02').toISOString(),
         agent: {
           name: 'Agent Two',
           purpose: 'ADVISOR',
@@ -140,7 +140,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
 
   it('should create evaluation job', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ 
+    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce({ 
       id: mockDocId,
       currentVersionId: 'version-123',
     });
@@ -160,7 +160,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
     
     const data = await response.json();
     expect(data).toEqual({

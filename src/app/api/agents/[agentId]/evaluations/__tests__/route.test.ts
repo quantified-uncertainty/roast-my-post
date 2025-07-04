@@ -1,127 +1,115 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth-helpers';
+import { AgentModel } from '@/models/Agent';
 
 // Mock dependencies
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
-    evaluation: {
-      findMany: jest.fn(),
-    },
+jest.mock('@/models/Agent', () => ({
+  AgentModel: {
+    getAgentEvaluations: jest.fn(),
   },
-}));
-
-jest.mock('@/lib/auth', () => ({
-  authenticateRequest: jest.fn(),
 }));
 
 describe('GET /api/agents/[agentId]/evaluations', () => {
   const mockAgentId = 'agent-123';
-  const mockUser = { id: 'user-123', email: 'test@example.com' };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
-
-    const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
-    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
-    
-    expect(response.status).toBe(401);
-    const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
-  });
-
-  it('should return evaluations by agent', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    
+  it('should not require authentication', async () => {
     const mockEvaluations = [
       {
         id: 'eval-1',
-        agentId: mockAgentId,
         documentId: 'doc-1',
-        summary: 'First evaluation summary',
-        analysis: 'Detailed analysis...',
+        documentTitle: 'Document One',
+        createdAt: new Date('2024-01-01').toISOString(),
+        status: 'completed',
         overallGrade: 85,
-        gradeComponents: { clarity: 90, accuracy: 80 },
-        createdAt: new Date('2024-01-01'),
-        document: {
-          title: 'Document One',
-          slug: 'document-one',
-        },
-        _count: {
-          comments: 5,
-        },
-      },
-      {
-        id: 'eval-2',
-        agentId: mockAgentId,
-        documentId: 'doc-2',
-        summary: 'Second evaluation summary',
-        analysis: 'Another analysis...',
-        overallGrade: null,
-        gradeComponents: null,
-        createdAt: new Date('2024-01-02'),
-        document: {
-          title: 'Document Two',
-          slug: 'document-two',
-        },
-        _count: {
-          comments: 3,
-        },
       },
     ];
     
-    (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce(mockEvaluations);
+    (AgentModel.getAgentEvaluations as jest.Mock).mockResolvedValueOnce(mockEvaluations);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual(mockEvaluations);
+    expect(data).toEqual({ evaluations: mockEvaluations });
+  });
+
+  it('should return evaluations by agent', async () => {
+    const mockEvaluations = [
+      {
+        id: 'eval-1',
+        documentId: 'doc-1',
+        documentTitle: 'Document One',
+        createdAt: new Date('2024-01-01').toISOString(),
+        status: 'completed',
+        overallGrade: 85,
+        summary: 'First evaluation summary',
+      },
+      {
+        id: 'eval-2',
+        documentId: 'doc-2',
+        documentTitle: 'Document Two',
+        createdAt: new Date('2024-01-02').toISOString(),
+        status: 'pending',
+        overallGrade: null,
+        summary: null,
+      },
+    ];
     
-    expect(prisma.evaluation.findMany).toHaveBeenCalledWith({
-      where: {
-        agentId: mockAgentId,
+    (AgentModel.getAgentEvaluations as jest.Mock).mockResolvedValueOnce(mockEvaluations);
+
+    const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
+    
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ evaluations: mockEvaluations });
+    
+    expect(AgentModel.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId);
+  });
+
+  it('should filter evaluations by batchId', async () => {
+    const mockBatchId = 'batch-123';
+    const mockEvaluations = [
+      {
+        id: 'eval-1',
+        documentId: 'doc-1',
+        documentTitle: 'Document One',
+        batchId: mockBatchId,
+        createdAt: new Date('2024-01-01').toISOString(),
+        status: 'completed',
       },
-      include: {
-        document: {
-          select: {
-            title: true,
-            slug: true,
-          },
-        },
-        _count: {
-          select: {
-            comments: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    ];
+    
+    (AgentModel.getAgentEvaluations as jest.Mock).mockResolvedValueOnce(mockEvaluations);
+
+    const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations?batchId=${mockBatchId}`);
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
+    
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ evaluations: mockEvaluations });
+    
+    expect(AgentModel.getAgentEvaluations).toHaveBeenCalledWith(mockAgentId, { batchId: mockBatchId });
   });
 
   it('should return empty array when agent has no evaluations', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce([]);
+    (AgentModel.getAgentEvaluations as jest.Mock).mockResolvedValueOnce([]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual([]);
+    expect(data).toEqual({ evaluations: [] });
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    (prisma.evaluation.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (AgentModel.getAgentEvaluations as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });

@@ -20,7 +20,7 @@ describe('GET /api/agents/[agentId]/review', () => {
     const mockReview = {
       agentId: mockAgentId,
       reviewData: 'Test review data',
-      createdAt: new Date('2024-01-01'),
+      createdAt: new Date('2024-01-01').toISOString(),
     };
     
     (AgentModel.getAgentReview as jest.Mock).mockResolvedValueOnce(mockReview);

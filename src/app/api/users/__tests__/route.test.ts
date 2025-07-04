@@ -1,19 +1,18 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { UserModel } from '@/models/User';
 import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
-    user: {
-      findMany: jest.fn(),
-    },
-  },
+
+jest.mock('@/lib/auth-helpers', () => ({
+  authenticateRequest: jest.fn(),
 }));
 
-jest.mock('@/lib/auth', () => ({
-  authenticateRequest: jest.fn(),
+jest.mock('@/models/User', () => ({
+  UserModel: {
+    getAllUsers: jest.fn(),
+  },
 }));
 
 describe('GET /api/users', () => {
@@ -39,8 +38,8 @@ describe('GET /api/users', () => {
   });
 
   it('should return all users when not authenticated', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
-    (prisma.user.findMany as jest.Mock).mockResolvedValueOnce(mockUsers);
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(mockUsers);
 
     const request = new NextRequest('http://localhost:3000/api/users');
     const response = await GET(request);
@@ -48,25 +47,19 @@ describe('GET /api/users', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     
-    // Without auth, no isCurrentUser flag
-    expect(data).toEqual(mockUsers);
+    // Without auth, all users have isCurrentUser: false
+    expect(data).toEqual(mockUsers.map(user => ({ 
+      ...user, 
+      createdAt: user.createdAt.toISOString(), 
+      isCurrentUser: false 
+    })));
     
-    expect(prisma.user.findMany).toHaveBeenCalledWith({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    expect(UserModel.getAllUsers).toHaveBeenCalled();
   });
 
   it('should include isCurrentUser flag when authenticated', async () => {
-    const currentUser = { id: 'user-1', email: 'user1@example.com' };
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: currentUser });
-    (prisma.user.findMany as jest.Mock).mockResolvedValueOnce(mockUsers);
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce('user-1');
+    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(mockUsers);
 
     const request = new NextRequest('http://localhost:3000/api/users', {
       headers: {
@@ -79,14 +72,14 @@ describe('GET /api/users', () => {
     
     const data = await response.json();
     expect(data).toEqual([
-      { ...mockUsers[0], isCurrentUser: true },
-      { ...mockUsers[1], isCurrentUser: false },
+      { ...mockUsers[0], createdAt: mockUsers[0].createdAt.toISOString(), isCurrentUser: true },
+      { ...mockUsers[1], createdAt: mockUsers[1].createdAt.toISOString(), isCurrentUser: false },
     ]);
   });
 
   it('should handle empty user list', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
-    (prisma.user.findMany as jest.Mock).mockResolvedValueOnce([]);
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce([]);
 
     const request = new NextRequest('http://localhost:3000/api/users');
     const response = await GET(request);
@@ -97,8 +90,8 @@ describe('GET /api/users', () => {
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
-    (prisma.user.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    (UserModel.getAllUsers as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/users');
     const response = await GET(request);

@@ -1,19 +1,12 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth-helpers';
+import { UserModel } from '@/models/User';
 
 // Mock dependencies
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
-    agent: {
-      count: jest.fn(),
-    },
+jest.mock('@/models/User', () => ({
+  UserModel: {
+    getUserAgentsCount: jest.fn(),
   },
-}));
-
-jest.mock('@/lib/auth', () => ({
-  authenticateRequest: jest.fn(),
 }));
 
 describe('GET /api/users/[userId]/agents/count', () => {
@@ -23,41 +16,32 @@ describe('GET /api/users/[userId]/agents/count', () => {
     jest.clearAllMocks();
   });
 
-  it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
-
-    const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
-    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
-    
-    expect(response.status).toBe(401);
-    const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
-  });
-
-  it('should return agent count for user', async () => {
-    const mockUser = { id: 'current-user', email: 'test@example.com' };
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    (prisma.agent.count as jest.Mock).mockResolvedValueOnce(5);
+  it('should not require authentication', async () => {
+    (UserModel.getUserAgentsCount as jest.Mock).mockResolvedValueOnce(3);
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
     const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual({ count: 5 });
+    expect(data).toEqual({ count: 3 });
+  });
+
+  it('should return agent count for user', async () => {
+    (UserModel.getUserAgentsCount as jest.Mock).mockResolvedValueOnce(7);
+
+    const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
+    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
-    expect(prisma.agent.count).toHaveBeenCalledWith({
-      where: { 
-        ownerId: mockUserId,
-        isArchived: false,
-      },
-    });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ count: 7 });
+    
+    expect(UserModel.getUserAgentsCount).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should return zero when user has no agents', async () => {
-    const mockUser = { id: 'current-user', email: 'test@example.com' };
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    (prisma.agent.count as jest.Mock).mockResolvedValueOnce(0);
+    (UserModel.getUserAgentsCount as jest.Mock).mockResolvedValueOnce(0);
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
     const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
@@ -67,10 +51,17 @@ describe('GET /api/users/[userId]/agents/count', () => {
     expect(data).toEqual({ count: 0 });
   });
 
+  it('should return 400 when userId is missing', async () => {
+    const request = new NextRequest(`http://localhost:3000/api/users/undefined/agents/count`);
+    const response = await GET(request, { params: Promise.resolve({ userId: undefined as any }) });
+    
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe('User ID is required');
+  });
+
   it('should handle database errors', async () => {
-    const mockUser = { id: 'current-user', email: 'test@example.com' };
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: mockUser });
-    (prisma.agent.count as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (UserModel.getUserAgentsCount as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
     const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });

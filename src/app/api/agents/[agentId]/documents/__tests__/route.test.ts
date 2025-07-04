@@ -45,7 +45,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
         id: 'doc-1',
         title: 'Document One',
         slug: 'document-one',
-        createdAt: new Date('2024-01-01'),
+        createdAt: new Date('2024-01-01').toISOString(),
         owner: {
           name: 'User One',
           email: 'user1@example.com',
@@ -54,7 +54,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
           {
             id: 'eval-1',
             agentId: mockAgentId,
-            createdAt: new Date('2024-01-02'),
+            createdAt: new Date('2024-01-02').toISOString(),
             overallGrade: 85,
           },
         ],
@@ -66,7 +66,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
         id: 'doc-2',
         title: 'Document Two',
         slug: 'document-two',
-        createdAt: new Date('2024-01-03'),
+        createdAt: new Date('2024-01-03').toISOString(),
         owner: {
           name: 'User Two',
           email: 'user2@example.com',
@@ -75,7 +75,7 @@ describe('GET /api/agents/[agentId]/documents', () => {
           {
             id: 'eval-2',
             agentId: mockAgentId,
-            createdAt: new Date('2024-01-04'),
+            createdAt: new Date('2024-01-04').toISOString(),
             overallGrade: null,
           },
         ],

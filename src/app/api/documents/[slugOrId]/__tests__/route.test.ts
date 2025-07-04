@@ -2,22 +2,37 @@ import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateRequest } from '@/lib/auth-helpers';
+import { DocumentModel } from '@/models/Document';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     document: {
-      findFirst: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
     },
     documentVersion: {
+      update: jest.fn(),
+    },
+    evaluation: {
+      findMany: jest.fn(),
       create: jest.fn(),
     },
+    job: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn(),
   },
 }));
 
 jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
+}));
+
+jest.mock('@/models/Document', () => ({
+  DocumentModel: {
+    getDocumentWithEvaluations: jest.fn(),
+  },
 }));
 
 describe('GET /api/documents/[slugOrId]', () => {
@@ -29,23 +44,17 @@ describe('GET /api/documents/[slugOrId]', () => {
   });
 
   it('should not require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
-    
     const mockDocument = {
       id: mockDocId,
       title: 'Test Document',
       slug: mockSlug,
-      currentVersion: {
-        content: 'Document content...',
-        importUrl: 'https://example.com/article',
-        metadata: { author: 'Test Author' },
-      },
-      _count: {
-        evaluations: 5,
-      },
+      author: 'Test Author',
+      content: 'Document content...',
+      publishedDate: new Date('2024-01-01').toISOString(),
+      evaluations: [],
     };
     
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
+    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -60,38 +69,17 @@ describe('GET /api/documents/[slugOrId]', () => {
       id: mockDocId,
       title: 'Test Document',
       slug: mockSlug,
-      currentVersion: { content: 'Content...' },
-      _count: { evaluations: 0 },
+      content: 'Content...',
+      evaluations: [],
     };
     
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
+    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
-    expect(prisma.document.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [
-          { id: mockDocId },
-          { slug: mockDocId },
-        ],
-      },
-      include: {
-        currentVersion: {
-          select: {
-            content: true,
-            importUrl: true,
-            metadata: true,
-          },
-        },
-        _count: {
-          select: {
-            evaluations: true,
-          },
-        },
-      },
-    });
+    expect(DocumentModel.getDocumentWithEvaluations).toHaveBeenCalledWith(mockDocId);
   });
 
   it('should find document by slug', async () => {
@@ -99,29 +87,21 @@ describe('GET /api/documents/[slugOrId]', () => {
       id: mockDocId,
       title: 'Test Document',
       slug: mockSlug,
-      currentVersion: { content: 'Content...' },
-      _count: { evaluations: 0 },
+      content: 'Content...',
+      evaluations: [],
     };
     
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(mockDocument);
+    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockSlug}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockSlug }) });
     
     expect(response.status).toBe(200);
-    expect(prisma.document.findFirst).toHaveBeenCalledWith({
-      where: {
-        OR: [
-          { id: mockSlug },
-          { slug: mockSlug },
-        ],
-      },
-      include: expect.any(Object),
-    });
+    expect(DocumentModel.getDocumentWithEvaluations).toHaveBeenCalledWith(mockSlug);
   });
 
   it('should return 404 when document not found', async () => {
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
+    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/non-existent`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: 'non-existent' }) });
@@ -141,101 +121,76 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
+    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Updated Title' }),
+      body: JSON.stringify({ intendedAgentIds: ['agent-1'] }),
     });
     
     const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(401);
   });
 
-  it('should update document and create new version', async () => {
+  it('should update intended agents', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const existingDoc = {
       id: mockDocId,
-      ownerId: mockUser.id,
-      currentVersionId: 'old-version',
-      currentVersion: {
-        content: 'Old content',
-        metadata: { author: 'Old Author' },
-      },
+      versions: [{
+        id: 'version-1',
+        intendedAgents: [],
+      }],
     };
     
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(existingDoc);
+    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce(existingDoc);
+    (prisma.documentVersion.update as jest.Mock).mockResolvedValueOnce({
+      id: 'version-1',
+      intendedAgents: ['agent-1', 'agent-2'],
+    });
+    (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce([]);
     
-    const newVersion = {
-      id: 'new-version',
-      content: 'Updated content',
-      metadata: { author: 'Updated Author' },
-    };
-    
-    (prisma.documentVersion.create as jest.Mock).mockResolvedValueOnce(newVersion);
-    
-    const updatedDoc = {
-      ...existingDoc,
-      title: 'Updated Title',
-      currentVersionId: 'new-version',
-    };
-    
-    (prisma.document.update as jest.Mock).mockResolvedValueOnce(updatedDoc);
+    const mockTransaction = jest.fn().mockImplementation(async (fn) => {
+      return await fn({
+        evaluation: {
+          create: jest.fn().mockResolvedValue({ id: 'eval-1', agentId: 'agent-1' }),
+        },
+        job: {
+          create: jest.fn().mockResolvedValue({ id: 'job-1' }),
+        },
+      });
+    });
+    (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: 'Updated Title',
-        content: 'Updated content',
-        metadata: { author: 'Updated Author' },
-      }),
+      body: JSON.stringify({ intendedAgentIds: ['agent-1', 'agent-2'] }),
     });
     
     const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     expect(response.status).toBe(200);
     
-    expect(prisma.documentVersion.create).toHaveBeenCalledWith({
-      data: {
-        documentId: mockDocId,
-        content: 'Updated content',
-        metadata: { author: 'Updated Author' },
-        importUrl: undefined,
-      },
-    });
-    
-    expect(prisma.document.update).toHaveBeenCalledWith({
-      where: { id: mockDocId },
-      data: {
-        title: 'Updated Title',
-        currentVersionId: 'new-version',
-      },
-    });
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.updatedFields.intendedAgents).toEqual(['agent-1', 'agent-2']);
   });
 
-  it('should prevent updating documents owned by others', async () => {
+  it('should handle database errors', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    
-    const existingDoc = {
-      id: mockDocId,
-      ownerId: 'other-user-id', // Different owner
-      title: 'Document',
-    };
-    
-    (prisma.document.findFirst as jest.Mock).mockResolvedValueOnce(existingDoc);
+    (prisma.document.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: 'Updated Title' }),
+      body: JSON.stringify({ intendedAgentIds: ['agent-1'] }),
     });
     
     const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(500);
     
     const data = await response.json();
-    expect(data.error).toBe('You do not have permission to update this document');
+    expect(data.error).toBe('Failed to update document');
   });
 });

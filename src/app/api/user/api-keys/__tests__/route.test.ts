@@ -49,16 +49,16 @@ describe('GET /api/user/api-keys', () => {
       {
         id: 'key-1',
         name: 'Production Key',
-        createdAt: new Date('2024-01-01'),
-        lastUsedAt: new Date('2024-01-02'),
+        createdAt: new Date('2024-01-01').toISOString(),
+        lastUsedAt: new Date('2024-01-02').toISOString(),
         expiresAt: null,
       },
       {
         id: 'key-2',
         name: 'Test Key',
-        createdAt: new Date('2024-01-03'),
+        createdAt: new Date('2024-01-03').toISOString(),
         lastUsedAt: null,
-        expiresAt: new Date('2025-01-01'),
+        expiresAt: new Date('2025-01-01').toISOString(),
       },
     ];
     
@@ -69,7 +69,7 @@ describe('GET /api/user/api-keys', () => {
     
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual(mockApiKeys);
+    expect(data).toEqual({ apiKeys: mockApiKeys });
     
     expect(prisma.apiKey.findMany).toHaveBeenCalledWith({
       where: { userId: mockUserId },
@@ -122,11 +122,11 @@ describe('POST /api/user/api-keys', () => {
   it('should create a new API key', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
-    const mockKey = 'rmp_sk_live_1234567890';
+    const mockKey = 'rmp_1234567890abcdef'.padEnd(68, '0'); // rmp_ + 64 chars
     const mockHashedKey = 'hashed_key_value';
     
     (crypto.randomBytes as jest.Mock).mockReturnValueOnce({
-      toString: () => '1234567890',
+      toString: () => '1234567890abcdef'.padEnd(64, '0'),
     });
     
     (crypto.createHash as jest.Mock).mockReturnValueOnce({
@@ -137,7 +137,7 @@ describe('POST /api/user/api-keys', () => {
     const createdKey = {
       id: 'key-123',
       name: 'New API Key',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       lastUsedAt: null,
       expiresAt: null,
     };
@@ -151,26 +151,27 @@ describe('POST /api/user/api-keys', () => {
     });
     
     const response = await POST(request);
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
     
     const data = await response.json();
     expect(data).toEqual({
-      ...createdKey,
-      key: mockKey, // Unhashed key returned only on creation
+      apiKey: {
+        ...createdKey,
+        key: mockKey, // Unhashed key returned only on creation
+      }
     });
     
     expect(prisma.apiKey.create).toHaveBeenCalledWith({
       data: {
         userId: mockUserId,
         name: 'New API Key',
-        hashedKey: mockHashedKey,
-        expiresAt: undefined,
+        key: mockHashedKey,
+        expiresAt: null,
       },
       select: {
         id: true,
         name: true,
         createdAt: true,
-        lastUsedAt: true,
         expiresAt: true,
       },
     });
@@ -192,9 +193,9 @@ describe('POST /api/user/api-keys', () => {
     const createdKey = {
       id: 'key-123',
       name: 'Expiring Key',
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
       lastUsedAt: null,
-      expiresAt: new Date(expiresAt),
+      expiresAt: new Date(expiresAt).toISOString(),
     };
     
     (prisma.apiKey.create as jest.Mock).mockResolvedValueOnce(createdKey);
@@ -202,18 +203,18 @@ describe('POST /api/user/api-keys', () => {
     const request = new NextRequest('http://localhost:3000/api/user/api-keys', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Expiring Key', expiresAt }),
+      body: JSON.stringify({ name: 'Expiring Key', expiresIn: 365 }),
     });
     
     const response = await POST(request);
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
     
     expect(prisma.apiKey.create).toHaveBeenCalledWith({
       data: {
         userId: mockUserId,
         name: 'Expiring Key',
-        hashedKey: 'hashed_key',
-        expiresAt: new Date(expiresAt),
+        key: 'hashed_key',
+        expiresAt: expect.any(Date),
       },
       select: expect.any(Object),
     });

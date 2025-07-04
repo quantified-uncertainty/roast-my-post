@@ -1,7 +1,7 @@
 import { PATCH } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -12,8 +12,8 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-jest.mock('@/lib/auth', () => ({
-  auth: jest.fn(),
+jest.mock('@/lib/auth-helpers', () => ({
+  authenticateRequestSessionFirst: jest.fn(),
 }));
 
 describe('PATCH /api/user/profile', () => {
@@ -30,7 +30,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should require authentication', async () => {
-    (auth as jest.Mock).mockResolvedValueOnce(null);
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -48,7 +48,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should validate request body', async () => {
-    (auth as jest.Mock).mockResolvedValueOnce(mockSession);
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -66,7 +66,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should update user profile successfully', async () => {
-    (auth as jest.Mock).mockResolvedValueOnce(mockSession);
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
     
     const updatedUser = {
       id: mockUserId,
@@ -97,7 +97,7 @@ describe('PATCH /api/user/profile', () => {
   });
 
   it('should handle database errors', async () => {
-    (auth as jest.Mock).mockResolvedValueOnce(mockSession);
+    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
     (prisma.user.update as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {

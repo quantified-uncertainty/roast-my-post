@@ -8,16 +8,20 @@ import { unauthorizedResponse, forbiddenResponse, notFoundResponse } from "./api
  * 
  * @param request - The NextRequest object
  * @param agentId - The agent ID to check access for
+ * @param useSession - If true, use session-based auth. If false, use API key auth.
  * @param requireOwnership - If true, user must be the agent owner. If false, just needs valid auth.
  * @returns Object with userId and agent if successful, or error response if not
  */
 export async function authenticateAndVerifyAgentAccess(
   request: NextRequest,
   agentId: string,
+  useSession = false,
   requireOwnership = false
 ) {
   // Authenticate request
-  const userId = await authenticateRequest(request);
+  const userId = useSession 
+    ? await authenticateRequestSessionFirst(request)
+    : await authenticateRequest(request);
   
   if (!userId) {
     return { error: unauthorizedResponse() };

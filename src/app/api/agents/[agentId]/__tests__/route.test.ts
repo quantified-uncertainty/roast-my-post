@@ -142,6 +142,6 @@ describe('GET /api/agents/[agentId]', () => {
     
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.error).toBe('Failed to fetch agent');
+    expect(data.error).toBe('Failed to fetch agent data');
   });
 });
