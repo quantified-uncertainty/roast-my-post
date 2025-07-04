@@ -36,7 +36,7 @@ interface ValidationResult {
   warnings: string[];
 }
 
-const REQUIRED_FIELDS = ["name", "purpose", "description"];
+const REQUIRED_FIELDS = ["name", "description"];
 const OPTIONAL_FIELDS = [
   "primaryInstructions",
   "selfCritiqueInstructions",
@@ -45,7 +45,6 @@ const OPTIONAL_FIELDS = [
   "readme",
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
-const VALID_PURPOSES = ["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"];
 
 export default function NewAgentPage() {
   const router = useRouter();
@@ -62,7 +61,6 @@ export default function NewAgentPage() {
   } = useForm<AgentInput>({
     defaultValues: {
       name: "",
-      purpose: "ASSESSOR",
       description: "",
       primaryInstructions: "",
       providesGrades: false,
@@ -116,13 +114,6 @@ export default function NewAgentPage() {
         warnings.push("Description should be at least 30 characters");
       }
 
-      // Check purpose is valid
-      if (
-        parsedObj.purpose &&
-        !VALID_PURPOSES.includes(parsedObj.purpose.toUpperCase())
-      ) {
-        warnings.push(`Purpose must be one of: ${VALID_PURPOSES.join(", ")}`);
-      }
 
       // Warn about extra fields that won't be saved
       if (extraFields.length > 0) {
@@ -158,7 +149,6 @@ export default function NewAgentPage() {
       // Extract only the supported fields
       const agentData: AgentInput = {
         name: validation.parsedData.name,
-        purpose: validation.parsedData.purpose?.toUpperCase() || "ASSESSOR",
         description: validation.parsedData.description,
         providesGrades: validation.parsedData.providesGrades || false,
       };
@@ -441,7 +431,6 @@ export default function NewAgentPage() {
                     value={yamlText}
                     onChange={(e) => setYamlText(e.target.value)}
                     placeholder="name: My Agent
-purpose: ASSESSOR
 description: A helpful agent that does amazing things
 primaryInstructions: |
   You are an expert assistant...
@@ -557,12 +546,6 @@ readme: |
                         </p>
                       </div>
 
-                      <div>
-                        <span className="font-medium text-gray-700">Purpose:</span>
-                        <p className="mt-1 text-gray-900">
-                          {validation.parsedData.purpose || "Not provided"}
-                        </p>
-                      </div>
 
                       <div>
                         <span className="font-medium text-gray-700">

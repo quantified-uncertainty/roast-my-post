@@ -20,7 +20,6 @@ import {
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
-import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 
 import { useAgentDetail } from "./hooks";
 import {
@@ -156,7 +155,7 @@ export default function AgentDetail({
             {agent.name}
           </h2>
           <p className="text-sm text-gray-500">
-            {AGENT_TYPE_INFO[agent.purpose].individualTitle} v{agent.version}
+            v{agent.version}
             {agent.owner && (
               <>
                 {" • "}

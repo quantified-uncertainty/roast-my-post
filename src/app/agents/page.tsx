@@ -26,7 +26,6 @@ export default async function AgentsPage() {
   const agents = dbAgents.map((dbAgent) => ({
     id: dbAgent.id,
     name: dbAgent.versions[0].name,
-    purpose: dbAgent.versions[0].agentType,
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
     primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,

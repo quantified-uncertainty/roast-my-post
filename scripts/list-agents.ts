@@ -16,8 +16,8 @@ async function listAgents() {
     const latestVersion = agent.versions[0];
     console.log(`ID: ${agent.id}`);
     console.log(`Name: ${latestVersion.name}`);
-    console.log(`Type: ${latestVersion.agentType}`);
     console.log(`Description: ${latestVersion.description}`);
+    console.log(`Provides Grades: ${latestVersion.providesGrades ? 'YES' : 'NO'}`);
     console.log(`Has README: ${latestVersion.readme ? 'YES' : 'NO'}`);
     console.log('---');
   }

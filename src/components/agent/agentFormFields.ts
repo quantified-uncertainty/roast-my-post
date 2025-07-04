@@ -19,19 +19,6 @@ export const agentFormFields: FormFieldConfig[] = [
     placeholder: "Agent name",
   },
   {
-    name: "purpose",
-    label: "Purpose",
-    required: true,
-    type: "select",
-    placeholder: "Select agent purpose",
-    options: [
-      { value: "ASSESSOR", label: "Assessor" },
-      { value: "ADVISOR", label: "Advisor" },
-      { value: "ENRICHER", label: "Enricher" },
-      { value: "EXPLAINER", label: "Explainer" },
-    ],
-  },
-  {
     name: "description",
     label: "Description",
     required: true,

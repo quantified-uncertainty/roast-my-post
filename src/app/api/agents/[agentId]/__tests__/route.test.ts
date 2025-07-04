@@ -40,7 +40,6 @@ describe('GET /api/agents/[agentId]', () => {
     const mockAgent = {
       id: mockAgentId,
       name: 'Test Agent',
-      purpose: 'ASSESSOR',
       version: '3',
       description: 'A test agent',
       primaryInstructions: 'Detailed instructions...',
@@ -89,7 +88,6 @@ describe('GET /api/agents/[agentId]', () => {
     const archivedAgent = {
       id: mockAgentId,
       name: 'Archived Agent',
-      purpose: 'ASSESSOR',
       version: '1',
       description: 'An archived agent',
       primaryInstructions: 'Instructions...',

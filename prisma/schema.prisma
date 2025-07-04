@@ -174,7 +174,6 @@ model AgentVersion {
   id                       String              @id @default(uuid())
   version                  Int
   name                     String
-  agentType                AgentType
   description              String
   primaryInstructions      String?
   selfCritiqueInstructions String?
@@ -262,13 +261,6 @@ model ApiKey {
 enum UserRole {
   USER
   ADMIN
-}
-
-enum AgentType {
-  ASSESSOR
-  ADVISOR
-  ENRICHER
-  EXPLAINER
 }
 
 enum JobStatus {

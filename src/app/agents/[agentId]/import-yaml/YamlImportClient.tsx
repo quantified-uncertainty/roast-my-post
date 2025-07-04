@@ -35,7 +35,6 @@ interface ValidationResult {
 
 interface AgentData {
   name: string;
-  purpose: string;
   description: string;
   primaryInstructions?: string;
   selfCritiqueInstructions?: string;
@@ -44,7 +43,7 @@ interface AgentData {
   readme?: string;
 }
 
-const REQUIRED_FIELDS = ["name", "purpose", "description"];
+const REQUIRED_FIELDS = ["name", "description"];
 const OPTIONAL_FIELDS = [
   "primaryInstructions",
   "selfCritiqueInstructions",
@@ -53,7 +52,6 @@ const OPTIONAL_FIELDS = [
   "readme",
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
-const VALID_PURPOSES = ["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"];
 
 export function YamlImportClient({ agentId }: YamlImportClientProps) {
   const router = useRouter();
@@ -107,13 +105,6 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
         warnings.push("Description should be at least 30 characters");
       }
 
-      // Check purpose is valid
-      if (
-        parsedObj.purpose &&
-        !VALID_PURPOSES.includes(parsedObj.purpose.toUpperCase())
-      ) {
-        warnings.push(`Purpose must be one of: ${VALID_PURPOSES.join(", ")}`);
-      }
 
       // Warn about extra fields that won't be saved
       if (extraFields.length > 0) {
@@ -149,7 +140,6 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       // Extract only the supported fields
       const agentData: AgentData = {
         name: validation.parsedData.name,
-        purpose: validation.parsedData.purpose?.toUpperCase() || "ASSESSOR",
         description: validation.parsedData.description,
       };
 
@@ -268,7 +258,6 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
               value={yamlText}
               onChange={(e) => setYamlText(e.target.value)}
               placeholder="name: My Agent
-purpose: ASSESSOR
 description: A helpful agent that does amazing things
 primaryInstructions: |
   You are an expert assistant...
@@ -389,12 +378,6 @@ readme: |
                   </p>
                 </div>
 
-                <div>
-                  <span className="font-medium text-gray-700">Purpose:</span>
-                  <p className="mt-1 text-gray-900">
-                    {validation.parsedData.purpose || "Not provided"}
-                  </p>
-                </div>
 
                 <div>
                   <span className="font-medium text-gray-700">

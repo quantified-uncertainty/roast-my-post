@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-// Enum for agent purposes
-export const AgentPurposeEnum = z.enum([
-  "ASSESSOR",
-  "ADVISOR",
-  "ENRICHER",
-  "EXPLAINER",
-]);
-
-export type AgentPurpose = z.infer<typeof AgentPurposeEnum>;
-
 // Schema for agent owner
 export const AgentOwnerSchema = z.object({
   id: z.string(),
@@ -24,7 +14,6 @@ export const AgentVersionSchema = z.object({
   id: z.string(),
   version: z.number(),
   name: z.string(),
-  agentType: AgentPurposeEnum,
   description: z.string(),
   primaryInstructions: z.string().optional(),
   selfCritiqueInstructions: z.string().optional(),
@@ -40,7 +29,6 @@ export type AgentVersion = z.infer<typeof AgentVersionSchema>;
 // Base schema for common agent fields
 const BaseAgentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
-  purpose: AgentPurposeEnum,
   description: z.string().min(30, "Description must be at least 30 characters"),
   primaryInstructions: z.string().optional(),
   selfCritiqueInstructions: z.string().optional(),

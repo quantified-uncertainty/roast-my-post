@@ -66,14 +66,12 @@ describe('GET /api/agents', () => {
         {
           id: 'agent-1',
           name: 'Agent One',
-          purpose: 'assessor',
           version: '1',
           description: 'First agent',
         },
         {
           id: 'agent-2',
           name: 'Agent Two',
-          purpose: 'advisor',
           version: '2',
           description: 'Second agent',
         },
