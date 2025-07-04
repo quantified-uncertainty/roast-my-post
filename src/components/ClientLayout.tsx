@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 import AuthHeader from "./AuthHeader";
+import Footer from "./Footer";
 
 export default function ClientLayout({
   children,
@@ -50,7 +51,12 @@ export default function ClientLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto">
+        <div className="min-h-full flex flex-col">
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </div>
+      </main>
     </div>
   );
 }
