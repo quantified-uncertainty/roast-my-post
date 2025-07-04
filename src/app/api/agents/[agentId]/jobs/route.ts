@@ -19,7 +19,7 @@ export async function GET(
     });
     
     if (!agent) {
-      return commonErrors.notFound("Agent not found");
+      return commonErrors.notFound("Agent");
     }
 
     // Build where clause for jobs
