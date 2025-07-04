@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 const aboutContent = `
 # About Roast My Post
@@ -50,7 +51,7 @@ Roast My Post is developed and maintained by [Quantified Uncertainty Research In
 We'd love to hear from you! Whether you have questions, feedback, or want to contribute:
 
 - **Email**: [contact@quantifieduncertainty.org](mailto:contact@quantifieduncertainty.org)
-- **Discord**: [Join our community](https://discord.gg/nsTmQqHRnV)
+- **Discord**: [Join our community](https://discord.gg/nsTnQTgtG6)
 - **GitHub Issues**: [Report bugs or request features](https://github.com/quantified-uncertainty/roast-my-post/issues)
 
 ## Support the Project

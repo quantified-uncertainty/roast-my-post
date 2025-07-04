@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { RssIcon } from "@heroicons/react/24/outline";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -54,7 +55,7 @@ export default function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <a
-                  href="https://github.com/quantified-uncertainty/roast-my-post"
+                  href={EXTERNAL_URLS.GITHUB_REPO}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
@@ -67,7 +68,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://discord.com/invite/nsTnQTgtG6"
+                  href={EXTERNAL_URLS.DISCORD}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
@@ -80,7 +81,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://quantifieduncertainty.org/"
+                  href={EXTERNAL_URLS.QURI_WEBSITE}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
@@ -91,7 +92,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://quantifieduncertainty.org/donate/"
+                  href={`${EXTERNAL_URLS.QURI_WEBSITE}/donate/`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
@@ -128,7 +129,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://github.com/quantified-uncertainty/roast-my-post/issues"
+                  href={EXTERNAL_URLS.GITHUB_ISSUES}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-600 hover:text-gray-900"
@@ -145,7 +146,7 @@ export default function Footer() {
           <div className="flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
             <div className="flex items-center space-x-4">
               <a
-                href="https://quantifieduncertainty.org"
+                href={EXTERNAL_URLS.QURI_WEBSITE}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-3 text-gray-600 hover:text-gray-900"

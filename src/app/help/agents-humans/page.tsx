@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 const agentDocumentationForHumans = `# Agent Documentation for Humans
 
@@ -201,46 +201,19 @@ If the document is a blog post:
 ## Getting Help
 
 - **Examples**: Check out [popular agents](/agents) for inspiration
-- **Community**: Join our [Discord](https://discord.gg/nsTmQqHRnV) to discuss agent creation
+- **Community**: Join our [Discord](https://discord.gg/nsTnQTgtG6) to discuss agent creation
 - **Support**: Email us at contact@quantifieduncertainty.org
 
 Remember: The best agents are specialized, detailed, and provide actionable feedback. Start simple and refine based on results!`;
 
 export default function AgentsHumansPage() {
-  const [copied, setCopied] = useState(false);
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(agentDocumentationForHumans);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-    }
-  };
-
   return (
     <div className="rounded-lg bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">
           Agent Documentation for Humans
         </h1>
-        <button
-          onClick={copyToClipboard}
-          className="inline-flex items-center rounded-md bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
-        >
-          {copied ? (
-            <>
-              <CheckIcon className="mr-2 h-4 w-4" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <ClipboardDocumentIcon className="mr-2 h-4 w-4" />
-              Copy as MD
-            </>
-          )}
-        </button>
+        <CopyMarkdownButton content={agentDocumentationForHumans} />
       </div>
       
       <div className="prose prose-gray max-w-none">

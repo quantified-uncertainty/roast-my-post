@@ -7,6 +7,7 @@ import {
   DocumentTextIcon,
   ChatBubbleLeftRightIcon
 } from "@heroicons/react/24/outline";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 const documentationSections = [
   {
@@ -103,9 +104,9 @@ export default function HelpPage() {
               Can't find what you're looking for? We're here to help:
             </p>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>• Join our <a href="https://discord.gg/nsTmQqHRnV" className="text-blue-600 hover:text-blue-800">Discord community</a> for real-time support</li>
+              <li>• Join our <a href={EXTERNAL_URLS.DISCORD} className="text-blue-600 hover:text-blue-800">Discord community</a> for real-time support</li>
               <li>• Email us at <a href="mailto:contact@quantifieduncertainty.org" className="text-blue-600 hover:text-blue-800">contact@quantifieduncertainty.org</a></li>
-              <li>• <a href="https://github.com/quantified-uncertainty/roast-my-post/issues" className="text-blue-600 hover:text-blue-800">Report issues</a> on GitHub</li>
+              <li>• <a href={EXTERNAL_URLS.GITHUB_ISSUES} className="text-blue-600 hover:text-blue-800">Report issues</a> on GitHub</li>
             </ul>
           </div>
         </div>
