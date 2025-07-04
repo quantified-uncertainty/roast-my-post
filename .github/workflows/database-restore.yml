@@ -1,0 +1,143 @@
+name: Database Restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_artifact_name:
+        description: 'Name of the backup artifact to restore (e.g., database-backup-roast_my_post_pre-migration_20250104_120000.sql.gz)'
+        required: true
+        type: string
+      confirm_restore:
+        description: 'Type "RESTORE" to confirm you want to restore the database'
+        required: true
+        type: string
+      restore_reason:
+        description: 'Reason for restoration'
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Validate Restore Request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirm_restore }}" != "RESTORE" ]; then
+            echo "❌ Restore cancelled - confirmation text must be exactly 'RESTORE'"
+            exit 1
+          fi
+          echo "✅ Restore confirmation validated"
+
+  restore:
+    name: Restore Database
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: Production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get -y install postgresql-client-16
+
+      - name: Download backup artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.backup_artifact_name }}
+          path: ./backup
+
+      - name: List backup files
+        run: |
+          echo "📁 Backup files found:"
+          ls -la ./backup/
+
+      - name: Parse database connection
+        id: parse_db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Remove schema parameter for psql
+          DB_URL_CLEAN=$(echo "$DATABASE_URL" | sed 's/?schema=public//')
+          echo "::add-mask::$DB_URL_CLEAN"
+          echo "db_url=$DB_URL_CLEAN" >> $GITHUB_OUTPUT
+          
+          # Extract database name
+          DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
+          echo "db_name=$DB_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create pre-restore backup
+        env:
+          PGPASSWORD: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🔄 Creating pre-restore backup..."
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          BACKUP_FILE="pre_restore_backup_${TIMESTAMP}.sql"
+          
+          pg_dump "${{ steps.parse_db.outputs.db_url }}" > "$BACKUP_FILE"
+          gzip "$BACKUP_FILE"
+          
+          echo "✅ Pre-restore backup created: ${BACKUP_FILE}.gz"
+          ls -lh "${BACKUP_FILE}.gz"
+
+      - name: Upload pre-restore backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-restore-backup-${{ github.run_id }}
+          path: pre_restore_backup_*.sql.gz
+          retention-days: 7
+
+      - name: Restore database
+        env:
+          PGPASSWORD: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🔄 Starting database restore..."
+          
+          # Find the backup file
+          BACKUP_FILE=$(find ./backup -name "*.sql.gz" -type f | head -n 1)
+          
+          if [ -z "$BACKUP_FILE" ]; then
+            echo "❌ No backup file found!"
+            exit 1
+          fi
+          
+          echo "📄 Restoring from: $BACKUP_FILE"
+          
+          # Decompress and restore
+          gunzip -c "$BACKUP_FILE" | psql "${{ steps.parse_db.outputs.db_url }}"
+          
+          echo "✅ Database restore completed"
+
+      - name: Run Prisma migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "🔄 Ensuring database schema is up to date..."
+          npm ci
+          npx prisma generate
+          npx prisma migrate deploy
+          npx prisma migrate status
+
+      - name: Restore summary
+        if: always()
+        run: |
+          echo "## Database Restore Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Restore triggered by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reason**: ${{ inputs.restore_reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backup restored**: ${{ inputs.backup_artifact_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Restore completed successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A pre-restore backup was created and is available for 7 days." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Restore failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for more information. A pre-restore backup may have been created." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,8 +1,17 @@
 # Deployment Notes for AgentType Removal
 
-## Pre-deployment Steps
+## Automated Backup System
 
-1. **Create a backup of the agentType data** (CRITICAL):
+**GitHub Actions will automatically create a backup before running migrations!** The workflow:
+1. Creates a database backup when migrations are detected
+2. Stores backup as GitHub artifact (30 days retention)
+3. Optionally uploads to S3 if configured
+4. Only runs migrations after successful backup
+
+### Manual Pre-deployment Steps (Optional)
+
+If you want an additional manual backup:
+1. **Create a backup of the agentType data**:
    ```bash
    psql $DATABASE_URL < scripts/backup-agenttype-data.sql
    ```
@@ -14,11 +23,15 @@
 
 ## Deployment Steps
 
-1. Deploy the code changes (this PR)
-2. Run the migration:
-   ```bash
-   npx prisma migrate deploy
-   ```
+1. **Merge to main branch** - This triggers:
+   - Automatic database backup via GitHub Actions
+   - Migration deployment after successful backup
+   - Backup artifact stored for 30 days
+
+2. **Monitor the GitHub Actions workflow**:
+   - Check the "Prisma Migrate Production DB" workflow
+   - Verify backup completed successfully
+   - Confirm migrations applied
 
 ## Rollback Plan
 
