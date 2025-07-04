@@ -37,7 +37,7 @@ export default function HelpLayout({
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
         {/* Sidebar */}
-        <div className="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto bg-white shadow-sm">
+        <div className="sticky top-0 h-screen w-64 overflow-y-auto bg-white shadow-sm">
           <div className="flex h-full flex-col">
             <div className="flex h-16 items-center px-4">
               <Link href="/" className="text-lg font-semibold text-gray-900">

@@ -1,7 +1,7 @@
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateAndVerifyAgentAccess } from '@/lib/auth';
+import { authenticateAndVerifyAgentAccess } from '@/lib/auth-agent-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -48,7 +48,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ targetCount: 5 }),
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(401);
   });
 
@@ -64,7 +64,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ invalidField: 'value' }),
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(400);
   });
 
@@ -80,7 +80,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ targetCount: 150 }),
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(400);
   });
 
@@ -105,7 +105,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ targetCount: 5 }), // Requesting 5 but only 3 available
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(200);
     
     const data = await response.json();
@@ -161,7 +161,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ targetCount: 10 }),
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(200);
     
     const data = await response.json();
@@ -187,7 +187,7 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       body: JSON.stringify({ targetCount: 5 }),
     });
     
-    const response = await POST(request, { params: { agentId: mockAgentId } });
+    const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     expect(response.status).toBe(500);
     
     const data = await response.json();

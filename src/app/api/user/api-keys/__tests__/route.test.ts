@@ -35,7 +35,7 @@ describe('GET /api/user/api-keys', () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(undefined);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
-    const response = await GET();
+    const response = await GET(request);
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -65,7 +65,7 @@ describe('GET /api/user/api-keys', () => {
     (prisma.apiKey.findMany as jest.Mock).mockResolvedValueOnce(mockApiKeys);
 
     const request = new NextRequest('http://localhost:3000/api/user/api-keys');
-    const response = await GET();
+    const response = await GET(request);
     
     expect(response.status).toBe(200);
     const data = await response.json();

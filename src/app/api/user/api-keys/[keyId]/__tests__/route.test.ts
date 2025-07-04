@@ -1,7 +1,7 @@
 import { DELETE } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequestSessionFirst } from '@/lib/auth';
+import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -30,7 +30,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce({ user: null });
 
     const request = new NextRequest(`http://localhost:3000/api/user/api-keys/${mockKeyId}`);
-    const response = await DELETE(request, { params: { keyId: mockKeyId } });
+    const response = await DELETE(request, { params: Promise.resolve({ keyId: mockKeyId }) });
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -42,7 +42,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
     (prisma.apiKey.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/user/api-keys/${mockKeyId}`);
-    const response = await DELETE(request, { params: { keyId: mockKeyId } });
+    const response = await DELETE(request, { params: Promise.resolve({ keyId: mockKeyId }) });
     
     expect(response.status).toBe(404);
     const data = await response.json();
@@ -61,7 +61,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
     (prisma.apiKey.findUnique as jest.Mock).mockResolvedValueOnce(mockApiKey);
 
     const request = new NextRequest(`http://localhost:3000/api/user/api-keys/${mockKeyId}`);
-    const response = await DELETE(request, { params: { keyId: mockKeyId } });
+    const response = await DELETE(request, { params: Promise.resolve({ keyId: mockKeyId }) });
     
     expect(response.status).toBe(403);
     const data = await response.json();
@@ -81,7 +81,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
     (prisma.apiKey.delete as jest.Mock).mockResolvedValueOnce(mockApiKey);
 
     const request = new NextRequest(`http://localhost:3000/api/user/api-keys/${mockKeyId}`);
-    const response = await DELETE(request, { params: { keyId: mockKeyId } });
+    const response = await DELETE(request, { params: Promise.resolve({ keyId: mockKeyId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -110,7 +110,7 @@ describe('DELETE /api/user/api-keys/[keyId]', () => {
     (prisma.apiKey.delete as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/user/api-keys/${mockKeyId}`);
-    const response = await DELETE(request, { params: { keyId: mockKeyId } });
+    const response = await DELETE(request, { params: Promise.resolve({ keyId: mockKeyId }) });
     
     expect(response.status).toBe(500);
     const data = await response.json();

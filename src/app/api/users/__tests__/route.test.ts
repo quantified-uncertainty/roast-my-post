@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({

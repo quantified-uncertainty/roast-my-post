@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -27,7 +27,7 @@ describe('GET /api/users/[userId]/agents/count', () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
-    const response = await GET(request, { params: { userId: mockUserId } });
+    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -40,7 +40,7 @@ describe('GET /api/users/[userId]/agents/count', () => {
     (prisma.agent.count as jest.Mock).mockResolvedValueOnce(5);
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
-    const response = await GET(request, { params: { userId: mockUserId } });
+    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -60,7 +60,7 @@ describe('GET /api/users/[userId]/agents/count', () => {
     (prisma.agent.count as jest.Mock).mockResolvedValueOnce(0);
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
-    const response = await GET(request, { params: { userId: mockUserId } });
+    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -73,7 +73,7 @@ describe('GET /api/users/[userId]/agents/count', () => {
     (prisma.agent.count as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}/agents/count`);
-    const response = await GET(request, { params: { userId: mockUserId } });
+    const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(500);
     const data = await response.json();

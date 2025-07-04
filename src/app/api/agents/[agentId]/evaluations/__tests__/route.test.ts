@@ -1,7 +1,7 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { authenticateRequest } from '@/lib/auth';
+import { authenticateRequest } from '@/lib/auth-helpers';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -28,7 +28,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce({ user: null });
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -78,7 +78,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce(mockEvaluations);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -112,7 +112,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce([]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -124,7 +124,7 @@ describe('GET /api/agents/[agentId]/evaluations', () => {
     (prisma.evaluation.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/evaluations`);
-    const response = await GET(request, { params: { agentId: mockAgentId } });
+    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
     expect(response.status).toBe(500);
     const data = await response.json();

@@ -43,7 +43,7 @@ const documentationSections = [
 
 export default function HelpPage() {
   return (
-    <div className="flex-1 bg-gray-50 py-8 pb-20">
+    <div className="flex-1 bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
