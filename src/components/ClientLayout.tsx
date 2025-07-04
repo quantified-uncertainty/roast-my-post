@@ -2,16 +2,21 @@
 
 import { Bot } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 import AuthHeader from "./AuthHeader";
+import Footer from "./Footer";
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isReaderPage = pathname?.includes('/reader');
+
   return (
     <div className="h-full flex flex-col">
       {/* Header (always visible at the top) */}
@@ -50,7 +55,16 @@ export default function ClientLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto">
+        {isReaderPage ? (
+          children
+        ) : (
+          <div className="min-h-full flex flex-col">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        )}
+      </main>
     </div>
   );
 }
