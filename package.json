@@ -19,6 +19,8 @@
     "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.'",
     "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.'",
     "test:ci": "npm run test:without-external",
+    "test:quiet": "jest --config ./config/jest/jest.config.cjs --silent",
+    "test:ci:quiet": "npm run test:without-external -- --silent",
     "db:push": "./scripts/safe-prisma.sh db push",
     "db:migrate": "./scripts/safe-prisma.sh migrate dev",
     "db:migrate:reset": "./scripts/safe-prisma.sh migrate reset",
