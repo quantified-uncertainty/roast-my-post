@@ -1,13 +1,8 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { authenticateRequest } from '@/lib/auth-helpers';
 import { AgentModel } from '@/models/Agent';
 
 // Mock dependencies
-jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
-}));
-
 jest.mock('@/models/Agent', () => ({
   AgentModel: {
     getAgentWithOwner: jest.fn(),
@@ -23,19 +18,18 @@ describe('GET /api/agents/[agentId]/documents', () => {
     jest.clearAllMocks();
   });
 
-  it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+  it('should return 404 for non-existent agent', async () => {
+    (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
     const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
     
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
     const data = await response.json();
-    expect(data.error).toBe('Unauthorized');
+    expect(data.error).toBe('Agent not found');
   });
 
   it('should return documents evaluated by agent', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockAgent = { id: mockAgentId, name: 'Test Agent' };
     (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(mockAgent);
@@ -94,12 +88,11 @@ describe('GET /api/agents/[agentId]/documents', () => {
     const data = await response.json();
     expect(data).toEqual({ documents: mockDocuments });
     
-    expect(AgentModel.getAgentWithOwner).toHaveBeenCalledWith(mockAgentId, mockUser.id);
+    expect(AgentModel.getAgentWithOwner).toHaveBeenCalledWith(mockAgentId);
     expect(AgentModel.getAgentDocuments).toHaveBeenCalledWith(mockAgentId, 40);
   });
 
   it('should return empty array when agent has no evaluations', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
     const mockAgent = { id: mockAgentId, name: 'Test Agent' };
     (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(mockAgent);
@@ -113,20 +106,8 @@ describe('GET /api/agents/[agentId]/documents', () => {
     expect(data).toEqual({ documents: [] });
   });
 
-  it('should return 404 when agent not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (AgentModel.getAgentWithOwner as jest.Mock).mockResolvedValueOnce(null);
-
-    const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
-    const response = await GET(request, { params: Promise.resolve({ agentId: mockAgentId }) });
-    
-    expect(response.status).toBe(404);
-    const data = await response.json();
-    expect(data.error).toBe('Agent not found');
-  });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
     (AgentModel.getAgentWithOwner as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/documents`);
