@@ -37,17 +37,18 @@ model Session {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String?
-  email         String?    @unique
+  email         String?          @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole   @default(USER)
+  role          UserRole         @default(USER)
   accounts      Account[]
   agents        Agent[]
   apiKeys       ApiKey[]
   documents     Document[]
   sessions      Session[]
+  preferences   UserPreferences?
 }
 
 model VerificationToken {
@@ -56,6 +57,20 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model UserPreferences {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  agreedToTerms     Boolean   @default(false)
+  agreedToTermsAt   DateTime?
+  researchUpdates   Boolean   @default(false)
+  quriUpdates       Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Document {
@@ -174,7 +189,6 @@ model AgentVersion {
   id                       String              @id @default(uuid())
   version                  Int
   name                     String
-  agentType                AgentType
   description              String
   primaryInstructions      String?
   selfCritiqueInstructions String?
@@ -262,13 +276,6 @@ model ApiKey {
 enum UserRole {
   USER
   ADMIN
-}
-
-enum AgentType {
-  ASSESSOR
-  ADVISOR
-  ENRICHER
-  EXPLAINER
 }
 
 enum JobStatus {

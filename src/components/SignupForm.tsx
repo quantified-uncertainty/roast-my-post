@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [researchUpdates, setResearchUpdates] = useState(false);
+  const [quriUpdates, setQuriUpdates] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -12,6 +15,13 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
+    // Validate terms agreement
+    if (!agreedToTerms) {
+      setError("You must agree to the terms of service to continue");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -29,6 +39,14 @@ export default function SignupForm() {
         setIsLoading(false);
         return;
       }
+
+      // Store preferences temporarily
+      sessionStorage.setItem('signupPreferences', JSON.stringify({
+        agreedToTerms,
+        researchUpdates,
+        quriUpdates,
+        timestamp: Date.now()
+      }));
 
       // Use NextAuth's signIn to send magic link
       const { signIn } = await import("next-auth/react");
@@ -64,6 +82,61 @@ export default function SignupForm() {
           placeholder="john@example.com"
           disabled={isLoading}
         />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-start">
+          <input
+            id="terms"
+            name="terms"
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+            disabled={isLoading}
+          />
+          <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+            I agree to the{" "}
+            <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500">
+              Privacy Policy
+            </a>
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+        </div>
+
+        <div className="flex items-start">
+          <input
+            id="research"
+            name="research"
+            type="checkbox"
+            checked={researchUpdates}
+            onChange={(e) => setResearchUpdates(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+            disabled={isLoading}
+          />
+          <label htmlFor="research" className="ml-2 block text-sm text-gray-700">
+            Send me updates about RoastMyPost research and new features
+          </label>
+        </div>
+
+        <div className="flex items-start">
+          <input
+            id="quri"
+            name="quri"
+            type="checkbox"
+            checked={quriUpdates}
+            onChange={(e) => setQuriUpdates(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+            disabled={isLoading}
+          />
+          <label htmlFor="quri" className="ml-2 block text-sm text-gray-700">
+            Send me updates from QURI (Quantified Uncertainty Research Institute)
+          </label>
+        </div>
       </div>
 
       {error && (
