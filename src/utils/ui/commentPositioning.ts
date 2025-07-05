@@ -53,7 +53,36 @@ export function calculateCommentPositions(
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
-      newPositions[tag] = 100 + (index * 150);
+      // Try to position based on the highlight offset as a percentage of document
+      const comment = comments[index];
+      
+      if (comment?.highlight?.startOffset !== undefined) {
+        // Get total content length from the container's text content
+        const totalTextLength = container.textContent?.length || 10000;
+        
+        // Calculate position as a percentage of the document
+        const offsetPercentage = Math.min(comment.highlight.startOffset / totalTextLength, 1);
+        
+        // Get the actual scrollable height of the content
+        const scrollHeight = container.scrollHeight || containerRect.height;
+        
+        // Position based on percentage of scrollable content
+        const estimatedPosition = offsetPercentage * scrollHeight;
+        
+        // Ensure the position is within reasonable bounds
+        newPositions[tag] = Math.max(0, Math.min(estimatedPosition, scrollHeight - 100));
+        
+        console.debug(`Fallback positioning for comment ${tag}:`, {
+          startOffset: comment.highlight.startOffset,
+          totalTextLength,
+          offsetPercentage,
+          estimatedPosition
+        });
+      } else {
+        // Last resort: spread them out more evenly
+        const spacing = Math.max(150, containerRect.height / Math.max(comments.length, 5));
+        newPositions[tag] = 100 + (index * spacing);
+      }
     }
   });
 
