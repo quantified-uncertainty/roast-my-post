@@ -28,30 +28,16 @@ export default function WelcomeForm({ userEmail, userName }: WelcomeFormProps) {
     setIsLoading(true);
 
     try {
-      // Get stored preferences from sessionStorage
-      const storedPreferences = sessionStorage.getItem('signupPreferences');
-      const preferences = storedPreferences ? JSON.parse(storedPreferences) : null;
-
       const response = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          name,
-          preferences: preferences ? {
-            agreedToTerms: preferences.agreedToTerms,
-            researchUpdates: preferences.researchUpdates,
-            quriUpdates: preferences.quriUpdates
-          } : undefined
-        }),
+        body: JSON.stringify({ name }),
       });
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || "Failed to update profile");
       }
-
-      // Clear stored preferences
-      sessionStorage.removeItem('signupPreferences');
 
       // Force a session refresh by reloading the page
       window.location.href = "/";

@@ -6,12 +6,10 @@ import {
   KeyIcon,
   UserIcon,
   CurrencyDollarIcon,
-  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
   { name: "Profile", href: "/settings/profile", icon: UserIcon },
-  { name: "Email Preferences", href: "/settings/preferences", icon: EnvelopeIcon },
   { name: "API Keys", href: "/settings/keys", icon: KeyIcon },
   { name: "Costs", href: "/settings/costs", icon: CurrencyDollarIcon },
 ];

@@ -48,7 +48,6 @@ model User {
   apiKeys       ApiKey[]
   documents     Document[]
   sessions      Session[]
-  preferences   UserPreferences?
 }
 
 model VerificationToken {
@@ -57,20 +56,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-model UserPreferences {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  agreedToTerms     Boolean   @default(false)
-  agreedToTermsAt   DateTime?
-  researchUpdates   Boolean   @default(false)
-  quriUpdates       Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model Document {
