@@ -47,7 +47,9 @@ export function calculateCommentPositions(
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
       const highlightCenter = relativeTop + (rect.height / 2);
       // Offset slightly up to better align with the highlighted text
-      const adjustedPosition = highlightCenter - 15; // Adjust this value as needed
+      // Offset to better align comment with highlighted text  
+      const HIGHLIGHT_ALIGNMENT_OFFSET = 15;
+      const adjustedPosition = highlightCenter - HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
