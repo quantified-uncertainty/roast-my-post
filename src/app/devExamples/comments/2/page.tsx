@@ -13,7 +13,7 @@ import {
   SimpleComment,
   simpleComments,
   simpleMarkdownContent,
-} from "../../../../lib/devExamples/simpleCommentsTestData";
+} from "../../../../tests/fixtures/simpleCommentsTestData";
 
 // Convert comments to SlateEditor highlight format
 function commentsToHighlights(comments: SimpleComment[]) {
