@@ -109,8 +109,24 @@ export function checkHighlightsReady(
   container: HTMLElement,
   expectedCount: number
 ): boolean {
+  if (expectedCount === 0) return true;
+  
   const highlightElements = container.querySelectorAll('[data-tag]');
-  return highlightElements.length >= expectedCount;
+  if (highlightElements.length === 0) return false;
+  
+  // Get unique tag numbers from the highlights
+  const uniqueTags = new Set<string>();
+  highlightElements.forEach(el => {
+    const tag = el.getAttribute('data-tag');
+    if (tag !== null) {
+      uniqueTags.add(tag);
+    }
+  });
+  
+  // Check if we have enough unique tags for the comments
+  // Note: Multiple comments can share the same highlight position,
+  // so we check if unique tags >= half of expected count as a heuristic
+  return uniqueTags.size >= Math.ceil(expectedCount / 2);
 }
 
 /**
