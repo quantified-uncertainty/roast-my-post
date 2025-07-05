@@ -31,6 +31,7 @@ import { unified } from "unified";
 // Import our improved hooks for Phase 2
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
+import { readerFontFamily } from "@/lib/fonts";
 
 // Helper function to normalize text by removing markdown formatting
 const normalizeText = (text: string): string => {
@@ -634,8 +635,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   return (
     <div
       style={{
-        fontFamily:
-          "Merriweather, Baskerville, Libre Baskerville, Georgia, serif",
+        fontFamily: readerFontFamily,
       }}
     >
       <Slate editor={editor} initialValue={value}>
