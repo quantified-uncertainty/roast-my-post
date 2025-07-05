@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
             providesGrades: agentConfig.providesGrades,
             extendedCapabilityId: agentConfig.extendedCapabilityId || null,
             readme: agentConfig.readme || null,
+            githubUrl: githubUrl,
           },
         },
       },

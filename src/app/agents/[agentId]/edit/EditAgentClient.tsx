@@ -45,6 +45,7 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
       providesGrades: false,
       extendedCapabilityId: "",
       readme: "",
+      githubUrl: "",
     }
   });
 
@@ -104,6 +105,9 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
           readme: importedData
             ? (importedData.readme ?? "")
             : data.readme || "",
+          githubUrl: importedData
+            ? (importedData.githubUrl ?? "")
+            : data.githubUrl || "",
         };
 
         reset(resetData);

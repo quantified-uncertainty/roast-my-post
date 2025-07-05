@@ -41,6 +41,7 @@ interface AgentData {
   providesGrades?: boolean;
   extendedCapabilityId?: string;
   readme?: string;
+  githubUrl?: string;
 }
 
 const REQUIRED_FIELDS = ["name", "description"];
@@ -50,6 +51,7 @@ const OPTIONAL_FIELDS = [
   "providesGrades",
   "extendedCapabilityId",
   "readme",
+  "githubUrl",
 ];
 const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
@@ -438,6 +440,24 @@ readme: |
                     <p className="mt-1 max-h-24 overflow-y-auto rounded border bg-white p-2 text-gray-900">
                       {validation.parsedData.readme.slice(0, 200)}
                       {validation.parsedData.readme.length > 200 && "..."}
+                    </p>
+                  </div>
+                )}
+
+                {validation.parsedData.githubUrl && (
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      GitHub URL:
+                    </span>
+                    <p className="mt-1 text-gray-900">
+                      <a 
+                        href={validation.parsedData.githubUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {validation.parsedData.githubUrl}
+                      </a>
                     </p>
                   </div>
                 )}

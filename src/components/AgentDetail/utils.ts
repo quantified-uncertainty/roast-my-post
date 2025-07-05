@@ -75,6 +75,7 @@ export const exportAgentAsJson = async (
     providesGrades: agent.providesGrades,
     extendedCapabilityId: agent.extendedCapabilityId,
     readme: agent.readme,
+    githubUrl: agent.githubUrl,
     owner: agent.owner,
     exportedAt: new Date().toISOString(),
   };
@@ -106,6 +107,7 @@ owner: ${agent.owner?.name || "Unknown"}
 created: ${exportDate}
 provides_grades: ${agent.providesGrades || false}
 extended_capability: ${agent.extendedCapabilityId || "none"}
+github_url: ${agent.githubUrl || "none"}
 ---
 
 # ${agent.name}
@@ -124,6 +126,14 @@ extended_capability: ${agent.extendedCapabilityId || "none"}
 ## Description
 
 ${agent.description}`;
+
+  if (agent.githubUrl) {
+    markdown += `
+
+## Source Repository
+
+[View on GitHub](${agent.githubUrl})`;
+  }
 
   if (agent.primaryInstructions) {
     markdown += `
@@ -179,6 +189,7 @@ export const exportAgentAsYaml = async (
     providesGrades: agent.providesGrades,
     extendedCapabilityId: agent.extendedCapabilityId,
     readme: agent.readme,
+    githubUrl: agent.githubUrl,
     owner: {
       id: agent.owner?.id,
       name: agent.owner?.name,
