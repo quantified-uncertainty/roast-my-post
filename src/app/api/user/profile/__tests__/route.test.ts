@@ -9,10 +9,6 @@ jest.mock('@/lib/prisma', () => ({
     user: {
       update: jest.fn(),
     },
-    userPreferences: {
-      upsert: jest.fn(),
-    },
-    $transaction: jest.fn(),
   },
 }));
 
@@ -84,18 +80,8 @@ describe('PATCH /api/user/profile', () => {
       email: 'test@example.com',
     };
     
-    // Mock the transaction to return the updated user
-    (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
-      const mockTx = {
-        user: {
-          update: jest.fn().mockResolvedValue(updatedUser),
-        },
-        userPreferences: {
-          upsert: jest.fn().mockResolvedValue({}),
-        },
-      };
-      return await callback(mockTx);
-    });
+    // Mock the user update
+    (prisma.user.update as jest.Mock).mockResolvedValueOnce(updatedUser);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -111,30 +97,19 @@ describe('PATCH /api/user/profile', () => {
     const data = await response.json();
     expect(data).toEqual(updatedUser);
     
-    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: mockUserId },
+      data: { name: 'Updated Name' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
   });
 
-  it('should update user profile with preferences', async () => {
+  it('should reject invalid fields in request body', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
-    
-    const updatedUser = {
-      id: mockUserId,
-      name: 'Updated Name',
-      email: 'test@example.com',
-    };
-    
-    // Mock the transaction to return the updated user
-    (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
-      const mockTx = {
-        user: {
-          update: jest.fn().mockResolvedValue(updatedUser),
-        },
-        userPreferences: {
-          upsert: jest.fn().mockResolvedValue({}),
-        },
-      };
-      return await callback(mockTx);
-    });
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
@@ -152,17 +127,15 @@ describe('PATCH /api/user/profile', () => {
     });
 
     const response = await PATCH(request);
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(400);
     
     const data = await response.json();
-    expect(data).toEqual(updatedUser);
-    
-    expect(prisma.$transaction).toHaveBeenCalled();
+    expect(data.error).toBe('Invalid data');
   });
 
   it('should handle database errors', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
-    (prisma.$transaction as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    (prisma.user.update as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
       method: 'PATCH',
