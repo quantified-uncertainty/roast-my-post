@@ -177,7 +177,6 @@ export class AgentModel {
         owner: {
           id: dbAgent.submittedById,
           name: dbAgent.submittedBy.name || "Unknown",
-          ...(isOwner && dbAgent.submittedBy.email && { email: dbAgent.submittedBy.email }),
         },
         isOwner,
       });

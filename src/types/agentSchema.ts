@@ -4,7 +4,7 @@ import { z } from "zod";
 export const AgentOwnerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.string().email().optional(),
 });
 
 export type AgentOwner = z.infer<typeof AgentOwnerSchema>;
