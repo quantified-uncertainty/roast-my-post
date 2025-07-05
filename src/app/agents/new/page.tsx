@@ -22,6 +22,7 @@ import {
   XCircleIcon,
   ExclamationTriangleIcon,
   BookOpenIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 
 import { createAgent } from "./actions";
@@ -48,10 +49,13 @@ const ALL_SUPPORTED_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
 
 export default function NewAgentPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<"form" | "yaml">("form");
+  const [mode, setMode] = useState<"form" | "yaml" | "github">("form");
   const [yamlText, setYamlText] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isCreatingFromYaml, setIsCreatingFromYaml] = useState(false);
+  const [isImportingFromGithub, setIsImportingFromGithub] = useState(false);
+  const [githubImportError, setGithubImportError] = useState<string | null>(null);
 
   const {
     register,
@@ -191,6 +195,42 @@ export default function NewAgentPage() {
     }
   };
 
+  const handleImportFromGithub = async () => {
+    if (!githubUrl) return;
+
+    setIsImportingFromGithub(true);
+    setGithubImportError(null);
+
+    try {
+      // Call the API to import from GitHub
+      const response = await fetch('/api/agents/import-github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ githubUrl }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setGithubImportError(result.error || 'Failed to import from GitHub');
+        return;
+      }
+
+      if (result.agentId) {
+        router.push(`/agents/${result.agentId}`);
+      } else {
+        setGithubImportError('Import succeeded but no agent ID returned');
+      }
+    } catch (error) {
+      logger.error('Error importing from GitHub:', error);
+      setGithubImportError('Failed to connect to the server');
+    } finally {
+      setIsImportingFromGithub(false);
+    }
+  };
+
   const onSubmit = async (data: AgentInput) => {
     try {
       const result = agentSchema.parse(data);
@@ -304,6 +344,18 @@ export default function NewAgentPage() {
                 <CodeBracketIcon className="h-4 w-4" />
                 YAML
               </button>
+              <button
+                type="button"
+                onClick={() => setMode("github")}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  mode === "github"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <ArrowDownTrayIcon className="h-4 w-4" />
+                GitHub
+              </button>
             </div>
           </div>
 
@@ -396,7 +448,7 @@ export default function NewAgentPage() {
                 </Button>
               </div>
             </form>
-          ) : (
+          ) : mode === "yaml" ? (
             // YAML Mode
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               {/* Input Section */}
@@ -625,7 +677,108 @@ readme: |
                 </div>
               </div>
             </div>
-          )}
+          ) : mode === "github" ? (
+            // GitHub Mode
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              {/* Input Section */}
+              <div className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="github-url"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    GitHub Repository URL
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="text"
+                      id="github-url"
+                      value={githubUrl}
+                      onChange={(e) => {
+                        setGithubUrl(e.target.value);
+                        setGithubImportError(null);
+                      }}
+                      placeholder="https://github.com/username/agent-repo"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                      disabled={isImportingFromGithub}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Enter the URL of a GitHub repository containing an agent configuration file
+                  </p>
+                </div>
+
+                {githubImportError && (
+                  <div className="rounded-md bg-red-50 p-4">
+                    <div className="flex">
+                      <XCircleIcon className="h-5 w-5 text-red-400" />
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Import Error</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          {githubImportError}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={handleImportFromGithub}
+                    disabled={!githubUrl || isImportingFromGithub}
+                  >
+                    {isImportingFromGithub ? "Importing..." : "Import from GitHub"}
+                  </Button>
+                  <Link href="/agents">
+                    <Button variant="secondary">Cancel</Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Info Section */}
+              <div className="space-y-6">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h3 className="mb-3 text-lg font-medium">How GitHub Import Works</h3>
+                  <div className="space-y-3 text-sm text-gray-700">
+                    <p>
+                      The importer will look for agent configuration files in your repository:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>agent.yaml, agent.yml, agent.json</li>
+                      <li>.roastmypost.yaml, .roastmypost.yml, .roastmypost.json</li>
+                      <li>roastmypost.yaml, roastmypost.yml, roastmypost.json</li>
+                    </ul>
+                    <p className="mt-3">
+                      The configuration can reference other files for instructions:
+                    </p>
+                    <pre className="mt-2 bg-gray-100 p-3 rounded text-xs overflow-x-auto">
+{`primaryInstructions: ./instructions/primary.md
+selfCritiqueInstructions: ./instructions/critique.md`}
+                    </pre>
+                    <p className="mt-3">
+                      If a README.md exists, it will be imported as the agent's documentation.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-blue-50 p-4">
+                  <h3 className="mb-3 text-lg font-medium">Configuration Format</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium text-blue-800">Required fields:</span>
+                      <p className="text-blue-700">name, description</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-blue-800">Optional fields:</span>
+                      <p className="text-blue-700">
+                        primaryInstructions, selfCritiqueInstructions, providesGrades, extendedCapabilityId, readme
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
