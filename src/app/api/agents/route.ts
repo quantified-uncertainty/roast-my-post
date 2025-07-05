@@ -22,7 +22,7 @@ export async function GET() {
   const agents = dbAgents.map((dbAgent) => ({
     id: dbAgent.id,
     name: dbAgent.versions[0].name,
-    purpose: dbAgent.versions[0].agentType.toLowerCase(),
+    purpose: "assessor", // Default purpose since agentType doesn't exist in DB
     version: dbAgent.versions[0].version.toString(),
     description: dbAgent.versions[0].description,
   }));

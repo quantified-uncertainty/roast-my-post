@@ -268,7 +268,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
       agent: {
         id: agent.id,
         name: agent.versions[0].name,
-        type: agent.versions[0].agentType,
+        // type field removed since agentType doesn't exist in DB
         current_version: agent.versions[0].version,
         description: agent.versions[0].description,
         provides_grades: agent.versions[0].providesGrades,

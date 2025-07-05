@@ -161,7 +161,7 @@ export default async function EvaluationPage({
   const grade = latestVersion?.grade;
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
-  const agentType = evaluation.agent.versions[0]?.agentType || "";
+  // agentType removed since it doesn't exist in DB
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
   const costInCents = latestVersion?.job?.costInCents;
   const durationInSeconds = latestVersion?.job?.durationInSeconds;
@@ -272,11 +272,6 @@ export default async function EvaluationPage({
               <h3 className="text-lg font-semibold text-gray-900 mb-1">{agentName}</h3>
               {agentDescription && (
                 <p className="text-sm text-gray-600 mb-2">{agentDescription}</p>
-              )}
-              {agentType && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  {agentType}
-                </span>
               )}
             </div>
             {grade !== undefined && grade !== null && (
