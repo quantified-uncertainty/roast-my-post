@@ -418,6 +418,17 @@ readme: |
                   </div>
                 )}
 
+                {validation.parsedData.providesGrades !== undefined && (
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Provides Grades:
+                    </span>
+                    <p className="mt-1 text-gray-900">
+                      {validation.parsedData.providesGrades ? "Yes" : "No"}
+                    </p>
+                  </div>
+                )}
+
 
                 {validation.parsedData.readme && (
                   <div>

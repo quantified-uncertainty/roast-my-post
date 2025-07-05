@@ -274,6 +274,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
         instructions: agent.versions[0].primaryInstructions,
         self_critique_instructions: agent.versions[0].selfCritiqueInstructions,
         extended_capability: agent.versions[0].extendedCapabilityId,
+        readme: agent.versions[0].readme,
       },
       evaluations: evaluationData,
     };
