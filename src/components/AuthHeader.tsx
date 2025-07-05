@@ -27,7 +27,16 @@ export default function AuthHeader() {
       {isLoading ? (
         <span className="text-gray-500">Loading...</span>
       ) : session ? (
-        <div className="relative" ref={dropdownRef}>
+        <>
+          {session.user && !session.user.name && (
+            <Link
+              href="/welcome"
+              className="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-md hover:bg-yellow-200 transition-colors"
+            >
+              Complete profile
+            </Link>
+          )}
+          <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -54,13 +63,22 @@ export default function AuthHeader() {
             </div>
           )}
         </div>
+        </>
       ) : (
-        <Link
-          href="/api/auth/signin"
-          className="text-gray-600 hover:text-gray-900"
-        >
-          Log In
-        </Link>
+        <div className="flex items-center space-x-4">
+          <Link
+            href="/api/auth/signin"
+            className="text-gray-600 hover:text-gray-900"
+          >
+            Log In
+          </Link>
+          <Link
+            href="/signup"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            Sign Up
+          </Link>
+        </div>
       )}
     </>
   );

@@ -42,6 +42,10 @@ function buildAuthConfig(): NextAuthConfig {
         return session;
       },
     },
+    pages: {
+      signIn: "/auth/signin",
+      error: "/auth/error",
+    },
   };
 
   return config;

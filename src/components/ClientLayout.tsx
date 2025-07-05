@@ -8,6 +8,7 @@ import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 import AuthHeader from "./AuthHeader";
 import Footer from "./Footer";
+import ProfileCheck from "./ProfileCheck";
 
 export default function ClientLayout({
   children,
@@ -19,6 +20,7 @@ export default function ClientLayout({
 
   return (
     <div className="h-full flex flex-col">
+      <ProfileCheck />
       {/* Header (always visible at the top) */}
       <header className="border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
