@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100),
-}).strict();
+});
 
 export async function PATCH(request: NextRequest) {
   try {

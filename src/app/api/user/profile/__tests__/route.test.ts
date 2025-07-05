@@ -108,31 +108,6 @@ describe('PATCH /api/user/profile', () => {
     });
   });
 
-  it('should reject invalid fields in request body', async () => {
-    (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
-
-    const request = new NextRequest('http://localhost:3000/api/user/profile', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        name: 'Updated Name',
-        preferences: {
-          agreedToTerms: true,
-          researchUpdates: true,
-          quriUpdates: false,
-        }
-      }),
-    });
-
-    const response = await PATCH(request);
-    expect(response.status).toBe(400);
-    
-    const data = await response.json();
-    expect(data.error).toBe('Invalid data');
-  });
-
   it('should handle database errors', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUserId);
     (prisma.user.update as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
