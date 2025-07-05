@@ -5,7 +5,8 @@ import {
   UserGroupIcon, 
   RocketLaunchIcon,
   DocumentTextIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  FolderIcon
 } from "@heroicons/react/24/outline";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
@@ -27,6 +28,12 @@ const documentationSections = [
     description: "Technical specification for AI agents and their capabilities",
     href: "/help/agents-llms",
     icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    title: "GitHub Agent Repositories",
+    description: "Create and structure GitHub repos for agent import",
+    href: "/help/github-agents",
+    icon: FolderIcon,
   },
   {
     title: "API Documentation",

@@ -758,6 +758,11 @@ selfCritiqueInstructions: ./instructions/critique.md`}
                     <p className="mt-3">
                       If a README.md exists, it will be imported as the agent's documentation.
                     </p>
+                    <p className="mt-3">
+                      <Link href="/help/github-agents" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View full documentation →
+                      </Link>
+                    </p>
                   </div>
                 </div>
 
