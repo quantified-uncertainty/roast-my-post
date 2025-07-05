@@ -252,16 +252,16 @@ ESLint runs in CI and blocks deployments on errors:
 
 ## Adding New Rules
 
-1. Create rule file in `/eslint-rules/`
-2. Add to `/eslint-rules/index.js`
-3. Configure in `.eslintrc.json`
+1. Create rule file in `/config/eslint-rules/`
+2. Add to `/config/eslint-rules/index.js`
+3. Configure in `/config/eslint/.eslintrc.json`
 4. Update this documentation
 5. Test with existing codebase
 
 ## Related Files
 
-- `/eslint-rules/` - Custom rule implementations
-- `.eslintrc.json` - ESLint configuration
+- `/config/eslint-rules/` - Custom rule implementations
+- `/config/eslint/.eslintrc.json` - ESLint configuration
 - `/docs/security/api-authentication.md` - Authentication standards
 - `/docs/development/` - Other development guidelines
 

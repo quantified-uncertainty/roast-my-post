@@ -17,6 +17,7 @@ async function listAgents() {
     console.log(`ID: ${agent.id}`);
     console.log(`Name: ${latestVersion.name}`);
     console.log(`Description: ${latestVersion.description}`);
+    console.log(`Provides Grades: ${latestVersion.providesGrades ? 'YES' : 'NO'}`);
     console.log(`Has README: ${latestVersion.readme ? 'YES' : 'NO'}`);
     console.log('---');
   }

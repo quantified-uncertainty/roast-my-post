@@ -104,7 +104,7 @@ export default function AgentCheckboxList({
                 htmlFor={`${name}-${agent.id}`}
                 className="ml-2 block text-sm text-gray-900"
               >
-                {agent.name} ({agent.purpose})
+                {agent.name}
               </label>
             </div>
           );

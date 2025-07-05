@@ -8,7 +8,7 @@ set -e  # Exit on error
 # Configuration
 DB_NAME="roast_my_post"
 DB_USER="postgres"
-BACKUP_DIR="./backups"
+BACKUP_DIR="./data/backups"
 
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"

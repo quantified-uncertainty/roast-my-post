@@ -10,8 +10,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  backup:
+    name: Backup Database
+    uses: ./.github/workflows/database-backup.yml
+    with:
+      backup_prefix: 'pre-migration'
+    secrets: inherit
+
   migrate:
     name: Deploy Database Migrations
+    needs: backup  # Only run after successful backup
     runs-on: ubuntu-latest
     environment: Production
     
@@ -31,6 +39,12 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Show backup info
+        run: |
+          echo "✅ Database backed up successfully"
+          echo "Backup filename: ${{ needs.backup.outputs.backup_filename }}"
+          echo "Proceeding with migration..."
+
       - name: Run Prisma migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -40,3 +54,21 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx prisma migrate status
+
+      - name: Migration summary
+        if: always()
+        run: |
+          echo "## Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Migration completed successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Backup created**: ${{ needs.backup.outputs.backup_filename }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Migration failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Backup available**: ${{ needs.backup.outputs.backup_filename }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Use the backup to restore if needed" >> $GITHUB_STEP_SUMMARY
+          fi

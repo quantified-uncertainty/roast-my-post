@@ -1,0 +1,157 @@
+name: Database Backup
+
+on:
+  # Run before production migrations
+  workflow_call:
+    inputs:
+      backup_prefix:
+        description: 'Prefix for backup filename'
+        required: false
+        default: 'pre-migration'
+        type: string
+    outputs:
+      backup_filename:
+        description: 'Name of the backup file created'
+        value: ${{ jobs.backup.outputs.backup_filename }}
+  
+  # Scheduled backups
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      backup_reason:
+        description: 'Reason for manual backup'
+        required: false
+        default: 'Manual backup'
+        type: string
+
+jobs:
+  backup:
+    name: Create Database Backup
+    runs-on: ubuntu-latest
+    environment: Production
+    outputs:
+      backup_filename: ${{ steps.create_backup.outputs.filename }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get -y install postgresql-client-16
+
+      - name: Parse database connection
+        id: parse_db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Extract connection details from DATABASE_URL
+          # Format: postgresql://user:password@host:port/database?schema=public
+          
+          # Remove schema parameter for pg_dump
+          DB_URL_CLEAN=$(echo "$DATABASE_URL" | sed 's/?schema=public//')
+          echo "::add-mask::$DB_URL_CLEAN"
+          echo "db_url=$DB_URL_CLEAN" >> $GITHUB_OUTPUT
+          
+          # Extract database name for filename
+          DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
+          echo "db_name=$DB_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create backup
+        id: create_backup
+        env:
+          PGPASSWORD: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Generate backup filename
+          PREFIX="${{ inputs.backup_prefix || 'scheduled' }}"
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          DB_NAME="${{ steps.parse_db.outputs.db_name }}"
+          FILENAME="${DB_NAME}_${PREFIX}_${TIMESTAMP}.sql"
+          
+          echo "Creating backup: $FILENAME"
+          
+          # Create backup using parsed URL
+          pg_dump "${{ steps.parse_db.outputs.db_url }}" > "$FILENAME"
+          
+          # Compress backup
+          gzip "$FILENAME"
+          FILENAME="${FILENAME}.gz"
+          
+          # Output filename for other jobs
+          echo "filename=$FILENAME" >> $GITHUB_OUTPUT
+          
+          # Show backup size
+          ls -lh "$FILENAME"
+
+      - name: Upload backup to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ steps.create_backup.outputs.filename }}
+          path: ${{ steps.create_backup.outputs.filename }}
+          retention-days: 30
+
+      - name: Upload to S3 (if configured)
+        if: env.AWS_ACCESS_KEY_ID != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          S3_BACKUP_BUCKET: ${{ secrets.S3_BACKUP_BUCKET }}
+        run: |
+          if [ -n "$S3_BACKUP_BUCKET" ]; then
+            aws s3 cp "${{ steps.create_backup.outputs.filename }}" "s3://$S3_BACKUP_BUCKET/database-backups/"
+            echo "✅ Backup uploaded to S3: s3://$S3_BACKUP_BUCKET/database-backups/${{ steps.create_backup.outputs.filename }}"
+          else
+            echo "⚠️ S3_BACKUP_BUCKET not configured, skipping S3 upload"
+          fi
+
+      - name: Cleanup old artifacts (S3)
+        if: env.AWS_ACCESS_KEY_ID != '' && env.S3_BACKUP_BUCKET != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          S3_BACKUP_BUCKET: ${{ secrets.S3_BACKUP_BUCKET }}
+        run: |
+          # Keep only last 30 days of backups in S3
+          CUTOFF_DATE=$(date -d "30 days ago" +%Y-%m-%d)
+          
+          aws s3 ls "s3://$S3_BACKUP_BUCKET/database-backups/" | \
+          while read -r line; do
+            FILE_DATE=$(echo $line | awk '{print $1}')
+            FILE_NAME=$(echo $line | awk '{print $4}')
+            
+            if [[ "$FILE_DATE" < "$CUTOFF_DATE" ]]; then
+              echo "Deleting old backup: $FILE_NAME (from $FILE_DATE)"
+              aws s3 rm "s3://$S3_BACKUP_BUCKET/database-backups/$FILE_NAME"
+            fi
+          done
+
+      - name: Create backup summary
+        if: always()
+        run: |
+          echo "## Backup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Backup created successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Filename**: ${{ steps.create_backup.outputs.filename }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              echo "- **Reason**: ${{ inputs.backup_reason }}" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "- **Retention**: 30 days" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ secrets.S3_BACKUP_BUCKET }}" ]; then
+              echo "- **S3 Location**: s3://${{ secrets.S3_BACKUP_BUCKET }}/database-backups/" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Backup failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for more information." >> $GITHUB_STEP_SUMMARY
+          fi

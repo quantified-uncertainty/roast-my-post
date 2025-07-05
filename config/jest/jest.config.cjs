@@ -50,8 +50,9 @@ module.exports = {
     "^next-auth$": "<rootDir>/src/__mocks__/next-auth.js",
     "^next-auth/providers/resend$": "<rootDir>/src/__mocks__/next-auth/providers/resend.js",
     "^@auth/prisma-adapter$": "<rootDir>/src/__mocks__/@auth/prisma-adapter.js",
+    "^next/font/google$": "<rootDir>/src/__mocks__/next/font/google.js",
   },
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts", "<rootDir>/config/jest/setup.js"],
 };

@@ -161,7 +161,6 @@ export default async function EvaluationPage({
   const grade = latestVersion?.grade;
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
-  // agentType removed since it doesn't exist in DB
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
   const costInCents = latestVersion?.job?.costInCents;
   const durationInSeconds = latestVersion?.job?.durationInSeconds;

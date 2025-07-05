@@ -2,7 +2,6 @@ import * as yaml from "js-yaml";
 import { logger } from "@/lib/logger";
 
 import type { Agent } from "@/types/agentSchema";
-import { AGENT_TYPE_INFO } from "@/types/agentTypes";
 import { formatRelativeTime, formatDateTime } from "@/utils/dateUtils";
 
 import type { ExportType } from "./types";
@@ -69,7 +68,6 @@ export const exportAgentAsJson = async (
   const agentData = {
     id: agent.id,
     name: agent.name,
-    purpose: agent.purpose,
     version: agent.version,
     description: agent.description,
     primaryInstructions: agent.primaryInstructions,
@@ -97,12 +95,10 @@ export const exportAgentAsMarkdown = async (
   setCopySuccess: (success: boolean) => void
 ) => {
   const exportDate = new Date().toISOString();
-  const agentTypeInfo = AGENT_TYPE_INFO[agent.purpose];
 
   let markdown = `---
 id: ${agent.id}
 name: "${agent.name}"
-type: ${agent.purpose}
 version: ${agent.version}
 owner: ${agent.owner?.name || "Unknown"}
 created: ${exportDate}
@@ -111,7 +107,6 @@ extended_capability: ${agent.extendedCapabilityId || "none"}
 
 # ${agent.name}
 
-**Type:** ${agentTypeInfo.individualTitle}  
 **Version:** ${agent.version}  
 **Owner:** ${agent.owner?.name || "Unknown"}`;
 
@@ -165,7 +160,6 @@ export const exportAgentAsYaml = async (
   const agentData = {
     id: agent.id,
     name: agent.name,
-    purpose: agent.purpose,
     version: agent.version,
     description: agent.description,
     primaryInstructions: agent.primaryInstructions,
