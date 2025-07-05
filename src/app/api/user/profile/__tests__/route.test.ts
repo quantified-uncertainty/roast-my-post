@@ -20,6 +20,12 @@ jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: jest.fn(),
+  },
+}));
+
 describe('PATCH /api/user/profile', () => {
   const mockUserId = 'user-123';
   const mockSession = {
@@ -80,14 +86,15 @@ describe('PATCH /api/user/profile', () => {
     
     // Mock the transaction to return the updated user
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
-      return callback({
+      const mockTx = {
         user: {
-          update: jest.fn().mockResolvedValueOnce(updatedUser),
+          update: jest.fn().mockResolvedValue(updatedUser),
         },
         userPreferences: {
-          upsert: jest.fn().mockResolvedValueOnce({}),
+          upsert: jest.fn().mockResolvedValue({}),
         },
-      });
+      };
+      return await callback(mockTx);
     });
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
@@ -120,13 +127,13 @@ describe('PATCH /api/user/profile', () => {
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
       const mockTx = {
         user: {
-          update: jest.fn().mockResolvedValueOnce(updatedUser),
+          update: jest.fn().mockResolvedValue(updatedUser),
         },
         userPreferences: {
-          upsert: jest.fn().mockResolvedValueOnce({}),
+          upsert: jest.fn().mockResolvedValue({}),
         },
       };
-      return callback(mockTx);
+      return await callback(mockTx);
     });
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
