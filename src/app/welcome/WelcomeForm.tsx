@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface WelcomeFormProps {
   userEmail: string;
@@ -113,12 +114,12 @@ export default function WelcomeForm({ userEmail, userName }: WelcomeFormProps) {
       </div>
 
       <div className="text-sm text-center">
-        <a 
+        <Link 
           href="/settings/profile" 
           className="text-gray-500 hover:text-gray-700"
         >
           Skip for now
-        </a>
+        </Link>
       </div>
     </form>
   );

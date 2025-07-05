@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -97,13 +98,13 @@ export default function SignupForm() {
           />
           <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
             I agree to the{" "}
-            <a href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500">
+            <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-500">
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500">
+            <Link href="/privacy" target="_blank" className="text-blue-600 hover:text-blue-500">
               Privacy Policy
-            </a>
+            </Link>
             <span className="text-red-500 ml-1">*</span>
           </label>
         </div>
@@ -157,9 +158,9 @@ export default function SignupForm() {
 
       <div className="text-sm text-center">
         <span className="text-gray-600">Already have an account? </span>
-        <a href="/api/auth/signin" className="font-medium text-blue-600 hover:text-blue-500">
+        <Link href="/api/auth/signin" className="font-medium text-blue-600 hover:text-blue-500">
           Log in
-        </a>
+        </Link>
       </div>
     </form>
   );
