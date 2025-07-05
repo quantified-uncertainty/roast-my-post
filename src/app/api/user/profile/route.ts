@@ -20,7 +20,8 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const validatedData = updateProfileSchema.parse(body);
 
-    const updatedUser = await prisma.user.update({
+    // Update user name
+    const result = await prisma.user.update({
       where: { id: userId },
       data: { name: validatedData.name },
       select: {
@@ -30,7 +31,7 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(updatedUser);
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

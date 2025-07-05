@@ -16,6 +16,12 @@ jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: jest.fn(),
+  },
+}));
+
 describe('PATCH /api/user/profile', () => {
   const mockUserId = 'user-123';
   const mockSession = {
@@ -74,6 +80,7 @@ describe('PATCH /api/user/profile', () => {
       email: 'test@example.com',
     };
     
+    // Mock the user update
     (prisma.user.update as jest.Mock).mockResolvedValueOnce(updatedUser);
 
     const request = new NextRequest('http://localhost:3000/api/user/profile', {
