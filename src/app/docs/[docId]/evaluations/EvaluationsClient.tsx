@@ -73,7 +73,6 @@ export default function EvaluationsClient({
             combined.push({
               id: agent.id,
               name: agent.name,
-              purpose: agent.purpose,
               version: agent.version,
               description: agent.description,
               evaluation: reviewMap.get(agentId),
@@ -92,7 +91,6 @@ export default function EvaluationsClient({
               combined.push({
                 id: agent.id,
                 name: agent.name,
-                purpose: agent.purpose,
                 version: agent.version,
                 description: agent.description,
                 evaluation: review,

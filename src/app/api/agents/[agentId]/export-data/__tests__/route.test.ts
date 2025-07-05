@@ -63,12 +63,10 @@ describe("GET /api/agents/[agentId]/export-data", () => {
     const mockAgent = {
       id: "test-agent",
       name: "Test Agent",
-      purpose: "ASSESSOR",
       versions: [{
         id: "version-1",
         version: 1,
         name: "Test Agent",
-        agentType: "ASSESSOR",
         description: "Test description",
         primaryInstructions: "Test instructions",
         selfCritiqueInstructions: "Test self critique",

@@ -15,7 +15,7 @@ if [ -z "$1" ]; then
     echo "Usage: $0 <backup_file>"
     echo ""
     echo "Available backups:"
-    ls -lh ./backups/*.gz 2>/dev/null || echo "No backups found in ./backups/"
+    ls -lh ./data/backups/*.gz 2>/dev/null || echo "No backups found in ./data/backups/"
     exit 1
 fi
 
@@ -40,7 +40,7 @@ fi
 
 # Create a safety backup first
 echo "Creating safety backup of current database..."
-SAFETY_BACKUP="./backups/safety_backup_before_restore_$(date +%Y%m%d_%H%M%S).sql"
+SAFETY_BACKUP="./data/backups/safety_backup_before_restore_$(date +%Y%m%d_%H%M%S).sql"
 pg_dump -U "$DB_USER" -d "$DB_NAME" > "$SAFETY_BACKUP"
 gzip "$SAFETY_BACKUP"
 echo "Safety backup created: ${SAFETY_BACKUP}.gz"

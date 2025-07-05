@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SlateEditor from '@/components/SlateEditor';
-import { mockComments, MockComment, mockMarkdownContent } from '../../../../lib/devExamples/commentsTestData';
+import { mockComments, MockComment, mockMarkdownContent } from '../../../../tests/fixtures/commentsTestData';
 
 // Convert mock comments to SlateEditor highlight format
 function commentsToHighlights(comments: MockComment[]) {

@@ -387,7 +387,6 @@ export class JobModel {
       const agent: Agent = {
         id: job.evaluation.agent.id,
         name: agentVersion.name,
-        purpose: agentVersion.agentType.toLowerCase(),
         version: agentVersion.version.toString(),
         description: agentVersion.description,
         primaryInstructions: agentVersion.primaryInstructions || undefined,
@@ -511,7 +510,6 @@ export class JobModel {
 ## Agent Information
 - ID: ${job.evaluation.agent.id}
 - Name: ${agentVersion.name}
-- Type: ${agentVersion.agentType}
 
 ## Summary Statistics
 - Total Tokens: ${totalInputTokens + totalOutputTokens}

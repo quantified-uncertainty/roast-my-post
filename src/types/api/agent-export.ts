@@ -81,11 +81,9 @@ export interface AgentExportData {
   agent: {
     id: string;
     name: string;
-    purpose: string;
     latest_version: {
       version: number;
       name: string;
-      purpose: string;
       description: string;
       primary_instructions: string;
       self_critique_instructions?: string;

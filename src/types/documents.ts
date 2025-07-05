@@ -12,7 +12,6 @@ export interface RawDocumentReview {
     name: string;
     version: string;
     description: string;
-    purpose: string;
     primaryInstructions?: string;
     selfCritiqueInstructions?: string;
     providesGrades?: boolean;

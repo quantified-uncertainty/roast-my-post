@@ -27,7 +27,6 @@ describe("markdownPrepend Edge Cases", () => {
     id: "test-agent-1",
     name: "Test Agent",
     version: "1.0",
-    purpose: "ASSESSOR",
     description: "A test agent",
     primaryInstructions: "Test instructions",
     providesGrades: false,

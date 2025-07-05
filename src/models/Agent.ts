@@ -26,7 +26,6 @@ export class AgentModel {
             create: {
               version: 1,
               name: data.name,
-              agentType: data.purpose,
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
@@ -54,7 +53,6 @@ export class AgentModel {
       return AgentSchema.parse({
         id: agent.id,
         name: agent.versions[0].name,
-        purpose: agent.versions[0].agentType,
         version: agent.versions[0].version.toString(),
         description: agent.versions[0].description,
         primaryInstructions: agent.versions[0].primaryInstructions || undefined,
@@ -98,7 +96,6 @@ export class AgentModel {
             create: {
               version: latestVersion + 1,
               name: data.name,
-              agentType: data.purpose,
               description: data.description,
               primaryInstructions: data.primaryInstructions,
               selfCritiqueInstructions: data.selfCritiqueInstructions,
@@ -123,7 +120,6 @@ export class AgentModel {
       return AgentSchema.parse({
         id: agent.id,
         name: agent.versions[0].name,
-        purpose: agent.versions[0].agentType,
         version: agent.versions[0].version.toString(),
         description: agent.versions[0].description,
         primaryInstructions: agent.versions[0].primaryInstructions || undefined,
@@ -171,7 +167,6 @@ export class AgentModel {
       return AgentSchema.parse({
         id: dbAgent.id,
         name: dbAgent.versions[0].name,
-        purpose: dbAgent.versions[0].agentType,
         version: dbAgent.versions[0].version.toString(),
         description: dbAgent.versions[0].description,
         primaryInstructions: dbAgent.versions[0].primaryInstructions || undefined,
@@ -203,10 +198,10 @@ export class AgentModel {
           id: version.id,
           version: version.version,
           name: version.name,
-          agentType: version.agentType,
           description: version.description,
           primaryInstructions: version.primaryInstructions || undefined,
           selfCritiqueInstructions: version.selfCritiqueInstructions || undefined,
+          providesGrades: version.providesGrades ?? false,
           extendedCapabilityId: version.extendedCapabilityId || undefined,
           readme: version.readme || undefined,
           createdAt: version.createdAt,

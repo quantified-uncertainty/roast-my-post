@@ -39,7 +39,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
   } = useForm<AgentInput>({
     defaultValues: {
       name: "",
-      purpose: "ASSESSOR",
       description: "",
       primaryInstructions: "",
       selfCritiqueInstructions: "",
@@ -87,9 +86,6 @@ export function EditAgentClient({ agentId }: { agentId: string }) {
         // When importing, use imported data preferentially for all fields
         const resetData = {
           name: importedData ? importedData.name : data.name,
-          purpose: importedData
-            ? importedData.purpose?.toUpperCase()
-            : data.purpose?.toUpperCase() || "ASSESSOR",
           description: importedData
             ? importedData.description
             : data.description,

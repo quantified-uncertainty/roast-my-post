@@ -43,7 +43,6 @@ async function analyzeRecentEvals() {
   // Agent distribution
   const agentStats = new Map<string, {
     name: string;
-    type: string;
     count: number;
     avgGrade: number;
     avgComments: number;
@@ -58,7 +57,6 @@ async function analyzeRecentEvals() {
     if (!agentStats.has(agentId)) {
       agentStats.set(agentId, {
         name: evaluation.agentVersion.name,
-        type: evaluation.agentVersion.agentType,
         count: 0,
         avgGrade: 0,
         avgComments: 0,
@@ -105,7 +103,7 @@ async function analyzeRecentEvals() {
   agentArray.sort((a, b) => b.count - a.count);
 
   for (const agent of agentArray) {
-    console.log(`${agent.name} (${agent.type}):`);
+    console.log(`${agent.name}:`);
     console.log(`  Evaluations: ${agent.count}`);
     console.log(`  Avg Grade: ${agent.avgGrade.toFixed(1)}`);
     console.log(`  Avg Comments: ${agent.avgComments.toFixed(1)}`);

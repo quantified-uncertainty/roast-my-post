@@ -101,7 +101,6 @@ const GetJobQueueStatusArgsSchema = z.object({
 const CreateAgentVersionArgsSchema = z.object({
   agentId: z.string(),
   name: z.string(),
-  purpose: z.enum(["ASSESSOR", "ADVISOR", "ENRICHER", "EXPLAINER"]),
   description: z.string(),
   primaryInstructions: z.string(),
   selfCritiqueInstructions: z.string().optional(),
@@ -504,7 +503,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 agents.map((agent: AgentWithVersions) => ({
                   id: agent.id,
                   name: agent.versions[0]?.name || "Unknown",
-                  type: agent.versions[0]?.agentType || "Unknown",
                   latestVersion: agent.versions[0]?.version || 0,
                   providesGrades: agent.versions[0]?.providesGrades || false,
                   createdAt: agent.createdAt,
@@ -608,7 +606,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const latestVersion = agent.versions[agent.versions.length - 1];
         const stats = {
           agentName: latestVersion?.name || "Unknown",
-          agentType: latestVersion?.agentType || "Unknown",
           totalVersions: agent.versions.length,
           evaluationsInPeriod: 0,
           successRate: 0,
@@ -1234,7 +1231,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const agentData = {
             agentId: args.agentId,
             name: args.name,
-            purpose: args.purpose,
             description: args.description,
             primaryInstructions: args.primaryInstructions,
             selfCritiqueInstructions: args.selfCritiqueInstructions,

@@ -132,7 +132,7 @@ export function AgentSelector({
                     <PlayIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-gray-900">{agent.name}</div>
-                      <div className="text-sm text-gray-500 line-clamp-2">{agent.purpose}</div>
+                      <div className="text-sm text-gray-500 line-clamp-2">{agent.description}</div>
                     </div>
                   </button>
                 ))}
@@ -164,7 +164,7 @@ export function AgentSelector({
                 />
                 <label htmlFor={`agent-${agent.id}`} className="flex-1 cursor-pointer">
                   <div className="font-medium text-gray-900">{agent.name}</div>
-                  <div className="text-sm text-gray-500">{agent.purpose}</div>
+                  <div className="text-sm text-gray-500">{agent.description}</div>
                 </label>
               </div>
               <Button
@@ -212,7 +212,7 @@ export function AgentSelector({
                 <div className="min-w-0 flex-1">
                   <h3 className="font-medium text-gray-900">{agent.name}</h3>
                   <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                    {agent.purpose}
+                    {agent.description}
                   </p>
                 </div>
                 <Button

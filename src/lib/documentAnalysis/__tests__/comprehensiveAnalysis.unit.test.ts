@@ -27,7 +27,6 @@ describe("Comprehensive Analysis Unit Tests", () => {
     id: "test-agent-1",
     name: "Test Agent",
     version: "1.0",
-    purpose: "ADVISOR",
     description: "A test agent",
     primaryInstructions: "Test instructions",
     providesGrades: true,

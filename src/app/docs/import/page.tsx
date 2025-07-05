@@ -11,7 +11,6 @@ import { importDocument } from "./actions";
 interface Agent {
   id: string;
   name: string;
-  purpose: string;
   description: string;
 }
 

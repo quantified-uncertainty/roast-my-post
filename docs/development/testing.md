@@ -175,6 +175,66 @@ This runs the exact same tests as CI.
 - **E2E test failing**: Check API keys and external service status
 - **LLM test failing**: Check API keys, rate limits, and costs
 
+## Console Output Suppression
+
+By default, tests suppress console output to keep test logs clean. This prevents confusing output like error logs from test scenarios that intentionally trigger errors.
+
+### How It Works
+
+1. **Automatic Suppression**: The Jest setup file (`/config/jest/setup.js`) mocks console methods during tests
+2. **Debug Access**: `console.debug` remains available for debugging
+3. **Environment Control**: Set `SHOW_TEST_LOGS=true` to see all console output
+4. **Quiet Mode**: Use `--silent` flag for even cleaner output
+
+### Running Tests with Different Output Modes
+
+```bash
+# Default: Console output suppressed
+npm run test
+
+# Show all console output
+SHOW_TEST_LOGS=true npm run test
+
+# Quiet mode: Minimal test output
+npm run test:quiet
+npm run test:ci:quiet
+
+# Debug specific test with full output
+SHOW_TEST_LOGS=true npm test -- highlightUtils.test.ts
+```
+
+### Handling Console Output in Tests
+
+If you need to verify console output in a specific test:
+
+```typescript
+describe('Error logging', () => {
+  beforeEach(() => {
+    global.restoreConsole(); // Restore real console
+  });
+  
+  afterEach(() => {
+    global.mockConsole(); // Re-mock console
+  });
+  
+  test('logs errors correctly', () => {
+    const spy = jest.spyOn(console, 'error');
+    myFunction(); // Function that calls console.error
+    expect(spy).toHaveBeenCalledWith('Expected error');
+  });
+});
+```
+
+### Why Console Suppression?
+
+Tests often trigger error scenarios to ensure proper error handling. Without suppression, test output becomes cluttered with expected errors, making it hard to identify real issues. For example:
+
+- Authentication tests that verify error handling
+- Validation tests that check error messages
+- API tests that ensure proper error responses
+
+These all generate console errors that are expected and tested for, but would otherwise clutter the test output.
+
 ## Best Practices
 
 1. **Start with unit tests** - fastest feedback loop
@@ -185,6 +245,8 @@ This runs the exact same tests as CI.
 6. **Keep tests focused** - one concept per test file
 7. **Mock external dependencies** in unit tests
 8. **Use descriptive test names** that explain the scenario
+9. **Keep test output clean** - use console suppression by default
+10. **Use `SHOW_TEST_LOGS=true`** when debugging test failures
 
 ## Migration Guide
 

@@ -53,12 +53,11 @@ export default async function UserAgentsPage({
       return {
         id: agent.id,
         name: latestVersion.name,
-        purpose: latestVersion.agentType as Agent['purpose'],
         version: latestVersion.version.toString(),
         description: latestVersion.description,
         primaryInstructions: latestVersion.primaryInstructions || undefined,
         selfCritiqueInstructions: latestVersion.selfCritiqueInstructions || undefined,
-        providesGrades: latestVersion.agentType === "ASSESSOR",
+        providesGrades: latestVersion.providesGrades ?? false,
       };
     });
 
