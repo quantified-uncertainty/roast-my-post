@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 const { checkHighlightsReady, calculateCommentPositions } = require('../commentPositioning');
 
 describe('commentPositioning', () => {
