@@ -60,6 +60,11 @@ export const fullEvaluationInclude = {
     orderBy: { version: 'desc' as const },
     include: {
       job: true,
+      documentVersion: {
+        select: {
+          version: true,
+        },
+      },
     },
   },
   // Include ALL jobs to get the latest job status (including pending ones without versions)
