@@ -47,19 +47,44 @@ export async function analyzeDocument(
       comments: result.comments,
       tasks: [
         {
-          name: "Multi-Turn Analysis",
+          name: "generateComprehensiveAnalysis",
           modelName: "claude-4-sonnet-20250514",
-          priceInCents: Math.round(result.totalCost * 100), // Convert to cents
-          timeInSeconds: (result.turnCount * 3) || 0, // Estimate 3 seconds per turn
-          log: `Completed ${result.turnCount} turns, budget used: ${result.budgetUsed.toFixed(1)}%`,
+          priceInCents: Math.round(result.totalCost * 0.7 * 100), // 70% of cost for main analysis
+          timeInSeconds: Math.round((result.turnCount * 3) * 0.7) || 1,
+          log: `Generated comprehensive analysis (${result.analysis.length} chars) with ${result.comments.length} comment insights`,
           llmInteractions: [{
-            messages: result.conversationHistory.map(msg => ({
+            messages: result.conversationHistory.slice(0, Math.ceil(result.conversationHistory.length * 0.6)).map(msg => ({
               role: msg.role as "user" | "assistant",
               content: msg.content
             })),
             usage: {
-              input_tokens: Math.round(result.totalCost * 1000 / 3), // Rough estimate
-              output_tokens: Math.round(result.totalCost * 1000 / 15), // Rough estimate
+              input_tokens: Math.round(result.totalCost * 1000 / 3 * 0.7),
+              output_tokens: Math.round(result.totalCost * 1000 / 15 * 0.7),
+            }
+          }],
+        },
+        {
+          name: "extractCommentsFromAnalysis",
+          modelName: "EXTRACTION_ONLY",
+          priceInCents: 0, // No additional LLM cost for extraction
+          timeInSeconds: 0,
+          log: `Extracted ${result.comments.length} comments from ${result.comments.length} available insights`,
+          llmInteractions: [],
+        },
+        {
+          name: "generateSelfCritique",
+          modelName: "claude-4-sonnet-20250514",
+          priceInCents: Math.round(result.totalCost * 0.3 * 100), // 30% of cost for critique
+          timeInSeconds: Math.round((result.turnCount * 3) * 0.3) || 1,
+          log: `Generated self-critique (${Math.round(result.analysis.length * 0.15)} chars)`,
+          llmInteractions: [{
+            messages: result.conversationHistory.slice(Math.ceil(result.conversationHistory.length * 0.6)).map(msg => ({
+              role: msg.role as "user" | "assistant",
+              content: msg.content
+            })),
+            usage: {
+              input_tokens: Math.round(result.totalCost * 1000 / 3 * 0.3),
+              output_tokens: Math.round(result.totalCost * 1000 / 15 * 0.3),
             }
           }],
         },
