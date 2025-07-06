@@ -168,18 +168,40 @@ function generateLinkComments(
   for (const url of originalUrls) {
     const urlPosition = findUrlPosition(fullContent, url);
 
-    if (urlPosition) {
-      // Create a unique key for this position to prevent duplicates
-      const positionKey = `${urlPosition.startOffset}-${urlPosition.endOffset}`;
+    if (!urlPosition) {
+      console.debug(`Could not find position for URL: ${url.substring(0, 50)}...`);
+      continue;
+    }
 
-      // Skip if we've already processed this exact position
-      if (processedPositions.has(positionKey)) {
-        continue;
-      }
+    // Validate the position
+    if (urlPosition.startOffset < 0 || urlPosition.endOffset <= urlPosition.startOffset) {
+      console.warn(`Invalid position for URL ${url.substring(0, 50)}:`, {
+        startOffset: urlPosition.startOffset,
+        endOffset: urlPosition.endOffset
+      });
+      continue;
+    }
 
-      const linkResult = linkResultMap.get(url);
+    // Additional validation: ensure offsets are within content bounds
+    if (urlPosition.endOffset > fullContent.length) {
+      console.warn(`URL position exceeds content length for ${url.substring(0, 50)}:`, {
+        endOffset: urlPosition.endOffset,
+        contentLength: fullContent.length
+      });
+      continue;
+    }
 
-      if (linkResult) {
+    // Create a unique key for this position to prevent duplicates
+    const positionKey = `${urlPosition.startOffset}-${urlPosition.endOffset}`;
+
+    // Skip if we've already processed this exact position
+    if (processedPositions.has(positionKey)) {
+      continue;
+    }
+
+    const linkResult = linkResultMap.get(url);
+
+    if (linkResult) {
         let grade: number;
         let importance: number;
         let description: string;
@@ -226,9 +248,8 @@ function generateLinkComments(
           isValid: true,
         });
 
-        // Mark this position as processed
-        processedPositions.add(positionKey);
-      }
+      // Mark this position as processed
+      processedPositions.add(positionKey);
     }
   }
 
