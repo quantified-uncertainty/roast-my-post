@@ -48,10 +48,10 @@ export async function analyzeDocument(
       tasks: [
         {
           name: "generateComprehensiveAnalysis",
-          modelName: "claude-sonnet-4-20250514",
+          modelName: "claude-4-sonnet-20250514",
           priceInCents: Math.round(result.totalCost * 0.7 * 100), // 70% of cost for main analysis
           timeInSeconds: Math.round((result.turnCount * 3) * 0.7) || 1,
-          log: `Generated comprehensive analysis (${result.analysis.length} chars) with ${result.comments.length} comment insights`,
+          log: `Multi-turn analysis completed:\n- Turns: ${result.turnCount}\n- Total cost: $${result.totalCost.toFixed(4)}\n- Budget used: ${result.budgetUsed.toFixed(1)}%\n- Analysis length: ${result.analysis.length} chars\n- Comments extracted: ${result.comments.length}\n- Grade: ${result.grade || 'N/A'}/100\n- Summary: ${result.summary.substring(0, 100)}...`,
           llmInteractions: [{
             messages: result.conversationHistory.slice(0, Math.ceil(result.conversationHistory.length * 0.6)).map(msg => ({
               role: msg.role as "user" | "assistant",
@@ -73,10 +73,10 @@ export async function analyzeDocument(
         },
         {
           name: "generateSelfCritique",
-          modelName: "claude-sonnet-4-20250514",
+          modelName: "claude-4-sonnet-20250514",
           priceInCents: Math.round(result.totalCost * 0.3 * 100), // 30% of cost for critique
           timeInSeconds: Math.round((result.turnCount * 3) * 0.3) || 1,
-          log: `Generated self-critique (${Math.round(result.analysis.length * 0.15)} chars)`,
+          log: `Self-critique phase completed:\n- Used final ${100 - Math.ceil(result.conversationHistory.length * 0.6 / result.conversationHistory.length * 100)}% of conversation\n- Estimated length: ${Math.round(result.analysis.length * 0.15)} chars`,
           llmInteractions: [{
             messages: result.conversationHistory.slice(Math.ceil(result.conversationHistory.length * 0.6)).map(msg => ({
               role: msg.role as "user" | "assistant",

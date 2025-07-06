@@ -142,9 +142,31 @@ export async function analyzeWithMultiTurn(
 
     } catch (error) {
       logger.error(`Error in turn ${turn + 1}`, error);
+      // Log detailed error info
+      if (error instanceof Error) {
+        logger.error(`Turn ${turn + 1} error details:`, {
+          message: error.message,
+          stack: error.stack,
+          totalCostSoFar: tracker.getTotalCost(),
+          turnsCompleted: turn,
+        });
+      }
       break;
     }
   }
+
+  // Log final results
+  logger.info("Multi-turn analysis completed", {
+    agentName: agent.name,
+    documentId: document.id,
+    turnsCompleted: tracker.getTurnCount(),
+    totalCost: tracker.getTotalCost(),
+    budgetUsed: `${tracker.getBudgetUtilization().toFixed(1)}%`,
+    analysisLength: analysis.length,
+    commentsExtracted: comments.length,
+    grade: grade || "N/A",
+    error: analysis.length === 0 ? "No analysis generated" : undefined,
+  });
 
   return {
     analysis,
