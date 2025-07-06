@@ -1,5 +1,6 @@
 import { Button } from "@/components/Button";
 import { GradeBadge } from "@/components/GradeBadge";
+import { StaleBadge } from "@/components/StaleBadge";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -145,25 +146,33 @@ export function VersionHistory({
                     onClick={() => onVersionSelect(index)}
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <div className="font-medium text-gray-800">
-                          {version.version ? (
-                            <>
-                              Version {version.version}
-                              {index === 0 && " (Latest)"}
-                            </>
-                          ) : (
-                            <>
-                              Version{" "}
-                              {selectedReview.versions?.length
-                                ? selectedReview.versions.length - index
-                                : 0}
-                              {index === 0 && " (Latest)"}
-                            </>
-                          )}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 font-medium text-gray-800">
+                          <span>
+                            {version.version ? (
+                              <>
+                                Version {version.version}
+                                {index === 0 && " (Latest)"}
+                              </>
+                            ) : (
+                              <>
+                                Version{" "}
+                                {selectedReview.versions?.length
+                                  ? selectedReview.versions.length - index
+                                  : 0}
+                                {index === 0 && " (Latest)"}
+                              </>
+                            )}
+                          </span>
+                          {version.isStale && <StaleBadge size="sm" />}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(version.createdAt)}
+                          {version.documentVersion?.version && (
+                            <span className="ml-2">
+                              (Doc v{version.documentVersion.version})
+                            </span>
+                          )}
                         </div>
                       </div>
                       {version.grade !== undefined && (

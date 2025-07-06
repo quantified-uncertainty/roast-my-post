@@ -13,6 +13,7 @@ import {
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
 import { GradeBadge } from "@/components/GradeBadge";
 import { JobStatusIndicator } from "@/components/JobStatusIndicator";
+import { StaleBadge } from "@/components/StaleBadge";
 import { Button } from "@/components/Button";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
@@ -85,6 +86,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const latestVersion = evaluation.versions?.[0];
               const latestGrade = latestVersion?.grade;
               const versionCount = evaluation.versions?.length || 0;
+              const isStale = evaluation.isStale || false;
               
               // Calculate stats
               const totalCost = evaluation.versions?.reduce((sum: number, v: any) => 
@@ -130,6 +132,9 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                             >
                               {evaluation.agent.name}
                             </Link>
+                            {isStale && (
+                              <StaleBadge size="sm" />
+                            )}
                           </div>
                           <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">
                             <Link 

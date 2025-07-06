@@ -37,12 +37,12 @@ model Session {
 }
 
 model User {
-  id            String           @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?          @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole         @default(USER)
+  role          UserRole   @default(USER)
   accounts      Account[]
   agents        Agent[]
   apiKeys       ApiKey[]
@@ -78,14 +78,14 @@ model DocumentVersion {
   platforms             String[]
   intendedAgents        String[]
   content               String
-  markdownPrepend       String?
-  importUrl             String?
   documentId            String
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
-  contentSearchVector   Unsupported("tsvector")?
-  content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
+  importUrl             String?
   searchableText        String?                  @default(dbgenerated("lower(((((((((COALESCE(title, ''::text) || ' '::text) || COALESCE(immutable_array_to_string(authors, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(platforms, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(urls, ' '::text), ''::text)) || ' '::text) || COALESCE(\"importUrl\", ''::text)))"))
+  content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
+  contentSearchVector   Unsupported("tsvector")?
+  markdownPrepend       String?
   document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
   evaluationVersions    EvaluationVersion[]
 
@@ -112,16 +112,17 @@ model Evaluation {
 
 model EvaluationVersion {
   id                String              @id @default(uuid())
-  version           Int                 @default(1)
   agentId           String
   createdAt         DateTime            @default(now())
   summary           String?
-  analysis          String?
   grade             Int?
-  selfCritique      String?
   agentVersionId    String
   evaluationId      String
   documentVersionId String
+  analysis          String?
+  selfCritique      String?
+  version           Int                 @default(1)
+  isStale           Boolean             @default(false)
   comments          EvaluationComment[]
   agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
   documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
@@ -132,6 +133,7 @@ model EvaluationVersion {
   @@index([evaluationId])
   @@index([agentVersionId])
   @@index([documentVersionId])
+  @@index([isStale])
 }
 
 model EvaluationComment {
@@ -175,14 +177,14 @@ model AgentVersion {
   version                  Int
   name                     String
   description              String
-  primaryInstructions      String?
-  selfCritiqueInstructions String?
-  providesGrades           Boolean             @default(false)
-  extendedCapabilityId     String?
-  readme                   String?
   agentId                  String
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt
+  extendedCapabilityId     String?
+  readme                   String?
+  selfCritiqueInstructions String?
+  primaryInstructions      String?
+  providesGrades           Boolean             @default(false)
   agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
   evaluations              EvaluationVersion[]
 
@@ -193,8 +195,8 @@ model AgentEvalBatch {
   id          String   @id @default(uuid())
   name        String?
   agentId     String
-  targetCount Int
   createdAt   DateTime @default(now())
+  targetCount Int
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
   jobs        Job[]
 }
@@ -212,10 +214,10 @@ model Job {
   costInCents         Int?
   durationInSeconds   Int?
   logs                String?
-  originalJobId       String?
   evaluationId        String
   evaluationVersionId String?            @unique
   agentEvalBatchId    String?
+  originalJobId       String?
   agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
   evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
   evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
@@ -235,10 +237,10 @@ model Task {
   priceInCents    Int
   timeInSeconds   Int?
   log             String?
-  llmInteractions Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   jobId           String
+  llmInteractions Json?
   job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])

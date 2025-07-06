@@ -58,6 +58,7 @@ export const EvaluationVersionSchema = z.object({
   documentVersion: z.object({
     version: z.number(),
   }),
+  isStale: z.boolean().optional(),
 });
 
 export type EvaluationVersion = z.infer<typeof EvaluationVersionSchema>;
@@ -93,6 +94,7 @@ export const EvaluationSchema = z.object({
       })
     )
     .optional(),
+  isStale: z.boolean().optional(),
 });
 
 export type Evaluation = z.infer<typeof EvaluationSchema>;

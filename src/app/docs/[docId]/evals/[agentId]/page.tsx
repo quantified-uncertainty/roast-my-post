@@ -16,6 +16,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -165,6 +166,9 @@ export default async function EvaluationPage({
   const costInCents = latestVersion?.job?.costInCents;
   const durationInSeconds = latestVersion?.job?.durationInSeconds;
   
+  // Check if this evaluation is stale
+  const isStale = latestVersion?.isStale || false;
+  
   // Get all evaluations for the sidebar
   const allEvaluations = evaluation.document.evaluations || [];
   
@@ -253,6 +257,19 @@ export default async function EvaluationPage({
           <div className="flex gap-8">
             {/* Main Content */}
             <div id="evaluation-content" className="flex-1 max-w-4xl">
+
+        {/* Stale Evaluation Warning */}
+        {isStale && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-start">
+            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-medium text-yellow-800">Warning: Outdated Evaluation</h3>
+              <p className="mt-1 text-sm text-yellow-700">
+                The document was modified after this evaluation was created. It might be out of date.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Summary Section */}
         {summary && (

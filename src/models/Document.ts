@@ -102,8 +102,25 @@ type DocumentWithRelations = {
 };
 
 export class DocumentModel {
+  /**
+   * Retrieves a document with its evaluations, optionally filtering out stale evaluations.
+   * 
+   * @param docId - The unique identifier of the document
+   * @param includeStale - Whether to include evaluations that don't match the current document version.
+   *                       Defaults to false, which filters out stale evaluations.
+   * @returns The document with evaluations, or null if not found
+   * 
+   * @remarks
+   * When includeStale is false (default), only evaluations where the latest evaluation version
+   * matches the current document version are included. This prevents stale evaluations with
+   * broken highlights from appearing in the main reader view.
+   * 
+   * When includeStale is true, all evaluations are returned regardless of version matching.
+   * This is useful for history views where users need to see all past evaluations.
+   */
   static async getDocumentWithEvaluations(
-    docId: string
+    docId: string,
+    includeStale: boolean = false
   ): Promise<Document | null> {
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
@@ -122,6 +139,14 @@ export class DocumentModel {
           },
         },
         evaluations: {
+          where: includeStale ? {} : {
+            // Only include evaluations that have at least one non-stale version
+            versions: {
+              some: {
+                isStale: false,
+              },
+            },
+          },
           include: {
             jobs: {
               orderBy: {
@@ -170,6 +195,9 @@ export class DocumentModel {
     }
 
     const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    // Evaluations are already filtered at the database level based on isStale field
 
     // Transform database document to frontend Document shape
     const document: Document = {
@@ -196,48 +224,54 @@ export class DocumentModel {
       updatedAt: dbDoc.updatedAt,
       reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map((version) => ({
-          version: version.version,
-          createdAt: new Date(version.createdAt),
-          job: version.job
-            ? {
-                costInCents: version.job.costInCents || 0,
-                llmThinking: version.job.llmThinking || "",
-                durationInSeconds: version.job.durationInSeconds || undefined,
-                logs: version.job.logs || undefined,
-                tasks: version.job.tasks.map((task) => ({
-                  id: task.id,
-                  name: task.name,
-                  modelName: task.modelName,
-                  priceInCents: task.priceInCents,
-                  timeInSeconds: task.timeInSeconds,
-                  log: task.log,
-                  llmInteractions: (task as any).llmInteractions,
-                  createdAt: task.createdAt,
-                })),
-              }
-            : undefined,
-          comments: version.comments.map((comment) => ({
-            description: comment.description,
-            importance: comment.importance || undefined,
-            grade: comment.grade || undefined,
-            highlight: {
-              startOffset: comment.highlight.startOffset,
-              endOffset: comment.highlight.endOffset,
-              quotedText: comment.highlight.quotedText,
+        const evaluationVersions = evaluation.versions.map((version) => {
+          // Calculate if this version is stale
+          const isStale = version.documentVersion.version !== currentDocumentVersion;
+          
+          return {
+            version: version.version,
+            createdAt: new Date(version.createdAt),
+            job: version.job
+              ? {
+                  costInCents: version.job.costInCents || 0,
+                  llmThinking: version.job.llmThinking || "",
+                  durationInSeconds: version.job.durationInSeconds || undefined,
+                  logs: version.job.logs || undefined,
+                  tasks: version.job.tasks.map((task) => ({
+                    id: task.id,
+                    name: task.name,
+                    modelName: task.modelName,
+                    priceInCents: task.priceInCents,
+                    timeInSeconds: task.timeInSeconds,
+                    log: task.log,
+                    llmInteractions: (task as any).llmInteractions,
+                    createdAt: task.createdAt,
+                  })),
+                }
+              : undefined,
+            comments: version.comments.map((comment) => ({
+              description: comment.description,
+              importance: comment.importance || undefined,
+              grade: comment.grade || undefined,
+              highlight: {
+                startOffset: comment.highlight.startOffset,
+                endOffset: comment.highlight.endOffset,
+                quotedText: comment.highlight.quotedText,
+                isValid: comment.highlight.isValid,
+              },
               isValid: comment.highlight.isValid,
+              error: comment.highlight.isValid ? undefined : "Invalid highlight",
+            })),
+            summary: version.summary || "",
+            analysis: version.analysis || undefined,
+            grade: version.grade ?? undefined,
+            selfCritique: version.selfCritique || undefined,
+            documentVersion: {
+              version: version.documentVersion.version,
             },
-            isValid: comment.highlight.isValid,
-            error: comment.highlight.isValid ? undefined : "Invalid highlight",
-          })),
-          summary: version.summary || "",
-          analysis: version.analysis || undefined,
-          grade: version.grade ?? undefined,
-          selfCritique: version.selfCritique || undefined,
-          documentVersion: {
-            version: version.documentVersion.version,
-          },
-        }));
+            isStale,
+          };
+        });
 
         // Map jobs for this evaluation
         const jobs = (evaluation.jobs || []).map((job) => ({
@@ -245,6 +279,10 @@ export class DocumentModel {
           status: job.status,
           createdAt: job.createdAt,
         }));
+
+        // Calculate if the evaluation (latest version) is stale
+        const latestVersion = evaluation.versions[0];
+        const evaluationIsStale = latestVersion?.documentVersion.version !== currentDocumentVersion;
 
         return {
           id: evaluation.id,
@@ -286,6 +324,7 @@ export class DocumentModel {
           selfCritique: evaluation.versions[0]?.selfCritique || undefined,
           versions: evaluationVersions,
           jobs,
+          isStale: evaluationIsStale,
         };
       }),
     };
@@ -294,12 +333,36 @@ export class DocumentModel {
     return DocumentSchema.parse(document);
   }
 
+  /**
+   * Retrieves a document with all evaluations, including stale ones.
+   * 
+   * @param docId - The unique identifier of the document
+   * @returns The document with all evaluations, or null if not found
+   * 
+   * @remarks
+   * This is a convenience method equivalent to calling getDocumentWithEvaluations(docId, true).
+   * It's intended for use in history views, evaluation management pages, and anywhere that
+   * needs to display all evaluations regardless of their version compatibility.
+   */
+  static async getDocumentWithAllEvaluations(
+    docId: string
+  ): Promise<Document | null> {
+    return DocumentModel.getDocumentWithEvaluations(docId, true);
+  }
+
+  /**
+   * Formats a database document into the frontend Document type
+   * @param dbDoc - The raw document from the database with all relations
+   * @returns The formatted Document object for frontend use
+   * @internal
+   */
   static formatDocumentFromDB(dbDoc: any): Document {
     if (!dbDoc.versions.length) {
       throw new Error(`Document ${dbDoc.id} has no versions`);
     }
 
     const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
 
     // Transform database document to frontend Document shape
     const document: Document = {
@@ -326,40 +389,46 @@ export class DocumentModel {
       updatedAt: dbDoc.updatedAt,
       reviews: dbDoc.evaluations.map((evaluation: any) => {
         // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map((version: any) => ({
-          createdAt: new Date(version.createdAt),
-          job: version.job
-            ? {
-                costInCents: version.job.costInCents || 0,
-                llmThinking: version.job.llmThinking || "",
-                durationInSeconds: version.job.durationInSeconds || undefined,
-                logs: version.job.logs || undefined,
-                tasks: version.job.tasks || [],
-              }
-            : undefined,
-          comments: version.comments.map((comment: any) => ({
-            description: comment.description,
-            importance: comment.importance || undefined,
-            grade: comment.grade || undefined,
-            highlight: {
-              startOffset: comment.highlight.startOffset,
-              endOffset: comment.highlight.endOffset,
-              quotedText: comment.highlight.quotedText,
+        const evaluationVersions = evaluation.versions.map((version: any) => {
+          // Calculate if this version is stale
+          const isStale = version.documentVersion.version !== currentDocumentVersion;
+          
+          return {
+            createdAt: new Date(version.createdAt),
+            job: version.job
+              ? {
+                  costInCents: version.job.costInCents || 0,
+                  llmThinking: version.job.llmThinking || "",
+                  durationInSeconds: version.job.durationInSeconds || undefined,
+                  logs: version.job.logs || undefined,
+                  tasks: version.job.tasks || [],
+                }
+              : undefined,
+            comments: version.comments.map((comment: any) => ({
+              description: comment.description,
+              importance: comment.importance || undefined,
+              grade: comment.grade || undefined,
+              highlight: {
+                startOffset: comment.highlight.startOffset,
+                endOffset: comment.highlight.endOffset,
+                quotedText: comment.highlight.quotedText,
+                isValid: comment.highlight.isValid,
+              },
               isValid: comment.highlight.isValid,
+              error: comment.highlight.isValid
+                ? undefined
+                : "Invalid highlight",
+            })),
+            summary: version.summary || "",
+            analysis: version.analysis || undefined,
+            grade: version.grade ?? undefined,
+            selfCritique: version.selfCritique || undefined,
+            documentVersion: {
+              version: version.documentVersion.version,
             },
-            isValid: comment.highlight.isValid,
-            error: comment.highlight.isValid
-              ? undefined
-              : "Invalid highlight",
-          })),
-          summary: version.summary || "",
-          analysis: version.analysis || undefined,
-          grade: version.grade ?? undefined,
-          selfCritique: version.selfCritique || undefined,
-          documentVersion: {
-            version: version.documentVersion.version,
-          },
-        }));
+            isStale,
+          };
+        });
 
         // Map jobs for this evaluation
         const jobs = (evaluation.jobs || []).map((job: any) => ({
@@ -367,6 +436,10 @@ export class DocumentModel {
           status: job.status,
           createdAt: job.createdAt,
         }));
+
+        // Calculate if the evaluation (latest version) is stale
+        const latestVersion = evaluation.versions[0];
+        const evaluationIsStale = latestVersion?.documentVersion.version !== currentDocumentVersion;
 
         return {
           id: evaluation.id,
@@ -408,6 +481,7 @@ export class DocumentModel {
           selfCritique: evaluation.versions[0]?.selfCritique || undefined,
           versions: evaluationVersions,
           jobs,
+          isStale: evaluationIsStale,
         };
       }),
     };
@@ -807,6 +881,31 @@ export class DocumentModel {
     return { success: true };
   }
 
+  /**
+   * Updates a document by creating a new version and automatically queues re-evaluations.
+   * 
+   * @param docId - The unique identifier of the document to update
+   * @param data - The updated document data
+   * @param data.title - The new document title
+   * @param data.authors - Comma-separated list of authors
+   * @param data.urls - Optional comma-separated list of URLs
+   * @param data.platforms - Optional comma-separated list of platforms
+   * @param data.intendedAgents - Optional comma-separated list of intended agent IDs
+   * @param data.content - The new document content
+   * @param data.importUrl - Optional URL where the document was imported from
+   * @param userId - The ID of the user making the update (for authorization)
+   * @returns The updated document with the new version
+   * 
+   * @throws {Error} When document is not found or user lacks permission
+   * 
+   * @remarks
+   * This method creates a new document version with an incremented version number.
+   * All existing evaluations are automatically queued for re-evaluation by creating
+   * new PENDING jobs. This ensures that evaluations stay current with the document content.
+   * 
+   * The re-evaluation is automatic to minimize the staleness window, though users
+   * should be warned about the API costs through the UI before calling this method.
+   */
   static async update(
     docId: string,
     data: {
@@ -820,63 +919,94 @@ export class DocumentModel {
     },
     userId: string
   ) {
-    // First get current document and its latest version
-    const document = await prisma.document.findUnique({
-      where: { id: docId },
-      include: {
-        versions: {
-          orderBy: {
-            version: "desc",
+    // Use a transaction to ensure atomicity and prevent race conditions
+    return await prisma.$transaction(async (tx) => {
+      // First get current document and its latest version
+      const document = await tx.document.findUnique({
+        where: { id: docId },
+        include: {
+          versions: {
+            orderBy: {
+              version: "desc",
+            },
+            take: 1,
           },
-          take: 1,
+          evaluations: true,
         },
-      },
+      });
+
+      if (!document) {
+        throw new Error("Document not found");
+      }
+
+      // Verify ownership
+      if (document.submittedById !== userId) {
+        throw new Error("You don't have permission to update this document");
+      }
+
+      // Get current version number
+      const currentVersion = document.versions[0]?.version || 0;
+      const newVersion = currentVersion + 1;
+
+      // Update the document by creating a new version
+      const updatedDocument = await tx.document.update({
+        where: { id: docId },
+        data: {
+          versions: {
+            create: {
+              version: newVersion,
+              title: data.title,
+              authors: data.authors.split(",").map((a) => a.trim()),
+              urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
+              platforms: data.platforms
+                ? data.platforms.split(",").map((p) => p.trim())
+                : [],
+              intendedAgents: data.intendedAgents
+                ? data.intendedAgents.split(",").map((a) => a.trim())
+                : [],
+              content: data.content,
+              importUrl: data.importUrl || null,
+            },
+          },
+        },
+        include: {
+          versions: {
+            orderBy: {
+              version: "desc",
+            },
+            take: 1,
+          },
+          evaluations: true,
+        },
+      });
+
+      // Mark all existing evaluation versions as stale
+      await tx.evaluationVersion.updateMany({
+        where: {
+          evaluation: {
+            documentId: docId,
+          },
+          isStale: false, // Only update ones that aren't already stale
+        },
+        data: {
+          isStale: true,
+        },
+      });
+
+      // Automatically queue re-evaluations for all existing evaluations
+      if (document.evaluations.length > 0) {
+        // Use createMany for better performance
+        await tx.job.createMany({
+          data: document.evaluations.map((evaluation) => ({
+            status: "PENDING",
+            evaluationId: evaluation.id,
+          })),
+        });
+      }
+
+      return updatedDocument;
+    }, {
+      isolationLevel: 'Serializable', // Strongest isolation to prevent race conditions
     });
-
-    if (!document) {
-      throw new Error("Document not found");
-    }
-
-    // Verify ownership
-    if (document.submittedById !== userId) {
-      throw new Error("You don't have permission to update this document");
-    }
-
-    // Get current version number
-    const currentVersion = document.versions[0]?.version || 0;
-    const newVersion = currentVersion + 1;
-
-    // Update the document by creating a new version
-    const updatedDocument = await prisma.document.update({
-      where: { id: docId },
-      data: {
-        versions: {
-          create: {
-            version: newVersion,
-            title: data.title,
-            authors: data.authors.split(",").map((a) => a.trim()),
-            urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
-            platforms: data.platforms
-              ? data.platforms.split(",").map((p) => p.trim())
-              : [],
-            intendedAgents: data.intendedAgents
-              ? data.intendedAgents.split(",").map((a) => a.trim())
-              : [],
-            content: data.content,
-            importUrl: data.importUrl || null,
-          },
-        },
-      },
-      include: {
-        versions: {
-          orderBy: {
-            version: "desc",
-          },
-          take: 1,
-        },
-      },
-    });
-
-    return updatedDocument;
   }
 }

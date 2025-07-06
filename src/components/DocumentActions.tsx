@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ArrowPathIcon,
@@ -8,6 +8,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "./Button";
+import { WarningDialog } from "./WarningDialog";
 import { deleteDocument, reuploadDocument } from "@/app/docs/[docId]/reader/actions";
 
 interface DocumentActionsProps {
@@ -21,7 +22,25 @@ interface DocumentActionsProps {
 export function DocumentActions({ docId, document, className = "" }: DocumentActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showReuploadWarning, setShowReuploadWarning] = useState(false);
+  const [evaluationCount, setEvaluationCount] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    // Fetch evaluation count
+    const fetchEvaluationCount = async () => {
+      try {
+        const response = await fetch(`/api/documents/${docId}`);
+        if (response.ok) {
+          const doc = await response.json();
+          setEvaluationCount(doc.reviews?.length || 0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch document:", error);
+      }
+    };
+    fetchEvaluationCount();
+  }, [docId]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this document and all its evaluations?")) {
@@ -45,10 +64,17 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
       return;
     }
 
-    if (!confirm("This will update the document content from the source URL. Continue?")) {
+    // Show warning dialog if there are evaluations
+    if (evaluationCount > 0) {
+      setShowReuploadWarning(true);
       return;
     }
 
+    // If no evaluations, proceed directly
+    performReupload();
+  };
+
+  const performReupload = async () => {
     setIsRefreshing(true);
     try {
       await reuploadDocument(docId);
@@ -59,7 +85,17 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
       alert("Failed to refresh document");
     } finally {
       setIsRefreshing(false);
+      setShowReuploadWarning(false);
     }
+  };
+
+  const handleConfirmReupload = () => {
+    setShowReuploadWarning(false);
+    performReupload();
+  };
+
+  const handleCancelReupload = () => {
+    setShowReuploadWarning(false);
   };
 
   const handleEdit = () => {
@@ -96,6 +132,15 @@ export function DocumentActions({ docId, document, className = "" }: DocumentAct
         <TrashIcon className="h-4 w-4" />
         Delete
       </Button>
+
+      <WarningDialog
+        isOpen={showReuploadWarning}
+        title="Re-upload Document"
+        message={`Re-uploading this document will create a new version and invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? 's' : ''}. They will be automatically re-run, which will incur API costs. Continue?`}
+        confirmText="Continue with re-upload"
+        onConfirm={handleConfirmReupload}
+        onCancel={handleCancelReupload}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   useEffect,
   useState,
 } from "react";
@@ -40,6 +40,7 @@ export default function EvaluationsClient({
   const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<
     AgentWithEvaluation[]
   >([]);
+
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<
     number | null

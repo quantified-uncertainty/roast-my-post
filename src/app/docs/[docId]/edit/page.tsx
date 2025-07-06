@@ -17,6 +17,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/Button";
 import { FormField } from "@/components/FormField";
+import { WarningDialog } from "@/components/WarningDialog";
 
 import {
   type DocumentInput,
@@ -79,6 +80,9 @@ export default function EditDocumentPage({ params }: Props) {
   const docId = resolvedParams.docId;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [evaluationCount, setEvaluationCount] = useState(0);
+  const [pendingFormData, setPendingFormData] = useState<DocumentInput | null>(null);
 
   const methods = useForm<DocumentInput>({
     defaultValues: {
@@ -123,6 +127,10 @@ export default function EditDocumentPage({ params }: Props) {
           importUrl: document.importUrl || "",
         });
 
+        // Count the number of evaluations
+        const evalCount = document.reviews?.length || 0;
+        setEvaluationCount(evalCount);
+
         setLoading(false);
       } catch (err) {
         logger.error('Error fetching document:', err);
@@ -136,9 +144,49 @@ export default function EditDocumentPage({ params }: Props) {
     fetchDocument();
   }, [docId, reset]);
 
+  const handleConfirmUpdate = async () => {
+    if (!pendingFormData) return;
+    
+    setShowWarningDialog(false);
+    
+    try {
+      const updateResult = await updateDocument({
+        ...pendingFormData,
+        docId: docId,
+      });
+
+      if (!updateResult.success) {
+        setFormError("root", {
+          message: updateResult.error || "Failed to update document",
+        });
+        return;
+      }
+
+      // Redirect to document page
+      router.push(`/docs/${docId}`);
+      router.refresh();
+    } catch (error) {
+      logger.error('Error updating document:', error);
+      setFormError("root", { message: "An unexpected error occurred" });
+    }
+  };
+
+  const handleCancelUpdate = () => {
+    setShowWarningDialog(false);
+    setPendingFormData(null);
+  };
+
   const onSubmit = async (data: DocumentInput) => {
     try {
       const result = documentSchema.parse(data);
+      
+      // If there are evaluations, show warning dialog
+      if (evaluationCount > 0 && !showWarningDialog) {
+        setPendingFormData(result);
+        setShowWarningDialog(true);
+        return;
+      }
+
       // Use updateDocument for editing with the docId explicitly included
       const updateResult = await updateDocument({
         ...result,
@@ -153,7 +201,7 @@ export default function EditDocumentPage({ params }: Props) {
       }
 
       // Redirect to document page
-      router.push(`/docs/${docId}/reader`);
+      router.push(`/docs/${docId}`);
       router.refresh(); // Force a refresh to show the updated data
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -285,6 +333,15 @@ export default function EditDocumentPage({ params }: Props) {
               </div>
             </form>
           </FormProvider>
+
+          <WarningDialog
+            isOpen={showWarningDialog}
+            title="Update Document"
+            message={`Updating this document will invalidate ${evaluationCount} existing evaluation${evaluationCount !== 1 ? 's' : ''}. They will be automatically re-run after saving, which will incur API costs. Continue?`}
+            confirmText="Continue with update"
+            onConfirm={handleConfirmUpdate}
+            onCancel={handleCancelUpdate}
+          />
         </div>
       </div>
     </div>
