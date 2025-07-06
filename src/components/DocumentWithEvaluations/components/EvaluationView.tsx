@@ -139,13 +139,12 @@ export function EvaluationView({
               contentRef={contentRef}
               selectedCommentId={evaluationState.expandedCommentId}
               hoveredCommentId={evaluationState.hoveredCommentId}
-              onCommentHover={(commentId) => {
-                console.log('[EvaluationView] Comment hover changed to:', commentId);
+              onCommentHover={(commentId) =>
                 onEvaluationStateChange({
                   ...evaluationState,
                   hoveredCommentId: commentId,
-                });
-              }}
+                })
+              }
               onCommentClick={(commentId) => {
                 onEvaluationStateChange({
                   ...evaluationState,

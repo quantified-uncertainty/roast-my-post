@@ -87,6 +87,16 @@ export function PositionedComment({
           {/* Agent name */}
           <div className="mt-1 text-xs text-gray-400">{agentName}</div>
 
+          {/* Show quoted text snippet when expanded */}
+          {isHovered && comment.highlight?.quotedText && (
+            <div className="mt-3 border-l-4 border-blue-400 bg-gray-50 p-3 rounded-r">
+              <div className="text-xs font-medium text-gray-600 mb-1">Referenced text:</div>
+              <div className="font-mono text-xs bg-gray-800 text-gray-100 p-2 rounded overflow-x-auto">
+                <pre className="whitespace-pre-wrap">{comment.highlight.quotedText}</pre>
+              </div>
+            </div>
+          )}
+
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (
             <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
