@@ -34,7 +34,6 @@ interface VersionHistoryProps {
   selectedJobIndex: number | null;
   middleTab: "versions" | "jobs";
   isOwner?: boolean;
-  currentDocumentVersion: number;
   onVersionSelect: (index: number) => void;
   onTabChange: (tab: "versions" | "jobs") => void;
   onRunEvaluation: (agentId: string) => void;
@@ -48,7 +47,6 @@ export function VersionHistory({
   selectedJobIndex,
   middleTab,
   isOwner,
-  currentDocumentVersion,
   onVersionSelect,
   onTabChange,
   onRunEvaluation,
