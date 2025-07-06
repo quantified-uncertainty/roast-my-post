@@ -6,9 +6,11 @@ import axios from "axios";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// Set environment variable before importing the module
-const originalEnv = process.env.FIRECRAWL_KEY;
+// Set environment variables before importing the module
+const originalFirecrawlKey = process.env.FIRECRAWL_KEY;
+const originalDiffbotKey = process.env.DIFFBOT_KEY;
 process.env.FIRECRAWL_KEY = 'test-firecrawl-key';
+process.env.DIFFBOT_KEY = 'test-diffbot-key';
 
 // Import after setting env var
 import {
@@ -24,10 +26,15 @@ beforeEach(() => {
 
 afterAll(() => {
   // Restore original environment
-  if (originalEnv !== undefined) {
-    process.env.FIRECRAWL_KEY = originalEnv;
+  if (originalFirecrawlKey !== undefined) {
+    process.env.FIRECRAWL_KEY = originalFirecrawlKey;
   } else {
     delete process.env.FIRECRAWL_KEY;
+  }
+  if (originalDiffbotKey !== undefined) {
+    process.env.DIFFBOT_KEY = originalDiffbotKey;
+  } else {
+    delete process.env.DIFFBOT_KEY;
   }
 });
 
@@ -183,8 +190,78 @@ describe("articleImport", () => {
     });
   });
 
-  describe("processArticle with Firecrawl", () => {
-    it("should process article with Firecrawl API", async () => {
+  describe("processArticle with Diffbot and Firecrawl", () => {
+    it("should process article with Diffbot API first", async () => {
+      // Mock Diffbot API response
+      mockedAxios.get.mockResolvedValueOnce({
+        data: {
+          objects: [{
+            type: "article",
+            title: "Test Article from Diffbot",
+            text: "This is the article content from Diffbot. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.",
+            html: "<p>This is the article content from Diffbot. It needs to be much longer to avoid the fallback mechanism.</p>",
+            author: "Jane Smith",
+            date: "2025-01-15T00:00:00Z",
+            pageUrl: "https://example.com/article"
+          }],
+          request: {
+            pageUrl: "https://example.com/article",
+            api: "article",
+            version: 3
+          }
+        }
+      });
+      
+      const result = await processArticle("https://example.com/article");
+      
+      expect(result.title).toBe("Test Article from Diffbot");
+      expect(result.author).toBe("Jane Smith");
+      expect(result.date).toBe("2025-01-15");
+      expect(result.content).toContain("This is the article content from Diffbot");
+      expect(result.url).toBe("https://example.com/article");
+      
+      // Verify Diffbot was called
+      expect(mockedAxios.get).toHaveBeenCalledWith(
+        "https://api.diffbot.com/v3/article",
+        expect.objectContaining({
+          params: {
+            token: "test-diffbot-key",
+            url: "https://example.com/article",
+            discussion: false
+          }
+        })
+      );
+    });
+
+    it("should fallback to Firecrawl when Diffbot fails", async () => {
+      // Mock Diffbot to fail
+      mockedAxios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      
+      // Mock Firecrawl API response
+      mockedAxios.post.mockResolvedValueOnce({
+        data: {
+          success: true,
+          data: {
+            markdown: "This is the article content from Firecrawl. It needs to be much longer to avoid the fallback mechanism. The article import module checks if content is less than 100 characters and falls back to manual extraction if it is. So we need to make sure this content is sufficiently long.",
+            metadata: {
+              title: "Test Article from Firecrawl",
+              author: "John Doe",
+              publishedDate: "2025-01-15T00:00:00Z"
+            }
+          }
+        }
+      });
+      
+      const result = await processArticle("https://example.com/article");
+      
+      expect(result.title).toBe("Test Article from Firecrawl");
+      expect(result.author).toBe("John Doe");
+      expect(result.content).toContain("This is the article content from Firecrawl");
+    });
+
+    it("should process article with Firecrawl API when Diffbot is not available", async () => {
+      // Temporarily disable Diffbot
+      delete process.env.DIFFBOT_KEY;
       // Mock Firecrawl API response with longer content to avoid fallback
       mockedAxios.post.mockResolvedValueOnce({
         data: {
@@ -208,9 +285,15 @@ describe("articleImport", () => {
       expect(result.date).toBe("2025-01-15");
       expect(result.content).toContain("This is the article content in markdown");
       expect(result.url).toBe("https://example.com/article");
+      
+      // Restore Diffbot key
+      process.env.DIFFBOT_KEY = 'test-diffbot-key';
     });
 
-    it("should fallback when Firecrawl fails", async () => {
+    it("should fallback when both Diffbot and Firecrawl fail", async () => {
+      // Mock Diffbot to fail
+      mockedAxios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      
       // Mock Firecrawl to fail
       mockedAxios.post.mockRejectedValueOnce(new Error("Firecrawl API Error"));
       
@@ -238,6 +321,9 @@ describe("articleImport", () => {
     });
 
     it("should fallback when Firecrawl returns short content", async () => {
+      // Mock Diffbot to fail first
+      mockedAxios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      
       // Mock Firecrawl to return very short content
       mockedAxios.post.mockResolvedValueOnce({
         data: {
