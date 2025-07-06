@@ -45,25 +45,13 @@ interface CodeBlockProps {
   language?: string;
   attributes?: any;
   children?: React.ReactNode;
-  isHighlighted?: boolean;
-  highlightTag?: string;
-  onHighlightClick?: (tag: string) => void;
-  onHighlightHover?: (tag: string | null) => void;
-  referencedLines?: number[];
-  showLineNumbers?: boolean;
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = ({ 
   code, 
   language = 'plain', 
   attributes, 
-  children,
-  isHighlighted = false,
-  highlightTag,
-  onHighlightClick,
-  onHighlightHover,
-  referencedLines = [],
-  showLineNumbers = false
+  children
 }) => {
   const [formattedCode, setFormattedCode] = useState(code);
   const [copied, setCopied] = useState(false);
@@ -176,30 +164,20 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
       <div className="overflow-x-auto">
         <div className="flex">
           {/* Line numbers column */}
-          {(showLineNumbers || referencedLines.length > 0) && (
-            <div className="flex-shrink-0 bg-gray-800 border-r border-gray-700 px-3 py-4 text-right">
-              {formattedCode.split('\n').map((_, index) => {
-                const lineNumber = index + 1;
-                const isReferenced = referencedLines.includes(lineNumber);
-                return (
-                  <div 
-                    key={index}
-                    className={`text-xs leading-[1.5] ${
-                      isReferenced 
-                        ? 'text-blue-300 font-bold bg-blue-900/30' 
-                        : 'text-gray-500'
-                    }`}
-                    style={{ height: '1.5em' }}
-                  >
-                    {isReferenced && (
-                      <span className="inline-block w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
-                    )}
-                    {lineNumber}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className="flex-shrink-0 bg-gray-800 border-r border-gray-700 px-3 py-4 text-right">
+            {formattedCode.split('\n').map((_, index) => {
+              const lineNumber = index + 1;
+              return (
+                <div 
+                  key={index}
+                  className="text-xs leading-[1.5] text-gray-500"
+                  style={{ height: '1.5em' }}
+                >
+                  {lineNumber}
+                </div>
+              );
+            })}
+          </div>
           
           {/* Code content */}
           <div className="flex-1 p-4">
