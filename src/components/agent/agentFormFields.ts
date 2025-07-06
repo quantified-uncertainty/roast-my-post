@@ -56,4 +56,11 @@ export const agentFormFields: FormFieldConfig[] = [
     type: "textarea",
     placeholder: "Human-readable documentation for users and future modifiers (optional)",
   },
+  {
+    name: "githubUrl",
+    label: "GitHub URL",
+    type: "text",
+    placeholder: "https://github.com/username/repository (optional)",
+    description: "Link to the GitHub repository for this agent",
+  },
 ];

@@ -32,6 +32,7 @@ export class AgentModel {
               providesGrades: data.providesGrades || false,
               extendedCapabilityId: data.extendedCapabilityId,
               readme: data.readme,
+              githubUrl: data.githubUrl,
             },
           },
         },
@@ -60,6 +61,7 @@ export class AgentModel {
         providesGrades: agent.versions[0].providesGrades ?? false,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
         readme: agent.versions[0].readme || undefined,
+        githubUrl: agent.versions[0].githubUrl || undefined,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
@@ -102,6 +104,7 @@ export class AgentModel {
               providesGrades: data.providesGrades || false,
               extendedCapabilityId: data.extendedCapabilityId,
               readme: data.readme,
+              githubUrl: data.githubUrl,
             },
           },
         },
@@ -127,6 +130,7 @@ export class AgentModel {
         providesGrades: agent.versions[0].providesGrades ?? false,
         extendedCapabilityId: agent.versions[0].extendedCapabilityId || undefined,
         readme: agent.versions[0].readme || undefined,
+        githubUrl: agent.versions[0].githubUrl || undefined,
         owner: {
           id: agent.submittedById,
           name: agent.submittedBy.name || "Unknown",
@@ -174,6 +178,7 @@ export class AgentModel {
         providesGrades: dbAgent.versions[0].providesGrades ?? false,
         extendedCapabilityId: dbAgent.versions[0].extendedCapabilityId || undefined,
         readme: dbAgent.versions[0].readme || undefined,
+        githubUrl: dbAgent.versions[0].githubUrl || undefined,
         owner: {
           id: dbAgent.submittedById,
           name: dbAgent.submittedBy.name || "Unknown",

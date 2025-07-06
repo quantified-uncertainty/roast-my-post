@@ -72,7 +72,10 @@ export const exportAgentAsJson = async (
     description: agent.description,
     primaryInstructions: agent.primaryInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
+    providesGrades: agent.providesGrades,
     extendedCapabilityId: agent.extendedCapabilityId,
+    readme: agent.readme,
+    githubUrl: agent.githubUrl,
     owner: agent.owner,
     exportedAt: new Date().toISOString(),
   };
@@ -102,13 +105,16 @@ name: "${agent.name}"
 version: ${agent.version}
 owner: ${agent.owner?.name || "Unknown"}
 created: ${exportDate}
+provides_grades: ${agent.providesGrades || false}
 extended_capability: ${agent.extendedCapabilityId || "none"}
+github_url: ${agent.githubUrl || "none"}
 ---
 
 # ${agent.name}
 
 **Version:** ${agent.version}  
-**Owner:** ${agent.owner?.name || "Unknown"}`;
+**Owner:** ${agent.owner?.name || "Unknown"}  
+**Provides Grades:** ${agent.providesGrades ? "Yes" : "No"}`;
 
   if (agent.extendedCapabilityId) {
     markdown += `  
@@ -120,6 +126,14 @@ extended_capability: ${agent.extendedCapabilityId || "none"}
 ## Description
 
 ${agent.description}`;
+
+  if (agent.githubUrl) {
+    markdown += `
+
+## Source Repository
+
+[View on GitHub](${agent.githubUrl})`;
+  }
 
   if (agent.primaryInstructions) {
     markdown += `
@@ -135,6 +149,14 @@ ${agent.primaryInstructions}`;
 ## Self-Critique Instructions
 
 ${agent.selfCritiqueInstructions}`;
+  }
+
+  if (agent.readme) {
+    markdown += `
+
+## README
+
+${agent.readme}`;
   }
 
   markdown += `
@@ -164,7 +186,10 @@ export const exportAgentAsYaml = async (
     description: agent.description,
     primaryInstructions: agent.primaryInstructions,
     selfCritiqueInstructions: agent.selfCritiqueInstructions,
+    providesGrades: agent.providesGrades,
     extendedCapabilityId: agent.extendedCapabilityId,
+    readme: agent.readme,
+    githubUrl: agent.githubUrl,
     owner: {
       id: agent.owner?.id,
       name: agent.owner?.name,

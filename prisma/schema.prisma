@@ -180,6 +180,7 @@ model AgentVersion {
   providesGrades           Boolean             @default(false)
   extendedCapabilityId     String?
   readme                   String?
+  githubUrl                String?
   agentId                  String
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt

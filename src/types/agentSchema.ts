@@ -20,6 +20,7 @@ export const AgentVersionSchema = z.object({
   providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
   readme: z.string().optional(),
+  githubUrl: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -35,6 +36,7 @@ const BaseAgentSchema = z.object({
   providesGrades: z.boolean().default(false),
   extendedCapabilityId: z.string().optional(),
   readme: z.string().optional(),
+  githubUrl: z.string().optional(),
 });
 
 // Schema for the complete agent

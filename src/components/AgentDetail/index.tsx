@@ -12,6 +12,7 @@ import {
   Download,
   FileDown,
   FileText,
+  Github,
   Pencil,
   Play,
   Upload,
@@ -214,6 +215,15 @@ export default function AgentDetail({
               </div>
             )}
           </div>
+
+          {agent.githubUrl && (
+            <a href={agent.githubUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Github className="h-4 w-4" />
+                View on GitHub
+              </Button>
+            </a>
+          )}
 
           <Link href={`/agents/${agent.id}/versions`}>
             <Button variant="secondary" className="flex items-center gap-2">

@@ -9,7 +9,8 @@ import {
   RocketLaunchIcon,
   DocumentTextIcon,
   ChatBubbleLeftRightIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  FolderIcon
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Getting Started", href: "/help/getting-started", icon: RocketLaunchIcon },
   { name: "Agents for Humans", href: "/help/agents-humans", icon: UserGroupIcon },
   { name: "Agents for LLMs", href: "/help/agents-llms", icon: ChatBubbleLeftRightIcon },
+  { name: "GitHub Agent Repos", href: "/help/github-agents", icon: FolderIcon },
   { name: "API Documentation", href: "/help/api", icon: CodeBracketIcon },
   { name: "Roadmap", href: "/help/roadmap", icon: DocumentTextIcon },
 ];
