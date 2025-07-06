@@ -710,8 +710,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             if (codeContent.includes(highlight.quotedText.trim())) {
               return true;
             }
+            
+            // Try partial matches (for cases where quoted text might be incomplete)
+            const quotedWords = highlight.quotedText.trim().split(/\s+/).filter(word => word.length > 3);
+            if (quotedWords.length > 0 && quotedWords.some(word => codeContent.includes(word))) {
+              return true;
+            }
+            
             // Check if it's a code-related comment (contains common code keywords)
-            const codeKeywords = ['function', 'const', 'let', 'var', 'return', 'if', 'for', 'while', 'class', '()', '=>', '{', '}'];
+            const codeKeywords = ['function', 'const', 'let', 'var', 'return', 'if', 'for', 'while', 'class', '()', '=>', '{', '}', 'import', 'export', 'name', '@'];
             if (codeKeywords.some(keyword => highlight.quotedText.includes(keyword))) {
               return true;
             }
@@ -724,7 +731,11 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           h.tag === activeTag || h.tag === hoveredTag
         );
 
-        if (relevantHighlights.length > 0) {
+        // Simplified approach: show indicators when ANY highlight is active
+        // This ensures we get visual feedback even if exact matching fails
+        const hasAnyActiveHighlight = activeTag !== null || hoveredTag !== null;
+        
+        if (relevantHighlights.length > 0 || hasAnyActiveHighlight) {
           // Get unique lines that are referenced in comments
           const referencedLines = new Set<number>();
           relevantHighlights.forEach((highlight: any) => {
@@ -741,12 +752,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           return (
             <CodeBlockErrorBoundary>
               <div className="relative">
-                {activeHighlight && (
+                {(activeHighlight || hasAnyActiveHighlight) && (
                   <div className="absolute -top-8 left-0 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded z-10">
-                    💬 Line{referencedLines.size > 1 ? 's' : ''} {Array.from(referencedLines).join(', ')} referenced
+                    💬 {referencedLines.size > 0 
+                      ? `Line${referencedLines.size > 1 ? 's' : ''} ${Array.from(referencedLines).join(', ')} referenced`
+                      : 'Comment may reference this code'
+                    }
                   </div>
                 )}
-                <div className={activeHighlight ? "ring-2 ring-blue-400 ring-opacity-50 rounded-lg" : ""}>
+                <div className={(activeHighlight || hasAnyActiveHighlight) ? "ring-2 ring-blue-400 ring-opacity-50 rounded-lg" : ""}>
                   <CodeBlock
                     code={props.element.value || ""}
                     language={props.element.lang || "plain"}
@@ -758,7 +772,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
                   </CodeBlock>
                 </div>
                 {/* Show quoted text snippets below code block when relevant highlights are active */}
-                {activeHighlight && relevantHighlights.length > 0 && (
+                {(activeHighlight || hasAnyActiveHighlight) && relevantHighlights.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {relevantHighlights
                       .filter((h: any) => h.tag === activeTag || h.tag === hoveredTag)
