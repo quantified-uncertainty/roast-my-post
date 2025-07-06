@@ -139,6 +139,14 @@ export class DocumentModel {
           },
         },
         evaluations: {
+          where: includeStale ? {} : {
+            // Only include evaluations that have at least one non-stale version
+            versions: {
+              some: {
+                isStale: false,
+              },
+            },
+          },
           include: {
             jobs: {
               orderBy: {
@@ -189,33 +197,7 @@ export class DocumentModel {
     const latestVersion = dbDoc.versions[0];
     const currentDocumentVersion = latestVersion.version;
 
-    // Filter evaluations to only include those matching current document version (unless includeStale is true)
-    let filteredEvaluations = dbDoc.evaluations;
-    if (!includeStale) {
-      filteredEvaluations = dbDoc.evaluations.filter((evaluation) => {
-        try {
-          // Get the latest evaluation version
-          const latestEvalVersion = evaluation.versions?.[0];
-          
-          // Skip evaluations with no versions
-          if (!latestEvalVersion) {
-            return false;
-          }
-          
-          // Skip evaluations with invalid document version data
-          if (!latestEvalVersion.documentVersion || typeof latestEvalVersion.documentVersion.version !== 'number') {
-            return false;
-          }
-          
-          // Check if it matches the current document version
-          return latestEvalVersion.documentVersion.version === currentDocumentVersion;
-        } catch (error) {
-          // Log error but don't fail the entire operation
-          console.warn(`Error filtering evaluation ${evaluation.id}:`, error);
-          return false;
-        }
-      });
-    }
+    // Evaluations are already filtered at the database level based on isStale field
 
     // Transform database document to frontend Document shape
     const document: Document = {
@@ -240,7 +222,7 @@ export class DocumentModel {
         : undefined,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
-      reviews: filteredEvaluations.map((evaluation) => {
+      reviews: dbDoc.evaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => {
           // Calculate if this version is stale
@@ -931,82 +913,94 @@ export class DocumentModel {
     },
     userId: string
   ) {
-    // First get current document and its latest version
-    const document = await prisma.document.findUnique({
-      where: { id: docId },
-      include: {
-        versions: {
-          orderBy: {
-            version: "desc",
+    // Use a transaction to ensure atomicity and prevent race conditions
+    return await prisma.$transaction(async (tx) => {
+      // First get current document and its latest version
+      const document = await tx.document.findUnique({
+        where: { id: docId },
+        include: {
+          versions: {
+            orderBy: {
+              version: "desc",
+            },
+            take: 1,
           },
-          take: 1,
+          evaluations: true,
         },
-      },
-    });
+      });
 
-    if (!document) {
-      throw new Error("Document not found");
-    }
+      if (!document) {
+        throw new Error("Document not found");
+      }
 
-    // Verify ownership
-    if (document.submittedById !== userId) {
-      throw new Error("You don't have permission to update this document");
-    }
+      // Verify ownership
+      if (document.submittedById !== userId) {
+        throw new Error("You don't have permission to update this document");
+      }
 
-    // Get current version number
-    const currentVersion = document.versions[0]?.version || 0;
-    const newVersion = currentVersion + 1;
+      // Get current version number
+      const currentVersion = document.versions[0]?.version || 0;
+      const newVersion = currentVersion + 1;
 
-    // Update the document by creating a new version
-    const updatedDocument = await prisma.document.update({
-      where: { id: docId },
-      data: {
-        versions: {
-          create: {
-            version: newVersion,
-            title: data.title,
-            authors: data.authors.split(",").map((a) => a.trim()),
-            urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
-            platforms: data.platforms
-              ? data.platforms.split(",").map((p) => p.trim())
-              : [],
-            intendedAgents: data.intendedAgents
-              ? data.intendedAgents.split(",").map((a) => a.trim())
-              : [],
-            content: data.content,
-            importUrl: data.importUrl || null,
-          },
-        },
-      },
-      include: {
-        versions: {
-          orderBy: {
-            version: "desc",
-          },
-          take: 1,
-        },
-        evaluations: true,
-      },
-    });
-
-    // Automatically queue re-evaluations for all existing evaluations
-    if (updatedDocument.evaluations.length > 0) {
-      const jobCreations = updatedDocument.evaluations.map((evaluation) =>
-        prisma.job.create({
-          data: {
-            status: "PENDING",
-            evaluation: {
-              connect: {
-                id: evaluation.id,
-              },
+      // Update the document by creating a new version
+      const updatedDocument = await tx.document.update({
+        where: { id: docId },
+        data: {
+          versions: {
+            create: {
+              version: newVersion,
+              title: data.title,
+              authors: data.authors.split(",").map((a) => a.trim()),
+              urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
+              platforms: data.platforms
+                ? data.platforms.split(",").map((p) => p.trim())
+                : [],
+              intendedAgents: data.intendedAgents
+                ? data.intendedAgents.split(",").map((a) => a.trim())
+                : [],
+              content: data.content,
+              importUrl: data.importUrl || null,
             },
           },
-        })
-      );
+        },
+        include: {
+          versions: {
+            orderBy: {
+              version: "desc",
+            },
+            take: 1,
+          },
+          evaluations: true,
+        },
+      });
 
-      await Promise.all(jobCreations);
-    }
+      // Mark all existing evaluation versions as stale
+      await tx.evaluationVersion.updateMany({
+        where: {
+          evaluation: {
+            documentId: docId,
+          },
+          isStale: false, // Only update ones that aren't already stale
+        },
+        data: {
+          isStale: true,
+        },
+      });
 
-    return updatedDocument;
+      // Automatically queue re-evaluations for all existing evaluations
+      if (document.evaluations.length > 0) {
+        // Use createMany for better performance
+        await tx.job.createMany({
+          data: document.evaluations.map((evaluation) => ({
+            status: "PENDING",
+            evaluationId: evaluation.id,
+          })),
+        });
+      }
+
+      return updatedDocument;
+    }, {
+      isolationLevel: 'Serializable', // Strongest isolation to prevent race conditions
+    });
   }
 }

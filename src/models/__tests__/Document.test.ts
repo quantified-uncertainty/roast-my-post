@@ -36,6 +36,8 @@ describe('DocumentModel', () => {
   });
 
   describe('getDocumentWithEvaluations', () => {
+    // Note: With the new isStale field approach, filtering happens at the database level
+    // These tests assume the database query already filters based on isStale field
     const mockDbDoc = {
       id: 'doc-123',
       publishedDate: new Date('2024-01-01'),
@@ -143,7 +145,7 @@ describe('DocumentModel', () => {
       ],
     };
 
-    it('should filter out stale evaluations by default (includeStale=false)', async () => {
+    it('should use database filtering for stale evaluations by default (includeStale=false)', async () => {
       (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDbDoc);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
@@ -151,13 +153,26 @@ describe('DocumentModel', () => {
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(1);
       
-      // Should include the evaluation since its latest version matches current document version (2)
-      const evaluation = result?.reviews[0];
-      expect(evaluation?.versions).toHaveLength(2); // All versions are included
-      expect(evaluation?.versions?.[0]?.documentVersion?.version).toBe(2); // Latest version matches current
+      // Verify that the query was called with proper where clause for filtering
+      expect(prisma.document.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'doc-123' },
+          include: expect.objectContaining({
+            evaluations: expect.objectContaining({
+              where: {
+                versions: {
+                  some: {
+                    isStale: false,
+                  },
+                },
+              },
+            }),
+          }),
+        })
+      );
     });
 
-    it('should include all evaluations when includeStale=true', async () => {
+    it('should not filter evaluations when includeStale=true', async () => {
       (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDbDoc);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123', true);
@@ -165,9 +180,17 @@ describe('DocumentModel', () => {
       expect(result).toBeTruthy();
       expect(result?.reviews).toHaveLength(1);
       
-      // Should include all evaluation versions
-      const evaluation = result?.reviews[0];
-      expect(evaluation?.versions).toHaveLength(2);
+      // Verify that the query was called without filtering
+      expect(prisma.document.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'doc-123' },
+          include: expect.objectContaining({
+            evaluations: expect.objectContaining({
+              where: {},
+            }),
+          }),
+        })
+      );
     });
 
     it('should handle documents with no evaluations', async () => {
@@ -282,6 +305,143 @@ describe('DocumentModel', () => {
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    const mockTransaction = {
+      document: {
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
+      evaluationVersion: {
+        updateMany: jest.fn(),
+      },
+      job: {
+        createMany: jest.fn(),
+      },
+    };
+
+    beforeEach(() => {
+      (prisma.$transaction as jest.Mock).mockImplementation(async (fn) => {
+        return fn(mockTransaction);
+      });
+    });
+
+    it('should update document with transaction safety', async () => {
+      const mockDocument = {
+        id: 'doc-123',
+        submittedById: 'user-123',
+        versions: [{ version: 1 }],
+        evaluations: [
+          { id: 'eval-1' },
+          { id: 'eval-2' },
+        ],
+      };
+
+      mockTransaction.document.findUnique.mockResolvedValue(mockDocument);
+      mockTransaction.document.update.mockResolvedValue({
+        ...mockDocument,
+        versions: [{ version: 2 }],
+      });
+      mockTransaction.evaluationVersion.updateMany.mockResolvedValue({ count: 3 });
+      mockTransaction.job.createMany.mockResolvedValue({ count: 2 });
+
+      const result = await DocumentModel.update(
+        'doc-123',
+        {
+          title: 'Updated Title',
+          authors: 'John Doe',
+          content: 'Updated content',
+        },
+        'user-123'
+      );
+
+      // Verify transaction was used with serializable isolation
+      expect(prisma.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        { isolationLevel: 'Serializable' }
+      );
+
+      // Verify evaluation versions were marked as stale
+      expect(mockTransaction.evaluationVersion.updateMany).toHaveBeenCalledWith({
+        where: {
+          evaluation: {
+            documentId: 'doc-123',
+          },
+          isStale: false,
+        },
+        data: {
+          isStale: true,
+        },
+      });
+
+      // Verify jobs were created for re-evaluation
+      expect(mockTransaction.job.createMany).toHaveBeenCalledWith({
+        data: [
+          { status: 'PENDING', evaluationId: 'eval-1' },
+          { status: 'PENDING', evaluationId: 'eval-2' },
+        ],
+      });
+
+      expect(result).toBeTruthy();
+    });
+
+    it('should throw error if document not found', async () => {
+      mockTransaction.document.findUnique.mockResolvedValue(null);
+
+      await expect(
+        DocumentModel.update('non-existent', { 
+          title: 'Test',
+          authors: 'Test Author',
+          content: 'Test content'
+        }, 'user-123')
+      ).rejects.toThrow('Document not found');
+    });
+
+    it('should throw error if user lacks permission', async () => {
+      mockTransaction.document.findUnique.mockResolvedValue({
+        id: 'doc-123',
+        submittedById: 'other-user',
+        versions: [{ version: 1 }],
+      });
+
+      await expect(
+        DocumentModel.update('doc-123', { 
+          title: 'Test',
+          authors: 'Test Author',
+          content: 'Test content'
+        }, 'user-123')
+      ).rejects.toThrow("You don't have permission to update this document");
+    });
+
+    it('should handle documents with no evaluations', async () => {
+      const mockDocument = {
+        id: 'doc-123',
+        submittedById: 'user-123',
+        versions: [{ version: 1 }],
+        evaluations: [], // No evaluations
+      };
+
+      mockTransaction.document.findUnique.mockResolvedValue(mockDocument);
+      mockTransaction.document.update.mockResolvedValue({
+        ...mockDocument,
+        versions: [{ version: 2 }],
+      });
+
+      const result = await DocumentModel.update(
+        'doc-123',
+        { title: 'Updated Title', authors: 'John Doe', content: 'Updated' },
+        'user-123'
+      );
+
+      // Should still mark evaluation versions as stale (even if none exist)
+      expect(mockTransaction.evaluationVersion.updateMany).toHaveBeenCalled();
+      
+      // Should not create any jobs
+      expect(mockTransaction.job.createMany).not.toHaveBeenCalled();
+
+      expect(result).toBeTruthy();
     });
   });
 
