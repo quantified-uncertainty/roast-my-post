@@ -29,6 +29,7 @@
     "db:studio": "prisma studio",
     "process-jobs": "tsx src/scripts/process-job.ts",
     "test:claude-code": "tsx src/scripts/test-claude-code.ts",
+    "test:multi-turn": "tsx src/scripts/test-multi-turn.ts",
     "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts",
     "process-jobs-parallel": "tsx src/scripts/process-jobs-parallel.ts",
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",

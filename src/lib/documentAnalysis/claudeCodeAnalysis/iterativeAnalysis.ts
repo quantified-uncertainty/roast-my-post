@@ -140,7 +140,7 @@ ${document.content}
           console.log(`   Comments preview: ${commentsPreview.replace(/\n/g, ' ')}`);
         }
       } catch (err) {
-        logger.warn('Could not read analysis file for progress update', err);
+        logger.warn('Could not read analysis file for progress update', { error: err });
       }
     }
 

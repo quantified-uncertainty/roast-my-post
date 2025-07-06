@@ -8,6 +8,7 @@ import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 import { analyzeWithClaudeCode } from "./claudeCodeAnalysis";
+import { analyzeWithMultiTurn } from "./multiTurnAnalysis";
 
 export async function analyzeDocument(
   document: Document,
@@ -24,44 +25,41 @@ export async function analyzeDocument(
   comments: Comment[];
   tasks: TaskResult[];
 }> {
-  // Always use Claude Code for now (hardcoded)
-  const useClaudeCode = true;
+  // Use the new multi-turn approach instead of Claude Code
+  const useMultiTurn = true;
   
-  // Check if agent should use Claude Code
-  if (useClaudeCode) {
-    logger.info(`Using Claude Code workflow for agent ${agentInfo.name}`);
+  // Check if we should use multi-turn analysis
+  if (useMultiTurn) {
+    logger.info(`Using multi-turn analysis for agent ${agentInfo.name}`);
     
-    const result = await analyzeWithClaudeCode(document, agentInfo, {
+    const result = await analyzeWithMultiTurn(document, agentInfo, {
       budget: (agentInfo as any).claudeCodeBudget || 0.06,
+      maxTurns: 5,
       verbose: true,
     });
 
     // Convert to standard format
     return {
-      thinking: "", // Claude Code doesn't separate thinking
+      thinking: "", // Multi-turn analysis doesn't separate thinking
       analysis: result.analysis,
       summary: result.summary,
       grade: result.grade,
       comments: result.comments,
       tasks: [
         {
-          name: "Claude Code Analysis",
+          name: "Multi-Turn Analysis",
           modelName: "claude-4-sonnet-20250514",
           priceInCents: Math.round(result.totalCost * 100), // Convert to cents
-          timeInSeconds: (result.turnCount * 2) || 0, // Estimate 2 seconds per turn
-          log: `Completed ${result.turnCount} turns with ${result.abortReason} reason`,
+          timeInSeconds: (result.turnCount * 3) || 0, // Estimate 3 seconds per turn
+          log: `Completed ${result.turnCount} turns, budget used: ${result.budgetUsed.toFixed(1)}%`,
           llmInteractions: [{
-            messages: result.conversation
-              .filter(msg => msg.type === "user" || msg.type === "assistant")
-              .map(msg => ({
-                role: msg.type as "user" | "assistant",
-                content: (msg as any).content || ""
-              })),
+            messages: result.conversationHistory.map(msg => ({
+              role: msg.role as "user" | "assistant",
+              content: msg.content
+            })),
             usage: {
-              input_tokens: result.conversation.reduce((sum, msg) => 
-                sum + ((msg as any).usage?.input_tokens || 0), 0),
-              output_tokens: result.conversation.reduce((sum, msg) => 
-                sum + ((msg as any).usage?.output_tokens || 0), 0)
+              input_tokens: Math.round(result.totalCost * 1000 / 3), // Rough estimate
+              output_tokens: Math.round(result.totalCost * 1000 / 15), // Rough estimate
             }
           }],
         },
