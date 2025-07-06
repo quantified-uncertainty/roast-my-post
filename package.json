@@ -33,11 +33,11 @@
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts",
     "set-admin": "npx tsx scripts/set-admin.ts",
-    "worktree:create": "./scripts/worktree-manager.sh create",
-    "worktree:start": "./scripts/worktree-manager.sh start",
-    "worktree:list": "./scripts/worktree-manager.sh list",
-    "worktree:ports": "./scripts/worktree-manager.sh ports",
-    "worktree": "./scripts/worktree-manager.sh"
+    "worktree:create": "test -f scripts/worktree-manager.sh && scripts/worktree-manager.sh create || echo 'Worktree scripts not available'",
+    "worktree:start": "test -f scripts/worktree-manager.sh && scripts/worktree-manager.sh start || echo 'Worktree scripts not available'",
+    "worktree:list": "test -f scripts/worktree-manager.sh && scripts/worktree-manager.sh list || echo 'Worktree scripts not available'",
+    "worktree:ports": "test -f scripts/worktree-manager.sh && scripts/worktree-manager.sh ports || echo 'Worktree scripts not available'",
+    "worktree": "test -f scripts/worktree-manager.sh && scripts/worktree-manager.sh || echo 'Worktree scripts not available'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
