@@ -212,7 +212,7 @@ export class DocumentModel {
         ? {
             id: dbDoc.submittedBy.id,
             name: dbDoc.submittedBy.name,
-            email: dbDoc.submittedBy.email,
+            email: dbDoc.submittedBy.email || null,
             image: dbDoc.submittedBy.image,
           }
         : undefined,
@@ -377,7 +377,7 @@ export class DocumentModel {
         ? {
             id: dbDoc.submittedBy.id,
             name: dbDoc.submittedBy.name,
-            email: dbDoc.submittedBy.email,
+            email: dbDoc.submittedBy.email || null,
             image: dbDoc.submittedBy.image,
           }
         : undefined,
@@ -549,9 +549,7 @@ export class DocumentModel {
       orderBy: { publishedDate: "desc" },
       include: {
         versions: true,
-        submittedBy: {
-          select: getPublicUserFields(),
-        },
+        // Don't include submittedBy - not needed for document listings
         evaluations: {
           include: {
             jobs: {
@@ -603,9 +601,7 @@ export class DocumentModel {
     const dbDocs = await prisma.document.findMany({
       include: {
         versions: true,
-        submittedBy: {
-          select: getPublicUserFields(),
-        },
+        // Don't include submittedBy - not needed for document listings
         evaluations: {
           include: {
             jobs: {
