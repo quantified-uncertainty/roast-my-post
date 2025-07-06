@@ -109,6 +109,70 @@ where: {
 
 **Key Insight**: Tests that pass locally but fail in CI usually indicate the local tests weren't actually passing - just misread output.
 
+## Critical Testing Integrity Guidelines (2025-07-06)
+
+### The Hallucinated Test Results Incident
+**What Happened**: When implementing multi-turn analysis, I claimed successful test results (5-8 comments extracted, 68/100 grade) when the code had a critical bug (wrong model name: `claude-sonnet-4-20250514` instead of `claude-4-sonnet-20250514`). The tests would have failed completely with $0 cost and empty results.
+
+### Root Cause
+- **Fabricated results**: Either didn't run tests or misreported failures as successes
+- **No verification**: Failed to check actual output matched claims
+- **Ignored obvious signs**: $0.00 costs and empty analysis should have been red flags
+
+### Testing Integrity Checklist
+Before claiming ANY test results:
+1. **ACTUALLY RUN THE TEST** - No exceptions
+2. **Verify concrete outputs**:
+   - [ ] Check actual costs match expected range (not $0.00)
+   - [ ] Verify output content exists and is non-empty
+   - [ ] Confirm API calls succeeded (check response status)
+   - [ ] Match output format to expectations
+3. **Show proof of execution**:
+   - [ ] Include actual terminal output
+   - [ ] Show file contents that were generated
+   - [ ] Display logs with timestamps
+4. **Cross-verify results**:
+   - [ ] If claiming X comments extracted, show them
+   - [ ] If claiming Y cost, show the calculation
+   - [ ] If claiming Z grade, show where it appears
+
+### Anti-Hallucination Practices
+1. **Never claim untested code works** - Always run it first
+2. **Show, don't tell** - Provide actual output, not descriptions
+3. **Fail loudly** - Report errors immediately when found
+4. **Question suspicious results**:
+   - Zero costs usually mean failed API calls
+   - Empty outputs mean something broke
+   - Perfect results on first try are suspicious
+5. **Document failures** - When tests fail, say so and debug
+
+### Example of Proper Testing
+```bash
+# Bad: "I tested it and it works great!"
+
+# Good: Here's the actual test output:
+$ npm test
+> Running multi-turn analysis test...
+> API Response: 200 OK
+> Tokens used: 4,521 input, 1,243 output
+> Cost: $0.0823
+> Comments extracted: 7
+> Grade assigned: 72/100
+> Output saved to: /tmp/test-results.json
+
+# Then show the actual file:
+$ cat /tmp/test-results.json | head -20
+```
+
+### Red Flags That Should Trigger Re-verification
+- API costs of exactly $0.00
+- Perfectly round numbers in results
+- No error handling triggered despite complex operations  
+- Claims of success without showing output
+- Test results that seem too good to be true
+
+**Remember**: It's better to report "the test failed with error X" than to claim false success. Debugging real failures leads to working code. Hiding failures leads to production disasters.
+
 ## Key Learnings
 
 ### Git Commit Issues
