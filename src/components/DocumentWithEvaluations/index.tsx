@@ -15,6 +15,25 @@ export function DocumentWithEvaluations({
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
+  // Check for pending/running jobs across all evaluations
+  const pendingJobs = useMemo(() => {
+    return document.reviews.flatMap(review => 
+      review.jobs?.filter(job => job.status === 'PENDING' || job.status === 'RUNNING') || []
+    );
+  }, [document.reviews]);
+
+  // Check for failed jobs (most recent failure per evaluation)
+  const failedJobs = useMemo(() => {
+    return document.reviews.map(review => {
+      const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
+      return mostRecentJob?.status === 'FAILED' ? {
+        ...mostRecentJob,
+        agentName: review.agent.name,
+        agentId: review.agentId
+      } : null;
+    }).filter((job): job is NonNullable<typeof job> => job !== null);
+  }, [document.reviews]);
+  
   // Initialize evaluation state immediately if we have evaluations
   const [evaluationState, setEvaluationState] = useState<EvaluationState | null>(
     hasEvaluations
@@ -49,6 +68,8 @@ export function DocumentWithEvaluations({
           document={document}
           contentWithMetadataPrepend={contentWithMetadata}
           isOwner={isOwner}
+          pendingJobsCount={pendingJobs.length}
+          failedJobs={failedJobs}
         />
       )}
     </div>
