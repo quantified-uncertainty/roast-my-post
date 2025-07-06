@@ -321,6 +321,9 @@ describe("articleImport", () => {
     });
 
     it("should fallback when Firecrawl returns short content", async () => {
+      // Mock Diffbot to fail first
+      mockedAxios.get.mockRejectedValueOnce(new Error("Diffbot API Error"));
+      
       // Mock Firecrawl to return very short content
       mockedAxios.post.mockResolvedValueOnce({
         data: {
