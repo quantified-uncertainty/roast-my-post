@@ -135,14 +135,15 @@ export class DocumentModel {
           select: getPublicUserFields(),
         },
         evaluations: {
-          where: includeStale ? {} : {
-            // Only include evaluations that have at least one non-stale version
-            versions: {
-              some: {
-                isStale: false,
-              },
-            },
-          },
+          // TODO: Re-enable isStale filter after Prisma client is properly regenerated
+          // where: includeStale ? {} : {
+          //   // Only include evaluations that have at least one non-stale version
+          //   versions: {
+          //     some: {
+          //       isStale: false,
+          //     },
+          //   },
+          // },
           include: {
             jobs: {
               orderBy: {
