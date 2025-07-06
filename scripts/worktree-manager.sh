@@ -223,8 +223,13 @@ start_tmux_session() {
     # Window 1: Workers
     tmux new-window -t "$SESSION" -n "workers"
     tmux send-keys -t "$SESSION:workers" "cd '$WORKTREE_PATH'" C-m
-    tmux send-keys -t "$SESSION:workers" "echo '⚙️  Starting job processor...'" C-m
-    tmux send-keys -t "$SESSION:workers" "npm run process-jobs-adaptive" C-m
+    tmux send-keys -t "$SESSION:workers" "echo '⚙️  Job processor disabled for worktrees'" C-m
+    tmux send-keys -t "$SESSION:workers" "echo ''" C-m
+    tmux send-keys -t "$SESSION:workers" "echo 'To avoid conflicts with multiple worktrees accessing the same database,'" C-m
+    tmux send-keys -t "$SESSION:workers" "echo 'job processing should only run from the main repository.'" C-m
+    tmux send-keys -t "$SESSION:workers" "echo ''" C-m
+    tmux send-keys -t "$SESSION:workers" "echo 'If you need to run jobs manually from this worktree:'" C-m
+    tmux send-keys -t "$SESSION:workers" "echo '  npm run process-jobs-adaptive'" C-m
     
     # Window 2: Database
     tmux new-window -t "$SESSION" -n "database"
