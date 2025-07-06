@@ -350,6 +350,12 @@ export class DocumentModel {
     return DocumentModel.getDocumentWithEvaluations(docId, true);
   }
 
+  /**
+   * Formats a database document into the frontend Document type
+   * @param dbDoc - The raw document from the database with all relations
+   * @returns The formatted Document object for frontend use
+   * @internal
+   */
   static formatDocumentFromDB(dbDoc: any): Document {
     if (!dbDoc.versions.length) {
       throw new Error(`Document ${dbDoc.id} has no versions`);
