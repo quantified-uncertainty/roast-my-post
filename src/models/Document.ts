@@ -894,8 +894,27 @@ export class DocumentModel {
           },
           take: 1,
         },
+        evaluations: true,
       },
     });
+
+    // Automatically queue re-evaluations for all existing evaluations
+    if (updatedDocument.evaluations.length > 0) {
+      const jobCreations = updatedDocument.evaluations.map((evaluation) =>
+        prisma.job.create({
+          data: {
+            status: "PENDING",
+            evaluation: {
+              connect: {
+                id: evaluation.id,
+              },
+            },
+          },
+        })
+      );
+
+      await Promise.all(jobCreations);
+    }
 
     return updatedDocument;
   }

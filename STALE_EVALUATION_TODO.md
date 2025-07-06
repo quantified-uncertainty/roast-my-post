@@ -4,17 +4,17 @@ This worktree is for implementing the stale evaluation handling feature as docum
 
 ## Implementation Plan
 
-### Phase 1: Server-Side Filtering (Priority: High)
-- [ ] Modify `DocumentModel.getDocumentWithEvaluations()` to filter evaluations by version match
-- [ ] Add a parameter or separate method to fetch all evaluations (for history views)  
-- [ ] Test that reader view only shows current version evaluations
-- [ ] Ensure other views still have access to all evaluations
+### Phase 1: Server-Side Filtering (Priority: High) ✅
+- [x] Modify `DocumentModel.getDocumentWithEvaluations()` to filter evaluations by version match
+- [x] Add a parameter or separate method to fetch all evaluations (for history views)  
+- [x] Test that reader view only shows current version evaluations
+- [x] Ensure other views still have access to all evaluations
 
-### Phase 2: Auto Re-evaluation with Warnings (Priority: High)
-- [ ] Add warning dialog for document edit action
-- [ ] Add warning dialog for document re-upload action
-- [ ] Modify `DocumentModel.update()` to automatically queue re-evaluations
-- [ ] Track and display the number of evaluations being re-run
+### Phase 2: Auto Re-evaluation with Warnings (Priority: High) ✅
+- [x] Add warning dialog for document edit action
+- [x] Add warning dialog for document re-upload action
+- [x] Modify `DocumentModel.update()` to automatically queue re-evaluations
+- [x] Track and display the number of evaluations being re-run
 
 ### Phase 3: UI Enhancements (Priority: Medium)
 - [ ] Add version mismatch indicators in evaluation history views
