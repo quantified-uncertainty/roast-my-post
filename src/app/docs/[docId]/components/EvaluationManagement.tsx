@@ -9,6 +9,7 @@ import {
   PlusIcon,
   ChatBubbleLeftIcon,
   DocumentTextIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -22,9 +23,10 @@ interface EvaluationManagementProps {
   evaluations: any[];
   availableAgents: any[];
   isOwner: boolean;
+  currentDocumentVersion?: number;
 }
 
-export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner }: EvaluationManagementProps) {
+export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner, currentDocumentVersion }: EvaluationManagementProps) {
   const router = useRouter();
   const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
@@ -85,6 +87,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const latestVersion = evaluation.versions?.[0];
               const latestGrade = latestVersion?.grade;
               const versionCount = evaluation.versions?.length || 0;
+              const isStale = currentDocumentVersion && latestVersion?.documentVersion?.version !== currentDocumentVersion;
               
               // Calculate stats
               const totalCost = evaluation.versions?.reduce((sum: number, v: any) => 
@@ -130,6 +133,12 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                             >
                               {evaluation.agent.name}
                             </Link>
+                            {isStale && (
+                              <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded">
+                                <ExclamationTriangleIcon className="h-3 w-3" />
+                                STALE
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">
                             <Link 

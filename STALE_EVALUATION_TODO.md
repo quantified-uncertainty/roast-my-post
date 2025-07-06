@@ -16,10 +16,10 @@ This worktree is for implementing the stale evaluation handling feature as docum
 - [x] Modify `DocumentModel.update()` to automatically queue re-evaluations
 - [x] Track and display the number of evaluations being re-run
 
-### Phase 3: UI Enhancements (Priority: Medium)
-- [ ] Add version mismatch indicators in evaluation history views
-- [ ] Show which document version each evaluation was run against
-- [ ] Add "stale" badges where appropriate outside reader view
+### Phase 3: UI Enhancements (Priority: Medium) ✅
+- [x] Add version mismatch indicators in evaluation history views
+- [x] Show which document version each evaluation was run against
+- [x] Add "stale" badges where appropriate outside reader view
 
 ## Key Files to Modify
 

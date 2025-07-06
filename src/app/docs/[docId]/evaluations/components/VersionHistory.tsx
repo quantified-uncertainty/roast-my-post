@@ -7,6 +7,7 @@ import {
   RectangleStackIcon,
   SparklesIcon,
   XCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 import type { AgentWithEvaluation } from "../types";
@@ -33,6 +34,7 @@ interface VersionHistoryProps {
   selectedJobIndex: number | null;
   middleTab: "versions" | "jobs";
   isOwner?: boolean;
+  currentDocumentVersion: number;
   onVersionSelect: (index: number) => void;
   onTabChange: (tab: "versions" | "jobs") => void;
   onRunEvaluation: (agentId: string) => void;
@@ -46,6 +48,7 @@ export function VersionHistory({
   selectedJobIndex,
   middleTab,
   isOwner,
+  currentDocumentVersion,
   onVersionSelect,
   onTabChange,
   onRunEvaluation,
@@ -145,25 +148,38 @@ export function VersionHistory({
                     onClick={() => onVersionSelect(index)}
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <div className="font-medium text-gray-800">
-                          {version.version ? (
-                            <>
-                              Version {version.version}
-                              {index === 0 && " (Latest)"}
-                            </>
-                          ) : (
-                            <>
-                              Version{" "}
-                              {selectedReview.versions?.length
-                                ? selectedReview.versions.length - index
-                                : 0}
-                              {index === 0 && " (Latest)"}
-                            </>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 font-medium text-gray-800">
+                          <span>
+                            {version.version ? (
+                              <>
+                                Version {version.version}
+                                {index === 0 && " (Latest)"}
+                              </>
+                            ) : (
+                              <>
+                                Version{" "}
+                                {selectedReview.versions?.length
+                                  ? selectedReview.versions.length - index
+                                  : 0}
+                                {index === 0 && " (Latest)"}
+                              </>
+                            )}
+                          </span>
+                          {version.documentVersion?.version !== currentDocumentVersion && (
+                            <div className="flex items-center gap-1">
+                              <ExclamationTriangleIcon className="h-4 w-4 text-amber-500" />
+                              <span className="text-xs text-amber-600 font-medium">STALE</span>
+                            </div>
                           )}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(version.createdAt)}
+                          {version.documentVersion?.version && (
+                            <span className="ml-2">
+                              (Doc v{version.documentVersion.version})
+                            </span>
+                          )}
                         </div>
                       </div>
                       {version.grade !== undefined && (

@@ -204,6 +204,15 @@ export default function EvaluationsClient({
               selectedJobIndex={selectedJobIndex}
               middleTab={middleTab}
               isOwner={isOwner}
+              currentDocumentVersion={
+                // Get the current document version from the latest evaluation or default to 1
+                Math.max(
+                  ...reviews.flatMap(review => 
+                    review.versions?.map(v => v.documentVersion?.version) || []
+                  ).filter(Boolean),
+                  1
+                )
+              }
               onVersionSelect={setSelectedVersionIndex}
               onTabChange={setMiddleTab}
               onRunEvaluation={handleRerun}
