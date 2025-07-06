@@ -37,9 +37,11 @@ describe('GET /api/users', () => {
     jest.clearAllMocks();
   });
 
-  it('should return all users when not authenticated', async () => {
+  it('should return all users without emails when not authenticated', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
-    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(mockUsers);
+    // UserModel should already exclude emails
+    const usersWithoutEmails = mockUsers.map(({ email, ...user }) => user);
+    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(usersWithoutEmails);
 
     const request = new NextRequest('http://localhost:3000/api/users');
     const response = await GET(request);
@@ -47,8 +49,13 @@ describe('GET /api/users', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     
+    // Verify no emails are present
+    data.forEach((user: any) => {
+      expect(user.email).toBeUndefined();
+    });
+    
     // Without auth, all users have isCurrentUser: false
-    expect(data).toEqual(mockUsers.map(user => ({ 
+    expect(data).toEqual(usersWithoutEmails.map(user => ({ 
       ...user, 
       createdAt: user.createdAt.toISOString(), 
       isCurrentUser: false 
@@ -57,9 +64,11 @@ describe('GET /api/users', () => {
     expect(UserModel.getAllUsers).toHaveBeenCalled();
   });
 
-  it('should include isCurrentUser flag when authenticated', async () => {
+  it('should include isCurrentUser flag but no emails when authenticated', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce('user-1');
-    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(mockUsers);
+    // UserModel should already exclude emails
+    const usersWithoutEmails = mockUsers.map(({ email, ...user }) => user);
+    (UserModel.getAllUsers as jest.Mock).mockResolvedValueOnce(usersWithoutEmails);
 
     const request = new NextRequest('http://localhost:3000/api/users', {
       headers: {
@@ -71,9 +80,15 @@ describe('GET /api/users', () => {
     expect(response.status).toBe(200);
     
     const data = await response.json();
+    
+    // Verify no emails are present even when authenticated
+    data.forEach((user: any) => {
+      expect(user.email).toBeUndefined();
+    });
+    
     expect(data).toEqual([
-      { ...mockUsers[0], createdAt: mockUsers[0].createdAt.toISOString(), isCurrentUser: true },
-      { ...mockUsers[1], createdAt: mockUsers[1].createdAt.toISOString(), isCurrentUser: false },
+      { ...usersWithoutEmails[0], createdAt: mockUsers[0].createdAt.toISOString(), isCurrentUser: true },
+      { ...usersWithoutEmails[1], createdAt: mockUsers[1].createdAt.toISOString(), isCurrentUser: false },
     ]);
   });
 

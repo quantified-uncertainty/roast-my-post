@@ -64,6 +64,44 @@ describe('GET /api/documents/[slugOrId]', () => {
     expect(data).toEqual(mockDocument);
   });
 
+  it('should not expose submittedBy user email', async () => {
+    // This test verifies that DocumentModel properly excludes emails
+    // The DocumentModel should already filter out emails at the database level
+    const mockDocumentFromDB = {
+      id: mockDocId,
+      title: 'Test Document',
+      slug: mockSlug,
+      author: 'Test Author',
+      content: 'Document content...',
+      publishedDate: new Date('2024-01-01').toISOString(),
+      submittedById: 'user-456',
+      submittedBy: {
+        id: 'user-456',
+        name: 'John Doe',
+        image: 'https://example.com/avatar.jpg',
+        // DocumentModel should have already excluded email at DB query level
+      },
+      evaluations: [],
+    };
+    
+    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocumentFromDB);
+
+    const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
+    const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    
+    // Verify submittedBy user exists but email is not exposed
+    expect(data.submittedBy).toBeDefined();
+    expect(data.submittedBy.id).toBe('user-456');
+    expect(data.submittedBy.name).toBe('John Doe');
+    expect(data.submittedBy.email).toBeUndefined();
+    
+    // The real protection happens in DocumentModel via getPublicUserFields()
+    // This test verifies the API passes through what DocumentModel returns
+  });
+
   it('should find document by ID', async () => {
     const mockDocument = {
       id: mockDocId,

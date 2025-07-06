@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import DocumentsClient from "@/app/docs/DocumentsClient";
 import { DocumentModel } from "@/models/Document";
 import type { Document } from "@/types/documentSchema";
+import { USER_DISPLAY } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,7 @@ export default async function UserDocumentsPage({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {user.name || "User"}'s Documents
+                  {user.name || USER_DISPLAY.GUEST_NAME}'s Documents
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
                   {userDocuments.length} document{userDocuments.length !== 1 ? 's' : ''} submitted

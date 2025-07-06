@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getUserSelectFields, getPublicUserFields } from "@/lib/user-permissions";
 
 // Define schema for User object
 export const UserSchema = z.object({
@@ -22,12 +23,7 @@ export class UserModel {
   static async getAllUsers(): Promise<User[]> {
     try {
       const users = await prisma.user.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
+        select: getPublicUserFields(),
       });
 
       return users.map((user) => UserSchema.parse(user));
@@ -43,12 +39,7 @@ export class UserModel {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
+        select: getUserSelectFields(currentUserId, userId),
       });
 
       if (!user) return null;

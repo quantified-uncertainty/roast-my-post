@@ -6,6 +6,7 @@ import {
   DocumentSchema,
 } from "@/types/documentSchema";
 import { generateMarkdownPrepend } from "@/utils/documentMetadata";
+import { getPublicUserFields } from "@/lib/user-permissions";
 
 type DocumentWithRelations = {
   id: string;
@@ -131,12 +132,7 @@ export class DocumentModel {
           },
         },
         submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
+          select: getPublicUserFields(),
         },
         evaluations: {
           where: includeStale ? {} : {
@@ -498,12 +494,7 @@ export class DocumentModel {
       include: {
         versions: true,
         submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
+          select: getPublicUserFields(),
         },
         evaluations: {
           include: {
@@ -559,12 +550,7 @@ export class DocumentModel {
       include: {
         versions: true,
         submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
+          select: getPublicUserFields(),
         },
         evaluations: {
           include: {
@@ -618,12 +604,7 @@ export class DocumentModel {
       include: {
         versions: true,
         submittedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
+          select: getPublicUserFields(),
         },
         evaluations: {
           include: {
