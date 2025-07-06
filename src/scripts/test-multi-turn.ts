@@ -3,18 +3,32 @@ import { analyzeWithMultiTurn } from "@/lib/documentAnalysis/multiTurnAnalysis";
 import { logger } from "@/lib/logger";
 import type { Agent } from "@/types/agentSchema";
 import type { Document } from "@/types/documents";
+import * as fs from "fs/promises";
 
 async function testMultiTurnAnalysis() {
   try {
-    // Get specific document
-    const documentId = "JcM4O45bdrPM7qJr";
-    const documentVersion = await prisma.documentVersion.findFirst({
+    // Try to find a shorter document for testing
+    let documentVersion = await prisma.documentVersion.findFirst({
       where: { 
-        documentId: documentId,
         content: { not: "" } 
       },
-      orderBy: { version: "desc" }
+      orderBy: { 
+        content: "asc" // Get a shorter document
+      },
+      take: 1
     });
+    
+    // Fallback to specific document if needed
+    if (!documentVersion || documentVersion.content.length > 10000) {
+      const documentId = "JcM4O45bdrPM7qJr";
+      documentVersion = await prisma.documentVersion.findFirst({
+        where: { 
+          documentId: documentId,
+          content: { not: "" } 
+        },
+        orderBy: { version: "desc" }
+      });
+    }
 
     if (!documentVersion) {
       throw new Error("No test document found");
@@ -45,7 +59,7 @@ async function testMultiTurnAnalysis() {
 
     // Get any evaluation for this document
     const evaluation = await prisma.evaluation.findFirst({
-      where: { documentId: documentId },
+      where: { documentId: documentVersion.documentId },
       include: {
         agent: {
           include: {
@@ -99,9 +113,9 @@ async function testMultiTurnAnalysis() {
       document,
       agent,
       { 
-        budget: 0.06, 
+        budget: 0.10, 
         verbose: true,
-        maxTurns: 5,
+        maxTurns: 3, // Fewer turns for faster testing
         temperature: 0.7,
       }
     );
@@ -137,6 +151,13 @@ async function testMultiTurnAnalysis() {
       const preview = msg.content.substring(0, 150).replace(/\n/g, ' ');
       console.log(`\nTurn ${i + 1} [${msg.role}]: ${preview}...`);
     });
+    
+    // Save last assistant response for debugging
+    const lastAssistant = result.conversationHistory.filter(m => m.role === "assistant").pop();
+    if (lastAssistant) {
+      await fs.writeFile("/tmp/last-assistant-response.txt", lastAssistant.content, 'utf-8');
+      console.log("\n📝 Last assistant response saved to: /tmp/last-assistant-response.txt");
+    }
 
     logger.info("Multi-turn test completed successfully", {
       documentId: document.id,

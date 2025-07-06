@@ -30,7 +30,7 @@ export async function analyzeWithMultiTurn(
   options: MultiTurnOptions = {}
 ): Promise<MultiTurnAnalysisResult> {
   const { 
-    budget = 0.06, 
+    budget = 0.10, // Increased for longer documents
     maxTurns = 5, 
     verbose = false,
     temperature = 0.7 
@@ -180,29 +180,54 @@ When providing comments, always include:
 }
 
 function buildInitialMessage(document: Document): string {
+  // Truncate very long documents to avoid token limits
+  const maxContentLength = 15000; // ~3750 tokens
+  let content = document.content || "";
+  let truncated = false;
+  
+  if (content.length > maxContentLength) {
+    content = content.substring(0, maxContentLength);
+    truncated = true;
+    // Try to cut at a paragraph boundary
+    const lastParagraph = content.lastIndexOf("\n\n");
+    if (lastParagraph > maxContentLength * 0.8) {
+      content = content.substring(0, lastParagraph);
+    }
+    content += "\n\n[Document truncated for analysis - focusing on first portion]";
+  }
+  
   return `Please analyze this document titled "${document.title}":
 
-${document.content}
+${content}
 
-Begin with an overview of the document's main thesis and structure. In subsequent responses, we'll dive deeper into specific aspects.`;
+Begin with a concise overview of the document's main thesis and key arguments.`;
 }
 
 function getContinuationPrompt(turn: number, maxTurns: number, commentCount: number): string {
   const prompts = [
-    "Now, please identify the key arguments and evaluate the quality of evidence provided for each.",
-    "Please examine the logical structure and identify any potential weaknesses or gaps in reasoning.",
-    `Let's focus on generating specific comments. You've found ${commentCount} so far. Please identify ${Math.max(5 - commentCount, 3)} more specific issues or highlights with exact quotes.`,
+    "Now identify 2-3 key arguments and evaluate their evidence quality.",
+    "Examine the logical structure. What are 2-3 specific strengths or weaknesses?",
+    `Generate ${Math.max(5 - commentCount, 3)} specific comments. For each:
+- Quote the exact text (20-50 words)
+- Explain your concern or observation
+- Keep each comment focused on one issue
+
+Example format:
+"The author claims that AI intellectuals are 'neglected' without data" - This assertion lacks supporting evidence from research funding or publication metrics.`,
   ];
 
   if (turn === maxTurns - 2) {
-    return `For this final turn, please:
-1. Provide any additional specific comments with exact quotes
-2. Summarize your overall assessment
-3. Assign a grade from 0-100 based on your analysis
-4. Ensure all your key insights are captured`;
+    return `This is your final turn. Please provide:
+
+1. SPECIFIC COMMENTS (3-5 total):
+"exact quote from the document" - Your analysis of this quote
+
+2. OVERALL ASSESSMENT (2-3 sentences)
+
+3. GRADE: XX/100 - Brief justification`;
   }
 
-  return prompts[turn] || "Please continue your analysis, focusing on aspects not yet covered.";
+  return prompts[turn] || "Continue analysis, focus on specific examples.";
 }
 
 function extractSummary(content: string): string {
@@ -243,28 +268,27 @@ function extractComments(content: string, document: Document): Comment[] {
   const comments: Comment[] = [];
   const lines = document.content?.split('\n') || [];
   
-  // Pattern to find quoted text with surrounding context
-  const quotePattern = /[""]([^""]{20,200})[""](?:[^]*?(?:because|since|as|due to|however|but|although|issue|problem|concern|strength|excellent|good)([^.!?]{10,200})[.!?])?/gi;
+  // Primary pattern: "quote" - explanation
+  const primaryPattern = /[""]([^""]{15,300})["''"]\s*[-–—]\s*([^.!?\n]{10,400})[.!?]?/gi;
   
   let match;
-  while ((match = quotePattern.exec(content)) !== null) {
+  const seenQuotes = new Set<string>();
+  
+  while ((match = primaryPattern.exec(content)) !== null) {
     const quote = match[1].trim();
-    const explanation = match[2]?.trim() || "";
+    const explanation = match[2].trim();
+    
+    if (seenQuotes.has(quote)) continue;
+    seenQuotes.add(quote);
     
     // Find the line number in the original document
-    const lineIndex = lines.findIndex(line => line.includes(quote));
+    const lineIndex = lines.findIndex(line => line.includes(quote.substring(0, 30)));
     const lineNumber = lineIndex >= 0 ? lineIndex + 1 : 1;
     
-    // Build the comment
-    const comment = explanation || 
-      content.substring(Math.max(0, match.index - 100), match.index + match[0].length + 100)
-        .replace(/\n/g, ' ')
-        .trim();
-    
     comments.push({
-      description: comment,
+      description: explanation,
       highlight: {
-        startOffset: 0, // Would need to calculate actual offset
+        startOffset: 0,
         endOffset: quote.length,
         quotedText: quote,
         isValid: true,
@@ -275,31 +299,59 @@ function extractComments(content: string, document: Document): Comment[] {
     });
   }
   
-  // Also look for structured feedback sections
-  const feedbackPattern = /(?:comment|feedback|issue|observation)\s*\d*[:\s]+([^]*?)(?=\n(?:comment|feedback|issue|observation)|$)/gi;
-  while ((match = feedbackPattern.exec(content)) !== null) {
-    const feedbackText = match[1].trim();
-    const quoteMatch = feedbackText.match(/[""]([^""]+)[""]/);
+  // Secondary pattern: bullet points with quotes
+  const bulletPattern = /^[\s-•*]+["']([^""'']{15,300})["'']\s*[:：]?\s*([^.!?\n]{10,400})/gim;
+  
+  while ((match = bulletPattern.exec(content)) !== null) {
+    const quote = match[1].trim();
+    const explanation = match[2].trim();
     
-    if (quoteMatch && !comments.some(c => c.highlight.quotedText === quoteMatch[1])) {
-      const quote = quoteMatch[1];
-      const lineIndex = lines.findIndex(line => line.includes(quote));
-      const lineNumber = lineIndex >= 0 ? lineIndex + 1 : 1;
-      
-      comments.push({
-        description: feedbackText,
-        highlight: {
-          startOffset: 0,
-          endOffset: quote.length,
-          quotedText: quote,
-          isValid: true,
-          prefix: `Line ${lineNumber}: `,
-        },
+    if (seenQuotes.has(quote)) continue;
+    seenQuotes.add(quote);
+    
+    const lineIndex = lines.findIndex(line => line.includes(quote.substring(0, 30)));
+    const lineNumber = lineIndex >= 0 ? lineIndex + 1 : 1;
+    
+    comments.push({
+      description: explanation,
+      highlight: {
+        startOffset: 0,
+        endOffset: quote.length,
+        quotedText: quote,
         isValid: true,
-        importance: 5,
-      });
-    }
+        prefix: `Line ${lineNumber}: `,
+      },
+      isValid: true,
+      importance: 5,
+    });
   }
   
-  return comments;
+  // Fallback: numbered comments
+  const numberedPattern = /\d+\.\s*["']([^""'']{15,300})["'']\s*[-–—:：]?\s*([^.!?\n]{10,400})/gi;
+  
+  while ((match = numberedPattern.exec(content)) !== null) {
+    const quote = match[1].trim();
+    const explanation = match[2].trim();
+    
+    if (seenQuotes.has(quote)) continue;
+    seenQuotes.add(quote);
+    
+    const lineIndex = lines.findIndex(line => line.includes(quote.substring(0, 30)));
+    const lineNumber = lineIndex >= 0 ? lineIndex + 1 : 1;
+    
+    comments.push({
+      description: explanation,
+      highlight: {
+        startOffset: 0,
+        endOffset: quote.length,
+        quotedText: quote,
+        isValid: true,
+        prefix: `Line ${lineNumber}: `,
+      },
+      isValid: true,
+      importance: 5,
+    });
+  }
+  
+  return comments.slice(0, 15); // Return up to 15 comments
 }

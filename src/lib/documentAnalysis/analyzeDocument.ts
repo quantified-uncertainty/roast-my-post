@@ -33,7 +33,7 @@ export async function analyzeDocument(
     logger.info(`Using multi-turn analysis for agent ${agentInfo.name}`);
     
     const result = await analyzeWithMultiTurn(document, agentInfo, {
-      budget: (agentInfo as any).claudeCodeBudget || 0.06,
+      budget: (agentInfo as any).claudeCodeBudget || 0.10,
       maxTurns: 5,
       verbose: true,
     });
