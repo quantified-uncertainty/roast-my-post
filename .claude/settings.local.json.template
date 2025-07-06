@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Task",
+      "Bash",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(./scripts/*)",
+      "Glob",
+      "Grep",
+      "LS",
+      "Read",
+      "Edit",
+      "MultiEdit",
+      "Write",
+      "WebFetch",
+      "WebSearch",
+      "TodoRead",
+      "TodoWrite",
+      "NotebookRead",
+      "NotebookEdit"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo *)"
+    ]
+  }
+}
