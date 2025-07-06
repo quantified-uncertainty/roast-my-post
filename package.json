@@ -37,7 +37,8 @@
     "worktree:start": "./scripts/worktree-manager.sh start",
     "worktree:list": "./scripts/worktree-manager.sh list",
     "worktree:ports": "./scripts/worktree-manager.sh ports",
-    "worktree": "./scripts/worktree-manager.sh"
+    "worktree": "./scripts/worktree-manager.sh",
+    "migrations:status": "node scripts/show-migrations.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
