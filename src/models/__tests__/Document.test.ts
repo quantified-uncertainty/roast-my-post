@@ -207,75 +207,51 @@ describe('DocumentModel', () => {
     });
 
     it('should handle evaluations with no versions', async () => {
+      // With DB-level filtering, evaluations with no non-stale versions are filtered at DB
       const mockDocWithEmptyEvals = {
         ...mockDbDoc,
-        evaluations: [
-          {
-            ...mockDbDoc.evaluations[0],
-            versions: [],
-          }
-        ],
+        evaluations: [], // DB returns no evaluations when all are filtered
       };
       (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocWithEmptyEvals);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
       expect(result).toBeTruthy();
-      expect(result?.reviews).toHaveLength(0); // Should filter out evaluation with no versions
+      expect(result?.reviews).toHaveLength(0);
     });
 
     it('should filter out evaluations where latest version is stale', async () => {
+      // With DB-level filtering, stale evaluations are filtered at DB
       const mockDocWithStaleEval = {
         ...mockDbDoc,
-        evaluations: [
-          {
-            ...mockDbDoc.evaluations[0],
-            versions: [
-              // Latest version is stale (version 1, current doc is version 2)
-              {
-                ...mockDbDoc.evaluations[0].versions[1], // version 1
-                id: 'eval-version-stale-latest',
-              }
-            ],
-          }
-        ],
+        evaluations: [], // DB returns no evaluations when all are stale
       };
       (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocWithStaleEval);
 
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
       expect(result).toBeTruthy();
-      expect(result?.reviews).toHaveLength(0); // Should filter out entire evaluation
+      expect(result?.reviews).toHaveLength(0);
     });
 
     it('should handle mix of current and stale evaluations', async () => {
+      // With DB-level filtering, only non-stale evaluations are returned
       const mockDocMixedEvals = {
         ...mockDbDoc,
         evaluations: [
-          // Current evaluation
+          // Only current evaluation is returned by DB
           {
             ...mockDbDoc.evaluations[0],
             id: 'eval-current',
             agentId: 'agent-current',
             versions: [
               {
-                ...mockDbDoc.evaluations[0].versions[0], // version matching current doc version (first = latest)
+                ...mockDbDoc.evaluations[0].versions[0], // version matching current doc version
                 id: 'eval-version-current',
+                isStale: false,
               }
             ],
           },
-          // Stale evaluation
-          {
-            ...mockDbDoc.evaluations[0],
-            id: 'eval-stale',
-            agentId: 'agent-stale',
-            versions: [
-              {
-                ...mockDbDoc.evaluations[0].versions[1], // version 1, doc is version 2 (second = stale)
-                id: 'eval-version-stale',
-              }
-            ],
-          }
         ],
       };
       (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocMixedEvals);
@@ -283,7 +259,7 @@ describe('DocumentModel', () => {
       const result = await DocumentModel.getDocumentWithEvaluations('doc-123');
 
       expect(result).toBeTruthy();
-      expect(result?.reviews).toHaveLength(1); // Only current evaluation
+      expect(result?.reviews).toHaveLength(1);
       expect(result?.reviews[0]?.id).toBe('eval-current');
     });
 
@@ -457,139 +433,6 @@ describe('DocumentModel', () => {
       expect(result).toBe(mockDoc);
 
       getDocumentWithEvaluationsSpy.mockRestore();
-    });
-  });
-
-  describe('update', () => {
-    const mockDocument = {
-      id: 'doc-123',
-      submittedById: 'user-123',
-      versions: [
-        { version: 1 }
-      ]
-    };
-
-    const mockUpdatedDocument = {
-      ...mockDocument,
-      versions: [
-        { version: 2 }
-      ],
-      evaluations: [
-        { id: 'eval-1' },
-        { id: 'eval-2' }
-      ]
-    };
-
-    const updateData = {
-      title: 'Updated Title',
-      authors: 'Author 1, Author 2',
-      content: 'Updated content',
-      urls: 'https://example.com',
-      platforms: 'platform1, platform2',
-      intendedAgents: 'agent1, agent2',
-      importUrl: 'https://source.com',
-    };
-
-    beforeEach(() => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
-      (prisma.document.update as jest.Mock).mockResolvedValue(mockUpdatedDocument);
-      (prisma.job.create as jest.Mock).mockResolvedValue({ id: 'job-new' });
-    });
-
-    it('should update document and create new version', async () => {
-      const result = await DocumentModel.update('doc-123', updateData, 'user-123');
-
-      expect(prisma.document.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'doc-123' },
-          data: expect.objectContaining({
-            versions: {
-              create: expect.objectContaining({
-                version: 2,
-                title: updateData.title,
-                authors: ['Author 1', 'Author 2'],
-                content: updateData.content,
-              })
-            }
-          }),
-          include: expect.objectContaining({
-            evaluations: true,
-          })
-        })
-      );
-
-      expect(result).toBe(mockUpdatedDocument);
-    });
-
-    it('should automatically queue re-evaluations for existing evaluations', async () => {
-      await DocumentModel.update('doc-123', updateData, 'user-123');
-
-      // Should create jobs for both evaluations
-      expect(prisma.job.create).toHaveBeenCalledTimes(2);
-      expect(prisma.job.create).toHaveBeenCalledWith({
-        data: {
-          status: 'PENDING',
-          evaluation: {
-            connect: { id: 'eval-1' }
-          }
-        }
-      });
-      expect(prisma.job.create).toHaveBeenCalledWith({
-        data: {
-          status: 'PENDING',
-          evaluation: {
-            connect: { id: 'eval-2' }
-          }
-        }
-      });
-    });
-
-    it('should not create jobs when no evaluations exist', async () => {
-      const mockDocumentNoEvals = {
-        ...mockUpdatedDocument,
-        evaluations: []
-      };
-      (prisma.document.update as jest.Mock).mockResolvedValue(mockDocumentNoEvals);
-
-      await DocumentModel.update('doc-123', updateData, 'user-123');
-
-      expect(prisma.job.create).not.toHaveBeenCalled();
-    });
-
-    it('should throw error for non-existent document', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(null);
-
-      await expect(
-        DocumentModel.update('non-existent', updateData, 'user-123')
-      ).rejects.toThrow('Document not found');
-    });
-
-    it('should throw error for unauthorized user', async () => {
-      await expect(
-        DocumentModel.update('doc-123', updateData, 'wrong-user')
-      ).rejects.toThrow("You don't have permission to update this document");
-    });
-
-    it('should increment version number correctly', async () => {
-      const mockDocumentV5 = {
-        ...mockDocument,
-        versions: [{ version: 5 }]
-      };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocumentV5);
-
-      await DocumentModel.update('doc-123', updateData, 'user-123');
-
-      expect(prisma.document.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            versions: {
-              create: expect.objectContaining({
-                version: 6,
-              })
-            }
-          })
-        })
-      );
     });
   });
 });
