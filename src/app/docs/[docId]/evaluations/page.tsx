@@ -17,7 +17,7 @@ export async function generateMetadata({
 }: EvaluationsPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const docId = resolvedParams.docId;
-  const document = await DocumentModel.getDocumentWithEvaluations(docId);
+  const document = await DocumentModel.getDocumentWithAllEvaluations(docId);
 
   if (!document) {
     return {
@@ -39,7 +39,7 @@ export default async function EvaluationsPage({
   const session = await auth();
 
   // Fetch the document
-  const document = await DocumentModel.getDocumentWithEvaluations(docId);
+  const document = await DocumentModel.getDocumentWithAllEvaluations(docId);
 
   if (!document) {
     redirect("/docs");

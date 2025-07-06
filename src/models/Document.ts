@@ -103,7 +103,8 @@ type DocumentWithRelations = {
 
 export class DocumentModel {
   static async getDocumentWithEvaluations(
-    docId: string
+    docId: string,
+    includeStale: boolean = false
   ): Promise<Document | null> {
     const dbDoc = (await prisma.document.findUnique({
       where: { id: docId },
@@ -170,6 +171,18 @@ export class DocumentModel {
     }
 
     const latestVersion = dbDoc.versions[0];
+    const currentDocumentVersion = latestVersion.version;
+
+    // Filter evaluations to only include those matching current document version (unless includeStale is true)
+    let filteredEvaluations = dbDoc.evaluations;
+    if (!includeStale) {
+      filteredEvaluations = dbDoc.evaluations.filter((evaluation) => {
+        // Get the latest evaluation version
+        const latestEvalVersion = evaluation.versions[0];
+        // Check if it matches the current document version
+        return latestEvalVersion && latestEvalVersion.documentVersion.version === currentDocumentVersion;
+      });
+    }
 
     // Transform database document to frontend Document shape
     const document: Document = {
@@ -194,7 +207,7 @@ export class DocumentModel {
         : undefined,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
-      reviews: dbDoc.evaluations.map((evaluation) => {
+      reviews: filteredEvaluations.map((evaluation) => {
         // Map all evaluation versions
         const evaluationVersions = evaluation.versions.map((version) => ({
           version: version.version,
@@ -292,6 +305,13 @@ export class DocumentModel {
 
     // Validate the transformed document against the schema
     return DocumentSchema.parse(document);
+  }
+
+  static async getDocumentWithAllEvaluations(
+    docId: string
+  ): Promise<Document | null> {
+    // This method always includes stale evaluations (for history views, etc.)
+    return DocumentModel.getDocumentWithEvaluations(docId, true);
   }
 
   static formatDocumentFromDB(dbDoc: any): Document {
