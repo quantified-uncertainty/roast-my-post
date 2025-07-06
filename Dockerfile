@@ -9,9 +9,6 @@ RUN apk add --no-cache libc6-compat python3 make g++
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Copy scripts directory for npm scripts that reference them
-COPY scripts ./scripts/
-
 # Install all dependencies
 RUN npm ci
 

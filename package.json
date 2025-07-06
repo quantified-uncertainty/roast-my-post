@@ -32,12 +32,7 @@
     "process-jobs-parallel": "tsx src/scripts/process-jobs-parallel.ts",
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts",
-    "set-admin": "npx tsx scripts/set-admin.ts",
-    "worktree:create": "./scripts/worktree-manager.sh create",
-    "worktree:start": "./scripts/worktree-manager.sh start",
-    "worktree:list": "./scripts/worktree-manager.sh list",
-    "worktree:ports": "./scripts/worktree-manager.sh ports",
-    "worktree": "./scripts/worktree-manager.sh"
+    "set-admin": "npx tsx scripts/set-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
