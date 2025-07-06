@@ -26,7 +26,7 @@ export async function analyzeDocument(
   tasks: TaskResult[];
 }> {
   // Use the new multi-turn approach instead of Claude Code
-  const useMultiTurn = true;
+  const useMultiTurn = true; // Force multi-turn analysis for all evaluations
   
   // Check if we should use multi-turn analysis
   if (useMultiTurn) {
@@ -48,7 +48,7 @@ export async function analyzeDocument(
       tasks: [
         {
           name: "generateComprehensiveAnalysis",
-          modelName: "claude-4-sonnet-20250514",
+          modelName: "claude-sonnet-4-20250514",
           priceInCents: Math.round(result.totalCost * 0.7 * 100), // 70% of cost for main analysis
           timeInSeconds: Math.round((result.turnCount * 3) * 0.7) || 1,
           log: `Generated comprehensive analysis (${result.analysis.length} chars) with ${result.comments.length} comment insights`,
@@ -73,7 +73,7 @@ export async function analyzeDocument(
         },
         {
           name: "generateSelfCritique",
-          modelName: "claude-4-sonnet-20250514",
+          modelName: "claude-sonnet-4-20250514",
           priceInCents: Math.round(result.totalCost * 0.3 * 100), // 30% of cost for critique
           timeInSeconds: Math.round((result.turnCount * 3) * 0.3) || 1,
           log: `Generated self-critique (${Math.round(result.analysis.length * 0.15)} chars)`,
