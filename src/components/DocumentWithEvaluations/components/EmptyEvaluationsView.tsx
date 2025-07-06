@@ -3,17 +3,20 @@
 import { useRef } from "react";
 import Link from "next/link";
 import SlateEditor from "@/components/SlateEditor";
-import { ArrowTopRightOnSquareIcon, InformationCircleIcon } from "@heroicons/react/20/solid";
+import { InformationCircleIcon } from "@heroicons/react/20/solid";
 import type { Document } from "@/types/documentSchema";
+import { DocumentMetadata } from "./DocumentMetadata";
 
 interface EmptyEvaluationsViewProps {
   document: Document;
   contentWithMetadataPrepend: string;
+  isOwner?: boolean;
 }
 
 export function EmptyEvaluationsView({
   document,
   contentWithMetadataPrepend,
+  isOwner = false,
 }: EmptyEvaluationsViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +27,20 @@ export function EmptyEvaluationsView({
         <div className="flex items-center gap-2">
           <InformationCircleIcon className="h-5 w-5 text-blue-600" />
           <p className="text-sm text-blue-800">
-            This document hasn't been evaluated yet. You can still read the content below.
+            {isOwner ? (
+              <>
+                This document has no evaluations.{" "}
+                <Link
+                  href={`/docs/${document.id}`}
+                  className="font-medium text-blue-900 hover:underline"
+                >
+                  Add some here
+                </Link>
+                .
+              </>
+            ) : (
+              "This document doesn't have any evaluations, but you can still read the content below."
+            )}
           </p>
         </div>
       </div>
@@ -36,42 +52,7 @@ export function EmptyEvaluationsView({
           {/* Main content area */}
           <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
             {/* Document metadata section */}
-            <div className="flex items-center justify-between px-6">
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                {document.submittedBy && (
-                  <span>
-                    Uploaded from{" "}
-                    <Link
-                      href={`/users/${document.submittedBy.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {document.submittedBy.name ||
-                        document.submittedBy.email ||
-                        "Unknown"}
-                    </Link>{" "}
-                    on {new Date(document.updatedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/docs/${document.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                >
-                  Document Details
-                </Link>
-                {(document.importUrl || document.url) && (
-                  <Link
-                    href={document.importUrl || document.url}
-                    target="_blank"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                  >
-                    <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                    Source
-                  </Link>
-                )}
-              </div>
-            </div>
+            <DocumentMetadata document={document} />
 
             <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
               <SlateEditor

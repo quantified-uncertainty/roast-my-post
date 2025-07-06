@@ -11,6 +11,7 @@ import type { DocumentWithReviewsProps, EvaluationState } from "./types";
 
 export function DocumentWithEvaluations({
   document,
+  isOwner = false,
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
@@ -47,6 +48,7 @@ export function DocumentWithEvaluations({
         <EmptyEvaluationsView
           document={document}
           contentWithMetadataPrepend={contentWithMetadata}
+          isOwner={isOwner}
         />
       )}
     </div>
