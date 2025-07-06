@@ -1,74 +1,46 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import * as Prism from 'prismjs';
-// You can change this to other themes like:
-// import 'prismjs/themes/prism.css'; // Default theme
-// import 'prismjs/themes/prism-twilight.css'; // Twilight theme
-// import 'prismjs/themes/prism-okaidia.css'; // Monokai-like theme
-// import 'prismjs/themes/prism-solarizedlight.css'; // Solarized Light
-import 'prismjs/themes/prism-tomorrow.css'; // Tomorrow Night theme
-import { DocumentDuplicateIcon, CheckIcon } from '@heroicons/react/24/outline';
-
-// Import additional language support
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-jsx';
-import 'prismjs/components/prism-tsx';
-import 'prismjs/components/prism-json';
-import 'prismjs/components/prism-markdown';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-bash';
-import 'prismjs/components/prism-yaml';
-
-// Define basic Squiggle language support
-if (typeof Prism !== 'undefined') {
-  Prism.languages.squiggle = {
-    'comment': /\/\/.*/,
-    'string': {
-      pattern: /"(?:\\.|[^\\"\r\n])*"/,
-      greedy: true
-    },
-    'number': /\b\d+(?:\.\d+)?\b/,
-    'operator': /[+\-*\/=<>!]=?|->|=>|\|>/,
-    'punctuation': /[{}[\];(),.:]/,
-    'builtin': /\b(?:normal|uniform|beta|lognormal|sample|mean|variance|quantile)\b/,
-    'keyword': /\b(?:let|if|then|else|to)\b/,
-    'function': /\b[a-zA-Z_]\w*(?=\s*\()/,
-    'variable': /\b[a-zA-Z_]\w*\b/
-  };
-}
+import React, { useState } from "react";
+import { Highlight, themes, Language } from "prism-react-renderer";
+import {
+  CheckIcon,
+  DocumentDuplicateIcon,
+} from "@heroicons/react/24/outline";
 
 interface CodeBlockProps {
   code: string;
   language?: string;
   attributes?: any;
-  children?: React.ReactNode;
+  highlightLines?: number[]; // Array of line numbers to highlight (1-indexed)
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ 
-  code, 
-  language = 'plain', 
-  attributes, 
-  children
+// Map our language strings to prism-react-renderer Language type
+const languageMap: Record<string, Language> = {
+  javascript: "javascript",
+  js: "javascript",
+  jsx: "jsx",
+  typescript: "typescript",
+  ts: "typescript",
+  tsx: "tsx",
+  json: "json",
+  markdown: "markdown",
+  css: "css",
+  python: "python",
+  bash: "bash",
+  yaml: "yaml",
+  squiggle: "javascript", // Use JavaScript as fallback for squiggle
+};
+
+const CodeBlock: React.FC<CodeBlockProps> = ({
+  code,
+  language = "plain",
+  attributes,
+  highlightLines = [],
 }) => {
   const [formattedCode, setFormattedCode] = useState(code);
   const [copied, setCopied] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
   const [formatError, setFormatError] = useState<string | null>(null);
-  const codeRef = useRef<HTMLElement>(null);
-
-  // Apply syntax highlighting
-  useEffect(() => {
-    if (codeRef.current && language !== 'plain') {
-      try {
-        Prism.highlightElement(codeRef.current);
-      } catch (error) {
-        console.error('Prism highlighting error:', error);
-      }
-    }
-  }, [formattedCode, language]);
 
   const formatCode = async () => {
     try {
@@ -76,40 +48,50 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
       setIsFormatting(true);
 
       // Only format JavaScript/TypeScript code
-      if (['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'].includes(language)) {
+      if (
+        ["javascript", "js", "jsx", "typescript", "ts", "tsx"].includes(
+          language
+        )
+      ) {
         // Dynamic import of prettier for browser usage
-        const prettier = await import('prettier/standalone');
-        const prettierPluginBabel = await import('prettier/plugins/babel');
-        const prettierPluginTypescript = await import('prettier/plugins/typescript');
-        const prettierPluginEstree = await import('prettier/plugins/estree');
+        const prettier = await import("prettier/standalone");
+        const prettierPluginBabel = await import("prettier/plugins/babel");
+        const prettierPluginTypescript = await import(
+          "prettier/plugins/typescript"
+        );
+        const prettierPluginEstree = await import("prettier/plugins/estree");
 
         // Determine parser based on language
-        let parser = 'babel';
-        if (language === 'typescript' || language === 'ts' || language === 'tsx') {
-          parser = 'typescript';
+        let parser = "babel";
+        if (
+          language === "typescript" ||
+          language === "ts" ||
+          language === "tsx"
+        ) {
+          parser = "typescript";
         }
 
         const formatted = await prettier.format(formattedCode, {
           parser,
           plugins: [
-            prettierPluginBabel,
-            prettierPluginTypescript,
-            prettierPluginEstree
+            prettierPluginBabel.default,
+            prettierPluginTypescript.default,
+            prettierPluginEstree.default,
           ],
           semi: true,
           singleQuote: true,
           tabWidth: 2,
-          trailingComma: 'es5',
+          trailingComma: "es5",
           printWidth: 80,
         });
-        
+
         setFormattedCode(formatted.trim());
       } else {
         setFormatError(`Formatting not supported for ${language}`);
       }
     } catch (error) {
-      console.error('Prettier formatting error:', error);
-      setFormatError('Failed to format code. Please check the syntax.');
+      console.error("Prettier formatting error:", error);
+      setFormatError("Failed to format code. Please check the syntax.");
     } finally {
       setIsFormatting(false);
     }
@@ -122,24 +104,32 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
     });
   };
 
+  // Get the language for prism-react-renderer
+  const prismLanguage = languageMap[language] || "jsx";
+
   return (
-    <div {...attributes} className="relative my-4 overflow-hidden rounded-lg bg-gray-900">
-      <div className="flex items-center justify-between bg-gray-800 px-4 py-2">
+    <div
+      {...attributes}
+      className="relative my-4 overflow-hidden rounded-lg bg-gray-800"
+    >
+      <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
         <span className="text-sm text-gray-400">{language}</span>
         <div className="flex items-center gap-2">
-          {['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'].includes(language) && (
+          {["javascript", "js", "jsx", "typescript", "ts", "tsx"].includes(
+            language
+          ) && (
             <button
               onClick={formatCode}
               disabled={isFormatting}
-              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-600 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
               title="Format with Prettier"
             >
-              {isFormatting ? 'Formatting...' : 'Format'}
+              {isFormatting ? "Formatting..." : "Format"}
             </button>
           )}
           <button
             onClick={copyToClipboard}
-            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-600 hover:text-gray-200"
             title="Copy code"
           >
             {copied ? (
@@ -161,35 +151,79 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           {formatError}
         </div>
       )}
-      <div className="overflow-x-auto">
-        <div className="flex">
-          {/* Line numbers column */}
-          <div className="flex-shrink-0 bg-gray-800 border-r border-gray-700 px-3 py-4 text-right">
-            {formattedCode.split('\n').map((_, index) => {
-              const lineNumber = index + 1;
-              return (
-                <div 
-                  key={index}
-                  className="text-xs leading-[1.5] text-gray-500"
-                  style={{ height: '1.5em' }}
-                >
-                  {lineNumber}
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Code content */}
-          <div className="flex-1 p-4">
-            <pre className="text-sm">
-              <code ref={codeRef} className={`language-${language}`}>
-                {formattedCode}
+      <Highlight
+        theme={themes.nightOwl}
+        code={formattedCode.trim()}
+        language={prismLanguage}
+      >
+        {({ className, style, tokens, getLineProps, getTokenProps }) => (
+          <div className="overflow-x-auto">
+            <pre
+              className={`${className} flex !border-0 bg-transparent text-sm !shadow-none`}
+              style={{
+                ...style,
+                background: "transparent",
+                margin: 0,
+                fontFamily:
+                  'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              }}
+            >
+              {/* Line numbers column */}
+              <div className="flex-shrink-0 select-none px-3 text-right">
+                {tokens.map((line, i) => {
+                  const lineNumber = i + 1;
+                  const isHighlighted = highlightLines.includes(lineNumber);
+                  return (
+                    <div
+                      key={i}
+                      className={`text-xs ${
+                        isHighlighted ? "text-gray-300" : "text-gray-500"
+                      }`}
+                      style={{ 
+                        lineHeight: "1.5rem",
+                        backgroundColor: isHighlighted ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                        marginLeft: isHighlighted ? "-12px" : "0",
+                        marginRight: isHighlighted ? "-12px" : "0",
+                        paddingLeft: isHighlighted ? "12px" : "0",
+                        paddingRight: isHighlighted ? "12px" : "0",
+                      }}
+                    >
+                      {lineNumber}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Code content */}
+              <code className="flex-1 px-4">
+                {tokens.map((line, i) => {
+                  const lineNumber = i + 1;
+                  const isHighlighted = highlightLines.includes(lineNumber);
+                  return (
+                    <div 
+                      key={i} 
+                      {...getLineProps({ line })}
+                      style={{ 
+                        lineHeight: "1.5rem",
+                        backgroundColor: isHighlighted ? "rgba(59, 130, 246, 0.15)" : "transparent",
+                        marginLeft: isHighlighted ? "-16px" : "0",
+                        marginRight: isHighlighted ? "-16px" : "0",
+                        paddingLeft: isHighlighted ? "16px" : "0",
+                        paddingRight: isHighlighted ? "16px" : "0",
+                      }}
+                    >
+                      {line.map((token, key) => (
+                        <span key={key} {...getTokenProps({ token })} />
+                      ))}
+                      {line.length === 0 && "\n"}
+                    </div>
+                  );
+                })}
               </code>
             </pre>
           </div>
-        </div>
-      </div>
-      {children}
+        )}
+      </Highlight>
     </div>
   );
 };
