@@ -5,6 +5,17 @@ import type { Comment } from "@/types/documentSchema";
 import { logger } from "@/lib/logger";
 import { BudgetTracker } from "../claudeCodeAnalysis/budgetTracker";
 import { withTimeout } from "@/types/openai";
+import type { CaptureLogger } from "@/lib/logger/captureLogger";
+
+interface TurnData {
+  turnNumber: number;
+  prompt: string;
+  response: string;
+  cost: number;
+  inputTokens: number;
+  outputTokens: number;
+  timeInSeconds: number;
+}
 
 interface MultiTurnAnalysisResult {
   analysis: string;
@@ -15,6 +26,7 @@ interface MultiTurnAnalysisResult {
   totalCost: number;
   turnCount: number;
   budgetUsed: number;
+  turns: TurnData[];  // Individual turn data for creating tasks
 }
 
 interface MultiTurnOptions {
@@ -22,6 +34,7 @@ interface MultiTurnOptions {
   maxTurns?: number;
   verbose?: boolean;
   temperature?: number;
+  captureLogger?: CaptureLogger;  // Optional logger to capture output
 }
 
 export async function analyzeWithMultiTurn(
@@ -33,11 +46,16 @@ export async function analyzeWithMultiTurn(
     budget = 0.10, // Increased for longer documents
     maxTurns = 5, 
     verbose = false,
-    temperature = 0.7 
+    temperature = 0.7,
+    captureLogger
   } = options;
+
+  // Use capture logger if provided, otherwise use default logger
+  const log = captureLogger || logger;
 
   const tracker = new BudgetTracker(budget);
   const conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
+  const turns: TurnData[] = [];  // Track individual turn data
   
   // Build system prompt
   const systemPrompt = buildSystemPrompt(agent);
@@ -47,7 +65,7 @@ export async function analyzeWithMultiTurn(
   conversationHistory.push({ role: "user", content: initialMessage });
 
   if (verbose) {
-    logger.info("Starting multi-turn analysis", {
+    log.info("Starting multi-turn analysis", {
       agentName: agent.name,
       documentId: document.id,
       budget,
