@@ -6,10 +6,12 @@ import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 
 import { EvaluationView } from "./components";
+import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";
 import type { DocumentWithReviewsProps, EvaluationState } from "./types";
 
 export function DocumentWithEvaluations({
   document,
+  isOwner = false,
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
@@ -43,14 +45,11 @@ export function DocumentWithEvaluations({
           contentWithMetadataPrepend={contentWithMetadata}
         />
       ) : (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
-            No evaluations available
-          </h1>
-          <p className="mb-8 text-gray-600">
-            This document hasn't been evaluated yet.
-          </p>
-        </div>
+        <EmptyEvaluationsView
+          document={document}
+          contentWithMetadataPrepend={contentWithMetadata}
+          isOwner={isOwner}
+        />
       )}
     </div>
   );
