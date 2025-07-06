@@ -698,35 +698,84 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   // Create a custom renderElement that has access to highlights
   const customRenderElement = useCallback(
     (props: any) => {
-      // For code blocks, check if any highlight overlaps with the code content
+      // For code blocks, check if any highlights reference this code block
       if (props.element.type === "code") {
         const codeContent = props.element.value || "";
         
-        // Find any highlights that might be referencing this code block
-        const overlappingHighlight = highlights.find((h: any) => {
-          // Check if the quoted text appears in the code block
-          return h.quotedText && codeContent.includes(h.quotedText);
+        // Find highlights that reference this code block
+        const relevantHighlights = highlights.filter((highlight: any) => {
+          // Check if the quoted text appears in the code block or is nearby
+          if (highlight.quotedText) {
+            // Direct match in code content
+            if (codeContent.includes(highlight.quotedText.trim())) {
+              return true;
+            }
+            // Check if it's a code-related comment (contains common code keywords)
+            const codeKeywords = ['function', 'const', 'let', 'var', 'return', 'if', 'for', 'while', 'class', '()', '=>', '{', '}'];
+            if (codeKeywords.some(keyword => highlight.quotedText.includes(keyword))) {
+              return true;
+            }
+          }
+          return false;
         });
-        
-        if (overlappingHighlight) {
-          const isActive = overlappingHighlight.tag === activeTag;
-          const isHovered = overlappingHighlight.tag === hoveredTag;
-          
+
+        // Check if any of the relevant highlights are active/hovered
+        const activeHighlight = relevantHighlights.find((h: any) => 
+          h.tag === activeTag || h.tag === hoveredTag
+        );
+
+        if (relevantHighlights.length > 0) {
+          // Get unique lines that are referenced in comments
+          const referencedLines = new Set<number>();
+          relevantHighlights.forEach((highlight: any) => {
+            if (highlight.quotedText && codeContent.includes(highlight.quotedText.trim())) {
+              const lines = codeContent.split('\n');
+              lines.forEach((line, index) => {
+                if (line.includes(highlight.quotedText.trim())) {
+                  referencedLines.add(index + 1); // 1-based line numbers
+                }
+              });
+            }
+          });
+
           return (
             <CodeBlockErrorBoundary>
-              <div className={`relative ${isActive || isHovered ? 'ring-2 ring-blue-400 rounded-lg' : ''}`}>
-                {(isActive || isHovered) && (
-                  <div className="absolute -top-8 left-0 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                    💬 Contains commented section
+              <div className="relative">
+                {activeHighlight && (
+                  <div className="absolute -top-8 left-0 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded z-10">
+                    💬 Line{referencedLines.size > 1 ? 's' : ''} {Array.from(referencedLines).join(', ')} referenced
                   </div>
                 )}
-                <CodeBlock
-                  code={props.element.value || ""}
-                  language={props.element.lang || "plain"}
-                  attributes={props.attributes}
-                >
-                  {props.children}
-                </CodeBlock>
+                <div className={activeHighlight ? "ring-2 ring-blue-400 ring-opacity-50 rounded-lg" : ""}>
+                  <CodeBlock
+                    code={props.element.value || ""}
+                    language={props.element.lang || "plain"}
+                    attributes={props.attributes}
+                    referencedLines={Array.from(referencedLines)}
+                    showLineNumbers={referencedLines.size > 0}
+                  >
+                    {props.children}
+                  </CodeBlock>
+                </div>
+                {/* Show quoted text snippets below code block when relevant highlights are active */}
+                {activeHighlight && relevantHighlights.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {relevantHighlights
+                      .filter((h: any) => h.tag === activeTag || h.tag === hoveredTag)
+                      .map((highlight: any, index: number) => (
+                        <div 
+                          key={index}
+                          className="bg-blue-50 border-l-4 border-blue-400 p-3 text-sm"
+                        >
+                          <div className="font-medium text-blue-800 mb-1">Referenced in comment:</div>
+                          <div className="text-gray-700 italic">
+                            "{highlight.quotedText}"
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             </CodeBlockErrorBoundary>
           );
