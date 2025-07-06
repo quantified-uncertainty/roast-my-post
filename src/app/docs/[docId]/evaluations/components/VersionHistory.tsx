@@ -1,5 +1,6 @@
 import { Button } from "@/components/Button";
 import { GradeBadge } from "@/components/GradeBadge";
+import { StaleBadge } from "@/components/StaleBadge";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -7,7 +8,6 @@ import {
   RectangleStackIcon,
   SparklesIcon,
   XCircleIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 import type { AgentWithEvaluation } from "../types";
@@ -166,12 +166,7 @@ export function VersionHistory({
                               </>
                             )}
                           </span>
-                          {version.documentVersion?.version !== currentDocumentVersion && (
-                            <div className="flex items-center gap-1">
-                              <ExclamationTriangleIcon className="h-4 w-4 text-amber-500" />
-                              <span className="text-xs text-amber-600 font-medium">STALE</span>
-                            </div>
-                          )}
+                          {version.isStale && <StaleBadge size="sm" />}
                         </div>
                         <div className="mt-1 text-xs text-gray-500">
                           {formatDate(version.createdAt)}

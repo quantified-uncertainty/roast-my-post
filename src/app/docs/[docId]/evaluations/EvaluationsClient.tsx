@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   useEffect,
   useState,
 } from "react";
@@ -40,6 +40,18 @@ export default function EvaluationsClient({
   const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<
     AgentWithEvaluation[]
   >([]);
+
+  // Get current document version from evaluation data
+  const currentDocumentVersion = React.useMemo(() => {
+    try {
+      const allVersions = reviews.flatMap(review => 
+        review.versions?.map(v => v.documentVersion?.version).filter((v): v is number => typeof v === 'number') || []
+      );
+      return allVersions.length > 0 ? Math.max(...allVersions) : 1;
+    } catch {
+      return 1;
+    }
+  }, [reviews]);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<
     number | null
@@ -204,15 +216,7 @@ export default function EvaluationsClient({
               selectedJobIndex={selectedJobIndex}
               middleTab={middleTab}
               isOwner={isOwner}
-              currentDocumentVersion={
-                // Get the current document version from the latest evaluation or default to 1
-                Math.max(
-                  ...reviews.flatMap(review => 
-                    review.versions?.map(v => v.documentVersion?.version) || []
-                  ).filter(Boolean),
-                  1
-                )
-              }
+              currentDocumentVersion={currentDocumentVersion}
               onVersionSelect={setSelectedVersionIndex}
               onTabChange={setMiddleTab}
               onRunEvaluation={handleRerun}

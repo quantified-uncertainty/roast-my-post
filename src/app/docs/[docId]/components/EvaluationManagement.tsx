@@ -9,11 +9,11 @@ import {
   PlusIcon,
   ChatBubbleLeftIcon,
   DocumentTextIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
 import { GradeBadge } from "@/components/GradeBadge";
 import { JobStatusIndicator } from "@/components/JobStatusIndicator";
+import { StaleBadge } from "@/components/StaleBadge";
 import { Button } from "@/components/Button";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
@@ -23,10 +23,9 @@ interface EvaluationManagementProps {
   evaluations: any[];
   availableAgents: any[];
   isOwner: boolean;
-  currentDocumentVersion?: number;
 }
 
-export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner, currentDocumentVersion }: EvaluationManagementProps) {
+export function EvaluationManagement({ docId, evaluations, availableAgents, isOwner }: EvaluationManagementProps) {
   const router = useRouter();
   const [runningEvals, setRunningEvals] = useState<Set<string>>(new Set());
   const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
@@ -87,7 +86,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const latestVersion = evaluation.versions?.[0];
               const latestGrade = latestVersion?.grade;
               const versionCount = evaluation.versions?.length || 0;
-              const isStale = currentDocumentVersion && latestVersion?.documentVersion?.version !== currentDocumentVersion;
+              const isStale = evaluation.isStale || false;
               
               // Calculate stats
               const totalCost = evaluation.versions?.reduce((sum: number, v: any) => 
@@ -134,10 +133,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
                               {evaluation.agent.name}
                             </Link>
                             {isStale && (
-                              <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded">
-                                <ExclamationTriangleIcon className="h-3 w-3" />
-                                STALE
-                              </div>
+                              <StaleBadge size="sm" />
                             )}
                           </div>
                           <div className="flex items-center gap-3 mt-0.5 text-sm text-gray-500">
