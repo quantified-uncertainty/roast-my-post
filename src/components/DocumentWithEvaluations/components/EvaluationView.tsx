@@ -129,6 +129,7 @@ export function EvaluationView({
                   }}
                   highlights={highlights}
                   activeTag={evaluationState.hoveredCommentId}
+                  hoveredTag={evaluationState.hoveredCommentId}
                 />
               </article>
             </div>
@@ -138,12 +139,13 @@ export function EvaluationView({
               contentRef={contentRef}
               selectedCommentId={evaluationState.expandedCommentId}
               hoveredCommentId={evaluationState.hoveredCommentId}
-              onCommentHover={(commentId) =>
+              onCommentHover={(commentId) => {
+                console.log('[EvaluationView] Comment hover changed to:', commentId);
                 onEvaluationStateChange({
                   ...evaluationState,
                   hoveredCommentId: commentId,
-                })
-              }
+                });
+              }}
               onCommentClick={(commentId) => {
                 onEvaluationStateChange({
                   ...evaluationState,

@@ -213,28 +213,39 @@ const renderLeaf = ({
 
   // Apply highlight styling if this is a highlighted section
   if (leaf.highlight) {
+    // Use leaf.isActive if available, otherwise fall back to tag comparison
+    const isActive = leaf.isActive || leaf.tag === activeTag;
+    const isHovered = leaf.tag === hoveredTag;
+    
     el = (
       <span
         {...leafAttributes}
         data-tag={leaf.tag}
         id={`highlight-${leaf.tag}`}
         style={{
-          backgroundColor: `rgba(${parseInt(leaf.color.slice(0, 2), 16)}, ${parseInt(leaf.color.slice(2, 4), 16)}, ${parseInt(leaf.color.slice(4, 6), 16)}, ${leaf.tag === activeTag ? 0.8 : 0.3})`,
+          backgroundColor: (() => {
+            // Handle color format - remove # if present
+            const color = leaf.color.startsWith('#') ? leaf.color.slice(1) : leaf.color;
+            const r = parseInt(color.slice(0, 2), 16) || 59;
+            const g = parseInt(color.slice(2, 4), 16) || 130;
+            const b = parseInt(color.slice(4, 6), 16) || 246;
+            return `rgba(${r}, ${g}, ${b}, ${isActive ? 0.8 : 0.3})`;
+          })(),
           borderRadius: "2px",
           boxShadow:
-            leaf.tag === activeTag
+            isActive
               ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
-              : leaf.tag === hoveredTag
+              : isHovered
               ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
               : "none",
-          transform: leaf.tag === activeTag ? "scale(1.01)" : "scale(1)",
+          transform: isActive ? "scale(1.01)" : "scale(1)",
           transformOrigin: "center",
           padding: "0 1px",
           margin: "0 -1px",
           scrollMarginTop: "100px", // Add scroll margin to prevent the highlight from being hidden under the header
         }}
         className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
-          leaf.tag === activeTag ? "relative z-10" : ""
+          isActive ? "relative z-10" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
@@ -684,6 +695,49 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
   );
 
+  // Create a custom renderElement that has access to highlights
+  const customRenderElement = useCallback(
+    (props: any) => {
+      // For code blocks, check if any highlight overlaps with the code content
+      if (props.element.type === "code") {
+        const codeContent = props.element.value || "";
+        
+        // Find any highlights that might be referencing this code block
+        const overlappingHighlight = highlights.find((h: any) => {
+          // Check if the quoted text appears in the code block
+          return h.quotedText && codeContent.includes(h.quotedText);
+        });
+        
+        if (overlappingHighlight) {
+          const isActive = overlappingHighlight.tag === activeTag;
+          const isHovered = overlappingHighlight.tag === hoveredTag;
+          
+          return (
+            <CodeBlockErrorBoundary>
+              <div className={`relative ${isActive || isHovered ? 'ring-2 ring-blue-400 rounded-lg' : ''}`}>
+                {(isActive || isHovered) && (
+                  <div className="absolute -top-8 left-0 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                    💬 Contains commented section
+                  </div>
+                )}
+                <CodeBlock
+                  code={props.element.value || ""}
+                  language={props.element.lang || "plain"}
+                  attributes={props.attributes}
+                >
+                  {props.children}
+                </CodeBlock>
+              </div>
+            </CodeBlockErrorBoundary>
+          );
+        }
+      }
+      
+      return renderElement(props);
+    },
+    [highlights, activeTag, hoveredTag]
+  );
+
   if (!initialized) {
     return <div>Loading...</div>;
   }
@@ -698,7 +752,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         <Editable
           data-testid="slate-editable"
           decorate={decorate}
-          renderElement={renderElement}
+          renderElement={customRenderElement}
           renderLeaf={(props) =>
             renderLeaf({
               ...props,
