@@ -4,7 +4,7 @@
  */
 
 export function getUserSelectFields(currentUserId?: string, targetUserId?: string) {
-  const isOwnProfile = currentUserId && currentUserId === targetUserId;
+  const isOwnProfile = !!(currentUserId && currentUserId === targetUserId);
   
   return {
     id: true,
