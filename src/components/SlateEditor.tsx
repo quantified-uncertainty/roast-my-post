@@ -479,6 +479,11 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           highlight?.startOffset < 0 ||
           highlight?.endOffset <= highlight?.startOffset
         ) {
+          console.warn(`Skipping invalid highlight ${highlight.tag}:`, {
+            startOffset: highlight?.startOffset,
+            endOffset: highlight?.endOffset,
+            tag: highlight?.tag
+          });
           continue; // Skip invalid highlights
         }
 
@@ -589,6 +594,14 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             }
           }
 
+          if (!found) {
+            console.warn(`Failed to render highlight ${highlight.tag}:`, {
+              startOffset: highlight.startOffset,
+              endOffset: highlight.endOffset,
+              quotedText: highlight.quotedText?.substring(0, 50) + '...',
+              reason: 'No text match found in any node'
+            });
+          }
           continue;
         }
 

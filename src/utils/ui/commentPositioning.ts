@@ -47,11 +47,42 @@ export function calculateCommentPositions(
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
       const highlightCenter = relativeTop + (rect.height / 2);
       // Offset slightly up to better align with the highlighted text
-      const adjustedPosition = highlightCenter - 15; // Adjust this value as needed
+      // Offset to better align comment with highlighted text  
+      const HIGHLIGHT_ALIGNMENT_OFFSET = 15;
+      const adjustedPosition = highlightCenter - HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
-      newPositions[tag] = 100 + (index * 150);
+      // Try to position based on the highlight offset as a percentage of document
+      const comment = comments[index];
+      
+      if (comment?.highlight?.startOffset !== undefined) {
+        // Get total content length from the container's text content
+        const totalTextLength = container.textContent?.length || 10000;
+        
+        // Calculate position as a percentage of the document
+        const offsetPercentage = Math.min(comment.highlight.startOffset / totalTextLength, 1);
+        
+        // Get the actual scrollable height of the content
+        const scrollHeight = container.scrollHeight || containerRect.height;
+        
+        // Position based on percentage of scrollable content
+        const estimatedPosition = offsetPercentage * scrollHeight;
+        
+        // Ensure the position is within reasonable bounds
+        newPositions[tag] = Math.max(0, Math.min(estimatedPosition, scrollHeight - 100));
+        
+        console.debug(`Fallback positioning for comment ${tag}:`, {
+          startOffset: comment.highlight.startOffset,
+          totalTextLength,
+          offsetPercentage,
+          estimatedPosition
+        });
+      } else {
+        // Last resort: spread them out more evenly
+        const spacing = Math.max(150, containerRect.height / Math.max(comments.length, 5));
+        newPositions[tag] = 100 + (index * spacing);
+      }
     }
   });
 
@@ -109,8 +140,24 @@ export function checkHighlightsReady(
   container: HTMLElement,
   expectedCount: number
 ): boolean {
+  if (expectedCount === 0) return true;
+  
   const highlightElements = container.querySelectorAll('[data-tag]');
-  return highlightElements.length >= expectedCount;
+  if (highlightElements.length === 0) return false;
+  
+  // Get unique tag numbers from the highlights
+  const uniqueTags = new Set<string>();
+  highlightElements.forEach(el => {
+    const tag = el.getAttribute('data-tag');
+    if (tag !== null) {
+      uniqueTags.add(tag);
+    }
+  });
+  
+  // Check if we have enough unique tags for the comments
+  // Note: Multiple comments can share the same highlight position,
+  // so we check if unique tags >= half of expected count as a heuristic
+  return uniqueTags.size >= Math.ceil(expectedCount / 2);
 }
 
 /**
