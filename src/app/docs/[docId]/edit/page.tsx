@@ -163,7 +163,7 @@ export default function EditDocumentPage({ params }: Props) {
       }
 
       // Redirect to document page
-      router.push(`/docs/${docId}/reader`);
+      router.push(`/docs/${docId}`);
       router.refresh();
     } catch (error) {
       logger.error('Error updating document:', error);
@@ -201,7 +201,7 @@ export default function EditDocumentPage({ params }: Props) {
       }
 
       // Redirect to document page
-      router.push(`/docs/${docId}/reader`);
+      router.push(`/docs/${docId}`);
       router.refresh(); // Force a refresh to show the updated data
     } catch (error) {
       if (error instanceof z.ZodError) {
