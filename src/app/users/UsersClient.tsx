@@ -32,9 +32,6 @@ export default function UsersClient({ users }: UsersClientProps) {
                   <h3 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
                     {user.name || USER_DISPLAY.GUEST_NAME}
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    {user.email || "No email provided"}
-                  </p>
                 </div>
               </div>
             </div>

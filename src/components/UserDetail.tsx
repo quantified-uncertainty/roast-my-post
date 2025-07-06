@@ -55,9 +55,11 @@ export default function UserDetail({ user }: UserDetailProps) {
             <h2 className="text-xl font-semibold">
               {user.name || USER_DISPLAY.GUEST_NAME}
             </h2>
-            <p className="text-sm text-gray-500">
-              {user.email || "No email provided"}
-            </p>
+            {user.email && (
+              <p className="text-sm text-gray-500">
+                {user.email}
+              </p>
+            )}
           </div>
         </div>
 
