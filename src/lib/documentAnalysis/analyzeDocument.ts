@@ -7,6 +7,7 @@ import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
+import { analyzeWithClaudeCode } from "./claudeCodeAnalysis";
 
 export async function analyzeDocument(
   document: Document,
@@ -23,6 +24,51 @@ export async function analyzeDocument(
   comments: Comment[];
   tasks: TaskResult[];
 }> {
+  // Always use Claude Code for now (hardcoded)
+  const useClaudeCode = true;
+  
+  // Check if agent should use Claude Code
+  if (useClaudeCode) {
+    logger.info(`Using Claude Code workflow for agent ${agentInfo.name}`);
+    
+    const result = await analyzeWithClaudeCode(document, agentInfo, {
+      budget: (agentInfo as any).claudeCodeBudget || 0.06,
+      verbose: true,
+    });
+
+    // Convert to standard format
+    return {
+      thinking: "", // Claude Code doesn't separate thinking
+      analysis: result.analysis,
+      summary: result.summary,
+      grade: result.grade,
+      comments: result.comments,
+      tasks: [
+        {
+          name: "Claude Code Analysis",
+          modelName: "claude-4-sonnet-20250514",
+          priceInCents: Math.round(result.totalCost * 100), // Convert to cents
+          timeInSeconds: (result.turnCount * 2) || 0, // Estimate 2 seconds per turn
+          log: `Completed ${result.turnCount} turns with ${result.abortReason} reason`,
+          llmInteractions: [{
+            messages: result.conversation
+              .filter(msg => msg.type === "user" || msg.type === "assistant")
+              .map(msg => ({
+                role: msg.type as "user" | "assistant",
+                content: (msg as any).content || ""
+              })),
+            usage: {
+              input_tokens: result.conversation.reduce((sum, msg) => 
+                sum + ((msg as any).usage?.input_tokens || 0), 0),
+              output_tokens: result.conversation.reduce((sum, msg) => 
+                sum + ((msg as any).usage?.output_tokens || 0), 0)
+            }
+          }],
+        },
+      ],
+    };
+  }
+
   // Choose workflow based on agent's extended capability
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
     logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);

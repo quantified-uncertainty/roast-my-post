@@ -28,6 +28,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "process-jobs": "tsx src/scripts/process-job.ts",
+    "test:claude-code": "tsx src/scripts/test-claude-code.ts",
     "process-jobs-loop": "tsx src/scripts/process-jobs-loop.ts",
     "process-jobs-parallel": "tsx src/scripts/process-jobs-parallel.ts",
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
@@ -41,6 +42,7 @@
     "migrations:status": "node scripts/show-migrations.js"
   },
   "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.43",
     "@anthropic-ai/sdk": "^0.54.0",
     "@auth/prisma-adapter": "^2.9.1",
     "@heroicons/react": "^2.2.0",
