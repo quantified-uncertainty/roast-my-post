@@ -157,6 +157,13 @@ EOF
         echo "  ✓ Copied mcp-server/.env"
     fi
     
+    # Set up Claude permissions
+    if [ -f "$GIT_ROOT/.claude/settings.local.json.template" ]; then
+        mkdir -p "$WORKTREE_PATH/.claude"
+        cp "$GIT_ROOT/.claude/settings.local.json.template" "$WORKTREE_PATH/.claude/settings.local.json"
+        echo "  ✓ Set up Claude permissions"
+    fi
+    
     # Install dependencies
     cd "$WORKTREE_PATH"
     echo ""

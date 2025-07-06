@@ -49,7 +49,7 @@ export default async function DocumentPage({
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1">
           <DocumentWithEvaluations document={document} isOwner={isOwner} />
         </div>
       </div>
