@@ -22,27 +22,36 @@ describe('GET /api/users/[userId]', () => {
     email: 'test@example.com',
     image: 'https://example.com/avatar.jpg',
   };
+  
+  const mockUserWithoutEmail = {
+    id: mockUserId,
+    name: 'Test User',
+    image: 'https://example.com/avatar.jpg',
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should return user details when user exists', async () => {
+  it('should return user details without email when viewing other users profile', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(undefined);
-    (UserModel.getUser as jest.Mock).mockResolvedValueOnce(mockUser);
+    // UserModel should return without email for other users
+    (UserModel.getUser as jest.Mock).mockResolvedValueOnce(mockUserWithoutEmail);
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}`);
     const response = await GET(request, { params: Promise.resolve({ userId: mockUserId }) });
     
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toEqual(mockUser);
+    expect(data).toEqual(mockUserWithoutEmail);
+    expect(data.email).toBeUndefined();
     
     expect(UserModel.getUser).toHaveBeenCalledWith(mockUserId, undefined);
   });
 
-  it('should include isCurrentUser flag when authenticated', async () => {
+  it('should include email and isCurrentUser flag when viewing own profile', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUserId);
+    // UserModel should return with email for own profile
     (UserModel.getUser as jest.Mock).mockResolvedValueOnce({ ...mockUser, isCurrentUser: true });
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}`, {
@@ -56,12 +65,14 @@ describe('GET /api/users/[userId]', () => {
     
     const data = await response.json();
     expect(data).toEqual({ ...mockUser, isCurrentUser: true });
+    expect(data.email).toBe('test@example.com'); // Email should be present for own profile
     expect(UserModel.getUser).toHaveBeenCalledWith(mockUserId, mockUserId);
   });
 
-  it('should set isCurrentUser to false for different user', async () => {
+  it('should exclude email when viewing different users profile', async () => {
     (authenticateRequest as jest.Mock).mockResolvedValueOnce('different-user');
-    (UserModel.getUser as jest.Mock).mockResolvedValueOnce({ ...mockUser, isCurrentUser: false });
+    // UserModel should return without email for other users
+    (UserModel.getUser as jest.Mock).mockResolvedValueOnce({ ...mockUserWithoutEmail, isCurrentUser: false });
 
     const request = new NextRequest(`http://localhost:3000/api/users/${mockUserId}`, {
       headers: {
@@ -73,7 +84,8 @@ describe('GET /api/users/[userId]', () => {
     expect(response.status).toBe(200);
     
     const data = await response.json();
-    expect(data).toEqual({ ...mockUser, isCurrentUser: false });
+    expect(data).toEqual({ ...mockUserWithoutEmail, isCurrentUser: false });
+    expect(data.email).toBeUndefined(); // Email should not be present for other users
     expect(UserModel.getUser).toHaveBeenCalledWith(mockUserId, 'different-user');
   });
 
