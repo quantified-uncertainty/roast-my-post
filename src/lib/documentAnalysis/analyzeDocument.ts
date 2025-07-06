@@ -9,7 +9,7 @@ import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 import { analyzeWithClaudeCode } from "./claudeCodeAnalysis";
 import { analyzeWithMultiTurn } from "./multiTurnAnalysis";
-import { analyzeWithAgent } from "./agenticAnalysis";
+// import { analyzeWithAgent } from "./agenticAnalysis"; // Moved to experiments/
 
 export async function analyzeDocument(
   document: Document,
@@ -27,50 +27,10 @@ export async function analyzeDocument(
   tasks: TaskResult[];
 }> {
   // Choose analysis approach
-  const useAgentic = true; // Enable new agentic approach
-  const useMultiTurn = false; // Old multi-turn approach
-  
-  // Check if we should use agentic analysis
-  if (useAgentic) {
-    logger.info(`Using agentic analysis for agent ${agentInfo.name}`);
-    
-    const result = await analyzeWithAgent(document, agentInfo, {
-      budget: (agentInfo as any).claudeCodeBudget || 0.15,
-      maxTurns: 15,
-      verbose: true,
-    });
-
-    // Convert to standard format with dynamic task creation
-    const tasks: TaskResult[] = result.toolCalls.map((call, index) => ({
-      name: call.tool,
-      modelName: "claude-4-sonnet-20250514",
-      priceInCents: Math.round((result.totalCost / result.turnsUsed) * 100), // Distribute cost evenly
-      timeInSeconds: Math.round(60 / result.turnsUsed), // Estimate time per turn
-      log: `${call.tool}: ${call.result}`,
-      llmInteractions: [{
-        messages: [
-          { role: "user" as const, content: JSON.stringify(call.input) },
-          { role: "assistant" as const, content: call.result }
-        ],
-        usage: {
-          input_tokens: Math.round(500), // Estimates
-          output_tokens: Math.round(200),
-        }
-      }],
-    }));
-
-    return {
-      thinking: "", // Agentic analysis doesn't separate thinking
-      analysis: result.analysis,
-      summary: result.summary,
-      grade: result.grade,
-      comments: result.comments,
-      tasks,
-    };
-  }
+  const useMultiTurn = true; // Use multi-turn approach
   
   // Check if we should use multi-turn analysis
-  else if (useMultiTurn) {
+  if (useMultiTurn) {
     logger.info(`Using multi-turn analysis for agent ${agentInfo.name}`);
     
     const result = await analyzeWithMultiTurn(document, agentInfo, {
