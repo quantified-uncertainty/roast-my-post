@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import AgentsList from "@/components/AgentsList";
 import type { Agent } from "@/types/agentSchema";
+import { USER_DISPLAY } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +70,7 @@ export default async function UserAgentsPage({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {user.name || "User"}'s Agents
+                  {user.name || USER_DISPLAY.GUEST_NAME}'s Agents
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
                   {agents.length} agent{agents.length !== 1 ? 's' : ''} created

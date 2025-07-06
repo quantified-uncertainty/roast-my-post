@@ -17,3 +17,8 @@ export const RATE_LIMITS = {
   STANDARD: 60, // requests per minute
   SENSITIVE: 10, // requests per minute for sensitive operations
 } as const;
+
+// User display constants
+export const USER_DISPLAY = {
+  GUEST_NAME: 'Guest User',
+} as const;

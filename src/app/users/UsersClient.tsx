@@ -4,6 +4,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 
 import type { User as UserType } from "@/models/User";
+import { USER_DISPLAY } from "@/lib/constants";
 
 interface UsersClientProps {
   users: UserType[];
@@ -29,7 +30,7 @@ export default function UsersClient({ users }: UsersClientProps) {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
-                    {user.name || "Unnamed User"}
+                    {user.name || USER_DISPLAY.GUEST_NAME}
                   </h3>
                   <p className="text-sm text-gray-500">
                     {user.email || "No email provided"}

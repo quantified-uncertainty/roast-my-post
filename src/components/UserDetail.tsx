@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 
 import { Button } from "@/components/Button";
 import type { User as UserType } from "@/models/User";
+import { USER_DISPLAY } from "@/lib/constants";
 
 interface UserDetailProps {
   user: UserType;
@@ -52,7 +53,7 @@ export default function UserDetail({ user }: UserDetailProps) {
           </div>
           <div>
             <h2 className="text-xl font-semibold">
-              {user.name || "Unnamed User"}
+              {user.name || USER_DISPLAY.GUEST_NAME}
             </h2>
             <p className="text-sm text-gray-500">
               {user.email || "No email provided"}
