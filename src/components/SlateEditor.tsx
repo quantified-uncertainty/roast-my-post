@@ -153,8 +153,8 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
       const codeLines = codeContent.split('\n');
       const linesToHighlight: number[] = [];
       
-      // Track which highlight tags match this code block
-      const matchingTags: string[] = [];
+      // Track which highlights match this code block and their line positions
+      const highlightPositions: Array<{ tag: string; lineNumber: number }> = [];
       
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
@@ -170,20 +170,22 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
             
             // Check if the entire quoted text appears in the code block
             if (codeContent.includes(quotedText)) {
-              // Track this tag as matching
-              matchingTags.push(highlight.tag);
-              
-              // Find which lines contain this quoted text
+              // Find the first line that contains this quoted text
+              const quotedStart = codeContent.indexOf(quotedText);
               let currentPos = 0;
+              let firstMatchingLine = -1;
+              
               codeLines.forEach((line, index) => {
                 const lineStart = currentPos;
                 const lineEnd = currentPos + line.length;
                 
-                // Check if the quoted text overlaps with this line
-                const quotedStart = codeContent.indexOf(quotedText);
-                const quotedEnd = quotedStart + quotedText.length;
+                // Check if the quoted text starts in this line
+                if (quotedStart >= lineStart && quotedStart < lineEnd && firstMatchingLine === -1) {
+                  firstMatchingLine = index + 1; // 1-indexed
+                }
                 
-                if (quotedStart <= lineEnd && quotedEnd >= lineStart) {
+                // Track all lines that contain part of this quoted text
+                if (quotedStart <= lineEnd && (quotedStart + quotedText.length) >= lineStart) {
                   if (!linesToHighlight.includes(index + 1)) {
                     linesToHighlight.push(index + 1);
                   }
@@ -191,6 +193,10 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
                 
                 currentPos = lineEnd + 1; // +1 for newline
               });
+              
+              if (firstMatchingLine > 0) {
+                highlightPositions.push({ tag: highlight.tag, lineNumber: firstMatchingLine });
+              }
             }
           }
         });
@@ -203,6 +209,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
             language={element.lang || "plain"}
             attributes={attributes}
             highlightLines={linesToHighlight}
+            highlightPositions={highlightPositions}
           >
             {children}
           </CodeBlock>
@@ -567,6 +574,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     ([node, path]: [Node, number[]]) => {
       if (!Text.isText(node) || !initialized) {
         return [];
+      }
+
+      // Check if this text node is within a code block
+      const ancestors = Node.ancestors(editor, path);
+      for (const [ancestor] of ancestors) {
+        if (Element.isElement(ancestor) && ancestor.type === 'code') {
+          // Skip highlighting within code blocks
+          return [];
+        }
       }
 
       const ranges: any[] = [];

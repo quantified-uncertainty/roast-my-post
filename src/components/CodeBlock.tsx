@@ -12,6 +12,7 @@ interface CodeBlockProps {
   language?: string;
   attributes?: any;
   highlightLines?: number[]; // Array of line numbers to highlight (1-indexed)
+  highlightPositions?: Array<{ tag: string; lineNumber: number }>; // Position markers for comments
 }
 
 // Map our language strings to prism-react-renderer Language type
@@ -36,6 +37,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   language = "plain",
   attributes,
   highlightLines = [],
+  highlightPositions = [],
 }) => {
   const [formattedCode, setFormattedCode] = useState(code);
   const [copied, setCopied] = useState(false);
@@ -111,6 +113,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
     <div
       {...attributes}
       className="relative my-4 overflow-hidden rounded-lg bg-gray-800"
+      style={{ position: 'relative' }}
     >
       <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
         <span className="text-sm text-gray-400">{language}</span>
@@ -224,6 +227,31 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           </div>
         )}
       </Highlight>
+      
+      {/* Position markers for comment alignment */}
+      {highlightPositions.map(({ tag, lineNumber }) => {
+        // Calculate vertical position based on line number
+        // Header height (language bar) is 40px + padding of 14px = 54px
+        // Each line is 1.5rem = 24px
+        const headerHeight = 54;
+        const lineHeight = 24; // 1.5rem
+        const topPosition = headerHeight + (lineNumber - 1) * lineHeight;
+        
+        return (
+          <div
+            key={tag}
+            data-tag={tag}
+            style={{
+              position: 'absolute',
+              top: `${topPosition}px`,
+              left: 0,
+              width: 0,
+              height: 0,
+              pointerEvents: 'none',
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
