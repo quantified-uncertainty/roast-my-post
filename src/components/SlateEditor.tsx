@@ -153,9 +153,8 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
       const codeLines = codeContent.split('\n');
       const linesToHighlight: number[] = [];
       
-      // Debug logging
-      console.log("Code block content:", codeContent.substring(0, 100));
-      console.log("Highlights:", highlights);
+      // Track which highlight tags match this code block
+      const matchingTags: string[] = [];
       
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
@@ -169,10 +168,11 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
               return;
             }
             
-            console.log("Checking quoted text:", quotedText);
-            
             // Check if the entire quoted text appears in the code block
             if (codeContent.includes(quotedText)) {
+              // Track this tag as matching
+              matchingTags.push(highlight.tag);
+              
               // Find which lines contain this quoted text
               let currentPos = 0;
               codeLines.forEach((line, index) => {
@@ -184,7 +184,6 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
                 const quotedEnd = quotedStart + quotedText.length;
                 
                 if (quotedStart <= lineEnd && quotedEnd >= lineStart) {
-                  console.log(`Found match on line ${index + 1}: ${line}`);
                   if (!linesToHighlight.includes(index + 1)) {
                     linesToHighlight.push(index + 1);
                   }
@@ -196,8 +195,6 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
           }
         });
       }
-      
-      console.log("Lines to highlight:", linesToHighlight);
       
       return (
         <CodeBlockErrorBoundary>
