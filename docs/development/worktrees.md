@@ -182,6 +182,10 @@ You can run multiple worktrees simultaneously:
 ./scripts/worktree-manager.sh remove feature-new-ui
 ```
 
+## Note on npm Scripts
+
+The worktree management scripts are standalone shell scripts and are intentionally **not** included as npm scripts. This prevents issues with Docker builds and keeps them as development-only tools. Always use the direct script paths as shown above.
+
 ## Implementation Details
 
 The worktree system consists of:
