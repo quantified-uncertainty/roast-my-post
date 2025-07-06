@@ -220,6 +220,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - `npm run db:push` - Push schema changes (now uses safe wrapper)
 - `npm run process-jobs` - Manual job processing
 
+### Worktree Management (for parallel development)
+- `./scripts/worktree-manager.sh create <branch>` - Create new worktree with automatic setup
+- `./scripts/worktree-manager.sh start <branch>` - Start all processes in tmux
+- `./scripts/worktree-manager.sh attach <branch>` - Attach to tmux session
+- `./scripts/worktree-manager.sh list` - List all worktrees and their status
+- `./scripts/worktree-manager.sh ports` - Show port allocations
+- See `/docs/development/worktrees.md` for detailed documentation
+
 ## Recent Updates (2025-01-24)
 
 ### Admin User System
