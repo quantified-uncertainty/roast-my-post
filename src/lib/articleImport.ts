@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom";
 import TurndownService from "turndown";
 
 const FIRECRAWL_API_KEY = process.env.FIRECRAWL_KEY;
+const DIFFBOT_KEY = process.env.DIFFBOT_KEY;
 
 export interface ArticleData {
   html: string;
@@ -39,6 +40,36 @@ interface FirecrawlResponse {
     links?: string[];
   };
   error?: string;
+}
+
+interface DiffbotResponse {
+  objects: Array<{
+    type: string;
+    title: string;
+    text: string;
+    html: string;
+    date: string;
+    author: string;
+    authorUrl?: string;
+    siteName?: string;
+    pageUrl: string;
+    resolvedPageUrl: string;
+    tags?: Array<{
+      label: string;
+      uri?: string;
+    }>;
+    images?: Array<{
+      url: string;
+      title?: string;
+      width?: number;
+      height?: number;
+    }>;
+  }>;
+  request: {
+    pageUrl: string;
+    api: string;
+    version: number;
+  };
 }
 
 export function transformEAForumUrl(url: string): string {
@@ -649,6 +680,15 @@ export function detectPlatforms(url: string): string[] {
 }
 
 export async function processArticle(url: string): Promise<ProcessedArticle> {
+  // Try Diffbot first if available, then Firecrawl, then fallback
+  if (DIFFBOT_KEY) {
+    try {
+      return await processArticleWithDiffbot(url);
+    } catch (error) {
+      logger.warn('⚠️ Diffbot failed, trying Firecrawl...');
+    }
+  }
+  
   // Check if Firecrawl API key is available
   if (!FIRECRAWL_API_KEY) {
     logger.warn('⚠️ FIRECRAWL_KEY not found, using fallback method');
@@ -739,6 +779,80 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     logger.error('❌ Firecrawl extraction failed:', error);
     logger.info('⚠️ Falling back to manual extraction...');
     return processArticleFallback(url);
+  }
+}
+
+// Process article using Diffbot API
+async function processArticleWithDiffbot(url: string): Promise<ProcessedArticle> {
+  logger.info(`📥 Fetching article from ${url} with Diffbot...`);
+  
+  try {
+    // Use Diffbot Article API
+    const diffbotUrl = `https://api.diffbot.com/v3/article`;
+    const response = await axios.get<DiffbotResponse>(diffbotUrl, {
+      params: {
+        token: DIFFBOT_KEY,
+        url: url,
+        discussion: false, // We don't need comments
+      },
+      timeout: 30000, // 30 second timeout
+    });
+
+    if (!response.data.objects || response.data.objects.length === 0) {
+      throw new Error("No article content found by Diffbot");
+    }
+
+    const article = response.data.objects[0];
+    logger.info('✅ Diffbot extraction successful');
+
+    // Extract metadata from Diffbot response
+    const title = article.title || "Untitled Article";
+    const author = article.author || "Unknown Author";
+    const date = article.date ? 
+      new Date(article.date).toISOString().split("T")[0] : 
+      new Date().toISOString().split("T")[0];
+
+    // Convert HTML to Markdown if html is provided, otherwise use text
+    let content: string;
+    if (article.html) {
+      logger.info('🔄 Converting HTML to Markdown...');
+      content = convertToMarkdown(article.html);
+    } else if (article.text) {
+      // Check if text already contains markdown patterns
+      if (article.text.includes('![') || article.text.includes('](')) {
+        logger.info('📝 Text appears to already be in Markdown format');
+        content = article.text;
+      } else {
+        content = article.text;
+      }
+    } else {
+      content = "";
+    }
+
+    // If content is still very short, throw to try next method
+    if (content.length < 100) {
+      throw new Error("Diffbot content too short");
+    }
+
+    // Additional cleanup for common markdown issues
+    content = cleanMarkdownContent(content);
+    
+    // Reorganize footnotes if present
+    content = reorganizeFootnotes(content);
+    
+    const platforms = detectPlatforms(url);
+
+    return {
+      title,
+      author,
+      date,
+      content,
+      platforms,
+      url,
+    };
+  } catch (error) {
+    logger.error('❌ Diffbot extraction failed:', error);
+    throw error; // Re-throw to allow fallback to next method
   }
 }
 
