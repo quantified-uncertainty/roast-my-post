@@ -50,6 +50,7 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'plain', attributes, children }) => {
   const [formattedCode, setFormattedCode] = useState(code);
   const [copied, setCopied] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
   const [formatError, setFormatError] = useState<string | null>(null);
   const codeRef = useRef<HTMLElement>(null);
 
@@ -67,6 +68,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'plain', attribu
   const formatCode = async () => {
     try {
       setFormatError(null);
+      setIsFormatting(true);
 
       // Only format JavaScript/TypeScript code
       if (['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'].includes(language)) {
@@ -103,6 +105,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'plain', attribu
     } catch (error) {
       console.error('Prettier formatting error:', error);
       setFormatError('Failed to format code. Please check the syntax.');
+    } finally {
+      setIsFormatting(false);
     }
   };
 
@@ -121,10 +125,11 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = 'plain', attribu
           {['javascript', 'js', 'jsx', 'typescript', 'ts', 'tsx'].includes(language) && (
             <button
               onClick={formatCode}
-              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+              disabled={isFormatting}
+              className="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Format with Prettier"
             >
-              Format
+              {isFormatting ? 'Formatting...' : 'Format'}
             </button>
           )}
           <button

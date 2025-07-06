@@ -35,6 +35,7 @@ import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/lib/fonts";
 import CodeBlock from "./CodeBlock";
+import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
 
 // Helper function to normalize text by removing markdown formatting
 const normalizeText = (text: string): string => {
@@ -148,13 +149,15 @@ const renderElement = ({ attributes, children, element }: any) => {
       );
     case "code":
       return (
-        <CodeBlock
-          code={element.value || ""}
-          language={element.lang || "plain"}
-          attributes={attributes}
-        >
-          {children}
-        </CodeBlock>
+        <CodeBlockErrorBoundary>
+          <CodeBlock
+            code={element.value || ""}
+            language={element.lang || "plain"}
+            attributes={attributes}
+          >
+            {children}
+          </CodeBlock>
+        </CodeBlockErrorBoundary>
       );
     case "image":
       return (
