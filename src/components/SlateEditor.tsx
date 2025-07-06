@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useCallback,
   useEffect,
@@ -32,6 +34,7 @@ import { unified } from "unified";
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/lib/fonts";
+import CodeBlock from "./CodeBlock";
 
 // Helper function to normalize text by removing markdown formatting
 const normalizeText = (text: string): string => {
@@ -142,6 +145,16 @@ const renderElement = ({ attributes, children, element }: any) => {
         >
           {children}
         </a>
+      );
+    case "code":
+      return (
+        <CodeBlock
+          code={element.value || ""}
+          language={element.lang || "plain"}
+          attributes={attributes}
+        >
+          {children}
+        </CodeBlock>
       );
     case "image":
       return (
@@ -273,8 +286,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           nodeTypes: {
             emphasis: "emphasis",
             strong: "strong",
-            inlineCode: "code",
+            inlineCode: "inlineCode",
+            code: "code",
+            codeBlock: "code",
             link: "link",
+            paragraph: "paragraph",
+            heading: "heading",
+            list: "list",
+            listItem: "listItem",
+            blockquote: "block-quote",
           },
         });
 
@@ -324,6 +344,26 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               type: "link",
               url: node.url,
               children: node.children.map(processNode),
+            };
+
+          case "code":
+          case "code-block":
+          case "codeBlock":
+            // Extract the code content from children if it's there
+            let codeValue = node.value || "";
+            if (!codeValue && node.children && node.children.length > 0) {
+              // Sometimes the code is in the children as text nodes
+              codeValue = node.children.map((child: any) => 
+                child.text || child.value || ""
+              ).join("");
+            }
+            
+            return {
+              ...node,
+              type: "code",
+              value: codeValue,
+              lang: node.lang || node.language || node.meta || "plain",
+              children: [{ text: "" }], // Code blocks need at least one child
             };
 
 
