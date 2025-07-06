@@ -66,7 +66,7 @@ interface SlateEditorProps {
   hoveredTag?: string | null;
 }
 
-const renderElement = ({ attributes, children, element }: any) => {
+const renderElement = ({ attributes, children, element, highlights }: any) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -148,12 +148,64 @@ const renderElement = ({ attributes, children, element }: any) => {
         </a>
       );
     case "code":
+      // Find which lines to highlight based on comment highlights
+      const codeContent = element.value || "";
+      const codeLines = codeContent.split('\n');
+      const linesToHighlight: number[] = [];
+      
+      // Debug logging
+      console.log("Code block content:", codeContent.substring(0, 100));
+      console.log("Highlights:", highlights);
+      
+      // Check each highlight to see if its quoted text appears in this code block
+      if (highlights && Array.isArray(highlights)) {
+        highlights.forEach((highlight: any) => {
+          if (highlight.quotedText) {
+            // Search for the quoted text in the code block
+            const quotedText = highlight.quotedText.trim();
+            
+            // Skip if quoted text is too short or just punctuation
+            if (quotedText.length < 10) {
+              return;
+            }
+            
+            console.log("Checking quoted text:", quotedText);
+            
+            // Check if the entire quoted text appears in the code block
+            if (codeContent.includes(quotedText)) {
+              // Find which lines contain this quoted text
+              let currentPos = 0;
+              codeLines.forEach((line, index) => {
+                const lineStart = currentPos;
+                const lineEnd = currentPos + line.length;
+                
+                // Check if the quoted text overlaps with this line
+                const quotedStart = codeContent.indexOf(quotedText);
+                const quotedEnd = quotedStart + quotedText.length;
+                
+                if (quotedStart <= lineEnd && quotedEnd >= lineStart) {
+                  console.log(`Found match on line ${index + 1}: ${line}`);
+                  if (!linesToHighlight.includes(index + 1)) {
+                    linesToHighlight.push(index + 1);
+                  }
+                }
+                
+                currentPos = lineEnd + 1; // +1 for newline
+              });
+            }
+          }
+        });
+      }
+      
+      console.log("Lines to highlight:", linesToHighlight);
+      
       return (
         <CodeBlockErrorBoundary>
           <CodeBlock
-            code={element.value || ""}
+            code={codeContent}
             language={element.lang || "plain"}
             attributes={attributes}
+            highlightLines={linesToHighlight}
           >
             {children}
           </CodeBlock>
@@ -710,7 +762,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         <Editable
           data-testid="slate-editable"
           decorate={decorate}
-          renderElement={renderElement}
+          renderElement={(props) => renderElement({ ...props, highlights })}
           renderLeaf={(props) =>
             renderLeaf({
               ...props,

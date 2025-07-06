@@ -67,6 +67,7 @@ export function EvaluationView({
       displayComments.map((comment, index) => ({
         startOffset: comment.highlight.startOffset,
         endOffset: comment.highlight.endOffset,
+        quotedText: comment.highlight.quotedText,
         tag: index.toString(),
         color: "#3b82f6",
       })),
