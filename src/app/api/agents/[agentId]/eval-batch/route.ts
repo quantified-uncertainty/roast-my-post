@@ -5,7 +5,8 @@ import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 
 interface CreateBatchRequest {
   name?: string;
-  targetCount: number;
+  targetCount?: number;
+  documentIds?: string[];
 }
 
 export async function POST(
@@ -24,10 +25,33 @@ export async function POST(
     const agentId = resolvedParams.agentId;
     const body: CreateBatchRequest = await request.json();
 
-    // Validate request
-    if (!body.targetCount || body.targetCount < 1 || body.targetCount > 100) {
+    // Validate request - mutual exclusivity
+    if (body.documentIds && body.targetCount) {
+      return NextResponse.json(
+        { error: "Cannot specify both documentIds and targetCount" },
+        { status: 400 }
+      );
+    }
+
+    if (!body.documentIds && !body.targetCount) {
+      return NextResponse.json(
+        { error: "Must specify either documentIds or targetCount" },
+        { status: 400 }
+      );
+    }
+
+    // Validate targetCount if provided
+    if (body.targetCount && (body.targetCount < 1 || body.targetCount > 100)) {
       return NextResponse.json(
         { error: "Target count must be between 1 and 100" },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentIds if provided
+    if (body.documentIds && body.documentIds.length === 0) {
+      return NextResponse.json(
+        { error: "Document IDs array cannot be empty" },
         { status: 400 }
       );
     }
@@ -48,62 +72,137 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Find documents that have been evaluated by this agent
-    const documentsWithEvaluations = await prisma.document.findMany({
-      where: {
-        evaluations: {
-          some: {
-            agentId: agentId,
-            versions: {
-              some: {},
+    let documentsToProcess: { id: string; evaluations: { id: string }[] }[] = [];
+    let requestedDocumentIds: string[] = [];
+
+    if (body.documentIds) {
+      // Specific document mode - validate that documents exist
+      const docs = await prisma.document.findMany({
+        where: { id: { in: body.documentIds } },
+        select: { id: true },
+      });
+
+      const foundIds = new Set(docs.map((d) => d.id));
+      const missing = body.documentIds.filter((id) => !foundIds.has(id));
+
+      if (missing.length > 0) {
+        return NextResponse.json(
+          { error: `Documents not found: ${missing.join(", ")}` },
+          { status: 400 }
+        );
+      }
+
+      // Check if these documents have evaluations for this agent
+      documentsToProcess = await prisma.document.findMany({
+        where: {
+          id: { in: body.documentIds },
+          evaluations: {
+            some: {
+              agentId: agentId,
             },
           },
         },
-      },
-      select: {
-        id: true,
-        evaluations: {
-          where: {
-            agentId: agentId,
-          },
-          select: {
-            id: true,
+        select: {
+          id: true,
+          evaluations: {
+            where: {
+              agentId: agentId,
+            },
+            select: {
+              id: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (documentsWithEvaluations.length === 0) {
-      return NextResponse.json(
-        { error: "No documents found with evaluations for this agent" },
-        { status: 400 }
-      );
+      if (documentsToProcess.length !== body.documentIds.length) {
+        const docsWithoutEvals = body.documentIds.filter(
+          id => !documentsToProcess.some(d => d.id === id)
+        );
+        return NextResponse.json(
+          { error: `Some documents don't have evaluations for this agent: ${docsWithoutEvals.join(", ")}` },
+          { status: 400 }
+        );
+      }
+
+      requestedDocumentIds = body.documentIds;
+    } else {
+      // Random selection mode - find documents that have been evaluated by this agent
+      const documentsWithEvaluations = await prisma.document.findMany({
+        where: {
+          evaluations: {
+            some: {
+              agentId: agentId,
+              versions: {
+                some: {},
+              },
+            },
+          },
+        },
+        select: {
+          id: true,
+          evaluations: {
+            where: {
+              agentId: agentId,
+            },
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      if (documentsWithEvaluations.length === 0) {
+        return NextResponse.json(
+          { error: "No documents found with evaluations for this agent" },
+          { status: 400 }
+        );
+      }
+
+      documentsToProcess = documentsWithEvaluations;
     }
+
+    // Calculate targetCount based on mode
+    const targetCount = body.documentIds ? body.documentIds.length : body.targetCount!;
 
     // Create the batch
     const batch = await prisma.agentEvalBatch.create({
       data: {
         name: body.name,
         agentId: agentId,
-        targetCount: body.targetCount,
+        targetCount: targetCount,
+        requestedDocumentIds: requestedDocumentIds,
       },
     });
 
-    // Create jobs by randomly selecting documents (avoiding recent duplicates)
-    const shuffledDocuments = documentsWithEvaluations.sort(() => 0.5 - Math.random());
-    const documentsToUse = shuffledDocuments.slice(0, Math.min(body.targetCount, documentsWithEvaluations.length));
-    
-    // If we need more jobs than unique documents, we'll repeat documents
+    // Create jobs based on mode
     const jobsToCreate = [];
-    for (let i = 0; i < body.targetCount; i++) {
-      const documentIndex = i % documentsToUse.length;
-      const document = documentsToUse[documentIndex];
-      const evaluationId = document.evaluations[0].id;
+    
+    if (body.documentIds) {
+      // Specific document mode - create one job per document
+      for (const document of documentsToProcess) {
+        const evaluationId = document.evaluations[0].id;
+        jobsToCreate.push({
+          evaluationId: evaluationId,
+          agentEvalBatchId: batch.id,
+        });
+      }
+    } else {
+      // Random selection mode
+      const shuffledDocuments = documentsToProcess.sort(() => 0.5 - Math.random());
+      const documentsToUse = shuffledDocuments.slice(0, Math.min(body.targetCount!, documentsToProcess.length));
       
-      jobsToCreate.push({
-        evaluationId: evaluationId,
-        agentEvalBatchId: batch.id,
-      });
+      // If we need more jobs than unique documents, we'll repeat documents
+      for (let i = 0; i < body.targetCount!; i++) {
+        const documentIndex = i % documentsToUse.length;
+        const document = documentsToUse[documentIndex];
+        const evaluationId = document.evaluations[0].id;
+        
+        jobsToCreate.push({
+          evaluationId: evaluationId,
+          agentEvalBatchId: batch.id,
+        });
+      }
     }
 
     // Create all jobs
@@ -112,7 +211,7 @@ export async function POST(
     });
 
     // Return the created batch with job count
-    const batchWithJobs = await prisma.agentEvalBatch.findUnique({
+    const batchWithJobCount = await prisma.agentEvalBatch.findUnique({
       where: { id: batch.id },
       include: {
         _count: {
@@ -123,9 +222,42 @@ export async function POST(
       },
     });
 
+    // Get job details separately
+    const jobs = await prisma.job.findMany({
+      where: { agentEvalBatchId: batch.id },
+      select: {
+        id: true,
+        status: true,
+        evaluation: {
+          select: {
+            document: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const documentIds = jobs.map(job => job.evaluation.document.id);
+    const uniqueDocumentIds = [...new Set(documentIds)];
+
     return NextResponse.json({
-      batch: batchWithJobs,
-      message: `Created batch with ${jobsToCreate.length} jobs`,
+      batch: {
+        id: batchWithJobCount?.id,
+        name: batchWithJobCount?.name,
+        agentId: batchWithJobCount?.agentId,
+        createdAt: batchWithJobCount?.createdAt,
+        targetCount: batchWithJobCount?.targetCount,
+        documentIds: uniqueDocumentIds,
+        jobCount: batchWithJobCount?._count.jobs || 0,
+      },
+      jobs: jobs.map(job => ({
+        id: job.id,
+        documentId: job.evaluation.document.id,
+        status: job.status,
+      })),
     });
   } catch (error) {
     logger.error('Error creating agent eval batch:', error);

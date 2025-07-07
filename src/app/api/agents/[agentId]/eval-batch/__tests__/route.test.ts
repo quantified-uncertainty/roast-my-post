@@ -18,6 +18,7 @@ jest.mock('@/lib/prisma', () => ({
     },
     job: {
       createMany: jest.fn(),
+      findMany: jest.fn(),
     },
   },
 }));
@@ -119,6 +120,55 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     (prisma.agentEvalBatch.create as jest.Mock).mockResolvedValueOnce(mockBatch);
     (prisma.job.createMany as jest.Mock).mockResolvedValueOnce({ count: 5 });
     (prisma.agentEvalBatch.findUnique as jest.Mock).mockResolvedValueOnce(mockBatchWithCount);
+    
+    // Mock the job.findMany call that's used to get job details
+    (prisma.job.findMany as jest.Mock).mockResolvedValueOnce([
+      {
+        id: 'job-1',
+        status: 'PENDING',
+        evaluation: {
+          document: {
+            id: 'doc-1'
+          }
+        }
+      },
+      {
+        id: 'job-2',
+        status: 'PENDING',
+        evaluation: {
+          document: {
+            id: 'doc-2'
+          }
+        }
+      },
+      {
+        id: 'job-3',
+        status: 'PENDING',
+        evaluation: {
+          document: {
+            id: 'doc-3'
+          }
+        }
+      },
+      {
+        id: 'job-4',
+        status: 'PENDING',
+        evaluation: {
+          document: {
+            id: 'doc-1'
+          }
+        }
+      },
+      {
+        id: 'job-5',
+        status: 'PENDING',
+        evaluation: {
+          document: {
+            id: 'doc-2'
+          }
+        }
+      }
+    ]);
 
     const request = new NextRequest(`http://localhost:3000/api/agents/${mockAgentId}/eval-batch`, {
       method: 'POST',
@@ -127,12 +177,32 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
+    
+    // Log the error if status is not 200
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
+    }
+    
     expect(response.status).toBe(200);
     
     const data = await response.json();
-    expect(data).toEqual({
-      batch: mockBatchWithCount,
-      message: 'Created batch with 5 jobs',
+    expect(data).toMatchObject({
+      batch: {
+        id: mockBatch.id,
+        name: mockBatch.name,
+        agentId: mockBatch.agentId,
+        targetCount: mockBatch.targetCount,
+        jobCount: 5,
+        documentIds: expect.arrayContaining(['doc-1', 'doc-2', 'doc-3'])
+      },
+      jobs: expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          documentId: expect.any(String),
+          status: 'PENDING'
+        })
+      ])
     });
     
     // Verify agent lookup

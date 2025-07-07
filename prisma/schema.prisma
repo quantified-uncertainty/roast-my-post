@@ -192,13 +192,14 @@ model AgentVersion {
 }
 
 model AgentEvalBatch {
-  id          String   @id @default(uuid())
-  name        String?
-  agentId     String
-  createdAt   DateTime @default(now())
-  targetCount Int
-  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  jobs        Job[]
+  id                   String   @id @default(uuid())
+  name                 String?
+  agentId              String
+  createdAt            DateTime @default(now())
+  targetCount          Int
+  requestedDocumentIds String[] @default([])
+  agent                Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  jobs                 Job[]
 }
 
 model Job {
