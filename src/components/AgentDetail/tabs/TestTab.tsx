@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Play } from "lucide-react";
 import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/Button";
 import type { Agent } from "@/types/agentSchema";
+import { DocumentSelector } from "./DocumentSelector";
 
 import type { ActiveTab } from "../types";
 
@@ -27,6 +29,9 @@ export function TestTab({
   setBatches,
   fetchBatches,
 }: TestTabProps) {
+  const [selectionMode, setSelectionMode] = useState<"specific" | "random">("random");
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -57,11 +62,26 @@ export function TestTab({
 
             try {
               const formData = new FormData(e.currentTarget);
-              const targetCount = parseInt(
-                formData.get("targetCount") as string,
-                10
-              );
               const name = formData.get("name") as string;
+
+              let requestBody: any = {
+                name: name || undefined,
+              };
+
+              if (selectionMode === "specific") {
+                if (selectedDocumentIds.length === 0) {
+                  setTestSuccess("Error: Please select at least one document");
+                  setTestLoading(false);
+                  return;
+                }
+                requestBody.documentIds = selectedDocumentIds;
+              } else {
+                const targetCount = parseInt(
+                  formData.get("targetCount") as string,
+                  10
+                );
+                requestBody.targetCount = targetCount;
+              }
 
               const response = await fetch(
                 `/api/agents/${agent.id}/eval-batch`,
@@ -70,10 +90,7 @@ export function TestTab({
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({
-                    name: name || undefined,
-                    targetCount,
-                  }),
+                  body: JSON.stringify(requestBody),
                 }
               );
 
@@ -83,16 +100,18 @@ export function TestTab({
               }
 
               const result = await response.json();
-              setTestSuccess(
-                `${result.message} Switch to the Jobs tab to monitor progress.`
-              );
-
+              const jobCount = result.batch?.jobCount || 0;
+              
               // Reset form
               (e.target as HTMLFormElement).reset();
+              setSelectedDocumentIds([]);
 
-              // Refresh batches list if we're on that tab
+              // Refresh batches list
               setBatches([]);
               fetchBatches();
+              
+              // Switch to Batch Tests tab
+              setActiveTab("batches");
             } catch (error) {
               logger.error('Test creation failed:', error);
               setTestSuccess(
@@ -124,31 +143,77 @@ export function TestTab({
           </div>
 
           <div>
-            <label
-              htmlFor="targetCount"
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
-              Number of Evaluations
+            <label className="mb-3 block text-sm font-medium text-gray-700">
+              Selection Mode
             </label>
-            <select
-              id="targetCount"
-              name="targetCount"
-              required
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Select number of tests...</option>
-              <option value="1">1 evaluation (Sanity check)</option>
-              <option value="3">3 evaluations (Quick test)</option>
-              <option value="5">5 evaluations (Standard test)</option>
-              <option value="10">10 evaluations (Comprehensive test)</option>
-              <option value="20">20 evaluations (Extensive benchmark)</option>
-              <option value="50">50 evaluations (Extreme benchmark)</option>
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Documents will be randomly selected from those previously
-              evaluated by this agent
-            </p>
+            <div className="flex gap-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="random"
+                  checked={selectionMode === "random"}
+                  onChange={() => {
+                    setSelectionMode("random");
+                    setSelectedDocumentIds([]);
+                  }}
+                  className="mr-2 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Random Selection</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="specific"
+                  checked={selectionMode === "specific"}
+                  onChange={() => setSelectionMode("specific")}
+                  className="mr-2 h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Select Specific Documents</span>
+              </label>
+            </div>
           </div>
+
+          {selectionMode === "random" ? (
+            <div>
+              <label
+                htmlFor="targetCount"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                Number of Evaluations
+              </label>
+              <select
+                id="targetCount"
+                name="targetCount"
+                required
+                className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">Select number of tests...</option>
+                <option value="1">1 evaluation (Sanity check)</option>
+                <option value="3">3 evaluations (Quick test)</option>
+                <option value="5">5 evaluations (Standard test)</option>
+                <option value="10">10 evaluations (Comprehensive test)</option>
+                <option value="20">20 evaluations (Extensive benchmark)</option>
+                <option value="50">50 evaluations (Extreme benchmark)</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Documents will be randomly selected from those previously
+                evaluated by this agent
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Select Documents to Test
+              </label>
+              <DocumentSelector
+                agentId={agent.id}
+                selectedIds={selectedDocumentIds}
+                onChange={setSelectedDocumentIds}
+              />
+            </div>
+          )}
 
           <div className="rounded-md bg-blue-50 p-4">
             <h4 className="mb-2 text-sm font-medium text-blue-900">
