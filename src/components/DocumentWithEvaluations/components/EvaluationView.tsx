@@ -26,6 +26,7 @@ import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 
 export function EvaluationView({
   evaluationState,
@@ -219,13 +220,11 @@ export function EvaluationView({
 
                       {/* Summary Section */}
                       {evaluation.summary && (
-                        <div
-                          className="mb-6"
+                        <CollapsibleSection
                           id={`eval-${evaluation.agentId}-summary`}
+                          title="Summary"
+                          defaultOpen={true}
                         >
-                          <h4 className="mb-2 text-lg font-medium text-gray-700">
-                            Summary
-                          </h4>
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
@@ -234,15 +233,16 @@ export function EvaluationView({
                               {evaluation.summary}
                             </ReactMarkdown>
                           </div>
-                        </div>
+                        </CollapsibleSection>
                       )}
 
                       {/* Analysis Section */}
                       {evaluation.analysis && (
-                        <div id={`eval-${evaluation.agentId}-analysis`}>
-                          <h4 className="mb-2 text-lg font-medium text-gray-700">
-                            Analysis
-                          </h4>
+                        <CollapsibleSection
+                          id={`eval-${evaluation.agentId}-analysis`}
+                          title="Analysis"
+                          defaultOpen={true}
+                        >
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
@@ -251,7 +251,7 @@ export function EvaluationView({
                               {evaluation.analysis}
                             </ReactMarkdown>
                           </div>
-                        </div>
+                        </CollapsibleSection>
                       )}
                     </div>
                   ))}
