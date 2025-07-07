@@ -175,7 +175,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
               let currentPos = 0;
               let firstMatchingLine = -1;
               
-              codeLines.forEach((line, index) => {
+              codeLines.forEach((line: string, index: number) => {
                 const lineStart = currentPos;
                 const lineEnd = currentPos + line.length;
                 
