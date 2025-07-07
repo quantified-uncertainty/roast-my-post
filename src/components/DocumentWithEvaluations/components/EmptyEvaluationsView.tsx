@@ -19,7 +19,7 @@ interface EmptyEvaluationsViewProps {
   document: Document;
   contentWithMetadataPrepend: string;
   isOwner?: boolean;
-  pendingJobsCount?: number;
+  hasPendingJobs?: boolean;
   failedJobs?: FailedJob[];
 }
 
@@ -27,7 +27,7 @@ export function EmptyEvaluationsView({
   document,
   contentWithMetadataPrepend,
   isOwner = false,
-  pendingJobsCount = 0,
+  hasPendingJobs = false,
   failedJobs = [],
 }: EmptyEvaluationsViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -41,12 +41,12 @@ export function EmptyEvaluationsView({
           {/* Main content area */}
           <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
             {/* Message banner at the top */}
-            {pendingJobsCount > 0 ? (
+            {hasPendingJobs ? (
               <div className="mx-6 mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-center gap-2">
                   <InformationCircleIcon className="h-5 w-5 text-amber-600" />
                   <p className="text-sm text-amber-800">
-                    Processing {pendingJobsCount} evaluation{pendingJobsCount > 1 ? 's' : ''}... This may take a few moments.
+                    Processing evaluations... This may take a few moments.
                   </p>
                 </div>
               </div>

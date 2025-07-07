@@ -15,24 +15,29 @@ export function DocumentWithEvaluations({
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
-  // Check for pending/running jobs across all evaluations
-  const pendingJobs = useMemo(() => {
-    return document.reviews.flatMap(review => 
-      review.jobs?.filter(job => job.status === 'PENDING' || job.status === 'RUNNING') || []
-    );
+  // Check if any evaluations have pending/running jobs (only check most recent job per evaluation)
+  const hasPendingJobs = useMemo(() => {
+    return document.reviews.some(review => {
+      const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
+      return mostRecentJob?.status === 'PENDING' || mostRecentJob?.status === 'RUNNING';
+    });
   }, [document.reviews]);
 
-  // Check for failed jobs (most recent failure per evaluation)
+  // Get failed jobs (only most recent job per evaluation, for owner view)
   const failedJobs = useMemo(() => {
-    return document.reviews.map(review => {
-      const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
-      return mostRecentJob?.status === 'FAILED' ? {
-        ...mostRecentJob,
-        agentName: review.agent.name,
-        agentId: review.agentId
-      } : null;
-    }).filter((job): job is NonNullable<typeof job> => job !== null);
-  }, [document.reviews]);
+    if (!isOwner) return []; // Only calculate for owners
+    
+    return document.reviews
+      .map(review => {
+        const mostRecentJob = review.jobs?.[0]; // Jobs are ordered by createdAt desc
+        return mostRecentJob?.status === 'FAILED' ? {
+          ...mostRecentJob,
+          agentName: review.agent.name,
+          agentId: review.agentId
+        } : null;
+      })
+      .filter((job): job is NonNullable<typeof job> => job !== null);
+  }, [document.reviews, isOwner]);
   
   // Initialize evaluation state immediately if we have evaluations
   const [evaluationState, setEvaluationState] = useState<EvaluationState | null>(
@@ -68,7 +73,7 @@ export function DocumentWithEvaluations({
           document={document}
           contentWithMetadataPrepend={contentWithMetadata}
           isOwner={isOwner}
-          pendingJobsCount={pendingJobs.length}
+          hasPendingJobs={hasPendingJobs}
           failedJobs={failedJobs}
         />
       )}
