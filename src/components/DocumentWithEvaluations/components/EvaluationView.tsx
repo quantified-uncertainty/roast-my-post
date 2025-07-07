@@ -108,9 +108,9 @@ export function EvaluationView({
           className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
         >
           {/* Document content and comments section */}
-          <div className={`flex min-h-screen ${isFullWidth ? '' : 'justify-center'} py-5`}>
+          <div className={`flex min-h-screen ${isFullWidth ? 'px-5' : 'justify-center'} py-5`}>
             {/* Main content area */}
-            <div ref={contentRef} className={`relative ${isFullWidth ? 'max-w-none px-8' : 'max-w-3xl'} flex-1 p-0`}>
+            <div ref={contentRef} className={`relative ${isFullWidth ? 'flex-1 pr-4' : 'max-w-3xl flex-1'} p-0`}>
               {/* Document metadata section */}
               <DocumentMetadata 
                 document={document} 
@@ -141,7 +141,7 @@ export function EvaluationView({
               </article>
             </div>
             {/* Comments column with positioned comments */}
-            {!isFullWidth && (
+            <div className={isFullWidth ? 'w-[400px] flex-shrink-0' : ''}>
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}
@@ -163,7 +163,7 @@ export function EvaluationView({
                 evaluationState={evaluationState}
                 onEvaluationStateChange={onEvaluationStateChange}
               />
-            )}
+            </div>
           </div>
 
           {/* Evaluation Analysis Section */}
