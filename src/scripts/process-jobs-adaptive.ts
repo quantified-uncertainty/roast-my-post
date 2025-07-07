@@ -26,8 +26,10 @@ class AdaptiveJobProcessor {
   private isShuttingDown = false;
   private consecutiveEmptyChecks = 0;
   private totalJobsProcessed = 0;
+  private totalErrors = 0;
   private nextWorkerId = 1;
   private lastState: "idle" | "working" | "waiting" = "idle";
+  private startTime = new Date();
 
   constructor(maxWorkers: number = DEFAULT_MAX_WORKERS) {
     this.maxWorkers = maxWorkers;
@@ -60,6 +62,15 @@ class AdaptiveJobProcessor {
         }
       }
 
+      // Show final statistics
+      const runtime = Math.round(
+        (Date.now() - this.startTime.getTime()) / 1000
+      );
+      console.log(`\n📊 Final stats:`);
+      console.log(`   Total jobs processed: ${this.totalJobsProcessed}`);
+      console.log(`   Total errors: ${this.totalErrors}`);
+      console.log(`   Runtime: ${runtime}s`);
+      
       logger.info("\n👋 Shutting down. Goodbye!");
       process.exit(0);
     };
@@ -110,11 +121,21 @@ class AdaptiveJobProcessor {
       // Set timeout for hanging processes
       const timeout = setTimeout(() => {
         if (!isResolved && !this.isShuttingDown) {
-          console.log(`⏰ Worker ${workerId} timeout - terminating...`);
+          console.error(`\n⏰ Worker ${workerId} timeout after ${WORKER_TIMEOUT_MS/1000}s - terminating...`);
+          
+          // Show what the worker was doing
+          if (stdout.trim()) {
+            const lastLines = stdout.trim().split('\n').slice(-3);
+            console.error(`   Last output:`);
+            lastLines.forEach(line => {
+              console.error(`     ${line}`);
+            });
+          }
+          
           childProcess.kill("SIGTERM");
           setTimeout(() => {
             if (!isResolved && childProcess.pid && !childProcess.killed) {
-              console.log(`💀 Force killing worker ${workerId}...`);
+              console.error(`💀 Force killing worker ${workerId}...`);
               childProcess.kill("SIGKILL");
             }
           }, KILL_GRACE_PERIOD_MS);
@@ -126,7 +147,8 @@ class AdaptiveJobProcessor {
           isResolved = true;
           clearTimeout(timeout);
           this.activeWorkers.delete(workerId);
-          console.error(`❌ Worker ${workerId} error:`, error);
+          this.totalErrors++;
+          console.error(`\n❌ Worker ${workerId} spawn error:`, error.message);
           reject(error);
         }
       });
@@ -151,13 +173,40 @@ class AdaptiveJobProcessor {
             console.log(
               `✅ Worker ${workerId} completed job in ${duration}s (Total processed: ${this.totalJobsProcessed})`
             );
-          } else {
+            // Worker successfully processed a job, resolve even if exit code is non-zero
+            resolve();
+          } else if (code === 0 || stdout.includes("No pending jobs")) {
+            // Worker found no jobs and exited cleanly
             console.log(`💤 Worker ${workerId} found no jobs`);
-          }
-
-          if (code === 0 || code === null) {
             resolve();
           } else {
+            // Worker failed without processing a job
+            this.totalErrors++;
+            console.error(`\n❌ Worker ${workerId} failed with exit code ${code}`);
+            
+            // Show the actual error output
+            if (stderr.trim()) {
+              console.error(`   Error output:`);
+              stderr.trim().split('\n').forEach(line => {
+                console.error(`     ${line}`);
+              });
+            }
+            
+            // Also check stdout for error messages
+            if (stdout.includes('Error:') || stdout.includes('error:')) {
+              const errorLines = stdout.split('\n').filter(line => 
+                line.toLowerCase().includes('error') || 
+                line.includes('❌') ||
+                line.includes('Failed')
+              );
+              if (errorLines.length > 0) {
+                console.error(`   Output errors:`);
+                errorLines.forEach(line => {
+                  console.error(`     ${line.trim()}`);
+                });
+              }
+            }
+            
             reject(new Error(`Worker ${workerId} exited with code ${code}`));
           }
         }
@@ -169,6 +218,8 @@ class AdaptiveJobProcessor {
     console.log(
       `🚀 Starting adaptive job processor (max workers: ${this.maxWorkers})`
     );
+    console.log(`⏱️  Worker timeout: ${WORKER_TIMEOUT_MS/1000}s`);
+    console.log(`🔄 Poll interval: ${POLL_INTERVAL_MS/1000}s`);
     logger.info("Press Ctrl+C to stop\n");
 
     while (!this.isShuttingDown) {
@@ -207,15 +258,16 @@ class AdaptiveJobProcessor {
             for (let i = 0; i < workersToSpawn; i++) {
               workerPromises.push(
                 this.spawnWorker().catch((error) => {
-                  console.error(`Failed to spawn worker:`, error.message);
+                  // Error already logged in spawnWorker
                 })
               );
             }
 
             // Don't wait for workers to complete, just spawn them
-            Promise.all(workerPromises).then(() => {
-              // Workers completed, loop will check again
-            });
+            // Fire and forget - workers will process independently
+            workerPromises.forEach(p => p.catch(() => {
+              // Error already logged in spawnWorker
+            }));
           } else if (currentWorkers > 0) {
             // We have workers but don't need more
             if (this.lastState !== "waiting") {
@@ -238,8 +290,14 @@ class AdaptiveJobProcessor {
 
             if (this.consecutiveEmptyChecks > 1) {
               if (this.consecutiveEmptyChecks % 60 === 0) {
-                // Print newline every minute to show we're still alive
-                process.stdout.write("\n💤 Still waiting for jobs...\n");
+                // Print stats every minute
+                const runtime = Math.round(
+                  (Date.now() - this.startTime.getTime()) / 1000 / 60
+                );
+                process.stdout.write(
+                  `\n📊 Status: ${this.totalJobsProcessed} jobs processed, ` +
+                  `${this.totalErrors} errors, running for ${runtime}m\n`
+                );
               } else {
                 process.stdout.write(".");
               }
