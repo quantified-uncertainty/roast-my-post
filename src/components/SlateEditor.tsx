@@ -210,9 +210,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
             attributes={attributes}
             highlightLines={linesToHighlight}
             highlightPositions={highlightPositions}
-          >
-            {children}
-          </CodeBlock>
+          />
         </CodeBlockErrorBoundary>
       );
     case "image":
@@ -579,7 +577,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Check if this text node is within a code block
       const ancestors = Node.ancestors(editor, path);
       for (const [ancestor] of ancestors) {
-        if (Element.isElement(ancestor) && ancestor.type === 'code') {
+        if (Element.isElement(ancestor) && (ancestor as any).type === 'code') {
           // Skip highlighting within code blocks
           return [];
         }
