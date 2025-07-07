@@ -1,15 +1,19 @@
 import Link from "next/link";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
+import { ArrowTopRightOnSquareIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from "@heroicons/react/20/solid";
 import type { Document } from "@/types/documentSchema";
 
 interface DocumentMetadataProps {
   document: Document;
   showDetailedAnalysisLink?: boolean;
+  isFullWidth?: boolean;
+  onToggleFullWidth?: () => void;
 }
 
 export function DocumentMetadata({ 
   document, 
-  showDetailedAnalysisLink = false 
+  showDetailedAnalysisLink = false,
+  isFullWidth = false,
+  onToggleFullWidth
 }: DocumentMetadataProps) {
   return (
     <div className="flex items-center justify-between px-6">
@@ -30,6 +34,20 @@ export function DocumentMetadata({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {onToggleFullWidth && (
+          <button
+            onClick={onToggleFullWidth}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
+            title={isFullWidth ? "Exit full width" : "Enter full width"}
+          >
+            {isFullWidth ? (
+              <ArrowsPointingInIcon className="h-4 w-4" />
+            ) : (
+              <ArrowsPointingOutIcon className="h-4 w-4" />
+            )}
+            {isFullWidth ? "Exit Full Width" : "Full Width"}
+          </button>
+        )}
         <Link
           href={`/docs/${document.id}`}
           className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"

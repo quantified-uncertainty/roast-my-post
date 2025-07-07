@@ -29,6 +29,7 @@ export function EvaluationView({
 }: EvaluationViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
+  const [isFullWidth, setIsFullWidth] = useState(false);
   
   // Use the scroll behavior hook
   const {
@@ -107,13 +108,18 @@ export function EvaluationView({
           className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
         >
           {/* Document content and comments section */}
-          <div className="flex min-h-screen justify-center py-5">
+          <div className={`flex min-h-screen ${isFullWidth ? '' : 'justify-center'} py-5`}>
             {/* Main content area */}
-            <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
+            <div ref={contentRef} className={`relative ${isFullWidth ? 'max-w-none px-8' : 'max-w-3xl'} flex-1 p-0`}>
               {/* Document metadata section */}
-              <DocumentMetadata document={document} showDetailedAnalysisLink={true} />
+              <DocumentMetadata 
+                document={document} 
+                showDetailedAnalysisLink={true}
+                isFullWidth={isFullWidth}
+                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+              />
 
-              <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
+              <article className={`prose prose-lg prose-slate ${isFullWidth ? 'max-w-none' : 'mx-auto'} rounded-lg p-8`}>
                 <SlateEditor
                   content={contentWithMetadataPrepend}
                   onHighlightHover={(commentId) => {
@@ -135,27 +141,29 @@ export function EvaluationView({
               </article>
             </div>
             {/* Comments column with positioned comments */}
-            <CommentsColumn
-              comments={displayComments}
-              contentRef={contentRef}
-              selectedCommentId={evaluationState.expandedCommentId}
-              hoveredCommentId={evaluationState.hoveredCommentId}
-              onCommentHover={(commentId) =>
-                onEvaluationStateChange({
-                  ...evaluationState,
-                  hoveredCommentId: commentId,
-                })
-              }
-              onCommentClick={(commentId) => {
-                onEvaluationStateChange({
-                  ...evaluationState,
-                  expandedCommentId: commentId,
-                });
-              }}
-              document={document}
-              evaluationState={evaluationState}
-              onEvaluationStateChange={onEvaluationStateChange}
-            />
+            {!isFullWidth && (
+              <CommentsColumn
+                comments={displayComments}
+                contentRef={contentRef}
+                selectedCommentId={evaluationState.expandedCommentId}
+                hoveredCommentId={evaluationState.hoveredCommentId}
+                onCommentHover={(commentId) =>
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    hoveredCommentId: commentId,
+                  })
+                }
+                onCommentClick={(commentId) => {
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    expandedCommentId: commentId,
+                  });
+                }}
+                document={document}
+                evaluationState={evaluationState}
+                onEvaluationStateChange={onEvaluationStateChange}
+              />
+            )}
           </div>
 
           {/* Evaluation Analysis Section */}
