@@ -20,6 +20,7 @@ import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { EvaluationViewProps } from "../types";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 import { DocumentMetadata } from "./DocumentMetadata";
+import { MARKDOWN_COMPONENTS } from "../config/markdown";
 
 export function EvaluationView({
   evaluationState,
@@ -209,6 +210,7 @@ export function EvaluationView({
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               rehypePlugins={[rehypeRaw]}
+                              components={MARKDOWN_COMPONENTS}
                             >
                               {evaluation.summary}
                             </ReactMarkdown>
@@ -226,6 +228,7 @@ export function EvaluationView({
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               rehypePlugins={[rehypeRaw]}
+                              components={MARKDOWN_COMPONENTS}
                             >
                               {evaluation.analysis}
                             </ReactMarkdown>
