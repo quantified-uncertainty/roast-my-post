@@ -1,10 +1,13 @@
 "use client";
 
 import { useRef } from "react";
+
 import Link from "next/link";
+
 import SlateEditor from "@/components/SlateEditor";
-import { InformationCircleIcon } from "@heroicons/react/20/solid";
 import type { Document } from "@/types/documentSchema";
+import { InformationCircleIcon } from "@heroicons/react/20/solid";
+
 import { DocumentMetadata } from "./DocumentMetadata";
 
 interface EmptyEvaluationsViewProps {
@@ -29,7 +32,7 @@ export function EmptyEvaluationsView({
           {/* Main content area */}
           <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
             {/* Message banner at the top */}
-            <div className="mx-6 mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="mx-3 mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <InformationCircleIcon className="h-5 w-5 text-blue-600" />
@@ -52,7 +55,7 @@ export function EmptyEvaluationsView({
             {/* Document metadata section */}
             <DocumentMetadata document={document} />
 
-            <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
+            <article className="prose prose-lg prose-slate mx-auto rounded-lg px-4 py-8">
               <SlateEditor
                 content={contentWithMetadataPrepend}
                 onHighlightHover={() => {}}

@@ -213,7 +213,7 @@ export function CommentsColumn({
   return (
     <CommentErrorBoundary>
       <div style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}>
-        <div className="relative overflow-hidden" style={{ minHeight: "100%" }}>
+        <div className="relative" style={{ minHeight: "100%" }}>
           {!highlightsReady && sortedComments.length > 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="mb-3 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-500"></div>

@@ -112,7 +112,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
   return (
     <div
       {...attributes}
-      className="relative my-4 overflow-hidden rounded-lg bg-gray-800"
+      className="relative my-4 overflow-hidden rounded-lg bg-gray-800 max-w-full"
       style={{ position: 'relative' }}
     >
       <div className="flex items-center justify-between bg-gray-700 px-4 py-2">
@@ -160,13 +160,15 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         language={prismLanguage}
       >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" style={{ maxWidth: '100%' }}>
             <pre
               className={`${className} flex !border-0 bg-transparent text-sm !shadow-none`}
               style={{
                 ...style,
                 background: "transparent",
                 margin: 0,
+                maxWidth: '100%',
+                overflow: 'visible',
                 fontFamily:
                   'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
               }}

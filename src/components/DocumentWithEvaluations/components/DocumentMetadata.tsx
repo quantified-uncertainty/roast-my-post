@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { ArrowTopRightOnSquareIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from "@heroicons/react/20/solid";
+
 import type { Document } from "@/types/documentSchema";
+import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/20/solid";
 
 interface DocumentMetadataProps {
   document: Document;
@@ -9,14 +14,14 @@ interface DocumentMetadataProps {
   onToggleFullWidth?: () => void;
 }
 
-export function DocumentMetadata({ 
-  document, 
+export function DocumentMetadata({
+  document,
   showDetailedAnalysisLink = false,
   isFullWidth = false,
-  onToggleFullWidth
+  onToggleFullWidth,
 }: DocumentMetadataProps) {
   return (
-    <div className="flex items-center justify-between px-6">
+    <div className="flex items-center justify-between px-3">
       <div className="flex items-center gap-4 text-sm text-gray-600">
         {document.submittedBy && (
           <span>

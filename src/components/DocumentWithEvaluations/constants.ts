@@ -10,8 +10,8 @@ export const TRANSITION_DURATION_SLOW = 500;
 
 // Layout constants
 export const COMMENT_PADDING = 14;
-export const COMMENT_MARGIN_LEFT = 20;
-export const COMMENT_MARGIN_RIGHT = 20;
+export const COMMENT_MARGIN_LEFT = 5;
+export const COMMENT_MARGIN_RIGHT = 5;
 export const COMMENT_MIN_GAP = 10;
 export const COMMENT_COLUMN_WIDTH = 600;
 export const HIGHLIGHT_CHECK_INTERVAL = 200;

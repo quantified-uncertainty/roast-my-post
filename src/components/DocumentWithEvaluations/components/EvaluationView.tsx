@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import Link from "next/link";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -10,16 +14,18 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { CommentsColumn } from "@/components/DocumentWithEvaluations/components/CommentsColumn";
+import {
+  CommentsColumn,
+} from "@/components/DocumentWithEvaluations/components/CommentsColumn";
 import { GradeBadge } from "@/components/GradeBadge";
 import SlateEditor from "@/components/SlateEditor";
-import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
+import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
-import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 import { DocumentMetadata } from "./DocumentMetadata";
+import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 
 export function EvaluationView({
   evaluationState,
@@ -30,23 +36,18 @@ export function EvaluationView({
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
   const [isFullWidth, setIsFullWidth] = useState(false);
-  
+
   // Use the scroll behavior hook
-  const {
-    scrollContainerRef,
-    headerVisible,
-    isLargeMode,
-    setIsLargeMode,
-  } = useScrollBehavior({
-    evaluationsSectionRef,
-    isLargeMode: true,
-  });
+  const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
+    useScrollBehavior({
+      evaluationsSectionRef,
+      isLargeMode: true,
+    });
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
     evaluationState.selectedAgentIds.has(r.agentId)
   );
-
 
   // Merge comments from all selected evaluations
   const displayComments = useMemo(() => {
@@ -108,18 +109,30 @@ export function EvaluationView({
           className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
         >
           {/* Document content and comments section */}
-          <div className={`flex min-h-screen ${isFullWidth ? 'px-5' : 'justify-center'} py-5`}>
+          <div
+            className={`flex min-h-screen ${isFullWidth ? "px-5" : "justify-center"} py-5`}
+          >
             {/* Main content area */}
-            <div ref={contentRef} className={`relative ${isFullWidth ? 'flex-1 pr-4' : 'max-w-3xl flex-1'} p-0`}>
+            <div
+              ref={contentRef}
+              className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
+              style={
+                isFullWidth
+                  ? { width: "calc(100% - 600px)", overflow: "hidden" }
+                  : {}
+              }
+            >
               {/* Document metadata section */}
-              <DocumentMetadata 
-                document={document} 
+              <DocumentMetadata
+                document={document}
                 showDetailedAnalysisLink={true}
                 isFullWidth={isFullWidth}
                 onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
               />
 
-              <article className={`prose prose-lg prose-slate ${isFullWidth ? 'max-w-none' : 'mx-auto'} rounded-lg p-8`}>
+              <article
+                className={`prose prose-lg prose-slate ${isFullWidth ? "max-w-none [&_pre]:!max-w-[calc(100vw-600px-80px)] [&_pre]:overflow-x-auto" : "mx-auto"} rounded-lg px-4 py-8`}
+              >
                 <SlateEditor
                   content={contentWithMetadataPrepend}
                   onHighlightHover={(commentId) => {
@@ -141,29 +154,27 @@ export function EvaluationView({
               </article>
             </div>
             {/* Comments column with positioned comments */}
-            <div className={isFullWidth ? 'w-[400px] flex-shrink-0' : ''}>
-              <CommentsColumn
-                comments={displayComments}
-                contentRef={contentRef}
-                selectedCommentId={evaluationState.expandedCommentId}
-                hoveredCommentId={evaluationState.hoveredCommentId}
-                onCommentHover={(commentId) =>
-                  onEvaluationStateChange({
-                    ...evaluationState,
-                    hoveredCommentId: commentId,
-                  })
-                }
-                onCommentClick={(commentId) => {
-                  onEvaluationStateChange({
-                    ...evaluationState,
-                    expandedCommentId: commentId,
-                  });
-                }}
-                document={document}
-                evaluationState={evaluationState}
-                onEvaluationStateChange={onEvaluationStateChange}
-              />
-            </div>
+            <CommentsColumn
+              comments={displayComments}
+              contentRef={contentRef}
+              selectedCommentId={evaluationState.expandedCommentId}
+              hoveredCommentId={evaluationState.hoveredCommentId}
+              onCommentHover={(commentId) =>
+                onEvaluationStateChange({
+                  ...evaluationState,
+                  hoveredCommentId: commentId,
+                })
+              }
+              onCommentClick={(commentId) => {
+                onEvaluationStateChange({
+                  ...evaluationState,
+                  expandedCommentId: commentId,
+                });
+              }}
+              document={document}
+              evaluationState={evaluationState}
+              onEvaluationStateChange={onEvaluationStateChange}
+            />
           </div>
 
           {/* Evaluation Analysis Section */}
