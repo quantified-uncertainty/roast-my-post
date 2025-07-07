@@ -30,6 +30,7 @@ import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
 import { CopyButton } from "@/components/CopyButton";
+import { UI_LAYOUT, ANIMATION } from "../constants/uiConstants";
 
 export function EvaluationView({
   evaluationState,
@@ -89,8 +90,8 @@ export function EvaluationView({
     <>
       {/* Header wrapper that collapses when hidden */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          headerVisible ? "max-h-[1000px]" : "max-h-0 overflow-hidden"
+        className={`transition-all duration-[${ANIMATION.TRANSITION_DURATION}ms] ease-in-out ${
+          headerVisible ? `max-h-[${UI_LAYOUT.HEADER_MAX_HEIGHT}px]` : "max-h-0 overflow-hidden"
         }`}
       >
         {/* Sticky Evaluation Cards Header Bar */}
@@ -122,7 +123,7 @@ export function EvaluationView({
               className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
               style={
                 isFullWidth
-                  ? { width: "calc(100% - 600px)", overflow: "hidden" }
+                  ? { width: `calc(100% - ${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px)`, overflow: "hidden" }
                   : {}
               }
             >
@@ -135,7 +136,7 @@ export function EvaluationView({
               />
 
               <article
-                className={`prose prose-lg prose-slate ${isFullWidth ? "max-w-none [&_pre]:!max-w-[calc(100vw-600px-80px)] [&_pre]:overflow-x-auto" : "mx-auto"} rounded-lg px-4 py-8`}
+                className={`prose prose-lg prose-slate ${isFullWidth ? `max-w-none [&_pre]:!max-w-[calc(100vw-${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px-${UI_LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto` : "mx-auto"} rounded-lg px-4 py-8`}
               >
                 <SlateEditor
                   content={contentWithMetadataPrepend}
@@ -268,7 +269,25 @@ export function EvaluationView({
                           title={`Comments (${evaluation.comments.length})`}
                           defaultOpen={false}
                         >
-                          <EvaluationComments comments={evaluation.comments as any} />
+                          <EvaluationComments 
+                            comments={evaluation.comments.map((comment, index) => ({
+                              id: `${evaluation.agentId}-comment-${index}`,
+                              description: comment.description,
+                              importance: comment.importance ?? null,
+                              grade: comment.grade ?? null,
+                              evaluationVersionId: evaluation.id || '',
+                              highlightId: `${evaluation.agentId}-highlight-${index}`,
+                              highlight: {
+                                id: `${evaluation.agentId}-highlight-${index}`,
+                                startOffset: comment.highlight.startOffset,
+                                endOffset: comment.highlight.endOffset,
+                                quotedText: comment.highlight.quotedText,
+                                isValid: comment.highlight.isValid,
+                                prefix: comment.highlight.prefix ?? null,
+                                error: comment.error ?? null,
+                              }
+                            }))} 
+                          />
                         </CollapsibleSection>
                       )}
                     </div>

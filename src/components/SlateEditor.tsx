@@ -36,6 +36,20 @@ import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/lib/fonts";
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
+import { UI_LAYOUT, TEXT_PROCESSING, ANIMATION } from "@/components/DocumentWithEvaluations/constants/uiConstants";
+
+// Define custom element types for Slate
+type CustomElement = {
+  type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
+        'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
+        'list-item' | 'link' | 'code' | 'image';
+  children?: any[];
+  url?: string;
+  value?: string;
+  lang?: string;
+  alt?: string;
+  [key: string]: any;
+};
 
 // Helper function to normalize text by removing markdown formatting
 const normalizeText = (text: string): string => {
@@ -164,7 +178,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
             const quotedText = highlight.quotedText.trim();
             
             // Skip if quoted text is too short or just punctuation
-            if (quotedText.length < 10) {
+            if (quotedText.length < TEXT_PROCESSING.MIN_HIGHLIGHT_LENGTH) {
               return;
             }
             
@@ -296,14 +310,20 @@ const renderLeaf = ({
           transformOrigin: "center",
           padding: "0 1px",
           margin: "0 -1px",
-          scrollMarginTop: "100px", // Add scroll margin to prevent the highlight from being hidden under the header
+          scrollMarginTop: `${UI_LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
+        className={`group cursor-pointer transition-all duration-[${ANIMATION.HIGHLIGHT_TRANSITION}ms] ease-out hover:bg-opacity-60 ${
           isActive ? "relative z-10" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
           onHighlightClick?.(leaf.tag);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onHighlightClick?.(leaf.tag);
+          }
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
@@ -313,6 +333,9 @@ const renderLeaf = ({
           e.preventDefault();
           onHighlightHover?.(null);
         }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Highlighted text: ${children}`}
       >
         {el}
       </span>
@@ -349,7 +372,8 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const processor = unified()
         .use(remarkParse)
         .use(remarkGfm) // Add GitHub-Flavored Markdown support (includes footnotes)
-        .use(remarkToSlate as any, {
+        // @ts-expect-error - remarkToSlate types are not fully compatible
+        .use(remarkToSlate, {
           // Configure node types for proper formatting
           nodeTypes: {
             emphasis: "emphasis",
@@ -577,7 +601,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       // Check if this text node is within a code block
       const ancestors = Node.ancestors(editor, path);
       for (const [ancestor] of ancestors) {
-        if (Element.isElement(ancestor) && (ancestor as any).type === 'code') {
+        if (Element.isElement(ancestor) && (ancestor as CustomElement).type === 'code') {
           // Skip highlighting within code blocks
           return [];
         }
