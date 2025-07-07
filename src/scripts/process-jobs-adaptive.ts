@@ -146,9 +146,9 @@ class AdaptiveJobProcessor {
         
         // Track when worker starts processing a job
         const jobMatch = output.match(/Processing job ([a-zA-Z0-9-]+)/i);
-        if (jobMatch) {
+        if (jobMatch && jobMatch[1]) {
           worker.jobId = jobMatch[1];
-          this.jobWorkerMap.set(worker.jobId, workerId);
+          this.jobWorkerMap.set(jobMatch[1], workerId);
           console.log(`  🔄 Worker ${workerId} started processing job ${worker.jobId}`);
         }
       });
@@ -158,14 +158,14 @@ class AdaptiveJobProcessor {
       });
 
       // Set timeout for hanging processes
-      const timeout = setTimeout(() => {
+      const timeout = setTimeout(async () => {
         if (!isResolved && !this.isShuttingDown) {
           console.error(`\n⏰ Worker ${workerId} timeout after ${WORKER_TIMEOUT_MS/1000}s - terminating...`);
           
           // Mark job as failed if worker was processing one
           if (worker.jobId) {
             console.error(`   🔥 Job ${worker.jobId} needs recovery (worker timeout)`);
-            this.markJobAsFailed(worker.jobId, `Worker ${workerId} timed out after ${WORKER_TIMEOUT_MS/1000}s`);
+            await this.markJobAsFailed(worker.jobId, `Worker ${workerId} timed out after ${WORKER_TIMEOUT_MS/1000}s`);
           }
           
           // Show what the worker was doing
@@ -198,7 +198,7 @@ class AdaptiveJobProcessor {
         }
       });
 
-      childProcess.on("exit", (code, signal) => {
+      childProcess.on("exit", async (code, signal) => {
         if (!isResolved) {
           isResolved = true;
           clearTimeout(timeout);
@@ -240,7 +240,7 @@ class AdaptiveJobProcessor {
             // If worker was processing a job, mark it as failed
             if (worker.jobId) {
               console.error(`   🔥 Job ${worker.jobId} needs recovery (worker died)`);
-              this.markJobAsFailed(worker.jobId, `Worker ${workerId} crashed with exit code ${code}`);
+              await this.markJobAsFailed(worker.jobId, `Worker ${workerId} crashed with exit code ${code}`);
             }
             
             // Show the actual error output
