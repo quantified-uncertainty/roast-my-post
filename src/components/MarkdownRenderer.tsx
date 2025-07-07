@@ -1,36 +1,36 @@
 import React from "react";
 
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
+import { 
+  MARKDOWN_COMPONENTS, 
+  INLINE_MARKDOWN_COMPONENTS, 
+  MARKDOWN_PLUGINS 
+} from "./DocumentWithEvaluations/config/markdown";
+
+interface MarkdownRendererProps {
+  children: string;
+  className?: string;
+  inline?: boolean;
+  components?: Record<string, React.ComponentType<any>>;
+}
 
 function MarkdownRenderer({
   children,
   className = "",
-}: {
-  children: string;
-  className?: string;
-}) {
-  const isInline = className.includes("inline");
+  inline = false,
+  components,
+}: MarkdownRendererProps) {
+  // Detect inline mode from className for backward compatibility
+  const isInline = inline || className.includes("inline");
+
+  const defaultComponents = isInline ? INLINE_MARKDOWN_COMPONENTS : MARKDOWN_COMPONENTS;
+  const finalComponents = components || defaultComponents;
 
   const markdownProps = {
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [rehypeRaw],
+    ...MARKDOWN_PLUGINS,
     disallowedElements: isInline ? ["p"] : [],
     unwrapDisallowed: isInline,
-    components: {
-      a: ({ node, href, className, ...props }: any) => {
-        return (
-          <a
-            href={href}
-            {...props}
-            className="text-blue-600 hover:text-blue-800 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          />
-        );
-      },
-    },
+    components: finalComponents,
   };
 
   if (isInline) {

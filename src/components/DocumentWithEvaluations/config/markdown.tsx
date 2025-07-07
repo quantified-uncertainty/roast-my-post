@@ -1,4 +1,5 @@
 import React from "react";
+
 // @ts-ignore - ESM modules are handled by Next.js
 import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -26,6 +27,23 @@ export const MARKDOWN_COMPONENTS = {
   ),
   p: ({ children }: MarkdownComponentProps) => (
     <div className="mb-1 last:mb-0">{children}</div>
+  ),
+  details: ({ children, ...props }: MarkdownComponentProps) => (
+    <details
+      className="my-6 border-l-4 border-gray-200 pl-4 transition-colors open:border-gray-300"
+      {...props}
+    >
+      {children}
+    </details>
+  ),
+
+  summary: ({ children, ...props }: MarkdownComponentProps) => (
+    <summary
+      className="cursor-pointer py-2 font-bold hover:text-gray-800 hover:underline focus:text-gray-800 focus:outline-none"
+      {...props}
+    >
+      {children}
+    </summary>
   ),
 };
 

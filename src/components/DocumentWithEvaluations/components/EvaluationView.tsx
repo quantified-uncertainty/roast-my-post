@@ -28,6 +28,8 @@ import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EvaluationComments } from "@/components/EvaluationComments";
+import { MARKDOWN_COMPONENTS } from "../config/markdown";
+import { CopyButton } from "@/components/CopyButton";
 
 export function EvaluationView({
   evaluationState,
@@ -225,11 +227,13 @@ export function EvaluationView({
                           id={`eval-${evaluation.agentId}-summary`}
                           title="Summary"
                           defaultOpen={true}
+                          action={<CopyButton text={evaluation.summary} />}
                         >
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               rehypePlugins={[rehypeRaw]}
+                              components={MARKDOWN_COMPONENTS}
                             >
                               {evaluation.summary}
                             </ReactMarkdown>
@@ -243,11 +247,13 @@ export function EvaluationView({
                           id={`eval-${evaluation.agentId}-analysis`}
                           title="Analysis"
                           defaultOpen={true}
+                          action={<CopyButton text={evaluation.analysis} />}
                         >
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               rehypePlugins={[rehypeRaw]}
+                              components={MARKDOWN_COMPONENTS}
                             >
                               {evaluation.analysis}
                             </ReactMarkdown>
