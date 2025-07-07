@@ -27,6 +27,11 @@ export const MARKDOWN_COMPONENTS = {
   p: ({ children }: MarkdownComponentProps) => (
     <div className="mb-1 last:mb-0">{children}</div>
   ),
+  details: ({ children, ...props }: MarkdownComponentProps) => (
+    <details {...props} className="[&[open]>*:not(summary)]:p-2 [&[open]>*:not(summary)]:bg-gray-50">
+      {children}
+    </details>
+  ),
 };
 
 export const INLINE_MARKDOWN_COMPONENTS = {
