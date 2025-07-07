@@ -1,4 +1,4 @@
-# EphemeralAgentEvalBatch Implementation Strategy
+# AgentExperiment Implementation Strategy
 
 ## Executive Summary
 
@@ -15,11 +15,11 @@ This strategy assumes completion of:
 
 See [2025-07-07-01-ephemeral-evaluation-strategy.md](./2025-07-07-01-ephemeral-evaluation-strategy.md) for these foundational phases.
 
-## Phase 3: EphemeralAgentEvalBatch Implementation (3-4 days)
+## Phase 3: AgentExperiment Implementation (3-4 days)
 
 ### Goal
 
-Implement the `EphemeralAgentEvalBatch` system for temporary experiments with automatic cleanup.
+Implement the `AgentExperiment` system for temporary experiments with automatic cleanup.
 
 ### Implementation
 
@@ -131,14 +131,17 @@ interface ExperimentDetails {
 
 #### 3.3 Database Schema
 
-##### Prisma Schema for EphemeralAgentEvalBatch
+##### Prisma Schema for AgentExperiment
 
 ```prisma
-model EphemeralAgentEvalBatch {
+model AgentExperiment {
   id                   String              @id @default(cuid())
   trackingId           String              @unique // User-friendly ID
+  name                 String
+  description          String?
   userId               String
   createdAt            DateTime            @default(now())
+  expiresAt            DateTime            // When to auto-delete
 
   // Related ephemeral agent (if created for this experiment)
   agentId              String?
@@ -147,9 +150,9 @@ model EphemeralAgentEvalBatch {
   // Track ephemeral documents created for this experiment
   ephemeralDocumentIds String[]            @default([])
 
-  // Related batche
+  // Related batch
   agentEvalBatchId     String
-  agentEvalBatch                AgentEvalBatch              @relation(fields: [agentEvalBatchId], references: [id], onDelete: Cascade)
+  agentEvalBatch       AgentEvalBatch      @relation(fields: [agentEvalBatchId], references: [id], onDelete: Cascade)
 
   user                 User                @relation(fields: [userId], references: [id])
 
@@ -177,14 +180,14 @@ model Agent {
   evaluations             Evaluation[]
   agentVersions           AgentVersion[]
   agentEvalBatches        AgentEvalBatch[]
-  ephemeralAgentEvalBatch          EphemeralAgentEvalBatch?
+  agentExperiments        AgentExperiment[]
 
   @@index([type])
   @@index([isActive])
   @@index([isEphemeral])
 }
 
-// Update AgentEvalBatch to link to EphemeralAgentEvalBatch
+// Update AgentEvalBatch to link to AgentExperiment
 model AgentEvalBatch {
   id                   String              @id @default(cuid())
   name                 String?
@@ -193,15 +196,15 @@ model AgentEvalBatch {
   createdAt            DateTime            @default(now())
   requestedDocumentIds String[]            @default([])
 
-  // NEW: Link to ephemeral batch if part of experiment
-  ephemeralAgentEvalBatchId     String?
-  ephemeralAgentEvalBatch       EphemeralAgentEvalBatch?     @relation("EphemeralAgentEvalBatchToAgentEvalBatch", fields: [EphemeralAgentEvalBatchId], references: [id], onDelete: Cascade)
+  // NEW: Link to experiment if part of one
+  agentExperimentId    String?
+  agentExperiment      AgentExperiment?    @relation(fields: [agentExperimentId], references: [id], onDelete: Cascade)
 
   agent                Agent               @relation(fields: [agentId], references: [id])
   jobs                 Job[]
 
   @@index([agentId])
-  @@index([ephemeralAgentEvalBatchId])
+  @@index([agentExperimentId])
 }
 
 // Optional: Track ephemeral documents separately
@@ -211,7 +214,7 @@ model Document {
 
   // NEW: Track if document is ephemeral
   isEphemeral          Boolean            @default(false)
-  EphemeralAgentEvalBatchId     String?
+  agentExperimentId    String?
 
   // ... rest of model ...
 

@@ -37,17 +37,18 @@ model Session {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  name          String?
-  email         String?    @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole   @default(USER)
-  accounts      Account[]
-  agents        Agent[]
-  apiKeys       ApiKey[]
-  documents     Document[]
-  sessions      Session[]
+  id             String           @id @default(cuid())
+  name           String?
+  email          String?          @unique
+  emailVerified  DateTime?
+  image          String?
+  role           UserRole         @default(USER)
+  accounts       Account[]
+  agents         Agent[]
+  apiKeys        ApiKey[]
+  documents      Document[]
+  sessions       Session[]
+  agentEvalBatches AgentEvalBatch[]
 }
 
 model VerificationToken {
@@ -59,14 +60,21 @@ model VerificationToken {
 }
 
 model Document {
-  id            String            @id
-  publishedDate DateTime
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  submittedById String
-  submittedBy   User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  versions      DocumentVersion[]
-  evaluations   Evaluation[]
+  id               String            @id
+  publishedDate    DateTime
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  submittedById    String
+  
+  // NEW: Link to ephemeral batch if created for one
+  ephemeralBatchId String?
+  ephemeralBatch   AgentEvalBatch?   @relation("EphemeralDocuments", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  
+  submittedBy      User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  versions         DocumentVersion[]
+  evaluations      Evaluation[]
+  
+  @@index([ephemeralBatchId])
 }
 
 model DocumentVersion {
@@ -161,14 +169,19 @@ model EvaluationHighlight {
 }
 
 model Agent {
-  id            String           @id
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  submittedById String
-  submittedBy   User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
-  evalBatches   AgentEvalBatch[]
-  versions      AgentVersion[]
-  evaluations   Evaluation[]
+  id               String           @id
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  submittedById    String
+  
+  // NEW: Link to ephemeral batch if created for one
+  ephemeralBatchId String?          @unique
+  ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  
+  submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  evalBatches      AgentEvalBatch[]
+  versions         AgentVersion[]
+  evaluations      Evaluation[]
 }
 
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
@@ -192,14 +205,32 @@ model AgentVersion {
 }
 
 model AgentEvalBatch {
-  id                   String   @id @default(uuid())
+  id                   String     @id @default(uuid())
   name                 String?
   agentId              String
-  createdAt            DateTime @default(now())
-  targetCount          Int
-  requestedDocumentIds String[] @default([])
-  agent                Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt            DateTime   @default(now())
+  targetCount          Int?       // Optional - might not know upfront
+  requestedDocumentIds String[]   @default([]) // Can be empty
+  userId               String
+  
+  // NEW: Experiment features (all optional)
+  trackingId           String?    // User-friendly ID for experiments
+  description          String?
+  expiresAt            DateTime?  // When to auto-delete
+  isEphemeral          Boolean    @default(false)
+  
+  agent                Agent      @relation(fields: [agentId], references: [id])
+  user                 User       @relation(fields: [userId], references: [id])
   jobs                 Job[]
+  
+  // Relations for ephemeral resources
+  ephemeralAgent       Agent?     @relation("EphemeralAgent")
+  ephemeralDocuments   Document[] @relation("EphemeralDocuments")
+  
+  @@index([agentId])
+  @@index([userId])
+  @@index([expiresAt])
+  @@unique([userId, trackingId]) // Only enforced when trackingId exists
 }
 
 model Job {
