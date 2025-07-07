@@ -29,7 +29,7 @@ export type AgentVersion = z.infer<typeof AgentVersionSchema>;
 // Base schema for common agent fields
 const BaseAgentSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
-  description: z.string().min(30, "Description must be at least 30 characters"),
+  description: z.string().min(1, "Description is required"),
   primaryInstructions: z.string().optional(),
   selfCritiqueInstructions: z.string().optional(),
   providesGrades: z.boolean().default(false),
