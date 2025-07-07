@@ -14,6 +14,8 @@ const POLL_INTERVAL_MS = parseInt(process.env.ADAPTIVE_POLL_INTERVAL_MS || '1000
 const WORKER_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_WORKER_TIMEOUT_MS || '120000', 10);
 const KILL_GRACE_PERIOD_MS = parseInt(process.env.ADAPTIVE_KILL_GRACE_PERIOD_MS || '5000', 10);
 const SHUTDOWN_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_SHUTDOWN_TIMEOUT_MS || '30000', 10); // 30s to finish jobs
+const STALE_JOB_CHECK_INTERVAL_MS = parseInt(process.env.ADAPTIVE_STALE_CHECK_INTERVAL_MS || '300000', 10); // 5 minutes
+const STALE_JOB_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_STALE_JOB_TIMEOUT_MS || '1800000', 10); // 30 minutes
 
 interface WorkerInfo {
   id: number;
@@ -33,6 +35,8 @@ class AdaptiveJobProcessor {
   private nextWorkerId = 1;
   private lastState: "idle" | "working" | "waiting" = "idle";
   private startTime = new Date();
+  private lastStaleCheckTime = new Date();
+  private jobWorkerMap = new Map<string, number>(); // Track which worker is processing which job
 
   constructor(maxWorkers: number = DEFAULT_MAX_WORKERS) {
     this.maxWorkers = maxWorkers;
@@ -144,6 +148,7 @@ class AdaptiveJobProcessor {
         const jobMatch = output.match(/Processing job ([a-zA-Z0-9-]+)/i);
         if (jobMatch) {
           worker.jobId = jobMatch[1];
+          this.jobWorkerMap.set(worker.jobId, workerId);
           console.log(`  🔄 Worker ${workerId} started processing job ${worker.jobId}`);
         }
       });
@@ -156,6 +161,12 @@ class AdaptiveJobProcessor {
       const timeout = setTimeout(() => {
         if (!isResolved && !this.isShuttingDown) {
           console.error(`\n⏰ Worker ${workerId} timeout after ${WORKER_TIMEOUT_MS/1000}s - terminating...`);
+          
+          // Mark job as failed if worker was processing one
+          if (worker.jobId) {
+            console.error(`   🔥 Job ${worker.jobId} needs recovery (worker timeout)`);
+            this.markJobAsFailed(worker.jobId, `Worker ${workerId} timed out after ${WORKER_TIMEOUT_MS/1000}s`);
+          }
           
           // Show what the worker was doing
           if (stdout.trim()) {
@@ -192,6 +203,11 @@ class AdaptiveJobProcessor {
           isResolved = true;
           clearTimeout(timeout);
           this.activeWorkers.delete(workerId);
+          
+          // Clean up job tracking
+          if (worker.jobId) {
+            this.jobWorkerMap.delete(worker.jobId);
+          }
 
           // Check if any work was done
           const hadWork =
@@ -217,9 +233,15 @@ class AdaptiveJobProcessor {
             }
             resolve();
           } else {
-            // Worker failed without processing a job
+            // Worker failed
             this.totalErrors++;
             console.error(`\n❌ Worker ${workerId} failed with exit code ${code}`);
+            
+            // If worker was processing a job, mark it as failed
+            if (worker.jobId) {
+              console.error(`   🔥 Job ${worker.jobId} needs recovery (worker died)`);
+              this.markJobAsFailed(worker.jobId, `Worker ${workerId} crashed with exit code ${code}`);
+            }
             
             // Show the actual error output
             if (stderr.trim()) {
@@ -251,12 +273,81 @@ class AdaptiveJobProcessor {
     });
   }
 
+  private async markJobAsFailed(jobId: string, errorMessage: string) {
+    try {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.FAILED,
+          error: errorMessage,
+          completedAt: new Date()
+        }
+      });
+      console.log(`   ✅ Marked job ${jobId} as FAILED`);
+    } catch (error) {
+      console.error(`   ❌ Failed to update job ${jobId} status:`, error);
+    }
+  }
+
+  private async cleanupStaleJobs() {
+    const cutoffTime = new Date();
+    cutoffTime.setTime(cutoffTime.getTime() - STALE_JOB_TIMEOUT_MS);
+    
+    try {
+      const staleJobs = await prisma.job.findMany({
+        where: {
+          status: JobStatus.RUNNING,
+          startedAt: {
+            lt: cutoffTime
+          }
+        },
+        select: {
+          id: true,
+          startedAt: true
+        }
+      });
+      
+      if (staleJobs.length > 0) {
+        console.log(`\n🧹 Found ${staleJobs.length} stale job(s) to clean up`);
+        
+        for (const job of staleJobs) {
+          const runningTime = job.startedAt ? 
+            Math.round((Date.now() - job.startedAt.getTime()) / 1000 / 60) : 
+            'unknown';
+          
+          // Check if we're tracking this job
+          const workerId = this.jobWorkerMap.get(job.id);
+          if (workerId && this.activeWorkers.has(workerId)) {
+            // Worker is still active, skip
+            continue;
+          }
+          
+          const errorMessage = `Job terminated: Running for ${runningTime} minutes (exceeded ${STALE_JOB_TIMEOUT_MS/1000/60} minute timeout). Process likely crashed.`;
+          
+          await prisma.job.update({
+            where: { id: job.id },
+            data: {
+              status: JobStatus.FAILED,
+              error: errorMessage,
+              completedAt: new Date()
+            }
+          });
+          
+          console.log(`   ❌ Marked stale job ${job.id} as FAILED (ran for ${runningTime}m)`);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error cleaning up stale jobs:`, error);
+    }
+  }
+
   async start() {
     console.log(
       `🚀 Starting adaptive job processor (max workers: ${this.maxWorkers})`
     );
     console.log(`⏱️  Worker timeout: ${WORKER_TIMEOUT_MS/1000}s`);
     console.log(`🔄 Poll interval: ${POLL_INTERVAL_MS/1000}s`);
+    console.log(`🧹 Stale job cleanup: every ${STALE_JOB_CHECK_INTERVAL_MS/1000/60}m`);
     logger.info("Press Ctrl+C to stop\n");
 
     while (!this.isShuttingDown) {
@@ -350,6 +441,12 @@ class AdaptiveJobProcessor {
           }
         }
 
+        // Check for stale jobs periodically
+        if (Date.now() - this.lastStaleCheckTime.getTime() > STALE_JOB_CHECK_INTERVAL_MS) {
+          await this.cleanupStaleJobs();
+          this.lastStaleCheckTime = new Date();
+        }
+        
         // Brief pause before next check
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       } catch (error) {
@@ -392,6 +489,8 @@ Environment Variables:
   ADAPTIVE_WORKER_TIMEOUT_MS=${WORKER_TIMEOUT_MS}  Worker timeout in ms
   ADAPTIVE_KILL_GRACE_PERIOD_MS=${KILL_GRACE_PERIOD_MS} Grace period before SIGKILL
   ADAPTIVE_SHUTDOWN_TIMEOUT_MS=${SHUTDOWN_TIMEOUT_MS}  Time to wait for jobs to finish on shutdown
+  ADAPTIVE_STALE_CHECK_INTERVAL_MS=${STALE_JOB_CHECK_INTERVAL_MS} Stale job check interval
+  ADAPTIVE_STALE_JOB_TIMEOUT_MS=${STALE_JOB_TIMEOUT_MS}  Time before job considered stale
 
 Examples:
   npm run process-jobs-adaptive -n 10
