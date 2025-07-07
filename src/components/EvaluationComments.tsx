@@ -7,11 +7,28 @@ import ReactMarkdown from "react-markdown";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import type { Comment } from "@/types/documentSchema";
+// Database comment type (different from the documentSchema Comment type)
+type DatabaseComment = {
+  id: string;
+  description: string;
+  importance: number | null;
+  grade: number | null;
+  evaluationVersionId: string;
+  highlightId: string;
+  highlight: {
+    id: string;
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+    isValid: boolean;
+    prefix: string | null;
+    error: string | null;
+  };
+};
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface EvaluationCommentsProps {
-  comments: Comment[];
+  comments: DatabaseComment[];
   documentContent?: string;
 }
 
