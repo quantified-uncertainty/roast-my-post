@@ -65,6 +65,11 @@ export const fullEvaluationInclude = {
           version: true,
         },
       },
+      comments: {
+        include: {
+          highlight: true,
+        },
+      },
     },
   },
   // Include ALL jobs to get the latest job status (including pending ones without versions)

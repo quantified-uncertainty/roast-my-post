@@ -16,6 +16,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
+import { EvaluationComments } from "@/components/EvaluationComments";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 // Function to extract headings from markdown
@@ -160,6 +161,7 @@ export default async function EvaluationPage({
   const selfCritique = latestVersion?.selfCritique || "";
   const summary = latestVersion?.summary || "";
   const grade = latestVersion?.grade;
+  const comments = latestVersion?.comments || [];
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
@@ -199,6 +201,16 @@ export default async function EvaluationPage({
       label: 'Analysis', 
       show: true,
       subItems: analysisHeadings.map(h => ({ ...h, id: `analysis-${h.id}` }))
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      show: comments && comments.length > 0,
+      subItems: comments.map((_, index) => ({
+        id: `comment-${index + 1}`,
+        label: `Comment ${index + 1}`,
+        level: 3
+      }))
     },
     { 
       id: 'thinking', 
@@ -324,6 +336,16 @@ export default async function EvaluationPage({
             </div>
           )}
         </div>
+
+        {/* Comments Section */}
+        {comments && comments.length > 0 && (
+          <div id="comments" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
+            <div className="border-b border-gray-200 pb-4 mb-6">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Comments</h2>
+            </div>
+            <EvaluationComments comments={comments} />
+          </div>
+        )}
 
         {/* Thinking Section */}
         {thinking && (
