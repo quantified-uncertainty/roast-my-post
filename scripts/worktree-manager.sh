@@ -15,7 +15,6 @@
 #
 # Within each range:
 #   :00 - Next.js dev server
-#   :55 - Prisma Studio
 #   :06 - Storybook (future)
 #   :10 - MCP Server (future)
 #   etc.
@@ -44,6 +43,55 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Check required dependencies
+check_dependencies() {
+    local missing_deps=()
+    
+    if ! command -v tmux &> /dev/null; then
+        missing_deps+=("tmux")
+    fi
+    
+    if ! command -v jq &> /dev/null; then
+        missing_deps+=("jq")
+    fi
+    
+    if ! command -v git &> /dev/null; then
+        missing_deps+=("git")
+    fi
+    
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        echo -e "${RED}Error: Missing required dependencies:${NC}"
+        printf '%s\n' "${missing_deps[@]}"
+        echo ""
+        echo "Install them with:"
+        echo "  brew install ${missing_deps[*]}"
+        exit 1
+    fi
+}
+
+# Validate branch name
+validate_branch_name() {
+    local branch="$1"
+    
+    # Check for empty branch name
+    if [ -z "$branch" ]; then
+        echo -e "${RED}Error: Branch name cannot be empty${NC}"
+        exit 1
+    fi
+    
+    # Check for invalid characters
+    if [[ ! "$branch" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
+        echo -e "${RED}Error: Invalid branch name. Use only alphanumeric characters, dots, underscores, slashes, and hyphens.${NC}"
+        exit 1
+    fi
+    
+    # Check if branch name is too long
+    if [ ${#branch} -gt 100 ]; then
+        echo -e "${RED}Error: Branch name too long (max 100 characters)${NC}"
+        exit 1
+    fi
+}
+
 # Create config directory
 mkdir -p "$CONFIG_DIR"
 
@@ -51,7 +99,6 @@ mkdir -p "$CONFIG_DIR"
 get_service_offset() {
     case "$1" in
         "dev") echo 0 ;;
-        "prisma") echo 55 ;;
         "storybook") echo 6 ;;
         "mcp") echo 10 ;;
         "api-docs") echo 20 ;;
@@ -94,18 +141,21 @@ calculate_port() {
 create_worktree() {
     local BRANCH="$1"
     local COMMIT="${2:-HEAD}"
+    
+    # Validate inputs
+    validate_branch_name "$BRANCH"
+    
     local WORKTREE_PATH="$WORKTREE_BASE$BRANCH"
     local GIT_ROOT=$(git rev-parse --show-toplevel)
     
     # Get worktree ID and calculate ports
     local WORKTREE_ID=$(get_next_worktree_id)
     local DEV_PORT=$(calculate_port $WORKTREE_ID "dev")
-    local PRISMA_PORT=$(calculate_port $WORKTREE_ID "prisma")
     
     echo -e "${BLUE}Creating worktree for branch: $BRANCH${NC}"
     echo "Worktree ID: $WORKTREE_ID"
     echo "Port range: $((BASE_PORT + WORKTREE_ID * PORT_RANGE_SIZE))-$((BASE_PORT + (WORKTREE_ID + 1) * PORT_RANGE_SIZE - 1))"
-    echo "Dev server: $DEV_PORT, Prisma Studio: $PRISMA_PORT"
+    echo "Dev server: $DEV_PORT"
     echo ""
     
     # Create git worktree
@@ -122,14 +172,13 @@ create_worktree() {
     "port_range": "$((BASE_PORT + WORKTREE_ID * PORT_RANGE_SIZE))-$((BASE_PORT + (WORKTREE_ID + 1) * PORT_RANGE_SIZE - 1))",
     "ports": {
         "dev": $DEV_PORT,
-        "prisma": $PRISMA_PORT,
         "storybook": $(calculate_port $WORKTREE_ID "storybook"),
         "mcp": $(calculate_port $WORKTREE_ID "mcp"),
         "api_docs": $(calculate_port $WORKTREE_ID "api-docs"),
         "test": $(calculate_port $WORKTREE_ID "test"),
         "monitor": $(calculate_port $WORKTREE_ID "monitor")
     },
-    "tmux_session": "rmp-$BRANCH",
+    "tmux_session": "$BRANCH",
     "created": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 }
 EOF
@@ -181,7 +230,7 @@ EOF
     echo "📍 Location: $WORKTREE_PATH"
     echo "🌿 Branch: $BRANCH"
     echo "🔢 Worktree ID: $WORKTREE_ID"
-    echo "📡 Ports: Dev=$DEV_PORT, Prisma=$PRISMA_PORT"
+    echo "📡 Port: Dev=$DEV_PORT"
     echo ""
     echo "Next steps:"
     echo "  $0 start $BRANCH    # Start all processes"
@@ -202,15 +251,14 @@ start_tmux_session() {
     # Read configuration
     local WORKTREE_PATH=$(jq -r '.path' "$CONFIG_FILE")
     local DEV_PORT=$(jq -r '.ports.dev' "$CONFIG_FILE")
-    local PRISMA_PORT=$(jq -r '.ports.prisma' "$CONFIG_FILE")
-    local SESSION="rmp-$BRANCH"
+    local SESSION="$BRANCH"
     
     # Kill existing session if it exists
     tmux kill-session -t "$SESSION" 2>/dev/null || true
     
     echo -e "${BLUE}Starting tmux session: $SESSION${NC}"
     echo "Worktree: $WORKTREE_PATH"
-    echo "Ports: Dev=$DEV_PORT, Prisma=$PRISMA_PORT"
+    echo "Port: Dev=$DEV_PORT"
     
     # Create tmux session with windows
     tmux new-session -d -s "$SESSION" -n "dev"
@@ -231,19 +279,25 @@ start_tmux_session() {
     tmux send-keys -t "$SESSION:workers" "echo 'If you need to run jobs manually from this worktree:'" C-m
     tmux send-keys -t "$SESSION:workers" "echo '  npm run process-jobs-adaptive'" C-m
     
-    # Window 2: Database
-    tmux new-window -t "$SESSION" -n "database"
-    tmux send-keys -t "$SESSION:database" "cd '$WORKTREE_PATH'" C-m
-    tmux send-keys -t "$SESSION:database" "echo '🗄️  Starting Prisma Studio on port $PRISMA_PORT...'" C-m
-    tmux send-keys -t "$SESSION:database" "npx prisma studio -p $PRISMA_PORT" C-m
-    
-    # Window 3: Terminal
-    tmux new-window -t "$SESSION" -n "terminal"
-    tmux send-keys -t "$SESSION:terminal" "cd '$WORKTREE_PATH'" C-m
-    tmux send-keys -t "$SESSION:terminal" "clear" C-m
-    tmux send-keys -t "$SESSION:terminal" "echo '📁 Worktree: $BRANCH'" C-m
-    tmux send-keys -t "$SESSION:terminal" "echo '🌐 Dev server: http://localhost:$DEV_PORT'" C-m
-    tmux send-keys -t "$SESSION:terminal" "echo '💾 Prisma Studio: http://localhost:$PRISMA_PORT'" C-m
+    # Window 2: Claude Code
+    tmux new-window -t "$SESSION" -n "claude"
+    tmux send-keys -t "$SESSION:claude" "cd '$WORKTREE_PATH'" C-m
+    tmux send-keys -t "$SESSION:claude" "export CLAUDE_DEV_SERVER_URL='http://localhost:$DEV_PORT'" C-m
+    tmux send-keys -t "$SESSION:claude" "export CLAUDE_WORKTREE_BRANCH='$BRANCH'" C-m
+    tmux send-keys -t "$SESSION:claude" "clear" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '🤖 Claude Code - Worktree: $BRANCH'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '🌐 Dev server: http://localhost:$DEV_PORT'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '📁 Working directory: $WORKTREE_PATH'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo ''" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '📊 Git Status:'" C-m
+    tmux send-keys -t "$SESSION:claude" "git status -sb" C-m
+    tmux send-keys -t "$SESSION:claude" "echo ''" C-m
+    tmux send-keys -t "$SESSION:claude" "echo 'Environment variables set:'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '  CLAUDE_DEV_SERVER_URL=http://localhost:$DEV_PORT'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo '  CLAUDE_WORKTREE_BRANCH=$BRANCH'" C-m
+    tmux send-keys -t "$SESSION:claude" "echo ''" C-m
+    tmux send-keys -t "$SESSION:claude" "echo 'Starting Claude Code with workspace context...'" C-m
+    tmux send-keys -t "$SESSION:claude" "claude" C-m
     
     # Select first window
     tmux select-window -t "$SESSION:dev"
@@ -265,13 +319,12 @@ list_worktrees() {
             local branch=$(jq -r '.branch' "$config")
             local id=$(jq -r '.worktree_id' "$config")
             local dev_port=$(jq -r '.ports.dev' "$config")
-            local prisma_port=$(jq -r '.ports.prisma' "$config")
             local session=$(jq -r '.tmux_session' "$config")
             local path=$(jq -r '.path' "$config")
             
             echo -e "${GREEN}$branch${NC} (ID: $id)"
             echo "  Path: $path"
-            echo "  Ports: Dev=$dev_port, Prisma=$prisma_port"
+            echo "  Ports: Dev=$dev_port"
             echo -n "  Session: $session "
             
             if tmux has-session -t "$session" 2>/dev/null; then
@@ -298,7 +351,7 @@ show_ports() {
     # Main repo
     echo "📁 Main Repository (ID: 0)"
     echo "   Port Range: 3000-3099"
-    echo "   - dev: 3000, prisma: 3055"
+    echo "   - dev: 3000"
     echo ""
     
     # Worktrees
@@ -328,7 +381,7 @@ remove_worktree() {
     fi
     
     local WORKTREE_PATH=$(jq -r '.path' "$CONFIG_FILE")
-    local SESSION="rmp-$BRANCH"
+    local SESSION="$BRANCH"
     
     # Stop tmux session
     if tmux has-session -t "$SESSION" 2>/dev/null; then
@@ -355,6 +408,9 @@ remove_worktree() {
     fi
 }
 
+# Check dependencies before any commands
+check_dependencies
+
 # Main command handling
 case "${1:-help}" in
     create)
@@ -378,7 +434,7 @@ case "${1:-help}" in
             echo "Usage: $0 attach <branch>"
             exit 1
         fi
-        tmux attach -t "rmp-$2"
+        tmux attach -t "$2"
         ;;
         
     stop)
@@ -386,7 +442,7 @@ case "${1:-help}" in
             echo "Usage: $0 stop <branch>"
             exit 1
         fi
-        tmux kill-session -t "rmp-$2"
+        tmux kill-session -t "$2"
         echo "Session stopped"
         ;;
         

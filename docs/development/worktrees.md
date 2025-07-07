@@ -16,7 +16,7 @@ The worktree system allows you to work on multiple branches simultaneously witho
 # Create a new worktree for a feature branch
 ./scripts/worktree-manager.sh create feature-awesome-thing
 
-# Start all processes (dev server, workers, Prisma Studio)
+# Start all processes (dev server, workers)
 ./scripts/worktree-manager.sh start feature-awesome-thing
 
 # Attach to see all running processes
@@ -27,16 +27,15 @@ The worktree system allows you to work on multiple branches simultaneously witho
 
 Each worktree gets 100 dedicated ports to prevent conflicts:
 
-| Worktree | Port Range | Dev Server | Prisma Studio |
-|----------|------------|------------|---------------|
-| Main repo | 3000-3099 | 3000 | 3055 |
-| Worktree 1 | 3100-3199 | 3100 | 3155 |
-| Worktree 2 | 3200-3299 | 3200 | 3255 |
-| Worktree 3 | 3300-3399 | 3300 | 3355 |
+| Worktree | Port Range | Dev Server |
+|----------|------------|------------|
+| Main repo | 3000-3099 | 3000 |
+| Worktree 1 | 3100-3199 | 3100 |
+| Worktree 2 | 3200-3299 | 3200 |
+| Worktree 3 | 3300-3399 | 3300 |
 
 Within each range, services use standard offsets:
 - `:00` - Next.js dev server
-- `:55` - Prisma Studio
 - `:06` - Storybook (future)
 - `:10` - MCP Server (future)
 - `:20` - API documentation (future)
@@ -45,17 +44,16 @@ Within each range, services use standard offsets:
 
 ## tmux Session Layout
 
-Each worktree runs in a tmux session named `rmp-<branch>` with 4 windows:
+Each worktree runs in a tmux session named `<branch>` with 3 windows:
 
 1. **dev** - Next.js development server
-2. **workers** - Job processor (process-jobs-adaptive)
-3. **database** - Prisma Studio
-4. **terminal** - Free terminal for ad-hoc commands
+2. **workers** - Job processor (disabled in worktrees to avoid conflicts)
+3. **claude** - Claude Code with workspace context and dev server URL
 
 ### tmux Navigation
 
 - `Ctrl+B, D` - Detach from session (processes keep running)
-- `Ctrl+B, 0-3` - Switch to window by number
+- `Ctrl+B, 0-2` - Switch to window by number
 - `Ctrl+B, N/P` - Next/Previous window
 - `Ctrl+B, [` - Enter scroll mode (q to exit)
 - `Ctrl+B, Z` - Toggle pane zoom
@@ -135,7 +133,7 @@ The system automatically:
 ### Running Multiple Worktrees
 You can run multiple worktrees simultaneously:
 - Each has its own ports (no conflicts)
-- Monitor all with `tmux ls | grep rmp-`
+- Monitor all with `tmux ls`
 - System resources permitting, run 3-4 worktrees at once
 
 ### Troubleshooting
@@ -170,7 +168,7 @@ You can run multiple worktrees simultaneously:
 
 # 5. Access services
 # Dev server: http://localhost:3100
-# Prisma Studio: http://localhost:3155
+# (Use main repo's Prisma Studio on port 3055 if needed)
 
 # 6. When done for the day, detach with Ctrl+B, D
 # (processes keep running)
