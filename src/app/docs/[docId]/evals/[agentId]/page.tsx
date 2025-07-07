@@ -1,11 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-// @ts-ignore - ESM modules are handled by Next.js
-import ReactMarkdown from "react-markdown";
-// @ts-ignore - ESM modules are handled by Next.js
-import rehypeRaw from "rehype-raw";
-// @ts-ignore - ESM modules are handled by Next.js
-import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
@@ -17,6 +11,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { MARKDOWN_COMPONENTS } from "@/components/DocumentWithEvaluations/config/markdown";
+import { CopyButton } from "@/components/CopyButton";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -48,10 +45,15 @@ function extractHeadings(markdown: string, minLevel: number = 1): { id: string; 
   return headings;
 }
 
-// Function to create markdown components with heading IDs
-function createMarkdownComponents(sectionPrefix: string) {
-  return {
-    // Style headings with IDs
+// Custom MarkdownRenderer with heading IDs for navigation
+function MarkdownRendererWithHeadingIds({ 
+  children, 
+  sectionPrefix 
+}: { 
+  children: string; 
+  sectionPrefix: string; 
+}) {
+  const headingComponents = {
     h1: ({ children }: any) => {
       const text = String(children);
       const id = `${sectionPrefix}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
@@ -70,62 +72,22 @@ function createMarkdownComponents(sectionPrefix: string) {
         </h2>
       );
     },
-    h3: ({ children }: any) => (
-      <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">
-        {children}
-      </h3>
-    ),
-    // Style paragraphs
-    p: ({ children }: any) => (
-      <p className="text-gray-700 leading-relaxed mb-4">
-        {children}
-      </p>
-    ),
-    // Style lists
-    ul: ({ children }: any) => (
-      <ul className="list-disc list-inside space-y-2 mb-4 text-gray-700">
-        {children}
-      </ul>
-    ),
-    ol: ({ children }: any) => (
-      <ol className="list-decimal list-inside space-y-2 mb-4 text-gray-700">
-        {children}
-      </ol>
-    ),
-    // Style blockquotes
-    blockquote: ({ children }: any) => (
-      <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 text-gray-600 italic">
-        {children}
-      </blockquote>
-    ),
-    // Style code blocks
-    pre: ({ children }: any) => (
-      <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto mb-4">
-        {children}
-      </pre>
-    ),
-    code: ({ children, ...props }: any) => {
-      const isInline = !props.className;
-      return isInline ? (
-        <code className="bg-gray-100 px-1 py-0.5 rounded text-sm text-gray-800">
-          {children}
-        </code>
-      ) : (
-        <code className="text-sm">{children}</code>
-      );
-    },
-    // Style links
-    a: ({ children, href }: any) => (
-      <a
-        href={href}
-        className="text-blue-600 hover:text-blue-800 underline"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {children}
-      </a>
-    ),
   };
+
+  // Merge shared components with custom heading components
+  const combinedComponents = {
+    ...MARKDOWN_COMPONENTS,
+    ...headingComponents,
+  };
+
+  return (
+    <MarkdownRenderer 
+      className="prose prose-gray max-w-none"
+      components={combinedComponents}
+    >
+      {children}
+    </MarkdownRenderer>
+  );
 }
 
 async function getEvaluation(docId: string, agentId: string) {
@@ -303,19 +265,14 @@ export default async function EvaluationPage({
 
         {/* Analysis Section */}
         <div id="analysis" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-          <div className="border-b border-gray-200 pb-4 mb-6">
+          <div className="border-b border-gray-200 pb-4 mb-6 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Analysis</h2>
+            {analysis && <CopyButton text={analysis} />}
           </div>
           {analysis ? (
-            <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={createMarkdownComponents('analysis')}
-              >
-                {analysis}
-              </ReactMarkdown>
-            </div>
+            <MarkdownRendererWithHeadingIds sectionPrefix="analysis">
+              {analysis}
+            </MarkdownRendererWithHeadingIds>
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
@@ -331,15 +288,9 @@ export default async function EvaluationPage({
             <div className="border-b border-gray-200 pb-4 mb-6">
               <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Thinking Process</h2>
             </div>
-            <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={createMarkdownComponents('thinking')}
-              >
-                {thinking}
-              </ReactMarkdown>
-            </div>
+            <MarkdownRendererWithHeadingIds sectionPrefix="thinking">
+              {thinking}
+            </MarkdownRendererWithHeadingIds>
           </div>
         )}
 
@@ -349,15 +300,9 @@ export default async function EvaluationPage({
             <div className="border-b border-gray-200 pb-4 mb-6">
               <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Self-Critique</h2>
             </div>
-            <div className="prose prose-gray max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={createMarkdownComponents('self-critique')}
-              >
-                {selfCritique}
-              </ReactMarkdown>
-            </div>
+            <MarkdownRendererWithHeadingIds sectionPrefix="self-critique">
+              {selfCritique}
+            </MarkdownRendererWithHeadingIds>
           </div>
         )}
 
