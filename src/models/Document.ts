@@ -449,6 +449,7 @@ export class DocumentModel {
               evaluation.agent.versions[0].primaryInstructions || undefined,
             selfCritiqueInstructions:
               evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
+            providesGrades: evaluation.agent.versions[0].providesGrades || false,
           },
           createdAt: new Date(
             evaluation.versions[0]?.createdAt || evaluation.createdAt

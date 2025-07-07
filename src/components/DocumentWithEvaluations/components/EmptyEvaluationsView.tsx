@@ -1,10 +1,13 @@
 "use client";
 
 import { useRef } from "react";
+
 import Link from "next/link";
+
 import SlateEditor from "@/components/SlateEditor";
 import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
 import type { Document } from "@/types/documentSchema";
+
 import { DocumentMetadata } from "./DocumentMetadata";
 
 interface FailedJob {
@@ -105,7 +108,7 @@ export function EmptyEvaluationsView({
             {/* Document metadata section */}
             <DocumentMetadata document={document} />
 
-            <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
+            <article className="prose prose-lg prose-slate mx-auto rounded-lg px-4 py-8">
               <SlateEditor
                 content={contentWithMetadataPrepend}
                 onHighlightHover={() => {}}

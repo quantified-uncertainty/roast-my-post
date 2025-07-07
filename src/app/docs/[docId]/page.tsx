@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
-import { MarkdownRenderer } from "@/components/DocumentWithEvaluations/components/MarkdownRenderer";
+import SlateEditor from "@/components/SlateEditor";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { auth } from "@/lib/auth";
@@ -167,12 +167,15 @@ export default async function DocumentPage({
 
                   <div className="prose prose-gray max-w-none">
                     {document.content ? (
-                      <MarkdownRenderer className="leading-relaxed text-gray-700">
-                        {truncateMarkdown(document.content, {
-                          limit: 500,
-                          ellipsis: true,
-                        })}
-                      </MarkdownRenderer>
+                      <div className="leading-relaxed text-gray-700">
+                        <SlateEditor 
+                          content={truncateMarkdown(document.content, {
+                            limit: 500,
+                            ellipsis: true,
+                          })}
+                          highlights={[]}
+                        />
+                      </div>
                     ) : (
                       <p className="italic text-gray-500">
                         No content available

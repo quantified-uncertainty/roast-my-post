@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useCallback,
   useEffect,
@@ -32,6 +34,22 @@ import { unified } from "unified";
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/lib/fonts";
+import CodeBlock from "./CodeBlock";
+import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
+import { UI_LAYOUT, TEXT_PROCESSING, ANIMATION } from "@/components/DocumentWithEvaluations/constants/uiConstants";
+
+// Define custom element types for Slate
+type CustomElement = {
+  type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
+        'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
+        'list-item' | 'link' | 'code' | 'image';
+  children?: any[];
+  url?: string;
+  value?: string;
+  lang?: string;
+  alt?: string;
+  [key: string]: any;
+};
 
 // Helper function to normalize text by removing markdown formatting
 const normalizeText = (text: string): string => {
@@ -62,7 +80,7 @@ interface SlateEditorProps {
   hoveredTag?: string | null;
 }
 
-const renderElement = ({ attributes, children, element }: any) => {
+const renderElement = ({ attributes, children, element, highlights }: any) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -143,6 +161,72 @@ const renderElement = ({ attributes, children, element }: any) => {
           {children}
         </a>
       );
+    case "code":
+      // Find which lines to highlight based on comment highlights
+      const codeContent = element.value || "";
+      const codeLines = codeContent.split('\n');
+      const linesToHighlight: number[] = [];
+      
+      // Track which highlights match this code block and their line positions
+      const highlightPositions: Array<{ tag: string; lineNumber: number }> = [];
+      
+      // Check each highlight to see if its quoted text appears in this code block
+      if (highlights && Array.isArray(highlights)) {
+        highlights.forEach((highlight: any) => {
+          if (highlight.quotedText) {
+            // Search for the quoted text in the code block
+            const quotedText = highlight.quotedText.trim();
+            
+            // Skip if quoted text is too short or just punctuation
+            if (quotedText.length < TEXT_PROCESSING.MIN_HIGHLIGHT_LENGTH) {
+              return;
+            }
+            
+            // Check if the entire quoted text appears in the code block
+            if (codeContent.includes(quotedText)) {
+              // Find the first line that contains this quoted text
+              const quotedStart = codeContent.indexOf(quotedText);
+              let currentPos = 0;
+              let firstMatchingLine = -1;
+              
+              codeLines.forEach((line: string, index: number) => {
+                const lineStart = currentPos;
+                const lineEnd = currentPos + line.length;
+                
+                // Check if the quoted text starts in this line
+                if (quotedStart >= lineStart && quotedStart < lineEnd && firstMatchingLine === -1) {
+                  firstMatchingLine = index + 1; // 1-indexed
+                }
+                
+                // Track all lines that contain part of this quoted text
+                if (quotedStart <= lineEnd && (quotedStart + quotedText.length) >= lineStart) {
+                  if (!linesToHighlight.includes(index + 1)) {
+                    linesToHighlight.push(index + 1);
+                  }
+                }
+                
+                currentPos = lineEnd + 1; // +1 for newline
+              });
+              
+              if (firstMatchingLine > 0) {
+                highlightPositions.push({ tag: highlight.tag, lineNumber: firstMatchingLine });
+              }
+            }
+          }
+        });
+      }
+      
+      return (
+        <CodeBlockErrorBoundary>
+          <CodeBlock
+            code={codeContent}
+            language={element.lang || "plain"}
+            attributes={attributes}
+            highlightLines={linesToHighlight}
+            highlightPositions={highlightPositions}
+          />
+        </CodeBlockErrorBoundary>
+      );
     case "image":
       return (
         <div {...attributes} contentEditable={false} className="relative">
@@ -197,32 +281,49 @@ const renderLeaf = ({
 
   // Apply highlight styling if this is a highlighted section
   if (leaf.highlight) {
+    // Use leaf.isActive if available, otherwise fall back to tag comparison
+    const isActive = leaf.isActive || leaf.tag === activeTag;
+    const isHovered = leaf.tag === hoveredTag;
+    
     el = (
       <span
         {...leafAttributes}
         data-tag={leaf.tag}
         id={`highlight-${leaf.tag}`}
         style={{
-          backgroundColor: `rgba(${parseInt(leaf.color.slice(0, 2), 16)}, ${parseInt(leaf.color.slice(2, 4), 16)}, ${parseInt(leaf.color.slice(4, 6), 16)}, ${leaf.tag === activeTag ? 0.8 : 0.3})`,
+          backgroundColor: (() => {
+            // Handle color format - remove # if present
+            const color = leaf.color.startsWith('#') ? leaf.color.slice(1) : leaf.color;
+            const r = parseInt(color.slice(0, 2), 16) || 59;
+            const g = parseInt(color.slice(2, 4), 16) || 130;
+            const b = parseInt(color.slice(4, 6), 16) || 246;
+            return `rgba(${r}, ${g}, ${b}, ${isActive ? 0.8 : 0.3})`;
+          })(),
           borderRadius: "2px",
           boxShadow:
-            leaf.tag === activeTag
+            isActive
               ? "0 0 0 2px rgba(59, 130, 246, 0.5)"
-              : leaf.tag === hoveredTag
+              : isHovered
               ? "0 0 0 2px rgba(59, 130, 246, 0.3)"
               : "none",
-          transform: leaf.tag === activeTag ? "scale(1.01)" : "scale(1)",
+          transform: isActive ? "scale(1.01)" : "scale(1)",
           transformOrigin: "center",
           padding: "0 1px",
           margin: "0 -1px",
-          scrollMarginTop: "100px", // Add scroll margin to prevent the highlight from being hidden under the header
+          scrollMarginTop: `${UI_LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={`group cursor-pointer transition-all duration-150 ease-out hover:bg-opacity-60 ${
-          leaf.tag === activeTag ? "relative z-10" : ""
+        className={`group cursor-pointer transition-all duration-[${ANIMATION.HIGHLIGHT_TRANSITION}ms] ease-out hover:bg-opacity-60 ${
+          isActive ? "relative z-10" : ""
         }`}
         onClick={(e) => {
           e.preventDefault();
           onHighlightClick?.(leaf.tag);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onHighlightClick?.(leaf.tag);
+          }
         }}
         onMouseEnter={(e) => {
           e.preventDefault();
@@ -232,6 +333,9 @@ const renderLeaf = ({
           e.preventDefault();
           onHighlightHover?.(null);
         }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Highlighted text: ${children}`}
       >
         {el}
       </span>
@@ -268,13 +372,21 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       const processor = unified()
         .use(remarkParse)
         .use(remarkGfm) // Add GitHub-Flavored Markdown support (includes footnotes)
-        .use(remarkToSlate as any, {
+        // @ts-expect-error - remarkToSlate types are not fully compatible
+        .use(remarkToSlate, {
           // Configure node types for proper formatting
           nodeTypes: {
             emphasis: "emphasis",
             strong: "strong",
-            inlineCode: "code",
+            inlineCode: "inlineCode",
+            code: "code",
+            codeBlock: "code",
             link: "link",
+            paragraph: "paragraph",
+            heading: "heading",
+            list: "list",
+            listItem: "listItem",
+            blockquote: "block-quote",
           },
         });
 
@@ -324,6 +436,26 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
               type: "link",
               url: node.url,
               children: node.children.map(processNode),
+            };
+
+          case "code":
+          case "code-block":
+          case "codeBlock":
+            // Extract the code content from children if it's there
+            let codeValue = node.value || "";
+            if (!codeValue && node.children && node.children.length > 0) {
+              // Sometimes the code is in the children as text nodes
+              codeValue = node.children.map((child: any) => 
+                child.text || child.value || ""
+              ).join("");
+            }
+            
+            return {
+              ...node,
+              type: "code",
+              value: codeValue,
+              lang: node.lang || node.language || node.meta || "plain",
+              children: [{ text: "" }], // Code blocks need at least one child
             };
 
 
@@ -464,6 +596,15 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     ([node, path]: [Node, number[]]) => {
       if (!Text.isText(node) || !initialized) {
         return [];
+      }
+
+      // Check if this text node is within a code block
+      const ancestors = Node.ancestors(editor, path);
+      for (const [ancestor] of ancestors) {
+        if (Element.isElement(ancestor) && (ancestor as CustomElement).type === 'code') {
+          // Skip highlighting within code blocks
+          return [];
+        }
       }
 
       const ranges: any[] = [];
@@ -641,6 +782,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
     [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
   );
 
+
   if (!initialized) {
     return <div>Loading...</div>;
   }
@@ -655,7 +797,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         <Editable
           data-testid="slate-editable"
           decorate={decorate}
-          renderElement={renderElement}
+          renderElement={(props) => renderElement({ ...props, highlights })}
           renderLeaf={(props) =>
             renderLeaf({
               ...props,

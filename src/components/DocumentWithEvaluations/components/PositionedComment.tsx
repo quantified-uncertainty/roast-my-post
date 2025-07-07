@@ -96,6 +96,16 @@ export function PositionedComment({
               )}
             </div>
           )}
+
+          {/* Show quoted text snippet when expanded */}
+          {isHovered && comment.highlight?.quotedText && (
+            <div className="mt-3 border-l-2 border-gray-300 bg-gray-50 p-3 rounded-r">
+              <div className="text-xs text-gray-500 mb-1">Referenced text:</div>
+              <div className="font-mono text-xs bg-gray-100 text-gray-700 p-2 rounded overflow-x-auto">
+                <pre className="whitespace-pre-wrap">{comment.highlight.quotedText}</pre>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

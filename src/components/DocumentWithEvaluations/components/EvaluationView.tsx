@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import Link from "next/link";
 // @ts-ignore - ESM modules are handled by Next.js
@@ -10,17 +14,23 @@ import rehypeRaw from "rehype-raw";
 // @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
-import { CommentsColumn } from "@/components/DocumentWithEvaluations/components/CommentsColumn";
+import {
+  CommentsColumn,
+} from "@/components/DocumentWithEvaluations/components/CommentsColumn";
 import { GradeBadge } from "@/components/GradeBadge";
 import SlateEditor from "@/components/SlateEditor";
-import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
+import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
-import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 import { DocumentMetadata } from "./DocumentMetadata";
+import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { EvaluationComments } from "@/components/EvaluationComments";
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
+import { CopyButton } from "@/components/CopyButton";
+import { UI_LAYOUT, ANIMATION } from "../constants/uiConstants";
 
 export function EvaluationView({
   evaluationState,
@@ -30,23 +40,19 @@ export function EvaluationView({
 }: EvaluationViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
-  
+  const [isFullWidth, setIsFullWidth] = useState(false);
+
   // Use the scroll behavior hook
-  const {
-    scrollContainerRef,
-    headerVisible,
-    isLargeMode,
-    setIsLargeMode,
-  } = useScrollBehavior({
-    evaluationsSectionRef,
-    isLargeMode: true,
-  });
+  const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
+    useScrollBehavior({
+      evaluationsSectionRef,
+      isLargeMode: true,
+    });
 
   // Get selected evaluations
   const selectedEvaluations = document.reviews.filter((r) =>
     evaluationState.selectedAgentIds.has(r.agentId)
   );
-
 
   // Merge comments from all selected evaluations
   const displayComments = useMemo(() => {
@@ -68,6 +74,7 @@ export function EvaluationView({
       displayComments.map((comment, index) => ({
         startOffset: comment.highlight.startOffset,
         endOffset: comment.highlight.endOffset,
+        quotedText: comment.highlight.quotedText,
         tag: index.toString(),
         color: "#3b82f6",
       })),
@@ -83,8 +90,8 @@ export function EvaluationView({
     <>
       {/* Header wrapper that collapses when hidden */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          headerVisible ? "max-h-[1000px]" : "max-h-0 overflow-hidden"
+        className={`transition-all duration-[${ANIMATION.TRANSITION_DURATION}ms] ease-in-out ${
+          headerVisible ? `max-h-[${UI_LAYOUT.HEADER_MAX_HEIGHT}px]` : "max-h-0 overflow-hidden"
         }`}
       >
         {/* Sticky Evaluation Cards Header Bar */}
@@ -107,13 +114,30 @@ export function EvaluationView({
           className="flex-1 overflow-y-auto overflow-x-hidden pt-2"
         >
           {/* Document content and comments section */}
-          <div className="flex min-h-screen justify-center py-5">
+          <div
+            className={`flex min-h-screen ${isFullWidth ? "px-5" : "justify-center"} py-5`}
+          >
             {/* Main content area */}
-            <div ref={contentRef} className="relative max-w-3xl flex-1 p-0">
+            <div
+              ref={contentRef}
+              className={`relative p-0 ${isFullWidth ? "pr-4" : "max-w-3xl flex-1"}`}
+              style={
+                isFullWidth
+                  ? { width: `calc(100% - ${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px)`, overflow: "hidden" }
+                  : {}
+              }
+            >
               {/* Document metadata section */}
-              <DocumentMetadata document={document} showDetailedAnalysisLink={true} />
+              <DocumentMetadata
+                document={document}
+                showDetailedAnalysisLink={true}
+                isFullWidth={isFullWidth}
+                onToggleFullWidth={() => setIsFullWidth(!isFullWidth)}
+              />
 
-              <article className="prose prose-lg prose-slate mx-auto rounded-lg p-8">
+              <article
+                className={`prose prose-lg prose-slate ${isFullWidth ? `max-w-none [&_pre]:!max-w-[calc(100vw-${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px-${UI_LAYOUT.CONTENT_SIDE_PADDING}px)] [&_pre]:overflow-x-auto` : "mx-auto"} rounded-lg px-4 py-8`}
+              >
                 <SlateEditor
                   content={contentWithMetadataPrepend}
                   onHighlightHover={(commentId) => {
@@ -130,6 +154,7 @@ export function EvaluationView({
                   }}
                   highlights={highlights}
                   activeTag={evaluationState.hoveredCommentId}
+                  hoveredTag={evaluationState.hoveredCommentId}
                 />
               </article>
             </div>
@@ -199,13 +224,12 @@ export function EvaluationView({
 
                       {/* Summary Section */}
                       {evaluation.summary && (
-                        <div
-                          className="mb-6"
+                        <CollapsibleSection
                           id={`eval-${evaluation.agentId}-summary`}
+                          title="Summary"
+                          defaultOpen={true}
+                          action={<CopyButton text={evaluation.summary} />}
                         >
-                          <h4 className="mb-2 text-lg font-medium text-gray-700">
-                            Summary
-                          </h4>
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
@@ -215,15 +239,17 @@ export function EvaluationView({
                               {evaluation.summary}
                             </ReactMarkdown>
                           </div>
-                        </div>
+                        </CollapsibleSection>
                       )}
 
                       {/* Analysis Section */}
                       {evaluation.analysis && (
-                        <div id={`eval-${evaluation.agentId}-analysis`}>
-                          <h4 className="mb-2 text-lg font-medium text-gray-700">
-                            Analysis
-                          </h4>
+                        <CollapsibleSection
+                          id={`eval-${evaluation.agentId}-analysis`}
+                          title="Analysis"
+                          defaultOpen={true}
+                          action={<CopyButton text={evaluation.analysis} />}
+                        >
                           <div className="prose prose-sm max-w-none text-gray-600">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
@@ -233,7 +259,36 @@ export function EvaluationView({
                               {evaluation.analysis}
                             </ReactMarkdown>
                           </div>
-                        </div>
+                        </CollapsibleSection>
+                      )}
+
+                      {/* Comments Section */}
+                      {evaluation.comments && evaluation.comments.length > 0 && (
+                        <CollapsibleSection
+                          id={`eval-${evaluation.agentId}-comments`}
+                          title={`Comments (${evaluation.comments.length})`}
+                          defaultOpen={false}
+                        >
+                          <EvaluationComments 
+                            comments={evaluation.comments.map((comment, index) => ({
+                              id: `${evaluation.agentId}-comment-${index}`,
+                              description: comment.description,
+                              importance: comment.importance ?? null,
+                              grade: comment.grade ?? null,
+                              evaluationVersionId: evaluation.id || '',
+                              highlightId: `${evaluation.agentId}-highlight-${index}`,
+                              highlight: {
+                                id: `${evaluation.agentId}-highlight-${index}`,
+                                startOffset: comment.highlight.startOffset,
+                                endOffset: comment.highlight.endOffset,
+                                quotedText: comment.highlight.quotedText,
+                                isValid: comment.highlight.isValid,
+                                prefix: comment.highlight.prefix ?? null,
+                                error: comment.error ?? null,
+                              }
+                            }))} 
+                          />
+                        </CollapsibleSection>
                       )}
                     </div>
                   ))}
@@ -273,6 +328,16 @@ export function EvaluationView({
                                     className="text-sm text-gray-600 hover:text-gray-900"
                                   >
                                     Analysis
+                                  </a>
+                                </li>
+                              )}
+                              {evaluation.comments && evaluation.comments.length > 0 && (
+                                <li>
+                                  <a
+                                    href={`#eval-${evaluation.agentId}-comments`}
+                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                  >
+                                    Comments ({evaluation.comments.length})
                                   </a>
                                 </li>
                               )}

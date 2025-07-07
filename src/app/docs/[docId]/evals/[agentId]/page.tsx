@@ -10,6 +10,8 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
+import { EvaluationComments } from "@/components/EvaluationComments";
+import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { MARKDOWN_COMPONENTS } from "@/components/DocumentWithEvaluations/config/markdown";
@@ -122,6 +124,7 @@ export default async function EvaluationPage({
   const selfCritique = latestVersion?.selfCritique || "";
   const summary = latestVersion?.summary || "";
   const grade = latestVersion?.grade;
+  const comments = latestVersion?.comments || [];
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
@@ -161,6 +164,16 @@ export default async function EvaluationPage({
       label: 'Analysis', 
       show: true,
       subItems: analysisHeadings.map(h => ({ ...h, id: `analysis-${h.id}` }))
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      show: comments && comments.length > 0,
+      subItems: comments.map((_, index) => ({
+        id: `comment-${index + 1}`,
+        label: `Comment ${index + 1}`,
+        level: 3
+      }))
     },
     { 
       id: 'thinking', 
@@ -235,16 +248,17 @@ export default async function EvaluationPage({
 
         {/* Summary Section */}
         {summary && (
-          <div id="summary" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-            <div className="border-b border-gray-200 pb-4 mb-6">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Summary</h2>
-            </div>
+          <CollapsibleSection 
+            id="summary" 
+            title="Summary"
+            action={<CopyButton text={summary} />}
+          >
             <p className="text-gray-700 leading-relaxed">{summary}</p>
-          </div>
+          </CollapsibleSection>
         )}
 
-        {/* Agent Info Card */}
-        <div id="agent-info" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 scroll-mt-8">
+        {/* Agent Information Section */}
+        <CollapsibleSection id="agent-info" title="Agent Information">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">{agentName}</h3>
@@ -261,14 +275,14 @@ export default async function EvaluationPage({
               </div>
             )}
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Analysis Section */}
-        <div id="analysis" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-          <div className="border-b border-gray-200 pb-4 mb-6 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Analysis</h2>
-            {analysis && <CopyButton text={analysis} />}
-          </div>
+        <CollapsibleSection 
+          id="analysis" 
+          title="Analysis"
+          action={analysis ? <CopyButton text={analysis} /> : undefined}
+        >
           {analysis ? (
             <MarkdownRendererWithHeadingIds sectionPrefix="analysis">
               {analysis}
@@ -280,38 +294,45 @@ export default async function EvaluationPage({
               </p>
             </div>
           )}
-        </div>
+        </CollapsibleSection>
+
+        {/* Comments Section */}
+        {comments && comments.length > 0 && (
+          <CollapsibleSection 
+            id="comments" 
+            title={`Comments (${comments.length})`}
+            defaultOpen={false}
+          >
+            <EvaluationComments comments={comments} />
+          </CollapsibleSection>
+        )}
 
         {/* Thinking Section */}
         {thinking && (
-          <div id="thinking" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-            <div className="border-b border-gray-200 pb-4 mb-6">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Thinking Process</h2>
-            </div>
+          <CollapsibleSection id="thinking" title="Thinking Process">
             <MarkdownRendererWithHeadingIds sectionPrefix="thinking">
               {thinking}
             </MarkdownRendererWithHeadingIds>
-          </div>
+          </CollapsibleSection>
         )}
 
         {/* Self-Critique Section */}
         {selfCritique && (
-          <div id="self-critique" className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6 scroll-mt-8">
-            <div className="border-b border-gray-200 pb-4 mb-6">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Self-Critique</h2>
-            </div>
+          <CollapsibleSection 
+            id="self-critique" 
+            title="Self-Critique"
+            action={<CopyButton text={selfCritique} />}
+          >
             <MarkdownRendererWithHeadingIds sectionPrefix="self-critique">
               {selfCritique}
             </MarkdownRendererWithHeadingIds>
-          </div>
+          </CollapsibleSection>
         )}
 
         {/* Run Stats Section */}
         {(costInCents || durationInSeconds) && (
-          <div id="run-stats" className="bg-slate-50 rounded-lg shadow-sm border border-slate-200 p-8 scroll-mt-8">
-            <div className="border-b border-slate-200 pb-4 mb-6">
-              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Run Stats</h2>
-            </div>
+          <CollapsibleSection id="run-stats" title="Run Stats">
+            <div className="-m-8 p-8 bg-slate-50 rounded-b-lg">
             <div className="grid grid-cols-2 gap-4">
               {durationInSeconds !== undefined && durationInSeconds !== null && (
                 <div>
@@ -338,7 +359,8 @@ export default async function EvaluationPage({
                 </p>
               </div>
             </div>
-          </div>
+            </div>
+          </CollapsibleSection>
         )}
             </div>
 
