@@ -240,7 +240,7 @@ export class AgentModel {
 
       return AgentReviewSchema.parse({
         evaluatedAgentId: agentId,
-        grade: evaluationVersion.grade,
+        grade: evaluationVersion.grade ?? undefined,
         summary: evaluationVersion.summary,
         author:
           evaluationVersion.evaluation.document.submittedBy.name || "Unknown",

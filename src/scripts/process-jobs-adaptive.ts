@@ -11,7 +11,7 @@ import { JobStatus } from "@prisma/client";
 // Configuration with environment variable support
 const DEFAULT_MAX_WORKERS = parseInt(process.env.ADAPTIVE_MAX_WORKERS || '5', 10);
 const POLL_INTERVAL_MS = parseInt(process.env.ADAPTIVE_POLL_INTERVAL_MS || '1000', 10);
-const WORKER_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_WORKER_TIMEOUT_MS || '120000', 10);
+const WORKER_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_WORKER_TIMEOUT_MS || '240000', 10); // 4 minutes default
 const KILL_GRACE_PERIOD_MS = parseInt(process.env.ADAPTIVE_KILL_GRACE_PERIOD_MS || '5000', 10);
 const SHUTDOWN_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_SHUTDOWN_TIMEOUT_MS || '30000', 10); // 30s to finish jobs
 const STALE_JOB_CHECK_INTERVAL_MS = parseInt(process.env.ADAPTIVE_STALE_CHECK_INTERVAL_MS || '300000', 10); // 5 minutes
