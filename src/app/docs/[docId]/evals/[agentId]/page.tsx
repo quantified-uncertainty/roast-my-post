@@ -291,8 +291,8 @@ export default async function EvaluationPage({
           </CollapsibleSection>
         )}
 
-        {/* Agent Info Card */}
-        <div id="agent-info" className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 scroll-mt-8">
+        {/* Agent Information Section */}
+        <CollapsibleSection id="agent-info" title="Agent Information">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">{agentName}</h3>
@@ -309,7 +309,7 @@ export default async function EvaluationPage({
               </div>
             )}
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Analysis Section */}
         <CollapsibleSection id="analysis" title="Analysis">

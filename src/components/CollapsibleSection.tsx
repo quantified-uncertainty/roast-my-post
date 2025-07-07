@@ -19,10 +19,10 @@ export function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div id={id} className="mb-6 scroll-mt-8">
+    <div id={id} className="mb-6 scroll-mt-8 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-2 border-b border-gray-200 flex items-center gap-2 hover:bg-gray-50 transition-colors -mx-2 px-2 rounded"
+        className="w-full py-4 px-6 flex items-center gap-2 hover:bg-gray-50 transition-colors border-b border-gray-200"
       >
         {isOpen ? (
           <ChevronDownIcon className="h-5 w-5 text-gray-500" />
@@ -35,7 +35,7 @@ export function CollapsibleSection({
       </button>
       
       {isOpen && (
-        <div className="pt-4">
+        <div className="p-6">
           {children}
         </div>
       )}
