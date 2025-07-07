@@ -27,6 +27,7 @@ import { EvaluationViewProps } from "../types";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
+import { EvaluationComments } from "@/components/EvaluationComments";
 
 export function EvaluationView({
   evaluationState,
@@ -253,6 +254,17 @@ export function EvaluationView({
                           </div>
                         </CollapsibleSection>
                       )}
+
+                      {/* Comments Section */}
+                      {evaluation.comments && evaluation.comments.length > 0 && (
+                        <CollapsibleSection
+                          id={`eval-${evaluation.agentId}-comments`}
+                          title={`Comments (${evaluation.comments.length})`}
+                          defaultOpen={false}
+                        >
+                          <EvaluationComments comments={evaluation.comments as any} />
+                        </CollapsibleSection>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -291,6 +303,16 @@ export function EvaluationView({
                                     className="text-sm text-gray-600 hover:text-gray-900"
                                   >
                                     Analysis
+                                  </a>
+                                </li>
+                              )}
+                              {evaluation.comments && evaluation.comments.length > 0 && (
+                                <li>
+                                  <a
+                                    href={`#eval-${evaluation.agentId}-comments`}
+                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                  >
+                                    Comments ({evaluation.comments.length})
                                   </a>
                                 </li>
                               )}

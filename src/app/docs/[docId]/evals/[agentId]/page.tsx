@@ -334,7 +334,11 @@ export default async function EvaluationPage({
 
         {/* Comments Section */}
         {comments && comments.length > 0 && (
-          <CollapsibleSection id="comments" title="Comments">
+          <CollapsibleSection 
+            id="comments" 
+            title={`Comments (${comments.length})`}
+            defaultOpen={false}
+          >
             <EvaluationComments comments={comments} />
           </CollapsibleSection>
         )}
