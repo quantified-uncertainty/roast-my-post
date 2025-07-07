@@ -8,16 +8,19 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
 
-// Configuration
-const DEFAULT_MAX_WORKERS = 5;
-const POLL_INTERVAL_MS = 1000; // Check for jobs every second
-const WORKER_TIMEOUT_MS = 120000; // 2 minutes
-const KILL_GRACE_PERIOD_MS = 5000; // 5 seconds before SIGKILL
+// Configuration with environment variable support
+const DEFAULT_MAX_WORKERS = parseInt(process.env.ADAPTIVE_MAX_WORKERS || '5', 10);
+const POLL_INTERVAL_MS = parseInt(process.env.ADAPTIVE_POLL_INTERVAL_MS || '1000', 10);
+const WORKER_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_WORKER_TIMEOUT_MS || '120000', 10);
+const KILL_GRACE_PERIOD_MS = parseInt(process.env.ADAPTIVE_KILL_GRACE_PERIOD_MS || '5000', 10);
+const SHUTDOWN_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_SHUTDOWN_TIMEOUT_MS || '30000', 10); // 30s to finish jobs
 
 interface WorkerInfo {
   id: number;
   process: ChildProcess;
   startTime: Date;
+  jobId?: string; // Track which job this worker is processing
+  isDraining?: boolean; // Mark worker as draining during shutdown
 }
 
 class AdaptiveJobProcessor {
@@ -42,12 +45,35 @@ class AdaptiveJobProcessor {
       this.isShuttingDown = true;
 
       if (this.activeWorkers.size > 0) {
-        logger.info("\n🛑 Shutting down workers...");
+        logger.info("\n🛑 Initiating graceful shutdown...");
+        console.log(`⏳ Allowing up to ${SHUTDOWN_TIMEOUT_MS/1000}s for workers to finish current jobs\n`);
 
-        // Kill all worker processes
+        // Mark all workers as draining (no new jobs)
         for (const [id, worker] of this.activeWorkers) {
-          console.log(`  Terminating worker ${id}...`);
-          worker.process.kill("SIGTERM");
+          worker.isDraining = true;
+          console.log(`  🚫 Worker ${id}: No new jobs (draining)`);
+        }
+
+        // Wait for workers to finish current jobs with timeout
+        const shutdownStart = Date.now();
+        while (this.activeWorkers.size > 0 && (Date.now() - shutdownStart) < SHUTDOWN_TIMEOUT_MS) {
+          const workingCount = Array.from(this.activeWorkers.values())
+            .filter(w => w.jobId).length;
+          
+          if (workingCount > 0) {
+            console.log(`  ⏳ Waiting for ${workingCount} worker(s) to finish current jobs...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            break;
+          }
+        }
+
+        // Gracefully terminate idle workers
+        for (const [id, worker] of this.activeWorkers) {
+          if (!worker.jobId) {
+            console.log(`  ✅ Worker ${id}: Idle, terminating gracefully`);
+            worker.process.kill("SIGTERM");
+          }
         }
 
         // Give them time to exit gracefully
@@ -56,7 +82,7 @@ class AdaptiveJobProcessor {
         // Force kill any remaining processes
         for (const [id, worker] of this.activeWorkers) {
           if (!worker.process.killed) {
-            console.log(`  Force killing worker ${id}...`);
+            console.log(`  💀 Worker ${id}: Force killing (was processing job)`);
             worker.process.kill("SIGKILL");
           }
         }
@@ -109,9 +135,17 @@ class AdaptiveJobProcessor {
       let stderr = "";
       let isResolved = false;
 
-      // Capture output
+      // Capture output and track job processing
       childProcess.stdout?.on("data", (data) => {
-        stdout += data.toString();
+        const output = data.toString();
+        stdout += output;
+        
+        // Track when worker starts processing a job
+        const jobMatch = output.match(/Processing job ([a-zA-Z0-9-]+)/i);
+        if (jobMatch) {
+          worker.jobId = jobMatch[1];
+          console.log(`  🔄 Worker ${workerId} started processing job ${worker.jobId}`);
+        }
       });
 
       childProcess.stderr?.on("data", (data) => {
@@ -170,14 +204,17 @@ class AdaptiveJobProcessor {
             const duration = Math.round(
               (Date.now() - worker.startTime.getTime()) / 1000
             );
+            const jobInfo = worker.jobId ? ` (job ${worker.jobId})` : '';
             console.log(
-              `✅ Worker ${workerId} completed job in ${duration}s (Total processed: ${this.totalJobsProcessed})`
+              `✅ Worker ${workerId} completed job${jobInfo} in ${duration}s (Total processed: ${this.totalJobsProcessed})`
             );
             // Worker successfully processed a job, resolve even if exit code is non-zero
             resolve();
-          } else if (code === 0 || stdout.includes("No pending jobs")) {
-            // Worker found no jobs and exited cleanly
-            console.log(`💤 Worker ${workerId} found no jobs`);
+          } else if (code === 0 || stdout.includes("No pending jobs") || worker.isDraining) {
+            // Worker found no jobs, exited cleanly, or was draining
+            if (!worker.isDraining) {
+              console.log(`💤 Worker ${workerId} found no jobs`);
+            }
             resolve();
           } else {
             // Worker failed without processing a job
@@ -247,7 +284,7 @@ class AdaptiveJobProcessor {
             this.maxWorkers - currentWorkers
           );
 
-          if (workersToSpawn > 0) {
+          if (workersToSpawn > 0 && !this.isShuttingDown) {
             this.lastState = "working";
             console.log(
               `🔧 Active workers: ${currentWorkers}, spawning ${workersToSpawn} more...`
@@ -349,13 +386,22 @@ Options:
   -n, --max-workers <count>  Maximum parallel workers (default: ${DEFAULT_MAX_WORKERS}, max: 20)
   -h, --help                Show this help message
 
-Example:
+Environment Variables:
+  ADAPTIVE_MAX_WORKERS=${DEFAULT_MAX_WORKERS}         Max parallel workers
+  ADAPTIVE_POLL_INTERVAL_MS=${POLL_INTERVAL_MS}    Poll interval in ms
+  ADAPTIVE_WORKER_TIMEOUT_MS=${WORKER_TIMEOUT_MS}  Worker timeout in ms
+  ADAPTIVE_KILL_GRACE_PERIOD_MS=${KILL_GRACE_PERIOD_MS} Grace period before SIGKILL
+  ADAPTIVE_SHUTDOWN_TIMEOUT_MS=${SHUTDOWN_TIMEOUT_MS}  Time to wait for jobs to finish on shutdown
+
+Examples:
   npm run process-jobs-adaptive -n 10
+  ADAPTIVE_MAX_WORKERS=10 ADAPTIVE_WORKER_TIMEOUT_MS=300000 npm run process-jobs-adaptive
 
 This adaptive processor:
 - Starts with no workers (quiet when idle)
 - Spawns workers only when jobs are detected
 - Each worker processes one job then exits
+- Graceful shutdown: lets workers finish current jobs
 - Shows dots during idle periods
 - Limits concurrent workers to the specified maximum
 `);
