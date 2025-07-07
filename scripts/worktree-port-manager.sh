@@ -10,7 +10,6 @@
 #
 # Within each range:
 #   :00 - Next.js dev server
-#   :55 - Prisma Studio
 #   :06 - Storybook
 #   :10 - MCP Server
 #   etc.
@@ -30,7 +29,6 @@ PORT_RANGE_SIZE=100
 get_service_offset() {
     case "$1" in
         "dev") echo 0 ;;
-        "prisma") echo 55 ;;
         "storybook") echo 6 ;;
         "mcp") echo 10 ;;
         "api-docs") echo 20 ;;
