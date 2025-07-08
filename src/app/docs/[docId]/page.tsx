@@ -10,6 +10,7 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import SlateEditor from "@/components/SlateEditor";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
+import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DocumentModel } from "@/models/Document";
@@ -72,6 +73,19 @@ export default async function DocumentPage({
   if (!document) {
     notFound();
   }
+
+  // Get ephemeral batch information
+  const documentWithBatch = await prisma.document.findUnique({
+    where: { id: docId },
+    select: {
+      ephemeralBatch: {
+        select: {
+          trackingId: true,
+          isEphemeral: true,
+        },
+      },
+    },
+  });
 
   const isOwner = currentUserId
     ? document.submittedById === currentUserId
@@ -144,7 +158,17 @@ export default async function DocumentPage({
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
           <PageHeader
-            title={document.title || "Untitled Document"}
+            title={
+              <div className="flex items-center gap-2">
+                <span>{document.title || "Untitled Document"}</span>
+                {documentWithBatch?.ephemeralBatch && (
+                  <ExperimentalBadge 
+                    trackingId={documentWithBatch.ephemeralBatch.trackingId}
+                    className="ml-2"
+                  />
+                )}
+              </div>
+            }
             subtitle="Document Overview"
           >
             {isOwner && (

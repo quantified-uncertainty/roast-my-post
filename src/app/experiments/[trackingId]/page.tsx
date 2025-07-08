@@ -231,6 +231,55 @@ export default function ExperimentDetailsPage() {
           </div>
         </div>
 
+        {/* Ephemeral Resources */}
+        {(experiment.agent.isEphemeral || experiment.ephemeralDocuments.length > 0) && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-lg font-semibold mb-4">Ephemeral Resources</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              These resources were created specifically for this experiment and will be deleted when it expires.
+            </p>
+            
+            <div className="space-y-4">
+              {experiment.agent.isEphemeral && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Ephemeral Agent</h3>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <Link 
+                      href={`/agents/${experiment.agent.id}`}
+                      className="text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      {experiment.agent.name}
+                    </Link>
+                    <p className="text-sm text-gray-600 mt-1">
+                      This agent was created for this experiment only.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {experiment.ephemeralDocuments.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Ephemeral Documents ({experiment.ephemeralDocuments.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {experiment.ephemeralDocuments.map(doc => (
+                      <div key={doc.id} className="bg-gray-50 rounded-lg p-3">
+                        <Link
+                          href={`/docs/${doc.id}`}
+                          className="text-purple-600 hover:text-purple-700"
+                        >
+                          {doc.title}
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Job Progress */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <h2 className="text-lg font-semibold mb-4">Job Progress</h2>

@@ -137,9 +137,11 @@ export function YamlEditor({
     }
   };
 
+  const isFullHeight = height === "h-full";
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
+    <div className={`${isFullHeight ? 'h-full flex flex-col' : 'space-y-2'}`}>
+      <div className="flex items-center justify-between mb-2">
         <label className="block text-sm font-medium text-gray-700">
           YAML Configuration
         </label>
@@ -165,13 +167,13 @@ export function YamlEditor({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full ${height} resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-purple-500`}
+        className={`w-full ${isFullHeight ? 'flex-1' : height} resize-none rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-transparent focus:ring-2 focus:ring-purple-500`}
         disabled={disabled}
       />
 
       {/* Validation Details */}
       {validation && (
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 text-sm mt-2">
           {validation.yamlError && (
             <p className="text-red-600">{validation.yamlError}</p>
           )}
@@ -192,7 +194,7 @@ export function YamlEditor({
 
       {/* Field Reference */}
       {(requiredFields.length > 0 || optionalFields.length > 0) && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs mt-2">
           {requiredFields.length > 0 && (
             <div>
               <span className="font-medium text-gray-700">Required:</span>
