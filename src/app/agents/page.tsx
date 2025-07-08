@@ -8,6 +8,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function AgentsPage() {
   const dbAgents = await prisma.agent.findMany({
+    where: {
+      ephemeralBatchId: null, // Exclude ephemeral agents
+    },
     take: 100, // Reasonable limit for agents list
     include: {
       versions: {
