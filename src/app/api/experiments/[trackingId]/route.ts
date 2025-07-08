@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth-helpers";
+import { calculateJobStats, calculateSuccessRate } from "@/lib/batch-utils";
 
 export async function GET(
   request: NextRequest,
@@ -96,6 +97,7 @@ export async function GET(
     }
 
     // Calculate aggregate metrics
+    const jobStats = calculateJobStats(batch.jobs);
     const completedJobs = batch.jobs.filter(j => j.status === "COMPLETED");
     const grades = completedJobs
       .map(j => j.evaluation.versions[0]?.grade)
@@ -107,9 +109,7 @@ export async function GET(
         : null,
       totalCost: batch.jobs.reduce((sum, j) => sum + (j.costInCents || 0), 0),
       totalTime: batch.jobs.reduce((sum, j) => sum + (j.durationInSeconds || 0), 0),
-      successRate: batch.jobs.length > 0 
-        ? (completedJobs.length / batch.jobs.length) * 100 
-        : 0,
+      successRate: calculateSuccessRate(jobStats),
     };
 
     // Format results by document
@@ -149,13 +149,7 @@ export async function GET(
         },
       },
       
-      jobStats: {
-        total: batch.jobs.length,
-        completed: completedJobs.length,
-        failed: batch.jobs.filter(j => j.status === "FAILED").length,
-        running: batch.jobs.filter(j => j.status === "RUNNING").length,
-        pending: batch.jobs.filter(j => j.status === "PENDING").length,
-      },
+      jobStats,
       
       aggregateMetrics,
       results,

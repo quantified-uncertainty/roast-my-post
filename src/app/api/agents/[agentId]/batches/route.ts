@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth-helpers";
+import { calculateJobStats } from "@/lib/batch-utils";
 
 export async function GET(
   request: NextRequest,
@@ -57,10 +58,8 @@ export async function GET(
     // Calculate statistics for each batch
     const batchesWithStats = batches.map((batch) => {
       const jobs = batch.jobs;
+      const jobStats = calculateJobStats(jobs);
       const completedJobs = jobs.filter(job => job.status === "COMPLETED");
-      const runningJobs = jobs.filter(job => job.status === "RUNNING");
-      const failedJobs = jobs.filter(job => job.status === "FAILED");
-      const pendingJobs = jobs.filter(job => job.status === "PENDING");
       
       const totalCost = jobs.reduce((sum, job) => sum + (job.costInCents || 0), 0);
       const avgDuration = completedJobs.length > 0 
@@ -75,7 +74,7 @@ export async function GET(
         ? gradesWithValues.reduce((sum, grade) => sum + grade, 0) / gradesWithValues.length 
         : null;
 
-      const progress = batch.targetCount ? (completedJobs.length / batch.targetCount) * 100 : 0;
+      const progress = batch.targetCount ? (jobStats.completed / batch.targetCount) * 100 : 0;
 
       return {
         id: batch.id,
@@ -83,10 +82,10 @@ export async function GET(
         targetCount: batch.targetCount,
         createdAt: batch.createdAt,
         progress: Math.round(progress),
-        completedCount: completedJobs.length,
-        runningCount: runningJobs.length,
-        failedCount: failedJobs.length,
-        pendingCount: pendingJobs.length,
+        completedCount: jobStats.completed,
+        runningCount: jobStats.running,
+        failedCount: jobStats.failed,
+        pendingCount: jobStats.pending,
         totalCost,
         avgDuration: Math.round(avgDuration),
         avgGrade,

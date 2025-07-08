@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { z } from "zod";
 import { nanoid } from "nanoid";
+import { calculateJobStats } from "@/lib/batch-utils";
 
 // Schema for ephemeral agent creation
 const ephemeralAgentSchema = z.object({
@@ -394,13 +395,7 @@ export async function GET(request: NextRequest) {
         isEphemeral: batch.agent.ephemeralBatchId === batch.id,
       },
       ephemeralDocumentCount: batch.ephemeralDocuments.length,
-      jobStats: {
-        total: batch.jobs.length,
-        completed: batch.jobs.filter(j => j.status === "COMPLETED").length,
-        failed: batch.jobs.filter(j => j.status === "FAILED").length,
-        running: batch.jobs.filter(j => j.status === "RUNNING").length,
-        pending: batch.jobs.filter(j => j.status === "PENDING").length,
-      },
+      jobStats: calculateJobStats(batch.jobs),
     }));
 
     return NextResponse.json({
