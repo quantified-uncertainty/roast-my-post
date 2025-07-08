@@ -13,7 +13,7 @@ jest.mock("../../../types/openai", () => ({
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
-  COMMENT_EXTRACTION_TIMEOUT: 30000,
+  HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
 
 // Mock the cost calculator
