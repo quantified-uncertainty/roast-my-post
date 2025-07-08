@@ -1,9 +1,9 @@
 import { cleanupExpiredBatches } from "./cleanup-expired-batches";
-import { prisma } from "../src/lib/prisma";
-import { logger } from "../src/lib/logger";
+import { prisma } from "../../src/lib/prisma";
+import { logger } from "../../src/lib/logger";
 
 // Mock dependencies
-jest.mock("../src/lib/prisma", () => ({
+jest.mock("../../src/lib/prisma", () => ({
   prisma: {
     agentEvalBatch: {
       findMany: jest.fn(),
@@ -13,18 +13,13 @@ jest.mock("../src/lib/prisma", () => ({
   },
 }));
 
-jest.mock("../src/lib/logger", () => ({
+jest.mock("../../src/lib/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
   },
 }));
-
-// Mock process.exit
-const mockExit = jest.spyOn(process, "exit").mockImplementation((code) => {
-  throw new Error(`Process.exit(${code})`);
-});
 
 describe("cleanupExpiredBatches", () => {
   beforeEach(() => {
@@ -57,7 +52,15 @@ describe("cleanupExpiredBatches", () => {
       (prisma.agentEvalBatch.findMany as jest.Mock).mockResolvedValue(expiredBatches);
       (prisma.agentEvalBatch.delete as jest.Mock).mockResolvedValue({});
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(0)");
+      const result = await cleanupExpiredBatches(false);
+      
+      expect(result).toEqual({
+        found: 2,
+        deleted: 2,
+        skipped: 0,
+        errors: 0,
+        duration: expect.any(Number),
+      });
 
       expect(prisma.agentEvalBatch.findMany).toHaveBeenCalledWith({
         where: {
@@ -119,7 +122,15 @@ describe("cleanupExpiredBatches", () => {
       (prisma.agentEvalBatch.findMany as jest.Mock).mockResolvedValue(expiredBatches);
       (prisma.agentEvalBatch.delete as jest.Mock).mockResolvedValue({});
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(0)");
+      const result = await cleanupExpiredBatches(false);
+      
+      expect(result).toEqual({
+        found: 2,
+        deleted: 1,
+        skipped: 1,
+        errors: 0,
+        duration: expect.any(Number),
+      });
 
       expect(prisma.agentEvalBatch.delete).toHaveBeenCalledTimes(1);
       expect(prisma.agentEvalBatch.delete).toHaveBeenCalledWith({
@@ -134,7 +145,15 @@ describe("cleanupExpiredBatches", () => {
     it("should handle empty results", async () => {
       (prisma.agentEvalBatch.findMany as jest.Mock).mockResolvedValue([]);
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(0)");
+      const result = await cleanupExpiredBatches(false);
+      
+      expect(result).toEqual({
+        found: 0,
+        deleted: 0,
+        skipped: 0,
+        errors: 0,
+        duration: expect.any(Number),
+      });
 
       expect(prisma.agentEvalBatch.delete).not.toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith(
@@ -167,7 +186,15 @@ describe("cleanupExpiredBatches", () => {
         .mockRejectedValueOnce(new Error("Foreign key constraint"))
         .mockResolvedValueOnce({});
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(1)");
+      const result = await cleanupExpiredBatches(false);
+      
+      expect(result).toEqual({
+        found: 2,
+        deleted: 1,
+        skipped: 0,
+        errors: 1,
+        duration: expect.any(Number),
+      });
 
       expect(prisma.agentEvalBatch.delete).toHaveBeenCalledTimes(2);
       expect(logger.error).toHaveBeenCalledWith(
@@ -183,7 +210,7 @@ describe("cleanupExpiredBatches", () => {
         new Error("Database connection failed")
       );
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(1)");
+      await expect(cleanupExpiredBatches(false)).rejects.toThrow("Database connection failed");
 
       expect(logger.error).toHaveBeenCalledWith(
         "Fatal error during cleanup",
@@ -211,7 +238,15 @@ describe("cleanupExpiredBatches", () => {
       (prisma.agentEvalBatch.findMany as jest.Mock).mockResolvedValue([batchWithResources]);
       (prisma.agentEvalBatch.delete as jest.Mock).mockResolvedValue({});
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(0)");
+      const result = await cleanupExpiredBatches(false);
+      
+      expect(result).toEqual({
+        found: 1,
+        deleted: 1,
+        skipped: 0,
+        errors: 0,
+        duration: expect.any(Number),
+      });
 
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Deleting batch batch-cascade"),
@@ -224,22 +259,12 @@ describe("cleanupExpiredBatches", () => {
   });
 
   describe("Process Lifecycle", () => {
-    it("should disconnect from database on completion", async () => {
+    it("should not disconnect from database when exitOnComplete is false", async () => {
       (prisma.agentEvalBatch.findMany as jest.Mock).mockResolvedValue([]);
+      
+      await cleanupExpiredBatches(false);
 
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(0)");
-
-      expect(prisma.$disconnect).toHaveBeenCalled();
-    });
-
-    it("should disconnect from database on error", async () => {
-      (prisma.agentEvalBatch.findMany as jest.Mock).mockRejectedValue(
-        new Error("Test error")
-      );
-
-      await expect(cleanupExpiredBatches()).rejects.toThrow("Process.exit(1)");
-
-      expect(prisma.$disconnect).toHaveBeenCalled();
+      expect(prisma.$disconnect).not.toHaveBeenCalled();
     });
   });
 });

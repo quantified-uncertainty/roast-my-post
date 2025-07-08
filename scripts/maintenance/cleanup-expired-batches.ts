@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
-import { prisma } from "../src/lib/prisma";
-import { logger } from "../src/lib/logger";
+import { prisma } from "../../src/lib/prisma";
+import { logger } from "../../src/lib/logger";
 
 /**
  * Cleanup job for expired ephemeral batches
@@ -9,8 +9,11 @@ import { logger } from "../src/lib/logger";
  * 1. Finds all expired ephemeral batches
  * 2. Checks if they have any running jobs
  * 3. Deletes them if safe (cascade deletes related resources)
+ * 
+ * @param exitOnComplete - Whether to exit the process after completion (default: true for CLI, false for programmatic use)
+ * @returns Cleanup statistics
  */
-async function cleanupExpiredBatches() {
+async function cleanupExpiredBatches(exitOnComplete = true) {
   const startTime = Date.now();
   logger.info("Starting cleanup of expired ephemeral batches");
 
@@ -89,13 +92,29 @@ async function cleanupExpiredBatches() {
       logger.error("Cleanup encountered errors", { errors });
     }
 
-    // Exit with appropriate code
-    process.exit(errors.length > 0 ? 1 : 0);
+    const result = {
+      found: expiredBatches.length,
+      deleted: deletedCount,
+      skipped: skippedCount,
+      errors: errors.length,
+      duration,
+    };
+
+    if (exitOnComplete) {
+      await prisma.$disconnect();
+      process.exit(errors.length > 0 ? 1 : 0);
+    }
+    
+    return result;
   } catch (error) {
     logger.error("Fatal error during cleanup", error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
+    
+    if (exitOnComplete) {
+      await prisma.$disconnect();
+      process.exit(1);
+    }
+    
+    throw error;
   }
 }
 

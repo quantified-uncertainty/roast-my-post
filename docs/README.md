@@ -11,6 +11,11 @@ Development guides and technical documentation
 - **[database.md](development/database.md)** - Database operations, safety procedures, and best practices *(coming soon)*
 - **[architecture.md](development/architecture.md)** - System architecture overview *(coming soon)*
 
+### 📁 [`features/`](features/)
+Feature documentation and user guides
+
+- **[ephemeral-experiments.md](features/ephemeral-experiments.md)** - Temporary evaluation environments with automatic cleanup
+
 ### 📁 [`deployment/`](deployment/)
 Deployment guides and production configuration
 
@@ -41,6 +46,7 @@ Security documentation and procedures
 ### For Developers
 - **Getting Started**: See main [README.md](../README.md)
 - **Agent Development**: [development/agents.md](development/agents.md)
+- **Ephemeral Experiments**: [features/ephemeral-experiments.md](features/ephemeral-experiments.md)
 - **Security Guidelines**: [security/authentication.md](security/authentication.md)
 - **Code Quality**: [operations/health-checks.md](operations/health-checks.md)
 

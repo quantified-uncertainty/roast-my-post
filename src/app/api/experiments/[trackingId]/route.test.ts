@@ -39,7 +39,7 @@ describe("/api/experiments/[trackingId] GET", () => {
   };
 
   const mockParams = {
-    params: { trackingId: mockTrackingId },
+    params: Promise.resolve({ trackingId: mockTrackingId }),
   };
 
   beforeEach(() => {
@@ -71,22 +71,15 @@ describe("/api/experiments/[trackingId] GET", () => {
         createdAt: new Date(),
         agent: {
           id: "agent-123",
+          ephemeralBatchId: null,
           versions: [
             {
               id: "version-123",
               version: 1,
               name: "Test Agent",
               primaryInstructions: "Test instructions",
-            },
-          ],
-        },
-        ephemeralAgent: {
-          id: "exp_agent_123",
-          versions: [
-            {
-              id: "exp_version-123",
-              version: 1,
-              name: "Ephemeral Test Agent",
+              selfCritiqueInstructions: null,
+              providesGrades: false,
             },
           ],
         },
@@ -103,9 +96,39 @@ describe("/api/experiments/[trackingId] GET", () => {
           },
         ],
         jobs: [
-          { id: "job-1", status: "COMPLETED" },
-          { id: "job-2", status: "RUNNING" },
-          { id: "job-3", status: "FAILED" },
+          { 
+            id: "job-1", 
+            status: "COMPLETED",
+            evaluation: {
+              document: {
+                id: "doc-123",
+                versions: [{ title: "Test Document", authors: [] }]
+              },
+              versions: [{ grade: 85, summary: "Good" }]
+            }
+          },
+          { 
+            id: "job-2", 
+            status: "RUNNING",
+            evaluation: {
+              document: {
+                id: "doc-124",
+                versions: [{ title: "Test Document 2", authors: [] }]
+              },
+              versions: []
+            }
+          },
+          { 
+            id: "job-3", 
+            status: "FAILED",
+            evaluation: {
+              document: {
+                id: "doc-125",
+                versions: [{ title: "Test Document 3", authors: [] }]
+              },
+              versions: []
+            }
+          },
         ],
       };
 
@@ -131,9 +154,6 @@ describe("/api/experiments/[trackingId] GET", () => {
           latestVersion: expect.objectContaining({
             name: "Test Agent",
           }),
-        }),
-        ephemeralAgent: expect.objectContaining({
-          id: "exp_agent_123",
         }),
         ephemeralDocuments: expect.arrayContaining([
           expect.objectContaining({
@@ -161,13 +181,15 @@ describe("/api/experiments/[trackingId] GET", () => {
     });
 
     it("should return 403 if user does not own the experiment", async () => {
-      const mockBatch = {
-        id: "batch-123",
-        trackingId: mockTrackingId,
-        userId: "other-user-123", // Different user
-      };
-
-      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+      // First call with userId check will return null
+      (prisma.agentEvalBatch.findFirst as jest.Mock)
+        .mockResolvedValueOnce(null)
+        // Second call without userId check finds the batch owned by another user
+        .mockResolvedValueOnce({
+          id: "batch-123",
+          trackingId: mockTrackingId,
+          userId: "other-user-123",
+        });
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
@@ -181,7 +203,17 @@ describe("/api/experiments/[trackingId] GET", () => {
         id: "batch-123",
         trackingId: mockTrackingId,
         userId: mockUserId,
-        agent: { id: "agent-123" },
+        agent: { 
+          id: "agent-123",
+          ephemeralBatchId: null,
+          versions: [{ 
+            name: "Test Agent",
+            primaryInstructions: "Test",
+            selfCritiqueInstructions: null,
+            providesGrades: false
+          }] 
+        },
+        ephemeralDocuments: [],
         jobs: [],
       };
 
@@ -249,7 +281,17 @@ describe("/api/experiments/[trackingId] GET", () => {
         userId: mockUserId,
         isEphemeral: true,
         expiresAt: new Date(Date.now() - 1000), // Already expired
-        agent: { id: "agent-123" },
+        agent: { 
+          id: "agent-123",
+          ephemeralBatchId: null,
+          versions: [{ 
+            name: "Test Agent",
+            primaryInstructions: "Test",
+            selfCritiqueInstructions: null,
+            providesGrades: false
+          }] 
+        },
+        ephemeralDocuments: [],
         jobs: [],
       };
 

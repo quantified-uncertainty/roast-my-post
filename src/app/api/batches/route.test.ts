@@ -112,6 +112,16 @@ describe("/api/batches POST", () => {
         agentId: "agent-123",
         userId: mockUserId,
         isEphemeral: false,
+        trackingId: null,
+        expiresAt: null,
+        agent: {
+          id: "agent-123",
+          ephemeralBatchId: null,
+        },
+        _count: {
+          jobs: 10,
+          ephemeralDocuments: 0,
+        },
       };
 
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
@@ -121,6 +131,17 @@ describe("/api/batches POST", () => {
           },
           agentEvalBatch: {
             create: jest.fn().mockResolvedValue(mockBatch),
+            findUnique: jest.fn().mockResolvedValue(mockBatch),
+          },
+          document: {
+            findMany: jest.fn().mockResolvedValue([]),
+          },
+          evaluation: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+          },
+          job: {
+            createMany: jest.fn().mockResolvedValue({}),
           },
         });
       });
@@ -132,8 +153,11 @@ describe("/api/batches POST", () => {
       }));
       const data = await response.json();
       
-      expect(response.status).toBe(200);
-      expect(data.id).toBe("batch-123");
+      expect(response.status).toBe(201);
+      expect(data.batch.id).toBe("batch-123");
+      expect(data.batch.jobCount).toBe(10);
+      expect(data.agent.id).toBe("agent-123");
+      expect(data.agent.isEphemeral).toBe(false);
     });
   });
 
@@ -144,21 +168,35 @@ describe("/api/batches POST", () => {
         isEphemeral: true,
         trackingId: "test-experiment",
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        agent: {
+          id: "exp_agent_123",
+          ephemeralBatchId: "batch-123",
+        },
+        _count: {
+          jobs: 0,
+          ephemeralDocuments: 0,
+        },
       };
 
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
             create: jest.fn().mockResolvedValue({ id: "exp_agent_123" }),
+            update: jest.fn().mockResolvedValue({ id: "exp_agent_123", ephemeralBatchId: "batch-123" }),
           },
           agentVersion: {
             create: jest.fn().mockResolvedValue({ id: "version-123" }),
           },
           agentEvalBatch: {
             create: jest.fn().mockResolvedValue(mockBatch),
+            findUnique: jest.fn().mockResolvedValue(mockBatch),
           },
-          agent: {
-            update: jest.fn(),
+          evaluation: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
+          },
+          job: {
+            createMany: jest.fn().mockResolvedValue({}),
           },
         };
         return callback(tx);
@@ -177,28 +215,47 @@ describe("/api/batches POST", () => {
       }));
       const data = await response.json();
       
-      expect(response.status).toBe(200);
-      expect(data.isEphemeral).toBe(true);
-      expect(data.trackingId).toBe("test-experiment");
+      expect(response.status).toBe(201);
+      expect(data.batch.isEphemeral).toBe(true);
+      expect(data.batch.trackingId).toBe("test-experiment");
+      expect(data.batch.jobCount).toBe(0);
+      expect(data.agent.id).toBe("exp_agent_123");
+      expect(data.agent.isEphemeral).toBe(true);
     });
 
     it("should create ephemeral documents from URLs", async () => {
+      const mockBatch = { 
+        id: "batch-123",
+        isEphemeral: true,
+        trackingId: "exp_generated",
+        agent: {
+          id: "agent-123",
+          ephemeralBatchId: null,
+        },
+        _count: {
+          jobs: 2,
+          ephemeralDocuments: 2,
+        },
+      };
+
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123" }),
+            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
-            create: jest.fn().mockResolvedValue({ 
-              id: "batch-123",
-              isEphemeral: true,
-            }),
+            create: jest.fn().mockResolvedValue(mockBatch),
+            findUnique: jest.fn().mockResolvedValue(mockBatch),
           },
           document: {
             create: jest.fn().mockResolvedValue({ id: "doc-123" }),
           },
           documentVersion: {
             create: jest.fn().mockResolvedValue({ id: "version-123" }),
+          },
+          evaluation: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockResolvedValue({ id: "eval-123" }),
           },
           job: {
             createMany: jest.fn(),
@@ -216,8 +273,10 @@ describe("/api/batches POST", () => {
       }));
       const data = await response.json();
       
-      expect(response.status).toBe(200);
-      expect(data.isEphemeral).toBe(true);
+      expect(response.status).toBe(201);
+      expect(data.batch.isEphemeral).toBe(true);
+      expect(data.batch.jobCount).toBe(2);
+      expect(data.agent.isEphemeral).toBe(false);
     });
 
     it("should create ephemeral documents from inline content", async () => {
@@ -230,6 +289,12 @@ describe("/api/batches POST", () => {
             create: jest.fn().mockResolvedValue({ 
               id: "batch-123",
               isEphemeral: true,
+            }),
+            findUnique: jest.fn().mockResolvedValue({ 
+              id: "batch-123",
+              isEphemeral: true,
+              agent: { id: "agent-123" },
+              _count: { jobs: 0, ephemeralDocuments: 1 },
             }),
           },
           document: {
@@ -263,21 +328,29 @@ describe("/api/batches POST", () => {
       }));
       const data = await response.json();
       
-      expect(response.status).toBe(200);
-      expect(data.isEphemeral).toBe(true);
+      expect(response.status).toBe(201);
+      expect(data.batch.isEphemeral).toBe(true);
+      expect(data.agent).toBeDefined();
     });
 
     it("should auto-generate trackingId if not provided", async () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123" }),
+            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
             create: jest.fn().mockImplementation(({ data }) => ({
               id: "batch-123",
               ...data,
             })),
+            findUnique: jest.fn().mockResolvedValue({
+              id: "batch-123",
+              isEphemeral: true,
+              trackingId: "exp_12345678",
+              agent: { id: "agent-123" },
+              _count: { jobs: 0, ephemeralDocuments: 0 },
+            }),
           },
         };
         return callback(tx);
@@ -290,8 +363,10 @@ describe("/api/batches POST", () => {
       }));
       const data = await response.json();
       
-      expect(response.status).toBe(200);
-      expect(data.trackingId).toMatch(/^exp_/); // Should start with exp_
+      expect(response.status).toBe(201);
+      expect(data.batch.trackingId).toMatch(/^exp_/); // Should start with exp_
+      expect(data.batch.isEphemeral).toBe(true);
+      expect(data.agent).toBeDefined();
     });
   });
 

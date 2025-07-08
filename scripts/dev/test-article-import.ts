@@ -1,5 +1,5 @@
 #!/usr/bin/env npx tsx
-import { processArticle } from "../src/lib/articleImport";
+import { processArticle } from "../../src/lib/articleImport";
 
 async function testArticleImport(url: string) {
   console.log(`\n🧪 Testing article import for: ${url}`);

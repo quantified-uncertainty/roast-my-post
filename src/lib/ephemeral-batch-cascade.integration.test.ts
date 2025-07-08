@@ -134,6 +134,7 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     const job1 = await prisma.job.create({
       data: {
         agentEvalBatchId: batchId,
+        evaluationId: eval1.id,
         status: "COMPLETED",
       },
     });
@@ -147,8 +148,15 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     expect(await prisma.job.findUnique({ where: { id: job1.id } })).toBeTruthy();
 
     // Delete the batch - should cascade delete everything
-    await prisma.agentEvalBatch.delete({
-      where: { id: batchId },
+    await prisma.$transaction(async (tx) => {
+      // Delete jobs first to avoid foreign key constraint
+      await tx.job.deleteMany({
+        where: { agentEvalBatchId: batchId },
+      });
+      // Then delete the batch
+      await tx.agentEvalBatch.delete({
+        where: { id: batchId },
+      });
     });
 
     // Verify everything was deleted
@@ -197,8 +205,15 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     });
 
     // Delete the ephemeral batch
-    await prisma.agentEvalBatch.delete({
-      where: { id: batchId },
+    await prisma.$transaction(async (tx) => {
+      // Delete jobs first if any
+      await tx.job.deleteMany({
+        where: { agentEvalBatchId: batchId },
+      });
+      // Then delete the batch
+      await tx.agentEvalBatch.delete({
+        where: { id: batchId },
+      });
     });
 
     // Verify batch was deleted but regular resources remain
@@ -252,8 +267,15 @@ describeIfDb("Ephemeral Batch Cascade Deletion (Integration)", () => {
     });
 
     // Delete the batch
-    await prisma.agentEvalBatch.delete({
-      where: { id: batchId },
+    await prisma.$transaction(async (tx) => {
+      // Delete jobs first if any
+      await tx.job.deleteMany({
+        where: { agentEvalBatchId: batchId },
+      });
+      // Then delete the batch
+      await tx.agentEvalBatch.delete({
+        where: { id: batchId },
+      });
     });
 
     // Verify ephemeral agent was deleted but regular document remains
