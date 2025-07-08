@@ -17,12 +17,13 @@ import {
 } from "../../../utils/costCalculator";
 import { createLogDetails } from "../shared/llmUtils";
 import type { TaskResult } from "../shared/types";
+import { handleAnthropicError } from "../utils/anthropicErrorHandler";
 
 export interface SelfCritiqueInput {
   summary: string;
   analysis: string;
   grade?: number;
-  comments?: Array<{
+  highlights?: Array<{
     title: string;
     text: string;
   }>;
@@ -45,10 +46,10 @@ export async function generateSelfCritique(
     evaluationText += `\n\n# Grade\n${evaluationOutput.grade}/100`;
   }
 
-  if (evaluationOutput.comments && evaluationOutput.comments.length > 0) {
-    evaluationText += `\n\n# Comments\n`;
-    evaluationOutput.comments.forEach((comment, index) => {
-      evaluationText += `\n## Comment ${index + 1}: ${comment.title}\n${comment.text}\n`;
+  if (evaluationOutput.highlights && evaluationOutput.highlights.length > 0) {
+    evaluationText += `\n\n# Highlights\n`;
+    evaluationOutput.highlights.forEach((highlight, index) => {
+      evaluationText += `\n## Highlight ${index + 1}: ${highlight.title}\n${highlight.text}\n`;
     });
   }
 
@@ -119,28 +120,7 @@ ${evaluationText}`;
     )) as any; // Type assertion to avoid complex union type issues
   } catch (error: any) {
     logger.error('❌ Anthropic API error in self-critique generation:', error);
-
-    if (error?.status === 429) {
-      throw new Error(
-        "Anthropic API rate limit exceeded. Please try again in a moment."
-      );
-    }
-    if (error?.status === 402) {
-      throw new Error(
-        "Anthropic API quota exceeded. Please check your billing."
-      );
-    }
-    if (error?.status === 401) {
-      throw new Error(
-        "Anthropic API authentication failed. Please check your API key."
-      );
-    }
-    if (error?.status >= 500) {
-      throw new Error(
-        `Anthropic API server error (${error.status}). Please try again later.`
-      );
-    }
-    throw new Error(`Anthropic API error: ${error?.message || error}`);
+    handleAnthropicError(error);
   }
 
   try {

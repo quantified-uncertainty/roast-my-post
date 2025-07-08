@@ -1,5 +1,5 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
-import { extractCommentsFromAnalysis } from "../commentExtraction";
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";

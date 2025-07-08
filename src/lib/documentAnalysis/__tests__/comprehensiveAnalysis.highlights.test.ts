@@ -1,5 +1,5 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
-import { extractCommentsFromAnalysis } from "../commentExtraction";
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";

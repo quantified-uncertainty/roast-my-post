@@ -1,7 +1,7 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
-import { LineBasedHighlighter } from "../commentGeneration/lineBasedHighlighter";
+import { LineBasedHighlighter } from "../highlightGeneration/lineBasedHighlighter";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 const documentInformationSection = (document: Document) => {
@@ -21,21 +21,21 @@ ${highlighter.getNumberedLines()}
 </document>`;
 };
 
-export function getCommentExtractionPrompts(
+export function getHighlightExtractionPrompts(
   document: Document,
   agentInfo: Agent,
   analysisData: ComprehensiveAnalysisOutputs,
-  targetComments: number
+  targetHighlights: number
 ): { systemMessage: string; userMessage: string } {
   const systemMessage = `Context: ${agentInfo.name} - ${agentInfo.description}
 
-This process extracts and formats comments from the completed analysis. The analysis contains highlighted sections that need to be converted into structured comments.
+This process extracts and formats highlights from the completed analysis. The analysis contains highlighted sections that need to be converted into structured highlights.
 
 The extraction process:
 1. Identifies insights from the analysis
 2. Formats them with proper line number references
-3. Ensures each comment stands alone as a complete observation
-4. Maps comments to specific document passages
+3. Ensures each highlight stands alone as a complete observation
+4. Maps highlights to specific document passages
 
 `;
 
@@ -45,20 +45,20 @@ The extraction process:
 ${analysisData.analysis}
 </comprehensive_analysis>
 
-Based on the comprehensive analysis above, please extract and format ${targetComments} comments. 
+Based on the comprehensive analysis above, please extract and format ${targetHighlights} highlights. 
 
-Look for the "Key Insights for Commentary" section in the analysis, which contains pre-identified insights with:
+Look for the "Key Highlights" section in the analysis, which contains pre-identified insights with:
 - Location (line numbers)
 - Observation
 - Significance  
-- Suggested comment text
+- Suggested highlight text
 
-Convert these insights into properly formatted comments with:
+Convert these insights into properly formatted highlights with:
 - Well-written descriptions (100-300 words) that begin with a clear, concise statement of the main point
 - Correct line number references (startLine and endLine)
 - The description should be self-contained and include all necessary context
 
-If the analysis doesn't have a clear "Key Highlights" section, identify the most important observations from the analysis and create comments for those.
+If the analysis doesn't have a clear "Key Highlights" section, identify the most important observations from the analysis and create highlights for those.
 
 IMPORTANT: Start each description with a strong, clear statement that summarizes the key point (like a title would), then expand with details.`;
 

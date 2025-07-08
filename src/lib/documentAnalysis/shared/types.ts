@@ -28,6 +28,6 @@ export interface ThinkingAnalysisOutputs {
   grade?: number;
 }
 
-export interface CommentAnalysisOutputs {
-  comments: Comment[];
+export interface HighlightAnalysisOutputs {
+  highlights: Comment[];
 }

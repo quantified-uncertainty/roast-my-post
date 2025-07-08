@@ -448,11 +448,11 @@ export class JobModel {
         });
       }
 
-      // Save comments with highlights
-      if (evaluationOutputs.comments && evaluationOutputs.comments.length > 0) {
-        for (const comment of evaluationOutputs.comments) {
+      // Save highlights with highlights
+      if (evaluationOutputs.highlights && evaluationOutputs.highlights.length > 0) {
+        for (const comment of evaluationOutputs.highlights) {
           // Create highlight
-          const highlight = await prisma.evaluationHighlight.create({
+          const createdHighlight = await prisma.evaluationHighlight.create({
             data: {
               startOffset: comment.highlight.startOffset,
               endOffset: comment.highlight.endOffset,
@@ -468,7 +468,7 @@ export class JobModel {
               importance: comment.importance || null,
               grade: comment.grade || null,
               evaluationVersionId: evaluationVersion.id,
-              highlightId: highlight.id,
+              highlightId: createdHighlight.id,
             },
           });
         }
