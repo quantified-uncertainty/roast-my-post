@@ -158,25 +158,22 @@ export default async function DocumentPage({
         <div className="flex-1 overflow-y-auto">
           {/* Full-width Header */}
           <PageHeader
-            title={
-              <div className="flex items-center gap-2">
-                <span>{document.title || "Untitled Document"}</span>
-                {documentWithBatch?.ephemeralBatch && (
-                  <ExperimentalBadge 
-                    trackingId={documentWithBatch.ephemeralBatch.trackingId}
-                    className="ml-2"
-                  />
-                )}
-              </div>
-            }
+            title={document.title || "Untitled Document"}
             subtitle="Document Overview"
           >
-            {isOwner && (
-              <DocumentActions
-                docId={docId}
-                document={{ importUrl: document.importUrl }}
-              />
-            )}
+            <div className="flex items-center gap-4">
+              {documentWithBatch?.ephemeralBatch && (
+                <ExperimentalBadge 
+                  trackingId={documentWithBatch.ephemeralBatch.trackingId}
+                />
+              )}
+              {isOwner && (
+                <DocumentActions
+                  docId={docId}
+                  document={{ importUrl: document.importUrl }}
+                />
+              )}
+            </div>
           </PageHeader>
 
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
