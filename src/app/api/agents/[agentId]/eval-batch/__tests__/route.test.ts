@@ -136,6 +136,13 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
+    
+    // Log the error if status is not 200
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
+    }
+    
     expect(response.status).toBe(200);
     
     const data = await response.json();
