@@ -1,0 +1,372 @@
+hidden_assumptions:
+  purpose: Surface unstated premises the argument depends on, with concrete techniques and examples
+  
+  overview: |
+    Hidden assumptions are the invisible foundation of arguments - beliefs so fundamental the author doesn't even realize they're making them. Finding these requires specific techniques and practice. This module teaches you how to uncover assumptions that would surprise and enlighten the target audience.
+  
+  detection_techniques:
+    negation_test:
+      description: Take a claim, negate it, and ask what must be true for the original to hold
+      
+      detailed_process: |
+        1. Identify a core claim in the document
+        2. Write its logical negation
+        3. Ask: "What would have to be false for the negation to be true?"
+        4. Those prerequisites are likely hidden assumptions
+      
+      example_1:
+        original_claim: "We should prioritize x-risk reduction over global poverty"
+        negation: "We should NOT prioritize x-risk reduction over global poverty"
+        
+        revealed_assumptions:
+          - Future people matter morally (not just potential people)
+          - We can meaningfully affect x-risk probability
+          - Small probability × large impact > large probability × small impact
+          - Our x-risk estimates are accurate enough to act on
+          - Neglecting present suffering is acceptable for future benefit
+        
+        quality_insight: "The most controversial hidden assumption is that neglecting present suffering is acceptable - many ethical frameworks would reject this."
+      
+      example_2:
+        original_claim: "AI alignment research is the most important cause area"
+        negation: "AI alignment research is NOT the most important cause area"
+        
+        revealed_assumptions:
+          - AGI is possible within actionable timeframes
+          - Technical research can solve coordination problems
+          - We'll have warning before dangerous AI emerges
+          - Current research paradigms are on the right track
+          - Other existential risks are less tractable/likely
+        
+        quality_insight: "Assumes 'technical research can solve coordination problems' - but history shows technologies are adopted faster than wisdom about their use develops."
+    
+    framework_dependency:
+      description: Identify which philosophical, economic, or scientific frameworks the argument silently requires
+      
+      detailed_process: |
+        1. List the argument's key moves/conclusions
+        2. Ask: "What worldview makes these moves natural?"
+        3. Identify alternative frameworks that would reject these moves
+        4. Surface the implicit framework choice
+      
+      example_1:
+        argument: "We calculated the expected value, so we should fund this intervention"
+        
+        hidden_framework_dependencies:
+          utilitarian_ethics:
+            assumption: "Outcomes matter more than intentions/virtues"
+            alternative: "Virtue ethics would ask 'what kind of person/institution does this make us?'"
+          
+          quantifiability:
+            assumption: "The most important factors can be meaningfully quantified"
+            alternative: "Goodhart's law - quantified metrics become gamed and lose meaning"
+          
+          commensurability:
+            assumption: "Different types of value (lives, suffering, flourishing) can be compared on one scale"
+            alternative: "Incommensurable values require judgment, not calculation"
+          
+          linear_addition:
+            assumption: "Two people at welfare level 5 = one person at level 10"
+            alternative: "Priority to the worst off (Rawlsian) or threshold effects"
+      
+      example_2:
+        argument: "We should work on AI safety because of the expected value calculation showing 10^52 future lives"
+        
+        hidden_framework_dependencies:
+          total_utilitarianism:
+            assumption: "Potential people count equally to actual people"
+            alternative: "Person-affecting view - can't benefit someone who never exists"
+          
+          infinite_ethics:
+            assumption: "We can do expected value with infinite/astronomical outcomes"
+            alternative: "Bounded rationality - use heuristics when numbers break our intuitions"
+          
+          technological_determinism:
+            assumption: "Technology development follows predictable paths we can influence"
+            alternative: "Chaos theory - small changes have unpredictable large effects"
+    
+    causal_chain_analysis:
+      description: Map each link in the causal story and identify unsupported jumps
+      
+      detailed_process: |
+        1. Write out the full causal chain: A → B → C → D
+        2. For each arrow, list what must be true for it to hold
+        3. Identify which links are assumed vs argued
+        4. Find alternative causal paths ignored
+      
+      example_1:
+        claimed_chain: "Fund bednets → Prevent malaria → Save lives → Increase welfare"
+        
+        link_analysis:
+          "Fund bednets → Prevent malaria":
+            assumes:
+              - Bednets get distributed (not sold/stolen)
+              - People use them correctly (not for fishing)
+              - Mosquitos don't develop avoidance
+            ignored_complexity: "Local health systems may matter more than equipment"
+          
+          "Prevent malaria → Save lives":
+            assumes:
+              - Malaria is the binding constraint on mortality
+              - No substitution effects (other diseases take over)
+              - Healthcare exists to treat other conditions
+            ignored_complexity: "Comorbidities mean rarely single cause of death"
+          
+          "Save lives → Increase welfare":
+            assumes:
+              - Quantity of life = quality of life
+              - No negative economic effects from population growth
+              - Saved children have good life prospects
+            ignored_complexity: "May save lives into poverty/conflict situations"
+      
+      example_2:
+        claimed_chain: "Develop AI safety techniques → Implement in AI systems → Prevent AI catastrophe → Ensure flourishing future"
+        
+        link_analysis:
+          "Develop techniques → Implement in systems":
+            assumes:
+              - Economic incentives align with safety
+              - Techniques work outside research environment
+              - No competitive race to the bottom
+            ignored_path: "China/others develop AI without safety measures"
+          
+          "Implement → Prevent catastrophe":
+            assumes:
+              - We've identified the right risks
+              - No emergent behaviors at scale
+              - Safety measures aren't gamed/worked around
+            ignored_path: "AI catastrophe comes from human misuse, not misalignment"
+          
+          "Prevent catastrophe → Flourishing future":
+            assumes:
+              - AI is the main threat to flourishing
+              - Solving AI safety doesn't create new risks
+              - Future values align with present values
+            ignored_path: "Value drift means future doesn't want what we want"
+    
+    linguistic_analysis:
+      description: Examine word choices and phrasings that reveal implicit assumptions
+      
+      signals_to_detect:
+        universality_claims:
+          phrases: ["we all know", "everyone agrees", "it's obvious that", "naturally"]
+          reveals: "Assumes consensus that may not exist"
+          example: "'We all value reducing suffering' - assumes negative utilitarian stance"
+        
+        agency_attribution:
+          phrases: ["the market will", "evolution optimizes", "AI wants", "technology demands"]
+          reveals: "Assumes non-agents have goals/intentions"
+          example: "'The market will solve climate change' - markets don't 'solve', people using markets might"
+        
+        temporal_assumptions:
+          phrases: ["will inevitably", "the arc of history", "progress means", "eventually"]
+          reveals: "Assumes directional/predictable change"
+          example: "'Technology will eventually solve scarcity' - assumes tech progress continues"
+        
+        value_loading:
+          phrases: ["merely", "just", "only", "real", "actual", "legitimate"]
+          reveals: "Hidden value judgments about what matters"
+          example: "'Merely preventing suffering vs creating flourishing' - assumes creation > prevention"
+    
+    stakeholder_analysis:
+      description: Identify whose perspectives are centered vs marginalized
+      
+      detailed_process: |
+        1. List all stakeholders affected by the argument
+        2. Note whose voices are quoted/considered
+        3. Identify who benefits from the framing
+        4. Find missing perspectives that would change conclusions
+      
+      example_1:
+        document_about: "AI governance policy"
+        
+        centered_perspectives:
+          - AI researchers in Western universities
+          - EA/rationalist community members
+          - Tech company executives
+        
+        marginalized_perspectives:
+          - Global South countries without AI industries
+          - Workers displaced by automation
+          - Communities used for data extraction
+          - Future people who can't consent to risks
+        
+        hidden_assumption: "Technical experts should determine humanity's future"
+        alternative_view: "Democratic participation in transformative decisions"
+      
+      example_2:
+        document_about: "Effective giving"
+        
+        centered_perspectives:
+          - Wealthy donors in developed countries
+          - Charity evaluators with quantitative focus
+          - Academic moral philosophers
+        
+        marginalized_perspectives:
+          - Recipients of charity
+          - Local community organizations
+          - Indigenous knowledge systems
+          - Critics of charity model itself
+        
+        hidden_assumption: "Outsiders can determine community needs better than insiders"
+        alternative_view: "Community-led development with local priority setting"
+    
+    counterfactual_analysis:
+      description: Compare implicit baseline assumptions against alternative counterfactuals
+      
+      technique: |
+        For each proposed action, identify:
+        1. What's the implicit "otherwise" scenario?
+        2. Is that the most likely counterfactual?
+        3. What other counterfactuals change the analysis?
+      
+      example_1:
+        claim: "Donating $5000 to AMF saves a life"
+        
+        implicit_counterfactual: "Otherwise that person dies"
+        
+        alternative_counterfactuals:
+          - Local health improvements save them anyway
+          - They die from something else soon after
+          - Resources get redirected from other health interventions
+          - Community develops own solutions if not given charity
+        
+        hidden_assumption: "Static world where only our intervention matters"
+      
+      example_2:
+        claim: "Working on AI safety prevents catastrophic risk"
+        
+        implicit_counterfactual: "Otherwise AI causes catastrophe"
+        
+        alternative_counterfactuals:
+          - Other researchers solve it without you
+          - AI development stalls for economic reasons
+          - Different catastrophic risk occurs first
+          - Safety research accelerates dangerous capabilities
+        
+        hidden_assumption: "Personal marginal impact on binary outcome"
+  
+  output_structure:
+    format: |
+      ## 👻 Hidden Assumptions
+      
+      **Unstated premises detected:**
+      
+      1. **[Assumption]: [Specific description]**
+         - Found via: [Technique used]
+         - Evidence: "[Quote from text]" (Line X)
+         - But: [Why this is questionable]
+         - Alternative view: [Different framework]
+      
+      2. **[Continue for each major assumption...]**
+      
+      **Keystone assumption:** [The one assumption that, if false, collapses the entire argument]
+      - Why it's crucial: [Explanation]
+      - Probability it's false: [Rough estimate with reasoning]
+      - If false, then: [What conclusions change]
+    
+    quality_criteria:
+      include_if:
+        - Non-obvious to target audience
+        - Actually required for argument (not peripheral)
+        - Plausible alternative exists
+        - Would change conclusions if false
+      
+      exclude_if:
+        - Explicitly stated elsewhere in document
+        - Universal assumptions (e.g., "words have meaning")
+        - Nitpicky philosophical points
+        - Doesn't affect practical conclusions
+  
+  real_world_examples:
+    ea_forum_post_example:
+      text: "Given the astronomical stakes, a 0.01% reduction in x-risk outweighs all near-term considerations"
+      
+      hidden_assumptions_found:
+        astronomical_stakes_real:
+          assumption: "10^52 future lives is meaningful number"
+          challenge: "Infinity problems - any tiny probability × infinity = infinity"
+        
+        risk_reduction_measurable:
+          assumption: "We can meaningfully estimate 0.01% reduction"
+          challenge: "Deep uncertainty - could be 0% or 1%, we don't know"
+        
+        no_backfire_effects:
+          assumption: "X-risk work doesn't increase other risks"
+          challenge: "AI safety research might accelerate capabilities"
+        
+        future_matters_linearly:
+          assumption: "Person in year 3000 = person today morally"
+          challenge: "Discount rates, uncertainty, value drift"
+      
+      keystone: "We can predictably affect risks we barely understand"
+    
+    lesswrong_post_example:
+      text: "Rationality training will help us navigate the coming intelligence explosion"
+      
+      hidden_assumptions_found:
+        rationality_transferable:
+          assumption: "Skills from calibration training apply to novel domains"
+          challenge: "Domain-specific expertise often matters more"
+        
+        individual_agency:
+          assumption: "Individual rationality overcomes systemic forces"
+          challenge: "Coordination problems dominate individual choices"
+        
+        intelligence_explosion_model:
+          assumption: "Recursive self-improvement leads to fast takeoff"
+          challenge: "Physical limits, economic constraints, regulation"
+        
+        values_stable:
+          assumption: "We'll want same things when smarter"
+          challenge: "Value drift with capability gain throughout history"
+      
+      keystone: "Human-level rationality scales to superhuman problems"
+  
+  practice_exercises:
+    exercise_1:
+      quote: "We should fund research into digital sentience to prevent suffering of AIs"
+      
+      your_task: "Find 3 hidden assumptions using different techniques"
+      
+      sample_answer:
+        negation_test: "Assumes: Digital systems can be sentient (not just simulate)"
+        framework: "Assumes: Utilitarian ethics (vs rights-based or virtue ethics)"
+        stakeholder: "Assumes: Future AIs' interests > current humans' interests"
+    
+    exercise_2:
+      quote: "Earning to give is more impactful than direct work because money is fungible"
+      
+      your_task: "Identify the keystone assumption"
+      
+      sample_answer:
+        keystone: "Assumes: Marginal donations to top charities > marginal talented person doing direct work"
+        why_questionable: "Talent gaps in key areas, personal fit, motivation effects"
+        if_false: "Career capital and direct work could dominate for many people"
+  
+  advanced_techniques:
+    assumption_stacking:
+      description: "Identify how assumptions build on each other"
+      example: |
+        Level 1: "We can predict AI development"
+        Level 2: "We can influence what we predict"
+        Level 3: "Our influence will be positive"
+        Level 4: "Positive influence compounds over time"
+        
+        Each level depends on all previous levels being true
+    
+    cultural_blindness:
+      description: "Assumptions from author's cultural context"
+      example: |
+        WEIRD bias: "Individual choice is primary unit of analysis"
+        Alternative: "Community/family/ancestors make decisions"
+        
+        Secular bias: "Material outcomes are what matter"
+        Alternative: "Spiritual development is primary goal"
+    
+    meta_assumptions:
+      description: "Assumptions about assumptions"
+      example: |
+        "We should make our assumptions explicit"
+        Assumes: Explicit > implicit reasoning
+        But: Much human wisdom is tacit/embodied

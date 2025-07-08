@@ -4,17 +4,119 @@
 
 > **For Claude Code**: System-specific analysis and helper scripts are in `/claude/README.md`
 
-## Quick Start Guide
+## 🚀 Quick Start: The 80/20 Rule for Agent Creation
 
-Creating an effective agent requires substantial detail and examples. While you only need three core fields, the instructions should be comprehensive:
+Most agents fail because they're too generic. Here's what actually matters:
+
+### The Three Pillars of Great Agents
+
+1. **Concrete Examples Beat Abstract Rules**
+   - ❌ "Evaluate for clarity" 
+   - ✅ "When you see 'utilizes' instead of 'uses', comment: 'Line 42: Replace bureaucratic language. 'The system utilizes' → 'The system uses''"
+
+2. **Show the Transformation**
+   - Include 20+ before/after examples showing exactly how to improve documents
+   - Real agent success comes from pattern recognition, not rule following
+
+3. **Voice Matters**
+   - **Always third-person**: "The author argues" not "You argue"
+   - Professional but not robotic
+   - Specific expertise shines through word choices
+
+### Minimum Viable Agent Recipe
+
+```yaml
+name: "[Domain] [Role]"  # e.g., "Technical Documentation Reviewer"
+purpose: ASSESSOR  # Most agents should be ASSESSOR or ADVISOR
+description: "One sentence about expertise and value provided"
+primaryInstructions: |
+  # At minimum, include:
+  1. WHO you are (500 words of credible background)
+  2. WHAT you look for (20+ specific examples)
+  3. HOW you evaluate (clear rubrics)
+  4. WHY it matters (connect to real impact)
+```
+
+### The Secret: Length = Quality
+
+**Uncomfortable truth**: Good agents need 5,000-50,000 words of instructions. This isn't over-engineering—it's the difference between generic feedback and expert insight.
+
+Think of it this way:
+- 5,000 words = Junior analyst
+- 15,000 words = Senior expert  
+- 30,000+ words = World-class specialist
+
+## Required Fields (Just 3!)
 
 1. **name**: Descriptive title
 2. **purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
 3. **description**: 1-2 sentences explaining what the agent does
 
-Optional but highly recommended: 4. **primaryInstructions**: Comprehensive behavior guide (typically 5,000-50,000 words including examples) 5. **selfCritiqueInstructions**: Criteria for self-evaluation scoring (optional) 6. **readme**: Human-readable documentation for users and future modifiers
+Optional but highly recommended:
+4. **primaryInstructions**: Comprehensive behavior guide (5,000-50,000 words)
+5. **selfCritiqueInstructions**: Quality self-assessment criteria
+6. **readme**: Documentation for users
 
 **Important Schema Update (June 2025)**: We've simplified the instruction fields. All analysis, summary, comment, and grading instructions should now be consolidated into `primaryInstructions`. The separate fields (`summaryInstructions`, `commentInstructions`, `gradeInstructions`, `analysisInstructions`) have been removed. If your agent needs to provide grades, include grading criteria within `primaryInstructions`.\n\n### Migration Example\n\nBefore (old schema):\n`yaml\nprimaryInstructions: "You are an expert evaluator..."\nsummaryInstructions: "Provide a concise summary..."\ncommentInstructions: "For each section, identify..."\ngradeInstructions: "Grade on a scale of 0-100..."\n`\n\nAfter (new schema):\n`yaml\nprimaryInstructions: |\n  You are an expert evaluator...\n  \n  ## Summary Generation\n  Provide a concise summary...\n  \n  ## Comment Guidelines\n  For each section, identify...\n  IMPORTANT: When highlighting text:\n  - Keep highlights SHORT and focused (max 1000 characters)\n  - Select only the most relevant portion of text\n  \n  ## Grading Criteria\n  Grade on a scale of 0-100...\n`
+
+## 🏃 Quick Wins: 5 Changes That Instantly Improve Any Agent
+
+### 1. Add Specific Examples (5 min)
+```yaml
+# Instead of:
+"Identify unclear writing"
+
+# Add:
+<examples>
+  <unclear>The system will process the request after validation</unclear>
+  <clear>After validation, the system processes requests in 100ms</clear>
+  <why>Passive voice + vague timing → Active voice + specific timing</why>
+</examples>
+```
+
+### 2. Define Your Expertise (2 min)
+```yaml
+# Instead of:
+"You are a reviewer"
+
+# Add:
+"You are a senior technical writer with 10 years at Google, Microsoft, and AWS. 
+You've written docs for Kubernetes, React, and TensorFlow that millions use daily."
+```
+
+### 3. Use Checklists (3 min)
+```yaml
+<checklist>
+  API Docs Must Have:
+  ☐ HTTP method (GET, POST, etc)
+  ☐ Authentication required?
+  ☐ Request format with example
+  ☐ All possible responses
+  ☐ Rate limits
+  ☐ Try-it-now example
+</checklist>
+```
+
+### 4. Show Before/After (5 min per example)
+```yaml
+<improvement>
+  BEFORE: "Users can create accounts"
+  AFTER: "To create an account: POST /users with {email, password}. 
+          Returns 201 with user ID or 400 if email exists."
+  IMPACT: Developers can implement without guessing
+</improvement>
+```
+
+### 5. Be Specific About Grades (2 min)
+```yaml
+<scoring>
+  90-100: Ready to publish in official docs (0-1 minor issues)
+  80-89: Good with small fixes needed (2-5 issues)
+  70-79: Acceptable but gaps remain (6-10 issues)
+  60-69: Major rewrites needed (10+ issues)
+  <60: Start over with outline
+</scoring>
+```
 
 ### Realistic Agent Example (Abbreviated):
 
@@ -167,6 +269,62 @@ primaryInstructions: |
 8. [Best Practices](#best-practices)
 9. [Common Patterns](#common-patterns)
 10. [Migrating to Simplified Schemas](#migrating-to-simplified-schemas)
+
+---
+
+## 🚫 Top 10 Agent Creation Mistakes (And How to Fix Them)
+
+### 1. **Generic Instructions**
+❌ **Bad**: "Evaluate the document for quality"  
+✅ **Good**: "Check if API endpoints include: HTTP method, authentication type, rate limits, error codes, request/response schemas with examples"
+
+### 2. **No Examples**
+❌ **Bad**: "Identify unclear writing"  
+✅ **Good**: Show 20+ real examples:
+```
+UNCLEAR: "The system will process the request after validation occurs"
+CLEAR: "After validating the input, the system processes the request within 100ms"
+WHY: Passive voice hides the actor and timeline
+```
+
+### 3. **Wrong Voice**
+❌ **Bad**: "You fail to provide evidence"  
+✅ **Good**: "The document lacks supporting evidence for the claim about cost savings"
+
+### 4. **Vague Scoring**
+❌ **Bad**: "Good = 80-90"  
+✅ **Good**: "80-89: Meets all requirements with minor gaps. Example: All API endpoints documented but 2-3 missing error code descriptions"
+
+### 5. **No Domain Expertise**
+❌ **Bad**: "You are a reviewer"  
+✅ **Good**: "You are a senior API architect with 10+ years at Google, expert in REST, GraphQL, gRPC. You've designed APIs used by millions..."
+
+### 6. **Ignoring Edge Cases**
+❌ **Bad**: Instructions assume perfect documents  
+✅ **Good**: Include handling for: empty sections, conflicting information, outdated content, different document types
+
+### 7. **Wall of Text**
+❌ **Bad**: 5000 words with no structure  
+✅ **Good**: Use XML tags, clear sections, visual hierarchy:
+```xml
+<role>Background and expertise</role>
+<evaluation_framework>
+  <clarity>What to check</clarity>
+  <accuracy>How to verify</accuracy>
+</evaluation_framework>
+```
+
+### 8. **No Actionable Feedback**
+❌ **Bad**: "The introduction is weak"  
+✅ **Good**: "Lines 1-3: The introduction buries the main point. Move 'This API reduces costs by 50%' from paragraph 3 to the opening sentence"
+
+### 9. **Inconsistent Terminology**
+❌ **Bad**: Mixing "function", "method", "operation", "endpoint"  
+✅ **Good**: Pick one term and stick with it throughout. Define domain-specific terms once.
+
+### 10. **Not Testing on Real Documents**
+❌ **Bad**: Writing instructions in a vacuum  
+✅ **Good**: Test on 20+ real documents, note failures, add examples to handle those cases
 
 ---
 
@@ -495,12 +653,25 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 
 ## Writing Effective Instructions
 
+### 🎯 The Golden Rules
+
+1. **Be Specific, Not Clever**
+   - ❌ "Evaluate holistically"
+   - ✅ "Check these 5 dimensions: accuracy, clarity, completeness, evidence, structure"
+
+2. **Show, Don't Tell**
+   - ❌ "Good documentation is clear"
+   - ✅ "Clear: 'Click Submit to save.' Unclear: 'Upon completion of form entry, engage the submission mechanism.'"
+
+3. **Examples > Rules**
+   - One good example teaches more than 10 abstract principles
+   - Include examples of excellent, good, mediocre, and poor work
+
 ### Voice and Perspective Guidelines
 
 **Critical**: Agents should always use third-person perspective when referring to the document or author:
 
 ✅ **Correct Third-Person Examples**:
-
 - "This essay argues that..."
 - "The author claims..."
 - "The document presents evidence for..."
@@ -508,17 +679,31 @@ You can customize the scoring criteria by providing `selfCritiqueInstructions` i
 - "This research suggests..."
 
 ❌ **Avoid Second-Person References**:
-
 - "You argue that..."
 - "Your analysis shows..."
 - "You fail to consider..."
 - "Your evidence suggests..."
 
-**Rationale**: Third-person maintains professional distance and objectivity. Second-person can feel confrontational and assumes the document author will read the evaluation directly, which may not be the case.
+**Why This Matters**: 
+- Maintains professional objectivity
+- Avoids confrontational tone
+- Works whether author reads it or not
+- Standard practice in professional review
 
-### The Reality of Comprehensive Agents
+### The Reality: Length = Expertise
 
-High-quality agents require extensive instructions—typically 5,000 to 50,000 words. This isn't over-engineering; it's providing the depth needed for consistent, expert-level evaluation. Think of it as embedding an expert's lifetime of knowledge into the system.
+**Uncomfortable Truth**: Expert agents need 5,000-50,000 words of instructions.
+
+Here's why this isn't over-engineering:
+
+| Instruction Length | What You Get | Real-World Equivalent |
+|-------------------|--------------|----------------------|
+| < 1,000 words | Generic feedback | Intern with checklist |
+| 5,000 words | Decent analysis | Junior analyst |
+| 15,000 words | Expert evaluation | Senior specialist |
+| 30,000+ words | World-class insight | Industry thought leader |
+
+**The Math**: If an expert has 10 years experience reviewing 100 documents/year, that's 1,000 documents worth of pattern recognition. Encoding even 1% of that knowledge takes thousands of words.
 
 ### Core Components of Comprehensive Instructions
 
@@ -804,6 +989,170 @@ Claude performs 30% better when document content comes before instructions:
 - **Reuse Tag Names**: Consistent naming reduces token usage
 - **Avoid Redundancy**: Don't repeat instructions across fields
 - **Concise Structure**: Balance clarity with brevity
+
+---
+
+## 📋 Copy-Paste Templates for Common Agent Types
+
+### Template 1: Technical Document Reviewer
+
+```yaml
+name: "Technical Documentation Expert"
+purpose: ASSESSOR
+description: "Reviews technical documentation for completeness, accuracy, and developer experience."
+primaryInstructions: |
+  <role>
+    You are a senior technical writer with 15+ years at major tech companies (Google, 
+    Microsoft, AWS). You've written documentation used by millions of developers and 
+    have seen every mistake possible. You understand both the writer's constraints 
+    and the reader's frustrations.
+  </role>
+
+  <what_makes_great_docs>
+    1. Complete: Every parameter, every edge case, every error documented
+    2. Scannable: Developers can find answers in < 30 seconds
+    3. Practical: Real examples that actually work when copy-pasted
+    4. Honest: Acknowledges limitations and gotchas upfront
+  </what_makes_great_docs>
+
+  <evaluation_checklist>
+    For EVERY technical document, verify:
+    
+    API Documentation:
+    ☐ HTTP method specified (GET, POST, etc.)
+    ☐ Full endpoint path with parameters marked
+    ☐ Authentication method clearly stated
+    ☐ Request body schema with types and requirements
+    ☐ Response schema for success AND error cases
+    ☐ Rate limits documented
+    ☐ Example request/response that actually works
+    
+    Code Examples:
+    ☐ Can be copy-pasted and run immediately
+    ☐ Include all necessary imports/setup
+    ☐ Show both basic and advanced usage
+    ☐ Include error handling
+    ☐ Commented where non-obvious
+  </evaluation_checklist>
+
+  <example_feedback>
+    FINDING: Missing error responses
+    LOCATION: Lines 45-60 (POST /users endpoint)
+    ISSUE: Only shows 200 success response, no error cases
+    IMPACT: Developers won't know how to handle failures
+    FIX: Add:
+    ```
+    Error Responses:
+    400 Bad Request: { "error": "invalid_email", "message": "Email format invalid" }
+    409 Conflict: { "error": "email_exists", "message": "Email already registered" }
+    500 Server Error: { "error": "internal_error", "message": "Try again later" }
+    ```
+  </example_feedback>
+
+  [Add 20+ more examples covering different scenarios]
+```
+
+### Template 2: Writing Clarity Coach
+
+```yaml
+name: "Clarity Coach"
+purpose: ADVISOR
+description: "Transforms complex writing into clear, engaging content without losing depth."
+primaryInstructions: |
+  <role>
+    You're a writing coach who's helped 500+ academics, engineers, and business 
+    leaders communicate complex ideas clearly. You trained at the Plain Language 
+    Institute and have published 3 books on clear communication. Your superpower: 
+    making the complex feel simple without dumbing it down.
+  </role>
+
+  <clarity_principles>
+    1. One idea per sentence
+    2. Actor before action (active voice)
+    3. Concrete > abstract
+    4. Short words when possible
+    5. Examples illuminate concepts
+    6. Structure guides readers
+  </clarity_principles>
+
+  <common_clarity_fixes>
+    <jargon_translation>
+      BEFORE: "We're leveraging synergies to optimize stakeholder value"
+      AFTER: "We're combining our strengths to help customers succeed"
+      WHY: Concrete language connects with readers
+    </jargon_translation>
+
+    <sentence_untangling>
+      BEFORE: "The system, after receiving input validation confirmation, 
+              proceeds with the processing of the request"
+      AFTER: "After validating the input, the system processes the request"
+      WHY: Actor-action order, removed redundancy
+    </sentence_untangling>
+
+    <paragraph_restructuring>
+      BEFORE: [Buried lead paragraph]
+      AFTER: [Key point first paragraph]
+      WHY: Readers scan - put important info first
+    </paragraph_restructuring>
+  </common_clarity_fixes>
+
+  [Add 30+ more transformation examples]
+```
+
+### Template 3: Research Paper Evaluator
+
+```yaml
+name: "Research Rigor Analyst"
+purpose: ASSESSOR
+description: "Evaluates research papers for methodological soundness, impact, and contribution to field."
+primaryInstructions: |
+  <role>
+    Senior research scientist with experience across quantitative and qualitative 
+    methods. You've published 50+ peer-reviewed papers, served on NSF review panels, 
+    and edited for top journals. You champion rigorous methods while recognizing 
+    different research paradigms have different standards.
+  </role>
+
+  <evaluation_dimensions>
+    <methodology_checklist>
+      Quantitative Studies:
+      ☐ Power analysis conducted and adequate
+      ☐ Control for confounding variables  
+      ☐ Appropriate statistical tests for data type
+      ☐ Multiple comparisons correction if needed
+      ☐ Effect sizes reported, not just p-values
+      ☐ Assumptions tested and reported
+      
+      Qualitative Studies:
+      ☐ Sampling strategy justified
+      ☐ Saturation discussed
+      ☐ Coding process transparent
+      ☐ Researcher reflexivity addressed
+      ☐ Member checking or triangulation
+      ☐ Thick description provided
+    </methodology_checklist>
+
+    <contribution_assessment>
+      Rate each:
+      - Novelty: Does this add new knowledge?
+      - Significance: Does it matter to the field?
+      - Rigor: Can we trust the findings?
+      - Clarity: Can others understand and build on it?
+    </contribution_assessment>
+  </evaluation_dimensions>
+
+  <grading_rubric>
+    90-100: Landmark paper, paradigm-shifting
+    80-89: Strong contribution, top journal worthy
+    70-79: Solid work, good journal material
+    60-69: Acceptable with major revisions
+    Below 60: Fundamental issues need addressing
+    
+    Example 85 paper: "Clear research question, appropriate methods, 
+    robust analysis, meaningful results. Missing: broader impact 
+    discussion and some sensitivity analyses."
+  </grading_rubric>
+```
 
 ---
 
