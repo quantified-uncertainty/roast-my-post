@@ -93,7 +93,7 @@ And some more content on the final line.`;
             summary: "Analysis of test document",
             analysis: "# Analysis\n\nThis document contains important information and a link.",
             selfCritique: "This analysis provides a basic overview.",
-            commentInsights: [
+            highlightInsights: [
               {
                 id: "insight-1",
                 title: "Main Content Observation",
@@ -127,20 +127,20 @@ And some more content on the final line.`;
       2
     );
 
-    expect(analysisResult.outputs.commentInsights).toHaveLength(2);
+    expect(analysisResult.outputs.highlightInsights).toHaveLength(2);
 
-    // Step 2: Extract comments
-    const commentResult = await extractCommentsFromAnalysis(
+    // Step 2: Extract highlights
+    const commentResult = await extractHighlightsFromAnalysis(
       mockDocument,
       mockAgent,
       analysisResult.outputs,
       2
     );
 
-    expect(commentResult.outputs.comments).toHaveLength(2);
+    expect(commentResult.outputs.highlights).toHaveLength(2);
 
-    // Verify the comments have correct highlights
-    const [comment1, comment2] = commentResult.outputs.comments;
+    // Verify the highlights have correct highlights
+    const [comment1, comment2] = commentResult.outputs.highlights;
 
     // First comment should highlight "This is the main content"
     expect(comment1.highlight.quotedText).toContain("This is the main content");
@@ -202,11 +202,11 @@ And some more content on the final line.`;
 
     // Verify the analysis includes proper content
     expect(result.analysis).toContain("Link Quality Analysis");
-    expect(result.comments).toBeDefined();
+    expect(result.highlights).toBeDefined();
     
-    // If there are link comments, they should have correct offsets
-    if (result.comments.length > 0) {
-      const linkComment = result.comments[0];
+    // If there are link highlights, they should have correct offsets
+    if (result.highlights.length > 0) {
+      const linkComment = result.highlights[0];
       // The offset should account for the prepend
       const { prependCharCount } = getDocumentFullContent(mockDocument);
       expect(linkComment.highlight.startOffset).toBeGreaterThanOrEqual(prependCharCount);

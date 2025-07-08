@@ -31,6 +31,7 @@ export interface ComprehensiveAnalysisOutputs {
 
 export interface HighlightInsight {
   id: string;
+  title: string; // Short descriptive title
   location: string; // Line reference like "Lines 45-52" or "Line 78"
   observation: string;
   significance: string;

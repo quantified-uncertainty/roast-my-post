@@ -74,7 +74,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("processes line comments correctly", () => {
     const highlighter = new LineBasedHighlighter(sampleContent);
 
-    const lineComments: LineBasedComment[] = [
+    const lineComments: LineBasedHighlight[] = [
       {
         description:
           "Opening Hook. Great opening that connects personal story to broader impact",

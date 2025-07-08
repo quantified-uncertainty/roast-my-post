@@ -47,7 +47,6 @@ describe('GET /api/agents', () => {
         id: 'agent-2',
         versions: [{
           name: 'Agent Two',
-          agentType: 'ADVISOR',
           description: 'Second agent',
           version: 2,
         }],

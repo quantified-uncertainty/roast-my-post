@@ -22,7 +22,6 @@ interface AgentVersion {
   version: string;
   name: string;
   description: string;
-  purpose: 'ASSESSOR' | 'ADVISOR' | 'ENRICHER' | 'EXPLAINER';
   primaryInstructions: string;      // Main evaluation instructions
   selfCritiqueInstructions?: string; // Optional quality scoring criteria
   providesGrades: boolean;          // Whether agent provides numerical grades
@@ -32,26 +31,28 @@ interface AgentVersion {
 }
 ```
 
-### Agent Types (Purpose)
+### Agent Capabilities
 
-#### ASSESSOR
-- **Function**: Provides grades and detailed assessments
+Agents can be configured through their instructions to provide various types of analysis:
+
+#### Assessment & Grading
+- **Function**: Provide grades and detailed evaluations
 - **Outputs**: Numerical grades (1-100), structured comments with highlights
 - **Example**: Academic paper reviewer, writing quality evaluator
 
-#### ADVISOR  
-- **Function**: Offers recommendations and improvement suggestions
-- **Outputs**: Actionable advice, strategic recommendations
+#### Recommendations & Improvements
+- **Function**: Offer suggestions and strategic advice
+- **Outputs**: Actionable recommendations, improvement strategies
 - **Example**: Content strategy advisor, optimization consultant
 
-#### ENRICHER
-- **Function**: Adds context, background information, and supplementary content
+#### Context & Enhancement
+- **Function**: Add background information and supplementary content
 - **Outputs**: Additional context, related information, expanded explanations
 - **Example**: Research context provider, background information enricher
 
-#### EXPLAINER
-- **Function**: Clarifies complex content and improves comprehension
-- **Outputs**: Simplified explanations, clarifications, accessibility improvements
+#### Clarification & Explanation
+- **Function**: Simplify complex content and improve comprehension
+- **Outputs**: Plain-language explanations, accessibility improvements
 - **Example**: Technical concept explainer, jargon translator
 
 ## Instruction Structure
@@ -69,7 +70,7 @@ The `primaryInstructions` field contains the main evaluation logic in sections:
 ## Summary Instructions
 [How to create evaluation summaries]
 
-## Grading Instructions (for ASSESSOR agents)
+## Grading Instructions (if providesGrades is true)
 [Numerical scoring criteria and rubrics]
 ```
 
@@ -94,10 +95,9 @@ Use the admin interface or API to create a new agent:
 {
   "name": "New Agent Name",
   "description": "What this agent does",
-  "purpose": "ASSESSOR", // or ADVISOR, ENRICHER, EXPLAINER
-  "primaryInstructions": "...", // Detailed instructions
-  "selfCritiqueInstructions": "...", // Optional
-  "providesGrades": true, // true for ASSESSOR agents
+  "primaryInstructions": "...", // Detailed instructions defining agent behavior
+  "selfCritiqueInstructions": "...", // Optional quality control criteria
+  "providesGrades": true, // true if agent should provide numerical scores
   "extendedCapabilityId": null // Optional
 }
 ```

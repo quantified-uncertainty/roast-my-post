@@ -22,7 +22,7 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
-describe("Comprehensive Analysis Highlights to Comments E2E", () => {
+describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {
     id: "test-agent-1",
     name: "Test Agent",
@@ -50,7 +50,7 @@ Line 5 has the final content.`;
     jest.clearAllMocks();
   });
 
-  test("all highlights from comprehensive analysis should become comments", async () => {
+  test("all highlights from comprehensive analysis should become highlights", async () => {
     const { anthropic } = require("../../../types/openai");
     
     // Get the number of lines added by prepend
@@ -76,14 +76,14 @@ Line 5 has the final content.`;
             summary: "Test summary",
             analysis: "# Analysis\\n\\n## Overview\\nTest analysis content\\n\\n## Key Highlights\\n\\nHighlights listed below",
             selfCritique: "This analysis could be improved by considering additional perspectives and providing more specific evidence.",
-            commentInsights: [
+            highlightInsights: [
               {
                 id: "insight-1",
                 title: "First Important Point",
                 location: adjustedRefs[0], // Dynamically calculated
                 observation: "This is the first observation",
                 significance: "This matters because...",
-                suggestedComment: "Comment 1 text"
+                suggestedHighlight: "Highlight 1 text"
               },
               {
                 id: "insight-2", 
@@ -91,7 +91,7 @@ Line 5 has the final content.`;
                 location: adjustedRefs[1], // Dynamically calculated
                 observation: "This spans multiple lines",
                 significance: "Important for understanding",
-                suggestedComment: "Comment 2 text"
+                suggestedHighlight: "Highlight 2 text"
               },
               {
                 id: "insight-3",
@@ -99,7 +99,7 @@ Line 5 has the final content.`;
                 location: adjustedRefs[2], // Dynamically calculated
                 observation: "Found on line 3",
                 significance: "Critical insight",
-                suggestedComment: "Comment 3 text"
+                suggestedHighlight: "Highlight 3 text"
               },
               {
                 id: "insight-4",
@@ -107,7 +107,7 @@ Line 5 has the final content.`;
                 location: adjustedRefs[3], // Dynamically calculated
                 observation: "Filler analysis",
                 significance: "Shows pattern",
-                suggestedComment: "Comment 4 text"
+                suggestedHighlight: "Highlight 4 text"
               },
               {
                 id: "insight-5",
@@ -115,7 +115,7 @@ Line 5 has the final content.`;
                 location: adjustedRefs[4], // Dynamically calculated
                 observation: "Concluding observation",
                 significance: "Wraps up the analysis",
-                suggestedComment: "Comment 5 text"
+                suggestedHighlight: "Highlight 5 text"
               }
             ]
           }
@@ -126,37 +126,37 @@ Line 5 has the final content.`;
 
     anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
 
-    // Step 1: Generate comprehensive analysis with 5 target comments
+    // Step 1: Generate comprehensive analysis with 5 target highlights
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,
       mockAgent,
       500,
-      5 // Request 5 comments
+      5 // Request 5 highlights
     );
 
     // Verify we got 5 insights
-    expect(analysisResult.outputs.commentInsights).toHaveLength(5);
-    console.log(`Generated ${analysisResult.outputs.commentInsights.length} insights`);
+    expect(analysisResult.outputs.highlightInsights).toHaveLength(5);
+    console.log(`Generated ${analysisResult.outputs.highlightInsights.length} insights`);
 
-    // Step 2: Extract comments from the analysis
-    const commentResult = await extractCommentsFromAnalysis(
+    // Step 2: Extract highlights from the analysis
+    const highlightResult = await extractHighlightsFromAnalysis(
       mockDocument,
       mockAgent,
       analysisResult.outputs,
-      5 // Target 5 comments
+      5 // Target 5 highlights
     );
 
-    // Verify all 5 insights became comments
-    expect(commentResult.outputs.comments).toHaveLength(5);
-    console.log(`Extracted ${commentResult.outputs.comments.length} comments`);
+    // Verify all 5 insights became highlights
+    expect(highlightResult.outputs.highlights).toHaveLength(5);
+    console.log(`Extracted ${highlightResult.outputs.highlights.length} highlights`);
 
-    // Verify comment details
-    commentResult.outputs.comments.forEach((comment, index) => {
-      console.log(`Comment ${index + 1}: "${comment.description.substring(0, 50)}..."`);
-      expect(comment.description).toBe(analysisResult.outputs.commentInsights[index].suggestedComment);
-      expect(comment.highlight).toBeDefined();
-      expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
-      expect(comment.highlight.endOffset).toBeGreaterThan(comment.highlight.startOffset);
+    // Verify highlight details
+    highlightResult.outputs.highlights.forEach((highlight, index) => {
+      console.log(`Highlight ${index + 1}: "${highlight.description.substring(0, 50)}..."`);
+      expect(highlight.description).toBe(analysisResult.outputs.highlightInsights[index].suggestedHighlight);
+      expect(highlight.highlight).toBeDefined();
+      expect(highlight.highlight.startOffset).toBeGreaterThanOrEqual(0);
+      expect(highlight.highlight.endOffset).toBeGreaterThan(highlight.highlight.startOffset);
     });
   });
 
@@ -182,14 +182,14 @@ Line 5 has the final content.`;
             summary: "Test summary",
             analysis: "Test analysis",
             selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
-            commentInsights: [
+            highlightInsights: [
               {
                 id: "insight-1",
                 title: "Off by One Error",
                 location: wrongRefs[0], // Dynamically calculated wrong line
                 observation: "Looking for content from line 1",
                 significance: "Testing fuzzy line matching",
-                suggestedComment: "Should find 'line 1' text"
+                suggestedHighlight: "Should find 'line 1' text"
               },
               {
                 id: "insight-2",
@@ -197,7 +197,7 @@ Line 5 has the final content.`;
                 location: wrongRefs[1], // Dynamically calculated
                 observation: "Testing case sensitivity",
                 significance: "Should match despite case",
-                suggestedComment: "Should find 'IMPORTANT' as 'important'"
+                suggestedHighlight: "Should find 'IMPORTANT' as 'important'"
               }
             ]
           }
@@ -215,18 +215,18 @@ Line 5 has the final content.`;
       2
     );
 
-    const commentResult = await extractCommentsFromAnalysis(
+    const highlightResult = await extractHighlightsFromAnalysis(
       mockDocument,
       mockAgent,
       analysisResult.outputs,
       2
     );
 
-    // Should still get 2 comments despite line mismatches
-    expect(commentResult.outputs.comments).toHaveLength(2);
+    // Should still get 2 highlights despite line mismatches
+    expect(highlightResult.outputs.highlights).toHaveLength(2);
   });
 
-  test("skips invalid comments gracefully", async () => {
+  test("skips invalid highlights gracefully", async () => {
     const { anthropic } = require("../../../types/openai");
     
     // Mock response with some invalid highlights
@@ -239,14 +239,14 @@ Line 5 has the final content.`;
             summary: "Test summary",
             analysis: "Test analysis",
             selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
-            commentInsights: [
+            highlightInsights: [
               {
                 id: "insight-1",
-                title: "Valid Comment",
+                title: "Valid Highlight",
                 location: "Line 1",
                 observation: "This should work",
                 significance: "Valid",
-                suggestedComment: "Good comment"
+                suggestedHighlight: "Good highlight"
               },
               {
                 id: "insight-2",
@@ -254,7 +254,7 @@ Line 5 has the final content.`;
                 location: "Line 999", // Way out of bounds
                 observation: "This line doesn't exist",
                 significance: "Will fail",
-                suggestedComment: "Bad comment"
+                suggestedHighlight: "Bad highlight"
               },
               {
                 id: "insight-3",
@@ -262,7 +262,7 @@ Line 5 has the final content.`;
                 location: "Line 3",
                 observation: "This should also work",
                 significance: "Valid",
-                suggestedComment: "Another good comment"
+                suggestedHighlight: "Another good highlight"
               }
             ]
           }
@@ -280,18 +280,18 @@ Line 5 has the final content.`;
       3
     );
 
-    expect(analysisResult.outputs.commentInsights).toHaveLength(3);
+    expect(analysisResult.outputs.highlightInsights).toHaveLength(3);
 
-    const commentResult = await extractCommentsFromAnalysis(
+    const highlightResult = await extractHighlightsFromAnalysis(
       mockDocument,
       mockAgent,
       analysisResult.outputs,
       3
     );
 
-    // Should get 2 valid comments, skipping the invalid one
-    expect(commentResult.outputs.comments).toHaveLength(2);
-    expect(commentResult.outputs.comments[0].description).toBe("Good comment");
-    expect(commentResult.outputs.comments[1].description).toBe("Another good comment");
+    // Should get 2 valid highlights, skipping the invalid one
+    expect(highlightResult.outputs.highlights).toHaveLength(2);
+    expect(highlightResult.outputs.highlights[0].description).toBe("Good highlight");
+    expect(highlightResult.outputs.highlights[1].description).toBe("Another good highlight");
   });
 });
