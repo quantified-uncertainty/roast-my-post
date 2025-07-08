@@ -31,10 +31,7 @@ export interface ComprehensiveAnalysisOutputs {
 
 export interface HighlightInsight {
   id: string;
-  title: string; // Short descriptive title
   location: string; // Line reference like "Lines 45-52" or "Line 78"
-  observation: string;
-  significance: string;
   suggestedHighlight: string;
 }
 
@@ -78,13 +75,10 @@ export async function generateComprehensiveAnalysis(
         type: "object",
         properties: {
           id: { type: "string", description: "Unique identifier like 'insight-1'" },
-          title: { type: "string", description: "Short descriptive title" },
           location: { type: "string", description: "Line numbers like 'Lines 45-52' or 'Line 78'" },
-          observation: { type: "string", description: "Detailed explanation of the insight" },
-          significance: { type: "string", description: "Why this matters" },
           suggestedHighlight: { type: "string", description: "Draft highlight text" }
         },
-        required: ["id", "title", "location", "observation", "significance", "suggestedHighlight"]
+        required: ["id", "location", "suggestedHighlight"]
       }
     }
   };
@@ -183,8 +177,6 @@ export async function generateComprehensiveAnalysis(
     // Fix formatting in highlight insights
     validationResult.highlightInsights = validationResult.highlightInsights.map(insight => ({
       ...insight,
-      observation: fixFormatting(insight.observation),
-      significance: fixFormatting(insight.significance),
       suggestedHighlight: fixFormatting(insight.suggestedHighlight),
     }));
     

@@ -92,23 +92,16 @@ And some more content on the final line.`;
           input: {
             summary: "Analysis of test document",
             analysis: "# Analysis\n\nThis document contains important information and a link.",
-            selfCritique: "This analysis provides a basic overview.",
             highlightInsights: [
               {
                 id: "insight-1",
-                title: "Main Content Observation",
                 location: adjustedRefs[0], // Dynamically calculated
-                observation: "The document starts with main content",
-                significance: "Sets the tone",
-                suggestedComment: "Good opening statement"
+                suggestedHighlight: "Good opening statement"
               },
               {
                 id: "insight-2",
-                title: "Link Reference",
                 location: adjustedRefs[1], // Dynamically calculated
-                observation: "Contains an example link",
-                significance: "External reference",
-                suggestedComment: "Link to example.com"
+                suggestedHighlight: "Link to example.com"
               },
             ],
           },

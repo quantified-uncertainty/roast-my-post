@@ -81,20 +81,15 @@ Overall, this is a well-structured test document.
 ## Grade
 85/100 - Good test document with clear purpose`,
               grade: 85,
-              selfCritique: "My analysis focused primarily on structure but could have delved deeper into content quality and potential improvements. The assessment may be somewhat superficial given the limited content available.",
               highlightInsights: [
                 {
                   id: "insight-1",
                   location: "Lines 1",
-                  observation: "The opening line clearly states the document's purpose",
-                  significance: "Sets expectations for the reader",
                   suggestedHighlight: "Opening Line Analysis. The opening line effectively establishes context",
                 },
                 {
                   id: "insight-2",
                   location: "Lines 2-3",
-                  observation: "The document maintains consistent structure",
-                  significance: "Easy to follow and understand",
                   suggestedHighlight: "Structure Review. The structural consistency aids readability",
                 },
               ],
@@ -131,18 +126,12 @@ Overall, this is a well-structured test document.
         highlightInsights: [
           {
             id: "insight-1",
-            title: "Test Highlight 1",
             location: "Lines 1",
-            observation: "First observation",
-            significance: "Why it matters",
             suggestedHighlight: "Test Highlight 1. This is the first highlight text",
           },
           {
             id: "insight-2",
-            title: "Test Highlight 2",
             location: "Lines 2-3",
-            observation: "Second observation",
-            significance: "Also important",
             suggestedHighlight: "Test Highlight 2. This is the second highlight text",
           },
         ],

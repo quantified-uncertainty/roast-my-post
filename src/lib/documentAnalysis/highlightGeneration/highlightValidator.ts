@@ -93,9 +93,6 @@ export async function validateAndConvertHighlights(
 
     return {
       description: highlight.description,
-      title: highlight.title,
-      observation: highlight.observation,
-      significance: highlight.significance,
       highlight: highlightData as LineSnippetHighlight,
       importance: highlight.importance,
       grade: highlight.grade,

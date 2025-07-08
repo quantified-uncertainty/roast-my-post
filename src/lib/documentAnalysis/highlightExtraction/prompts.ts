@@ -49,8 +49,6 @@ Based on the comprehensive analysis above, please extract and format ${targetHig
 
 Look for the "Key Highlights" section in the analysis, which contains pre-identified insights with:
 - Location (line numbers)
-- Observation
-- Significance  
 - Suggested highlight text
 
 Convert these insights into properly formatted highlights with:

@@ -75,46 +75,30 @@ Line 5 has the final content.`;
           input: {
             summary: "Test summary",
             analysis: "# Analysis\\n\\n## Overview\\nTest analysis content\\n\\n## Key Highlights\\n\\nHighlights listed below",
-            selfCritique: "This analysis could be improved by considering additional perspectives and providing more specific evidence.",
             highlightInsights: [
               {
                 id: "insight-1",
-                title: "First Important Point",
                 location: adjustedRefs[0], // Dynamically calculated
-                observation: "This is the first observation",
-                significance: "This matters because...",
                 suggestedHighlight: "Highlight 1 text"
               },
               {
                 id: "insight-2", 
-                title: "Second Key Finding",
                 location: adjustedRefs[1], // Dynamically calculated
-                observation: "This spans multiple lines",
-                significance: "Important for understanding",
                 suggestedHighlight: "Highlight 2 text"
               },
               {
                 id: "insight-3",
-                title: "Third Observation",
                 location: adjustedRefs[2], // Dynamically calculated
-                observation: "Found on line 3",
-                significance: "Critical insight",
                 suggestedHighlight: "Highlight 3 text"
               },
               {
                 id: "insight-4",
-                title: "Fourth Note",
                 location: adjustedRefs[3], // Dynamically calculated
-                observation: "Filler analysis",
-                significance: "Shows pattern",
                 suggestedHighlight: "Highlight 4 text"
               },
               {
                 id: "insight-5",
-                title: "Final Point",
                 location: adjustedRefs[4], // Dynamically calculated
-                observation: "Concluding observation",
-                significance: "Wraps up the analysis",
                 suggestedHighlight: "Highlight 5 text"
               }
             ]
@@ -181,22 +165,15 @@ Line 5 has the final content.`;
           input: {
             summary: "Test summary",
             analysis: "Test analysis",
-            selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
             highlightInsights: [
               {
                 id: "insight-1",
-                title: "Off by One Error",
                 location: wrongRefs[0], // Dynamically calculated wrong line
-                observation: "Looking for content from line 1",
-                significance: "Testing fuzzy line matching",
                 suggestedHighlight: "Should find 'line 1' text"
               },
               {
                 id: "insight-2",
-                title: "Case Mismatch",
                 location: wrongRefs[1], // Dynamically calculated
-                observation: "Testing case sensitivity",
-                significance: "Should match despite case",
                 suggestedHighlight: "Should find 'IMPORTANT' as 'important'"
               }
             ]
@@ -238,30 +215,20 @@ Line 5 has the final content.`;
           input: {
             summary: "Test summary",
             analysis: "Test analysis",
-            selfCritique: "This analysis has limitations and could benefit from more thorough investigation.",
             highlightInsights: [
               {
                 id: "insight-1",
-                title: "Valid Highlight",
                 location: "Line 1",
-                observation: "This should work",
-                significance: "Valid",
                 suggestedHighlight: "Good highlight"
               },
               {
                 id: "insight-2",
-                title: "Invalid Line Number",
                 location: "Line 999", // Way out of bounds
-                observation: "This line doesn't exist",
-                significance: "Will fail",
                 suggestedHighlight: "Bad highlight"
               },
               {
                 id: "insight-3",
-                title: "Another Valid",
                 location: "Line 3",
-                observation: "This should also work",
-                significance: "Valid",
                 suggestedHighlight: "Another good highlight"
               }
             ]

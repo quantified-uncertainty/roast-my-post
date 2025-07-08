@@ -59,14 +59,10 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test summary",
               analysis: "Test analysis",
-              selfCritique: "Test critique",
               highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Boundary Spanning Comment",
                   location: `Lines ${prependLineCount - 1}-${prependLineCount + 1}`, // Spans boundary
-                  observation: "This spans the prepend boundary",
-                  significance: "Tests edge case",
                   suggestedHighlight: "Comment spanning boundary"
                 }
               ]
@@ -122,14 +118,10 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test summary",
               analysis: "Test analysis",
-              selfCritique: "Test critique",
               highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Exact Boundary Comment",
                   location: `Line ${prependLineCount + 1}`, // First line of content
-                  observation: "At the boundary",
-                  significance: "Boundary test",
                   suggestedHighlight: "Boundary comment"
                 }
               ]
@@ -182,7 +174,6 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: []
             }
           }
@@ -219,7 +210,6 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: []
             }
           }
@@ -253,14 +243,10 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Single Line",
                   location: `Line ${prependLineCount + 1}`,
-                  observation: "Only line",
-                  significance: "Test",
                   suggestedHighlight: "Comment"
                 }
               ]
@@ -304,14 +290,10 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Out of bounds",
                   location: "Line 9999", // Way out of bounds
-                  observation: "Invalid line",
-                  significance: "Test",
                   suggestedHighlight: "Should be skipped"
                 }
               ]
@@ -360,7 +342,6 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: []
             }
           }
@@ -396,14 +377,10 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Unicode test",
                   location: `Line ${prependLineCount + 1}`,
-                  observation: "Content line",
-                  significance: "Test",
                   suggestedHighlight: "Unicode handling"
                 }
               ]
@@ -453,7 +430,6 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
               highlightInsights: []
             }
           }
