@@ -5,7 +5,8 @@ import {
   UserGroupIcon, 
   RocketLaunchIcon,
   DocumentTextIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  BeakerIcon
 } from "@heroicons/react/24/outline";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
@@ -15,6 +16,12 @@ const documentationSections = [
     description: "Learn the basics of using Roast My Post",
     href: "/help/getting-started",
     icon: RocketLaunchIcon,
+  },
+  {
+    title: "Ephemeral Experiments",
+    description: "Create temporary experiments for testing agent configurations",
+    href: "/help/ephemeral-experiments",
+    icon: BeakerIcon,
   },
   {
     title: "Agent Documentation for Humans",

@@ -1,4 +1,10 @@
-# Ephemeral Experiments Help Guide
+"use client";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
+
+const ephemeralExperimentsGuide = `# Ephemeral Experiments Guide
 
 ## What are Ephemeral Experiments?
 
@@ -20,35 +26,30 @@ Ephemeral experiments are temporary evaluation sessions that automatically clean
 
 ## Getting Started
 
-### Creating Your First Experiment
+### Using the API
 
-1. **From the Web Interface**:
-   - Navigate to "Experiments" → "New Experiment"
-   - Toggle "Ephemeral" mode
-   - Configure your agent and documents
-   - Click "Run Experiment"
+Create your first experiment with a simple API call:
 
-2. **Using the API**:
-   ```bash
-   curl -X POST https://roastmypost.com/api/batches \
-     -H "Authorization: Bearer YOUR_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "isEphemeral": true,
-       "description": "My first experiment",
-       "ephemeralAgent": {
-         "name": "Test Reviewer",
-         "primaryInstructions": "Review for clarity and completeness."
-       },
-       "documentIds": ["doc_123"]
-     }'
-   ```
+\`\`\`bash
+curl -X POST https://roastmypost.com/api/batches \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "isEphemeral": true,
+    "description": "My first experiment",
+    "ephemeralAgent": {
+      "name": "Test Reviewer",
+      "primaryInstructions": "Review for clarity and completeness."
+    },
+    "documentIds": ["doc_123"]
+  }'
+\`\`\`
 
 ### Understanding Experiment Types
 
 #### 1. **Test Existing Agent**
 Use your production agent on test content:
-```json
+\`\`\`json
 {
   "agentId": "agent_production",
   "isEphemeral": true,
@@ -59,11 +60,11 @@ Use your production agent on test content:
     }]
   }
 }
-```
+\`\`\`
 
 #### 2. **Test New Agent Configuration**
 Create a temporary agent with custom instructions:
-```json
+\`\`\`json
 {
   "isEphemeral": true,
   "ephemeralAgent": {
@@ -73,11 +74,11 @@ Create a temporary agent with custom instructions:
   },
   "documentIds": ["doc_123", "doc_456"]
 }
-```
+\`\`\`
 
 #### 3. **Full Sandbox Mode**
 Everything ephemeral - agent and documents:
-```json
+\`\`\`json
 {
   "isEphemeral": true,
   "ephemeralAgent": {
@@ -91,119 +92,108 @@ Everything ephemeral - agent and documents:
     }]
   }
 }
-```
+\`\`\`
 
 ## Viewing Results
 
-### During the Experiment
-Access your results at: `https://roastmypost.com/experiments/[trackingId]`
+Access your experiment results using the tracking ID:
 
-The results page shows:
+\`\`\`bash
+curl https://roastmypost.com/api/experiments/exp_7a8b9c \\
+  -H "Authorization: Bearer YOUR_API_KEY"
+\`\`\`
+
+The results include:
 - **Overview**: Description, expiration time, status
 - **Agent Details**: Configuration used for the experiment
 - **Job Statistics**: Progress and success rates
 - **Aggregate Metrics**: Average grades, total cost, completion time
 - **Individual Results**: Detailed evaluation for each document
 
-### Tracking IDs
-Each experiment gets a unique tracking ID (e.g., `exp_7a8b9c`). Use this to:
-- Share results with teammates (they'll need access)
-- Reference in API calls
-- Track multiple experiments
-
 ## Best Practices
 
 ### 1. **Name Your Experiments**
-Use descriptive names and descriptions:
-```json
+Use descriptive tracking IDs and descriptions:
+\`\`\`json
 {
   "trackingId": "exp_strict_criteria_v2",
   "description": "Testing stricter grading criteria for technical docs"
 }
-```
+\`\`\`
 
 ### 2. **Set Appropriate Expiration**
 - Quick tests: 1-6 hours
-- Day-long experiments: 24 hours
-- Week-long studies: up to 7 days
+- Day-long experiments: 24 hours (default)
+- Week-long studies: up to 168 hours (7 days)
 
-### 3. **Use Representative Content**
-Test with content similar to your actual use case for meaningful results.
-
-### 4. **Compare Side-by-Side**
-Run multiple experiments with the same documents but different agents:
-```python
-agents = ["lenient", "balanced", "strict"]
-for agent_type in agents:
-    create_experiment(
-        agent_config=configs[agent_type],
-        documents=same_test_docs,
-        tracking_id=f"exp_compare_{agent_type}"
-    )
-```
+### 3. **Compare Side-by-Side**
+Run multiple experiments with the same documents but different agents to compare approaches.
 
 ## Common Use Cases
 
-### 1. **A/B Testing Agent Instructions**
+### A/B Testing Agent Instructions
 
-**Scenario**: You want to see if more detailed instructions improve evaluation quality.
+Test if more detailed instructions improve evaluation quality:
 
-**Approach**:
-1. Create Experiment A with current instructions
-2. Create Experiment B with detailed instructions
-3. Use the same test documents for both
-4. Compare average grades and feedback quality
+\`\`\`python
+# Experiment A: Current instructions
+exp_a = create_experiment(
+    agent_config={"primaryInstructions": "Brief review..."},
+    documents=test_docs,
+    tracking_id="exp_brief_v1"
+)
 
-### 2. **Testing on Edge Cases**
+# Experiment B: Detailed instructions
+exp_b = create_experiment(
+    agent_config={"primaryInstructions": "Detailed review with examples..."},
+    documents=test_docs,
+    tracking_id="exp_detailed_v1"
+)
 
-**Scenario**: Ensure your agent handles unusual content appropriately.
+# Compare results
+print(f"Brief: {exp_a['aggregateMetrics']['averageGrade']}")
+print(f"Detailed: {exp_b['aggregateMetrics']['averageGrade']}")
+\`\`\`
 
-**Approach**:
-```json
-{
-  "agentId": "agent_production",
-  "isEphemeral": true,
-  "description": "Edge case testing",
-  "ephemeralDocuments": {
-    "inline": [
-      { "title": "Empty Document", "content": "" },
-      { "title": "Very Long Document", "content": "..." },
-      { "title": "Code Heavy", "content": "..." },
-      { "title": "Non-English", "content": "..." }
-    ]
-  }
-}
-```
+### Testing Edge Cases
 
-### 3. **Training New Team Members**
+Ensure your agent handles unusual content:
 
-**Scenario**: Help new team members understand how agents work.
+\`\`\`javascript
+const edgeCases = [
+  { title: "Empty", content: "" },
+  { title: "Very Long", content: "...".repeat(10000) },
+  { title: "Code Only", content: "function test() { return true; }" },
+  { title: "Special Chars", content: "Test 🔥 émojis ñ unicode" }
+];
 
-**Approach**:
-- Create experiments with different agent personalities
-- Show how instructions affect evaluation outcomes
-- Safe environment to experiment without affecting production
+const response = await fetch('/api/batches', {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    agentId: 'agent_production',
+    isEphemeral: true,
+    ephemeralDocuments: { inline: edgeCases }
+  })
+});
+\`\`\`
 
 ## Limitations
 
 1. **No URL Import**: Currently, you cannot import documents from URLs for ephemeral experiments
 2. **Access Control**: Experiments are private to the creator
-3. **Rate Limits**: Maximum 10 experiments per hour
+3. **Rate Limits**: Maximum 10 experiments per hour per user
 4. **Size Limits**: Maximum 100 documents per experiment
 5. **Expiration**: Maximum 7 days (168 hours)
 
 ## Cleanup Process
 
-### Automatic Cleanup
 When an experiment expires:
 1. The batch record is deleted
 2. Ephemeral agents are removed (if created for the experiment)
 3. Ephemeral documents are deleted (if created for the experiment)
 4. All evaluations and jobs are removed
 5. Regular (non-ephemeral) resources are preserved
-
-### Manual Cleanup
-Currently, experiments cannot be manually deleted before expiration. Plan your expiration times accordingly.
 
 ## Troubleshooting
 
@@ -218,37 +208,45 @@ Currently, experiments cannot be manually deleted before expiration. Plan your e
 
 ### Results not updating
 - Jobs may still be processing
-- Refresh the page or check job status
+- Check job status in the response
 - Large experiments may take several minutes
 
 ## FAQ
 
-**Q: Can I extend an experiment's expiration?**
+**Q: Can I extend an experiment's expiration?**  
 A: No, expiration times are fixed at creation. Create a new experiment if needed.
 
-**Q: Are experiment results included in my usage statistics?**
+**Q: Are experiment results included in my usage statistics?**  
 A: Yes, API usage and costs from experiments count toward your quotas.
 
-**Q: Can I convert an ephemeral experiment to permanent?**
+**Q: Can I convert an ephemeral experiment to permanent?**  
 A: No, but you can recreate the agent configuration as a permanent agent.
 
-**Q: What happens to running jobs when an experiment expires?**
+**Q: What happens to running jobs when an experiment expires?**  
 A: The cleanup process waits for running jobs to complete before deletion.
-
-**Q: Can I use experiments in production?**
-A: Experiments are designed for testing. Use regular agents and evaluations for production workloads.
-
-## API Integration
-
-For programmatic access, see the [API Documentation](/help/api#ephemeral-experiments) for:
-- Creating experiments via API
-- Retrieving results programmatically  
-- Batch experiment creation
-- Status monitoring
 
 ## Getting Help
 
-- **Documentation**: [Full API Docs](/help/api)
+- **API Documentation**: [Full API Reference](/help/api#ephemeral-experiments)
 - **Support**: [Discord Community](https://discord.gg/nsTnQTgtG6)
 - **Issues**: [GitHub](https://github.com/quantified-uncertainty/roast-my-post/issues)
-- **Email**: support@quantifieduncertainty.org
+- **Email**: support@quantifieduncertainty.org`;
+
+export default function EphemeralExperimentsPage() {
+  return (
+    <div className="rounded-lg bg-white p-8 shadow-sm">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Ephemeral Experiments
+        </h1>
+        <CopyMarkdownButton content={ephemeralExperimentsGuide} />
+      </div>
+      
+      <div className="prose prose-gray max-w-none">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {ephemeralExperimentsGuide}
+        </ReactMarkdown>
+      </div>
+    </div>
+  );
+}
