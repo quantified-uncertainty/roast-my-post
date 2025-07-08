@@ -23,7 +23,9 @@ interface ExperimentBatch {
   agent: {
     id: string;
     name: string;
+    isEphemeral: boolean;
   };
+  ephemeralDocumentCount: number;
   jobStats: {
     total: number;
     completed: number;
@@ -70,13 +72,31 @@ export default function ExperimentsPage() {
     }
   };
 
-  const handleDelete = async (trackingId: string) => {
-    if (!confirm('Are you sure you want to delete this experiment?')) {
+  const handleDelete = async (experiment: ExperimentBatch) => {
+    if (!experiment.trackingId) return;
+
+    // Build deletion warning message
+    const resourceWarnings: string[] = [];
+    
+    if (experiment.agent.isEphemeral) {
+      resourceWarnings.push('1 agent');
+    }
+    
+    if (experiment.ephemeralDocumentCount > 0) {
+      resourceWarnings.push(`${experiment.ephemeralDocumentCount} document${experiment.ephemeralDocumentCount !== 1 ? 's' : ''}`);
+    }
+    
+    let confirmMessage = 'Are you sure you want to delete this experiment?';
+    if (resourceWarnings.length > 0) {
+      confirmMessage += `\n\nNote: This will also delete ${resourceWarnings.join(' and ')}.`;
+    }
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/experiments/${trackingId}`, {
+      const response = await fetch(`/api/experiments/${experiment.trackingId}`, {
         method: 'DELETE',
       });
 
@@ -145,10 +165,13 @@ export default function ExperimentsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <BeakerIcon className="h-8 w-8 mr-3 text-purple-600" />
-              Experiments
+              Your Experiments
             </h1>
             <p className="mt-2 text-gray-600">
               Temporary agent configurations for testing and development
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              These experiments are private and only visible to you.
             </p>
           </div>
           
@@ -196,7 +219,7 @@ export default function ExperimentsPage() {
               return (
                 <div
                   key={experiment.id}
-                  className={`bg-white rounded-lg shadow-sm p-6 ${
+                  className={`bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow ${
                     isExpired ? 'opacity-60' : ''
                   }`}
                 >
@@ -204,11 +227,11 @@ export default function ExperimentsPage() {
                     <div className="flex-1">
                       {/* Experiment Header */}
                       <div className="flex items-center mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold">
                           {experiment.trackingId ? (
                             <Link
                               href={`/experiments/${experiment.trackingId}`}
-                              className="hover:text-purple-600"
+                              className="text-purple-600 hover:text-purple-700 underline decoration-purple-200 hover:decoration-purple-400 transition-colors"
                             >
                               {experiment.trackingId}
                             </Link>
@@ -302,7 +325,7 @@ export default function ExperimentsPage() {
                     {/* Actions */}
                     <div className="ml-4">
                       <button
-                        onClick={() => experiment.trackingId && handleDelete(experiment.trackingId)}
+                        onClick={() => handleDelete(experiment)}
                         disabled={!experiment.trackingId || experiment.jobStats.running > 0}
                         className="text-red-600 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed"
                         title={experiment.jobStats.running > 0 ? 'Cannot delete while jobs are running' : 'Delete experiment'}

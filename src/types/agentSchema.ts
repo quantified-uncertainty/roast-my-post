@@ -44,6 +44,10 @@ export const AgentSchema = BaseAgentSchema.extend({
   owner: AgentOwnerSchema.optional(),
   isOwner: z.boolean().optional(),
   readme: z.string().optional(),
+  ephemeralBatch: z.object({
+    trackingId: z.string().nullable(),
+    isEphemeral: z.boolean(),
+  }).nullable().optional(),
 });
 
 export type Agent = z.infer<typeof AgentSchema>;

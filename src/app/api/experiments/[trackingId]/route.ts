@@ -220,9 +220,17 @@ export async function DELETE(
       );
     }
 
-    // Delete the batch (cascade will handle related records)
-    await prisma.agentEvalBatch.delete({
-      where: { id: batch.id },
+    // Delete in a transaction to handle foreign key constraints properly
+    await prisma.$transaction(async (tx) => {
+      // First delete all jobs associated with this batch
+      await tx.job.deleteMany({
+        where: { agentEvalBatchId: batch.id },
+      });
+
+      // Then delete the batch (cascade will handle ephemeral agent and documents)
+      await tx.agentEvalBatch.delete({
+        where: { id: batch.id },
+      });
     });
 
     return NextResponse.json({ success: true });

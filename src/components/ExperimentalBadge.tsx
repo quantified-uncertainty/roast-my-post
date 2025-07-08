@@ -32,8 +32,8 @@ export function ExperimentalBadge({ trackingId, className = '', showIcon = true 
     if (showTooltip && badgeRef.current) {
       const rect = badgeRef.current.getBoundingClientRect();
       setTooltipPosition({
-        top: rect.top - 10, // 10px above the badge
-        left: rect.left + rect.width / 2, // Center horizontally
+        top: rect.top + rect.height / 2, // Center vertically
+        left: rect.right + 10, // 10px to the right of the badge
       });
     }
   }, [showTooltip]);
@@ -57,11 +57,11 @@ export function ExperimentalBadge({ trackingId, className = '', showIcon = true 
       style={{
         top: `${tooltipPosition.top}px`,
         left: `${tooltipPosition.left}px`,
-        transform: 'translate(-50%, -100%)',
+        transform: 'translateY(-50%)',
       }}
     >
       <div 
-        className="bg-gray-900 text-white text-sm rounded-lg shadow-lg p-3 w-64 pointer-events-auto"
+        className="bg-gray-900 text-white text-sm rounded-lg shadow-lg p-3 w-64 pointer-events-auto relative"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -84,8 +84,8 @@ export function ExperimentalBadge({ trackingId, className = '', showIcon = true 
             )}
           </div>
         </div>
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
-          <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
+          <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-900"></div>
         </div>
       </div>
     </div>

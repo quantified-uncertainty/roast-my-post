@@ -346,6 +346,7 @@ export async function GET(request: NextRequest) {
           agent: {
             select: {
               id: true,
+              ephemeralBatchId: true,
               versions: {
                 orderBy: { version: "desc" },
                 take: 1,
@@ -358,6 +359,11 @@ export async function GET(request: NextRequest) {
           jobs: {
             select: {
               status: true,
+            },
+          },
+          ephemeralDocuments: {
+            select: {
+              id: true,
             },
           },
         },
@@ -377,7 +383,9 @@ export async function GET(request: NextRequest) {
       agent: {
         id: batch.agent.id,
         name: batch.agent.versions[0]?.name || "Unknown",
+        isEphemeral: batch.agent.ephemeralBatchId === batch.id,
       },
+      ephemeralDocumentCount: batch.ephemeralDocuments.length,
       jobStats: {
         total: batch.jobs.length,
         completed: batch.jobs.filter(j => j.status === "COMPLETED").length,

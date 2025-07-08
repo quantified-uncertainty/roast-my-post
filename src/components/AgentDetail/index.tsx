@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 
 import { Button } from "@/components/Button";
+import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 
 import { useAgentDetail } from "./hooks";
 import {
@@ -151,9 +152,17 @@ export default function AgentDetail({
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
-            {agent.name}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold transition-colors group-hover:text-blue-600">
+              {agent.name}
+            </h2>
+            {agent.ephemeralBatch && (
+              <ExperimentalBadge 
+                trackingId={agent.ephemeralBatch.trackingId}
+                className="ml-2"
+              />
+            )}
+          </div>
           <p className="text-sm text-gray-500">
             v{agent.version}
             {agent.owner && (
