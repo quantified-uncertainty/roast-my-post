@@ -16,7 +16,7 @@ Structure your response as a markdown document (${targetWordCount}+ words) with:
 
 1. A brief summary section
 2. Your main content (structured according to your role)
-3. A "Key Highlights" section with approximately ${targetHighlights} specific highlights
+3. A "Key Highlights" section with exactly ${targetHighlights} specific highlights (no more, no less)
 
 For the Key Highlights section, use this format for each highlight:
 
@@ -31,6 +31,7 @@ Important formatting notes:
 - Make your contributions specific and actionable
 - Begin each contribution with a strong opening sentence that summarizes the key point
 - Use markdown formatting (headers, lists, emphasis, code blocks) throughout
+- You MUST generate exactly ${targetHighlights} highlights - find the most important points if needed
 
 ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 

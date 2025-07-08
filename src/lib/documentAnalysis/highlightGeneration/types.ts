@@ -13,6 +13,9 @@ export interface RawLLMHighlight {
 // Validated highlight with line-based highlight
 export interface LineBasedHighlight {
   description: string;
+  title?: string;
+  observation?: string;
+  significance?: string;
   importance: number;
   grade?: number;
   highlight: LineSnippetHighlight;

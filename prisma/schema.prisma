@@ -139,6 +139,9 @@ model EvaluationVersion {
 model EvaluationComment {
   id                  String              @id @default(uuid())
   description         String
+  title               String?             // Short descriptive title for the highlight
+  observation         String?             // Detailed observation about what was found
+  significance        String?             // Why this matters or is important
   importance          Int?
   grade               Int?
   evaluationVersionId String

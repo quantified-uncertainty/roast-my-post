@@ -97,6 +97,9 @@ export async function extractHighlightsFromAnalysis(
       
       const lineBasedHighlight: LineBasedHighlight = {
         description: insight.suggestedHighlight,
+        title: insight.title,
+        observation: insight.observation,
+        significance: insight.significance,
         importance: 5, // Default importance
         highlight: {
           startLineIndex: startLine - 1, // Convert to 0-based

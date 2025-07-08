@@ -465,6 +465,9 @@ export class JobModel {
           await prisma.evaluationComment.create({
             data: {
               description: comment.description,
+              title: comment.title || null,
+              observation: comment.observation || null,
+              significance: comment.significance || null,
               importance: comment.importance || null,
               grade: comment.grade || null,
               evaluationVersionId: evaluationVersion.id,

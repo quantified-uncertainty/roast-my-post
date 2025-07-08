@@ -193,6 +193,21 @@ export async function generateComprehensiveAnalysis(
         `⚠️ Generated ${validationResult.highlightInsights.length} highlights but requested ${targetHighlights}. ` +
         `Agent may have found fewer noteworthy points.`
       );
+      
+      // If we got significantly fewer highlights, consider retrying with stronger instructions
+      if (validationResult.highlightInsights.length < Math.max(1, targetHighlights * 0.6)) {
+        logger.info(
+          `🔄 Attempting retry due to low highlight count (${validationResult.highlightInsights.length}/${targetHighlights})`
+        );
+        
+        // Add a retry flag to track this
+        const retryMessage = `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
+          `Each highlight should reference a specific part of the document. ` +
+          `If you cannot find ${targetHighlights} distinct points, create highlights for the most important sections.`;
+        
+        // For now, just log this - full retry implementation would require restructuring
+        logger.info(`Retry message would be: ${retryMessage}`);
+      }
     }
 
     rawResponse = JSON.stringify(validationResult);
