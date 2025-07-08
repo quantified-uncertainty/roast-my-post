@@ -306,7 +306,7 @@ export default function ExperimentDetailsPage() {
                           {getStatusIcon(result.status)}
                           <h3 className="ml-2 font-medium">
                             <Link
-                              href={`/documents/${result.documentId}`}
+                              href={`/docs/${result.documentId}/evals/${experiment.agent.id}`}
                               className="hover:text-purple-600"
                             >
                               {result.documentTitle}
