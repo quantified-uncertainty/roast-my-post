@@ -40,20 +40,20 @@ function formatUrlForDisplay(url: string, maxLength: number = 60): string {
 }
 
 /**
- * Complete link analysis workflow that produces thinking, analysis, summary, and comments
+ * Complete link analysis workflow that produces thinking, analysis, summary, and highlights
  * without additional LLM calls after the initial link analysis step
  */
 export async function analyzeLinkDocument(
   document: Document,
   agentInfo: Agent,
-  targetComments: number = 5
+  targetHighlights: number = 5
 ): Promise<{
   thinking: string;
   analysis: string;
   summary: string;
   grade?: number;
   selfCritique?: string;
-  comments: Comment[];
+  highlights: Comment[];
   tasks: TaskResult[];
 }> {
   const tasks: TaskResult[] = [];
@@ -71,15 +71,15 @@ export async function analyzeLinkDocument(
     linkAnalysisResult.linkAnalysisResults
   );
 
-  // Step 3: Generate comments from link issues (no LLM needed)
+  // Step 3: Generate highlights from link issues (no LLM needed)
   // Get the full content with prepend for URL extraction
   const { content: fullContent } = getDocumentFullContent(document);
   const urls = extractUrls(fullContent);
   
-  const comments = generateLinkComments(
+  const highlights = generateLinkHighlights(
     document,
     linkAnalysisResult.linkAnalysisResults,
-    targetComments,
+    targetHighlights,
     urls,
     fullContent // Pass the full content for correct position finding
   );
@@ -90,7 +90,7 @@ export async function analyzeLinkDocument(
     summary,
     grade,
     selfCritique: undefined, // Link analysis doesn't generate selfCritique
-    comments,
+    highlights,
     tasks,
   };
 }
@@ -144,16 +144,16 @@ Based on link analysis, this document has a **${calculateLinkGradeFromMetrics(me
 }
 
 /**
- * Generates comments from link analysis results without parsing reports
+ * Generates highlights from link analysis results without parsing reports
  */
-function generateLinkComments(
+function generateLinkHighlights(
   document: Document,
   linkAnalysisResults: LinkAnalysis[],
-  targetComments: number,
+  targetHighlights: number,
   originalUrls: string[],
   fullContent: string
 ): Comment[] {
-  const comments: Comment[] = [];
+  const highlights: Comment[] = [];
 
   // Create a map of URL to analysis result for faster lookup
   const linkResultMap = new Map<string, LinkAnalysis>();
@@ -161,7 +161,7 @@ function generateLinkComments(
     linkResultMap.set(result.url, result);
   });
 
-  // Track positions we've already commented on to avoid duplicates
+  // Track positions we've already highlighted to avoid duplicates
   const processedPositions = new Set<string>();
 
   // Process all URLs in the order they appear in the document
@@ -240,7 +240,7 @@ function generateLinkComments(
           description = `✅ Link verified\n\n${formatUrlForDisplay(url)} - Server responded successfully (HTTP 200)`;
         }
 
-        comments.push({
+        highlights.push({
           description,
           highlight: urlPosition,
           importance,
@@ -253,11 +253,11 @@ function generateLinkComments(
     }
   }
 
-  // Sort comments by their position in the document to ensure top-to-bottom order
-  comments.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+  // Sort highlights by their position in the document to ensure top-to-bottom order
+  highlights.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
 
-  // Don't limit comments - generate one for each analyzed link
-  return comments;
+  // Don't limit highlights - generate one for each analyzed link
+  return highlights;
 }
 
 

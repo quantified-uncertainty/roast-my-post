@@ -181,7 +181,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ### Core Architecture
 - **Documents**: Content items for analysis (with versioning)
-- **Agents**: AI evaluators (ASSESSOR, ADVISOR, ENRICHER, EXPLAINER) stored as TOML configs
+- **Agents**: AI evaluators with customizable instructions stored as database records
   - Note: Agent instructions are now consolidated into `primaryInstructions` and `selfCritiqueInstructions`
 - **Evaluations**: AI-generated analysis with comments and highlights
 - **Jobs**: Asynchronous processing queue for AI analysis with retry logic

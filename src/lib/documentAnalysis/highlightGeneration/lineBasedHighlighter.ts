@@ -1,6 +1,6 @@
 import type { Comment } from "../../../types/documentSchema";
 import { logger } from "@/lib/logger";
-import type { LineBasedComment } from "./types";
+import type { LineBasedHighlight } from "./types";
 
 // Line-based highlight interfaces
 export interface LineSnippetHighlight {
@@ -11,7 +11,7 @@ export interface LineSnippetHighlight {
 }
 
 // Re-export from types to maintain backward compatibility
-export type { LineBasedComment };
+export type { LineBasedHighlight };
 
 /**
  * Line-based highlighting using character snippets for precise positioning
@@ -405,19 +405,19 @@ export class LineBasedHighlighter {
   }
 
   /**
-   * Process comments with line-based highlights and convert to standard Comment format
+   * Process highlights with line-based highlights and convert to standard Comment format
    */
-  processLineComments(comments: LineBasedComment[]): Comment[] {
+  processLineHighlights(highlights: LineBasedHighlight[]): Comment[] {
     const processedComments: Comment[] = [];
 
-    for (const comment of comments) {
-      const highlightResult = this.createHighlight(comment.highlight);
+    for (const highlight of highlights) {
+      const highlightResult = this.createHighlight(highlight.highlight);
 
       if (highlightResult) {
         const processedComment: Comment = {
-          description: comment.description,
-          importance: comment.importance || 5,
-          grade: comment.grade,
+          description: highlight.description,
+          importance: highlight.importance || 5,
+          grade: highlight.grade,
           highlight: {
             startOffset: highlightResult.startOffset,
             endOffset: highlightResult.endOffset,
@@ -429,11 +429,11 @@ export class LineBasedHighlighter {
         };
         processedComments.push(processedComment);
       } else {
-        // Create invalid comment for debugging
+        // Create invalid highlight for debugging
         const invalidComment: Comment = {
-          description: comment.description,
-          importance: comment.importance || 5,
-          grade: comment.grade,
+          description: highlight.description,
+          importance: highlight.importance || 5,
+          grade: highlight.grade,
           highlight: {
             startOffset: -1,
             endOffset: -1,
@@ -441,7 +441,7 @@ export class LineBasedHighlighter {
             isValid: false,
           },
           isValid: false,
-          error: `Could not find highlight: lines ${comment.highlight.startLineIndex}-${comment.highlight.endLineIndex}, snippets "${comment.highlight.startCharacters}" to "${comment.highlight.endCharacters}"`,
+          error: `Could not find highlight: lines ${highlight.highlight.startLineIndex}-${highlight.highlight.endLineIndex}, snippets "${highlight.highlight.startCharacters}" to "${highlight.highlight.endCharacters}"`,
         };
         processedComments.push(invalidComment);
       }

@@ -1,6 +1,6 @@
 import {
   LineBasedHighlighter,
-  type LineBasedComment,
+  type LineBasedHighlight,
 } from "../lineBasedHighlighter";
 
 describe("LineBasedHighlighter", () => {
@@ -74,7 +74,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
   test("processes line comments correctly", () => {
     const highlighter = new LineBasedHighlighter(sampleContent);
 
-    const lineComments: LineBasedComment[] = [
+    const lineComments: LineBasedHighlight[] = [
       {
         description:
           "Opening Hook. Great opening that connects personal story to broader impact",
@@ -88,7 +88,7 @@ When I started this blog in high school, I did not imagine that I would cause [_
       },
     ];
 
-    const processedComments = highlighter.processLineComments(lineComments);
+    const processedComments = highlighter.processLineHighlights(lineComments);
 
     expect(processedComments).toHaveLength(1);
     expect(processedComments[0].isValid).toBe(true);

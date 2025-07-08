@@ -3,15 +3,15 @@ import type { LLMUsage } from "../../../types/llm";
 import type { LineSnippetHighlight } from "./lineBasedHighlighter";
 
 // Response from Anthropic API
-export interface RawLLMComment {
+export interface RawLLMHighlight {
   description: string;
   highlight: LineSnippetHighlight;
   importance?: number;
   grade?: number;
 }
 
-// Validated comment with line-based highlight
-export interface LineBasedComment {
+// Validated highlight with line-based highlight
+export interface LineBasedHighlight {
   description: string;
   importance: number;
   grade?: number;
@@ -29,7 +29,7 @@ export interface AnthropicResponse {
 }
 
 // Tool response structure
-export interface CommentToolResponse {
-  comments: RawLLMComment[];
+export interface HighlightToolResponse {
+  highlights: RawLLMHighlight[];
 }
 

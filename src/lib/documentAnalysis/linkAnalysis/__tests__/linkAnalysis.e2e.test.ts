@@ -82,25 +82,25 @@ describe("Link Analysis End-to-End Tests", () => {
       expect(result.thinking).toBeDefined();
       expect(result.analysis).toBeDefined();
       expect(result.summary).toBeDefined();
-      expect(result.comments).toBeDefined();
-      expect(Array.isArray(result.comments)).toBe(true);
+      expect(result.highlights).toBeDefined();
+      expect(Array.isArray(result.highlights)).toBe(true);
 
-      console.log(`📊 Generated ${result.comments.length} comments (expected ${testCase.expectedComments})`);
+      console.log(`📊 Generated ${result.highlights.length} highlights (expected ${testCase.expectedComments})`);
       console.log(`📝 Summary: ${result.summary}`);
 
       // Comments count validation
       if (testCase.expectedComments > 0) {
-        expect(result.comments.length).toBeGreaterThanOrEqual(testCase.expectedComments);
+        expect(result.highlights.length).toBeGreaterThanOrEqual(testCase.expectedComments);
         
         // Log comment details
         console.log("💬 Comments with grades:");
-        result.comments.forEach((comment, commentIndex) => {
+        result.highlights.forEach((comment, commentIndex) => {
           console.log(`  ${commentIndex + 1}. ${comment.description.substring(0, 50)}... (Grade: ${comment.grade}/100)`);
         });
 
         // Grade validation for each comment if we have grade range expectations
         if (testCase.expectedGradeRange) {
-          result.comments.forEach((comment, commentIndex) => {
+          result.highlights.forEach((comment, commentIndex) => {
             const grade = comment.grade;
             console.log(`✅ Comment ${commentIndex + 1} grade ${grade} is within expected range [${testCase.expectedGradeRange.min}, ${testCase.expectedGradeRange.max}]`);
             expect(grade).toBeGreaterThanOrEqual(testCase.expectedGradeRange.min);
@@ -108,14 +108,14 @@ describe("Link Analysis End-to-End Tests", () => {
           });
         }
       } else {
-        expect(result.comments.length).toBe(0);
+        expect(result.highlights.length).toBe(0);
       }
 
       // Status validation based on expected link status
       if (testCase.expectedLinkStatus === "working") {
-        expect(result.comments.some(c => c.description.includes("✅"))).toBe(true);
+        expect(result.highlights.some(c => c.description.includes("✅"))).toBe(true);
       } else if (testCase.expectedLinkStatus === "broken") {
-        expect(result.comments.some(c => c.description.includes("❌"))).toBe(true);
+        expect(result.highlights.some(c => c.description.includes("❌"))).toBe(true);
       }
 
       // Document-level grade validation
@@ -138,7 +138,7 @@ describe("Link Analysis End-to-End Tests", () => {
     const result = await analyzeLinkDocument(noLinksDoc, mockAgent);
 
     expect(result.thinking).toContain("No URLs were found");
-    expect(result.comments).toHaveLength(0);
+    expect(result.highlights).toHaveLength(0);
     expect(result.summary).toContain("No external links found");
   });
 });

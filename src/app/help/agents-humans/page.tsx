@@ -13,52 +13,48 @@ Learn how to create and use AI agents to evaluate your documents in Roast My Pos
 
 Agents are AI-powered evaluators that analyze your documents from specific perspectives. Think of them as expert reviewers, each with their own specialty and approach to providing feedback.
 
-## Types of Agents
+## What Can Agents Do?
 
-We have four types of agents, each serving a different purpose:
+Agents can be configured to provide various types of feedback based on their instructions:
 
-### 🎯 ASSESSOR
-**Purpose**: Critical evaluation and quality assessment
-- Points out flaws and weaknesses
-- Evaluates against specific criteria
-- Provides grades and scores
+### 🎯 Critical Evaluation
+- Point out flaws and weaknesses
+- Evaluate against specific criteria
+- Provide grades and scores
 - Best for: Academic papers, technical documentation, grant proposals
 
-**Example**: "Academic Rigor Assessor" checks research papers for methodology flaws, citation quality, and logical consistency.
+**Example**: An academic review agent checks research papers for methodology flaws, citation quality, and logical consistency.
 
-### 💡 ADVISOR
-**Purpose**: Constructive suggestions and improvements
-- Offers actionable recommendations
-- Suggests enhancements and alternatives
-- Focuses on how to make things better
+### 💡 Constructive Feedback
+- Offer actionable recommendations
+- Suggest enhancements and alternatives
+- Focus on improvements
 - Best for: Draft documents, business plans, creative writing
 
-**Example**: "Startup Pitch Advisor" helps refine your pitch deck with suggestions for clearer messaging and stronger value propositions.
+**Example**: A pitch deck reviewer helps refine your presentation with suggestions for clearer messaging and stronger value propositions.
 
-### 📚 ENRICHER
-**Purpose**: Adding context and supplementary information
-- Provides additional references
-- Adds historical or cultural context
-- Connects to related concepts
+### 📚 Contextual Enhancement
+- Provide additional references
+- Add historical or cultural context
+- Connect to related concepts
 - Best for: Educational content, research summaries, wiki articles
 
-**Example**: "Historical Context Enricher" adds relevant historical background and connects your content to broader trends.
+**Example**: A context agent adds relevant background information and connects your content to broader trends.
 
-### 🔍 EXPLAINER
-**Purpose**: Clarification and simplification
-- Breaks down complex concepts
-- Provides analogies and examples
-- Makes content more accessible
+### 🔍 Clarification & Simplification
+- Break down complex concepts
+- Provide analogies and examples
+- Make content more accessible
 - Best for: Technical content, academic papers, policy documents
 
-**Example**: "Jargon Translator" identifies technical terms and provides plain-language explanations.
+**Example**: A technical translator identifies jargon and provides plain-language explanations.
 
 ## How to Use Existing Agents
 
 1. **Browse Available Agents**
    - Go to the [Agents page](/agents)
    - Read agent descriptions to find ones matching your needs
-   - Check the "purpose" tag to understand their approach
+   - Check their descriptions and instructions to understand their approach
 
 2. **Submit Your Document**
    - Upload or paste your document
@@ -77,8 +73,8 @@ We have four types of agents, each serving a different purpose:
 
 Start with the basics:
 - **Name**: Clear, descriptive title (e.g., "SEO Content Optimizer")
-- **Purpose**: Choose from ASSESSOR, ADVISOR, ENRICHER, or EXPLAINER
 - **Description**: 1-2 sentences explaining what your agent does
+- **Focus**: Define the specific type of analysis your agent will provide
 
 ### Step 2: Write Primary Instructions
 

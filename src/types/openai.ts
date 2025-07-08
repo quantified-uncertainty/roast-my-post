@@ -42,7 +42,7 @@ export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requ
 
 // Configurable timeouts via environment variables
 export const COMPREHENSIVE_ANALYSIS_TIMEOUT = parseInt(process.env.COMPREHENSIVE_ANALYSIS_TIMEOUT || '600000'); // 10 minutes
-export const COMMENT_EXTRACTION_TIMEOUT = parseInt(process.env.COMMENT_EXTRACTION_TIMEOUT || '300000'); // 5 minutes
+export const HIGHLIGHT_EXTRACTION_TIMEOUT = parseInt(process.env.HIGHLIGHT_EXTRACTION_TIMEOUT || '300000'); // 5 minutes
 export const SELF_CRITIQUE_TIMEOUT = parseInt(process.env.SELF_CRITIQUE_TIMEOUT || '180000'); // 3 minutes
 
 // Helper function to add timeout to Anthropic requests

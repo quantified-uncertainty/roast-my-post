@@ -8,44 +8,44 @@ import {
   anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
-  COMMENT_EXTRACTION_TIMEOUT,
+  HIGHLIGHT_EXTRACTION_TIMEOUT,
 } from "../../../types/openai";
 import {
   calculateApiCost,
   mapModelToCostModel,
 } from "../../../utils/costCalculator";
-import type { CommentAnalysisOutputs, TaskResult } from "../shared/types";
+import type { HighlightAnalysisOutputs, TaskResult } from "../shared/types";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
-import { getCommentExtractionPrompts } from "./prompts";
+import { getHighlightExtractionPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
-import { validateAndConvertComments } from "../commentGeneration/commentValidator";
-import type { LineBasedComment } from "../commentGeneration/lineBasedHighlighter";
+import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
+import type { LineBasedHighlight } from "../highlightGeneration/lineBasedHighlighter";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
- * Extract and format comments from the comprehensive analysis
+ * Extract and format highlights from the comprehensive analysis
  */
-export async function extractCommentsFromAnalysis(
+export async function extractHighlightsFromAnalysis(
   document: Document,
   agentInfo: Agent,
   analysisData: ComprehensiveAnalysisOutputs,
-  targetComments: number = 5
-): Promise<{ task: TaskResult; outputs: CommentAnalysisOutputs }> {
+  targetHighlights: number = 5
+): Promise<{ task: TaskResult; outputs: HighlightAnalysisOutputs }> {
   const startTime = Date.now();
   
-  // If we have structured comment insights from the analysis, we can use them directly
-  if (analysisData.commentInsights && analysisData.commentInsights.length > 0) {
-    // Convert insights to comments format
-    const comments: Comment[] = [];
-    const lineBasedComments: LineBasedComment[] = [];
+  // If we have structured highlight insights from the analysis, we can use them directly
+  if (analysisData.highlightInsights && analysisData.highlightInsights.length > 0) {
+    // Convert insights to highlights format
+    const highlights: Comment[] = [];
+    const lineBasedHighlights: LineBasedHighlight[] = [];
     
     // Get the full content with prepend (same as what was shown to the LLM)
     const { content: fullContent } = getDocumentFullContent(document);
     const lines = fullContent.split('\n');
     
-    // Take up to targetComments insights
+    // Take up to targetHighlights insights
     // Use all insights provided by the comprehensive analysis
-    const insightsToUse = analysisData.commentInsights;
+    const insightsToUse = analysisData.highlightInsights;
     
     for (const insight of insightsToUse) {
       // Parse location to get line numbers
@@ -95,8 +95,8 @@ export async function extractCommentsFromAnalysis(
         if (!endCharacters) endCharacters = "...";
       }
       
-      const lineBasedComment: LineBasedComment = {
-        description: insight.suggestedComment,
+      const lineBasedHighlight: LineBasedHighlight = {
+        description: insight.suggestedHighlight,
         importance: 5, // Default importance
         highlight: {
           startLineIndex: startLine - 1, // Convert to 0-based
@@ -106,19 +106,38 @@ export async function extractCommentsFromAnalysis(
         },
       };
       
-      lineBasedComments.push(lineBasedComment);
+      lineBasedHighlights.push(lineBasedHighlight);
     }
     
-    // Convert to character-based comments using the full content (with prepend)
-    const convertedComments = await validateAndConvertComments(lineBasedComments, fullContent);
-    comments.push(...convertedComments);
+    // Convert to character-based highlights using the full content (with prepend)
+    const convertedHighlights = await validateAndConvertHighlights(lineBasedHighlights, fullContent);
+    highlights.push(...convertedHighlights);
+    
+    // Check for mismatch between highlights in markdown vs structured data
+    const markdownHighlightMatches = analysisData.analysis.match(/### Highlight \[/g);
+    const markdownHighlightCount = markdownHighlightMatches ? markdownHighlightMatches.length : 0;
+    
+    if (markdownHighlightCount > analysisData.highlightInsights.length) {
+      logger.warn(
+        `⚠️ Highlight count mismatch: ${markdownHighlightCount} highlights in markdown but only ${analysisData.highlightInsights.length} in structured data. ` +
+        `Missing ${markdownHighlightCount - analysisData.highlightInsights.length} highlights.`
+      );
+      
+      // If we're missing more than half the highlights, log additional details
+      if (analysisData.highlightInsights.length < markdownHighlightCount * 0.5) {
+        logger.error(
+          `🚨 Critical mismatch: Only ${Math.round((analysisData.highlightInsights.length / markdownHighlightCount) * 100)}% of highlights were captured in structured data. ` +
+          `Consider falling back to markdown parsing.`
+        );
+      }
+    }
     
     const endTime = Date.now();
     const timeInSeconds = Math.round((endTime - startTime) / 1000);
     
     // Create a minimal task result since we didn't call the LLM
     const logDetails = createLogDetails(
-      "extractCommentsFromAnalysis",
+      "extractHighlightsFromAnalysis",
       "EXTRACTION_ONLY",
       startTime,
       endTime,
@@ -126,19 +145,19 @@ export async function extractCommentsFromAnalysis(
       0,
       0,
       {
-        targetComments,
+        targetHighlights,
         agentName: agentInfo.name,
-        availableInsights: analysisData.commentInsights.length,
+        availableInsights: analysisData.highlightInsights.length,
       },
       {
-        extractedComments: comments.length,
+        extractedHighlights: highlights.length,
       },
-      `Extracted ${comments.length} comments from ${analysisData.commentInsights.length} available insights`
+      `Extracted ${highlights.length} highlights from ${analysisData.highlightInsights.length} available insights`
     );
     
     return {
       task: {
-        name: "extractCommentsFromAnalysis",
+        name: "extractHighlightsFromAnalysis",
         modelName: "EXTRACTION_ONLY",
         priceInCents: 0,
         timeInSeconds,
@@ -146,17 +165,17 @@ export async function extractCommentsFromAnalysis(
         llmInteractions: [],
       },
       outputs: {
-        comments,
+        highlights,
       },
     };
   }
   
-  // Fallback: If no structured insights, use LLM to extract comments from the analysis
-  const { systemMessage, userMessage } = getCommentExtractionPrompts(
+  // Fallback: If no structured insights, use LLM to extract highlights from the analysis
+  const { systemMessage, userMessage } = getHighlightExtractionPrompts(
     document,
     agentInfo,
     analysisData,
-    targetComments
+    targetHighlights
   );
 
   const messages: LLMMessage[] = [
@@ -165,7 +184,7 @@ export async function extractCommentsFromAnalysis(
   ];
 
   let response;
-  let comments: Comment[] = [];
+  let highlights: Comment[] = [];
 
   try {
     response = await withTimeout(
@@ -182,19 +201,19 @@ export async function extractCommentsFromAnalysis(
         ],
         tools: [
           {
-            name: "provide_comments",
-            description: "Extract and format comments based on the comprehensive analysis",
+            name: "provide_highlights",
+            description: "Extract and format highlights based on the comprehensive analysis",
             input_schema: {
               type: "object",
               properties: {
-                comments: {
+                highlights: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
                       description: {
                         type: "string",
-                        description: "Comment text (100-300 words) starting with a clear, concise statement of the main point",
+                        description: "Highlight text (100-300 words) starting with a clear, concise statement of the main point",
                       },
                       highlight: {
                         type: "object",
@@ -223,35 +242,35 @@ export async function extractCommentsFromAnalysis(
                   },
                 },
               },
-              required: ["comments"],
+              required: ["highlights"],
             },
           },
         ],
-        tool_choice: { type: "tool", name: "provide_comments" },
+        tool_choice: { type: "tool", name: "provide_highlights" },
       }),
-      COMMENT_EXTRACTION_TIMEOUT,
-      `Anthropic API request timed out after ${COMMENT_EXTRACTION_TIMEOUT / 60000} minutes`
+      HIGHLIGHT_EXTRACTION_TIMEOUT,
+      `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
     );
 
     const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "provide_comments") {
-      throw new Error("No tool use response from Anthropic for comment extraction");
+    if (!toolUse || toolUse.name !== "provide_highlights") {
+      throw new Error("No tool use response from Anthropic for highlight extraction");
     }
 
-    const result = toolUse.input as { comments: LineBasedComment[] };
+    const result = toolUse.input as { highlights: LineBasedHighlight[] };
     
-    // Convert line-based to character-based comments
+    // Convert line-based to character-based highlights
     // Get the full content with prepend (same as what was shown to the LLM)
     const { content: fullContent } = getDocumentFullContent(document);
-    comments = await validateAndConvertComments(result.comments, fullContent);
+    highlights = await validateAndConvertHighlights(result.highlights, fullContent);
 
   } catch (error: any) {
-    logger.error('Error in comment extraction:', error);
+    logger.error('Error in highlight extraction:', error);
     throw error;
   }
 
   const interaction: LLMInteraction = {
-    messages: [...messages, { role: "assistant", content: JSON.stringify({ comments }) }],
+    messages: [...messages, { role: "assistant", content: JSON.stringify({ highlights }) }],
     usage: {
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
@@ -270,7 +289,7 @@ export async function extractCommentsFromAnalysis(
   );
 
   const logDetails = createLogDetails(
-    "extractCommentsFromAnalysis",
+    "extractHighlightsFromAnalysis",
     ANALYSIS_MODEL,
     startTime,
     endTime,
@@ -278,18 +297,18 @@ export async function extractCommentsFromAnalysis(
     interaction.usage.input_tokens,
     interaction.usage.output_tokens,
     {
-      targetComments,
+      targetHighlights,
       agentName: agentInfo.name,
     },
     {
-      extractedComments: comments.length,
+      extractedHighlights: highlights.length,
     },
-    `Extracted ${comments.length} comments from comprehensive analysis`
+    `Extracted ${highlights.length} highlights from comprehensive analysis`
   );
 
   return {
     task: {
-      name: "extractCommentsFromAnalysis",
+      name: "extractHighlightsFromAnalysis",
       modelName: ANALYSIS_MODEL,
       priceInCents: cost,
       timeInSeconds,
@@ -297,7 +316,7 @@ export async function extractCommentsFromAnalysis(
       llmInteractions: [interaction],
     },
     outputs: {
-      comments,
+      highlights,
     },
   };
 }

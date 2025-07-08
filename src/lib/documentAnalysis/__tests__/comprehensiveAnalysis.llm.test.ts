@@ -53,20 +53,20 @@ What are your thoughts on AI in education? How can we balance innovation with th
     }
 
     const targetWordCount = 1000; // Comprehensive analysis should be longer
-    const targetComments = 3;
+    const targetHighlights = 3;
 
     const result = await analyzeDocument(
       mockDocument,
       mockAgent,
       targetWordCount,
-      targetComments
+      targetHighlights
     );
 
     // Check that we got results
     expect(result).toBeDefined();
     expect(result.summary).toBeDefined();
     expect(result.analysis).toBeDefined();
-    expect(result.comments).toBeDefined();
+    expect(result.highlights).toBeDefined();
     expect(result.tasks).toBeDefined();
 
     // Verify the comprehensive analysis structure
@@ -76,31 +76,31 @@ What are your thoughts on AI in education? How can we balance innovation with th
     
     // Check if analysis includes key sections - be flexible as the API may return different formats
     expect(result.analysis.toLowerCase()).toMatch(/summary|overview|assessment|analysis/i);
-    expect(result.analysis.toLowerCase()).toMatch(/insight|commentary|recommendation|observation/i);
+    expect(result.analysis.toLowerCase()).toMatch(/insight|highlightary|recommendation|observation/i);
     
     // Verify we have a summary
     expect(result.summary.length).toBeGreaterThan(50);
     expect(result.summary.length).toBeLessThan(500); // Summary should be concise
 
-    // Check comments
-    expect(result.comments).toHaveLength(targetComments);
-    result.comments.forEach((comment, i) => {
-      expect(comment.description).toBeDefined();
-      expect(comment.highlight).toBeDefined();
-      expect(comment.highlight.startOffset).toBeGreaterThanOrEqual(0);
-      expect(comment.highlight.endOffset).toBeGreaterThan(comment.highlight.startOffset);
+    // Check highlights
+    expect(result.highlights).toHaveLength(targetHighlights);
+    result.highlights.forEach((highlight, i) => {
+      expect(highlight.description).toBeDefined();
+      expect(highlight.highlight).toBeDefined();
+      expect(highlight.highlight.startOffset).toBeGreaterThanOrEqual(0);
+      expect(highlight.highlight.endOffset).toBeGreaterThan(highlight.highlight.startOffset);
       
-      console.log(`Comment ${i + 1}: {
-      description: '${comment.description.slice(0, 50)}...',
-      importance: ${comment.importance},
-      quotedText: '${comment.highlight.quotedText.slice(0, 50)}...'
+      console.log(`Highlight ${i + 1}: {
+      description: '${highlight.description.slice(0, 50)}...',
+      importance: ${highlight.importance},
+      quotedText: '${highlight.highlight.quotedText.slice(0, 50)}...'
     }`);
     });
 
     // Verify tasks
-    expect(result.tasks.length).toBe(2); // Comprehensive analysis + comment extraction
+    expect(result.tasks.length).toBe(2); // Comprehensive analysis + highlight extraction
     expect(result.tasks[0].name).toBe("generateComprehensiveAnalysis");
-    expect(result.tasks[1].name).toBe("extractCommentsFromAnalysis");
+    expect(result.tasks[1].name).toBe("extractHighlightsFromAnalysis");
 
     // Log some details for inspection
     console.log(`\n=== Analysis Preview ===`);

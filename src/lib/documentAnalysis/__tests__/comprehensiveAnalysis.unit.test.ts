@@ -1,5 +1,5 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
-import { extractCommentsFromAnalysis } from "../commentExtraction";
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
@@ -44,7 +44,7 @@ describe("Comprehensive Analysis Unit Tests", () => {
   };
 
   describe("generateComprehensiveAnalysis", () => {
-    it("should generate structured analysis with comment insights", async () => {
+    it("should generate structured analysis with highlight insights", async () => {
       const mockResponse = {
         content: [
           {
@@ -61,19 +61,19 @@ The document presents a simple test case with three lines of content.
 ## Detailed Analysis
 The content is minimal but serves its testing purpose well.
 
-## Key Insights for Commentary
+## Key Insights for Highlightary
 
 ### Insight 1: Opening Line Analysis {#insight-1}
 - **Location**: Lines 1
 - **Observation**: The opening line clearly states the document's purpose
 - **Significance**: Sets expectations for the reader
-- **Suggested Comment**: The opening line effectively establishes context
+- **Suggested Highlight**: The opening line effectively establishes context
 
 ### Insight 2: Structure Review {#insight-2}
 - **Location**: Lines 2-3
 - **Observation**: The document maintains consistent structure
 - **Significance**: Easy to follow and understand
-- **Suggested Comment**: The structural consistency aids readability
+- **Suggested Highlight**: The structural consistency aids readability
 
 ## Quality Assessment
 Overall, this is a well-structured test document.
@@ -81,21 +81,16 @@ Overall, this is a well-structured test document.
 ## Grade
 85/100 - Good test document with clear purpose`,
               grade: 85,
-              selfCritique: "My analysis focused primarily on structure but could have delved deeper into content quality and potential improvements. The assessment may be somewhat superficial given the limited content available.",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
                   location: "Lines 1",
-                  observation: "The opening line clearly states the document's purpose",
-                  significance: "Sets expectations for the reader",
-                  suggestedComment: "Opening Line Analysis. The opening line effectively establishes context",
+                  suggestedHighlight: "Opening Line Analysis. The opening line effectively establishes context",
                 },
                 {
                   id: "insight-2",
                   location: "Lines 2-3",
-                  observation: "The document maintains consistent structure",
-                  significance: "Easy to follow and understand",
-                  suggestedComment: "Structure Review. The structural consistency aids readability",
+                  suggestedHighlight: "Structure Review. The structural consistency aids readability",
                 },
               ],
             },
@@ -114,50 +109,46 @@ Overall, this is a well-structured test document.
 
       expect(result.outputs.summary).toBe("This is a test summary of the document.");
       expect(result.outputs.analysis).toContain("# Executive Summary");
-      expect(result.outputs.analysis).toContain("## Key Insights for Commentary");
+      expect(result.outputs.analysis).toContain("## Key Insights for Highlightary");
       expect(result.outputs.grade).toBe(85);
-      expect(result.outputs.commentInsights).toHaveLength(2);
-      expect(result.outputs.commentInsights[0].id).toBe("insight-1");
+      expect(result.outputs.highlightInsights).toHaveLength(2);
+      expect(result.outputs.highlightInsights[0].id).toBe("insight-1");
       expect(result.task.name).toBe("generateComprehensiveAnalysis");
     });
   });
 
-  describe("extractCommentsFromAnalysis", () => {
-    it("should extract comments from analysis insights", async () => {
+  describe("extractHighlightsFromAnalysis", () => {
+    it("should extract highlights from analysis insights", async () => {
       const mockAnalysisOutputs: ComprehensiveAnalysisOutputs = {
         summary: "Test summary",
         analysis: "Test analysis with insights",
         grade: 85,
-        commentInsights: [
+        highlightInsights: [
           {
             id: "insight-1",
             location: "Lines 1",
-            observation: "First observation",
-            significance: "Why it matters",
-            suggestedComment: "Test Comment 1. This is the first comment text",
+            suggestedHighlight: "Test Highlight 1. This is the first highlight text",
           },
           {
             id: "insight-2",
             location: "Lines 2-3",
-            observation: "Second observation",
-            significance: "Also important",
-            suggestedComment: "Test Comment 2. This is the second comment text",
+            suggestedHighlight: "Test Highlight 2. This is the second highlight text",
           },
         ],
       };
 
-      const result = await extractCommentsFromAnalysis(
+      const result = await extractHighlightsFromAnalysis(
         mockDocument,
         mockAgent,
         mockAnalysisOutputs,
         2
       );
 
-      expect(result.outputs.comments).toHaveLength(2);
-      expect(result.outputs.comments[0].description).toBe("Test Comment 1. This is the first comment text");
-      expect(result.outputs.comments[0].highlight.startOffset).toBeDefined();
-      expect(result.outputs.comments[0].highlight.endOffset).toBeDefined();
-      expect(result.task.name).toBe("extractCommentsFromAnalysis");
+      expect(result.outputs.highlights).toHaveLength(2);
+      expect(result.outputs.highlights[0].description).toBe("Test Highlight 1. This is the first highlight text");
+      expect(result.outputs.highlights[0].highlight.startOffset).toBeDefined();
+      expect(result.outputs.highlights[0].highlight.endOffset).toBeDefined();
+      expect(result.task.name).toBe("extractHighlightsFromAnalysis");
       expect(result.task.priceInCents).toBe(0); // Should be free extraction
     });
 
@@ -165,18 +156,18 @@ Overall, this is a well-structured test document.
       const mockAnalysisOutputs: ComprehensiveAnalysisOutputs = {
         summary: "Test summary",
         analysis: "Test analysis without structured insights",
-        commentInsights: [],
+        highlightInsights: [],
       };
 
       const mockResponse = {
         content: [
           {
             type: "tool_use",
-            name: "provide_comments",
+            name: "provide_highlights",
             input: {
-              comments: [
+              highlights: [
                 {
-                  description: "Extracted Comment. Comment extracted via LLM",
+                  description: "Extracted Highlight. Highlight extracted via LLM",
                   importance: 5,
                   highlight: {
                     startLineIndex: 0,
@@ -198,15 +189,15 @@ Overall, this is a well-structured test document.
       const { anthropic } = require("../../../types/openai");
       anthropic.messages.create.mockResolvedValue(mockResponse);
 
-      const result = await extractCommentsFromAnalysis(
+      const result = await extractHighlightsFromAnalysis(
         mockDocument,
         mockAgent,
         mockAnalysisOutputs,
         1
       );
 
-      expect(result.outputs.comments).toHaveLength(1);
-      expect(result.outputs.comments[0].description).toContain("Extracted Comment");
+      expect(result.outputs.highlights).toHaveLength(1);
+      expect(result.outputs.highlights[0].description).toContain("Extracted Highlight");
       expect(result.task.priceInCents).toBeGreaterThan(0); // Should have cost for LLM
     });
   });
