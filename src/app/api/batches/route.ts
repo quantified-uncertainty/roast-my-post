@@ -154,9 +154,11 @@ export async function POST(request: NextRequest) {
       const ephemeralDocumentIds: string[] = [];
       if (data.ephemeralDocuments) {
         // Import from URLs
-        if (data.ephemeralDocuments.urls) {
-          // TODO: Implement URL import logic
-          // For now, we'll skip this and implement in a separate PR
+        if (data.ephemeralDocuments.urls && data.ephemeralDocuments.urls.length > 0) {
+          throw new Error(
+            "URL import for ephemeral documents is not yet implemented. " +
+            "Please use inline documents or select existing documents instead."
+          );
         }
 
         // Create inline documents
@@ -319,7 +321,13 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     // Build where clause
-    const where: any = {
+    interface BatchWhereClause {
+      userId: string;
+      isEphemeral?: boolean;
+      OR?: Array<{ expiresAt: null } | { expiresAt: { gt: Date } }>;
+    }
+
+    const where: BatchWhereClause = {
       userId,
     };
 

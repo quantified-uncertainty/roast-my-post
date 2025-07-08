@@ -91,8 +91,8 @@ export default function NewExperimentPage() {
       // Redirect to experiment page
       router.push(`/experiments/${data.batch.trackingId}`);
     } catch (error) {
-      console.error('Error creating experiment:', error);
-      alert('Failed to create experiment');
+      const message = error instanceof Error ? error.message : 'Failed to create experiment';
+      alert(message);
     } finally {
       setIsSubmitting(false);
     }

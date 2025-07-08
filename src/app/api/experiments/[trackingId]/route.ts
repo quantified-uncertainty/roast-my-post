@@ -20,7 +20,6 @@ export async function GET(
     const batch = await prisma.agentEvalBatch.findFirst({
       where: {
         trackingId,
-        userId,
         isEphemeral: true,
       },
       include: {
@@ -85,6 +84,14 @@ export async function GET(
       return NextResponse.json(
         { error: "Experiment not found" },
         { status: 404 }
+      );
+    }
+
+    // Check ownership
+    if (batch.userId !== userId) {
+      return NextResponse.json(
+        { error: "Access denied" },
+        { status: 403 }
       );
     }
 

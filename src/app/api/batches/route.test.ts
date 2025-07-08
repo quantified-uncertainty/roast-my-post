@@ -283,7 +283,7 @@ describe("/api/batches POST", () => {
       (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
         const tx = {
           agent: {
-            findUnique: jest.fn().mockResolvedValue({ id: "agent-123" }),
+            findUnique: jest.fn().mockResolvedValue({ id: "agent-123", submittedById: mockUserId }),
           },
           agentEvalBatch: {
             create: jest.fn().mockResolvedValue({ 

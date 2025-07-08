@@ -181,15 +181,26 @@ describe("/api/experiments/[trackingId] GET", () => {
     });
 
     it("should return 403 if user does not own the experiment", async () => {
-      // First call with userId check will return null
-      (prisma.agentEvalBatch.findFirst as jest.Mock)
-        .mockResolvedValueOnce(null)
-        // Second call without userId check finds the batch owned by another user
-        .mockResolvedValueOnce({
-          id: "batch-123",
-          trackingId: mockTrackingId,
-          userId: "other-user-123",
-        });
+      const mockBatch = {
+        id: "batch-123",
+        trackingId: mockTrackingId,
+        userId: "other-user-123", // Different user
+        isEphemeral: true,
+        agent: { 
+          id: "agent-123",
+          ephemeralBatchId: null,
+          versions: [{ 
+            name: "Test Agent",
+            primaryInstructions: "Test",
+            selfCritiqueInstructions: null,
+            providesGrades: false
+          }] 
+        },
+        ephemeralDocuments: [],
+        jobs: [],
+      };
+
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
 
       const response = await GET(mockRequest(), mockParams);
       const data = await response.json();
