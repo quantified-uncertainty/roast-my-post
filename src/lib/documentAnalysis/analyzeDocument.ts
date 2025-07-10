@@ -2,7 +2,7 @@ import type { Agent } from "../../types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { Document } from "../../types/documents";
 import type { Comment } from "../../types/documentSchema";
-import { extractCommentsFromAnalysis } from "./commentExtraction";
+import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { generateSelfCritique } from "./selfCritique";
@@ -12,7 +12,7 @@ export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 500,
-  targetComments: number = 5,
+  targetHighlights: number = 5,
   anthropicApiKey?: string
 ): Promise<{
   thinking: string;
@@ -20,13 +20,13 @@ export async function analyzeDocument(
   summary: string;
   grade?: number;
   selfCritique?: string;
-  comments: Comment[];
+  highlights: Comment[];
   tasks: TaskResult[];
 }> {
   // Choose workflow based on agent's extended capability
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
     logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);
-    return await analyzeLinkDocument(document, agentInfo, targetComments);
+    return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
 
   logger.info(
@@ -42,25 +42,25 @@ export async function analyzeDocument(
       document,
       agentInfo,
       targetWordCount,
-      targetComments
+      targetHighlights
     );
     logger.info(
-      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.commentInsights.length}`
+      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.highlightInsights.length}`
     );
     tasks.push(analysisResult.task);
 
-    // Step 2: Extract and format comments from the analysis
-    logger.info(`Extracting comments from analysis...`);
-    const commentResult = await extractCommentsFromAnalysis(
+    // Step 2: Extract and format highlights from the analysis
+    logger.info(`Extracting highlights from analysis...`);
+    const highlightResult = await extractHighlightsFromAnalysis(
       document,
       agentInfo,
       analysisResult.outputs,
-      targetComments
+      targetHighlights
     );
     logger.info(
-      `Extracted ${commentResult.outputs.comments.length} comments`
+      `Extracted ${highlightResult.outputs.highlights.length} highlights`
     );
-    tasks.push(commentResult.task);
+    tasks.push(highlightResult.task);
 
     // Step 3: Generate self-critique if instructions are provided and randomly selected (10% chance)
     let selfCritique: string | undefined;
@@ -71,9 +71,9 @@ export async function analyzeDocument(
           summary: analysisResult.outputs.summary,
           analysis: analysisResult.outputs.analysis,
           grade: analysisResult.outputs.grade,
-          comments: commentResult.outputs.comments.map((c) => {
+          highlights: highlightResult.outputs.highlights.map((c) => {
             return {
-              title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Comment",
+              title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Highlight",
               text: c.description,
             };
           }),
@@ -91,7 +91,7 @@ export async function analyzeDocument(
       summary: analysisResult.outputs.summary,
       grade: analysisResult.outputs.grade,
       selfCritique,
-      comments: commentResult.outputs.comments,
+      highlights: highlightResult.outputs.highlights,
       tasks,
     };
   } catch (error) {

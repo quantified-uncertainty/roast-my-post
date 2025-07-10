@@ -76,38 +76,38 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Meet the Agents */}
+      {/* Flexible AI Agents */}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Meet Your AI Evaluators</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">🔍</div>
-              <h3 className="text-xl font-semibold mb-2">The Assessor</h3>
-              <p className="text-gray-600">Critical analysis and quality assessment</p>
+          <h2 className="text-3xl font-bold text-center mb-12">Flexible AI Analysis</h2>
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-lg text-gray-600 mb-8">
+              Our platform uses customizable AI agents that can be tailored to provide 
+              specific types of feedback on your writing. Each agent can be configured 
+              with unique instructions to focus on different aspects of your work.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="text-3xl mb-3">🎯</div>
+                <h3 className="text-xl font-semibold mb-2">Focused Analysis</h3>
+                <p className="text-gray-600">Agents provide targeted feedback based on their instructions</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="text-3xl mb-3">💬</div>
+                <h3 className="text-xl font-semibold mb-2">Detailed Highlights</h3>
+                <p className="text-gray-600">Get specific, actionable comments on your text</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="text-3xl mb-3">📊</div>
+                <h3 className="text-xl font-semibold mb-2">Comprehensive Reports</h3>
+                <p className="text-gray-600">Receive in-depth analysis and summaries</p>
+              </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">💡</div>
-              <h3 className="text-xl font-semibold mb-2">The Advisor</h3>
-              <p className="text-gray-600">Constructive suggestions and improvements</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">📚</div>
-              <h3 className="text-xl font-semibold mb-2">The Enricher</h3>
-              <p className="text-gray-600">Additional context and information</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <div className="text-3xl mb-3">🎓</div>
-              <h3 className="text-xl font-semibold mb-2">The Explainer</h3>
-              <p className="text-gray-600">Clarifies complex concepts</p>
-            </div>
-          </div>
-          <div className="text-center mt-8">
             <Link
               href="/agents"
               className="text-blue-600 hover:text-blue-700 font-semibold"
             >
-              Learn more about our agents →
+              Browse available agents →
             </Link>
           </div>
         </div>

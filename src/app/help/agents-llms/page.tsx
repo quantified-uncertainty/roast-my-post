@@ -15,7 +15,6 @@ Agents are defined using the following TypeScript interface:
 \`\`\`typescript
 interface Agent {
   name: string;                      // Required: Descriptive title
-  purpose: AgentPurpose;             // Required: ASSESSOR | ADVISOR | ENRICHER | EXPLAINER
   description: string;               // Required: 1-2 sentence explanation
   primaryInstructions?: string;      // Comprehensive behavior guide (5k-50k words)
   selfCritiqueInstructions?: string; // Self-evaluation scoring criteria
@@ -24,14 +23,15 @@ interface Agent {
 }
 \`\`\`
 
-## Agent Purposes
+## Agent Configuration
 
-Each agent must have exactly one purpose:
+Agents are flexible and can be configured for any evaluation purpose through their instructions. Rather than fixed types, agents can be tailored to:
 
-- **ASSESSOR**: Evaluates quality, identifies issues, provides critical feedback
-- **ADVISOR**: Offers suggestions, improvements, and actionable recommendations
-- **ENRICHER**: Adds context, references, and supplementary information
-- **EXPLAINER**: Clarifies complex concepts, provides educational content
+- **Evaluate quality** and identify issues
+- **Offer suggestions** and actionable improvements
+- **Add context** and supplementary information
+- **Clarify concepts** and provide explanations
+- **Any custom analysis** based on your specific needs
 
 ## Primary Instructions Format
 

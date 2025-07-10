@@ -1,5 +1,5 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
-import { extractCommentsFromAnalysis } from "../commentExtraction";
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
 import type { Agent } from "../../../types/agentSchema";
 
@@ -13,7 +13,7 @@ jest.mock("../../../types/openai", () => ({
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
-  COMMENT_EXTRACTION_TIMEOUT: 30000,
+  HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
 
 // Mock the cost calculator
@@ -59,15 +59,11 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test summary",
               analysis: "Test analysis",
-              selfCritique: "Test critique",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Boundary Spanning Comment",
                   location: `Lines ${prependLineCount - 1}-${prependLineCount + 1}`, // Spans boundary
-                  observation: "This spans the prepend boundary",
-                  significance: "Tests edge case",
-                  suggestedComment: "Comment spanning boundary"
+                  suggestedHighlight: "Comment spanning boundary"
                 }
               ]
             }
@@ -85,7 +81,7 @@ describe("markdownPrepend Edge Cases", () => {
         1
       );
 
-      const commentResult = await extractCommentsFromAnalysis(
+      const commentResult = await extractHighlightsFromAnalysis(
         mockDocument,
         mockAgent,
         analysisResult.outputs,
@@ -93,9 +89,9 @@ describe("markdownPrepend Edge Cases", () => {
       );
 
       // Should get the comment even though it spans the boundary
-      expect(commentResult.outputs.comments).toHaveLength(1);
+      expect(commentResult.outputs.highlights).toHaveLength(1);
       
-      const comment = commentResult.outputs.comments[0];
+      const comment = commentResult.outputs.highlights[0];
       expect(comment.highlight.isValid).toBe(true);
       
       // The highlight should include content from both prepend and main content
@@ -122,15 +118,11 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test summary",
               analysis: "Test analysis",
-              selfCritique: "Test critique",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Exact Boundary Comment",
                   location: `Line ${prependLineCount + 1}`, // First line of content
-                  observation: "At the boundary",
-                  significance: "Boundary test",
-                  suggestedComment: "Boundary comment"
+                  suggestedHighlight: "Boundary comment"
                 }
               ]
             }
@@ -148,16 +140,16 @@ describe("markdownPrepend Edge Cases", () => {
         1
       );
 
-      const commentResult = await extractCommentsFromAnalysis(
+      const commentResult = await extractHighlightsFromAnalysis(
         mockDocument,
         mockAgent,
         analysisResult.outputs,
         1
       );
 
-      expect(commentResult.outputs.comments).toHaveLength(1);
+      expect(commentResult.outputs.highlights).toHaveLength(1);
       
-      const comment = commentResult.outputs.comments[0];
+      const comment = commentResult.outputs.highlights[0];
       expect(comment.highlight.quotedText).toContain("First content line");
     });
   });
@@ -182,8 +174,7 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: []
+              highlightInsights: []
             }
           }
         ],
@@ -219,8 +210,7 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: []
+              highlightInsights: []
             }
           }
         ],
@@ -253,15 +243,11 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Single Line",
                   location: `Line ${prependLineCount + 1}`,
-                  observation: "Only line",
-                  significance: "Test",
-                  suggestedComment: "Comment"
+                  suggestedHighlight: "Comment"
                 }
               ]
             }
@@ -279,14 +265,14 @@ describe("markdownPrepend Edge Cases", () => {
         1
       );
 
-      const commentResult = await extractCommentsFromAnalysis(
+      const commentResult = await extractHighlightsFromAnalysis(
         singleLineDoc,
         mockAgent,
         analysisResult.outputs,
         1
       );
 
-      expect(commentResult.outputs.comments).toHaveLength(1);
+      expect(commentResult.outputs.highlights).toHaveLength(1);
     });
 
     test("handles out of bounds line references", async () => {
@@ -304,15 +290,11 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Out of bounds",
                   location: "Line 9999", // Way out of bounds
-                  observation: "Invalid line",
-                  significance: "Test",
-                  suggestedComment: "Should be skipped"
+                  suggestedHighlight: "Should be skipped"
                 }
               ]
             }
@@ -330,7 +312,7 @@ describe("markdownPrepend Edge Cases", () => {
         1
       );
 
-      const commentResult = await extractCommentsFromAnalysis(
+      const commentResult = await extractHighlightsFromAnalysis(
         mockDocument,
         mockAgent,
         analysisResult.outputs,
@@ -338,7 +320,7 @@ describe("markdownPrepend Edge Cases", () => {
       );
 
       // Should skip the invalid comment
-      expect(commentResult.outputs.comments).toHaveLength(0);
+      expect(commentResult.outputs.highlights).toHaveLength(0);
     });
   });
 
@@ -360,8 +342,7 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: []
+              highlightInsights: []
             }
           }
         ],
@@ -396,15 +377,11 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: [
+              highlightInsights: [
                 {
                   id: "insight-1",
-                  title: "Unicode test",
                   location: `Line ${prependLineCount + 1}`,
-                  observation: "Content line",
-                  significance: "Test",
-                  suggestedComment: "Unicode handling"
+                  suggestedHighlight: "Unicode handling"
                 }
               ]
             }
@@ -422,14 +399,14 @@ describe("markdownPrepend Edge Cases", () => {
         1
       );
 
-      const commentResult = await extractCommentsFromAnalysis(
+      const commentResult = await extractHighlightsFromAnalysis(
         unicodeDoc,
         mockAgent,
         analysisResult.outputs,
         1
       );
 
-      expect(commentResult.outputs.comments).toHaveLength(1);
+      expect(commentResult.outputs.highlights).toHaveLength(1);
     });
   });
 
@@ -453,8 +430,7 @@ describe("markdownPrepend Edge Cases", () => {
             input: {
               summary: "Test",
               analysis: "Test",
-              selfCritique: "Test",
-              commentInsights: []
+              highlightInsights: []
             }
           }
         ],

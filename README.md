@@ -122,11 +122,12 @@ Then restart Claude Code. See [/mcp-server/README.md](./mcp-server/README.md) fo
 ## Core Concepts
 
 ### Agents
-AI evaluators with specific purposes:
-- **ASSESSOR**: Provides critical analysis and quality assessment
-- **ADVISOR**: Offers constructive suggestions and improvements
-- **ENRICHER**: Adds context and additional information
-- **EXPLAINER**: Clarifies complex concepts for broader audiences
+AI evaluators that can be configured for various purposes:
+- Critical analysis and quality assessment
+- Constructive suggestions and improvements
+- Context and supplementary information
+- Clarification and concept explanation
+- Custom evaluation criteria based on specific needs
 
 ### Documents
 Content items stored with versioning support. Each document can have multiple versions, and each version can be evaluated by multiple agents.

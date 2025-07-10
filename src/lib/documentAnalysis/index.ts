@@ -5,7 +5,7 @@ export { analyzeDocument } from "./analyzeDocument";
 export { generateLinkAnalysis } from "./linkAnalysis";
 export { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 export { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
-export { extractCommentsFromAnalysis } from "./commentExtraction";
+export { extractHighlightsFromAnalysis } from "./highlightExtraction";
 
 // Utility functions used by external modules
 export { countTokensFromInteractions } from "./shared/llmUtils";

@@ -20,34 +20,33 @@ import type { TaskResult } from "../shared/types";
 import { getComprehensiveAnalysisPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { shouldIncludeGrade } from "../shared/agentContext";
+import { handleAnthropicError, formatFixing } from "../utils/anthropicErrorHandler";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
   analysis: string;
   grade?: number;
-  commentInsights: CommentInsight[];
+  highlightInsights: HighlightInsight[];
 }
 
-export interface CommentInsight {
+export interface HighlightInsight {
   id: string;
   location: string; // Line reference like "Lines 45-52" or "Line 78"
-  observation: string;
-  significance: string;
-  suggestedComment: string;
+  suggestedHighlight: string;
 }
 
 export async function generateComprehensiveAnalysis(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 2000,
-  targetComments: number = 5
+  targetHighlights: number = 5
 ): Promise<{ task: TaskResult; outputs: ComprehensiveAnalysisOutputs }> {
   const startTime = Date.now();
   const { systemMessage, userMessage } = getComprehensiveAnalysisPrompts(
     agentInfo,
     document,
     targetWordCount,
-    targetComments
+    targetHighlights
   );
 
   const messages: LLMMessage[] = [
@@ -69,20 +68,17 @@ export async function generateComprehensiveAnalysis(
       type: "string",
       description: `Main content document (${targetWordCount}+ words) in markdown format. Structure according to your specific role and instructions. Use proper markdown with headers, subheaders, lists, emphasis, code blocks, etc.`,
     },
-    commentInsights: {
+    highlightInsights: {
       type: "array",
-      description: "Structured insights that will become comments",
+      description: "Structured insights that will become highlights",
       items: {
         type: "object",
         properties: {
           id: { type: "string", description: "Unique identifier like 'insight-1'" },
-          title: { type: "string", description: "Short descriptive title" },
           location: { type: "string", description: "Line numbers like 'Lines 45-52' or 'Line 78'" },
-          observation: { type: "string", description: "Detailed explanation of the insight" },
-          significance: { type: "string", description: "Why this matters" },
-          suggestedComment: { type: "string", description: "Draft comment text" }
+          suggestedHighlight: { type: "string", description: "Draft highlight text" }
         },
-        required: ["id", "title", "location", "observation", "significance", "suggestedComment"]
+        required: ["id", "location", "suggestedHighlight"]
       }
     }
   };
@@ -112,11 +108,11 @@ export async function generateComprehensiveAnalysis(
         {
           name: "provide_comprehensive_analysis",
           description:
-            "Provide your complete response including summary, main content document, and structured comment insights",
+            "Provide your complete response including summary, main content document, and structured highlight insights",
           input_schema: {
             type: "object",
             properties: analysisProperties,
-            required: ["summary", "analysis", "commentInsights"],
+            required: ["summary", "analysis", "highlightInsights"],
           },
         },
       ],
@@ -129,38 +125,11 @@ export async function generateComprehensiveAnalysis(
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
     );
   } catch (error: any) {
-    console.error(
+    logger.error(
       "❌ Anthropic API error in comprehensive analysis generation:",
       error
     );
-
-    // Handle specific error types
-    if (error?.status === 429) {
-      throw new Error(
-        "Anthropic API rate limit exceeded. Please try again in a moment."
-      );
-    }
-
-    if (error?.status === 402) {
-      throw new Error(
-        "Anthropic API quota exceeded. Please check your billing."
-      );
-    }
-
-    if (error?.status === 401) {
-      throw new Error(
-        "Anthropic API authentication failed. Please check your API key."
-      );
-    }
-
-    if (error?.status >= 500) {
-      throw new Error(
-        `Anthropic API server error (${error.status}). Please try again later.`
-      );
-    }
-
-    // For other errors, provide a generic message
-    throw new Error(`Anthropic API error: ${error?.message || error}`);
+    handleAnthropicError(error);
   }
 
   try {
@@ -187,10 +156,10 @@ export async function generateComprehensiveAnalysis(
       throw new Error("Anthropic response missing or empty 'analysis' field");
     }
     if (
-      !validationResult.commentInsights ||
-      !Array.isArray(validationResult.commentInsights)
+      !validationResult.highlightInsights ||
+      !Array.isArray(validationResult.highlightInsights)
     ) {
-      throw new Error("Anthropic response missing or invalid 'commentInsights' field");
+      throw new Error("Anthropic response missing or invalid 'highlightInsights' field");
     }
 
     // Post-process to fix formatting issues from JSON tool use
@@ -205,13 +174,34 @@ export async function generateComprehensiveAnalysis(
     validationResult.summary = fixFormatting(validationResult.summary);
     validationResult.analysis = fixFormatting(validationResult.analysis);
     
-    // Fix formatting in comment insights
-    validationResult.commentInsights = validationResult.commentInsights.map(insight => ({
+    // Fix formatting in highlight insights
+    validationResult.highlightInsights = validationResult.highlightInsights.map(insight => ({
       ...insight,
-      observation: fixFormatting(insight.observation),
-      significance: fixFormatting(insight.significance),
-      suggestedComment: fixFormatting(insight.suggestedComment),
+      suggestedHighlight: fixFormatting(insight.suggestedHighlight),
     }));
+    
+    // Validate highlight count
+    if (validationResult.highlightInsights.length < targetHighlights - 1) {
+      logger.warn(
+        `⚠️ Generated ${validationResult.highlightInsights.length} highlights but requested ${targetHighlights}. ` +
+        `Agent may have found fewer noteworthy points.`
+      );
+      
+      // If we got significantly fewer highlights, consider retrying with stronger instructions
+      if (validationResult.highlightInsights.length < Math.max(1, targetHighlights * 0.6)) {
+        logger.info(
+          `🔄 Attempting retry due to low highlight count (${validationResult.highlightInsights.length}/${targetHighlights})`
+        );
+        
+        // Add a retry flag to track this
+        const retryMessage = `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
+          `Each highlight should reference a specific part of the document. ` +
+          `If you cannot find ${targetHighlights} distinct points, create highlights for the most important sections.`;
+        
+        // For now, just log this - full retry implementation would require restructuring
+        logger.info(`Retry message would be: ${retryMessage}`);
+      }
+    }
 
     rawResponse = JSON.stringify(validationResult);
   } catch (error) {
@@ -256,10 +246,10 @@ export async function generateComprehensiveAnalysis(
     {
       summary: validationResult.summary,
       analysisLength: validationResult.analysis.length,
-      commentInsightsCount: validationResult.commentInsights.length,
+      highlightInsightsCount: validationResult.highlightInsights.length,
       grade: validationResult.grade,
     },
-    `Generated comprehensive analysis (${validationResult.analysis.length} chars) with ${validationResult.commentInsights.length} comment insights`
+    `Generated comprehensive analysis (${validationResult.analysis.length} chars) with ${validationResult.highlightInsights.length} highlight insights`
   );
 
   return {

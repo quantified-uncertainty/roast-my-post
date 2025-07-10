@@ -1,5 +1,5 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
-import { extractCommentsFromAnalysis } from "../commentExtraction";
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
@@ -15,7 +15,7 @@ jest.mock("../../../types/openai", () => ({
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
-  COMMENT_EXTRACTION_TIMEOUT: 30000,
+  HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
 
 // Mock the cost calculator
@@ -92,23 +92,16 @@ And some more content on the final line.`;
           input: {
             summary: "Analysis of test document",
             analysis: "# Analysis\n\nThis document contains important information and a link.",
-            selfCritique: "This analysis provides a basic overview.",
-            commentInsights: [
+            highlightInsights: [
               {
                 id: "insight-1",
-                title: "Main Content Observation",
                 location: adjustedRefs[0], // Dynamically calculated
-                observation: "The document starts with main content",
-                significance: "Sets the tone",
-                suggestedComment: "Good opening statement"
+                suggestedHighlight: "Good opening statement"
               },
               {
                 id: "insight-2",
-                title: "Link Reference",
                 location: adjustedRefs[1], // Dynamically calculated
-                observation: "Contains an example link",
-                significance: "External reference",
-                suggestedComment: "Link to example.com"
+                suggestedHighlight: "Link to example.com"
               },
             ],
           },
@@ -127,20 +120,20 @@ And some more content on the final line.`;
       2
     );
 
-    expect(analysisResult.outputs.commentInsights).toHaveLength(2);
+    expect(analysisResult.outputs.highlightInsights).toHaveLength(2);
 
-    // Step 2: Extract comments
-    const commentResult = await extractCommentsFromAnalysis(
+    // Step 2: Extract highlights
+    const commentResult = await extractHighlightsFromAnalysis(
       mockDocument,
       mockAgent,
       analysisResult.outputs,
       2
     );
 
-    expect(commentResult.outputs.comments).toHaveLength(2);
+    expect(commentResult.outputs.highlights).toHaveLength(2);
 
-    // Verify the comments have correct highlights
-    const [comment1, comment2] = commentResult.outputs.comments;
+    // Verify the highlights have correct highlights
+    const [comment1, comment2] = commentResult.outputs.highlights;
 
     // First comment should highlight "This is the main content"
     expect(comment1.highlight.quotedText).toContain("This is the main content");
@@ -202,11 +195,11 @@ And some more content on the final line.`;
 
     // Verify the analysis includes proper content
     expect(result.analysis).toContain("Link Quality Analysis");
-    expect(result.comments).toBeDefined();
+    expect(result.highlights).toBeDefined();
     
-    // If there are link comments, they should have correct offsets
-    if (result.comments.length > 0) {
-      const linkComment = result.comments[0];
+    // If there are link highlights, they should have correct offsets
+    if (result.highlights.length > 0) {
+      const linkComment = result.highlights[0];
       // The offset should account for the prepend
       const { prependCharCount } = getDocumentFullContent(mockDocument);
       expect(linkComment.highlight.startOffset).toBeGreaterThanOrEqual(prependCharCount);
