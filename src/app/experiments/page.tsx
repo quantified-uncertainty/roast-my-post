@@ -11,6 +11,7 @@ import {
   ArrowPathIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import { formatRelativeTime } from '@/utils/dateUtils';
 
 interface ExperimentBatch {
   id: string;
@@ -140,6 +141,7 @@ export default function ExperimentsPage() {
     if (days > 0) return `${days}d ${hours}h remaining`;
     return `${hours}h remaining`;
   };
+
 
   if (loading) {
     return (
@@ -272,7 +274,7 @@ export default function ExperimentsPage() {
                         {/* Created */}
                         <div>
                           <span className="text-gray-500">Created:</span>{' '}
-                          {new Date(experiment.createdAt).toLocaleDateString()}
+                          {new Date(experiment.createdAt).toLocaleDateString()} ({formatRelativeTime(experiment.createdAt)})
                         </div>
                         
                         {/* Job Progress */}

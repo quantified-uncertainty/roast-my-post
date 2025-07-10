@@ -1,0 +1,163 @@
+{
+  "startingAgentPath": "./epistemic-agent.yaml",
+  "testDocumentIds": [
+    "7GuCcI-olkWYqyDA",
+    "JcM4O45bdrPM7qJr",
+    "QqgH1jaa3uBCmz0R"
+  ],
+  "desiderata": {
+    "requirements": [
+      {
+        "id": "catchy_titles",
+        "description": "Each comment should have a catchy, memorable title that summarizes the insight",
+        "patterns": [
+          "##\\s*(🎯|🧠|🔍|👻|📊|🗺️|📈|🔄|🛡️)\\s*[A-Z][^\\n]+",
+          "### (Highlight|Key|Critical|Hidden|Missing)"
+        ],
+        "weight": 1.5
+      },
+      {
+        "id": "analysis_blocks",
+        "description": "Use <analysis> blocks for detailed reasoning and methodology",
+        "patterns": [
+          "<analysis>[\\s\\S]+?</analysis>",
+          "<analysis>\\s*[\\s\\S]+?\\s*</analysis>"
+        ],
+        "weight": 1.2
+      },
+      {
+        "id": "key_info_outside",
+        "description": "Key conclusions and actionable insights should be outside analysis blocks",
+        "patterns": [
+          "(?<!<analysis>[\\s\\S]{0,500})(Key (insight|finding|takeaway)|Most important|Critical point|Action item):",
+          "(?<!<analysis>[\\s\\S]{0,500})\\*\\*(Recommendation|Conclusion|Impact):"
+        ],
+        "weight": 1.0
+      },
+      {
+        "id": "cognitive_bias_detection",
+        "description": "Identify specific cognitive biases with examples",
+        "patterns": [
+          "\\*\\*\\[.*bias.*\\]\\*\\*:",
+          "Cognitive Bias(es)? Detected",
+          "(Confirmation|Anchoring|Availability|Hindsight) bias"
+        ],
+        "weight": 1.0
+      },
+      {
+        "id": "hidden_assumptions",
+        "description": "Surface unstated premises and hidden assumptions",
+        "patterns": [
+          "Hidden Assumption",
+          "Unstated premise",
+          "Assumes:.*But:",
+          "Keystone assumption"
+        ],
+        "weight": 1.2
+      },
+      {
+        "id": "quantitative_scrutiny",
+        "description": "Examine numerical claims with skepticism",
+        "patterns": [
+          "Quantitative Claims Audit",
+          "🚩.*round number",
+          "Source:.*\\[(cited|uncited)\\]",
+          "base rate"
+        ],
+        "weight": 0.8
+      }
+    ],
+    "avoid": [
+      {
+        "id": "obvious_observations",
+        "description": "Avoid pointing out obvious formatting or surface-level issues",
+        "patterns": [
+          "formatting (issue|problem)",
+          "typo",
+          "grammar",
+          "could be (clearer|better organized)"
+        ],
+        "weight": 1.0
+      },
+      {
+        "id": "generic_advice",
+        "description": "Avoid generic feedback that could apply to any document",
+        "patterns": [
+          "could benefit from more",
+          "would be helpful to include",
+          "consider adding",
+          "might want to"
+        ],
+        "weight": 0.8
+      },
+      {
+        "id": "unfocused_analysis",
+        "description": "Avoid long rambling sections without clear structure",
+        "patterns": [
+          "Additionally.*Furthermore.*Moreover",
+          "(Furthermore|Moreover|Additionally).{200,}(Furthermore|Moreover|Additionally)"
+        ],
+        "weight": 0.6
+      }
+    ]
+  },
+  "commentTypes": [
+    {
+      "title": "Key Claims Analysis",
+      "emoji": "🎯",
+      "requiresAnalysisBlock": true,
+      "keyInfoPatterns": ["Central Claims:", "Most Controversial Claim:", "Evidence strength:"]
+    },
+    {
+      "title": "Cognitive Biases Detected",
+      "emoji": "🧠",
+      "requiresAnalysisBlock": false,
+      "keyInfoPatterns": ["Primary biases observed:", "Impact on conclusions:"]
+    },
+    {
+      "title": "Critical Missing Context",
+      "emoji": "🔍",
+      "requiresAnalysisBlock": false,
+      "keyInfoPatterns": ["What's absent but necessary:", "Most damaging omission:"]
+    },
+    {
+      "title": "Hidden Assumptions",
+      "emoji": "👻",
+      "requiresAnalysisBlock": true,
+      "keyInfoPatterns": ["Unstated premises:", "Keystone assumption:"]
+    },
+    {
+      "title": "Confidence vs Evidence Calibration",
+      "emoji": "📊",
+      "requiresAnalysisBlock": false,
+      "keyInfoPatterns": ["Key patterns:", "Well-calibrated:", "Overconfident:"]
+    },
+    {
+      "title": "Argument Structure Map",
+      "emoji": "🗺️",
+      "requiresAnalysisBlock": true,
+      "keyInfoPatterns": ["Core thesis:", "Critical dependencies:"]
+    },
+    {
+      "title": "Quantitative Claims Audit",
+      "emoji": "📈",
+      "requiresAnalysisBlock": false,
+      "keyInfoPatterns": ["Claims examined:", "Red flags:"]
+    },
+    {
+      "title": "Alternative Interpretations",
+      "emoji": "🔄",
+      "requiresAnalysisBlock": true,
+      "keyInfoPatterns": ["Equally valid alternatives:", "Why this matters:"]
+    },
+    {
+      "title": "Robustness Test",
+      "emoji": "🛡️",
+      "requiresAnalysisBlock": false,
+      "keyInfoPatterns": ["Core argument survives if:", "Single points of failure:"]
+    }
+  ],
+  "maxIterations": 10,
+  "successThreshold": 0.85,
+  "experimentExpiryDays": 7
+}

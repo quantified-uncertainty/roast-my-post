@@ -9,7 +9,7 @@ import { calculateJobStats } from "@/lib/batch-utils";
 // Schema for ephemeral agent creation
 const ephemeralAgentSchema = z.object({
   name: z.string().min(1).max(100),
-  primaryInstructions: z.string().min(1).max(10000),
+  primaryInstructions: z.string().min(1).max(50000), // Increased for agent improvement system
   selfCritiqueInstructions: z.string().optional(),
   providesGrades: z.boolean().optional(),
   description: z.string().optional(),

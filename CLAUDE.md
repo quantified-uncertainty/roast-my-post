@@ -168,6 +168,28 @@ Detailed explanation.
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
+## AI Model Selection (IMPORTANT)
+
+When using Claude API in this project:
+- **ALWAYS use Claude 4 (opus-4)** for production code
+- **DO NOT use Claude-3.5-sonnet** - it's being phased out
+- **For cost optimization in scripts**: Consider Claude-3-haiku for bulk operations, but default to Claude 4
+
+Example:
+```typescript
+// ✅ CORRECT
+const response = await anthropic.messages.create({
+  model: 'claude-4-opus-20241022', // or current Claude 4 model ID
+  // ...
+});
+
+// ❌ INCORRECT - Don't use this
+const response = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  // ...
+});
+```
+
 ## Project Overview
 "RoastMyPost" - AI-powered document annotation and evaluation platform
 
@@ -177,6 +199,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - **Authentication**: NextAuth.js 5.0.0-beta.28
 - **UI**: Tailwind CSS, Slate.js editor for document highlighting
 - **AI**: Anthropic Claude API + OpenAI integration
+  - **IMPORTANT**: Use Claude 4 (opus-4) for all Claude API calls, NOT Claude-3.5-sonnet
 - **MCP Server**: Fast database access via Model Context Protocol
 
 ### Core Architecture
