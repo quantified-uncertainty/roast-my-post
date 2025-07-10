@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 
-import { prisma } from "../src/lib/prisma";
+import { prisma } from "../../src/lib/prisma";
 
 async function addAgentToDocuments() {
   const documentIds = [
@@ -48,11 +48,11 @@ async function addAgentToDocuments() {
       });
 
       // Check if evaluation already exists
-      const existingEvaluation = document.evaluations.find(e => e.agentId === agentId);
+      const existingEvaluation = document.evaluations.find((e: any) => e.agentId === agentId);
       
       if (!existingEvaluation) {
         // Create evaluation and job
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
           const evaluation = await tx.evaluation.create({
             data: {
               documentId: documentId,

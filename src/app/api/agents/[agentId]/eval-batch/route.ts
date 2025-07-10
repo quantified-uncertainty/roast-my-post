@@ -172,6 +172,7 @@ export async function POST(
         agentId: agentId,
         targetCount: targetCount,
         requestedDocumentIds: requestedDocumentIds,
+        userId: userId,
       },
     });
 

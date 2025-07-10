@@ -16,6 +16,7 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
 import { MARKDOWN_COMPONENTS } from "@/components/DocumentWithEvaluations/config/markdown";
 import { CopyButton } from "@/components/CopyButton";
+import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 
 // Function to extract headings from markdown
 function extractHeadings(markdown: string, minLevel: number = 1): { id: string; label: string; level: number }[] {
@@ -98,7 +99,20 @@ async function getEvaluation(docId: string, agentId: string) {
       agentId: agentId,
       documentId: docId,
     },
-    include: fullEvaluationInclude,
+    include: {
+      ...fullEvaluationInclude,
+      agent: {
+        include: {
+          ...fullEvaluationInclude.agent.include,
+          ephemeralBatch: {
+            select: {
+              trackingId: true,
+              isEphemeral: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   return evaluation;
@@ -261,7 +275,15 @@ export default async function EvaluationPage({
         <CollapsibleSection id="agent-info" title="Agent Information">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{agentName}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-semibold text-gray-900">{agentName}</h3>
+                {evaluation.agent.ephemeralBatch && (
+                  <ExperimentalBadge 
+                    trackingId={evaluation.agent.ephemeralBatch.trackingId}
+                    className="ml-2"
+                  />
+                )}
+              </div>
               {agentDescription && (
                 <p className="text-sm text-gray-600 mb-2">{agentDescription}</p>
               )}

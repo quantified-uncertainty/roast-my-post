@@ -103,7 +103,14 @@ Once familiar with the system:
 - Define specific evaluation criteria
 - Tailor to your exact needs
 
-### 4. Keyboard Shortcuts
+### 4. Run Ephemeral Experiments
+Test new ideas without cluttering your workspace:
+- Create temporary agents that auto-delete
+- Test different evaluation approaches
+- Perfect for learning and experimentation
+- See [Ephemeral Experiments Guide](/help/ephemeral-experiments)
+
+### 5. Keyboard Shortcuts
 - \`Ctrl/Cmd + Enter\`: Submit evaluation
 - \`Esc\`: Close modal
 - \`Arrow Keys\`: Navigate comments
@@ -135,6 +142,13 @@ Once familiar with the system:
 2. Run "Documentation Reviewer"
 3. Apply "Code Example Validator"
 4. Use "Beginner-Friendly Explainer"
+
+### Testing New Agent Configurations
+1. Create an ephemeral experiment
+2. Define custom evaluation criteria
+3. Test on sample documents
+4. Compare results with existing agents
+5. Auto-cleanup after 24 hours
 
 ## Understanding Limitations
 

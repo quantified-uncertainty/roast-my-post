@@ -84,7 +84,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Build where clause
-    const where: any = { documentId };
+    interface EvaluationWhereClause {
+      documentId: string;
+      agentId?: string;
+    }
+    
+    const where: EvaluationWhereClause = { documentId };
     if (agentId) where.agentId = agentId;
 
     // Get evaluations with latest versions and job status
