@@ -334,6 +334,114 @@ Response includes status and results when complete:
 }
 \`\`\`
 
+### Ephemeral Experiments
+
+Create temporary experiments that automatically clean up after expiration. Perfect for testing agent configurations and evaluating content without permanent storage.
+
+#### Create Ephemeral Experiment
+\`\`\`http
+POST /batches
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "isEphemeral": true,
+  "trackingId": "exp_custom_name", // Optional, auto-generated if not provided
+  "description": "Testing new review criteria",
+  "expirationHours": 24, // Default: 24, max: 168 (7 days)
+  
+  // Option A: Use existing agent
+  "agentId": "agent_123",
+  
+  // Option B: Create ephemeral agent
+  "ephemeralAgent": {
+    "name": "Test Reviewer",
+    "primaryInstructions": "Review instructions...",
+    "selfCritiqueInstructions": "Optional self-critique...",
+    "providesGrades": true
+  },
+  
+  // For documents, choose one:
+  "documentIds": ["doc_123"], // Existing docs
+  "ephemeralDocuments": {     // New temporary docs
+    "inline": [{
+      "title": "Test Doc",
+      "content": "Content...",
+      "contentType": "text/plain",
+      "authors": ["John Doe"]
+    }]
+  }
+}
+\`\`\`
+
+Response:
+\`\`\`json
+{
+  "batch": {
+    "id": "batch_abc123",
+    "trackingId": "exp_7a8b9c",
+    "isEphemeral": true,
+    "expiresAt": "2024-01-02T00:00:00Z",
+    "jobCount": 2
+  },
+  "agent": {
+    "id": "exp_agent_def456",
+    "isEphemeral": true
+  },
+  "jobs": [{"id": "job_xyz789", "status": "pending"}]
+}
+\`\`\`
+
+#### Get Experiment Details
+\`\`\`http
+GET /experiments/{trackingId}
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Query parameters:
+- \`includeResults\`: Include evaluation results (default: false)
+
+Response:
+\`\`\`json
+{
+  "id": "batch_abc123",
+  "trackingId": "exp_7a8b9c",
+  "description": "Testing new review criteria",
+  "isEphemeral": true,
+  "expiresAt": "2024-01-02T00:00:00Z",
+  "agent": {
+    "id": "exp_agent_def456",
+    "name": "Test Reviewer",
+    "isEphemeral": true
+  },
+  "jobStats": {
+    "total": 2,
+    "completed": 1,
+    "failed": 0,
+    "running": 1,
+    "pending": 0
+  },
+  "aggregateMetrics": {
+    "averageGrade": 85.5,
+    "totalCost": 1250,
+    "totalTime": 45,
+    "successRate": 100
+  }
+}
+\`\`\`
+
+#### List Experiments
+\`\`\`http
+GET /batches?type=experiment
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+Query parameters:
+- \`type\`: "experiment" | "regular" | null (all)
+- \`includeExpired\`: Include expired experiments (default: false)
+- \`limit\`: Max results (default: 20, max: 100)
+- \`offset\`: Pagination offset
+
 ### Admin Endpoints (Requires Admin Role)
 
 These endpoints require both authentication and admin privileges:
@@ -463,6 +571,40 @@ async function importAndEvaluate(url: string, agentId: string) {
   }
   
   return importData;
+}
+
+// Create an ephemeral experiment
+async function runExperiment() {
+  const response = await fetch(\`\${BASE_URL}/batches\`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      isEphemeral: true,
+      description: 'Testing new review criteria',
+      ephemeralAgent: {
+        name: 'Strict Reviewer',
+        primaryInstructions: 'Apply high standards...',
+        providesGrades: true
+      },
+      ephemeralDocuments: {
+        inline: [{
+          title: 'Test Content',
+          content: 'Sample text to review...'
+        }]
+      }
+    })
+  });
+  
+  const result = await response.json();
+  const trackingId = result.batch.trackingId;
+  
+  // Get experiment results
+  const details = await fetch(
+    \`\${BASE_URL}/experiments/\${trackingId}\`,
+    { headers }
+  );
+  
+  return details.json();
 }
 \`\`\`
 

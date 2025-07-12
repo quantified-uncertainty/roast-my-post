@@ -10,6 +10,7 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import SlateEditor from "@/components/SlateEditor";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
+import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DocumentModel } from "@/models/Document";
@@ -72,6 +73,19 @@ export default async function DocumentPage({
   if (!document) {
     notFound();
   }
+
+  // Get ephemeral batch information
+  const documentWithBatch = await prisma.document.findUnique({
+    where: { id: docId },
+    select: {
+      ephemeralBatch: {
+        select: {
+          trackingId: true,
+          isEphemeral: true,
+        },
+      },
+    },
+  });
 
   const isOwner = currentUserId
     ? document.submittedById === currentUserId
@@ -147,12 +161,19 @@ export default async function DocumentPage({
             title={document.title || "Untitled Document"}
             subtitle="Document Overview"
           >
-            {isOwner && (
-              <DocumentActions
-                docId={docId}
-                document={{ importUrl: document.importUrl }}
-              />
-            )}
+            <div className="flex items-center gap-4">
+              {documentWithBatch?.ephemeralBatch && (
+                <ExperimentalBadge 
+                  trackingId={documentWithBatch.ephemeralBatch.trackingId}
+                />
+              )}
+              {isOwner && (
+                <DocumentActions
+                  docId={docId}
+                  document={{ importUrl: document.importUrl }}
+                />
+              )}
+            </div>
           </PageHeader>
 
           <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

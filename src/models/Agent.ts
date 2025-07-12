@@ -157,6 +157,12 @@ export class AgentModel {
               email: true,
             },
           },
+          ephemeralBatch: {
+            select: {
+              trackingId: true,
+              isEphemeral: true,
+            },
+          },
         },
       });
 
@@ -179,6 +185,7 @@ export class AgentModel {
           name: dbAgent.submittedBy.name || "Unknown",
         },
         isOwner,
+        ephemeralBatch: dbAgent.ephemeralBatch,
       });
     } finally {
       await prisma.$disconnect();
