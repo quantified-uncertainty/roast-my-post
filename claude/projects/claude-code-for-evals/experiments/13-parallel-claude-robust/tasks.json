@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    "Check for spelling errors, typos, and grammatical mistakes throughout the document",
+    "Verify factual accuracy of all claims, statistics, and referenced information",
+    "Analyze logical consistency and identify any contradictions or flawed reasoning",
+    "Evaluate clarity and readability, flagging unclear passages or overly complex language",
+    "Review document structure, formatting consistency, and proper use of headings/sections",
+    "Identify missing context, undefined terms, or incomplete explanations that need clarification"
+  ],
+  "timestamp": "2025-07-10T15:33:57.452Z",
+  "decompositionTime": 0,
+  "attempts": 1,
+  "method": "claude"
+}

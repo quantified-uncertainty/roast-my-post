@@ -1,0 +1,31 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 45
+Quote: "normal({ p5: -0.15, p95: -0.05 })"
+Issue: Normal distribution with only percentiles specified may not uniquely define parameters
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 50
+Quote: "normal({ p5: -0.1, p95: 0 })"
+Issue: Normal distribution with only percentiles specified may not uniquely define parameters
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 76
+Quote: "mean(inputs.avgWage)"
+Issue: Taking mean of already uncertain wage distribution may not properly propagate uncertainty
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 128
+Quote: "90% CI"
+Issue: Claims 90% CI but uses 5th and 95th percentiles which form a 90% credible interval, not confidence interval
+[/FINDING]

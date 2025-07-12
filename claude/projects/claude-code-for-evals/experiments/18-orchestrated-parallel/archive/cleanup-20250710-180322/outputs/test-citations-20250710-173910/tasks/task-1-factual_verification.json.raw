@@ -1,0 +1,39 @@
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 6
+Quote: "The US unemployment rate is 3.5% as of 2024"
+Issue: BLS data shows 4.1% (Oct 2024). Source: bls.gov/opub/ted/2024
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 7
+Quote: "Average hourly earnings increased by 4.1% year-over-year"
+Issue: BLS reports real wage growth 0.6-1.4% in 2024. Source: bls.gov/opub/ted/2024
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 11
+Quote: "According to a recent Harvard study, remote work increases productivity by 13%"
+Issue: No Harvard study found with this claim. Source: hbs.edu/faculty/Pages/item.aspx?num=66633
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 13
+Quote: "A 2023 meta-analysis found that meditation reduces anxiety by 30%"
+Issue: No 2023 study found with 30% figure. Effect sizes 0.22-0.41 typical. Source: frontiersin.org/journals/public-health
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 18
+Quote: "Life expectancy in the US is 76.4 years"
+Issue: CDC reports 78.4 years for 2023 (latest). Source: cdc.gov/nchs/products/databriefs/db521.htm
+[/FINDING]

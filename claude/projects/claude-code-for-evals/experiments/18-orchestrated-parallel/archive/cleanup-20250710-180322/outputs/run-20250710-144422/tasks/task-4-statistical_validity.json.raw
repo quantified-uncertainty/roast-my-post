@@ -1,0 +1,57 @@
+I'll analyze this document for statistical validity issues.
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 32
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Mixture distribution for wages lacks justification for 90/10 split between ranges
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 42
+Quote: "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])"
+Issue: No basis provided for 90/10 probability weights in work hours distribution
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 50
+Quote: "normal({ p5: -0.15, p95: -0.05 })"
+Issue: Normal distribution may not be appropriate for bounded elasticity parameter
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: critical
+Line: 75
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation oversimplified - ignores multiplier effects and productivity differences
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 113
+Quote: "The model assumes uniform effects across demographics"
+Issue: Acknowledges but doesn't address critical heterogeneity in treatment effects
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 109
+Quote: "Income effects are based on empirical studies of lottery winners"
+Issue: External validity concern - lottery/inheritance studies may not generalize to UBI
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 127
+Quote: "90% CI"
+Issue: Should specify this is a credible interval from simulation, not confidence interval
+[/FINDING]

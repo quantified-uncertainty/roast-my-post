@@ -1,0 +1,31 @@
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 5
+Quote: "6.3% peak during the pandemic in April 2020"
+Issue: April 2020 saw 14.7% unemployment, not 6.3% - this is a significant statistical error
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 11
+Quote: "US working-age population (ages 15-64)"
+Issue: Standard working-age population is 16-64, not 15-64 in US statistics
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 17
+Quote: "increases productivity by 13%"
+Issue: No confidence intervals, p-values, or statistical significance reported for key finding
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 17
+Quote: "tracked 1,000 workers over 9 months"
+Issue: No control group or experimental design details provided for causal claim
+[/FINDING]

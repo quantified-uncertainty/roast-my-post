@@ -1,0 +1,31 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 3
+Quote: "3.5% in December 2024"
+Issue: Claims future data (December 2024) when current date is July 2025
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 15
+Quote: "increases productivity by 13%"
+Issue: No confidence interval or statistical significance reported for key finding
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 11
+Quote: "210 million people"
+Issue: Lacks source citation for demographic statistic
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 15
+Quote: "tracked 1,000 workers over 9 months"
+Issue: Sample size context missing (e.g., power analysis, effect size)
+[/FINDING]

@@ -1,0 +1,78 @@
+[
+  {
+    "chunkId": "chunk-1",
+    "header": "Document Start",
+    "analyses": {
+      "factual_claims": [],
+      "logical_consistency": []
+    }
+  },
+  {
+    "chunkId": "chunk-2",
+    "header": "Basic Facts",
+    "analyses": {
+      "factual_claims": [
+        {
+          "type": "factual_claim",
+          "line": 5,
+          "quote": "The Earth orbits the Sun once every 365.25 days.",
+          "description": "Orbital period of Earth"
+        },
+        {
+          "type": "factual_claim",
+          "line": 5,
+          "quote": "This is why we have leap years every 4 years.",
+          "description": "Reason for leap years"
+        },
+        {
+          "type": "factual_claim",
+          "line": 7,
+          "quote": "Water freezes at 0 degrees Celsius",
+          "description": "Water freezing point"
+        },
+        {
+          "type": "factual_claim",
+          "line": 7,
+          "quote": "boils at 100 degrees.",
+          "description": "Water boiling point"
+        }
+      ],
+      "logical_consistency": []
+    }
+  },
+  {
+    "chunkId": "chunk-3",
+    "header": "Logical Example",
+    "analyses": {
+      "factual_claims": [
+        {
+          "type": "factual_claim",
+          "line": 11,
+          "quote": "All birds can fly",
+          "description": "General claim about bird flight capability"
+        },
+        {
+          "type": "factual_claim",
+          "line": 11,
+          "quote": "Penguins are birds",
+          "description": "Taxonomic classification of penguins"
+        },
+        {
+          "type": "factual_claim",
+          "line": 11,
+          "quote": "penguins can fly",
+          "description": "Claim about penguin flight capability"
+        }
+      ],
+      "logical_consistency": [
+        {
+          "type": "logical_issue",
+          "line": 11,
+          "quote": "All birds can fly. Penguins are birds. Therefore, penguins can fly.",
+          "issueType": "fallacy",
+          "explanation": "False premise - not all birds can fly, making the syllogism invalid"
+        }
+      ]
+    }
+  }
+]

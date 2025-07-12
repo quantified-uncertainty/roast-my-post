@@ -1,0 +1,20 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 341,
+      "quote": "we probably need to spread throughout the affectable universe as fast as possible",
+      "issue": "Directly contradicts key takeaway #6 that \"Interstellar travel should be banned\"",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:33:21.894Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 1,
+    "validFindings": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

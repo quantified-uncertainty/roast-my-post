@@ -1,0 +1,25 @@
+Looking through this Squiggle model for mathematical accuracy issues:
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: major
+Line: 70
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation is oversimplified - doesn't account for productivity multipliers or economic value-add beyond wages
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 61
+Quote: "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: Formula assumes linear elasticity response which may not hold for large income changes
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 107
+Quote: "labor supply reduction of **" + String(mean(impact.percentChange), ".1f")"
+Issue: Presenting mean of percentage changes without accounting for population distribution weights
+[/FINDING]

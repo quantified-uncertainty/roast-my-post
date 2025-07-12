@@ -1,0 +1,31 @@
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 3
+Quote: "US unemployment rate reached 3.5% in December 2024"
+Issue: Claims December 2024 data when current date is July 2025 - should clarify if referring to past December
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 5
+Quote: "November 2024"
+Issue: References November 2024 data without specifying it's historical (8 months ago from current date)
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 17
+Quote: "December 15, 2024"
+Issue: References specific December 2024 date without clarifying it's historical data from 7 months ago
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 19
+Quote: "November 2024"
+Issue: References November 2024 prices without indicating this is 8-month old data
+[/FINDING]

@@ -1,0 +1,19 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains multiple specific empirical claims about economic data that require verification against current sources",
+  "statistics": {
+    "lineCount": 11,
+    "wordCount": 77,
+    "characterCount": 458
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "taskType": "structural_analysis",
+  "findings": [
+    {
+      "category": "structural_analysis",
+      "severity": "major",
+      "line": 12,
+      "quote": "Once we expand to other star systems, we may begin",
+      "issue": "Abstract/summary paragraph appears before Introduction heading without clear labeling",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.473Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "minor",
+      "line": 14,
+      "quote": "Introduction",
+      "issue": "Introduction section disproportionately long compared to other major sections",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.473Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "major",
+      "line": 91,
+      "quote": "Unknowns",
+      "issue": "Section on unknowns appears before probability analysis sections, disrupting logical flow",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "critical",
+      "line": 162,
+      "quote": "Some key takeaways and hot takes to disagree with me on",
+      "issue": "Document lacks proper conclusion section, ending with informal \"hot takes\" instead",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "major",
+      "line": 171,
+      "quote": "Edit: Adding some further reading",
+      "issue": "Edit note disrupts document flow and should be integrated into main text or appendix",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "minor",
+      "line": 31,
+      "quote": "Threats Limited to a One Planet Civilisation",
+      "issue": "Inconsistent heading formatting - subsections use dashes while main sections use equals signs",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "major",
+      "line": 180,
+      "quote": "1. These solar system x-risks were unlikely",
+      "issue": "Footnotes section (72 entries) too extensive, suggesting poor content integration",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    },
+    {
+      "category": "structural_analysis",
+      "severity": "critical",
+      "line": 28,
+      "quote": "Existential risks to a Galactic Civilisation",
+      "issue": "Missing methodology section explaining threat identification and categorization approach",
+      "source": "structural_analysis",
+      "timestamp": "2025-07-10T21:57:34.474Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 8,
+    "validFindings": 8,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

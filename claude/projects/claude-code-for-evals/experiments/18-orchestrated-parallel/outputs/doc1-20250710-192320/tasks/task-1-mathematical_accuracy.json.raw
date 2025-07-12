@@ -1,0 +1,25 @@
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 52
+Quote: "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: Missing parentheses may cause order of operations confusion; elasticity formula should be clearer
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: major
+Line: 55
+Quote: "totalEffect = incomeEffect + inputs.substitutionEffect"
+Issue: Adding elasticities directly is incorrect; effects should be multiplicative (1 + effect1) * (1 + effect2) - 1
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 62
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation oversimplified; ignores multiplier effects and assumes hourly wage equals marginal product
+[/FINDING]
+
+No mathematical_accuracy issues found.

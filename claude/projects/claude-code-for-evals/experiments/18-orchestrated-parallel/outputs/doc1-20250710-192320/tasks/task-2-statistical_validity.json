@@ -1,0 +1,56 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 47,
+      "quote": "Based on empirical studies of lottery winners and inheritance recipients.",
+      "issue": "Invalid generalization - lottery/inheritance effects may not apply to regular UBI payments",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:23:40.223Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 65,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "Oversimplified GDP calculation - ignores multiplier effects and economic complexity",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:23:40.224Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 110,
+      "quote": "90% CI:",
+      "issue": "Confidence interval terminology incorrect for simulation - should be \"credible interval\"",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:23:40.224Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 89,
+      "quote": "The model assumes uniform effects across demographics",
+      "issue": "Homogeneity assumption likely invalid - labor supply elasticity varies significantly by income",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:23:40.224Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 74,
+      "quote": "sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)",
+      "issue": "Testing mean of distribution ignores full uncertainty range in validation",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:23:40.224Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

@@ -1,0 +1,47 @@
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 64
+Quote: "incomeEffect = inputs.incomeElasticity *"
+Issue: Variable name conflicts - 'incomeEffect' used for both calculation result and model input
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 73
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation assumes all work hours contribute equally to GDP regardless of productivity
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 86
+Quote: "income effects are based on empirical studies of lottery winners"
+Issue: Model assumes lottery/inheritance elasticities apply to regular UBI payments without justification
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 25
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Wage distribution mixing assumes independence between wage levels and worker proportions
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 38
+Quote: "Substitution Effect"
+Issue: Substitution effect defined as reducing hours for means-testing but UBI is universal, not means-tested
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: critical
+Line: 98
+Quote: "doesn't capture potential productivity gains from reduced financial stress"
+Issue: Model calculates GDP impact from hours reduction but admits it ignores productivity changes
+[/FINDING]

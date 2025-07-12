@@ -1,0 +1,47 @@
+[FINDING]
+Category: factual_verification
+Severity: critical
+Line: 7
+Quote: "Date: Fri Jun 27 2025 15:54:07 GMT-0700"
+Issue: Document dated in the future (June 27, 2025) when current date is January 2025
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 194
+Quote: "SU(5) is disproven because observational evidence indicates that the proton's half life is way longer than the theory predicts"
+Issue: While SU(5) is ruled out, it's due to proton lifetime lower limits, not measured half-life
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 257
+Quote: "Toby Ord gave at EAG London 2025"
+Issue: References a future event (EAG London 2025) as if it already occurred
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 274
+Quote: "Metaculus predicts 2116 (25%), 2248 (median), >2500 (75%)"
+Issue: Metaculus predictions change over time; these specific percentages may be outdated
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 344
+Quote: "Toby Ord. 2025. Forecasting can get easier over longer timeframes. EAG London 2025."
+Issue: Citation references future conference presentation as if already delivered
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 472
+Quote: "1 in 2.8 quadrillion chance of a binary black hole approaching the Solar System in the next 100 years"
+Issue: Extremely specific probability claim lacks clear source verification
+[/FINDING]

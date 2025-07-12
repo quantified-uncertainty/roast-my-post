@@ -1,0 +1,127 @@
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 9
+Quote: "I think we're at the point in this discussion where we need to get the basic shape"
+Issue: Vague reference - unclear what "this discussion" refers to and what "basic shape" means
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 17
+Quote: "using existing AI technologies through targeted interventions"
+Issue: "Targeted interventions" is vague jargon without explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 22
+Quote: "Development doesn't require any particularly scary advances"
+Issue: "Scary" is informal and unclear in technical context
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 74
+Quote: "to highlight one kind of use, but I think that this fits neatly into the above cluster"
+Issue: Unclear what "one kind of use" means and how it differs from the "cluster"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 94
+Quote: "An Executive Strategy Myth"
+Issue: Section heading doesn't clearly connect to content about time allocation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 102
+Quote: "AI forecasting has been proven to be surprisingly competent"
+Issue: "Surprisingly competent" is vague without specific metrics
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 104
+Quote: "I assume might be required to do a good job, and all seem very doable"
+Issue: Complex sentence with unclear referent for "do a good job"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 110
+Quote: "The Ontology Crisis discussion touches on this"
+Issue: Technical term "Ontology Crisis" used without explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 112
+Quote: "There seems to be a decent segment of doomers who expect that TAI"
+Issue: Undefined jargon - "doomers" and "TAI" need explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 154
+Quote: "most of these aren't that serious and don't represent cruxes"
+Issue: "Cruxes" is rationalist jargon without explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 198
+Quote: "I assume that early "full AI Intellectuals" will be mediocre"
+Issue: Unclear distinction between "full AI Intellectuals" and regular AI Intellectuals
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 214
+Quote: "has a very small and often negative mimetic advantage"
+Issue: "Mimetic advantage" is jargon without explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 230
+Quote: "Similar to intellectuals."
+Issue: Fragment sentence with unclear meaning
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 240
+Quote: "AI systems that are roughly twice as effective"
+Issue: "Twice as effective" lacks any metric or explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 270
+Quote: "decisions will likely become increasingly straightforward and convergent"
+Issue: Complex sentence with unclear meaning of "convergent"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 272
+Quote: "These details will seem increasingly straightforward, over-determined, and boring"
+Issue: "Over-determined" is technical jargon without explanation
+[/FINDING]

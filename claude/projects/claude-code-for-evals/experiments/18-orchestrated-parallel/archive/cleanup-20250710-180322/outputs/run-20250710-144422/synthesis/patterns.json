@@ -1,0 +1,90 @@
+{
+  "byCategory": {
+    "spelling_grammar": 5,
+    "statistical_validity": 7,
+    "clarity_readability": 5,
+    "code_quality": 7,
+    "mathematical_accuracy": 2
+  },
+  "bySeverity": {
+    "minor": 17,
+    "major": 8,
+    "critical": 1
+  },
+  "hotspots": [
+    {
+      "line": 125,
+      "issueCount": 3,
+      "findings": [
+        {
+          "category": "spelling_grammar",
+          "severity": "minor",
+          "line": 125,
+          "quote": "single parents vs dual income households",
+          "issue": "Missing periods after \"vs\" abbreviation",
+          "source": "spelling_grammar",
+          "timestamp": "2025-07-10T21:44:36.488Z",
+          "id": "finding-23",
+          "validated": true
+        },
+        {
+          "category": "clarity_readability",
+          "severity": "minor",
+          "line": 125,
+          "quote": "Geographic variations in cost of living would affect impact",
+          "issue": "Unclear how cost of living affects labor supply impact",
+          "source": "clarity_readability",
+          "timestamp": "2025-07-10T21:44:35.432Z",
+          "id": "finding-24",
+          "validated": true
+        },
+        {
+          "category": "code_quality",
+          "severity": "minor",
+          "line": 125,
+          "quote": "impact.gdpImpact / -1B",
+          "issue": "Unclear negative division operation - should use abs() or clearer logic",
+          "source": "code_quality",
+          "timestamp": "2025-07-10T21:44:37.387Z",
+          "id": "finding-25",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 122,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "spelling_grammar",
+          "severity": "minor",
+          "line": 122,
+          "quote": "poorer workers may reduce hours more",
+          "issue": "Should be \"reduce hours more significantly\" or \"work fewer hours\"",
+          "source": "spelling_grammar",
+          "timestamp": "2025-07-10T21:44:36.488Z",
+          "id": "finding-20",
+          "validated": true
+        },
+        {
+          "category": "code_quality",
+          "severity": "minor",
+          "line": 122,
+          "quote": "impact.totalHourChange / -1B",
+          "issue": "Unclear negative division operation - should use abs() or clearer logic",
+          "source": "code_quality",
+          "timestamp": "2025-07-10T21:44:37.387Z",
+          "id": "finding-21",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [],
+  "statistics": {
+    "total": 26,
+    "averagePerLine": "0.20",
+    "mostCommonCategory": "statistical_validity",
+    "mostCommonSeverity": "minor"
+  }
+}

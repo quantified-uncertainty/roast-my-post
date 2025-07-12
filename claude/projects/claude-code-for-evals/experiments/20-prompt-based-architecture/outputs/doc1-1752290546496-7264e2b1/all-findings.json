@@ -1,0 +1,82 @@
+[
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "critical",
+    "quote": "`incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))`",
+    "explanation": "The income elasticity calculation appears correct mathematically, but there's a conceptual issue: it assumes elasticity applies linearly to the income ratio, which may not hold for large changes. Elasticities are typically measured for marginal changes."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "major",
+    "quote": "`gdpImpact = totalHourChange * mean(inputs.avgWage)` with comment \"Correct wage impact calculation by taking mean wage to avoid double counting uncertainty\"",
+    "explanation": "Logical inconsistency: The comment claims to fix \"double counting uncertainty\" but totalHourChange already incorporates wage uncertainty through the income effect calculation. Using mean() here arbitrarily reduces uncertainty without proper justification."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "major",
+    "quote": "`substitutionEffect = normal({ p5: -0.1, p95: 0 })` with doc \"Some may reduce hours to stay under means-tested program thresholds\"",
+    "explanation": "Contradictory logic: UBI is unconditional, so reducing hours wouldn't affect UBI eligibility. This effect only makes sense if OTHER means-tested programs exist where UBI income might push recipients over thresholds, but this interaction isn't explained."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "critical",
+    "quote": "`sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)`",
+    "explanation": "Test ranges don't match model calculations: With elasticity ~-0.1 and UBI/income ratio ~8.8%, expected effect is ~-0.88%, not -8% to -1%. The test assertion is off by an order of magnitude."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "major",
+    "quote": "`avgWage = mx([25 to 35, 15 to 100], [0.9, 0.1])` and `baseWorkHours = mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])`",
+    "explanation": "Unexplained bimodal distributions: The 90/10 mixture suggests two distinct populations but doesn't explain what they represent. The extreme ranges (especially 1000-2500 hours) seem arbitrary without justification."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "major",
+    "quote": "`gdpImpact = totalHourChange * mean(inputs.avgWage)`",
+    "explanation": "Oversimplified GDP calculation: Assumes perfect labor-output relationship, ignoring productivity differences, capital substitution, and non-linear production functions. GDP impact of reduced labor hours is more complex than hours × wage."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "major",
+    "quote": "Model only calculates intensive margin (hours adjustment)",
+    "explanation": "Missing extensive margin: Ignores possibility that some workers might exit labor force entirely with $5k UBI, which could have larger effects than marginal hour reductions."
+  },
+  {
+    "type": "finding",
+    "jobId": "job-1",
+    "promptKey": "logical_errors",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "severity": "minor",
+    "quote": "\"The model suggests a labor supply reduction of **X%**\"",
+    "explanation": "Circular presentation: Results are presented as \"findings\" but are just mechanical outputs of input assumptions. No validation against empirical data or acknowledgment of model limitations in the main results."
+  }
+]

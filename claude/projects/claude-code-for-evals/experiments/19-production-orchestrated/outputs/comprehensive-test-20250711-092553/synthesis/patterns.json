@@ -1,0 +1,340 @@
+{
+  "byCategory": {
+    "factual_verification": 6,
+    "citation_accuracy": 13,
+    "statistical_validity": 4,
+    "logical_consistency": 3
+  },
+  "bySeverity": {
+    "critical": 5,
+    "major": 10,
+    "minor": 11
+  },
+  "hotspots": [
+    {
+      "line": 3,
+      "issueCount": 5,
+      "findings": [
+        {
+          "category": "factual_verification",
+          "severity": "critical",
+          "line": 3,
+          "quote": "6.3% peak during the pandemic in April 2020",
+          "issue": "April 2020 unemployment was 14.7%, not 6.3% - more than double the claimed figure. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+          "sourceUrl": "bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z",
+          "id": "finding-1",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 3,
+          "quote": "6.3% peak during the pandemic in April 2020",
+          "issue": "False data - April 2020 unemployment was 14.7%, not 6.3%. Source: bls.gov/opub/ted/2020",
+          "sourceUrl": "bls.gov/opub/ted/2020",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-2",
+          "validated": true
+        },
+        {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 3,
+          "quote": "The US unemployment rate reached 3.5% in December 2024",
+          "issue": "BLS data shows 4.1% unemployment in December 2024, not 3.5%. Source: bls.gov/news.release/empsit.nr0.htm",
+          "sourceUrl": "bls.gov/news.release/empsit.nr0.htm",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.552Z",
+          "id": "finding-3",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 3,
+          "quote": "The US unemployment rate reached 3.5% in December 2024",
+          "issue": "Incorrect statistic - BLS data shows 4.1% unemployment in December 2024. Source: bls.gov",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.981Z",
+          "id": "finding-4",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 3,
+          "quote": "US unemployment rate reached 3.5% in December 2024",
+          "issue": "Claims December 2024 data when current date is July 2025 - should clarify if referring to past December",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T16:26:13.450Z",
+          "id": "finding-5",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 5,
+      "issueCount": 4,
+      "findings": [
+        {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 5,
+          "quote": "Federal Reserve's current federal funds rate is 5.25-5.50%",
+          "issue": "Fed funds rate was cut to 4.25-4.50% by December 2024. Source: Federal Reserve data",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z",
+          "id": "finding-6",
+          "validated": true
+        },
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 5,
+          "quote": "reached 3.5% in December 2024",
+          "issue": "Claims December 2024 data but it's only July 2025 - data should exist",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T16:26:11.357Z",
+          "id": "finding-7",
+          "validated": true
+        },
+        {
+          "category": "factual_verification",
+          "severity": "minor",
+          "line": 5,
+          "quote": "Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024",
+          "issue": "November 2024 CPI was 2.7% year-over-year, not 3.1%. Source: BLS/CNBC reports",
+          "sourceUrl": "BLS/CNBC",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z",
+          "id": "finding-8",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 5,
+          "quote": "November 2024",
+          "issue": "References November 2024 data without specifying it's historical (8 months ago from current date)",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T16:26:13.450Z",
+          "id": "finding-9",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 25,
+      "issueCount": 4,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 25,
+          "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+          "issue": "WTI averaged $69.95 in November 2024, not $78. Source: statista.com",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-23",
+          "validated": true
+        },
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 25,
+          "quote": "closed at 4,750 points on December 15, 2024",
+          "issue": "Claims specific December 15, 2024 data but it's July 2025 - should be past data",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T16:26:11.358Z",
+          "id": "finding-24",
+          "validated": true
+        },
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 25,
+          "quote": "Bitcoin traded at $42,300 as of the same date",
+          "issue": "Claims December 15, 2024 Bitcoin price but it's July 2025 - should be historical",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T16:26:11.358Z",
+          "id": "finding-25",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 25,
+          "quote": "natural gas futures traded at $2.85 per MMBtu",
+          "issue": "No source provided; projections showed ~$3.10/MMBtu for November 2024. Source: eia.gov",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-26",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 23,
+      "issueCount": 3,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 23,
+          "quote": "The S&P 500 closed at 4,750 points on December 15, 2024",
+          "issue": "No data found; S&P 500 was above 5,800 in December 2024. Source: investing.com",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-20",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 23,
+          "quote": "Bitcoin traded at $42,300 as of the same date",
+          "issue": "Bitcoin was over $100,000 on Dec 15, 2024; $42,300 was Dec 2023 price. Source: statista.com",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-21",
+          "validated": true
+        },
+        {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 23,
+          "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+          "issue": "WTI crude averaged $69.95 per barrel in November 2024, not $78. Source: Statista/EIA data",
+          "sourceUrl": "Statista/EIA",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z",
+          "id": "finding-22",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 10,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 10,
+          "quote": "US working-age population (ages 15-64) is approximately 210 million people",
+          "issue": "No source provided; 2019 Census shows 213.6M for ages 15-64. No 2024 data found",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-11",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 10,
+          "quote": "Labor force participation rate stands at 63.4% as of late 2024",
+          "issue": "No source provided; BLS shows 62.5% in December 2024, not 63.4%. Source: bls.gov",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-12",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 16,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 16,
+          "quote": "A recent Stanford study found that remote work increases productivity by 13%",
+          "issue": "Wrong publication - Ctrip study was in Quarterly Journal of Economics 2015, not AER 2023",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-14",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 16,
+          "quote": "published in the American Economic Review in 2023",
+          "issue": "No such study exists; Stanford 2023 research shows remote work decreases productivity 10-20%",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-15",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 17,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "factual_verification",
+          "severity": "minor",
+          "line": 17,
+          "quote": "Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025",
+          "issue": "CBO projects 1.9% GDP growth for 2025, not 2.1%. Source: cbo.gov/publication/61172",
+          "sourceUrl": "cbo.gov/publication/61172",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z",
+          "id": "finding-16",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 17,
+          "quote": "December 15, 2024",
+          "issue": "References specific December 2024 date without clarifying it's historical data from 7 months ago",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T16:26:13.450Z",
+          "id": "finding-17",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 19,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 19,
+          "quote": "The World Bank estimates global GDP growth at 2.9% for the same period",
+          "issue": "World Bank cut 2025 forecast to 2.3%, not 2.9%. Source: worldbank.org",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T16:33:33.982Z",
+          "id": "finding-18",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 19,
+          "quote": "November 2024",
+          "issue": "References November 2024 prices without indicating this is 8-month old data",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T16:26:13.450Z",
+          "id": "finding-19",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [],
+  "statistics": {
+    "total": 26,
+    "averagePerLine": "1.04",
+    "mostCommonCategory": "citation_accuracy",
+    "mostCommonSeverity": "minor"
+  }
+}

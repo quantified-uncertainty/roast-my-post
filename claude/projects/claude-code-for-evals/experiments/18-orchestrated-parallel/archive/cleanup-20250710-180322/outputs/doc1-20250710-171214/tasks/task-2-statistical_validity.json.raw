@@ -1,0 +1,47 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 33
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Mixture weights should be justified when modeling wage distribution with extreme outliers
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 48
+Quote: "normal({ p5: -0.15, p95: -0.05 })"
+Issue: Normal distribution assumption for elasticity needs justification from empirical studies
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 55
+Quote: "normal({ p5: -0.1, p95: 0 })"
+Issue: Substitution effect distribution lacks empirical basis or citations
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: critical
+Line: 78
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation oversimplified - ignores multiplier effects and partial equilibrium
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 116
+Quote: "uniform effects across demographics"
+Issue: Acknowledges but doesn't model heterogeneous treatment effects despite their importance
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 132
+Quote: "90% CI:"
+Issue: Confidence interval interpretation unclear given mixture of uncertainty sources
+[/FINDING]

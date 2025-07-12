@@ -1,0 +1,44 @@
+[
+  {
+    "id": "task-1-factual_verification",
+    "type": "factual_verification",
+    "name": "Fact Checking",
+    "description": "Verify factual claims and statements",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "empirical_research",
+      "documentFeatures": [
+        "empirical_claims"
+      ]
+    }
+  },
+  {
+    "id": "task-3-statistical_validity",
+    "type": "statistical_validity",
+    "name": "Statistical Validity Review",
+    "description": "Check statistical claims, methods, and interpretations",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "empirical_research",
+      "documentFeatures": [
+        "empirical_claims"
+      ]
+    }
+  },
+  {
+    "id": "task-2-citation_accuracy",
+    "type": "citation_accuracy",
+    "name": "Citation Verification",
+    "description": "Verify citations, references, and attributions",
+    "priority": "medium",
+    "estimatedTime": 4,
+    "metadata": {
+      "documentType": "empirical_research",
+      "documentFeatures": [
+        "empirical_claims"
+      ]
+    }
+  }
+]

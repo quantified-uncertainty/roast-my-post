@@ -1,0 +1,119 @@
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 6
+Quote: "they need it needs to be in place"
+Issue: Grammar error - should be "it needs to be in place"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 6
+Quote: "self-propagating expansion of human civilisation"
+Issue: Technical term "self-propagating" used without explanation
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 15
+Quote: "whether these solar system disasters represented"
+Issue: Unclear antecedent - "these" refers to items in previous post
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 25
+Quote: "First, that's a lot of death."
+Issue: Abrupt informal tone shift in academic context
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 30
+Quote: "Don't worry too much about the categories/subheadings here."
+Issue: Overly conversational tone disrupts flow
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 35
+Quote: "arbitrarily advanced technology"
+Issue: Technical term "arbitrarily" needs clarification in this context
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 40
+Quote: "By spreading outside of one's own atmosphere"
+Issue: Awkward phrasing - "one's own" is unnecessarily formal
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: major
+Line: 47
+Quote: "The longest list of threats in this transitionary phase come from stars."
+Issue: Subject-verb disagreement - should be "comes" not "come"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 52
+Quote: "There are also all sorts of cosmic phenomena"
+Issue: Vague phrasing - "all sorts of" is imprecise
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 101
+Quote: "To quote Nick Bostrom[36]:"
+Issue: Missing space before footnote reference
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 165
+Quote: "How high is pure speculation I think."
+Issue: Awkward word order - should be "How high, I think, is pure speculation"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 264
+Quote: "From hereon I will assume"
+Issue: Should be "From here on" or "Henceforth"
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 287
+Quote: "conditions 3 to 5 basically describe God"
+Issue: Informal phrasing in academic context
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 297
+Quote: "so we don't need to bother now"
+Issue: Overly casual phrasing - "bother" is too informal
+[/FINDING]
+
+[FINDING]
+Category: clarity_readability
+Severity: minor
+Line: 313
+Quote: "Some key takeaways and hot takes to disagree with me on"
+Issue: Extremely informal section heading for academic paper
+[/FINDING]

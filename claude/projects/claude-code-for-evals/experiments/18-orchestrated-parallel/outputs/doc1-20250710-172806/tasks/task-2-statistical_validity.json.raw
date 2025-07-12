@@ -1,0 +1,63 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 32
+Quote: "Based on empirical studies of lottery winners and inheritance recipients."
+Issue: Extrapolating from lottery/inheritance studies to UBI may not be statistically valid due to different behavioral contexts
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 24
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Mixture weights (0.9, 0.1) lack justification for wage distribution
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 30
+Quote: "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])"
+Issue: Mixture weights (0.9, 0.1) for work hours lack empirical basis
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 35
+Quote: "normal({ p5: -0.15, p95: -0.05 })"
+Issue: Using normal distribution for bounded elasticity parameter may produce invalid values outside economic bounds
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 40
+Quote: "normal({ p5: -0.1, p95: 0 })"
+Issue: Normal distribution for substitution effect could yield positive values contradicting the stated negative effect
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: critical
+Line: 60
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: Taking mean of wage after multiplication ignores correlation structure and may underestimate uncertainty
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 99
+Quote: "responses likely vary by:\n    - Income level (poorer workers may reduce hours more)"
+Issue: Model assumes uniform effects despite acknowledging heterogeneous responses, potentially biasing estimates
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 114
+Quote: "90% CI: " + String(quantile(impact.percentChange, 0.05), ".1f")"
+Issue: Confidence interval interpretation unclear given mixture of uncertainty sources (population, parameters, model)
+[/FINDING]

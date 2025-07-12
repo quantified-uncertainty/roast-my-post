@@ -1,0 +1,46 @@
+[
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 52,
+    "quote": "Negative as higher non-wage income reduces labor supply",
+    "issue": "Contradicts line 68 - if elasticity is negative and UBI is positive income, the multiplication should increase hours worked, not decrease",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:44:48.329Z",
+    "id": "finding-1",
+    "validated": true
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "minor",
+    "line": 99,
+    "quote": "percent change is negative but modest",
+    "issue": "Test expects negative values but the calculation logic would produce positive values given negative elasticity",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:44:48.330Z",
+    "id": "finding-2",
+    "validated": true
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "critical",
+    "line": 131,
+    "quote": "The model suggests a labor supply reduction",
+    "issue": "Fundamental contradiction - the math shows negative elasticity × positive income ratio = negative effect, which means hours increase, not decrease",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:44:48.330Z",
+    "id": "finding-3",
+    "validated": true
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 144,
+    "quote": "Results are highly sensitive to assumptions about income elasticity",
+    "issue": "Claims sensitivity to elasticity but uses fixed negative range (-0.15 to -0.05) with no exploration of positive values",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:44:48.330Z",
+    "id": "finding-4",
+    "validated": true
+  }
+]

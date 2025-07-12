@@ -1,0 +1,15 @@
+{"error": "Task failed or timed out", "task": {
+  "id": "task-1-factual_verification",
+  "type": "factual_verification",
+  "name": "Fact Checking",
+  "description": "Verify factual claims and statements",
+  "priority": "high",
+  "estimatedTime": 5,
+  "metadata": {
+    "documentType": "empirical_research",
+    "documentFeatures": [
+      "empirical_claims",
+      "mathematical_content"
+    ]
+  }
+}}

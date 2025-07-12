@@ -1,0 +1,18 @@
+{
+  "id": "chunk-3",
+  "type": "section",
+  "header": "Methodology",
+  "level": 2,
+  "content": "## Methodology\n\nOur research employs a mixed-methods approach combining quantitative analysis with qualitative insights.\n\n### Data Collection\n\nWe gathered data from multiple sources:\n- Federal Reserve economic data (FRED)\n- Bloomberg terminal for market prices\n- Survey data from institutional investors (n=500)\n- Interviews with 25 senior portfolio managers\n\nThe time period covers January 2020 through December 2024, capturing both pre and post-pandemic market conditions.\n\n### Statistical Analysis\n\nWe use several econometric techniques:\n1. Vector autoregression (VAR) to examine dynamic relationships\n2. GARCH models for volatility analysis\n3. Difference-in-differences for policy impact assessment\n\nAll statistical tests use a significance level of p<0.05. We control for multiple comparisons using the Bonferroni correction.\n",
+  "startLine": 23,
+  "endLine": 45,
+  "lines": 23,
+  "metadata": {
+    "hasNumbers": true,
+    "hasCitations": false,
+    "hasQuotes": false,
+    "hasLists": true,
+    "hasCode": false,
+    "complexity": "high"
+  }
+}

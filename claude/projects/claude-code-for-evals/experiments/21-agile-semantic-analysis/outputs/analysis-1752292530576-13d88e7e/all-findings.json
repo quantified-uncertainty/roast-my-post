@@ -1,0 +1,67 @@
+[
+  {
+    "type": "factual_claim",
+    "line": 5,
+    "quote": "The Earth orbits the Sun once every 365.25 days.",
+    "description": "Orbital period of Earth",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Basic Facts"
+  },
+  {
+    "type": "factual_claim",
+    "line": 5,
+    "quote": "This is why we have leap years every 4 years.",
+    "description": "Reason for leap years",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Basic Facts"
+  },
+  {
+    "type": "factual_claim",
+    "line": 7,
+    "quote": "Water freezes at 0 degrees Celsius",
+    "description": "Water freezing point",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Basic Facts"
+  },
+  {
+    "type": "factual_claim",
+    "line": 7,
+    "quote": "boils at 100 degrees.",
+    "description": "Water boiling point",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Basic Facts"
+  },
+  {
+    "type": "factual_claim",
+    "line": 11,
+    "quote": "All birds can fly",
+    "description": "General claim about bird flight capability",
+    "chunkId": "chunk-3",
+    "chunkHeader": "Logical Example"
+  },
+  {
+    "type": "factual_claim",
+    "line": 11,
+    "quote": "Penguins are birds",
+    "description": "Taxonomic classification of penguins",
+    "chunkId": "chunk-3",
+    "chunkHeader": "Logical Example"
+  },
+  {
+    "type": "factual_claim",
+    "line": 11,
+    "quote": "penguins can fly",
+    "description": "Claim about penguin flight capability",
+    "chunkId": "chunk-3",
+    "chunkHeader": "Logical Example"
+  },
+  {
+    "type": "logical_issue",
+    "line": 11,
+    "quote": "All birds can fly. Penguins are birds. Therefore, penguins can fly.",
+    "issueType": "fallacy",
+    "explanation": "False premise - not all birds can fly, making the syllogism invalid",
+    "chunkId": "chunk-3",
+    "chunkHeader": "Logical Example"
+  }
+]

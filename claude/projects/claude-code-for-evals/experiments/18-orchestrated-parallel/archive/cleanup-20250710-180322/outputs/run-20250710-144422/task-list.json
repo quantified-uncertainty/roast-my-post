@@ -1,0 +1,77 @@
+[
+  {
+    "id": "task-3-mathematical_accuracy",
+    "type": "mathematical_accuracy",
+    "name": "Mathematical Accuracy Check",
+    "description": "Verify all mathematical statements, equations, and calculations",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content"
+      ]
+    }
+  },
+  {
+    "id": "task-4-statistical_validity",
+    "type": "statistical_validity",
+    "name": "Statistical Validity Review",
+    "description": "Check statistical claims, methods, and interpretations",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content"
+      ]
+    }
+  },
+  {
+    "id": "task-5-code_quality",
+    "type": "code_quality",
+    "name": "Code Quality Review",
+    "description": "Check code snippets for errors, best practices, and clarity",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content"
+      ]
+    }
+  },
+  {
+    "id": "task-1-spelling_grammar",
+    "type": "spelling_grammar",
+    "name": "Spelling and Grammar Check",
+    "description": "Identify spelling errors, grammatical mistakes, and typos",
+    "priority": "medium",
+    "estimatedTime": 3,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content"
+      ]
+    }
+  },
+  {
+    "id": "task-2-clarity_readability",
+    "type": "clarity_readability",
+    "name": "Clarity and Readability Review",
+    "description": "Assess sentence structure, clarity, and overall readability",
+    "priority": "medium",
+    "estimatedTime": 4,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content"
+      ]
+    }
+  }
+]

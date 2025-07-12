@@ -1,0 +1,70 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 60,
+      "quote": "taking mean wage to avoid double counting uncertainty",
+      "issue": "Mean wage multiplied by uncertain hours still propagates uncertainty, not avoiding it",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T01:04:40.933Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 29,
+      "quote": "Based on empirical studies of lottery winners and inheritance recipients.",
+      "issue": "Applying lottery/inheritance elasticities to regular UBI payments lacks logical basis",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T01:04:40.934Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 33,
+      "quote": "Some may reduce hours to stay under means-tested program thresholds",
+      "issue": "$5k UBI unlikely to affect most means-tested thresholds, logic unclear",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T01:04:40.934Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 115,
+      "quote": "Results are highly sensitive to assumptions about income elasticity",
+      "issue": "Admits high sensitivity but provides no sensitivity analysis or ranges",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T01:04:40.934Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 116,
+      "quote": "The model doesn't capture potential productivity gains from reduced financial stress",
+      "issue": "Inconsistent to omit positive effects while including negative substitution effects",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T01:04:40.934Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 5,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: logical_consistency\nSeverity: major\nLine: 91\nQuote: \"Income effects are based on empirical studies of lottery winners and inheritance recipients, which may not perfectly translate to UBI\"\nIssue: Acknowledges fundamental flaw but still uses these values as primary inputs\n[/FINDING]",
+        "parsed": {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 91,
+          "quote": "Income effects are based on empirical studies of lottery winners and inheritance recipients, which may not perfectly translate to UBI",
+          "issue": "Acknowledges fundamental flaw but still uses these values as primary inputs",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T01:04:40.934Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

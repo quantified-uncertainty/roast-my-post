@@ -1,0 +1,39 @@
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 91
+Quote: "This represents an annual reduction of **"
+Issue: Uses double negative with totalHourChange (negative value divided by -1B)
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 54
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation ignores productivity differences and assumes linear wage-output relationship
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 70
+Quote: "sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)"
+Issue: Test bounds (-8, -1) don't align with likely model outputs given elasticity ranges
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 80
+Quote: "Income effects are based on empirical studies of lottery winners"
+Issue: Claims lottery winner studies used but no evidence these informed the elasticity parameters
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 99
+Quote: "The model doesn't capture potential productivity gains"
+Issue: Contradicts earlier GDP calculation which implicitly assumes constant productivity
+[/FINDING]

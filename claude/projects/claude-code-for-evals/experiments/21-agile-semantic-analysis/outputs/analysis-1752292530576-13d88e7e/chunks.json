@@ -1,0 +1,26 @@
+[
+  {
+    "id": "chunk-1",
+    "header": "Document Start",
+    "content": "# Simple Test Document\n",
+    "startLine": 1,
+    "endLine": 2,
+    "lineCount": 2
+  },
+  {
+    "id": "chunk-2",
+    "header": "Basic Facts",
+    "content": "## Basic Facts\n\nThe Earth orbits the Sun once every 365.25 days. This is why we have leap years every 4 years.\n\nWater freezes at 0 degrees Celsius and boils at 100 degrees.\n",
+    "startLine": 3,
+    "endLine": 8,
+    "lineCount": 6
+  },
+  {
+    "id": "chunk-3",
+    "header": "Logical Example",
+    "content": "## Logical Example\n\nAll birds can fly. Penguins are birds. Therefore, penguins can fly.\n\nThe above argument contains a logical flaw - the premise is false.",
+    "startLine": 9,
+    "endLine": 13,
+    "lineCount": 5
+  }
+]

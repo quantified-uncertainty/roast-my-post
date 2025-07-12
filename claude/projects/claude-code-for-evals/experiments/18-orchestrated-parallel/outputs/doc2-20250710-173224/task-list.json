@@ -1,0 +1,32 @@
+[
+  {
+    "id": "task-1-logical_consistency",
+    "type": "logical_consistency",
+    "name": "Logical Consistency Analysis",
+    "description": "Examine logical flow, arguments, and reasoning",
+    "priority": "high",
+    "estimatedTime": 4,
+    "metadata": {
+      "documentType": "opinion_essay",
+      "documentFeatures": [
+        "argumentative_content",
+        "policy_recommendations"
+      ]
+    }
+  },
+  {
+    "id": "task-2-argument_strength",
+    "type": "argument_strength",
+    "name": "Argument Strength Assessment",
+    "description": "Evaluate the strength and validity of arguments",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "opinion_essay",
+      "documentFeatures": [
+        "argumentative_content",
+        "policy_recommendations"
+      ]
+    }
+  }
+]

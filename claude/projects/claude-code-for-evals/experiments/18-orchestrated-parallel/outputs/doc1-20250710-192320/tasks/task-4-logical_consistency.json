@@ -1,0 +1,52 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 40,
+      "quote": "Income Effect on Labor Supply",
+      "issue": "Description says negative elasticity reduces labor supply, but negative elasticity times positive income would increase (make less negative) hours worked",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T02:23:39.584Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 81,
+      "quote": "Correct wage impact calculation by taking mean wage",
+      "issue": "Comment says \"correct\" but doesn't explain what was incorrect or why mean avoids double counting",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T02:23:39.586Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 119,
+      "quote": "knowledge workers vs service workers",
+      "issue": "Earlier defines service workers as lower wage bound but here implies they're distinct from knowledge workers without clear differentiation",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T02:23:39.586Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 3,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: logical_consistency\nSeverity: major\nLine: 61\nQuote: \"incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))\"\nIssue: Income elasticity is negative but formula treats it as if reducing hours, creating sign confusion with later calculations\n[/FINDING]",
+        "parsed": {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 61,
+          "quote": "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+          "issue": "Income elasticity is negative but formula treats it as if reducing hours, creating sign confusion with later calculations",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T02:23:39.586Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

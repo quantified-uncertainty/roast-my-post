@@ -1,0 +1,29 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 10,
+      "quote": "productivity by 13%",
+      "issue": "Lacks context on measurement method, sample size, or confidence intervals",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:39:23.562Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 12,
+      "quote": "reduces anxiety by 30%",
+      "issue": "No effect size, confidence interval, or measurement scale specified",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:39:23.563Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 2,
+    "validFindings": 2,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

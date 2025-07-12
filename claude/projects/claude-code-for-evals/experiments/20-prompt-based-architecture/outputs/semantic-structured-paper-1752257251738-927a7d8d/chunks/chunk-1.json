@@ -1,0 +1,18 @@
+{
+  "id": "chunk-1",
+  "type": "section",
+  "header": "Introduction",
+  "level": 2,
+  "content": "## Introduction\n\nThis paper examines the relationship between fiscal policy decisions and market behavior during the period 2020-2024. Our analysis focuses on three key areas: monetary policy impacts, fiscal stimulus effects, and market volatility patterns.\n\nRecent studies have shown that traditional economic models may not fully capture the complexity of modern markets. As noted by Smith et al. (2023), \"the interconnectedness of global markets requires new analytical frameworks.\"\n",
+  "startLine": 3,
+  "endLine": 8,
+  "lines": 6,
+  "metadata": {
+    "hasNumbers": true,
+    "hasCitations": true,
+    "hasQuotes": true,
+    "hasLists": false,
+    "hasCode": false,
+    "complexity": "medium"
+  }
+}

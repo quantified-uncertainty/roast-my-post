@@ -1,0 +1,29 @@
+
+📋 Prompt-Based Document Analysis
+==================================================
+Document: test-documents/doc3.md
+Job ID: doc3-1752264820310-64ed3071
+Selected prompts: 3
+Output: outputs/doc3-1752264820310-64ed3071
+
+1️⃣  Chunking document...
+   Created 4 chunks
+2️⃣  Creating jobs from prompt templates...
+   Creating 12 jobs (4 chunks × 3 prompts)
+
+📊 Job Summary by Prompt Type:
+   Logical Error Detection: 4 jobs
+   Factual Claim Verification: 4 jobs
+   Statistical Claim Analysis: 4 jobs
+
+   Estimated time: 6 minutes
+   Estimated cost: $0.08
+
+📊 Job Status:
+Total Jobs: 12
+✅ Completed: 0 (0%)
+⏳ Pending: 12
+🔄 Running: 0
+❌ Failed: 0
+
+3️⃣  Running analysis jobs...

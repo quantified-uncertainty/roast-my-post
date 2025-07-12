@@ -1,0 +1,74 @@
+{
+  "taskType": "code_quality",
+  "findings": [
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 73,
+      "quote": "mean(inputs.avgWage)",
+      "issue": "Inconsistent uncertainty handling - other calculations preserve distributions",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.386Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 85,
+      "quote": "toBeBetween(-8, -1)",
+      "issue": "Magic numbers without explanation or named constants",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 90,
+      "quote": "toBeBetween(-20B, -5B)",
+      "issue": "Magic numbers without explanation or named constants",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "major",
+      "line": 62,
+      "quote": "incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+      "issue": "No validation for potential division by zero if baseWorkHours is 0",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 115,
+      "quote": "String(mean(impact.percentChange), \\\".1f\\\")",
+      "issue": "Repeated string formatting pattern could be extracted to helper function",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 122,
+      "quote": "impact.totalHourChange / -1B",
+      "issue": "Unclear negative division operation - should use abs() or clearer logic",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    },
+    {
+      "category": "code_quality",
+      "severity": "minor",
+      "line": 125,
+      "quote": "impact.gdpImpact / -1B",
+      "issue": "Unclear negative division operation - should use abs() or clearer logic",
+      "source": "code_quality",
+      "timestamp": "2025-07-10T21:44:37.387Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 7,
+    "validFindings": 7,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

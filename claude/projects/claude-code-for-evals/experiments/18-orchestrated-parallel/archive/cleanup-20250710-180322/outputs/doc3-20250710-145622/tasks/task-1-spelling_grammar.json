@@ -1,0 +1,29 @@
+{
+  "taskType": "spelling_grammar",
+  "findings": [
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 12,
+      "quote": "Later we can bring out more hard data. *",
+      "issue": "Extra space before the closing asterisk",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:57:32.604Z"
+    },
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 217,
+      "quote": "it's hard for me to argue against all,",
+      "issue": "Missing \"of them\" after \"all\" - should be \"argue against all of them\"",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:57:32.605Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 2,
+    "validFindings": 2,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

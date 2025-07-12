@@ -1,0 +1,16 @@
+[
+  {
+    "id": "task-1-logical_consistency",
+    "type": "logical_consistency",
+    "name": "Logical Consistency Analysis",
+    "description": "Examine logical flow, arguments, and reasoning",
+    "priority": "high",
+    "estimatedTime": 4,
+    "metadata": {
+      "documentType": "opinion_essay",
+      "documentFeatures": [
+        "argumentative_content"
+      ]
+    }
+  }
+]

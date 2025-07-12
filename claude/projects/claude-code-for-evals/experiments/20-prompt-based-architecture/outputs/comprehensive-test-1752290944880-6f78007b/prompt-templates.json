@@ -1,0 +1,13 @@
+{
+  "factual_claims": {
+    "name": "Factual Claim Verification",
+    "description": "Identify and verify factual claims",
+    "prompt": "Identify all factual claims in this text section.\n\nFor each factual claim:\n1. Extract the specific claim\n2. Determine if it needs verification (statistics, dates, quotes, etc.)\n3. Suggest how to verify it\n\nFormat:\nCLAIM: [line] | [claim text] | [verification needed: yes/no] | [verification method]\n\nFor claims needing verification, also add:\nVERIFY: [claim] | [search query] | [expected source type]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "web_search",
+      "verify_statistic",
+      "check_source"
+    ],
+    "estimatedTokens": 2500
+  }
+}

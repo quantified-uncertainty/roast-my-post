@@ -1,0 +1,38 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 12,
+      "quote": "Date: Fri Jun 27 2025",
+      "issue": "Date is in the future (June 2025) which seems incorrect for a published document",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:58.314Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 116,
+      "quote": "most executives spend less than 20% of their time on high-level strategy",
+      "issue": "Specific statistical claim lacks citation or source",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:58.315Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 289,
+      "quote": "Tim Ferris",
+      "issue": "Author's name is misspelled - should be \"Tim Ferriss\" with double 's'",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:58.315Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 3,
+    "validFindings": 3,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

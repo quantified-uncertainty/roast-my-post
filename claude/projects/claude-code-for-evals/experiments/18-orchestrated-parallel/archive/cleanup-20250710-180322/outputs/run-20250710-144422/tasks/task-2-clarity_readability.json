@@ -1,0 +1,56 @@
+{
+  "taskType": "clarity_readability",
+  "findings": [
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 39,
+      "quote": "based on empirical studies of lottery winners and inheritance recipients.",
+      "issue": "Missing context about why lottery/inheritance studies relate to UBI effects",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:44:35.431Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 79,
+      "quote": "total hour change is negative,",
+      "issue": "Ambiguous wording - unclear if \"negative\" means reduction or value below zero",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:44:35.432Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "major",
+      "line": 91,
+      "quote": "which may not perfectly translate to UBI",
+      "issue": "Vague statement without explaining key differences between lottery/inheritance and UBI",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:44:35.432Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 99,
+      "quote": "General equilibrium effects on wages",
+      "issue": "Economic jargon without explanation for general audience",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:44:35.432Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 125,
+      "quote": "Geographic variations in cost of living would affect impact",
+      "issue": "Unclear how cost of living affects labor supply impact",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:44:35.432Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

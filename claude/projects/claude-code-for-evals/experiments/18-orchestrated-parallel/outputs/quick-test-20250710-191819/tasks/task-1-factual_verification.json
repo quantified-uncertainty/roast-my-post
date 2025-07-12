@@ -1,0 +1,20 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate is 3.5% in 2024",
+      "issue": "BLS data shows 2024 rates ranged from 3.7-4.2%, not 3.5%. Source: bls.gov/opub/ted/2024/unemployment-rate-changed-little-at-3-8-percent-in-march-2024.htm",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T02:19:16.834Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 1,
+    "validFindings": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

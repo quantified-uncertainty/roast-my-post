@@ -1,0 +1,23 @@
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 5
+Quote: "This represents a significant improvement"
+Issue: No statistical test provided to justify "significant" improvement claim
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 17
+Quote: "remote work increases productivity by 13%"
+Issue: Missing confidence intervals, p-values, or error margins for 13% claim
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 17
+Quote: "study, published in the American Economic Review in 2023"
+Issue: Sample size of 1,000 may limit generalizability to broader population
+[/FINDING]

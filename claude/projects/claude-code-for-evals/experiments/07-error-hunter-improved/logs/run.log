@@ -1,0 +1,55 @@
+[2025-07-10T05:18:11.259Z] [INFO] 🚀 Error Hunter v2 starting...
+[2025-07-10T05:18:11.260Z] [INFO] 📄 Input: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/input.md
+[2025-07-10T05:18:11.260Z] [INFO] 🎯 Max iterations: 1
+[2025-07-10T05:18:11.261Z] [INFO] 
+🔍 Iteration 1/1: Find typos and grammatical errors
+[2025-07-10T05:19:02.522Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.0555
+[2025-07-10T05:19:02.524Z] [INFO] 
+📊 Generating final report...
+[2025-07-10T05:19:02.524Z] [INFO] 
+✅ Report saved to: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/output/report.md
+[2025-07-10T05:19:02.524Z] [INFO] 📈 Summary saved to: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/output/summary.json
+[2025-07-10T05:19:02.525Z] [INFO] 
+🏁 Error Hunter complete!
+[2025-07-10T05:19:02.525Z] [INFO] ⏱️  Duration: 51.3s
+[2025-07-10T05:19:02.525Z] [INFO] 💰 Total cost: $0.0555
+[2025-07-10T05:19:02.525Z] [INFO] 📝 Errors found: 0
+[2025-07-10T05:20:06.558Z] [INFO] 🚀 Error Hunter v2 starting...
+[2025-07-10T05:20:06.559Z] [INFO] 📄 Input: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/input.md
+[2025-07-10T05:20:06.560Z] [INFO] 🎯 Max iterations: 6
+[2025-07-10T05:20:06.560Z] [INFO] 
+🔍 Iteration 1/6: Find typos and grammatical errors
+[2025-07-10T05:21:06.407Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.0555
+[2025-07-10T05:21:06.408Z] [INFO] 
+🔍 Iteration 2/6: Verify numerical claims
+[2025-07-10T05:22:23.908Z] [INFO] 🚀 Error Hunter v2 starting...
+[2025-07-10T05:22:23.909Z] [INFO] 📄 Input: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/input.md
+[2025-07-10T05:22:23.909Z] [INFO] 🎯 Max iterations: 6
+[2025-07-10T05:22:23.909Z] [INFO] 
+🔍 Iteration 1/6: Find typos and grammatical errors
+[2025-07-10T05:23:24.932Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.0555
+[2025-07-10T05:23:24.933Z] [INFO] 
+🔍 Iteration 2/6: Verify numerical claims
+[2025-07-10T05:26:14.093Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.1110
+[2025-07-10T05:26:14.093Z] [INFO] 
+🔍 Iteration 3/6: Check mathematical statements
+[2025-07-10T05:27:37.923Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.1665
+[2025-07-10T05:27:37.923Z] [INFO] 
+🔍 Iteration 4/6: Identify logical contradictions
+[2025-07-10T05:29:38.040Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.2220
+[2025-07-10T05:29:38.040Z] [INFO] 
+🔍 Iteration 5/6: Fact-check people and organizations
+[2025-07-10T05:35:28.575Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.2775
+[2025-07-10T05:35:28.576Z] [INFO] 
+🔍 Iteration 6/6: Verify citations and references
+[2025-07-10T05:38:01.677Z] [INFO] ✓ Found 0 new errors | Cost: $0.0555 | Total: $0.3330
+[2025-07-10T05:38:01.678Z] [INFO] 
+📊 Generating final report...
+[2025-07-10T05:38:01.679Z] [INFO] 
+✅ Report saved to: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/output/report.md
+[2025-07-10T05:38:01.679Z] [INFO] 📈 Summary saved to: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/output/summary.json
+[2025-07-10T05:38:01.679Z] [INFO] 
+🏁 Error Hunter complete!
+[2025-07-10T05:38:01.679Z] [INFO] ⏱️  Duration: 937.8s
+[2025-07-10T05:38:01.679Z] [INFO] 💰 Total cost: $0.3330
+[2025-07-10T05:38:01.679Z] [INFO] 📝 Errors found: 0

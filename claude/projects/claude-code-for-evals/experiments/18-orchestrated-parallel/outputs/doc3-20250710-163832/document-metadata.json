@@ -1,0 +1,17 @@
+{
+  "type": "opinion_essay",
+  "features": [
+    "argumentative_content"
+  ],
+  "flawDensity": "low",
+  "analysisDepth": "minimal",
+  "reasoning": "This is a blog post expressing the author's views on AI intellectuals and addressing perceived misconceptions. It's explicitly labeled as 'thoughts' rather than empirical research, with the author noting 'Later we can bring out more hard data.'",
+  "statistics": {
+    "lineCount": 293,
+    "wordCount": 3596,
+    "characterCount": 25274
+  },
+  "recommendations": [
+    "logical_consistency"
+  ]
+}

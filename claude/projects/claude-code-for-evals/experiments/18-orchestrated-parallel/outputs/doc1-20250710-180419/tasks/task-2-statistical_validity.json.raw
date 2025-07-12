@@ -1,0 +1,39 @@
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 89
+Quote: "90% CI: " + String(quantile(impact.percentChange, 0.05), ".1f") + "% to " + String(quantile(impact.percentChange, 0.95), ".1f")
+Issue: Using 5th and 95th percentiles to construct confidence interval without verifying distribution assumptions
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 31
+Quote: "incomeElasticity = normal({ p5: -0.15, p95: -0.05 })"
+Issue: Assumes normal distribution for elasticity parameter without justification from empirical studies
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 53
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: GDP impact calculation oversimplified - doesn't account for multiplier effects or economic complexity
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 45
+Quote: "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: Linear elasticity application may not hold for large income changes or across income distributions
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: critical
+Line: 82
+Quote: "The model assumes uniform effects across demographics"
+Issue: Assuming uniform effects invalidates results - labor supply elasticity varies significantly by income level
+[/FINDING]

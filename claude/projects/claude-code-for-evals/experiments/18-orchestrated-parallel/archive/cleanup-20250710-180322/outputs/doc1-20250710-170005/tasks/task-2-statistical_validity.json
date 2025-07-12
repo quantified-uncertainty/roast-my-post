@@ -1,0 +1,70 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 31,
+      "quote": "mx([25 to 35, 15 to 100], [0.9, 0.1])",
+      "issue": "Mixture distribution with extreme range (15-100) that heavily skews results without justification",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:00:30.457Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 39,
+      "quote": "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+      "issue": "Mixture includes implausible work hours (1000-2500 range) for typical US workers",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:00:30.458Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 78,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "Oversimplified GDP calculation ignores productivity differences and multiplier effects",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:00:30.458Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 116,
+      "quote": "90% CI:",
+      "issue": "Confidence interval terminology incorrect for simulation output - should be \"90% prediction interval\"",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:00:30.458Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 45,
+      "quote": "Based on empirical studies of lottery winners and inheritance recipients",
+      "issue": "External validity problem - lottery/inheritance elasticities may not apply to regular UBI payments",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:00:30.458Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 5,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: statistical_validity\nSeverity: critical\nLine: 68\nQuote: \"incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))\"\nIssue: Invalid elasticity calculation - should use log changes for proper income elasticity formula\n[/FINDING]",
+        "parsed": {
+          "category": "statistical_validity",
+          "severity": "critical",
+          "line": 68,
+          "quote": "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+          "issue": "Invalid elasticity calculation - should use log changes for proper income elasticity formula",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T00:00:30.458Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

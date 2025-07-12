@@ -1,0 +1,9 @@
+{
+  "spelling_grammar": true,
+  "mathematical_accuracy": true,
+  "logical_consistency": true,
+  "factual_verification": true,
+  "clarity_readability": true,
+  "structural_analysis": true,
+  "technical_gaps": true
+}

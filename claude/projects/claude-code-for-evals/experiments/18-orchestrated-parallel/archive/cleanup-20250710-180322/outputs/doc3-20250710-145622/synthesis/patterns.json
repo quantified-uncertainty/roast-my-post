@@ -1,0 +1,185 @@
+{
+  "byCategory": {
+    "argument_strength": 16,
+    "clarity_readability": 16,
+    "citation_accuracy": 3,
+    "factual_verification": 3,
+    "spelling_grammar": 2,
+    "logical_consistency": 6,
+    "structural_analysis": 6
+  },
+  "bySeverity": {
+    "major": 29,
+    "critical": 6,
+    "minor": 17
+  },
+  "hotspots": [
+    {
+      "line": 9,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "argument_strength",
+          "severity": "critical",
+          "line": 9,
+          "quote": "we need to get the basic shape of the conversation right. Later we can bring out more hard data",
+          "issue": "Admits to lacking hard data while making sweeping claims throughout the document",
+          "source": "argument_strength",
+          "timestamp": "2025-07-10T21:57:38.274Z",
+          "id": "finding-2",
+          "validated": true
+        },
+        {
+          "category": "clarity_readability",
+          "severity": "minor",
+          "line": 9,
+          "quote": "I think we're at the point in this discussion where we need to get the basic shape",
+          "issue": "Vague reference - unclear what \"this discussion\" refers to and what \"basic shape\" means",
+          "source": "clarity_readability",
+          "timestamp": "2025-07-10T21:57:22.323Z",
+          "id": "finding-3",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 12,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 12,
+          "quote": "Date: Fri Jun 27 2025",
+          "issue": "Date is in the future (June 2025) which seems incorrect for a published document",
+          "source": "factual_verification",
+          "timestamp": "2025-07-10T21:56:58.314Z",
+          "id": "finding-5",
+          "validated": true
+        },
+        {
+          "category": "spelling_grammar",
+          "severity": "minor",
+          "line": 12,
+          "quote": "Later we can bring out more hard data. *",
+          "issue": "Extra space before the closing asterisk",
+          "source": "spelling_grammar",
+          "timestamp": "2025-07-10T21:57:32.604Z",
+          "id": "finding-6",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 23,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 23,
+          "quote": "Relatively Safe: Development doesn't require any particularly scary advances",
+          "issue": "Contradicts later acknowledgment that 100x AI intellectuals might be dangerous",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-10T21:57:07.234Z",
+          "id": "finding-10",
+          "validated": true
+        },
+        {
+          "category": "argument_strength",
+          "severity": "major",
+          "line": 23,
+          "quote": "Neglected: Few groups are actively pursuing this direction",
+          "issue": "Claims neglectedness without evidence or survey of current efforts",
+          "source": "argument_strength",
+          "timestamp": "2025-07-10T21:57:38.274Z",
+          "id": "finding-11",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 107,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 107,
+          "quote": "We're already successfully automating numerous complex tasks",
+          "issue": "Ignores that listed tasks have clearer verification than strategic thinking, which author later admits",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-10T21:57:07.234Z",
+          "id": "finding-19",
+          "validated": true
+        },
+        {
+          "category": "structural_analysis",
+          "severity": "major",
+          "line": 107,
+          "quote": "Many people seem to hold this belief implicitly",
+          "issue": "Misconception 1 section is disproportionately long compared to others (106 lines vs 20-40)",
+          "source": "structural_analysis",
+          "timestamp": "2025-07-10T21:57:24.729Z",
+          "id": "finding-20",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 283,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "argument_strength",
+          "severity": "major",
+          "line": 283,
+          "quote": "intellectual work that's highly accurate has a very small and often negative mimetic advantage",
+          "issue": "Strong claim about accuracy being disadvantageous without supporting evidence",
+          "source": "argument_strength",
+          "timestamp": "2025-07-10T21:57:38.274Z",
+          "id": "finding-44",
+          "validated": true
+        },
+        {
+          "category": "structural_analysis",
+          "severity": "major",
+          "line": 283,
+          "quote": "Thanks to Girish Sastry and Vyacheslav Matyuhin",
+          "issue": "Document lacks a proper conclusion section before acknowledgments",
+          "source": "structural_analysis",
+          "timestamp": "2025-07-10T21:57:24.728Z",
+          "id": "finding-45",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "type": "quality_cluster",
+      "name": "Clarity Issue Clusters",
+      "description": "Sections with concentrated clarity problems",
+      "instances": 2,
+      "severity": "major",
+      "clusters": [
+        {
+          "startLine": 9,
+          "endLine": 22,
+          "issueCount": 3
+        },
+        {
+          "startLine": 94,
+          "endLine": 112,
+          "issueCount": 5
+        }
+      ]
+    }
+  ],
+  "statistics": {
+    "total": 52,
+    "averagePerLine": "0.14",
+    "mostCommonCategory": "argument_strength",
+    "mostCommonSeverity": "major"
+  }
+}

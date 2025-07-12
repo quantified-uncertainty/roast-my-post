@@ -1,0 +1,21 @@
+🎭 ORCHESTRATED PARALLEL ANALYSIS
+================================
+Document: test-web-search.md
+Output: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/18-orchestrated-parallel/outputs/test-web-search-2025-07-11T02-06-59
+
+📊 Phase 1: Analyzing document characteristics...
+   Document type: empirical_research
+   Flaw density: high
+   Analysis depth: comprehensive
+
+📋 Phase 2: Generating task list...
+   Generated 2 analysis tasks
+
+✍️  Phase 3: Creating task prompts...
+   Created 2 prompts
+
+🚀 Phase 4: Running parallel analysis...
+   Max concurrent tasks: 4
+   Task timeout: 300s
+
+   [1/2] Starting: factual_verification

@@ -1,0 +1,47 @@
+{
+  "taskType": "citation_accuracy",
+  "findings": [
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate is 3.2% as of 2024",
+      "issue": "Incorrect rate. US unemployment rate in 2024 was 4.0-4.2%. Source: bls.gov, fred.stlouisfed.org",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T02:12:17.832Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 4,
+      "quote": "Python was created in 1995 by Guido van Rossum",
+      "issue": "Wrong year. Python was created in 1989 and released in 1991. Source: wikipedia.org/wiki/Python_(programming_language)",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T02:12:17.833Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 5,
+      "quote": "The speed of light is 300,000 km/s",
+      "issue": "Imprecise value. Exact speed is 299,792.458 km/s. Source: wikipedia.org/wiki/Speed_of_light",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T02:12:17.833Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 6,
+      "quote": "Amazon was founded in 1992",
+      "issue": "Wrong year. Amazon was founded July 5, 1994. Source: history.com/this-day-in-history/july-5/amazon-is-founded-by-jeff-bezos",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T02:12:17.833Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 4,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

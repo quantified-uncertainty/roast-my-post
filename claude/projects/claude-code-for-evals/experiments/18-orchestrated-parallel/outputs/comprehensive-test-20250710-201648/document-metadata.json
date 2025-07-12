@@ -1,0 +1,21 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims",
+    "mathematical_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains numerous empirical claims with specific statistics (unemployment rates, GDP projections, study results) and economic data that require verification. High flaw density expected due to multiple factual claims and research citations that could contain errors.",
+  "statistics": {
+    "lineCount": 25,
+    "wordCount": 218,
+    "characterCount": 1387
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy",
+    "logical_consistency"
+  ]
+}

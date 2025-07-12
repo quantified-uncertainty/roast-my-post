@@ -1,0 +1,31 @@
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 40
+Quote: "Income Effect on Labor Supply"
+Issue: Description says negative elasticity reduces labor supply, but negative elasticity times positive income would increase (make less negative) hours worked
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 81
+Quote: "Correct wage impact calculation by taking mean wage"
+Issue: Comment says "correct" but doesn't explain what was incorrect or why mean avoids double counting
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 61
+Quote: "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: Income elasticity is negative but formula treats it as if reducing hours, creating sign confusion with later calculations
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 119
+Quote: "knowledge workers vs service workers"
+Issue: Earlier defines service workers as lower wage bound but here implies they're distinct from knowledge workers without clear differentiation
+[/FINDING]

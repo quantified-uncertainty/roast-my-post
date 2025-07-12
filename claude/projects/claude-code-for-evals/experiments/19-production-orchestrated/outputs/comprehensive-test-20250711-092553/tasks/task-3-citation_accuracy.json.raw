@@ -1,0 +1,113 @@
+Based on my web searches to verify the citations in this document, I found several citation accuracy issues:
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 3
+Quote: "The US unemployment rate reached 3.5% in December 2024"
+Issue: Incorrect statistic - BLS data shows 4.1% unemployment in December 2024. Source: bls.gov
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: critical
+Line: 3
+Quote: "6.3% peak during the pandemic in April 2020"
+Issue: False data - April 2020 unemployment was 14.7%, not 6.3%. Source: bls.gov/opub/ted/2020
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 6
+Quote: "Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024"
+Issue: No source provided; November 2024 CPI data not found. Latest is May 2025 at 2.4%. Source: bls.gov
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 10
+Quote: "US working-age population (ages 15-64) is approximately 210 million people"
+Issue: No source provided; 2019 Census shows 213.6M for ages 15-64. No 2024 data found
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 10
+Quote: "Labor force participation rate stands at 63.4% as of late 2024"
+Issue: No source provided; BLS shows 62.5% in December 2024, not 63.4%. Source: bls.gov
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 12
+Quote: "productivity growth measured 2.3% in the third quarter of 2024"
+Issue: BLS reports 2.2% for Q3 2024, not 2.3%. Source: bls.gov/opub/ted/2024
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: critical
+Line: 16
+Quote: "A recent Stanford study found that remote work increases productivity by 13%"
+Issue: Wrong publication - Ctrip study was in Quarterly Journal of Economics 2015, not AER 2023
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 16
+Quote: "published in the American Economic Review in 2023"
+Issue: No such study exists; Stanford 2023 research shows remote work decreases productivity 10-20%
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 19
+Quote: "Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025"
+Issue: CBO projects 1.9-2.0% for 2025, not 2.1%. Source: cbo.gov/publication/60870
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 19
+Quote: "The World Bank estimates global GDP growth at 2.9% for the same period"
+Issue: World Bank cut 2025 forecast to 2.3%, not 2.9%. Source: worldbank.org
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: critical
+Line: 23
+Quote: "The S&P 500 closed at 4,750 points on December 15, 2024"
+Issue: No data found; S&P 500 was above 5,800 in December 2024. Source: investing.com
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: critical
+Line: 23
+Quote: "Bitcoin traded at $42,300 as of the same date"
+Issue: Bitcoin was over $100,000 on Dec 15, 2024; $42,300 was Dec 2023 price. Source: statista.com
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 25
+Quote: "Oil prices (WTI crude) averaged $78 per barrel in November 2024"
+Issue: WTI averaged $69.95 in November 2024, not $78. Source: statista.com
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 25
+Quote: "natural gas futures traded at $2.85 per MMBtu"
+Issue: No source provided; projections showed ~$3.10/MMBtu for November 2024. Source: eia.gov
+[/FINDING]

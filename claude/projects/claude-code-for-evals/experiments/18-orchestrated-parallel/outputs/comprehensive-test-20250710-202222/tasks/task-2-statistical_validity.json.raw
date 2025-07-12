@@ -1,0 +1,31 @@
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 3
+Quote: "The US unemployment rate reached 3.5% in December 2024"
+Issue: Future date reference - document cannot contain December 2024 data if written before that date
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 11
+Quote: "working-age population (ages 15-64)"
+Issue: US typically defines working age as 16-64, not 15-64
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 17
+Quote: "remote work increases productivity by 13%"
+Issue: Overgeneralization - study findings from specific context presented as universal truth
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 23
+Quote: "S&P 500 closed at 4,750 points on December 15, 2024"
+Issue: Future date reference - cannot have closing price for future date
+[/FINDING]

@@ -1,0 +1,15 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 105
+Quote: "most executives spend less than 20% of their time on high-level strategy"
+Issue: Statistical claim lacks source or supporting data
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 237
+Quote: "if you can improve the 'big picture strategy' by 20%, that might only lead to a 0.5% growth in profits"
+Issue: Speculative percentage conversion (20% to 0.5%) presented without statistical basis or methodology
+[/FINDING]

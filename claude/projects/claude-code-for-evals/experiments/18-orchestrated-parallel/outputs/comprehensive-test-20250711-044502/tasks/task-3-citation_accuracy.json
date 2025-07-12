@@ -1,0 +1,20 @@
+{
+  "taskType": "citation_accuracy",
+  "findings": [
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 23,
+      "quote": "natural gas futures traded at $2.85 per MMBtu",
+      "issue": "Incorrect price. November 2024 NYMEX contract expired at $2.32 per MMBtu. Source: eia.gov/naturalgas/weekly/",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T11:53:21.765Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 1,
+    "validFindings": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

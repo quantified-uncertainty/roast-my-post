@@ -1,0 +1,35 @@
+You are consolidating the results from 7 parallel analyses of a document.
+
+Here are all the findings from the parallel tasks:
+
+
+
+### Task 1: Grammar and spelling check - scan for typos, grammatical errors, and punctuation mistakes
+
+
+
+### Task 2: Factual accuracy verification - identify claims that may be incorrect or unsupported
+
+
+
+### Task 3: Logical consistency analysis - detect contradictions and flawed reasoning within the document
+
+
+
+### Task 4: Structure and organization review - evaluate flow, transitions, and overall document coherence
+
+
+
+### Task 5: Style and tone consistency - check for shifts in voice, formality level, or writing style
+
+
+
+Your job is to:
+1. Combine all findings into a single, well-organized report
+2. Remove any duplicates (same error found by multiple tasks)
+3. Organize by severity: Critical > Major > Minor
+4. Provide a clear summary at the top
+5. Ensure all line numbers and quotes are preserved
+6. Create a professional final report
+
+Format the output as a comprehensive error report.

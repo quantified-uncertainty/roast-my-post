@@ -1,0 +1,20 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate is 3.5% in 2024",
+      "issue": "Unsourced statistical claim without date specificity or data source",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:18:38.994Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 1,
+    "validFindings": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

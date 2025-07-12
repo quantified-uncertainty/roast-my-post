@@ -1,0 +1,56 @@
+{
+  "taskType": "spelling_grammar",
+  "findings": [
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 24,
+      "quote": "represents service sector, upper bound represents",
+      "issue": "Missing article \"the\" before \"service sector\"",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:44:36.487Z"
+    },
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 46,
+      "quote": "Some may reduce hours to stay under means-tested",
+      "issue": "Missing subject; sentence fragment needs \"Some workers\" or similar",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:44:36.488Z"
+    },
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 122,
+      "quote": "poorer workers may reduce hours more",
+      "issue": "Should be \"reduce hours more significantly\" or \"work fewer hours\"",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:44:36.488Z"
+    },
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 124,
+      "quote": "knowledge workers vs service workers",
+      "issue": "Missing periods after \"vs\" abbreviation",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:44:36.488Z"
+    },
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 125,
+      "quote": "single parents vs dual income households",
+      "issue": "Missing periods after \"vs\" abbreviation",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:44:36.488Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

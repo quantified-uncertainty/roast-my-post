@@ -1,0 +1,65 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 3,
+      "quote": "unemployment rate reached 3.5% in December 2024",
+      "issue": "Claims December 2024 data when that month hasn't occurred yet",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 5,
+      "quote": "3.1% year-over-year in November 2024",
+      "issue": "References November 2024 inflation data that doesn't exist yet",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 9,
+      "quote": "63.4% as of late 2024",
+      "issue": "Cites \"late 2024\" statistics when 2024 hasn't ended",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 11,
+      "quote": "2.3% in the third quarter of 2024",
+      "issue": "References Q3 2024 productivity data that isn't available yet",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 19,
+      "quote": "S&P 500 closed at 4,750 points on December 15, 2024",
+      "issue": "Provides specific December 15, 2024 market data from the future",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 21,
+      "quote": "averaged $78 per barrel in November 2024",
+      "issue": "Claims November 2024 average oil prices before that month ends",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:45:21.250Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 6,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

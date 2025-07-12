@@ -1,0 +1,27 @@
+{
+  "type": "technical",
+  "features": [
+    "mathematical_content",
+    "code_content",
+    "citations",
+    "logical_arguments",
+    "long_form"
+  ],
+  "statistics": {
+    "lineCount": 309,
+    "wordCount": 9644,
+    "characterCount": 68367
+  },
+  "recommendations": [
+    "spelling_grammar",
+    "clarity_readability",
+    "mathematical_accuracy",
+    "statistical_validity",
+    "code_quality",
+    "citation_accuracy",
+    "factual_verification",
+    "logical_consistency",
+    "argument_strength",
+    "structural_analysis"
+  ]
+}

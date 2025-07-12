@@ -1,0 +1,36 @@
+
+COST ESTIMATE FOR DOCUMENT ANALYSIS
+===================================
+Document: comprehensive-test.md
+Size: 1,387 characters (~347 tokens)
+
+ESTIMATED TOTAL COST: $0.27 USD
+
+Cost Range:
+- Low (efficient run): $0.19
+- Expected: $0.27
+- High (complex doc): $0.40
+
+Token Usage Estimate:
+- Input tokens: 32,400
+- Output tokens: 11,400
+- Total tokens: 43,800
+
+Task Breakdown:
+- mathematical_accuracy: $0.024
+- statistical_validity: $0.032
+- factual_verification: $0.112
+- logical_consistency: $0.024
+- synthesis: $0.076
+
+Assumptions:
+- Model: Claude 3.5 Sonnet
+- Includes web searches for fact-checking
+- Average document complexity
+- Standard finding counts per task
+
+Note: Actual costs may vary based on:
+- Document complexity
+- Number of factual claims requiring verification
+- Web search requirements
+- Model efficiency and caching

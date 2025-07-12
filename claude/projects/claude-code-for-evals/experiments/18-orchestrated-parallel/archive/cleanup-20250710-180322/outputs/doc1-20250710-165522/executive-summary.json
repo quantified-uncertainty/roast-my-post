@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-10T23:56:39.219Z",
+    "findingsCount": 20,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 20,
+    "severityCounts": {
+      "critical": 2,
+      "major": 8,
+      "minor": 10
+    },
+    "categoryCounts": {
+      "factual_verification": 5,
+      "logical_consistency": 6,
+      "statistical_validity": 6,
+      "mathematical_accuracy": 3
+    },
+    "qualityScore": 46,
+    "issuesPerLine": 0.16
+  },
+  "topIssues": [
+    {
+      "line": 98,
+      "category": "logical_consistency",
+      "issue": "Model calculates GDP impact from hours reduction but admits it ignores productivity changes"
+    },
+    {
+      "line": 119,
+      "category": "statistical_validity",
+      "issue": "Confidence interval interpretation unclear - mixing uncertainty from different sources"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 40,
+      "issueCount": 2,
+      "categories": [
+        "statistical_validity",
+        "factual_verification"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Poor - Major revision needed",
+    "mostProblematicCategory": "logical_consistency",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "160 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    }
+  ]
+}

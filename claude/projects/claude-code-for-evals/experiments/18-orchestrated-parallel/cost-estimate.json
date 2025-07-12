@@ -1,0 +1,72 @@
+{
+  "document": "comprehensive-test.md",
+  "document_size": {
+    "characters": 1387,
+    "estimated_tokens": 347
+  },
+  "estimated_total_cost_usd": 0.2682,
+  "estimated_total_tokens": 43800,
+  "token_breakdown": {
+    "input": 32400,
+    "output": 11400
+  },
+  "cost_breakdown_by_task": [
+    {
+      "task_type": "mathematical_accuracy",
+      "estimated_input_tokens": 3000,
+      "estimated_output_tokens": 1000,
+      "estimated_cost_usd": 0.024,
+      "breakdown": {
+        "input_cost": 0.009000000000000001,
+        "output_cost": 0.015000000000000001
+      }
+    },
+    {
+      "task_type": "statistical_validity",
+      "estimated_input_tokens": 3000,
+      "estimated_output_tokens": 1500,
+      "estimated_cost_usd": 0.0315,
+      "breakdown": {
+        "input_cost": 0.009000000000000001,
+        "output_cost": 0.0225
+      }
+    },
+    {
+      "task_type": "factual_verification",
+      "estimated_input_tokens": 13000,
+      "estimated_output_tokens": 4900,
+      "estimated_cost_usd": 0.11249999999999999,
+      "breakdown": {
+        "input_cost": 0.039,
+        "output_cost": 0.0735
+      }
+    },
+    {
+      "task_type": "logical_consistency",
+      "estimated_input_tokens": 3000,
+      "estimated_output_tokens": 1000,
+      "estimated_cost_usd": 0.024,
+      "breakdown": {
+        "input_cost": 0.009000000000000001,
+        "output_cost": 0.015000000000000001
+      }
+    },
+    {
+      "task_type": "synthesis",
+      "estimated_input_tokens": 10400,
+      "estimated_output_tokens": 3000,
+      "estimated_cost_usd": 0.0762
+    }
+  ],
+  "assumptions": {
+    "model": "claude-3.5-sonnet",
+    "includes_web_searches": true,
+    "web_searches_per_verification": 5,
+    "findings_per_task": "average estimates"
+  },
+  "cost_range": {
+    "low": 0.18774,
+    "expected": 0.2682,
+    "high": 0.4023
+  }
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "category": "statistical_validity",
+    "severity": "minor",
+    "line": 24,
+    "quote": "mx([25 to 35, 15 to 100], [0.9, 0.1])",
+    "issue": "Mixture weights (0.9, 0.1) lack justification for wage distribution",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 26,
+    "quote": "workingAgePop = 205M to 215M",
+    "issue": "Current data shows 211.78M (May 2025), range accurate but could be more precise",
+    "source": "factual_verification",
+    "timestamp": "2025-07-11T00:31:04.005Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "minor",
+    "line": 30,
+    "quote": "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+    "issue": "Mixture weights (0.9, 0.1) for work hours lack empirical basis",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 32,
+    "quote": "Based on empirical studies of lottery winners and inheritance recipients.",
+    "issue": "Extrapolating from lottery/inheritance studies to UBI may not be statistically valid due to different behavioral contexts",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.810Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "major",
+    "line": 33,
+    "quote": "avgWage = mx([25 to 35, 15 to 100], [0.9, 0.1])",
+    "issue": "BLS data shows $36.30/hour average (June 2025), base range underestimates current wages",
+    "source": "factual_verification",
+    "timestamp": "2025-07-11T00:31:04.006Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 35,
+    "quote": "normal({ p5: -0.15, p95: -0.05 })",
+    "issue": "Using normal distribution for bounded elasticity parameter may produce invalid values outside economic bounds",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 40,
+    "quote": "normal({ p5: -0.1, p95: 0 })",
+    "issue": "Normal distribution for substitution effect could yield positive values contradicting the stated negative effect",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 41,
+    "quote": "incomeElasticity = normal({ p5: -0.15, p95: -0.05 })",
+    "issue": "Income elasticity defined as negative, but substitution effect also negative - typically opposite signs",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.007Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 58,
+    "quote": "incomeEffect = inputs.incomeElasticity *",
+    "issue": "Formula multiplies negative elasticity by positive ratio, but comment says this reduces labor supply",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.008Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "critical",
+    "line": 60,
+    "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+    "issue": "Taking mean of wage after multiplication ignores correlation structure and may underestimate uncertainty",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "minor",
+    "line": 67,
+    "quote": "totalEffect = incomeEffect + inputs.substitutionEffect",
+    "issue": "Effects are additive but may interact multiplicatively in reality",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-11T00:28:29.396Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "minor",
+    "line": 68,
+    "quote": "// Correct wage impact calculation by taking mean wage",
+    "issue": "Comment mentions correcting calculation but doesn't explain what was wrong before",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.008Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "minor",
+    "line": 70,
+    "quote": "totalHourChange = hourChangePerWorker * inputs.workingAgePop",
+    "issue": "Should multiply by labor force participation rate, not total working age population",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-11T00:28:29.396Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "major",
+    "line": 73,
+    "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+    "issue": "GDP impact calculation missing annual hours multiplier - should be hourly wage × hours × workers",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-11T00:28:29.396Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "minor",
+    "line": 78,
+    "quote": "sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)",
+    "issue": "Test expects negative range but doesn't validate that totalEffect calculation produces negative values",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.008Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "minor",
+    "line": 86,
+    "quote": "sTest.expect(mean(impact.totalHourChange)).toBeBetween(-20B, -5B)",
+    "issue": "Test bounds seem arbitrary without justification for these specific ranges",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-11T00:28:29.396Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 99,
+    "quote": "responses likely vary by:\\n    - Income level (poorer workers may reduce hours more)",
+    "issue": "Model assumes uniform effects despite acknowledging heterogeneous responses, potentially biasing estimates",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 111,
+    "quote": "poorer workers may reduce hours more",
+    "issue": "Contradicts economic theory - poorer workers typically have less elastic labor supply",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.008Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "minor",
+    "line": 114,
+    "quote": "90% CI: \" + String(quantile(impact.percentChange, 0.05), \".1f\")",
+    "issue": "Confidence interval interpretation unclear given mixture of uncertainty sources (population, parameters, model)",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-11T00:28:32.811Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 127,
+    "quote": "$5,000 annual Universal Basic Income (UBI)",
+    "issue": "No factual error but model dated Sun Jul 06 2025 uses July 2025 data inconsistently",
+    "source": "factual_verification",
+    "timestamp": "2025-07-11T00:31:04.006Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 134,
+    "quote": "model doesn't capture potential productivity gains",
+    "issue": "Claims to not capture productivity but uses fixed wage rates which assumes no productivity change",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-11T00:28:29.008Z"
+  }
+]

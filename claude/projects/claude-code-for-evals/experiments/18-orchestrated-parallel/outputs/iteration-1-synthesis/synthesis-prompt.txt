@@ -1,0 +1,67 @@
+You are creating a final analysis report based on validated, structured findings.
+
+STRUCTURED FINDINGS SUMMARY
+==========================
+
+MAJOR ISSUES (3):
+----------------------------------------
+
+[FACTUAL VERIFICATION]
+1. Line 3: BLS data shows 4.0-4.2% range in 2024, not 3.2%. Source: bls.gov/news.release/empsit.nr0.htm
+   Quote: "The US unemployment rate is 3.2% as of 2024"
+2. Line 4: Python was created in December 1989, first released February 1991. Source: wikipedia.org/wiki/Guido_van_Rossum
+   Quote: "Python was created in 1995 by Guido van Rossum"
+3. Line 6: Amazon was founded July 5, 1994 by Jeff Bezos. Source: history.com/this-day-in-history/july-5/amazon-is-founded-by-jeff-bezos
+   Quote: "Amazon was founded in 1992"
+
+MINOR ISSUES (3):
+----------------------------------------
+
+[FACTUAL VERIFICATION]
+1. Line 5: Exact value is 299,792.458 km/s; 300,000 is acceptable rounding. Source: wikipedia.org/wiki/Speed_of_light
+   Quote: "The speed of light is 300,000 km/s"
+
+[STATISTICAL VALIDITY]
+1. Line 3: Lacks source citation for economic statistic
+   Quote: "The US unemployment rate is 3.2% as of 2024"
+2. Line 5: Rounded value presented without indicating approximation
+   Quote: "The speed of light is 300,000 km/s"
+
+Create a professional report with:
+
+1. **Executive Summary** (2-3 paragraphs)
+   - Overall document quality assessment
+   - Most critical issues identified
+   - Key recommendations
+
+2. **Critical Issues** (if any exist)
+   - Explain each with context
+   - Impact on document validity
+   - Required fixes
+   - IMPORTANT: Include all source citations from findings
+
+3. **Major Issues** 
+   - Group by type
+   - Provide examples with specific data/sources
+   - Suggest improvements
+   - IMPORTANT: Preserve all Source: references from findings
+
+4. **Minor Issues**
+   - Brief listing
+   - Quick fixes
+   - Include sources where provided
+
+5. **Positive Aspects**
+   - What the document does well
+   - Strong points to preserve
+
+6. **Recommendations**
+   - Prioritized action items
+   - Specific next steps
+
+7. **Technical Summary**
+   - Total issues by category
+   - Coverage assessment
+
+Format as professional markdown. Be specific and actionable.
+CRITICAL: When findings include Source: references, you MUST include them in your report.

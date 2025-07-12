@@ -1,0 +1,70 @@
+[
+  {
+    "id": "task-1-mathematical_accuracy",
+    "type": "mathematical_accuracy",
+    "name": "Mathematical Accuracy Check",
+    "description": "Verify all mathematical statements, equations, and calculations",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content",
+        "empirical_claims",
+        "policy_recommendations"
+      ]
+    }
+  },
+  {
+    "id": "task-2-statistical_validity",
+    "type": "statistical_validity",
+    "name": "Statistical Validity Review",
+    "description": "Check statistical claims, methods, and interpretations",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content",
+        "empirical_claims",
+        "policy_recommendations"
+      ]
+    }
+  },
+  {
+    "id": "task-3-factual_verification",
+    "type": "factual_verification",
+    "name": "Fact Checking",
+    "description": "Verify factual claims and statements",
+    "priority": "high",
+    "estimatedTime": 5,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content",
+        "empirical_claims",
+        "policy_recommendations"
+      ]
+    }
+  },
+  {
+    "id": "task-4-logical_consistency",
+    "type": "logical_consistency",
+    "name": "Logical Consistency Analysis",
+    "description": "Examine logical flow, arguments, and reasoning",
+    "priority": "high",
+    "estimatedTime": 4,
+    "metadata": {
+      "documentType": "technical",
+      "documentFeatures": [
+        "mathematical_content",
+        "code_content",
+        "empirical_claims",
+        "policy_recommendations"
+      ]
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "tasks": [
+    "Grammar and spelling check - scan for typos, grammatical errors, and punctuation mistakes",
+    "Factual accuracy verification - identify claims that may be incorrect or unsupported",
+    "Logical consistency analysis - detect contradictions and flawed reasoning within the document",
+    "Structure and organization review - evaluate flow, transitions, and overall document coherence",
+    "Style and tone consistency - check for shifts in voice, formality level, or writing style",
+    "Citation and reference validation - verify proper formatting and completeness of sources",
+    "Clarity and readability assessment - identify overly complex sentences or ambiguous statements"
+  ],
+  "timestamp": "2025-07-10T15:21:33.931Z",
+  "decompositionTime": 8.649
+}

@@ -1,0 +1,101 @@
+You are a senior technical editor preparing a comprehensive analysis report. You have been provided with validated findings from multiple expert reviewers who analyzed a document from different perspectives.
+
+Your task is to create a professional, well-structured report that synthesizes all findings into a coherent narrative.
+
+## Document Being Analyzed
+
+# Test Document for Citation Verification
+
+This document contains various claims that should be verified with sources:
+
+## Economic Data
+- The US unemployment rate is 3.5% as of 2024
+- Average hourly earnings increased by 4.1% year-over-year
+- The federal minimum wage is $7.25 per hour
+
+## Research Claims
+- According to a recent Harvard study, remote work increases productivity by 13%
+- The Stanford Prison Experiment (Zimbardo, 1971) demonstrated the power of situational forces
+- A 2023 meta-analysis found that meditation reduces anxiety by 30%
+
+## Population Statistics  
+- The US population is approximately 335 million
+- California has 39 million residents
+- Life expectancy in the US is 76.4 years
+
+These claims need verification with authoritative sources.
+
+## Validated Findings (13 total)
+
+Critical Issues (0):
+
+
+Major Issues (7):
+- Line 5: Incorrect figure. BLS data shows 2024 unemployment was around 4.1%, not 3.5%. Source: www.bls.gov/news.release/empsit.nr0.htm (citation_accuracy)
+- Line 10: No Harvard study found with this claim. The 13% figure appears in general statistics but not from Harvard. Source search: hbr.org and hbs.edu (citation_accuracy)
+- Line 10: Lacks context on measurement method, sample size, or confidence intervals (statistical_validity)
+- Line 11: No Harvard study found with this claim. Source: hbs.edu/faculty/Pages/item.aspx?num=66633 (factual_verification)
+- Line 12: No 2023 meta-analysis found with 30% reduction claim. Studies show smaller effect sizes (0.22-0.38). Source: pubmed.ncbi.nlm.nih.gov/24395196 (citation_accuracy)
+- Line 12: No effect size, confidence interval, or measurement scale specified (statistical_validity)
+- Line 13: No 2023 study found with 30% figure. Effect sizes 0.22-0.41 typical. Source: frontiersin.org/journals/public-health (factual_verification)
+
+Minor Issues (6):
+- Line 6: BLS data shows 4.1% (Oct 2024). Source: bls.gov/opub/ted/2024 (factual_verification)
+- Line 6: Missing citation and timeframe. Should specify source (BLS Employment Cost Index) and exact period. Source: www.bls.gov/news.release/eci.nr0.htm (citation_accuracy)
+- Line 7: BLS reports real wage growth 0.6-1.4% in 2024. Source: bls.gov/opub/ted/2024 (factual_verification)
+- Line 15: Outdated figure. Census Bureau shows 340.1 million as of July 2024. Source: www.census.gov/library/stories/2024/12/population-estimates.html (citation_accuracy)
+- Line 17: This is 2021 data, not current. 2023 CDC data shows 78.4 years. Source: www.cdc.gov/nchs/products/databriefs/db521.htm (citation_accuracy)
+- Line 18: CDC reports 78.4 years for 2023 (latest). Source: cdc.gov/nchs/products/databriefs/db521.htm (factual_verification)
+
+## Identified Patterns
+
+
+
+## Your Report Should Include:
+
+1. **Executive Summary** (3-4 paragraphs)
+   - Overall assessment of the document
+   - Most critical issues that need immediate attention
+   - Key strengths of the document (if any)
+   - Overall recommendation
+
+2. **Critical Issues** (detailed section)
+   - Each critical issue explained with context
+   - Why it matters
+   - Specific fix required
+
+3. **Major Issues** (organized by theme/category)
+   - Group related issues together
+   - Explain the impact
+   - Suggest improvements
+
+4. **Minor Issues** (brief listing)
+   - Quick fixes needed
+   - Can be in bullet format
+
+5. **Positive Aspects** (if applicable)
+   - What the document does well
+   - Innovative approaches
+   - Clear explanations
+
+6. **Recommendations**
+   - Prioritized list of actions
+   - Specific steps to improve the document
+   - Areas that may need expert review
+
+7. **Technical Summary**
+   - Statistics about issues found
+   - Coverage of the analysis
+   - Confidence in findings
+
+## Guidelines:
+
+- Be professional but accessible
+- Prioritize actionable feedback
+- Group similar issues to avoid repetition
+- Provide specific examples from the document
+- Balance criticism with recognition of strengths
+- Use clear section headings and formatting
+- Include specific line references for major issues
+
+Create a comprehensive report that would be useful for the document author to improve their work.

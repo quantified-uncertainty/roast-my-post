@@ -1,0 +1,49 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 5,
+      "quote": "reached 3.5% in December 2024",
+      "issue": "Claims December 2024 data but it's only July 2025 - data should exist",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T16:26:11.357Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 25,
+      "quote": "closed at 4,750 points on December 15, 2024",
+      "issue": "Claims specific December 15, 2024 data but it's July 2025 - should be past data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T16:26:11.358Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 25,
+      "quote": "Bitcoin traded at $42,300 as of the same date",
+      "issue": "Claims December 15, 2024 Bitcoin price but it's July 2025 - should be historical",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T16:26:11.358Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 3,
+    "validFindings": 3,
+    "errors": 0,
+    "errorDetails": []
+  },
+  "usage": {
+    "input_tokens": 157,
+    "output_tokens": 79,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.000471,
+    "output_cost_usd": 0.001185,
+    "total_cost_usd": 0.0016560000000000001,
+    "model_used": "claude-4-sonnet",
+    "tracked_at": "2025-07-11T16:26:11.420Z"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-10T23:45:35.252Z",
+    "findingsCount": 4,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 4,
+    "severityCounts": {
+      "critical": 1,
+      "major": 2,
+      "minor": 1
+    },
+    "categoryCounts": {
+      "logical_consistency": 4
+    },
+    "qualityScore": 83,
+    "issuesPerLine": 0.03
+  },
+  "topIssues": [
+    {
+      "line": 131,
+      "category": "logical_consistency",
+      "issue": "Fundamental contradiction - the math shows negative elasticity × positive income ratio = negative effect, which means hours increase, not decrease"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [],
+  "assessment": {
+    "overall": "Good - Some issues need attention",
+    "mostProblematicCategory": "logical_consistency",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "52 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    }
+  ]
+}

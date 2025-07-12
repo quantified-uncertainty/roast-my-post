@@ -1,0 +1,65 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 5,
+      "quote": "reached 3.5% in December 2024",
+      "issue": "December 2024 is in the future relative to the document's apparent creation date",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.151Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 9,
+      "quote": "3.1% year-over-year in November 2024",
+      "issue": "November 2024 data cited as factual despite being future date",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.152Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 13,
+      "quote": "63.4% as of late 2024",
+      "issue": "\"Late 2024\" presented as past/current when document appears to be from earlier",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.152Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 15,
+      "quote": "2.3% in the third quarter of 2024",
+      "issue": "Q3 2024 data presented as complete when it would be future data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.152Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 27,
+      "quote": "closed at 4,750 points on December 15, 2024",
+      "issue": "Specific future date (Dec 15, 2024) cited as historical fact",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.152Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 29,
+      "quote": "averaged $78 per barrel in November 2024",
+      "issue": "November 2024 average presented as known data point",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T03:22:42.152Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 6,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

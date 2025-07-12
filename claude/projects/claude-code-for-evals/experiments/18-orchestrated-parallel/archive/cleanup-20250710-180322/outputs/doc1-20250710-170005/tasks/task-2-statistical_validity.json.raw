@@ -1,0 +1,49 @@
+I'll analyze this document for statistical validity issues.
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 31
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Mixture distribution with extreme range (15-100) that heavily skews results without justification
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 39
+Quote: "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])"
+Issue: Mixture includes implausible work hours (1000-2500 range) for typical US workers
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: critical
+Line: 68
+Quote: "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: Invalid elasticity calculation - should use log changes for proper income elasticity formula
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 78
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: Oversimplified GDP calculation ignores productivity differences and multiplier effects
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 116
+Quote: "90% CI:"
+Issue: Confidence interval terminology incorrect for simulation output - should be "90% prediction interval"
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 45
+Quote: "Based on empirical studies of lottery winners and inheritance recipients"
+Issue: External validity problem - lottery/inheritance elasticities may not apply to regular UBI payments
+[/FINDING]

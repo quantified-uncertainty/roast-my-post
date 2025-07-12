@@ -1,0 +1,408 @@
+[
+  {
+    "type": "factual_claim",
+    "line": 7,
+    "quote": "the average height in the NBA is around 6'7",
+    "description": "NBA average height statistic",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 8,
+    "quote": "IQ scores are known to predict a slew of factors, from income, to chance of being imprisoned, to lifespan",
+    "description": "IQ correlation with multiple life outcomes",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "logical_issue",
+    "line": 10,
+    "quote": "extreme outliers of a given predictor are seldom similarly extreme outliers on the outcome it predicts",
+    "issueType": "unsupported",
+    "explanation": "This claim is presented as fact without supporting evidence or citation, despite being the central thesis",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 11,
+    "quote": "Although 6'7 is very tall, it lies within a couple of standard deviations of the median US adult male height",
+    "description": "Statistical claim about height distribution",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "logical_issue",
+    "line": 11,
+    "quote": "there are many thousands of US men taller than the average NBA player, yet are not in the NBA",
+    "issueType": "fallacy",
+    "explanation": "This commits the fallacy of reversed causation - height predicts basketball success, but the argument incorrectly assumes all tall people should be in the NBA",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 12,
+    "quote": "there are many thousands of US men taller than the average NBA player",
+    "description": "Population claim about tall men in US",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "logical_issue",
+    "line": 12,
+    "quote": "the very highest earners tend to be very smart, but their intelligence is not in step with their income (their cognitive ability is around +3 to +4 SD above the mean, yet their wealth is much higher than this)",
+    "issueType": "fallacy",
+    "explanation": "Comparing standard deviations across different distributions (IQ vs wealth) is mathematically inappropriate - wealth distributions are not normal and have no meaningful SD comparison to IQ",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 13,
+    "quote": "if you look at the players serving the fastest serves ever recorded, they aren't the very best players of their time",
+    "description": "Tennis performance claim",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 14,
+    "quote": "the very highest earners tend to be very smart",
+    "description": "Intelligence-income correlation claim",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "factual_claim",
+    "line": 14,
+    "quote": "their cognitive ability is around +3 to +4 SD above the mean",
+    "description": "Specific statistical claim about high earners' IQ",
+    "chunkId": "chunk-1",
+    "chunkHeader": "Document Start"
+  },
+  {
+    "type": "logical_issue",
+    "line": 17,
+    "quote": "I would guess that these sorts of 'hidden trade-offs' are common. But, the 'divergence of tails' seems pretty ubiquitous... and it would be weird if there was always a 'too much of a good thing' story",
+    "issueType": "contradiction",
+    "explanation": "Acknowledges hidden trade-offs are common, then argues it would be weird if they commonly explained the phenomenon",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Too much of a good thing?"
+  },
+  {
+    "type": "factual_claim",
+    "line": 18,
+    "quote": "a stratospherically high IQ has an increased risk of productivity-reducing mental illness",
+    "description": "Association between very high IQ and mental illness risk",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Too much of a good thing?"
+  },
+  {
+    "type": "factual_claim",
+    "line": 20,
+    "quote": "the tallest aren't the heaviest",
+    "description": "Lack of correlation between extreme height and weight",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Too much of a good thing?"
+  },
+  {
+    "type": "factual_claim",
+    "line": 20,
+    "quote": "the smartest parents don't have the smartest children",
+    "description": "Lack of perfect correlation between parent and child intelligence at extremes",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Too much of a good thing?"
+  },
+  {
+    "type": "factual_claim",
+    "line": 20,
+    "quote": "the fastest runners aren't the best footballers",
+    "description": "Lack of correlation between sprinting speed and football performance at elite levels",
+    "chunkId": "chunk-2",
+    "chunkHeader": "Too much of a good thing?"
+  },
+  {
+    "type": "logical_issue",
+    "line": 29,
+    "quote": "Given a correlation, the envelope of the distribution should form some sort of *ellipse*, narrower as the correlation goes stronger, and more circular as it gets weaker",
+    "issueType": "unsupported",
+    "explanation": "While this is generally true for bivariate normal distributions, the author doesn't establish that the shown examples follow this distribution. Real-world data often violates normality assumptions.",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 30,
+    "quote": "I'd guess the R-square is > 0.8",
+    "description": "Statistical correlation estimate for baseball pitch speeds",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 30,
+    "quote": "the very fastest balls out of the hand *aren't* the very fastest balls crossing the plate, and vice versa",
+    "description": "Empirical observation about baseball pitch speeds at extremes",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 33,
+    "quote": "as the ellipse doesn't sharpen to a point, there are bulges where the maximum x and y values lie with sub-maximal y and x values respectively",
+    "issueType": "unsupported",
+    "explanation": "This geometric description assumes a specific mathematical form without justification. The \"bulges\" are a consequence of finite sampling and the mathematical properties of correlation, not an inherent feature of ellipses.",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 35,
+    "quote": "So this offers an explanation why divergence at the tails is ubiquitous.",
+    "issueType": "unsupported",
+    "explanation": "The author jumps from observing a pattern in scatter plots to claiming this explains a ubiquitous phenomenon without establishing that all correlations follow this exact pattern or that this is the primary mechanism.",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 39,
+    "quote": "Hence the very best basketball players aren't the very tallest (and vice versa), the very wealthiest not the very smartest",
+    "issueType": "unsupported",
+    "explanation": "These real-world examples may have multiple confounding factors beyond simple correlation mechanics. The author assumes a single mathematical explanation for complex multivariate phenomena.",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 42,
+    "quote": "Given a correlation, the envelope of the distribution should form some sort of *ellipse*",
+    "description": "Mathematical/statistical principle about correlation distributions",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 50,
+    "quote": "the very best basketball players aren't the very tallest (and vice versa)",
+    "description": "Empirical claim about basketball player height and performance",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 50,
+    "quote": "the very wealthiest not the very smartest",
+    "description": "Empirical claim about correlation between wealth and intelligence",
+    "chunkId": "chunk-3",
+    "chunkHeader": "The simple graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 51,
+    "quote": "being tall matters for being good at basketball",
+    "description": "Claim about physical attribute importance in sports",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 51,
+    "quote": "strength, agility, hand-eye-coordination matter as well",
+    "description": "Claim about additional factors important for basketball",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 52,
+    "quote": "being smart helps in getting rich",
+    "description": "Claim about intelligence contributing to wealth",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 52,
+    "quote": "so does being hard working, being lucky",
+    "description": "Claim about additional factors contributing to wealth",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 56,
+    "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness",
+    "description": "Statistical claim about probability at extreme values",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 58,
+    "quote": "if 10 at +4SD, around 500 at +3SD",
+    "description": "Statistical claim about population distribution",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 60,
+    "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness",
+    "issueType": "unsupported",
+    "explanation": "The claim that you wouldn't expect any of 10 people at +4SD intelligence to be +2SD in conscientiousness lacks mathematical justification. Even with independent variables, there's a calculable probability (~2.3%) that any individual would be +2SD in conscientiousness, making it plausible that at least one of 10 people could achieve this.",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 62,
+    "quote": "if 10 at +4SD, around 500 at +3SD",
+    "issueType": "unsupported",
+    "explanation": "The ratio of 50:1 between +3SD and +4SD populations is stated without justification. While +3SD is indeed more common than +4SD in a normal distribution, the specific ratio should be calculated based on the normal distribution properties rather than assumed.",
+    "chunkId": "chunk-4",
+    "chunkHeader": "An intuitive explanation of the graphical explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 71,
+    "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space",
+    "description": "Mathematical relationship between R-square and cosine",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 79,
+    "quote": "As cos theta is never greater than 1",
+    "description": "Mathematical property of cosine function",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 81,
+    "quote": "the gap between extreme values of a factor and the less extreme values of the outcome grows linearly as the factor value gets more extreme",
+    "description": "Linear growth relationship",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 81,
+    "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)",
+    "issueType": "unsupported",
+    "explanation": "R-squared of 0.5 corresponds to an angle of 45 degrees, not 60 degrees (since cos(45°) = √0.5)",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 82,
+    "quote": "an R-square of 0.5... means that +4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome",
+    "issueType": "unsupported",
+    "explanation": "With R-squared of 0.5, the correlation R = √0.5 ≈ 0.707, so +4SD on the factor corresponds to +2.83SD on the outcome, not +2SD",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 84,
+    "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)",
+    "description": "Specific R-square to angle conversion",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 84,
+    "quote": "+4SD (~1/15000)",
+    "description": "Statistical frequency of 4 standard deviations",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 85,
+    "quote": "+2SD (~1/40)",
+    "description": "Statistical frequency of 2 standard deviations",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 86,
+    "quote": "an R-square of 0.5 is remarkably strong in the social sciences",
+    "description": "Field-specific interpretation of R-square value",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 86,
+    "quote": "implying it accounts for half the variance",
+    "description": "R-square of 0.5 accounting for half of variance",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 105,
+    "quote": "income isn't normally distributed",
+    "description": "Statistical property of income distribution",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 105,
+    "quote": "if Bill Gates is ~+4SD in intelligence",
+    "description": "Claim about Bill Gates' intelligence level",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 107,
+    "quote": "generally modest achievements of people in high-IQ societies",
+    "description": "Generalization about high-IQ society members",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 110,
+    "quote": "this depends on something like multivariate CLT",
+    "description": "Mathematical dependency claim",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "factual_claim",
+    "line": 117,
+    "quote": "The old faithful case is an example where actually you do get a 'point'",
+    "description": "Specific example about Old Faithful data",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 119,
+    "quote": "My intuition is that in cartesian coordinates the R-square between correlated X and Y is actually also the cosine of the angle between the regression lines of X on Y and Y on X",
+    "issueType": "unsupported",
+    "explanation": "This mathematical claim is incorrect - R-squared is not the cosine of the angle between regression lines",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  },
+  {
+    "type": "logical_issue",
+    "line": 122,
+    "quote": "this makes it clear why you can by R-squared to move between z-scores of correlated normal variables",
+    "issueType": "unsupported",
+    "explanation": "You multiply by R (correlation coefficient), not R-squared, to convert between z-scores of correlated variables",
+    "chunkId": "chunk-5",
+    "chunkHeader": "A parallel geometric explanation"
+  }
+]

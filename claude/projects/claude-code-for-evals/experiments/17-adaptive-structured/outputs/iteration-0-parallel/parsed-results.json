@@ -1,0 +1,144 @@
+{
+  "findings": [
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 7,
+      "quote": "to[ lifespan",
+      "issue": "Extra space before opening bracket in the hyperlink"
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 9,
+      "quote": "tend[ to be very smart",
+      "issue": "Extra space before opening bracket in the hyperlink"
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "major",
+      "line": 15,
+      "quote": "Maybe although having a faster serve is better all things being equal, but focusing too heavily",
+      "issue": "Incorrect use of \"although\" with \"but\" - should be either \"Although having a faster serve is better all things being equal, focusing too heavily\" or \"Having a faster serve is better all things being equal, but focusing too heavily\""
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 23,
+      "quote": "comparing the speed of a ball out of a baseball pitchers hand compared to its speed crossing crossing the plate",
+      "issue": "Word \"crossing\" is repeated twice"
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 23,
+      "quote": "baseball pitchers hand",
+      "issue": "Missing apostrophe - should be \"pitcher's hand\""
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 75,
+      "quote": "'Reading off the expected outcome",
+      "issue": "Incorrectly placed opening single quote at the beginning of the sentence"
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 83,
+      "quote": "spread funds sooner.(6)",
+      "issue": "Missing space between period and footnote number - should be \"sooner. (6)\""
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 87,
+      "quote": "richest man in america",
+      "issue": "\"America\" should be capitalized"
+    },
+    {
+      "source": "task-1-spelling_grammar",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 99,
+      "quote": "why you can by R-squared",
+      "issue": "Typo - \"by\" should be \"buy\" or more likely \"multiply by\""
+    },
+    {
+      "source": "task-2-mathematical_accuracy",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 71,
+      "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space",
+      "issue": "This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R² is the square of the correlation coefficient and equals cos²(θ), not cos(θ)."
+    },
+    {
+      "source": "task-2-mathematical_accuracy",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "mathematical_error",
+      "severity": "major",
+      "line": 75,
+      "quote": "the inverse cosine equal the R-squared",
+      "issue": "This should be \"the inverse cosine equal to R\" (the correlation coefficient), not R-squared. The angle θ = arccos(R), not arccos(R²)."
+    },
+    {
+      "source": "task-2-mathematical_accuracy",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "mathematical_error",
+      "severity": "major",
+      "line": 61,
+      "quote": "if 10 at +4SD, around 500 at +3SD",
+      "issue": "The ratio between population sizes at +4SD and +3SD is incorrect. Using normal distribution, +4SD represents approximately 1 in 31,574 while +3SD represents approximately 1 in 741. The ratio should be about 43:1, not 50:1."
+    },
+    {
+      "source": "task-2-mathematical_accuracy",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "mathematical_error",
+      "severity": "minor",
+      "line": 99,
+      "quote": "you can by R-squared to move between z-scores",
+      "issue": "Grammatical error that affects mathematical meaning. Should be \"you can multiply by R\" (not R-squared) to move between z-scores of correlated variables."
+    },
+    {
+      "source": "task-2-mathematical_accuracy",
+      "timestamp": "2025-07-10T19:38:12.690Z",
+      "category": "mathematical_error",
+      "severity": "major",
+      "line": 75,
+      "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)",
+      "issue": "If R² = 0.5, then R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degrees. For 60 degrees, cos(60°) = 0.5, so R = 0.5 and R² = 0.25."
+    }
+  ],
+  "stats": {
+    "totalTasks": 2,
+    "successfulTasks": 2,
+    "totalFindings": 14,
+    "bySeverity": {
+      "critical": 1,
+      "major": 4,
+      "minor": 9
+    },
+    "byCategory": {
+      "spelling_grammar": 9,
+      "mathematical_error": 5
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {
+      "type": "factual_verification",
+      "effort": "comprehensive",
+      "index": 1
+    },
+    {
+      "type": "citation_accuracy",
+      "effort": "comprehensive",
+      "index": 2
+    }
+  ]
+}

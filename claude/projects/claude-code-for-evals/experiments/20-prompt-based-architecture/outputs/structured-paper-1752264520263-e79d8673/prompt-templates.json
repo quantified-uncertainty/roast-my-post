@@ -1,0 +1,13 @@
+{
+  "statistical_analysis": {
+    "name": "Statistical Claim Analysis",
+    "description": "Analyze statistical claims and data",
+    "prompt": "Analyze all statistical claims in this text.\n\nFor each statistical claim:\n1. Extract the specific numbers/statistics\n2. Check for common statistical errors\n3. Verify if the interpretation is correct\n\nLook for:\n- Correlation vs causation errors\n- Sample size issues\n- Cherry-picking\n- Misrepresented percentages\n- Outdated data\n\nFormat:\nSTAT_CLAIM: [line] | [statistic] | [issue type] | [explanation]\n\nIf verification needed:\nVERIFY_STAT: [statistic] | [source to check] | [concern]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "calculate",
+      "verify_statistic",
+      "check_methodology"
+    ],
+    "estimatedTokens": 2000
+  }
+}

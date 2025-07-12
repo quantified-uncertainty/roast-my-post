@@ -1,0 +1,19 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains numerous empirical claims about economic data, research findings, and population statistics that require verification with authoritative sources. High flaw density expected due to specific numerical claims and research citations that need accuracy checks.",
+  "statistics": {
+    "lineCount": 20,
+    "wordCount": 120,
+    "characterCount": 767
+  },
+  "recommendations": [
+    "factual_verification",
+    "citation_accuracy",
+    "statistical_validity"
+  ]
+}

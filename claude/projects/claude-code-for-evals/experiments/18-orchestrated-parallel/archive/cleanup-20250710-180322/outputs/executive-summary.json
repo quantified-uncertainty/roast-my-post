@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-11T00:45:19.427Z",
+    "findingsCount": 13,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 13,
+    "severityCounts": {
+      "critical": 0,
+      "major": 7,
+      "minor": 6
+    },
+    "categoryCounts": {
+      "citation_accuracy": 6,
+      "factual_verification": 5,
+      "statistical_validity": 2
+    },
+    "qualityScore": 73,
+    "issuesPerLine": 0.72
+  },
+  "topIssues": [],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 6,
+      "issueCount": 2,
+      "categories": [
+        "factual_verification",
+        "citation_accuracy"
+      ]
+    },
+    {
+      "line": 10,
+      "issueCount": 2,
+      "categories": [
+        "citation_accuracy",
+        "statistical_validity"
+      ]
+    },
+    {
+      "line": 12,
+      "issueCount": 2,
+      "categories": [
+        "citation_accuracy",
+        "statistical_validity"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Fair - Significant improvements required",
+    "mostProblematicCategory": "citation_accuracy",
+    "recommendedPriority": "major",
+    "estimatedEffort": "82 minutes"
+  },
+  "recommendations": []
+}

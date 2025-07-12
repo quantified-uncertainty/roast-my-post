@@ -1,0 +1,86 @@
+You are creating a final analysis report based on validated, structured findings.
+
+STRUCTURED FINDINGS SUMMARY
+==========================
+
+CRITICAL ISSUES (1):
+----------------------------------------
+
+[MATHEMATICAL ERROR]
+1. Line 71: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between cen...
+   Quote: "The R-square measure of correlation between two sets of data..."
+
+MAJOR ISSUES (4):
+----------------------------------------
+
+[MATHEMATICAL ERROR]
+1. Line 75: This should be "the inverse cosine equal to R" (the correlation coefficient), not R-squared. The ang...
+   Quote: "the inverse cosine equal the R-squared"
+2. Line 61: The ratio between population sizes at +4SD and +3SD is incorrect. Using normal distribution, +4SD re...
+   Quote: "if 10 at +4SD, around 500 at +3SD"
+3. Line 75: If R² = 0.5, then R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degre...
+   Quote: "an R-square of 0.5 (corresponding to an angle of sixty degre..."
+
+[SPELLING GRAMMAR]
+1. Line 15: Incorrect use of "although" with "but" - should be either "Although having a faster serve is better ...
+   Quote: "Maybe although having a faster serve is better all things be..."
+
+MINOR ISSUES (9):
+----------------------------------------
+
+[MATHEMATICAL ERROR]
+1. Line 99: Grammatical error that affects mathematical meaning. Should be "you can multiply by R" (not R-square...
+   Quote: "you can by R-squared to move between z-scores"
+
+[SPELLING GRAMMAR]
+1. Line 7: Extra space before opening bracket in the hyperlink
+   Quote: "to[ lifespan"
+2. Line 9: Extra space before opening bracket in the hyperlink
+   Quote: "tend[ to be very smart"
+3. Line 23: Word "crossing" is repeated twice
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+4. Line 23: Missing apostrophe - should be "pitcher's hand"
+   Quote: "baseball pitchers hand"
+5. Line 75: Incorrectly placed opening single quote at the beginning of the sentence
+   Quote: "'Reading off the expected outcome"
+6. Line 83: Missing space between period and footnote number - should be "sooner. (6)"
+   Quote: "spread funds sooner.(6)"
+7. Line 87: "America" should be capitalized
+   Quote: "richest man in america"
+8. Line 99: Typo - "by" should be "buy" or more likely "multiply by"
+   Quote: "why you can by R-squared"
+
+Create a professional report with:
+
+1. **Executive Summary** (2-3 paragraphs)
+   - Overall document quality assessment
+   - Most critical issues identified
+   - Key recommendations
+
+2. **Critical Issues** (if any exist)
+   - Explain each with context
+   - Impact on document validity
+   - Required fixes
+
+3. **Major Issues** 
+   - Group by type
+   - Provide examples
+   - Suggest improvements
+
+4. **Minor Issues**
+   - Brief listing
+   - Quick fixes
+
+5. **Positive Aspects**
+   - What the document does well
+   - Strong points to preserve
+
+6. **Recommendations**
+   - Prioritized action items
+   - Specific next steps
+
+7. **Technical Summary**
+   - Total issues by category
+   - Coverage assessment
+
+Format as professional markdown. Be specific and actionable.

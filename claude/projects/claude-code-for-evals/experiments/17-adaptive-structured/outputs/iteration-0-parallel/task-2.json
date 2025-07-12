@@ -1,0 +1,10 @@
+{
+  "taskId": "task-2-mathematical_accuracy",
+  "taskNum": 2,
+  "taskType": "mathematical_accuracy",
+  "status": "success",
+  "duration": 25,
+  "findingCount": 5,
+  "output": "[FINDING]\nCategory: mathematical_error\nSeverity: critical\nLine: 71\nQuote: \"The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space\"\nIssue: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R² is the square of the correlation coefficient and equals cos²(θ), not cos(θ).\n[/FINDING]\n\n[FINDING]\nCategory: mathematical_error\nSeverity: major\nLine: 75\nQuote: \"the inverse cosine equal the R-squared\"\nIssue: This should be \"the inverse cosine equal to R\" (the correlation coefficient), not R-squared. The angle θ = arccos(R), not arccos(R²).\n[/FINDING]\n\n[FINDING]\nCategory: mathematical_error\nSeverity: major\nLine: 61\nQuote: \"if 10 at +4SD, around 500 at +3SD\"\nIssue: The ratio between population sizes at +4SD and +3SD is incorrect. Using normal distribution, +4SD represents approximately 1 in 31,574 while +3SD represents approximately 1 in 741. The ratio should be about 43:1, not 50:1.\n[/FINDING]\n\n[FINDING]\nCategory: mathematical_error\nSeverity: minor\nLine: 99\nQuote: \"you can by R-squared to move between z-scores\"\nIssue: Grammatical error that affects mathematical meaning. Should be \"you can multiply by R\" (not R-squared) to move between z-scores of correlated variables.\n[/FINDING]\n\n[FINDING]\nCategory: mathematical_error\nSeverity: major\nLine: 75\nQuote: \"an R-square of 0.5 (corresponding to an angle of sixty degrees)\"\nIssue: If R² = 0.5, then R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degrees. For 60 degrees, cos(60°) = 0.5, so R = 0.5 and R² = 0.25.\n[/FINDING]",
+  "timestamp": "2025-07-10T19:38:12.643Z"
+}

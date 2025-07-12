@@ -1,0 +1,23 @@
+{
+  "type": "technical",
+  "features": [
+    "mathematical_content",
+    "code_content",
+    "empirical_claims",
+    "policy_recommendations"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This is a Squiggle probabilistic model analyzing UBI's impact on labor supply. Contains mathematical calculations, economic elasticity parameters, empirical assumptions about wages/work hours, and implicit policy analysis. Technical models require comprehensive analysis across all verification types due to high potential for errors in assumptions, calculations, and parameter estimates.",
+  "statistics": {
+    "lineCount": 142,
+    "wordCount": 574,
+    "characterCount": 4560
+  },
+  "recommendations": [
+    "mathematical_accuracy",
+    "statistical_validity",
+    "factual_verification",
+    "logical_consistency"
+  ]
+}

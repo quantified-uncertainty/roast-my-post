@@ -1,0 +1,47 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 3,
+      "quote": "The US unemployment rate reached 3.5% in December 2024",
+      "issue": "Future date reference - document cannot contain December 2024 data if written before that date",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T03:22:39.648Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 11,
+      "quote": "working-age population (ages 15-64)",
+      "issue": "US typically defines working age as 16-64, not 15-64",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T03:22:39.649Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 17,
+      "quote": "remote work increases productivity by 13%",
+      "issue": "Overgeneralization - study findings from specific context presented as universal truth",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T03:22:39.649Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 23,
+      "quote": "S&P 500 closed at 4,750 points on December 15, 2024",
+      "issue": "Future date reference - cannot have closing price for future date",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T03:22:39.649Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 4,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

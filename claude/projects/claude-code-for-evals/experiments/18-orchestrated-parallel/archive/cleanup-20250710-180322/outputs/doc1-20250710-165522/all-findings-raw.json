@@ -1,0 +1,182 @@
+[
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 22,
+    "quote": "US Working Age Population",
+    "issue": "Definition uses ages 15-64, but US typically defines working age as 16-64",
+    "source": "factual_verification",
+    "timestamp": "2025-07-10T23:55:43.887Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 23,
+    "quote": "Population aged 15-64 eligible for UBI",
+    "issue": "Age 15 is below US working age; should be 16-64",
+    "source": "factual_verification",
+    "timestamp": "2025-07-10T23:55:43.888Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 24,
+    "quote": "workingAgePop = 205M to 215M",
+    "issue": "US working age population (16-64) is approximately 205-210M as of 2024-2025",
+    "source": "factual_verification",
+    "timestamp": "2025-07-10T23:55:43.888Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "minor",
+    "line": 25,
+    "quote": "mx([25 to 35, 15 to 100], [0.9, 0.1])",
+    "issue": "Wage distribution mixing assumes independence between wage levels and worker proportions",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.671Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 32,
+    "quote": "mx([25 to 35, 15 to 100], [0.9, 0.1])",
+    "issue": "Mixing distributions without clear justification for 90/10 split in wage distribution",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.145Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 37,
+    "quote": "Based on typical US full-time work year",
+    "issue": "Full-time US work year is typically 2080 hours, not 1800-2000",
+    "source": "factual_verification",
+    "timestamp": "2025-07-10T23:55:43.888Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 38,
+    "quote": "Substitution Effect",
+    "issue": "Substitution effect defined as reducing hours for means-testing but UBI is universal, not means-tested",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.671Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 40,
+    "quote": "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+    "issue": "Arbitrary 90/10 probability weights for work hours distribution lack empirical basis",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.146Z"
+  },
+  {
+    "category": "factual_verification",
+    "severity": "minor",
+    "line": 40,
+    "quote": "baseWorkHours = mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+    "issue": "Central range 1800-2000 underestimates typical full-time hours of 2080",
+    "source": "factual_verification",
+    "timestamp": "2025-07-10T23:55:43.888Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "minor",
+    "line": 47,
+    "quote": "normal({ p5: -0.15, p95: -0.05 })",
+    "issue": "Using normal distribution for bounded parameter (elasticity) without justification",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.146Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "minor",
+    "line": 64,
+    "quote": "incomeEffect = inputs.incomeElasticity *",
+    "issue": "Variable name conflicts - 'incomeEffect' used for both calculation result and model input",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.670Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 70,
+    "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+    "issue": "Oversimplified GDP calculation ignores multiplier effects and economic complexity",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.146Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 73,
+    "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+    "issue": "GDP impact calculation assumes all work hours contribute equally to GDP regardless of productivity",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.671Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "major",
+    "line": 86,
+    "quote": "income effects are based on empirical studies of lottery winners",
+    "issue": "Model assumes lottery/inheritance elasticities apply to regular UBI payments without justification",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.671Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "major",
+    "line": 89,
+    "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+    "issue": "GDP impact calculation assumes all work hours contribute equally to GDP regardless of productivity differences",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-10T23:55:42.603Z"
+  },
+  {
+    "category": "logical_consistency",
+    "severity": "critical",
+    "line": 98,
+    "quote": "doesn't capture potential productivity gains from reduced financial stress",
+    "issue": "Model calculates GDP impact from hours reduction but admits it ignores productivity changes",
+    "source": "logical_consistency",
+    "timestamp": "2025-07-10T23:55:44.671Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "minor",
+    "line": 102,
+    "quote": "sTest.expect(mean(impact.totalHourChange)).toBeBetween(-20B, -5B)",
+    "issue": "Test bounds don't align with calculation range given input distributions",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-10T23:55:42.604Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "major",
+    "line": 105,
+    "quote": "Income effects are based on empirical studies of lottery winners",
+    "issue": "External validity concern - lottery winner behavior may not generalize to UBI recipients",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.146Z"
+  },
+  {
+    "category": "statistical_validity",
+    "severity": "critical",
+    "line": 119,
+    "quote": "90% CI: \" + String(quantile(impact.percentChange, 0.05), \".1f\")",
+    "issue": "Confidence interval interpretation unclear - mixing uncertainty from different sources",
+    "source": "statistical_validity",
+    "timestamp": "2025-07-10T23:55:45.146Z"
+  },
+  {
+    "category": "mathematical_accuracy",
+    "severity": "minor",
+    "line": 123,
+    "quote": "The model suggests a labor supply reduction of **\" + String(mean(impact.percentChange), \".1f\")",
+    "issue": "Presenting mean of percentage without noting distribution shape could be misleading for skewed results",
+    "source": "mathematical_accuracy",
+    "timestamp": "2025-07-10T23:55:42.604Z"
+  }
+]

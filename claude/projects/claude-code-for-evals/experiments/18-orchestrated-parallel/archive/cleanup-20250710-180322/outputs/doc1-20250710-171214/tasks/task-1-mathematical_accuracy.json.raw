@@ -1,0 +1,7 @@
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 98
+Quote: "**$" + String(mean(impact.gdpImpact) / -1B, ".1f") + "B**"
+Issue: Division by -1B creates double negative, showing positive value for negative impact
+[/FINDING]

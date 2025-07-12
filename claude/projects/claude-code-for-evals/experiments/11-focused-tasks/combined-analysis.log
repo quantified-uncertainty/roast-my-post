@@ -1,0 +1,77 @@
+
+=== MATH ERRORS (9286ms) ===
+I'll analyze this blog post for mathematical, statistical, and logical errors:
+
+1. Error Quote: "the R-square measure of correlation between two sets of data is the same as the cosine of the angle between them"
+Error: This is incorrect. The correlation coefficient (r) is equal to the cosine of the angle, not R-squared. R-squared (r²) would be the square of the cosine.
+Correction: "The correlation coefficient (r) between two sets of data is equal to the cosine of the angle between them when presented as vectors in N-dimensional space."
+
+2. Error Quote: "an R-square of 0.5 (corresponding to an angle of sixty degrees)"
+Error: This is mathematically incorrect. If R² = 0.5, then r = √0.5 ≈ 0.707, which corresponds to an angle of approximately 45 degrees (cos⁻¹(0.707)), not 60 degrees.
+Correction: "an R-square of 0.5 (corresponding to an angle of approximately 45 degrees)"
+
+3. Error Quote: "+4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome"
+Error: The probability of being more than 2 standard deviations from the mean is approximately 1/44 (2.3%), not 1/40. The probability of being more than 4 standard deviations from the mean is approximately 1/15,873, not 1/15,000.
+Correction: "+4SD (~1/15,873) on a factor will be expected to be 'merely' +2SD (~1/44) in the outcome"
+
+4. Logical Error in: "...and a R-square of 0.5 is remarkably strong in the social sciences, implying it accounts for half the variance."
+While technically correct that R² = 0.5 means 50% of variance is explained, the statement presents a potential logical fallacy by implying that this level of correlation is "remarkably strong" without proper context or comparison to typical correlation values in social sciences.
+
+These errors don't significantly impact the main thesis of the article, but they do represent important technical inaccuracies in the mathematical presentation.
+
+=== TYPOS & GRAMMAR (11751ms) ===
+Here are the typos, grammar errors, and formatting issues I found:
+
+1. "crossing crossing the plate" - Repeated word
+Correction: "crossing the plate"
+
+2. "Here's one I grabbed off google" - "Google" should be capitalized
+Correction: "Here's one I grabbed off Google"
+
+3. "convenience sampled from googling" - "googling" should be capitalized
+Correction: "convenience sampled from Googling"
+
+4. "of this:" followed by an image but no subject specified - Incomplete sentence
+Correction: Remove "of this:" or add a subject
+
+5. "Providing the sample size is largeish" - Non-standard word usage
+Correction: "Provided the sample size is fairly large"
+
+6. "Although a +4SD intelligence person will likely be better than a given +3SD intelligence person (the mean conscientiousness in both populations is 0SD, and so the average wealth of the +4SD intelligence population is 1SD higher than the 3SD intelligence people)" - Missing article before "3SD"
+Correction: "...higher than the +3SD intelligence people"
+
+7. "Mainly adjustments and rewording" - Missing verb
+Correction: "Mainly made adjustments and rewording"
+
+8. "But it has relevance to Effective Altruism, given it generally focuses" - Awkward construction
+Correction: "But it has relevance to Effective Altruism, which generally focuses"
+
+9. Inconsistent spacing after periods throughout the text - Some have single spaces, others have double spaces
+
+10. Inconsistent capitalization of "SD" vs "sd" when referring to standard deviations
+
+The text otherwise appears to be grammatically sound, though there are some stylistic choices that, while not strictly incorrect, could be made more consistent.
+
+=== CONTRADICTIONS (13541ms) ===
+Here are the key contradictions and inconsistencies I found in the blog post:
+
+1. Contradiction between mathematical precision and uncertainty
+Quote 1: "For a toy model, pretend that wealth is wholly explained by two factors: intelligence and conscientiousness. Let's also say these are equally important to the outcome, independent of one another and are normally distributed."
+Quote 2: "My intuition is that in cartesian coordinates the R-square between correlated X and Y is actually also the cosine of the angle between the regression lines of X on Y and Y on X. But I can't see an obvious derivation, and I'm too lazy to demonstrate it myself."
+The author switches between precise mathematical models and admitted uncertainty/intuition without clearly delineating which parts are proven versus speculative.
+
+2. Inconsistent treatment of sample sizes
+Quote 1: "Providing the sample size is largeish, and the correlation not too tight (the tighter the correlation, the larger the sample size required), one will observe the ellipses with the bulging sides of the distribution."
+Quote 2: "Move down the tail to less extremely smart people - +3SD say. These people don't get such a boost to their wealth from their intelligence, but there should be a lot more of them (if 10 at +4SD, around 500 at +3SD)"
+The post fluctuates between requiring large samples for the theory to work and using very small sample sizes in examples without addressing this potential contradiction.
+
+3. Unclear causal relationship claims
+Quote: "Although being tall matters for being good at basketball, strength, agility, hand-eye-coordination matter as well (to name but a few)."
+The post sometimes implies direct causation between correlated factors while elsewhere maintaining they are merely correlated, creating ambiguity about the nature of these relationships.
+
+4. Inconsistent conclusions about practical applications
+Quote 1: "This probably has limited practical relevance."
+Quote 2: "There may be spread betting or portfolio scenarios where this factor comes into play"
+The post contradicts itself about whether the findings have practical applications, first dismissing their relevance then suggesting specific applications.
+
+These inconsistencies affect the argument's validity by making it unclear which parts of the analysis are meant to be taken as rigorous mathematical proofs versus general observations or intuitions. This makes it difficult to evaluate the strength of the overall argument and its practical implications.

@@ -1,0 +1,268 @@
+{
+  "outputDir": "outputs/iteration-0-parallel",
+  "totalTasks": 2,
+  "successfulTasks": 2,
+  "findingsCount": 18,
+  "findingsBySeverity": {
+    "critical": 0,
+    "major": 0,
+    "minor": 18
+  },
+  "findingsByCategory": {
+    "general": 15,
+    "spelling/grammar": 3
+  },
+  "findings": [
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        7
+      ],
+      "description": "1. **Line 7** - Spacing error after \"to\" link: \"to[ lifespan]\" - **Issue**: Missing space between \"to\" and the link - **Severity**: Minor",
+      "quotes": [
+        "- **Issue**: Missing space between \"to\" and the link"
+      ],
+      "timestamp": "2025-07-10T19:27:09.580Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        9
+      ],
+      "description": "2. **Line 9** - Missing space after \"tend\": \"tend[ to be very smart]\" - **Issue**: Missing space between \"tend\" and the link - **Severity**: Minor",
+      "quotes": [
+        "- **Issue**: Missing space between \"tend\" and the link"
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        9
+      ],
+      "description": "1. **Line 9** - Quote: \"Although 6'7\" is very tall, it lies within a couple of standard deviations of the median US adult male height\" - Issue: Statistical calculation error - Severity: **Major** - Description: Average US male height is ~5'9\" (69 inches). 6'7\" is 79 inches, a difference of 10 inches. With standard deviation ~3 inches for male height, 6'7\" is approximately 3.3 standard deviations above mean, not \"a couple\" (which implies ~2).",
+      "quotes": [
+        "- Quote: \"Although 6'7\" is very tall, it lies within a couple of standard deviations of the median US adult male height\"",
+        "- Description: Average US male height is ~5'9\" (69 inches). 6'7\" is 79 inches, a difference of 10 inches. With standard deviation ~3 inches for male height, 6'7\" is approximately 3.3 standard deviations above mean, not \"a couple\" (which implies ~2)."
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "spelling/grammar",
+      "severity": "minor",
+      "lineNumbers": [
+        15
+      ],
+      "description": "3. **Line 15** - Grammar error: \"Maybe although having a faster serve is better\" - **Issue**: \"Maybe although\" is grammatically incorrect; should be either \"Maybe\" or \"Although\" - **Severity**: Major",
+      "quotes": [
+        "- **Issue**: \"Maybe although\" is grammatically incorrect; should be either \"Maybe\" or \"Although\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        15
+      ],
+      "description": "4. **Line 15** - Missing comma: \"all things being equal, but\" - **Issue**: Should have a comma after \"equal\" - **Severity**: Minor",
+      "quotes": [
+        "- **Issue**: Should have a comma after \"equal\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        23
+      ],
+      "description": "5. **Line 23** - Duplicate word: \"compared to its speed crossing crossing the plate\" - **Issue**: Word \"crossing\" is repeated - **Severity**: Major",
+      "quotes": [
+        "- **Issue**: Word \"crossing\" is repeated"
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        59
+      ],
+      "description": "2. **Line 59** - Quote: \"with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness\" - Issue: Incorrect probability calculation - Severity: **Minor** - Description: If variables are independent, each person has ~2.3% chance of being +2SD in conscientiousness. With 10 people, the probability of at least one being +2SD is 1-(0.977)^10 ≈ 20.7%, not negligible.",
+      "quotes": [
+        "- Quote: \"with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        61
+      ],
+      "description": "3. **Line 61** - Quote: \"if 10 at +4SD, around 500 at +3SD\" - Issue: Incorrect ratio between normal distribution tails - Severity: **Major** - Description: The ratio between +4SD and +3SD frequencies is approximately 1:15.8, not 1:50. If 10 people at +4SD, expect ~158 at +3SD, not 500.",
+      "quotes": [
+        "- Quote: \"if 10 at +4SD, around 500 at +3SD\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        71
+      ],
+      "description": "4. **Line 71** - Quote: \"The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space\" - Issue: Conflation of R and R² - Severity: **Critical** - Description: The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R² is the square of this cosine.",
+      "quotes": [
+        "- Quote: \"The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "spelling/grammar",
+      "severity": "minor",
+      "lineNumbers": [
+        75
+      ],
+      "description": "6. **Line 75** - Grammar error: \"'Reading off\" - **Issue**: Missing closing apostrophe or improper punctuation at start of sentence - **Severity**: Major",
+      "quotes": [],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        75
+      ],
+      "description": "5. **Line 75** - Quote: \"Grant a factor correlated with an outcome, which we represent with two vectors at an angle theta, the inverse cosine equal the R-squared\" - Issue: Mathematical relationship error - Severity: **Critical** - Description: Should be \"angle theta equals arccos(R)\" not \"arccos(R²)\". This error propagates through the geometric explanation.",
+      "quotes": [
+        "- Quote: \"Grant a factor correlated with an outcome, which we represent with two vectors at an angle theta, the inverse cosine equal the R-squared\"",
+        "- Description: Should be \"angle theta equals arccos(R)\" not \"arccos(R²)\". This error propagates through the geometric explanation."
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        75
+      ],
+      "description": "6. **Line 75** - Quote: \"an R-square of 0.5 (corresponding to an angle of sixty degrees)\" - Issue: Incorrect angle calculation - Severity: **Critical** - Description: R² = 0.5 means R ≈ 0.707, which corresponds to arccos(0.707) ≈ 45°, not 60°. An angle of 60° would give R = 0.5 and R² = 0.25.",
+      "quotes": [
+        "- Quote: \"an R-square of 0.5 (corresponding to an angle of sixty degrees)\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        75
+      ],
+      "description": "7. **Line 75** - Quote: \"+4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40)\" - Issue: Incorrect probability values - Severity: **Major** - Description: +4SD corresponds to ~1/31,500 (not 1/15,000) and +2SD to ~1/44 (close to 1/40 but should be more precise in a mathematical context).",
+      "quotes": [
+        "- Quote: \"+4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40)\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        83
+      ],
+      "description": "10. **Line 83** - Parenthesis placement: \"spread funds sooner.(6)\" - **Issue**: Footnote number should be outside the period - **Severity**: Minor",
+      "quotes": [],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        87
+      ],
+      "description": "7. **Line 87** - Capitalization error: \"richest man in america\" - **Issue**: \"America\" should be capitalized - **Severity**: Minor",
+      "quotes": [
+        "- **Issue**: \"America\" should be capitalized"
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        89
+      ],
+      "description": "8. **Line 89** - Spacing issue: \"It is also worth clarifying the 'envelope' is only meant to illustrate the shape of the distribution, rather than some boundary that contains the entire probability density: as suggested by [homunq](/lw/km6/why_the_tails_come_apart/b6hs): it is an 'pdf isobar'\" - **Issue**: Should be \"a 'pdf isobar'\" not \"an 'pdf isobar'\" - **Severity**: Minor",
+      "quotes": [
+        "- **Issue**: Should be \"a 'pdf isobar'\" not \"an 'pdf isobar'\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-1.json",
+      "taskDesc": "Find spelling and grammar errors with line numbers",
+      "category": "spelling/grammar",
+      "severity": "minor",
+      "lineNumbers": [
+        99
+      ],
+      "description": "9. **Line 99** - Typo: \"why you can by R-squared\" - **Issue**: \"by\" should be \"buy\" or more likely \"multiply by\" - **Severity**: Major",
+      "quotes": [
+        "- **Issue**: \"by\" should be \"buy\" or more likely \"multiply by\""
+      ],
+      "timestamp": "2025-07-10T19:27:09.581Z"
+    },
+    {
+      "source": "task-2.json",
+      "taskDesc": "Check mathematical accuracy of statistical claims",
+      "category": "general",
+      "severity": "minor",
+      "lineNumbers": [
+        99
+      ],
+      "description": "8. **Line 99** - Quote: \"you can by R-squared to move between z-scores of correlated normal variables\" - Issue: Typo obscures mathematical claim - Severity: **Minor** - Description: Appears to be missing word \"multiply\" - should likely read \"you can multiply by R-squared\" though this would still be incorrect (should multiply by R, not R²).",
+      "quotes": [
+        "- Quote: \"you can by R-squared to move between z-scores of correlated normal variables\"",
+        "- Description: Appears to be missing word \"multiply\" - should likely read \"you can multiply by R-squared\" though this would still be incorrect (should multiply by R, not R²)."
+      ],
+      "timestamp": "2025-07-10T19:27:09.582Z"
+    }
+  ]
+}

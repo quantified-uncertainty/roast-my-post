@@ -1,0 +1,29 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 11,
+      "quote": "remote work increases productivity by 13%",
+      "issue": "No sample size, confidence intervals, or effect size context provided for this statistical claim",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:23:41.227Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 13,
+      "quote": "meditation reduces anxiety by 30%",
+      "issue": "Percentage reduction lacks baseline, measurement scale, or statistical significance information",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:23:41.228Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 2,
+    "validFindings": 2,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

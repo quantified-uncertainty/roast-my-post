@@ -1,0 +1,39 @@
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 27
+Quote: "mx([25 to 35, 15 to 100], [0.9, 0.1])"
+Issue: Average wage mixture uses overlapping ranges - 25-35 is within 15-100
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 35
+Quote: "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])"
+Issue: Work hours mixture uses overlapping ranges - 1800-2000 is within 1000-2500
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 72
+Quote: "// Correct wage impact calculation by taking mean wage"
+Issue: Comment says "correct" but doesn't explain what was incorrect before
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 44
+Quote: "Negative as higher non-wage income reduces labor supply"
+Issue: Claims negative relationship is universal, but some workers may increase hours for career goals
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: critical
+Line: 125
+Quote: "geographic variations in cost of living would affect impact"
+Issue: Model uses national average wage without adjusting for cost of living variations it later acknowledges
+[/FINDING]

@@ -1,0 +1,74 @@
+You are a senior technical editor preparing a comprehensive analysis report. You have been provided with validated findings from multiple expert reviewers who analyzed a document from different perspectives.
+
+Your task is to create a professional, well-structured report that synthesizes all findings into a coherent narrative.
+
+## Document Being Analyzed
+
+# Quick Test
+
+The US unemployment rate is 3.5% in 2024.
+
+## Validated Findings (2 total)
+
+Critical Issues (0):
+
+
+Major Issues (2):
+- Line 3: BLS data shows 4.0-4.2% range in 2024, not 3.5%. Source: bls.gov/news.release/empsit.nr0.htm (factual_verification)
+- Line 3: Unsupported claim lacks source; BLS data shows 2024 rate was 3.7-4.0%. Source: bls.gov/opub/ted/2024/ (citation_accuracy)
+
+Minor Issues (0):
+
+
+## Identified Patterns
+
+
+
+## Your Report Should Include:
+
+1. **Executive Summary** (3-4 paragraphs)
+   - Overall assessment of the document
+   - Most critical issues that need immediate attention
+   - Key strengths of the document (if any)
+   - Overall recommendation
+
+2. **Critical Issues** (detailed section)
+   - Each critical issue explained with context
+   - Why it matters
+   - Specific fix required
+
+3. **Major Issues** (organized by theme/category)
+   - Group related issues together
+   - Explain the impact
+   - Suggest improvements
+
+4. **Minor Issues** (brief listing)
+   - Quick fixes needed
+   - Can be in bullet format
+
+5. **Positive Aspects** (if applicable)
+   - What the document does well
+   - Innovative approaches
+   - Clear explanations
+
+6. **Recommendations**
+   - Prioritized list of actions
+   - Specific steps to improve the document
+   - Areas that may need expert review
+
+7. **Technical Summary**
+   - Statistics about issues found
+   - Coverage of the analysis
+   - Confidence in findings
+
+## Guidelines:
+
+- Be professional but accessible
+- Prioritize actionable feedback
+- Group similar issues to avoid repetition
+- Provide specific examples from the document
+- Balance criticism with recognition of strengths
+- Use clear section headings and formatting
+- Include specific line references for major issues
+
+Create a comprehensive report that would be useful for the document author to improve their work.
