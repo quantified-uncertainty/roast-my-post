@@ -1,0 +1,95 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate reached 3.5% in December 2024",
+      "issue": "BLS data shows 4.1% unemployment in December 2024, not 3.5%. Source: bls.gov/news.release/empsit.nr0.htm",
+      "sourceUrl": "bls.gov/news.release/empsit.nr0.htm",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.552Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "critical",
+      "line": 3,
+      "quote": "6.3% peak during the pandemic in April 2020",
+      "issue": "April 2020 unemployment was 14.7%, not 6.3% - more than double the claimed figure. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+      "sourceUrl": "bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.553Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 5,
+      "quote": "Federal Reserve's current federal funds rate is 5.25-5.50%",
+      "issue": "Fed funds rate was cut to 4.25-4.50% by December 2024. Source: Federal Reserve data",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.553Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 5,
+      "quote": "Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024",
+      "issue": "November 2024 CPI was 2.7% year-over-year, not 3.1%. Source: BLS/CNBC reports",
+      "sourceUrl": "BLS/CNBC",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.553Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 23,
+      "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+      "issue": "WTI crude averaged $69.95 per barrel in November 2024, not $78. Source: Statista/EIA data",
+      "sourceUrl": "Statista/EIA",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.553Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 17,
+      "quote": "Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025",
+      "issue": "CBO projects 1.9% GDP growth for 2025, not 2.1%. Source: cbo.gov/publication/61172",
+      "sourceUrl": "cbo.gov/publication/61172",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T16:32:13.553Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 7,
+    "validFindings": 6,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: factual_verification\nSeverity: major\nLine: 15\nQuote: \"A recent Stanford study found that remote work increases productivity by 13% compared to in-office work\"\nIssue: Cannot verify 2023 American Economic Review publication; recent Stanford research shows fully remote work REDUCES productivity by 10-20%\n[/FINDING]",
+        "parsed": {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 15,
+          "quote": "A recent Stanford study found that remote work increases productivity by 13% compared to in-office work",
+          "issue": "Cannot verify 2023 American Economic Review publication; recent Stanford research shows fully remote work REDUCES productivity by 10-20%",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T16:32:13.553Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 484,
+    "output_tokens": 242,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.001452,
+    "output_cost_usd": 0.00363,
+    "total_cost_usd": 0.005082,
+    "model_used": "claude-4-sonnet",
+    "tracked_at": "2025-07-11T16:32:13.615Z"
+  }
+}

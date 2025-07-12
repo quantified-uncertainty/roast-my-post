@@ -1,0 +1,38 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 26,
+      "quote": "workingAgePop = 205M to 215M",
+      "issue": "Current data shows 211.78M (May 2025), range accurate but could be more precise",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:31:04.005Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 33,
+      "quote": "avgWage = mx([25 to 35, 15 to 100], [0.9, 0.1])",
+      "issue": "BLS data shows $36.30/hour average (June 2025), base range underestimates current wages",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:31:04.006Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 127,
+      "quote": "$5,000 annual Universal Basic Income (UBI)",
+      "issue": "No factual error but model dated Sun Jul 06 2025 uses July 2025 data inconsistently",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:31:04.006Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 3,
+    "validFindings": 3,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

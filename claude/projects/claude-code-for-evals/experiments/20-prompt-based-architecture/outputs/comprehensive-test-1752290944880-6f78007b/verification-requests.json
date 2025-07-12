@@ -1,0 +1,37 @@
+[
+  {
+    "type": "verify",
+    "jobId": "job-1",
+    "claim": "US unemployment rate 3.5% December 2024",
+    "query": "\"US unemployment rate December 2024 BLS\"",
+    "context": "Bureau of Labor Statistics official data"
+  },
+  {
+    "type": "verify",
+    "jobId": "job-1",
+    "claim": "Fed funds rate 5.25-5.50% current",
+    "query": "\"Federal Reserve current interest rate FOMC\"",
+    "context": "Federal Reserve official website"
+  },
+  {
+    "type": "verify",
+    "jobId": "job-1",
+    "claim": "Stanford remote work productivity study",
+    "query": "\"Stanford remote work productivity 13% American Economic Review 2023\"",
+    "context": "Academic journal database"
+  },
+  {
+    "type": "verify",
+    "jobId": "job-1",
+    "claim": "CBO GDP projection 2.1% 2025",
+    "query": "\"Congressional Budget Office economic outlook 2025 GDP\"",
+    "context": "CBO official report"
+  },
+  {
+    "type": "verify",
+    "jobId": "job-1",
+    "claim": "S&P 500 4,750 December 15 2024",
+    "query": "\"S&P 500 closing price December 15 2024\"",
+    "context": "Financial market data provider"
+  }
+]

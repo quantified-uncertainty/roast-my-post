@@ -1,0 +1,83 @@
+{
+  "taskType": "citation_accuracy",
+  "findings": [
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 14,
+      "quote": "responded to the post on his blog](https://aleph.se/andart2/space/the-end-of-the-worlds/ )",
+      "issue": "Missing closing bracket after URL, incorrect citation formatting",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "critical",
+      "line": 251,
+      "quote": "Long & accurate explanation here.",
+      "issue": "Footnote 54 references content but provides no actual citation or link",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 243,
+      "quote": "SU(5) is disproven because observational evidence indicates",
+      "issue": "Scientific claim in footnote 37 lacks supporting citation",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 83,
+      "quote": "dump one end in the Sun and another elsewhere (a la Stephen Baxter's Ring)",
+      "issue": "Book reference lacks publication details (year, publisher)",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 260,
+      "quote": "Some good arguments for why this might take a really long time",
+      "issue": "Footnote 67 references arguments without citing their source",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 45,
+      "quote": "books.google.co.uk/books?hl=en&lr=&id=MME33bSTCDsC",
+      "issue": "Google Books URL excessively long, should use shortened citation format",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 249,
+      "quote": "Potentially avoided by wormholes or quantum coupling",
+      "issue": "Footnote 64 makes technical claim without supporting reference",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 258,
+      "quote": "I'm giving a 15% chance of this happening before 2500",
+      "issue": "Quoted text in footnote lacks attribution to original author",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-10T21:57:31.895Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 8,
+    "validFindings": 8,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

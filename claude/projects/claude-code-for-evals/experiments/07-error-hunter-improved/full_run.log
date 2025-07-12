@@ -1,0 +1,10 @@
+🚀 Starting Error Hunter v2...
+
+🚀 Error Hunter v2 starting...
+📄 Input: /Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/input.md
+🎯 Max iterations: 6
+
+🔍 Iteration 1/6: Find typos and grammatical errors
+✓ Found 0 new errors | Cost: $0.0555 | Total: $0.0555
+
+🔍 Iteration 2/6: Verify numerical claims

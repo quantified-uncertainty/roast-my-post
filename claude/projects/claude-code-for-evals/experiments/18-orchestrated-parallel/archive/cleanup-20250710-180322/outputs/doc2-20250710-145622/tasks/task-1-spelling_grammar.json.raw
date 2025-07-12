@@ -1,0 +1,7 @@
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 551
+Quote: "include:ozone destruction"
+Issue: Missing space after colon - should be "include: ozone"
+[/FINDING]

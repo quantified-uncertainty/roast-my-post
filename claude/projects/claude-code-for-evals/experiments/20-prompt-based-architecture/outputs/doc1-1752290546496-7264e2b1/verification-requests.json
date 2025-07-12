@@ -1,0 +1,16 @@
+[
+  {
+    "type": "needs_verification",
+    "jobId": "job-1",
+    "claim": "[44-46]",
+    "query": "\"Income Effect on Labor Supply... Based on empirical studies of lottery winners and inheritance recipients\"",
+    "context": "Search for \"income elasticity labor supply lottery winners inheritance -0.1 -0.15\""
+  },
+  {
+    "type": "needs_verification",
+    "jobId": "job-1",
+    "claim": "[15]",
+    "query": "\"$5k/year UBI\"",
+    "context": "Search for \"universal basic income proposals United States $5000 annual amount\""
+  }
+]

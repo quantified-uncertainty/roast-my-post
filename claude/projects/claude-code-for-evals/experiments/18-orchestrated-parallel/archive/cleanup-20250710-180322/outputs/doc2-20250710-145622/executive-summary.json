@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-10T21:58:55.785Z",
+    "findingsCount": 58,
+    "patternsIdentified": 1
+  },
+  "metrics": {
+    "totalIssues": 58,
+    "severityCounts": {
+      "critical": 9,
+      "major": 24,
+      "minor": 25
+    },
+    "categoryCounts": {
+      "argument_strength": 10,
+      "clarity_readability": 15,
+      "factual_verification": 4,
+      "logical_consistency": 9,
+      "structural_analysis": 8,
+      "citation_accuracy": 8,
+      "statistical_validity": 1,
+      "mathematical_accuracy": 2,
+      "spelling_grammar": 1
+    },
+    "qualityScore": 0,
+    "issuesPerLine": 0.11
+  },
+  "topIssues": [
+    {
+      "line": 6,
+      "category": "argument_strength",
+      "issue": "Extreme claim lacks sufficient evidence; assumes cumulative probability without considering mitigation or interdependence"
+    },
+    {
+      "line": 7,
+      "category": "factual_verification",
+      "issue": "Document dated in the future (June 27, 2025) when current date is January 2025"
+    },
+    {
+      "line": 28,
+      "category": "structural_analysis",
+      "issue": "Missing methodology section explaining threat identification and categorization approach"
+    },
+    {
+      "line": 76,
+      "category": "logical_consistency",
+      "issue": "Abrupt assumption after arguing aliens make long-term future impossible, with no justification"
+    },
+    {
+      "line": 77,
+      "category": "logical_consistency",
+      "issue": "Contradicts own argument that superintelligence is needed before interstellar expansion"
+    }
+  ],
+  "systematicProblems": [
+    {
+      "name": "Clarity Issue Clusters",
+      "severity": "major",
+      "occurrences": 1
+    }
+  ],
+  "hotspots": [
+    {
+      "line": 6,
+      "issueCount": 3,
+      "categories": [
+        "argument_strength",
+        "clarity_readability"
+      ]
+    },
+    {
+      "line": 14,
+      "issueCount": 2,
+      "categories": [
+        "citation_accuracy",
+        "structural_analysis"
+      ]
+    },
+    {
+      "line": 180,
+      "issueCount": 2,
+      "categories": [
+        "structural_analysis",
+        "argument_strength"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Critical - Fundamental issues throughout",
+    "mostProblematicCategory": "clarity_readability",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "560 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    },
+    {
+      "priority": 2,
+      "action": "Fix systematic issue: Clarity Issue Clusters",
+      "reason": "Sections with concentrated clarity problems"
+    },
+    {
+      "priority": 11,
+      "action": "Revise for clarity and readability",
+      "reason": "Numerous clarity issues impact comprehension"
+    }
+  ]
+}

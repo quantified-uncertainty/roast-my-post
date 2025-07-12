@@ -1,0 +1,56 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 22,
+      "quote": "US Working Age Population",
+      "issue": "Definition uses ages 15-64, but US typically defines working age as 16-64",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T23:55:43.887Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 23,
+      "quote": "Population aged 15-64 eligible for UBI",
+      "issue": "Age 15 is below US working age; should be 16-64",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T23:55:43.888Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 24,
+      "quote": "workingAgePop = 205M to 215M",
+      "issue": "US working age population (16-64) is approximately 205-210M as of 2024-2025",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T23:55:43.888Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 37,
+      "quote": "Based on typical US full-time work year",
+      "issue": "Full-time US work year is typically 2080 hours, not 1800-2000",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T23:55:43.888Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 40,
+      "quote": "baseWorkHours = mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+      "issue": "Central range 1800-2000 underestimates typical full-time hours of 2080",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T23:55:43.888Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 5,
+      "quote": "6.3% peak during the pandemic in April 2020",
+      "issue": "April 2020 saw 14.7% unemployment, not 6.3% - this is a significant statistical error",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:26:45.321Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 11,
+      "quote": "US working-age population (ages 15-64)",
+      "issue": "Standard working-age population is 16-64, not 15-64 in US statistics",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:26:45.322Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 17,
+      "quote": "increases productivity by 13%",
+      "issue": "No confidence intervals, p-values, or statistical significance reported for key finding",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:26:45.322Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 17,
+      "quote": "tracked 1,000 workers over 9 months",
+      "issue": "No control group or experimental design details provided for causal claim",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T02:26:45.322Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 4,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

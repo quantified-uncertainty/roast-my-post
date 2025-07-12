@@ -1,0 +1,21 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims",
+    "mathematical_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains numerous statistical claims and economic data points requiring verification. References specific studies and includes precise numerical data that needs fact-checking. High potential for statistical errors or outdated information.",
+  "statistics": {
+    "lineCount": 25,
+    "wordCount": 218,
+    "characterCount": 1387
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy",
+    "logical_consistency"
+  ]
+}

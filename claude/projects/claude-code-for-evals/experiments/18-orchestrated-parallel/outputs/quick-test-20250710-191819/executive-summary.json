@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-11T02:19:49.721Z",
+    "findingsCount": 2,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 2,
+    "severityCounts": {
+      "critical": 0,
+      "major": 2,
+      "minor": 0
+    },
+    "categoryCounts": {
+      "factual_verification": 1,
+      "statistical_validity": 1
+    },
+    "qualityScore": 94,
+    "issuesPerLine": 0.67
+  },
+  "topIssues": [],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 3,
+      "issueCount": 2,
+      "categories": [
+        "factual_verification",
+        "statistical_validity"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Excellent - Minor improvements needed",
+    "mostProblematicCategory": "factual_verification",
+    "recommendedPriority": "minor",
+    "estimatedEffort": "20 minutes"
+  },
+  "recommendations": []
+}

@@ -1,0 +1,52 @@
+{
+  "taskType": "mathematical_accuracy",
+  "findings": [
+    {
+      "category": "mathematical_accuracy",
+      "severity": "major",
+      "line": 57,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "GDP impact calculation assumes all labor hours contribute equally to GDP, ignoring productivity differences",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:21:34.593Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 118,
+      "quote": "String(mean(impact.totalHourChange) / -1B, \".1f\")",
+      "issue": "Dividing by negative 1B instead of positive 1B creates confusing double negative",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:21:34.594Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 121,
+      "quote": "String(mean(impact.gdpImpact) / -1B, \".1f\")",
+      "issue": "Dividing by negative 1B instead of positive 1B creates confusing double negative",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:21:34.594Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 3,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: mathematical_accuracy\nSeverity: minor\nLine: 46\nQuote: \"incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))\"\nIssue: Formula uses wage*hours as denominator but doesn't account for existing non-wage income\n[/FINDING]",
+        "parsed": {
+          "category": "mathematical_accuracy",
+          "severity": "minor",
+          "line": 46,
+          "quote": "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+          "issue": "Formula uses wage*hours as denominator but doesn't account for existing non-wage income",
+          "source": "mathematical_accuracy",
+          "timestamp": "2025-07-11T01:21:34.594Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

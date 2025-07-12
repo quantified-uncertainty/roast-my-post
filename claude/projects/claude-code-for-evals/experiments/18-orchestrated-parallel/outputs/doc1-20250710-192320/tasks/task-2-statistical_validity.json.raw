@@ -1,0 +1,39 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 47
+Quote: "Based on empirical studies of lottery winners and inheritance recipients."
+Issue: Invalid generalization - lottery/inheritance effects may not apply to regular UBI payments
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 65
+Quote: "gdpImpact = totalHourChange * mean(inputs.avgWage)"
+Issue: Oversimplified GDP calculation - ignores multiplier effects and economic complexity
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 110
+Quote: "90% CI:"
+Issue: Confidence interval terminology incorrect for simulation - should be "credible interval"
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 89
+Quote: "The model assumes uniform effects across demographics"
+Issue: Homogeneity assumption likely invalid - labor supply elasticity varies significantly by income
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 74
+Quote: "sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)"
+Issue: Testing mean of distribution ignores full uncertainty range in validation
+[/FINDING]

@@ -1,0 +1,23 @@
+{
+  "type": "technical",
+  "features": [
+    "mathematical_content",
+    "code_content",
+    "empirical_claims",
+    "policy_recommendations"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This is a Squiggle model implementing economic calculations for UBI impact on labor supply. It contains mathematical formulas, elasticity calculations, probabilistic distributions, and empirical parameter estimates that require rigorous verification. The model makes empirical claims about labor economics and policy implications that need fact-checking.",
+  "statistics": {
+    "lineCount": 142,
+    "wordCount": 574,
+    "characterCount": 4560
+  },
+  "recommendations": [
+    "mathematical_accuracy",
+    "statistical_validity",
+    "factual_verification",
+    "logical_consistency"
+  ]
+}

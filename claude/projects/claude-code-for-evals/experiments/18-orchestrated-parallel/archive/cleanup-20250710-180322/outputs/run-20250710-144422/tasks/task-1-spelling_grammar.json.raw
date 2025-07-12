@@ -1,0 +1,41 @@
+I'll analyze this document for spelling and grammar issues.
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 24
+Quote: "represents service sector, upper bound represents"
+Issue: Missing article "the" before "service sector"
+[/FINDING]
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 46
+Quote: "Some may reduce hours to stay under means-tested"
+Issue: Missing subject; sentence fragment needs "Some workers" or similar
+[/FINDING]
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 122
+Quote: "poorer workers may reduce hours more"
+Issue: Should be "reduce hours more significantly" or "work fewer hours"
+[/FINDING]
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 124
+Quote: "knowledge workers vs service workers"
+Issue: Missing periods after "vs" abbreviation
+[/FINDING]
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 125
+Quote: "single parents vs dual income households"
+Issue: Missing periods after "vs" abbreviation
+[/FINDING]

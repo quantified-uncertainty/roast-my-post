@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-11T00:31:57.287Z",
+    "findingsCount": 21,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 21,
+    "severityCounts": {
+      "critical": 1,
+      "major": 10,
+      "minor": 10
+    },
+    "categoryCounts": {
+      "statistical_validity": 8,
+      "factual_verification": 3,
+      "logical_consistency": 6,
+      "mathematical_accuracy": 4
+    },
+    "qualityScore": 50,
+    "issuesPerLine": 0.16
+  },
+  "topIssues": [
+    {
+      "line": 60,
+      "category": "statistical_validity",
+      "issue": "Taking mean of wage after multiplication ignores correlation structure and may underestimate uncertainty"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [],
+  "assessment": {
+    "overall": "Poor - Major revision needed",
+    "mostProblematicCategory": "statistical_validity",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "150 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    },
+    {
+      "priority": 10,
+      "action": "Have a mathematician review all calculations and formulas",
+      "reason": "Multiple mathematical errors detected"
+    }
+  ]
+}

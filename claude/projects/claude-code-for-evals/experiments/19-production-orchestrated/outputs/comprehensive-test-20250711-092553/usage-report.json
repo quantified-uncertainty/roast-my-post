@@ -1,0 +1,55 @@
+{
+  "total_input_tokens": 4716,
+  "total_output_tokens": 2859,
+  "total_cost_usd": 0.057033000000000014,
+  "tasks": [
+    {
+      "task": "task-1-factual_verification",
+      "type": "factual_verification",
+      "input_tokens": 484,
+      "output_tokens": 242,
+      "cost_usd": 0.005082,
+      "has_web_searches": true
+    },
+    {
+      "task": "task-2-statistical_validity",
+      "type": "statistical_validity",
+      "input_tokens": 212,
+      "output_tokens": 106,
+      "cost_usd": 0.002226,
+      "has_web_searches": false
+    },
+    {
+      "task": "task-3-citation_accuracy",
+      "type": "citation_accuracy",
+      "input_tokens": 863,
+      "output_tokens": 432,
+      "cost_usd": 0.009069,
+      "has_web_searches": false
+    },
+    {
+      "task": "task-4-logical_consistency",
+      "type": "logical_consistency",
+      "input_tokens": 157,
+      "output_tokens": 79,
+      "cost_usd": 0.0016560000000000001,
+      "has_web_searches": false
+    }
+  ],
+  "web_searches_count": 6,
+  "synthesis": {
+    "input_tokens": 3000,
+    "output_tokens": 2000,
+    "cost_usd": 0.03900000000000001
+  },
+  "summary": {
+    "total_tokens": 7575,
+    "average_cost_per_task": 0.014258250000000004,
+    "estimated_web_search_cost": 0.30000000000000004,
+    "breakdown": {
+      "analysis_tasks": 0.018033000000000004,
+      "synthesis": 0.03900000000000001,
+      "overhead": 0.005703300000000001
+    }
+  }
+}

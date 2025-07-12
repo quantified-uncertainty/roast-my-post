@@ -1,0 +1,148 @@
+You are a senior technical editor preparing a comprehensive analysis report. You have been provided with validated findings from multiple expert reviewers who analyzed a document from different perspectives.
+
+IMPORTANT CONTEXT: Today's date is 2025-07-11. When discussing claims about dates, statistics, or "recent" events, consider that it is currently 2025.
+
+Your task is to create a professional, well-structured report that synthesizes all findings into a coherent narrative.
+
+## Document Being Analyzed
+
+# Economic Research Brief: Labor Market Analysis
+
+## Key Statistics
+
+The US unemployment rate reached 3.5% in December 2024, according to recent data. This represents a significant improvement from the 6.3% peak during the pandemic in April 2020.
+
+The Federal Reserve's current federal funds rate is 5.25-5.50%, the highest level since 2007. Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024.
+
+## Demographic Trends
+
+The US working-age population (ages 15-64) is approximately 210 million people. Labor force participation rate stands at 63.4% as of late 2024.
+
+Average hourly earnings have increased by 4.1% year-over-year, while productivity growth measured 2.3% in the third quarter of 2024.
+
+## Research Claims
+
+A recent Stanford study found that remote work increases productivity by 13% compared to in-office work. The study, published in the American Economic Review in 2023, tracked 1,000 workers over 9 months.
+
+According to the Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025. The World Bank estimates global GDP growth at 2.9% for the same period.
+
+## Market Data
+
+The S&P 500 closed at 4,750 points on December 15, 2024. Bitcoin traded at $42,300 as of the same date.
+
+Oil prices (WTI crude) averaged $78 per barrel in November 2024, while natural gas futures traded at $2.85 per MMBtu.
+
+## Validated Findings (26 total)
+
+Critical Issues (5):
+- Line 3: April 2020 unemployment was 14.7%, not 6.3% - more than double the claimed figure. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm (factual_verification)
+  Source URL: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm
+- Line 3: False data - April 2020 unemployment was 14.7%, not 6.3%. Source: bls.gov/opub/ted/2020 (citation_accuracy)
+  Source URL: bls.gov/opub/ted/2020
+- Line 16: Wrong publication - Ctrip study was in Quarterly Journal of Economics 2015, not AER 2023 (citation_accuracy)
+  Source: citation_accuracy
+- Line 23: No data found; S&P 500 was above 5,800 in December 2024. Source: investing.com (citation_accuracy)
+  Source: citation_accuracy
+- Line 23: Bitcoin was over $100,000 on Dec 15, 2024; $42,300 was Dec 2023 price. Source: statista.com (citation_accuracy)
+  Source: citation_accuracy
+
+Major Issues (10):
+- Line 3: BLS data shows 4.1% unemployment in December 2024, not 3.5%. Source: bls.gov/news.release/empsit.nr0.htm (factual_verification)
+  Source URL: bls.gov/news.release/empsit.nr0.htm
+- Line 3: Incorrect statistic - BLS data shows 4.1% unemployment in December 2024. Source: bls.gov (citation_accuracy)
+  Source: citation_accuracy
+- Line 5: Fed funds rate was cut to 4.25-4.50% by December 2024. Source: Federal Reserve data (factual_verification)
+  Source: factual_verification
+- Line 5: Claims December 2024 data but it's only July 2025 - data should exist (logical_consistency)
+  Source: logical_consistency
+- Line 16: No such study exists; Stanford 2023 research shows remote work decreases productivity 10-20% (citation_accuracy)
+  Source: citation_accuracy
+- Line 19: World Bank cut 2025 forecast to 2.3%, not 2.9%. Source: worldbank.org (citation_accuracy)
+  Source: citation_accuracy
+- Line 23: WTI crude averaged $69.95 per barrel in November 2024, not $78. Source: Statista/EIA data (factual_verification)
+  Source URL: Statista/EIA
+- Line 25: WTI averaged $69.95 in November 2024, not $78. Source: statista.com (citation_accuracy)
+  Source: citation_accuracy
+- Line 25: Claims specific December 15, 2024 data but it's July 2025 - should be past data (logical_consistency)
+  Source: logical_consistency
+- Line 25: Claims December 15, 2024 Bitcoin price but it's July 2025 - should be historical (logical_consistency)
+  Source: logical_consistency
+
+Minor Issues (11):
+- Line 3: Claims December 2024 data when current date is July 2025 - should clarify if referring to past December (statistical_validity)
+  Source: statistical_validity
+- Line 5: November 2024 CPI was 2.7% year-over-year, not 3.1%. Source: BLS/CNBC reports (factual_verification)
+  Source URL: BLS/CNBC
+- Line 5: References November 2024 data without specifying it's historical (8 months ago from current date) (statistical_validity)
+  Source: statistical_validity
+- Line 6: No source provided; November 2024 CPI data not found. Latest is May 2025 at 2.4%. Source: bls.gov (citation_accuracy)
+  Source: citation_accuracy
+- Line 10: No source provided; 2019 Census shows 213.6M for ages 15-64. No 2024 data found (citation_accuracy)
+  Source: citation_accuracy
+- Line 10: No source provided; BLS shows 62.5% in December 2024, not 63.4%. Source: bls.gov (citation_accuracy)
+  Source: citation_accuracy
+- Line 12: BLS reports 2.2% for Q3 2024, not 2.3%. Source: bls.gov/opub/ted/2024 (citation_accuracy)
+  Source URL: bls.gov/opub/ted/2024
+- Line 17: CBO projects 1.9% GDP growth for 2025, not 2.1%. Source: cbo.gov/publication/61172 (factual_verification)
+  Source URL: cbo.gov/publication/61172
+- Line 17: References specific December 2024 date without clarifying it's historical data from 7 months ago (statistical_validity)
+  Source: statistical_validity
+- Line 19: References November 2024 prices without indicating this is 8-month old data (statistical_validity)
+  Source: statistical_validity
+- Line 25: No source provided; projections showed ~$3.10/MMBtu for November 2024. Source: eia.gov (citation_accuracy)
+  Source: citation_accuracy
+
+## Identified Patterns
+
+
+
+## Your Report Should Include:
+
+1. **Executive Summary** (3-4 paragraphs)
+   - Overall assessment of the document
+   - Most critical issues that need immediate attention
+   - Key strengths of the document (if any)
+   - Overall recommendation
+
+2. **Critical Issues** (detailed section)
+   - Each critical issue explained with context
+   - Why it matters
+   - Specific fix required
+
+3. **Major Issues** (organized by theme/category)
+   - Group related issues together
+   - Explain the impact
+   - Suggest improvements
+
+4. **Minor Issues** (brief listing)
+   - Quick fixes needed
+   - Can be in bullet format
+
+5. **Positive Aspects** (if applicable)
+   - What the document does well
+   - Innovative approaches
+   - Clear explanations
+
+6. **Recommendations**
+   - Prioritized list of actions
+   - Specific steps to improve the document
+   - Areas that may need expert review
+
+7. **Technical Summary**
+   - Statistics about issues found
+   - Coverage of the analysis
+   - Confidence in findings
+
+## Guidelines:
+
+- Be professional but accessible
+- Prioritize actionable feedback
+- Group similar issues to avoid repetition
+- Provide specific examples from the document
+- Balance criticism with recognition of strengths
+- Use clear section headings and formatting
+- Include specific line references for major issues
+- **CRITICAL**: When findings include source URLs or citations, you MUST preserve them in your report
+- **IMPORTANT**: Include all "Source:" references from the findings in your report
+
+Create a comprehensive report that would be useful for the document author to improve their work.

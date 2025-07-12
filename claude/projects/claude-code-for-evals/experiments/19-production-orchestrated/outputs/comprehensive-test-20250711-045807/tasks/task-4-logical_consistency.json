@@ -1,0 +1,76 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 3,
+      "quote": "unemployment rate reached 3.5% in December 2024",
+      "issue": "Future date reference - document cannot have verified December 2024 data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 11,
+      "quote": "63.4% as of late 2024",
+      "issue": "Vague temporal reference inconsistent with specific dates used elsewhere",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 17,
+      "quote": "study, published in the American Economic Review in 2023",
+      "issue": "2023 study cannot be \"recent\" if document references December 2024 data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "critical",
+      "line": 19,
+      "quote": "Congressional Budget Office's 2024 economic outlook",
+      "issue": "2024 outlook would not project 2025 growth if document has December 2024 data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 23,
+      "quote": "S&P 500 closed at 4,750 points on December 15, 2024",
+      "issue": "Cannot report closing price for future date December 15, 2024",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 25,
+      "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+      "issue": "Cannot have November 2024 average if current date allows December 2024 data",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T11:58:31.366Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 6,
+    "errors": 0,
+    "errorDetails": []
+  },
+  "usage": {
+    "input_tokens": 322,
+    "output_tokens": 161,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.0009660000000000001,
+    "output_cost_usd": 0.002415,
+    "total_cost_usd": 0.0033810000000000003,
+    "model_used": "claude-3-sonnet",
+    "tracked_at": "2025-07-11T11:58:31.427Z"
+  }
+}

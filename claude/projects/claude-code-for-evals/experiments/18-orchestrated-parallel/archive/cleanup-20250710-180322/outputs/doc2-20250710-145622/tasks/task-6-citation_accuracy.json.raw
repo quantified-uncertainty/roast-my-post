@@ -1,0 +1,63 @@
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 14
+Quote: "responded to the post on his blog](https://aleph.se/andart2/space/the-end-of-the-worlds/ )"
+Issue: Missing closing bracket after URL, incorrect citation formatting
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: critical
+Line: 251
+Quote: "Long & accurate explanation here."
+Issue: Footnote 54 references content but provides no actual citation or link
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 243
+Quote: "SU(5) is disproven because observational evidence indicates"
+Issue: Scientific claim in footnote 37 lacks supporting citation
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 83
+Quote: "dump one end in the Sun and another elsewhere (a la Stephen Baxter's Ring)"
+Issue: Book reference lacks publication details (year, publisher)
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 260
+Quote: "Some good arguments for why this might take a really long time"
+Issue: Footnote 67 references arguments without citing their source
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 45
+Quote: "books.google.co.uk/books?hl=en&lr=&id=MME33bSTCDsC"
+Issue: Google Books URL excessively long, should use shortened citation format
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 249
+Quote: "Potentially avoided by wormholes or quantum coupling"
+Issue: Footnote 64 makes technical claim without supporting reference
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 258
+Quote: "I'm giving a 15% chance of this happening before 2500"
+Issue: Quoted text in footnote lacks attribution to original author
+[/FINDING]

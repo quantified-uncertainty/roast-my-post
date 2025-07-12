@@ -1,0 +1,18 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "focused",
+  "reasoning": "Single empirical claim about unemployment rate requires verification of accuracy and context",
+  "statistics": {
+    "lineCount": 3,
+    "wordCount": 11,
+    "characterCount": 55
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity"
+  ]
+}

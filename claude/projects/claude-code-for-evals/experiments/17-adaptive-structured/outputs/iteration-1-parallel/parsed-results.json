@@ -1,0 +1,229 @@
+{
+  "findings": [
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.716Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 71,
+      "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space",
+      "issue": "This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R² would be cos²(θ), not cos(θ)."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 75,
+      "quote": "Grant a factor correlated with an outcome, which we represent with two vectors at an angle theta, the inverse cosine equal the R-squared.",
+      "issue": "This contradicts line 71 and is also incorrect. The angle θ = arccos(R), not arccos(R²). The inverse cosine equals the correlation coefficient R, not R-squared."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "logical_flaw",
+      "severity": "major",
+      "line": 61,
+      "quote": "the average wealth of the +4SD intelligence population is 1SD higher than the 3SD intelligence people",
+      "issue": "This contradicts the earlier setup where intelligence and conscientiousness were said to be \"equally important\" to wealth. If both factors contribute equally and independently, a 1SD difference in one factor should yield 0.5SD difference in outcome, not 1SD."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "logical_flaw",
+      "severity": "major",
+      "line": 59,
+      "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness",
+      "issue": "This reasoning is flawed. If the factors are truly independent as stipulated, each person has the same probability of being +2SD in conscientiousness regardless of the population size at their intelligence level."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "mathematical_error",
+      "severity": "major",
+      "line": 99,
+      "quote": "Another intuitive dividend is that this makes it clear why you can by R-squared to move between z-scores of correlated normal variables",
+      "issue": "You multiply by R (the correlation coefficient), not R², to convert z-scores between correlated normal variables. The expected z-score of Y given X is R times the z-score of X."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 23,
+      "quote": "comparing the speed of a ball out of a baseball pitchers hand compared to its speed crossing crossing the plate",
+      "issue": "Redundant use of \"comparing\" and \"compared\", and duplicate word \"crossing\"."
+    },
+    {
+      "source": "task-1-logical_consistency",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "missing_content",
+      "severity": "minor",
+      "line": 83,
+      "quote": "There may be spread betting or portfolio scenarios where this factor comes into play - perhaps instead of funding AMF to diminishing returns when its marginal effectiveness dips below charity #2, we should be willing to spread funds sooner.(6)",
+      "issue": "Footnote 6 referenced here appears to be about R² and z-scores (line 99), not about portfolio allocation strategies. The relevant footnote appears to be missing."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 71,
+      "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space",
+      "issue": "This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R² is the square of the correlation coefficient."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 75,
+      "quote": "Grant a factor correlated with an outcome, which we represent with two vectors at an angle theta, the inverse cosine equal the R-squared.",
+      "issue": "The angle theta's cosine equals R (the correlation coefficient), not R². The inverse cosine (arccos) of R gives the angle, not the inverse cosine of R²."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "factual_error",
+      "severity": "major",
+      "line": 75,
+      "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)",
+      "issue": "An R² of 0.5 means R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degrees. A 60-degree angle would give cos(60°) = 0.5, meaning R = 0.5 and R² = 0.25."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.717Z",
+      "category": "factual_error",
+      "severity": "major",
+      "line": 87,
+      "quote": "if Bill Gates is ~+4SD in intelligence, despite being the richest man in america",
+      "issue": "Bill Gates has not been the richest person in America for several years. As of the document's 2014 date and updates, this claim was becoming outdated."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "mathematical_error",
+      "severity": "minor",
+      "line": 99,
+      "quote": "Another intuitive dividend is that this makes it clear why you can by R-squared to move between z-scores of correlated normal variables",
+      "issue": "The text appears to have a typo (\"can by\" should likely be \"can multiply by\"), but more importantly, you multiply by R (not R²) to convert between z-scores of correlated variables."
+    },
+    {
+      "source": "task-2-factual_verification",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 23,
+      "quote": "comparing the speed of a ball out of a baseball pitchers hand compared to its speed crossing crossing the plate",
+      "issue": "Word repetition error - \"crossing\" appears twice."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 23,
+      "quote": "comparing the speed of a ball out of a baseball pitchers hand compared to its speed crossing crossing the plate",
+      "issue": "Redundant use of \"compared\" and \"comparing\" makes the sentence awkward. Also contains duplicated word \"crossing crossing\"."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "major",
+      "line": 27,
+      "quote": "Look at this data (again convenience sampled from googling 'scatter plot') of this:",
+      "issue": "Sentence ends with \"of this:\" but provides no completion, making it unclear what the data represents."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 15,
+      "quote": "Maybe although having a faster serve is better all things being equal, but focusing too heavily on one's serve counterproductively neglects other areas of one's game.",
+      "issue": "Awkward sentence structure with \"Maybe although\" followed by \"but\" creates confusion. Should be restructured for clarity."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "major",
+      "line": 75,
+      "quote": "Grant a factor correlated with an outcome, which we represent with two vectors at an angle theta, the inverse cosine equal the R-squared.",
+      "issue": "Missing verb and awkward phrasing makes this sentence difficult to parse. Should clarify the relationship between inverse cosine and R-squared."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 75,
+      "quote": "'Reading off the expected outcome given a factor score is just moving along the factor vector and multiplying by cosine theta to get the distance along the outcome vector.",
+      "issue": "Starting a sentence with a quoted phrase ('Reading off) is awkward and unclear."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "major",
+      "line": 57,
+      "quote": "So, [_ceteris paribus_](/lw/km6/why_the_tails_come_apart/b8ph), being more intelligent will make one richer",
+      "issue": "Latin term \"ceteris paribus\" with no explanation provided, and it's formatted as a link which adds confusion about whether it's meant to be explanatory."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 83,
+      "quote": "There may be spread betting or portfolio scenarios where this factor comes into play - perhaps instead of funding AMF to diminishing returns when its marginal effectiveness dips below charity #2, we should be willing to spread funds sooner.(6)",
+      "issue": "Uses acronym \"AMF\" without prior definition, making it unclear for readers unfamiliar with this charity."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "major",
+      "line": 89,
+      "quote": "I'm pretty sure this can be weakened: all that is needed, by the lights of my graphical intuition, is that the envelope be _concave_.",
+      "issue": "The phrase \"by the lights of my graphical intuition\" is unnecessarily convoluted and unclear."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 99,
+      "quote": "Another intuitive dividend is that this makes it clear why you can by R-squared to move between z-scores",
+      "issue": "Missing verb - should be \"multiply by R-squared\" or similar. The omission makes the sentence confusing."
+    },
+    {
+      "source": "task-3-clarity_readability",
+      "timestamp": "2025-07-10T19:41:23.720Z",
+      "category": "clarity_issue",
+      "severity": "minor",
+      "line": 17,
+      "quote": "the tallest aren't the heaviest, the smartest parents don't have the smartest children, the fastest runners aren't the best footballers, etc. etc.",
+      "issue": "Double \"etc.\" is redundant and informal."
+    }
+  ],
+  "stats": {
+    "totalTasks": 3,
+    "successfulTasks": 3,
+    "totalFindings": 23,
+    "bySeverity": {
+      "critical": 4,
+      "major": 9,
+      "minor": 10
+    },
+    "byCategory": {
+      "mathematical_error": 6,
+      "logical_flaw": 2,
+      "clarity_issue": 11,
+      "missing_content": 1,
+      "factual_error": 2,
+      "spelling_grammar": 1
+    }
+  }
+}

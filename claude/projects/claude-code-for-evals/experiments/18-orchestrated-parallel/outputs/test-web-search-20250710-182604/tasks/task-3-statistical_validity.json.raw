@@ -1,0 +1,17 @@
+I'll analyze this document for statistical validity issues.
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 3
+Quote: "The US unemployment rate is 3.2% as of 2024"
+Issue: Lacks source citation for economic statistic
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: minor
+Line: 5
+Quote: "The speed of light is 300,000 km/s"
+Issue: Rounded value presented without indicating approximation
+[/FINDING]

@@ -1,0 +1,104 @@
+{
+  "byCategory": {
+    "citation_accuracy": 6,
+    "factual_verification": 5,
+    "statistical_validity": 2
+  },
+  "bySeverity": {
+    "major": 7,
+    "minor": 6
+  },
+  "hotspots": [
+    {
+      "line": 6,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "factual_verification",
+          "severity": "minor",
+          "line": 6,
+          "quote": "The US unemployment rate is 3.5% as of 2024",
+          "issue": "BLS data shows 4.1% (Oct 2024). Source: bls.gov/opub/ted/2024",
+          "source": "factual_verification",
+          "timestamp": "2025-07-11T00:44:07.106Z",
+          "id": "finding-2",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 6,
+          "quote": "Average hourly earnings increased by 4.1% year-over-year",
+          "issue": "Missing citation and timeframe. Should specify source (BLS Employment Cost Index) and exact period. Source: www.bls.gov/news.release/eci.nr0.htm",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T00:44:19.227Z",
+          "id": "finding-3",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 10,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 10,
+          "quote": "According to a recent Harvard study, remote work increases productivity by 13%",
+          "issue": "No Harvard study found with this claim. The 13% figure appears in general statistics but not from Harvard. Source search: hbr.org and hbs.edu",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T00:44:19.227Z",
+          "id": "finding-5",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "major",
+          "line": 10,
+          "quote": "productivity by 13%",
+          "issue": "Lacks context on measurement method, sample size, or confidence intervals",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T00:39:23.562Z",
+          "id": "finding-6",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 12,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 12,
+          "quote": "A 2023 meta-analysis found that meditation reduces anxiety by 30%",
+          "issue": "No 2023 meta-analysis found with 30% reduction claim. Studies show smaller effect sizes (0.22-0.38). Source: pubmed.ncbi.nlm.nih.gov/24395196",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T00:44:19.227Z",
+          "id": "finding-8",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "major",
+          "line": 12,
+          "quote": "reduces anxiety by 30%",
+          "issue": "No effect size, confidence interval, or measurement scale specified",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T00:39:23.563Z",
+          "id": "finding-9",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [],
+  "statistics": {
+    "total": 13,
+    "averagePerLine": "0.72",
+    "mostCommonCategory": "citation_accuracy",
+    "mostCommonSeverity": "major"
+  }
+}

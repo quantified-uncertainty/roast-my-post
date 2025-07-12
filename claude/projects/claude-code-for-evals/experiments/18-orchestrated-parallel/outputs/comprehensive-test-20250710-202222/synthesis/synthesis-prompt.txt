@@ -1,0 +1,115 @@
+You are a senior technical editor preparing a comprehensive analysis report. You have been provided with validated findings from multiple expert reviewers who analyzed a document from different perspectives.
+
+Your task is to create a professional, well-structured report that synthesizes all findings into a coherent narrative.
+
+## Document Being Analyzed
+
+# Economic Research Brief: Labor Market Analysis
+
+## Key Statistics
+
+The US unemployment rate reached 3.5% in December 2024, according to recent data. This represents a significant improvement from the 6.3% peak during the pandemic in April 2020.
+
+The Federal Reserve's current federal funds rate is 5.25-5.50%, the highest level since 2007. Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024.
+
+## Demographic Trends
+
+The US working-age population (ages 15-64) is approximately 210 million people. Labor force participation rate stands at 63.4% as of late 2024.
+
+Average hourly earnings have increased by 4.1% year-over-year, while productivity growth measured 2.3% in the third quarter of 2024.
+
+## Research Claims
+
+A recent Stanford study found that remote work increases productivity by 13% compared to in-office work. The study, published in the American Economic Review in 2023, tracked 1,000 workers over 9 months.
+
+According to the Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025. The World Bank estimates global GDP growth at 2.9% for the same period.
+
+## Market Data
+
+The S&P 500 closed at 4,750 points on December 15, 2024. Bitcoin traded at $42,300 as of the same date.
+
+Oil prices (WTI crude) averaged $78 per barrel in November 2024, while natural gas futures traded at $2.85 per MMBtu.
+
+## Validated Findings (23 total)
+
+Critical Issues (2):
+- Line 3: Grossly incorrect - actual April 2020 rate was 14.7%. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm (citation_accuracy)
+- Line 25: Grossly incorrect - Bitcoin was above $90,000 in December 2024. Source: statista.com/statistics/326707/bitcoin-price-index/ (citation_accuracy)
+
+Major Issues (11):
+- Line 3: Incorrect data - actual rate was 4.1% in December 2024. Source: cnbc.com/2025/01/10/jobs-report-december-2024.html (citation_accuracy)
+- Line 5: December 2024 is in the future relative to the document's apparent creation date (logical_consistency)
+- Line 9: November 2024 data cited as factual despite being future date (logical_consistency)
+- Line 13: "Late 2024" presented as past/current when document appears to be from earlier (logical_consistency)
+- Line 15: Q3 2024 data presented as complete when it would be future data (logical_consistency)
+- Line 17: Overgeneralization - study findings from specific context presented as universal truth (statistical_validity)
+- Line 18: Misattributed - 13% figure is from older Chinese study, not recent work. Source: nber.org/system/files/working_papers/w18871/w18871.pdf (citation_accuracy)
+- Line 18: Cannot verify publication - no 2023 AER article found with these details (citation_accuracy)
+- Line 25: Incorrect - S&P 500 was around 5,800-6,000 in mid-December 2024. Source: finance.yahoo.com/quote/%5EGSPC/history/ (citation_accuracy)
+- Line 27: Specific future date (Dec 15, 2024) cited as historical fact (logical_consistency)
+- Line 29: November 2024 average presented as known data point (logical_consistency)
+
+Minor Issues (10):
+- Line 3: Future date reference - document cannot contain December 2024 data if written before that date (statistical_validity)
+- Line 3: Vague citation lacking specific source - should cite Bureau of Labor Statistics (citation_accuracy)
+- Line 5: Incorrect data - actual November 2024 CPI was 2.7%. Source: cnbc.com/2024/12/11/cpi-inflation-november-2024 (citation_accuracy)
+- Line 10: Incorrect - actual rate was 62.5% in December 2024. Source: bls.gov data (citation_accuracy)
+- Line 11: US typically defines working age as 16-64, not 15-64 (statistical_validity)
+- Line 14: Incorrect - actual Q3 2024 productivity growth was 2.2%. Source: bls.gov/opub/ted/2024/productivity-up-2-2-percent-in-third-quarter-2024.htm (citation_accuracy)
+- Line 21: Incorrect - CBO projects 1.9% for 2025, not 2.1%. Source: cbo.gov/publication/60870 (citation_accuracy)
+- Line 21: Incorrect - World Bank projects 2.7% for 2025, not 2.9%. Source: worldbank.org/en/news/press-release/2025/01/16/gep-january-2025-press-release (citation_accuracy)
+- Line 23: Future date reference - cannot have closing price for future date (statistical_validity)
+- Line 27: Incorrect - WTI averaged $69.95 in November 2024. Source: statista.com/statistics/279941/west-texas-intermediate-wti-crude-oil-price/ (citation_accuracy)
+
+## Identified Patterns
+
+
+
+## Your Report Should Include:
+
+1. **Executive Summary** (3-4 paragraphs)
+   - Overall assessment of the document
+   - Most critical issues that need immediate attention
+   - Key strengths of the document (if any)
+   - Overall recommendation
+
+2. **Critical Issues** (detailed section)
+   - Each critical issue explained with context
+   - Why it matters
+   - Specific fix required
+
+3. **Major Issues** (organized by theme/category)
+   - Group related issues together
+   - Explain the impact
+   - Suggest improvements
+
+4. **Minor Issues** (brief listing)
+   - Quick fixes needed
+   - Can be in bullet format
+
+5. **Positive Aspects** (if applicable)
+   - What the document does well
+   - Innovative approaches
+   - Clear explanations
+
+6. **Recommendations**
+   - Prioritized list of actions
+   - Specific steps to improve the document
+   - Areas that may need expert review
+
+7. **Technical Summary**
+   - Statistics about issues found
+   - Coverage of the analysis
+   - Confidence in findings
+
+## Guidelines:
+
+- Be professional but accessible
+- Prioritize actionable feedback
+- Group similar issues to avoid repetition
+- Provide specific examples from the document
+- Balance criticism with recognition of strengths
+- Use clear section headings and formatting
+- Include specific line references for major issues
+
+Create a comprehensive report that would be useful for the document author to improve their work.

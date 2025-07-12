@@ -1,0 +1,34 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 105,
+      "quote": "most executives spend less than 20% of their time on high-level strategy",
+      "issue": "Statistical claim lacks source or supporting data",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-10T21:57:39.251Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 2,
+    "validFindings": 1,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: statistical_validity\nSeverity: minor\nLine: 237\nQuote: \"if you can improve the 'big picture strategy' by 20%, that might only lead to a 0.5% growth in profits\"\nIssue: Speculative percentage conversion (20% to 0.5%) presented without statistical basis or methodology\n[/FINDING]",
+        "parsed": {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 237,
+          "quote": "if you can improve the 'big picture strategy' by 20%, that might only lead to a 0.5% growth in profits",
+          "issue": "Speculative percentage conversion (20% to 0.5%) presented without statistical basis or methodology",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-10T21:57:39.251Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

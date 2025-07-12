@@ -1,0 +1,58 @@
+[
+  {
+    "line": 5,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Orbital period of Earth",
+    "quote": "The Earth orbits the Sun once every 365.25 days."
+  },
+  {
+    "line": 5,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Reason for leap years",
+    "quote": "This is why we have leap years every 4 years."
+  },
+  {
+    "line": 7,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Water freezing point",
+    "quote": "Water freezes at 0 degrees Celsius"
+  },
+  {
+    "line": 7,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Water boiling point",
+    "quote": "boils at 100 degrees."
+  },
+  {
+    "line": 11,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "General claim about bird flight capability",
+    "quote": "All birds can fly"
+  },
+  {
+    "line": 11,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Taxonomic classification of penguins",
+    "quote": "Penguins are birds"
+  },
+  {
+    "line": 11,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about penguin flight capability",
+    "quote": "penguins can fly"
+  },
+  {
+    "line": 11,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "False premise - not all birds can fly, making the syllogism invalid",
+    "quote": "All birds can fly. Penguins are birds. Therefore, penguins can fly."
+  }
+]

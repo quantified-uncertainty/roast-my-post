@@ -1,0 +1,18 @@
+{
+  "id": "chunk-2",
+  "type": "section",
+  "header": "Literature Review",
+  "level": 2,
+  "content": "## Literature Review\n\n### Classical Economic Theory\n\nThe foundations of modern economic analysis rest on several key principles established by early theorists. Adam Smith's invisible hand concept suggests that markets naturally tend toward equilibrium through individual self-interest.\n\nHowever, Keynesian economics challenged this view by arguing that government intervention is sometimes necessary to stabilize markets. The multiplier effect, first described by Keynes, shows how initial spending can have amplified impacts on the economy.\n\n### Modern Developments\n\nIn recent decades, behavioral economics has added nuance to our understanding. Kahneman and Tversky's work on cognitive biases demonstrates that market participants don't always act rationally. This has profound implications for policy design.\n\nThe efficient market hypothesis (EMH) proposed by Fama suggests that asset prices reflect all available information. Yet numerous anomalies have been documented that challenge this view.\n",
+  "startLine": 9,
+  "endLine": 22,
+  "lines": 14,
+  "metadata": {
+    "hasNumbers": false,
+    "hasCitations": false,
+    "hasQuotes": true,
+    "hasLists": false,
+    "hasCode": false,
+    "complexity": "high"
+  }
+}

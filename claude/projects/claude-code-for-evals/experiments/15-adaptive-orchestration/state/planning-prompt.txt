@@ -1,0 +1,40 @@
+You are an intelligent analysis orchestrator for document analysis. Your job is to analyze a document at input.md and find errors, issues, and problems.
+
+The document to analyze is about "Why the tails fall apart" - a statistical essay about correlations and extreme values.
+
+Review the current state and decide what to do next for analyzing THIS DOCUMENT.
+
+CURRENT STATE:
+- Iteration: 9
+- Total findings: 78
+- Findings by category: {
+  "general": 78
+}
+- Previous strategies used: PARALLEL_EXPLORE, PARALLEL_EXPLORE, PARALLEL_EXPLORE, SYNTHESIS, SYNTHESIS, GAP_FILL
+- Analyzed aspects: Examine the mathematical claims and statistical concepts for accuracy, especially the R-squared/cosine relationship and the geometric explanation, Analyze the logical flow and consistency of arguments, particularly the transition between different explanations, Check the examples and data references for accuracy and appropriateness (NBA heights, tennis serves, IQ correlations), Review the clarity of explanations and identify areas where concepts could be confusing or misleading, Evaluate the formatting, broken links, image references, and overall document structure, Examine the practical implications and real-world applications of the 'tails falling apart' concept - are the conclusions actionable and well-supported?, Analyze potential counterarguments or alternative explanations that the author may have overlooked or inadequately addressed, Review the statistical methodology more deeply, including assumptions made about distributions, independence, and the validity of extrapolations, Check for internal contradictions between different sections and evaluate whether the geometric intuition properly aligns with the mathematical claims, Assess the pedagogical effectiveness - does the essay successfully convey complex statistical concepts to its intended audience?, Examine the statistical assumptions and their validity - particularly the assumption of bivariate normal distributions and when this breaks down in real-world scenarios, Analyze the causal reasoning and directionality issues - does the essay properly distinguish between correlation degradation due to selection vs fundamental changes in relationships?, Evaluate the mathematical rigor of the cosine/R-squared relationship derivation and check if all steps are justified, Review the essay's treatment of measurement error, noise, and their impact on correlation at the extremes, Assess whether the essay adequately addresses the difference between population correlations and sample correlations, especially in the tails, Re-categorize the 57 existing findings into proper categories (mathematical_errors, statistical_issues, logical_flaws, clarity_problems, technical_accuracy), Examine the essay's treatment of non-linear relationships and how they behave at extremes - this seems underexplored, Analyze the essay's discussion of range restriction and its mathematical implications on correlation, Check for missing discussion of alternative correlation measures (Spearman, Kendall) that might behave differently in tails, Evaluate whether the essay addresses regression to the mean and its relationship to correlation degradation
+- Total time spent: 4 minutes
+
+AVAILABLE STRATEGIES:
+1. PARALLEL_EXPLORE - Run 3-5 parallel tasks to explore different aspects
+2. DEEP_DIVE - Sequential deep investigation of a specific topic
+3. SYNTHESIS - Consolidate findings into a coherent report
+4. GAP_FILL - Target specific missing areas
+5. COMPLETE - Analysis is sufficient, finish
+
+DECISION CRITERIA:
+- Use PARALLEL_EXPLORE when starting or need broad coverage
+- Use DEEP_DIVE when you found something needing investigation
+- Use SYNTHESIS when you have 20+ findings across multiple categories
+- Use GAP_FILL when you notice specific missing areas
+- Use COMPLETE when analysis is comprehensive (usually 40+ findings)
+
+OUTPUT YOUR DECISION AS A JSON OBJECT:
+{
+  "strategy": "STRATEGY_NAME",
+  "reasoning": "Brief explanation of why this strategy",
+  "tasks": ["array of specific tasks if PARALLEL_EXPLORE or GAP_FILL"],
+  "focus": "specific focus area if DEEP_DIVE",
+  "confidence": 0.0-1.0
+}
+
+Important: Output ONLY the JSON object, no other text.

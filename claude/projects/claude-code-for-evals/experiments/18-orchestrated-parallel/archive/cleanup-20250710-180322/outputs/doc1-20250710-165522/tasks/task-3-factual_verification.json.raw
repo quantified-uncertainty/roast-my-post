@@ -1,0 +1,41 @@
+I'll analyze this document for factual verification issues.
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 22
+Quote: "US Working Age Population"
+Issue: Definition uses ages 15-64, but US typically defines working age as 16-64
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 23
+Quote: "Population aged 15-64 eligible for UBI"
+Issue: Age 15 is below US working age; should be 16-64
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 24
+Quote: "workingAgePop = 205M to 215M"
+Issue: US working age population (16-64) is approximately 205-210M as of 2024-2025
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 37
+Quote: "Based on typical US full-time work year"
+Issue: Full-time US work year is typically 2080 hours, not 1800-2000
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 40
+Quote: "baseWorkHours = mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])"
+Issue: Central range 1800-2000 underestimates typical full-time hours of 2080
+[/FINDING]

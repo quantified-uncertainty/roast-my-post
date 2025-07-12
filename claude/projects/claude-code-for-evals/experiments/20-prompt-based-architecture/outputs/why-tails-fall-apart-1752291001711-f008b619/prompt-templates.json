@@ -1,0 +1,33 @@
+{
+  "logical_errors": {
+    "name": "Logical Error Detection",
+    "description": "Find logical inconsistencies and contradictions",
+    "prompt": "Find logical errors in this text section.\n\nFor each potential logical error:\n1. Identify the specific claims or statements involved\n2. Explain why they might be contradictory or inconsistent\n3. Rate severity: critical (invalidates main argument), major (significant flaw), minor (small inconsistency)\n\nUse this format for each finding:\nFINDING: [line] | [severity] | [quote] | [explanation]\n\nIf you need to verify claims, note them as:\nNEEDS_VERIFICATION: [claim] | [suggested search query]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "verify_claim",
+      "check_definition"
+    ],
+    "estimatedTokens": 2000
+  },
+  "statistical_analysis": {
+    "name": "Statistical Claim Analysis",
+    "description": "Analyze statistical claims and data",
+    "prompt": "Analyze all statistical claims in this text.\n\nFor each statistical claim:\n1. Extract the specific numbers/statistics\n2. Check for common statistical errors\n3. Verify if the interpretation is correct\n\nLook for:\n- Correlation vs causation errors\n- Sample size issues\n- Cherry-picking\n- Misrepresented percentages\n- Outdated data\n\nFormat:\nSTAT_CLAIM: [line] | [statistic] | [issue type] | [explanation]\n\nIf verification needed:\nVERIFY_STAT: [statistic] | [source to check] | [concern]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "calculate",
+      "verify_statistic",
+      "check_methodology"
+    ],
+    "estimatedTokens": 2000
+  },
+  "argument_structure": {
+    "name": "Argument Structure Analysis",
+    "description": "Analyze the structure and strength of arguments",
+    "prompt": "Analyze the argument structure in this text.\n\nIdentify:\n1. Main claims/thesis\n2. Supporting evidence\n3. Logical flow\n4. Missing evidence\n5. Unsupported leaps\n\nFor each issue:\nARGUMENT_ISSUE: [line] | [type: unsupported/leap/missing/weak] | [description]\n\nFor strong points:\nSTRONG_POINT: [line] | [what works well]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "check_premise",
+      "verify_conclusion"
+    ],
+    "estimatedTokens": 1800
+  }
+}

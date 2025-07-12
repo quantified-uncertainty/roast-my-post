@@ -1,0 +1,15 @@
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 12
+Quote: "Later we can bring out more hard data. *"
+Issue: Extra space before the closing asterisk
+[/FINDING]
+
+[FINDING]
+Category: spelling_grammar
+Severity: minor
+Line: 217
+Quote: "it's hard for me to argue against all,"
+Issue: Missing "of them" after "all" - should be "argue against all of them"
+[/FINDING]

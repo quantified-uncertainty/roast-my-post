@@ -1,0 +1,146 @@
+{
+  "taskType": "clarity_readability",
+  "findings": [
+    {
+      "category": "clarity_readability",
+      "severity": "major",
+      "line": 6,
+      "quote": "they need it needs to be in place",
+      "issue": "Grammar error - should be \"it needs to be in place\"",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.310Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 6,
+      "quote": "self-propagating expansion of human civilisation",
+      "issue": "Technical term \"self-propagating\" used without explanation",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 15,
+      "quote": "whether these solar system disasters represented",
+      "issue": "Unclear antecedent - \"these\" refers to items in previous post",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 25,
+      "quote": "First, that's a lot of death.",
+      "issue": "Abrupt informal tone shift in academic context",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 30,
+      "quote": "Don't worry too much about the categories/subheadings here.",
+      "issue": "Overly conversational tone disrupts flow",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 35,
+      "quote": "arbitrarily advanced technology",
+      "issue": "Technical term \"arbitrarily\" needs clarification in this context",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 40,
+      "quote": "By spreading outside of one's own atmosphere",
+      "issue": "Awkward phrasing - \"one's own\" is unnecessarily formal",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "major",
+      "line": 47,
+      "quote": "The longest list of threats in this transitionary phase come from stars.",
+      "issue": "Subject-verb disagreement - should be \"comes\" not \"come\"",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 52,
+      "quote": "There are also all sorts of cosmic phenomena",
+      "issue": "Vague phrasing - \"all sorts of\" is imprecise",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 101,
+      "quote": "To quote Nick Bostrom[36]:",
+      "issue": "Missing space before footnote reference",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 165,
+      "quote": "How high is pure speculation I think.",
+      "issue": "Awkward word order - should be \"How high, I think, is pure speculation\"",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 264,
+      "quote": "From hereon I will assume",
+      "issue": "Should be \"From here on\" or \"Henceforth\"",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 287,
+      "quote": "conditions 3 to 5 basically describe God",
+      "issue": "Informal phrasing in academic context",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 297,
+      "quote": "so we don't need to bother now",
+      "issue": "Overly casual phrasing - \"bother\" is too informal",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    },
+    {
+      "category": "clarity_readability",
+      "severity": "minor",
+      "line": 313,
+      "quote": "Some key takeaways and hot takes to disagree with me on",
+      "issue": "Extremely informal section heading for academic paper",
+      "source": "clarity_readability",
+      "timestamp": "2025-07-10T21:57:39.311Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 15,
+    "validFindings": 15,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This document presents factual claims about unemployment rates, historical dates, and scientific measurements. Contains obvious errors (Python created in 1995 vs actual 1991, Amazon 1992 vs actual 1994) requiring comprehensive fact-checking.",
+  "statistics": {
+    "lineCount": 6,
+    "wordCount": 38,
+    "characterCount": 182
+  },
+  "recommendations": [
+    "factual_verification",
+    "citation_accuracy"
+  ]
+}

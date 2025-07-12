@@ -1,0 +1,18 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document presents multiple factual claims without citations. Contains clear factual errors (Python created 1991 not 1995, Amazon founded 1994 not 1992). As a fact-heavy document, comprehensive verification is needed.",
+  "statistics": {
+    "lineCount": 6,
+    "wordCount": 38,
+    "characterCount": 182
+  },
+  "recommendations": [
+    "factual_verification",
+    "citation_accuracy"
+  ]
+}

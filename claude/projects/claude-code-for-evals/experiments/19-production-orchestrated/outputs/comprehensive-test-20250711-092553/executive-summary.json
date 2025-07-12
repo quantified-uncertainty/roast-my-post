@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-11T16:34:26.159Z",
+    "findingsCount": 26,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 26,
+    "severityCounts": {
+      "critical": 5,
+      "major": 10,
+      "minor": 11
+    },
+    "categoryCounts": {
+      "factual_verification": 6,
+      "citation_accuracy": 13,
+      "statistical_validity": 4,
+      "logical_consistency": 3
+    },
+    "qualityScore": 9,
+    "issuesPerLine": 1.04
+  },
+  "topIssues": [
+    {
+      "line": 3,
+      "category": "factual_verification",
+      "issue": "April 2020 unemployment was 14.7%, not 6.3% - more than double the claimed figure. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm"
+    },
+    {
+      "line": 3,
+      "category": "citation_accuracy",
+      "issue": "False data - April 2020 unemployment was 14.7%, not 6.3%. Source: bls.gov/opub/ted/2020"
+    },
+    {
+      "line": 16,
+      "category": "citation_accuracy",
+      "issue": "Wrong publication - Ctrip study was in Quarterly Journal of Economics 2015, not AER 2023"
+    },
+    {
+      "line": 23,
+      "category": "citation_accuracy",
+      "issue": "No data found; S&P 500 was above 5,800 in December 2024. Source: investing.com"
+    },
+    {
+      "line": 23,
+      "category": "citation_accuracy",
+      "issue": "Bitcoin was over $100,000 on Dec 15, 2024; $42,300 was Dec 2023 price. Source: statista.com"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 3,
+      "issueCount": 5,
+      "categories": [
+        "factual_verification",
+        "citation_accuracy",
+        "statistical_validity"
+      ]
+    },
+    {
+      "line": 5,
+      "issueCount": 4,
+      "categories": [
+        "factual_verification",
+        "logical_consistency",
+        "statistical_validity"
+      ]
+    },
+    {
+      "line": 25,
+      "issueCount": 4,
+      "categories": [
+        "citation_accuracy",
+        "logical_consistency"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Critical - Fundamental issues throughout",
+    "mostProblematicCategory": "citation_accuracy",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "272 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    }
+  ]
+}

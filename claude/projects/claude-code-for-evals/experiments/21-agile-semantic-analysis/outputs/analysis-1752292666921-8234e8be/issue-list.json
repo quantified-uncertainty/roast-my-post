@@ -1,0 +1,345 @@
+[
+  {
+    "line": 7,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "NBA average height statistic",
+    "quote": "the average height in the NBA is around 6'7"
+  },
+  {
+    "line": 8,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "IQ correlation with multiple life outcomes",
+    "quote": "IQ scores are known to predict a slew of factors, from income, to chance of being imprisoned, to lifespan"
+  },
+  {
+    "line": 10,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "This claim is presented as fact without supporting evidence or citation, despite being the central thesis",
+    "quote": "extreme outliers of a given predictor are seldom similarly extreme outliers on the outcome it predicts"
+  },
+  {
+    "line": 11,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical claim about height distribution",
+    "quote": "Although 6'7 is very tall, it lies within a couple of standard deviations of the median US adult male height"
+  },
+  {
+    "line": 11,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "This commits the fallacy of reversed causation - height predicts basketball success, but the argument incorrectly assumes all tall people should be in the NBA",
+    "quote": "there are many thousands of US men taller than the average NBA player, yet are not in the NBA"
+  },
+  {
+    "line": 12,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Population claim about tall men in US",
+    "quote": "there are many thousands of US men taller than the average NBA player"
+  },
+  {
+    "line": 12,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "Comparing standard deviations across different distributions (IQ vs wealth) is mathematically inappropriate - wealth distributions are not normal and have no meaningful SD comparison to IQ",
+    "quote": "the very highest earners tend to be very smart, but their intelligence is not in step with their income (their cognitive ability is around +3 to +4 SD above the mean, yet their wealth is much higher than this)"
+  },
+  {
+    "line": 13,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Tennis performance claim",
+    "quote": "if you look at the players serving the fastest serves ever recorded, they aren't the very best players of their time"
+  },
+  {
+    "line": 14,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Intelligence-income correlation claim",
+    "quote": "the very highest earners tend to be very smart"
+  },
+  {
+    "line": 14,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Specific statistical claim about high earners' IQ",
+    "quote": "their cognitive ability is around +3 to +4 SD above the mean"
+  },
+  {
+    "line": 17,
+    "type": "logical_issue",
+    "severity": "high",
+    "description": "Acknowledges hidden trade-offs are common, then argues it would be weird if they commonly explained the phenomenon",
+    "quote": "I would guess that these sorts of 'hidden trade-offs' are common. But, the 'divergence of tails' seems pretty ubiquitous... and it would be weird if there was always a 'too much of a good thing' story"
+  },
+  {
+    "line": 18,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Association between very high IQ and mental illness risk",
+    "quote": "a stratospherically high IQ has an increased risk of productivity-reducing mental illness"
+  },
+  {
+    "line": 20,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Lack of correlation between extreme height and weight",
+    "quote": "the tallest aren't the heaviest"
+  },
+  {
+    "line": 20,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Lack of perfect correlation between parent and child intelligence at extremes",
+    "quote": "the smartest parents don't have the smartest children"
+  },
+  {
+    "line": 20,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Lack of correlation between sprinting speed and football performance at elite levels",
+    "quote": "the fastest runners aren't the best footballers"
+  },
+  {
+    "line": 29,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "While this is generally true for bivariate normal distributions, the author doesn't establish that the shown examples follow this distribution. Real-world data often violates normality assumptions.",
+    "quote": "Given a correlation, the envelope of the distribution should form some sort of *ellipse*, narrower as the correlation goes stronger, and more circular as it gets weaker"
+  },
+  {
+    "line": 30,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical correlation estimate for baseball pitch speeds",
+    "quote": "I'd guess the R-square is > 0.8"
+  },
+  {
+    "line": 30,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Empirical observation about baseball pitch speeds at extremes",
+    "quote": "the very fastest balls out of the hand *aren't* the very fastest balls crossing the plate, and vice versa"
+  },
+  {
+    "line": 33,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "This geometric description assumes a specific mathematical form without justification. The \"bulges\" are a consequence of finite sampling and the mathematical properties of correlation, not an inherent feature of ellipses.",
+    "quote": "as the ellipse doesn't sharpen to a point, there are bulges where the maximum x and y values lie with sub-maximal y and x values respectively"
+  },
+  {
+    "line": 35,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "The author jumps from observing a pattern in scatter plots to claiming this explains a ubiquitous phenomenon without establishing that all correlations follow this exact pattern or that this is the primary mechanism.",
+    "quote": "So this offers an explanation why divergence at the tails is ubiquitous."
+  },
+  {
+    "line": 39,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "These real-world examples may have multiple confounding factors beyond simple correlation mechanics. The author assumes a single mathematical explanation for complex multivariate phenomena.",
+    "quote": "Hence the very best basketball players aren't the very tallest (and vice versa), the very wealthiest not the very smartest"
+  },
+  {
+    "line": 42,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Mathematical/statistical principle about correlation distributions",
+    "quote": "Given a correlation, the envelope of the distribution should form some sort of *ellipse*"
+  },
+  {
+    "line": 50,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Empirical claim about basketball player height and performance",
+    "quote": "the very best basketball players aren't the very tallest (and vice versa)"
+  },
+  {
+    "line": 50,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Empirical claim about correlation between wealth and intelligence",
+    "quote": "the very wealthiest not the very smartest"
+  },
+  {
+    "line": 51,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about physical attribute importance in sports",
+    "quote": "being tall matters for being good at basketball"
+  },
+  {
+    "line": 51,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about additional factors important for basketball",
+    "quote": "strength, agility, hand-eye-coordination matter as well"
+  },
+  {
+    "line": 52,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about intelligence contributing to wealth",
+    "quote": "being smart helps in getting rich"
+  },
+  {
+    "line": 52,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about additional factors contributing to wealth",
+    "quote": "so does being hard working, being lucky"
+  },
+  {
+    "line": 56,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical claim about probability at extreme values",
+    "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness"
+  },
+  {
+    "line": 58,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical claim about population distribution",
+    "quote": "if 10 at +4SD, around 500 at +3SD"
+  },
+  {
+    "line": 60,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "The claim that you wouldn't expect any of 10 people at +4SD intelligence to be +2SD in conscientiousness lacks mathematical justification. Even with independent variables, there's a calculable probability (~2.3%) that any individual would be +2SD in conscientiousness, making it plausible that at least one of 10 people could achieve this.",
+    "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness"
+  },
+  {
+    "line": 62,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "The ratio of 50:1 between +3SD and +4SD populations is stated without justification. While +3SD is indeed more common than +4SD in a normal distribution, the specific ratio should be calculated based on the normal distribution properties rather than assumed.",
+    "quote": "if 10 at +4SD, around 500 at +3SD"
+  },
+  {
+    "line": 71,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Mathematical relationship between R-square and cosine",
+    "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them when presented as vectors in N-dimensional space"
+  },
+  {
+    "line": 79,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Mathematical property of cosine function",
+    "quote": "As cos theta is never greater than 1"
+  },
+  {
+    "line": 81,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Linear growth relationship",
+    "quote": "the gap between extreme values of a factor and the less extreme values of the outcome grows linearly as the factor value gets more extreme"
+  },
+  {
+    "line": 81,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "R-squared of 0.5 corresponds to an angle of 45 degrees, not 60 degrees (since cos(45°) = √0.5)",
+    "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)"
+  },
+  {
+    "line": 82,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "With R-squared of 0.5, the correlation R = √0.5 ≈ 0.707, so +4SD on the factor corresponds to +2.83SD on the outcome, not +2SD",
+    "quote": "an R-square of 0.5... means that +4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome"
+  },
+  {
+    "line": 84,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Specific R-square to angle conversion",
+    "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)"
+  },
+  {
+    "line": 84,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical frequency of 4 standard deviations",
+    "quote": "+4SD (~1/15000)"
+  },
+  {
+    "line": 85,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical frequency of 2 standard deviations",
+    "quote": "+2SD (~1/40)"
+  },
+  {
+    "line": 86,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Field-specific interpretation of R-square value",
+    "quote": "an R-square of 0.5 is remarkably strong in the social sciences"
+  },
+  {
+    "line": 86,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "R-square of 0.5 accounting for half of variance",
+    "quote": "implying it accounts for half the variance"
+  },
+  {
+    "line": 105,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Statistical property of income distribution",
+    "quote": "income isn't normally distributed"
+  },
+  {
+    "line": 105,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Claim about Bill Gates' intelligence level",
+    "quote": "if Bill Gates is ~+4SD in intelligence"
+  },
+  {
+    "line": 107,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Generalization about high-IQ society members",
+    "quote": "generally modest achievements of people in high-IQ societies"
+  },
+  {
+    "line": 110,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Mathematical dependency claim",
+    "quote": "this depends on something like multivariate CLT"
+  },
+  {
+    "line": 117,
+    "type": "factual_claim",
+    "severity": "medium",
+    "description": "Specific example about Old Faithful data",
+    "quote": "The old faithful case is an example where actually you do get a 'point'"
+  },
+  {
+    "line": 119,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "This mathematical claim is incorrect - R-squared is not the cosine of the angle between regression lines",
+    "quote": "My intuition is that in cartesian coordinates the R-square between correlated X and Y is actually also the cosine of the angle between the regression lines of X on Y and Y on X"
+  },
+  {
+    "line": 122,
+    "type": "logical_issue",
+    "severity": "medium",
+    "description": "You multiply by R (correlation coefficient), not R-squared, to convert between z-scores of correlated variables",
+    "quote": "this makes it clear why you can by R-squared to move between z-scores of correlated normal variables"
+  }
+]

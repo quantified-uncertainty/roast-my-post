@@ -1,0 +1,56 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 69,
+      "quote": "Correct wage impact calculation by taking mean wage to avoid double counting uncertainty",
+      "issue": "Comment claims to avoid double counting but still multiplies uncertain population by uncertain wage",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:00:28.315Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 32,
+      "quote": "Elasticity of work hours with respect to non-wage income",
+      "issue": "Definition contradicts later calculation which divides by total income not just non-wage income",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:00:28.316Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 52,
+      "quote": "incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+      "issue": "Formula divides UBI by total income but elasticity is defined for non-wage income changes",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:00:28.316Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 109,
+      "quote": "Income effects are based on empirical studies of lottery winners and inheritance recipients",
+      "issue": "Claims studies inform income effects but model shows no evidence of calibration to specific studies",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:00:28.316Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 137,
+      "quote": "Administrative costs and funding mechanisms not considered",
+      "issue": "Model analyzes GDP impact without considering that UBI funding would also affect labor supply",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-11T00:00:28.316Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

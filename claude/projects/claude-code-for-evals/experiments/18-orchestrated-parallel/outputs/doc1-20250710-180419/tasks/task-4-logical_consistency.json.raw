@@ -1,0 +1,47 @@
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 60
+Quote: "taking mean wage to avoid double counting uncertainty"
+Issue: Mean wage multiplied by uncertain hours still propagates uncertainty, not avoiding it
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 29
+Quote: "Based on empirical studies of lottery winners and inheritance recipients."
+Issue: Applying lottery/inheritance elasticities to regular UBI payments lacks logical basis
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 91
+Quote: "Income effects are based on empirical studies of lottery winners and inheritance recipients, which may not perfectly translate to UBI"
+Issue: Acknowledges fundamental flaw but still uses these values as primary inputs
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 33
+Quote: "Some may reduce hours to stay under means-tested program thresholds"
+Issue: $5k UBI unlikely to affect most means-tested thresholds, logic unclear
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 115
+Quote: "Results are highly sensitive to assumptions about income elasticity"
+Issue: Admits high sensitivity but provides no sensitivity analysis or ranges
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 116
+Quote: "The model doesn't capture potential productivity gains from reduced financial stress"
+Issue: Inconsistent to omit positive effects while including negative substitution effects
+[/FINDING]

@@ -1,0 +1,7 @@
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 3
+Quote: "The US unemployment rate is 3.5% in 2024."
+Issue: Unsupported claim lacks source; BLS data shows 2024 rate was 3.7-4.0%. Source: bls.gov/opub/ted/2024/
+[/FINDING]

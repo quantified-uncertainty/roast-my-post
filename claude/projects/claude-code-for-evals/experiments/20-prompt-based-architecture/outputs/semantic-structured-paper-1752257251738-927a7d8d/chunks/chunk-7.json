@@ -1,0 +1,18 @@
+{
+  "id": "chunk-7",
+  "type": "section",
+  "header": "References",
+  "level": 2,
+  "content": "## References\n\n1. Smith, J., Johnson, K., & Williams, R. (2023). \"Modern Market Dynamics.\" Journal of Finance, 78(3), 45-72.\n2. Keynes, J.M. (1936). The General Theory of Employment, Interest, and Money. London: Macmillan.\n3. Kahneman, D., & Tversky, A. (1979). \"Prospect Theory.\" Econometrica, 47(2), 263-291.",
+  "startLine": 103,
+  "endLine": 107,
+  "lines": 5,
+  "metadata": {
+    "hasNumbers": true,
+    "hasCitations": true,
+    "hasQuotes": true,
+    "hasLists": true,
+    "hasCode": false,
+    "complexity": "high"
+  }
+}

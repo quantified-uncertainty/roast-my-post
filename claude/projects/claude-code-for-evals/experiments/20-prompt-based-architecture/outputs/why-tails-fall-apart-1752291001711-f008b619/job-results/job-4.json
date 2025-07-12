@@ -1,0 +1,164 @@
+{
+  "job": {
+    "id": "job-4",
+    "chunkId": "chunk-2",
+    "chunkLines": "61-102",
+    "promptKey": "logical_errors",
+    "promptName": "Logical Error Detection",
+    "tools": [
+      "verify_claim",
+      "check_definition"
+    ],
+    "estimatedTokens": 2000,
+    "status": "completed",
+    "attempts": 1,
+    "createdAt": "2025-07-12T03:30:01.714Z",
+    "startedAt": "2025-07-12T03:31:01.798Z",
+    "completedAt": "2025-07-12T03:31:38.009Z",
+    "resultsCount": 7,
+    "results": {
+      "findings": [
+        {
+          "type": "finding",
+          "jobId": "job-4",
+          "promptKey": "logical_errors",
+          "chunkId": "chunk-2",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"if 10 at +4SD, around 500 at +3SD\"",
+          "explanation": "The population ratio is incorrect. At +4SD (~1/15,000) vs +3SD (~1/741), the ratio should be approximately 20:1, not 50:1. This doesn't invalidate the argument but weakens the numerical example."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-4",
+          "promptKey": "logical_errors",
+          "chunkId": "chunk-2",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"+4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome\"",
+          "explanation": "Mathematical error: With R² = 0.5, R = 0.707, so +4SD × 0.707 ≈ +2.83SD, not +2SD. The calculation understates the expected outcome by nearly 1 SD."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-4",
+          "promptKey": "logical_errors",
+          "chunkId": "chunk-2",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"Given income isn't normally distributed, using SDs might be misleading\"",
+          "explanation": "This footnote acknowledges a significant limitation that somewhat undermines the opening wealth/intelligence example, yet the main text continues to use this example without qualification."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-4",
+          "promptKey": "logical_errors",
+          "chunkId": "chunk-2",
+          "line": 0,
+          "severity": "major",
+          "quote": "\"in the world where these things were equally important, they would 'beat' someone +4SD in intelligence but average in conscientiousness\"",
+          "explanation": "This assumes perfectly additive effects (intelligence + conscientiousness = wealth), but real-world interactions are often multiplicative or have diminishing returns. The model's simplicity isn't acknowledged here."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-4",
+          "promptKey": "logical_errors",
+          "chunkId": "chunk-2",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"even if you have really good means of assessing the best charities...the very best ones you identify are unlikely to be *actually* the very best\"",
+          "explanation": "This conclusion assumes measurement error is symmetric and unbiased, but systematic biases in charity evaluation could make this statement too strong."
+        }
+      ],
+      "verifications": [
+        {
+          "type": "needs_verification",
+          "jobId": "job-4",
+          "claim": "[line 78]",
+          "query": "\"an R-square of 0.5 is remarkably strong in the social sciences\"",
+          "context": "Verify typical R² values in social science research"
+        },
+        {
+          "type": "needs_verification",
+          "jobId": "job-4",
+          "claim": "[line 73]",
+          "query": "\"R-square measure of correlation...is the same as the cosine of the angle between them when presented as vectors\"",
+          "context": "Verify this geometric interpretation of R²"
+        }
+      ],
+      "calculations": [],
+      "strong_points": []
+    }
+  },
+  "results": {
+    "findings": [
+      {
+        "type": "finding",
+        "jobId": "job-4",
+        "promptKey": "logical_errors",
+        "chunkId": "chunk-2",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"if 10 at +4SD, around 500 at +3SD\"",
+        "explanation": "The population ratio is incorrect. At +4SD (~1/15,000) vs +3SD (~1/741), the ratio should be approximately 20:1, not 50:1. This doesn't invalidate the argument but weakens the numerical example."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-4",
+        "promptKey": "logical_errors",
+        "chunkId": "chunk-2",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"+4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome\"",
+        "explanation": "Mathematical error: With R² = 0.5, R = 0.707, so +4SD × 0.707 ≈ +2.83SD, not +2SD. The calculation understates the expected outcome by nearly 1 SD."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-4",
+        "promptKey": "logical_errors",
+        "chunkId": "chunk-2",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"Given income isn't normally distributed, using SDs might be misleading\"",
+        "explanation": "This footnote acknowledges a significant limitation that somewhat undermines the opening wealth/intelligence example, yet the main text continues to use this example without qualification."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-4",
+        "promptKey": "logical_errors",
+        "chunkId": "chunk-2",
+        "line": 0,
+        "severity": "major",
+        "quote": "\"in the world where these things were equally important, they would 'beat' someone +4SD in intelligence but average in conscientiousness\"",
+        "explanation": "This assumes perfectly additive effects (intelligence + conscientiousness = wealth), but real-world interactions are often multiplicative or have diminishing returns. The model's simplicity isn't acknowledged here."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-4",
+        "promptKey": "logical_errors",
+        "chunkId": "chunk-2",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"even if you have really good means of assessing the best charities...the very best ones you identify are unlikely to be *actually* the very best\"",
+        "explanation": "This conclusion assumes measurement error is symmetric and unbiased, but systematic biases in charity evaluation could make this statement too strong."
+      }
+    ],
+    "verifications": [
+      {
+        "type": "needs_verification",
+        "jobId": "job-4",
+        "claim": "[line 78]",
+        "query": "\"an R-square of 0.5 is remarkably strong in the social sciences\"",
+        "context": "Verify typical R² values in social science research"
+      },
+      {
+        "type": "needs_verification",
+        "jobId": "job-4",
+        "claim": "[line 73]",
+        "query": "\"R-square measure of correlation...is the same as the cosine of the angle between them when presented as vectors\"",
+        "context": "Verify this geometric interpretation of R²"
+      }
+    ],
+    "calculations": [],
+    "strong_points": []
+  }
+}

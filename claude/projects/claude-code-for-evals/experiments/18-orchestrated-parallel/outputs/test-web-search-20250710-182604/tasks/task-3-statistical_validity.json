@@ -1,0 +1,29 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 3,
+      "quote": "The US unemployment rate is 3.2% as of 2024",
+      "issue": "Lacks source citation for economic statistic",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:26:19.837Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 5,
+      "quote": "The speed of light is 300,000 km/s",
+      "issue": "Rounded value presented without indicating approximation",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:26:19.838Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 2,
+    "validFindings": 2,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

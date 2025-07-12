@@ -1,0 +1,50 @@
+{
+  "byCategory": {
+    "factual_verification": 5,
+    "logical_consistency": 6,
+    "statistical_validity": 6,
+    "mathematical_accuracy": 3
+  },
+  "bySeverity": {
+    "minor": 10,
+    "major": 8,
+    "critical": 2
+  },
+  "hotspots": [
+    {
+      "line": 40,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "statistical_validity",
+          "severity": "major",
+          "line": 40,
+          "quote": "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+          "issue": "Arbitrary 90/10 probability weights for work hours distribution lack empirical basis",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-10T23:55:45.146Z",
+          "id": "finding-8",
+          "validated": true
+        },
+        {
+          "category": "factual_verification",
+          "severity": "minor",
+          "line": 40,
+          "quote": "baseWorkHours = mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+          "issue": "Central range 1800-2000 underestimates typical full-time hours of 2080",
+          "source": "factual_verification",
+          "timestamp": "2025-07-10T23:55:43.888Z",
+          "id": "finding-9",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [],
+  "statistics": {
+    "total": 20,
+    "averagePerLine": "0.16",
+    "mostCommonCategory": "logical_consistency",
+    "mostCommonSeverity": "minor"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "jobId": "structured-paper-1752257251738-927a7d8d",
+  "documentPath": "test-documents/structured-paper.md",
+  "outputDir": "outputs/semantic-structured-paper-1752257251738-927a7d8d",
+  "chunkingStrategy": "hybrid",
+  "chunks": [
+    {
+      "id": "chunk-1",
+      "type": "section",
+      "header": "Introduction",
+      "level": 2,
+      "content": "## Introduction\n\nThis paper examines the relationship between fiscal policy decisions and market behavior during the period 2020-2024. Our analysis focuses on three key areas: monetary policy impacts, fiscal stimulus effects, and market volatility patterns.\n\nRecent studies have shown that traditional economic models may not fully capture the complexity of modern markets. As noted by Smith et al. (2023), \"the interconnectedness of global markets requires new analytical frameworks.\"\n",
+      "startLine": 3,
+      "endLine": 8,
+      "lines": 6,
+      "metadata": {
+        "hasNumbers": true,
+        "hasCitations": true,
+        "hasQuotes": true,
+        "hasLists": false,
+        "hasCode": false,
+        "complexity": "medium"
+      }
+    },
+    {
+      "id": "chunk-2",
+      "type": "section",
+      "header": "Literature Review",
+      "level": 2,
+      "content": "## Literature Review\n\n### Classical Economic Theory\n\nThe foundations of modern economic analysis rest on several key principles established by early theorists. Adam Smith's invisible hand concept suggests that markets naturally tend toward equilibrium through individual self-interest.\n\nHowever, Keynesian economics challenged this view by arguing that government intervention is sometimes necessary to stabilize markets. The multiplier effect, first described by Keynes, shows how initial spending can have amplified impacts on the economy.\n\n### Modern Developments\n\nIn recent decades, behavioral economics has added nuance to our understanding. Kahneman and Tversky's work on cognitive biases demonstrates that market participants don't always act rationally. This has profound implications for policy design.\n\nThe efficient market hypothesis (EMH) proposed by Fama suggests that asset prices reflect all available information. Yet numerous anomalies have been documented that challenge this view.\n",
+      "startLine": 9,
+      "endLine": 22,
+      "lines": 14,
+      "metadata": {
+        "hasNumbers": false,
+        "hasCitations": false,
+        "hasQuotes": true,
+        "hasLists": false,
+        "hasCode": false,
+        "complexity": "high"
+      }
+    },
+    {
+      "id": "chunk-3",
+      "type": "section",
+      "header": "Methodology",
+      "level": 2,
+      "content": "## Methodology\n\nOur research employs a mixed-methods approach combining quantitative analysis with qualitative insights.\n\n### Data Collection\n\nWe gathered data from multiple sources:\n- Federal Reserve economic data (FRED)\n- Bloomberg terminal for market prices\n- Survey data from institutional investors (n=500)\n- Interviews with 25 senior portfolio managers\n\nThe time period covers January 2020 through December 2024, capturing both pre and post-pandemic market conditions.\n\n### Statistical Analysis\n\nWe use several econometric techniques:\n1. Vector autoregression (VAR) to examine dynamic relationships\n2. GARCH models for volatility analysis\n3. Difference-in-differences for policy impact assessment\n\nAll statistical tests use a significance level of p<0.05. We control for multiple comparisons using the Bonferroni correction.\n",
+      "startLine": 23,
+      "endLine": 45,
+      "lines": 23,
+      "metadata": {
+        "hasNumbers": true,
+        "hasCitations": false,
+        "hasQuotes": false,
+        "hasLists": true,
+        "hasCode": false,
+        "complexity": "high"
+      }
+    },
+    {
+      "id": "chunk-4",
+      "type": "section",
+      "header": "Results",
+      "level": 2,
+      "content": "## Results\n\n### Policy Impact on Markets\n\nOur findings reveal a complex relationship between policy announcements and market reactions. The data shows:\n\n- Interest rate changes explain 23% of market variance (R²=0.23, p<0.01)\n- Fiscal stimulus announcements led to an average 2.3% market increase within 48 hours\n- Volatility decreased by 15% following clear policy guidance\n\n### Statistical Findings\n\nThe regression results are summarized below:\n\nMarket Return = 0.02 + 0.45(Policy Rate) - 0.12(Uncertainty Index) + ε\n\nWhere:\n- Policy Rate coefficient: 0.45 (SE=0.08, t=5.625, p<0.001)\n- Uncertainty coefficient: -0.12 (SE=0.03, t=-4.0, p<0.001)\n\n### Robustness Checks\n\nWe performed several robustness checks:\n1. Alternative model specifications\n2. Different time windows\n3. Subsample analysis\n\nAll results remain qualitatively similar across specifications.\n",
+      "startLine": 46,
+      "endLine": 74,
+      "lines": 29,
+      "metadata": {
+        "hasNumbers": true,
+        "hasCitations": false,
+        "hasQuotes": false,
+        "hasLists": true,
+        "hasCode": false,
+        "complexity": "high"
+      }
+    },
+    {
+      "id": "chunk-5",
+      "type": "section",
+      "header": "Discussion",
+      "level": 2,
+      "content": "## Discussion\n\n### Theoretical Implications\n\nOur results support a nuanced view of market-policy interactions. While classical theory predicts certain relationships, we find that behavioral factors play a significant role.\n\nThe asymmetric response to positive versus negative policy news suggests that loss aversion affects institutional investors, not just retail traders.\n\n### Policy Recommendations\n\nBased on our analysis, we recommend:\n1. Clear communication strategies to reduce uncertainty\n2. Graduated policy changes rather than sudden shifts\n3. Coordination between fiscal and monetary authorities\n\n### Limitations\n\nSeveral limitations should be noted:\n- Our sample period includes an unprecedented global pandemic\n- Survey data may suffer from selection bias\n- Causal identification remains challenging despite our econometric approach\n",
+      "startLine": 75,
+      "endLine": 96,
+      "lines": 22,
+      "metadata": {
+        "hasNumbers": true,
+        "hasCitations": false,
+        "hasQuotes": false,
+        "hasLists": true,
+        "hasCode": false,
+        "complexity": "medium"
+      }
+    },
+    {
+      "id": "chunk-6",
+      "type": "section",
+      "header": "Conclusion",
+      "level": 2,
+      "content": "## Conclusion\n\nThis study provides new evidence on the complex dynamics between economic policy and financial markets. Our findings suggest that policymakers must consider both traditional economic channels and behavioral factors when designing interventions.\n\nFuture research should explore the role of social media in amplifying policy signals and investigate whether our findings hold in other market contexts.\n",
+      "startLine": 97,
+      "endLine": 102,
+      "lines": 6,
+      "metadata": {
+        "hasNumbers": false,
+        "hasCitations": false,
+        "hasQuotes": false,
+        "hasLists": false,
+        "hasCode": false,
+        "complexity": "low"
+      }
+    },
+    {
+      "id": "chunk-7",
+      "type": "section",
+      "header": "References",
+      "level": 2,
+      "content": "## References\n\n1. Smith, J., Johnson, K., & Williams, R. (2023). \"Modern Market Dynamics.\" Journal of Finance, 78(3), 45-72.\n2. Keynes, J.M. (1936). The General Theory of Employment, Interest, and Money. London: Macmillan.\n3. Kahneman, D., & Tversky, A. (1979). \"Prospect Theory.\" Econometrica, 47(2), 263-291.",
+      "startLine": 103,
+      "endLine": 107,
+      "lines": 5,
+      "metadata": {
+        "hasNumbers": true,
+        "hasCitations": true,
+        "hasQuotes": true,
+        "hasLists": true,
+        "hasCode": false,
+        "complexity": "high"
+      }
+    }
+  ],
+  "background": {},
+  "investigations": [],
+  "findings": [],
+  "createdAt": "2025-07-11T18:07:31.739Z",
+  "error": "Command failed: timeout 300 claude -p \"$(cat /tmp/claude-prompt-1752257251743.txt)\"\n"
+}

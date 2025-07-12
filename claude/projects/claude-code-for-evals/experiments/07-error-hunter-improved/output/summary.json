@@ -1,0 +1,75 @@
+{
+  "inputFile": "/Users/ozziegooen/Documents/Github/roast-my-post/claude/projects/claude-code-for-evals/experiments/07-error-hunter-improved/input.md",
+  "timestamp": "2025-07-10T05:38:01.678Z",
+  "duration": 937.77,
+  "iterations": [
+    {
+      "iteration": 1,
+      "task": "Find typos and grammatical errors",
+      "duration": 61021,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    },
+    {
+      "iteration": 2,
+      "task": "Verify numerical claims",
+      "duration": 169158,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    },
+    {
+      "iteration": 3,
+      "task": "Check mathematical statements",
+      "duration": 83828,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    },
+    {
+      "iteration": 4,
+      "task": "Identify logical contradictions",
+      "duration": 120116,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    },
+    {
+      "iteration": 5,
+      "task": "Fact-check people and organizations",
+      "duration": 350534,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    },
+    {
+      "iteration": 6,
+      "task": "Verify citations and references",
+      "duration": 153099,
+      "turnsUsed": 5,
+      "errorsFound": 0,
+      "cost": 0.0555,
+      "tokens": 18500
+    }
+  ],
+  "errors": {
+    "total": 0,
+    "bySeverity": {
+      "Critical": 0,
+      "Major": 0,
+      "Minor": 0
+    },
+    "byCategory": {}
+  },
+  "cost": {
+    "total": 0.333,
+    "perError": 0.333,
+    "tokens": 111000
+  }
+}

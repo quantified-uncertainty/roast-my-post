@@ -1,0 +1,49 @@
+I'll analyze this Squiggle model for logical consistency issues.
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 41
+Quote: "incomeElasticity = normal({ p5: -0.15, p95: -0.05 })"
+Issue: Income elasticity defined as negative, but substitution effect also negative - typically opposite signs
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 58
+Quote: "incomeEffect = inputs.incomeElasticity *"
+Issue: Formula multiplies negative elasticity by positive ratio, but comment says this reduces labor supply
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 68
+Quote: "// Correct wage impact calculation by taking mean wage"
+Issue: Comment mentions correcting calculation but doesn't explain what was wrong before
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 111
+Quote: "poorer workers may reduce hours more"
+Issue: Contradicts economic theory - poorer workers typically have less elastic labor supply
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 78
+Quote: "sTest.expect(mean(impact.percentChange)).toBeBetween(-8, -1)"
+Issue: Test expects negative range but doesn't validate that totalEffect calculation produces negative values
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 134
+Quote: "model doesn't capture potential productivity gains"
+Issue: Claims to not capture productivity but uses fixed wage rates which assumes no productivity change
+[/FINDING]

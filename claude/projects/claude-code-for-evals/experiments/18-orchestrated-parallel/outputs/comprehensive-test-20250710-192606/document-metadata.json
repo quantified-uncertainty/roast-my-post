@@ -1,0 +1,21 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims",
+    "mathematical_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains numerous empirical claims with specific statistics, economic data, and research findings that require verification. High density of verifiable facts about unemployment, inflation, GDP, and market data makes comprehensive analysis appropriate.",
+  "statistics": {
+    "lineCount": 25,
+    "wordCount": 218,
+    "characterCount": 1387
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy",
+    "logical_consistency"
+  ]
+}

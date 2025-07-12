@@ -1,0 +1,151 @@
+{
+  "taskType": "citation_accuracy",
+  "findings": [
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate reached 3.5% in December 2024",
+      "issue": "Incorrect data. Actual rate was 4.1% in December 2024. Source: cnbc.com/2025/01/10/jobs-report-december-2024.html",
+      "sourceUrl": "cnbc.com/2025/01/10/jobs-report-december-2024.html",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.744Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 3,
+      "quote": "6.3% peak during the pandemic in April 2020",
+      "issue": "Incorrect data. Actual rate was 14.7% in April 2020. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+      "sourceUrl": "bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 9,
+      "quote": "The US working-age population (ages 15-64) is approximately 210 million people",
+      "issue": "Slightly outdated. May 2025 data shows 211.8 million. Source: fred.stlouisfed.org/series/LFWA64TTUSM647S",
+      "sourceUrl": "fred.stlouisfed.org/series/LFWA64TTUSM647S",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 9,
+      "quote": "Labor force participation rate stands at 63.4% as of late 2024",
+      "issue": "Incorrect data. December 2024 rate was 62.5%. Source: bls.gov/charts/employment-situation/civilian-labor-force-participation-rate.htm",
+      "sourceUrl": "bls.gov/charts/employment-situation/civilian-labor-force-participation-rate.htm",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 11,
+      "quote": "productivity growth measured 2.3% in the third quarter of 2024",
+      "issue": "Data is for Q2 2024, not Q3. Q3 2024 growth was 2.2%. Source: bls.gov/opub/ted/2024/productivity-up-2-2-percent-in-third-quarter-2024.htm",
+      "sourceUrl": "bls.gov/opub/ted/2024/productivity-up-2-2-percent-in-third-quarter-2024.htm",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 15,
+      "quote": "Stanford study found that remote work increases productivity by 13%",
+      "issue": "Study was 2015 Ctrip experiment, not 2023. Recent Stanford research shows 10-20% productivity decrease for fully remote. Source: siepr.stanford.edu/publications/working-paper/evolution-working-home",
+      "sourceUrl": "siepr.stanford.edu/publications/working-paper/evolution-working-home",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 15,
+      "quote": "published in the American Economic Review in 2023",
+      "issue": "No such publication found. The 13% finding was from 2015 Ctrip study. Source: gsb.stanford.edu/faculty-research/working-papers/does-working-home-work-evidence-chinese-experiment",
+      "sourceUrl": "gsb.stanford.edu/faculty-research/working-papers/does-working-home-work-evidence-chinese-experiment",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 17,
+      "quote": "GDP growth is projected at 2.1% for 2025",
+      "issue": "CBO projects 1.9% for 2025, not 2.1%. Source: cbo.gov/publication/60870",
+      "sourceUrl": "cbo.gov/publication/60870",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 17,
+      "quote": "World Bank estimates global GDP growth at 2.9% for the same period",
+      "issue": "World Bank revised 2025 global growth to 2.3% in June 2025. Source: cnbc.com/2025/06/10/world-bank-cuts-2025-growth-outlook-to-2point3percent-as-trade-tariffs-weigh.html",
+      "sourceUrl": "cnbc.com/2025/06/10/world-bank-cuts-2025-growth-outlook-to-2point3percent-as-trade-tariffs-weigh.html",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 21,
+      "quote": "The S&P 500 closed at 4,750 points on December 15, 2024",
+      "issue": "Cannot verify. S&P 500 was above 6,000 in Nov 2024; this would be major decline. Source needed for verification.",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 21,
+      "quote": "Bitcoin traded at $42,300 as of the same date",
+      "issue": "Incorrect data. Bitcoin closed at $93,429 on Dec 31, 2024 and was above $100,000 earlier in December. Source: statmuse.com/money/ask/bitcoin-value-graph-december-2024",
+      "sourceUrl": "statmuse.com/money/ask/bitcoin-value-graph-december-2024",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 23,
+      "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+      "issue": "Incorrect data. WTI averaged $69.95 per barrel in November 2024. Source: statista.com/statistics/279941/west-texas-intermediate-wti-crude-oil-price/",
+      "sourceUrl": "statista.com/statistics/279941/west-texas-intermediate-wti-crude-oil-price/",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 23,
+      "quote": "natural gas futures traded at $2.85 per MMBtu",
+      "issue": "November 2024 NYMEX contract expired at $2.32 per MMBtu, not $2.85. Source: eia.gov/naturalgas/weekly/",
+      "sourceUrl": "eia.gov/naturalgas/weekly/",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T12:05:19.745Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 13,
+    "validFindings": 13,
+    "errors": 0,
+    "errorDetails": []
+  },
+  "usage": {
+    "input_tokens": 951,
+    "output_tokens": 476,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.002853,
+    "output_cost_usd": 0.0071400000000000005,
+    "total_cost_usd": 0.009993,
+    "model_used": "claude-3-sonnet",
+    "tracked_at": "2025-07-11T12:05:19.812Z"
+  }
+}

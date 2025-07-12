@@ -1,0 +1,21 @@
+{
+  "byCategory": {
+    "statistical_validity": 8,
+    "factual_verification": 3,
+    "logical_consistency": 6,
+    "mathematical_accuracy": 4
+  },
+  "bySeverity": {
+    "minor": 10,
+    "major": 10,
+    "critical": 1
+  },
+  "hotspots": [],
+  "patterns": [],
+  "statistics": {
+    "total": 21,
+    "averagePerLine": "0.16",
+    "mostCommonCategory": "statistical_validity",
+    "mostCommonSeverity": "minor"
+  }
+}

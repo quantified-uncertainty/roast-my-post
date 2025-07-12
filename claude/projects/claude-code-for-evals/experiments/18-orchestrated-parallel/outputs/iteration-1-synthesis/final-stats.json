@@ -1,0 +1,14 @@
+{
+  "reportGenerated": "2025-07-11T01:29:24.637Z",
+  "totalFindings": 6,
+  "bySeverity": {
+    "critical": 0,
+    "major": 3,
+    "minor": 3
+  },
+  "byCategory": {
+    "factual_verification": 4,
+    "statistical_validity": 2
+  },
+  "iterations": 1
+}

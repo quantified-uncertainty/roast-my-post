@@ -1,0 +1,25 @@
+Looking through this document for factual verification issues:
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 12
+Quote: "Date: Fri Jun 27 2025"
+Issue: Date is in the future (June 2025) which seems incorrect for a published document
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 116
+Quote: "most executives spend less than 20% of their time on high-level strategy"
+Issue: Specific statistical claim lacks citation or source
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 289
+Quote: "Tim Ferris"
+Issue: Author's name is misspelled - should be "Tim Ferriss" with double 's'
+[/FINDING]

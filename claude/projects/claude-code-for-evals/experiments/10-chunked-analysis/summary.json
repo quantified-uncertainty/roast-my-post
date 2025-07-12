@@ -1,0 +1,26 @@
+{
+  "chunks": 3,
+  "timings": {
+    "chunks": [
+      {
+        "chunk": 1,
+        "time": 5975
+      },
+      {
+        "chunk": 2,
+        "time": 5173
+      },
+      {
+        "chunk": 3,
+        "time": 8001
+      }
+    ],
+    "consolidation": 11265,
+    "total": 19268
+  },
+  "tokens": {
+    "input": 4912,
+    "output": 1236
+  },
+  "cost": 0.033276
+}

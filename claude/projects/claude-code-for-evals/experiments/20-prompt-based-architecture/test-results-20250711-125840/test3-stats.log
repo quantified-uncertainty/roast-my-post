@@ -1,0 +1,27 @@
+
+📋 Prompt-Based Document Analysis
+==================================================
+Document: test-documents/structured-paper.md
+Job ID: structured-paper-1752264520263-e79d8673
+Selected prompts: 1
+Output: outputs/structured-paper-1752264520263-e79d8673
+
+1️⃣  Chunking document...
+   Created 1 chunks
+2️⃣  Creating jobs from prompt templates...
+   Creating 1 jobs (1 chunks × 1 prompts)
+
+📊 Job Summary by Prompt Type:
+   Statistical Claim Analysis: 1 jobs
+
+   Estimated time: 1 minutes
+   Estimated cost: $0.01
+
+📊 Job Status:
+Total Jobs: 1
+✅ Completed: 0 (0%)
+⏳ Pending: 1
+🔄 Running: 0
+❌ Failed: 0
+
+3️⃣  Running analysis jobs...

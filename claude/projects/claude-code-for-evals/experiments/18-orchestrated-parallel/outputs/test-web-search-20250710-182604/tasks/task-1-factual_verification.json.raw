@@ -1,0 +1,31 @@
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 3
+Quote: "The US unemployment rate is 3.2% as of 2024"
+Issue: BLS data shows 4.0-4.2% range in 2024, not 3.2%. Source: bls.gov/news.release/empsit.nr0.htm
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 4
+Quote: "Python was created in 1995 by Guido van Rossum"
+Issue: Python was created in December 1989, first released February 1991. Source: wikipedia.org/wiki/Guido_van_Rossum
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: minor
+Line: 5
+Quote: "The speed of light is 300,000 km/s"
+Issue: Exact value is 299,792.458 km/s; 300,000 is acceptable rounding. Source: wikipedia.org/wiki/Speed_of_light
+[/FINDING]
+
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 6
+Quote: "Amazon was founded in 1992"
+Issue: Amazon was founded July 5, 1994 by Jeff Bezos. Source: history.com/this-day-in-history/july-5/amazon-is-founded-by-jeff-bezos
+[/FINDING]

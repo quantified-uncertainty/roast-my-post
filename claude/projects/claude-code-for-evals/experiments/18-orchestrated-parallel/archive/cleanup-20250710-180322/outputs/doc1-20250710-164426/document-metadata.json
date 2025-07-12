@@ -1,0 +1,17 @@
+{
+  "type": "technical",
+  "features": [
+    "argumentative_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This is a technical economic model using Squiggle probabilistic programming to estimate labor supply effects of UBI. Contains mathematical calculations, elasticity parameters, and statistical distributions typical of technical analysis requiring detailed scrutiny.",
+  "statistics": {
+    "lineCount": 142,
+    "wordCount": 574,
+    "characterCount": 4560
+  },
+  "recommendations": [
+    "logical_consistency"
+  ]
+}

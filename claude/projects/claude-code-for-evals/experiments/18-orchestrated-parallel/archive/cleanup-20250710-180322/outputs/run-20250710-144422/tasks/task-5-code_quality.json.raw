@@ -1,0 +1,57 @@
+I'll analyze this Squiggle model for code quality issues.
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 73
+Quote: "mean(inputs.avgWage)"
+Issue: Inconsistent uncertainty handling - other calculations preserve distributions
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 85
+Quote: "toBeBetween(-8, -1)"
+Issue: Magic numbers without explanation or named constants
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 90
+Quote: "toBeBetween(-20B, -5B)"
+Issue: Magic numbers without explanation or named constants
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: major
+Line: 62
+Quote: "incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))"
+Issue: No validation for potential division by zero if baseWorkHours is 0
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 115
+Quote: "String(mean(impact.percentChange), \".1f\")"
+Issue: Repeated string formatting pattern could be extracted to helper function
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 122
+Quote: "impact.totalHourChange / -1B"
+Issue: Unclear negative division operation - should use abs() or clearer logic
+[/FINDING]
+
+[FINDING]
+Category: code_quality
+Severity: minor
+Line: 125
+Quote: "impact.gdpImpact / -1B"
+Issue: Unclear negative division operation - should use abs() or clearer logic
+[/FINDING]

@@ -1,0 +1,18 @@
+{
+  "byCategory": {
+    "logical_consistency": 4
+  },
+  "bySeverity": {
+    "major": 2,
+    "minor": 1,
+    "critical": 1
+  },
+  "hotspots": [],
+  "patterns": [],
+  "statistics": {
+    "total": 4,
+    "averagePerLine": "0.03",
+    "mostCommonCategory": "logical_consistency",
+    "mostCommonSeverity": "major"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "taskType": "logical_consistency",
+  "findings": [
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 73,
+      "quote": "Relatively Safe: Development doesn't require any particularly scary advances",
+      "issue": "Contradicts later acknowledgment that \"100x AI intellectuals might not be\" safe (line 420)",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.372Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 151,
+      "quote": "intellectual work is useful and that these intellectuals on the whole do produce some value",
+      "issue": "Contradicts later claim that \"Few people care about high-quality intellectual work\" (line 369)",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 71,
+      "quote": "Neglected: Few groups are actively pursuing this direction",
+      "issue": "Contradicts extensive list of recent related work (lines 87-96) pursuing similar directions",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 391,
+      "quote": "Getting the 'big picture strategy' right is only one narrow piece of many organizations",
+      "issue": "Undermines the importance of AI intellectuals focused on strategic thinking",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 409,
+      "quote": "we would likely be in a strictly better position than we are now",
+      "issue": "Assumes AI advice would be followed despite earlier claims that good intellectual work is often ignored",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "major",
+      "line": 426,
+      "quote": "AI intellectuals might be one of our best defenses against a dangerous world",
+      "issue": "Contradicts earlier argument that AI intellectuals aren't \"incredibly powerful/transformative\" (misconception 4)",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    },
+    {
+      "category": "logical_consistency",
+      "severity": "minor",
+      "line": 271,
+      "quote": "I can envision near-term AI systems providing more trustworthy analysis",
+      "issue": "If achievable near-term with current tech, contradicts claim of neglectedness",
+      "source": "logical_consistency",
+      "timestamp": "2025-07-10T23:39:19.373Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 7,
+    "validFindings": 7,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

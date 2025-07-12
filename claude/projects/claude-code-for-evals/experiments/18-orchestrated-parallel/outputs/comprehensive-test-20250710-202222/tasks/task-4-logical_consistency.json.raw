@@ -1,0 +1,47 @@
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 5
+Quote: "reached 3.5% in December 2024"
+Issue: December 2024 is in the future relative to the document's apparent creation date
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 9
+Quote: "3.1% year-over-year in November 2024"
+Issue: November 2024 data cited as factual despite being future date
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 13
+Quote: "63.4% as of late 2024"
+Issue: "Late 2024" presented as past/current when document appears to be from earlier
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 15
+Quote: "2.3% in the third quarter of 2024"
+Issue: Q3 2024 data presented as complete when it would be future data
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 27
+Quote: "closed at 4,750 points on December 15, 2024"
+Issue: Specific future date (Dec 15, 2024) cited as historical fact
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 29
+Quote: "averaged $78 per barrel in November 2024"
+Issue: November 2024 average presented as known data point
+[/FINDING]

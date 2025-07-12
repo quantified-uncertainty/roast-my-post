@@ -1,0 +1,52 @@
+{
+  "taskType": "mathematical_accuracy",
+  "findings": [
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 52,
+      "quote": "totalEffect = incomeEffect + inputs.substitutionEffect",
+      "issue": "Adding elasticities directly is mathematically questionable - effects should be multiplicative or use proper economic formula",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:04:40.580Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "major",
+      "line": 60,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "GDP impact calculation oversimplified - ignores marginal product of labor, multiplier effects, and that GDP != wage bill",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:04:40.580Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 34,
+      "quote": "incomeElasticity = normal({ p5: -0.15, p95: -0.05 })",
+      "issue": "Normal distribution with only percentiles specified may not accurately represent the uncertainty in elasticity estimates",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T01:04:40.580Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 3,
+    "errors": 1,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: mathematical_accuracy\nSeverity: major\nLine: 47\nQuote: \"incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))\"\nIssue: Formula treats elasticity as if UBI is a percentage of annual income, but elasticity typically measures response to percentage changes in income\n[/FINDING]",
+        "parsed": {
+          "category": "mathematical_accuracy",
+          "severity": "major",
+          "line": 47,
+          "quote": "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+          "issue": "Formula treats elasticity as if UBI is a percentage of annual income, but elasticity typically measures response to percentage changes in income",
+          "source": "mathematical_accuracy",
+          "timestamp": "2025-07-11T01:04:40.579Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

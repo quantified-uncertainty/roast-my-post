@@ -1,0 +1,20 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This appears to be a collection of factual claims about statistics, dates, and scientific facts. Multiple claims are incorrect (Python was created in 1991 not 1995, Amazon was founded in 1994 not 1992), suggesting high potential for errors requiring comprehensive fact-checking.",
+  "statistics": {
+    "lineCount": 6,
+    "wordCount": 38,
+    "characterCount": 182
+  },
+  "recommendations": [
+    "factual_verification",
+    "citation_accuracy",
+    "statistical_validity",
+    "logical_consistency"
+  ]
+}

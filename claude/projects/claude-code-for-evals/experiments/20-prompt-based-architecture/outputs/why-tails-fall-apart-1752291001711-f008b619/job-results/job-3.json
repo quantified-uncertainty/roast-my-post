@@ -1,0 +1,184 @@
+{
+  "job": {
+    "id": "job-3",
+    "chunkId": "chunk-1",
+    "chunkLines": "1-61",
+    "promptKey": "argument_structure",
+    "promptName": "Argument Structure Analysis",
+    "tools": [
+      "check_premise",
+      "verify_conclusion"
+    ],
+    "estimatedTokens": 1800,
+    "status": "completed",
+    "attempts": 1,
+    "createdAt": "2025-07-12T03:30:01.714Z",
+    "startedAt": "2025-07-12T03:31:01.798Z",
+    "completedAt": "2025-07-12T03:31:39.779Z",
+    "resultsCount": 8,
+    "results": {
+      "findings": [
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "major",
+          "quote": "\"if 10 at +4SD, around 500 at +3SD\"",
+          "explanation": "Mathematical error in normal distribution calculations. At +4SD we expect ~1/15,787 people, at +3SD we expect ~1/741 people. The ratio should be approximately 21:1, not 50:1 as implied by \"10 at +4SD, around 500 at +3SD\"."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "critical",
+          "quote": "\"The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them\"",
+          "explanation": "This is incorrect. The correlation coefficient r equals cosine of the angle, while R-squared equals the square of the cosine (cos²θ). This is a fundamental conceptual error that affects subsequent calculations."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "major",
+          "quote": "\"an R-square of 0.5 (corresponding to an angle of sixty degrees)\"",
+          "explanation": "Given the error above, this calculation is wrong. If R² = 0.5, then cos²θ = 0.5, so cosθ = √0.5 ≈ 0.707, giving θ ≈ 45°, not 60°."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"R-square of 0.5...means that +4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome\"",
+          "explanation": "If R² = 0.5, then r = √0.5 ≈ 0.707. For correlated normal variables, E[Y"
+        },
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "major",
+          "quote": "\"R-square between correlated X and Y is actually also the cosine of the angle between the regression lines of X on Y and Y on X\"",
+          "explanation": "This appears to confuse R-squared with the correlation coefficient r. The correlation coefficient (not R-squared) relates to angles in certain geometric representations."
+        },
+        {
+          "type": "finding",
+          "jobId": "job-3",
+          "promptKey": "argument_structure",
+          "chunkId": "chunk-1",
+          "line": 0,
+          "severity": "minor",
+          "quote": "\"R-square of 0.5...accounting for half the variance\"",
+          "explanation": "While technically correct that R² = 0.5 means the factor explains 50% of variance, placing this immediately after the incorrect angle calculation may reinforce the confusion between r and R²."
+        }
+      ],
+      "verifications": [
+        {
+          "type": "needs_verification",
+          "jobId": "job-3",
+          "claim": "[line 63]",
+          "query": "Verify normal distribution tail probabilities: +4SD = 1/15,787, +3SD = 1/741",
+          "context": ""
+        },
+        {
+          "type": "needs_verification",
+          "jobId": "job-3",
+          "claim": "[geometric interpretation of correlation]",
+          "query": "Search: \"correlation coefficient cosine angle vectors\" vs \"R-squared cosine angle\"",
+          "context": ""
+        }
+      ],
+      "calculations": [],
+      "strong_points": []
+    }
+  },
+  "results": {
+    "findings": [
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "major",
+        "quote": "\"if 10 at +4SD, around 500 at +3SD\"",
+        "explanation": "Mathematical error in normal distribution calculations. At +4SD we expect ~1/15,787 people, at +3SD we expect ~1/741 people. The ratio should be approximately 21:1, not 50:1 as implied by \"10 at +4SD, around 500 at +3SD\"."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "critical",
+        "quote": "\"The R-square measure of correlation between two sets of data is the same as the cosine of the angle between them\"",
+        "explanation": "This is incorrect. The correlation coefficient r equals cosine of the angle, while R-squared equals the square of the cosine (cos²θ). This is a fundamental conceptual error that affects subsequent calculations."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "major",
+        "quote": "\"an R-square of 0.5 (corresponding to an angle of sixty degrees)\"",
+        "explanation": "Given the error above, this calculation is wrong. If R² = 0.5, then cos²θ = 0.5, so cosθ = √0.5 ≈ 0.707, giving θ ≈ 45°, not 60°."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"R-square of 0.5...means that +4SD (~1/15000) on a factor will be expected to be 'merely' +2SD (~1/40) in the outcome\"",
+        "explanation": "If R² = 0.5, then r = √0.5 ≈ 0.707. For correlated normal variables, E[Y"
+      },
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "major",
+        "quote": "\"R-square between correlated X and Y is actually also the cosine of the angle between the regression lines of X on Y and Y on X\"",
+        "explanation": "This appears to confuse R-squared with the correlation coefficient r. The correlation coefficient (not R-squared) relates to angles in certain geometric representations."
+      },
+      {
+        "type": "finding",
+        "jobId": "job-3",
+        "promptKey": "argument_structure",
+        "chunkId": "chunk-1",
+        "line": 0,
+        "severity": "minor",
+        "quote": "\"R-square of 0.5...accounting for half the variance\"",
+        "explanation": "While technically correct that R² = 0.5 means the factor explains 50% of variance, placing this immediately after the incorrect angle calculation may reinforce the confusion between r and R²."
+      }
+    ],
+    "verifications": [
+      {
+        "type": "needs_verification",
+        "jobId": "job-3",
+        "claim": "[line 63]",
+        "query": "Verify normal distribution tail probabilities: +4SD = 1/15,787, +3SD = 1/741",
+        "context": ""
+      },
+      {
+        "type": "needs_verification",
+        "jobId": "job-3",
+        "claim": "[geometric interpretation of correlation]",
+        "query": "Search: \"correlation coefficient cosine angle vectors\" vs \"R-squared cosine angle\"",
+        "context": ""
+      }
+    ],
+    "calculations": [],
+    "strong_points": []
+  }
+}

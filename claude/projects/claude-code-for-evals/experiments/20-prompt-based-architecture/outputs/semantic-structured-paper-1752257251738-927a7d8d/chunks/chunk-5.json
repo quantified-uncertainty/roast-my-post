@@ -1,0 +1,18 @@
+{
+  "id": "chunk-5",
+  "type": "section",
+  "header": "Discussion",
+  "level": 2,
+  "content": "## Discussion\n\n### Theoretical Implications\n\nOur results support a nuanced view of market-policy interactions. While classical theory predicts certain relationships, we find that behavioral factors play a significant role.\n\nThe asymmetric response to positive versus negative policy news suggests that loss aversion affects institutional investors, not just retail traders.\n\n### Policy Recommendations\n\nBased on our analysis, we recommend:\n1. Clear communication strategies to reduce uncertainty\n2. Graduated policy changes rather than sudden shifts\n3. Coordination between fiscal and monetary authorities\n\n### Limitations\n\nSeveral limitations should be noted:\n- Our sample period includes an unprecedented global pandemic\n- Survey data may suffer from selection bias\n- Causal identification remains challenging despite our econometric approach\n",
+  "startLine": 75,
+  "endLine": 96,
+  "lines": 22,
+  "metadata": {
+    "hasNumbers": true,
+    "hasCitations": false,
+    "hasQuotes": false,
+    "hasLists": true,
+    "hasCode": false,
+    "complexity": "medium"
+  }
+}

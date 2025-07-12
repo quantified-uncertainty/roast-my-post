@@ -1,0 +1,15 @@
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 473
+Quote: "[1.38 x 10^10^](https://en.wikipedia.org/wiki/Age_of_the_universe)"
+Issue: Incorrect superscript formatting - should be 1.38 × 10^10 or 1.38 x 10^10
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 474
+Quote: "[this would normally take 10^67 ^years]"
+Issue: Incorrect superscript formatting - should be 10^67 years
+[/FINDING]

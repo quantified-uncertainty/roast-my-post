@@ -1,0 +1,18 @@
+{
+  "id": "chunk-4",
+  "type": "section",
+  "header": "Results",
+  "level": 2,
+  "content": "## Results\n\n### Policy Impact on Markets\n\nOur findings reveal a complex relationship between policy announcements and market reactions. The data shows:\n\n- Interest rate changes explain 23% of market variance (R²=0.23, p<0.01)\n- Fiscal stimulus announcements led to an average 2.3% market increase within 48 hours\n- Volatility decreased by 15% following clear policy guidance\n\n### Statistical Findings\n\nThe regression results are summarized below:\n\nMarket Return = 0.02 + 0.45(Policy Rate) - 0.12(Uncertainty Index) + ε\n\nWhere:\n- Policy Rate coefficient: 0.45 (SE=0.08, t=5.625, p<0.001)\n- Uncertainty coefficient: -0.12 (SE=0.03, t=-4.0, p<0.001)\n\n### Robustness Checks\n\nWe performed several robustness checks:\n1. Alternative model specifications\n2. Different time windows\n3. Subsample analysis\n\nAll results remain qualitatively similar across specifications.\n",
+  "startLine": 46,
+  "endLine": 74,
+  "lines": 29,
+  "metadata": {
+    "hasNumbers": true,
+    "hasCitations": false,
+    "hasQuotes": false,
+    "hasLists": true,
+    "hasCode": false,
+    "complexity": "high"
+  }
+}

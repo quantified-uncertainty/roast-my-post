@@ -1,0 +1,55 @@
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 73
+Quote: "Relatively Safe: Development doesn't require any particularly scary advances"
+Issue: Contradicts later acknowledgment that "100x AI intellectuals might not be" safe (line 420)
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 151
+Quote: "intellectual work is useful and that these intellectuals on the whole do produce some value"
+Issue: Contradicts later claim that "Few people care about high-quality intellectual work" (line 369)
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 71
+Quote: "Neglected: Few groups are actively pursuing this direction"
+Issue: Contradicts extensive list of recent related work (lines 87-96) pursuing similar directions
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 391
+Quote: "Getting the 'big picture strategy' right is only one narrow piece of many organizations"
+Issue: Undermines the importance of AI intellectuals focused on strategic thinking
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 409
+Quote: "we would likely be in a strictly better position than we are now"
+Issue: Assumes AI advice would be followed despite earlier claims that good intellectual work is often ignored
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: major
+Line: 426
+Quote: "AI intellectuals might be one of our best defenses against a dangerous world"
+Issue: Contradicts earlier argument that AI intellectuals aren't "incredibly powerful/transformative" (misconception 4)
+[/FINDING]
+
+[FINDING]
+Category: logical_consistency
+Severity: minor
+Line: 271
+Quote: "I can envision near-term AI systems providing more trustworthy analysis"
+Issue: If achievable near-term with current tech, contradicts claim of neglectedness
+[/FINDING]

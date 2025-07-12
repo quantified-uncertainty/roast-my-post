@@ -1,0 +1,29 @@
+
+DOCUMENT ANALYSIS COST SUMMARY
+==============================
+Date: 2025-07-11T16:34:26.229Z
+Model: Claude 4 Sonnet (via Claude Code)
+
+TOTAL COST: $0.0570 USD
+
+Token Usage:
+- Input tokens:  4,716
+- Output tokens: 2,859
+- Total tokens:  7,575
+
+Task Breakdown:
+- task-1-factual_verification: $0.0051
+- task-2-statistical_validity: $0.0022
+- task-3-citation_accuracy: $0.0091
+- task-4-logical_consistency: $0.0017
+- Synthesis: $0.0390
+
+Web Searches: 6 (estimated)
+Estimated web search cost: $0.3000
+
+Average cost per task: $0.0143
+
+Note: This is an estimate. Actual costs may vary based on:
+- Exact model used (Opus/Sonnet/Haiku)
+- Web search implementation
+- Caching and optimization

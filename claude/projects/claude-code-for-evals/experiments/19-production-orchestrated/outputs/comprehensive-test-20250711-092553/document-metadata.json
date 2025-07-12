@@ -1,0 +1,21 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims",
+    "mathematical_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "This economic research brief contains numerous empirical claims with specific statistics, percentages, and research citations that require verification. The high density of quantitative data and research references makes it prone to factual errors and necessitates comprehensive fact-checking.",
+  "statistics": {
+    "lineCount": 25,
+    "wordCount": 218,
+    "characterCount": 1387
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy",
+    "logical_consistency"
+  ]
+}

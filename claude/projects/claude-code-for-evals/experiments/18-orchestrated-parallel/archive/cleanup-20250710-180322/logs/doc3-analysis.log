@@ -1,0 +1,320 @@
+🎭 ORCHESTRATED PARALLEL ANALYSIS
+================================
+Document: test-documents/doc3.md
+
+📊 Phase 1: Analyzing document characteristics...
+   Document type detected: general
+   Features: code_content, citations, logical_arguments, long_form
+
+📋 Phase 2: Generating task list...
+   Generated 8 analysis tasks
+
+✍️  Phase 3: Creating task prompts...
+Created 8 prompts in outputs/doc3-20250710-145622/prompts
+   Created 8 prompts
+
+🚀 Phase 4: Running parallel analysis (max 6 concurrent)...
+   Progress:
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+
+Computers / CPU threads / Max jobs to run
+1:local / 10 / 6
+
+Computer:jobs running/jobs completed/%of started jobs/Average seconds to complete
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [KETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 8 AVG: 0.00s  local:6/0/100%/0.0s [K   [1/] Task task-3-code_quality: ✅ Complete
+ETA: 0s Left: 7 AVG: 0.00s  local:5/1/100%/16.0s [KETA: 0s Left: 7 AVG: 0.00s  local:5/1/100%/16.0s [KETA: 0s Left: 7 AVG: 0.00s  local:6/1/100%/16.0s [KETA: 0s Left: 7 AVG: 0.00s  local:6/1/100%/16.0s [KETA: 0s Left: 7 AVG: 0.00s  local:6/1/100%/16.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 7s Left: 7 AVG: 1.00s  local:6/1/100%/17.0s [KETA: 7s Left: 7 AVG: 1.00s  local:6/1/100%/17.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 7s Left: 7 AVG: 2.00s  local:6/1/100%/18.0s [KETA: 8s Left: 7 AVG: 2.00s  local:6/1/100%/18.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 10s Left: 7 AVG: 3.00s  local:6/1/100%/19.0s [KETA: 10s Left: 7 AVG: 3.00s  local:6/1/100%/19.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 13s Left: 7 AVG: 4.00s  local:6/1/100%/20.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 16s Left: 7 AVG: 5.00s  local:6/1/100%/21.0s [KETA: 18s Left: 7 AVG: 5.00s  local:6/1/100%/21.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 21s Left: 7 AVG: 6.00s  local:6/1/100%/22.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 24s Left: 7 AVG: 7.00s  local:6/1/100%/23.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 28s Left: 7 AVG: 8.00s  local:6/1/100%/24.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 7 AVG: 9.00s  local:6/1/100%/25.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 7 AVG: 10.00s  local:6/1/100%/26.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 42s Left: 7 AVG: 11.00s  local:6/1/100%/27.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 47s Left: 7 AVG: 12.00s  local:6/1/100%/28.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 53s Left: 7 AVG: 13.00s  local:6/1/100%/29.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 53s Left: 7 AVG: 14.00s  local:6/1/100%/30.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 7 AVG: 15.00s  local:6/1/100%/31.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 7 AVG: 16.00s  local:6/1/100%/32.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 77s Left: 7 AVG: 18.00s  local:6/1/100%/34.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 77s Left: 7 AVG: 19.00s  local:6/1/100%/35.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 91s Left: 7 AVG: 20.00s  local:6/1/100%/36.0s [KETA: 91s Left: 7 AVG: 20.00s  local:6/1/100%/36.0s [K   [2/] Task task-5-factual_verification: ✅ Complete
+ETA: 77s Left: 6 AVG: 10.00s  local:5/2/100%/18.0s [KETA: 73s Left: 6 AVG: 10.00s  local:5/2/100%/18.0s [KETA: 69s Left: 6 AVG: 10.00s  local:6/2/100%/18.0s [KETA: 67s Left: 6 AVG: 10.00s  local:6/2/100%/18.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 66s Left: 6 AVG: 10.50s  local:6/2/100%/18.5s [KETA: 65s Left: 6 AVG: 10.50s  local:6/2/100%/18.5s [KETA: 64s Left: 6 AVG: 10.50s  local:6/2/100%/18.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 6 AVG: 11.00s  local:6/2/100%/19.0s [KETA: 64s Left: 6 AVG: 11.00s  local:6/2/100%/19.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 6 AVG: 11.50s  local:6/2/100%/19.5s [KETA: 64s Left: 6 AVG: 11.50s  local:6/2/100%/19.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 6 AVG: 12.00s  local:6/2/100%/20.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 64s Left: 6 AVG: 12.50s  local:6/2/100%/20.5s [KETA: 64s Left: 6 AVG: 12.50s  local:6/2/100%/20.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 72s Left: 6 AVG: 13.00s  local:6/2/100%/21.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 72s Left: 6 AVG: 13.50s  local:6/2/100%/21.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 72s Left: 6 AVG: 14.00s  local:6/2/100%/22.0s [K   [3/] Task task-4-citation_accuracy: ✅ Complete
+ETA: 57s Left: 5 AVG: 9.33s  local:5/3/100%/14.7s [KETA: 53s Left: 5 AVG: 9.33s  local:5/3/100%/14.7s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 51s Left: 5 AVG: 9.67s  local:5/3/100%/15.0s [KETA: 50s Left: 5 AVG: 9.67s  local:5/3/100%/15.0s [K   [4/] Task task-6-logical_consistency: ✅ Complete
+ETA: 34s Left: 4 AVG: 7.25s  local:4/4/100%/11.2s [KETA: 31s Left: 4 AVG: 7.25s  local:4/4/100%/11.2s [KETA: 30s Left: 4 AVG: 7.25s  local:4/4/100%/11.2s [KETA: 29s Left: 4 AVG: 7.25s  local:4/4/100%/11.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 4 AVG: 7.50s  local:4/4/100%/11.5s [KETA: 29s Left: 4 AVG: 7.50s  local:4/4/100%/11.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 4 AVG: 7.75s  local:4/4/100%/11.8s [KETA: 29s Left: 4 AVG: 7.75s  local:4/4/100%/11.8s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 4 AVG: 8.00s  local:4/4/100%/12.0s [KETA: 29s Left: 4 AVG: 8.00s  local:4/4/100%/12.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 4 AVG: 8.25s  local:4/4/100%/12.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 4 AVG: 8.50s  local:4/4/100%/12.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 4 AVG: 8.75s  local:4/4/100%/12.8s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 4 AVG: 9.00s  local:4/4/100%/13.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 4 AVG: 9.25s  local:4/4/100%/13.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 4 AVG: 9.50s  local:4/4/100%/13.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 4 AVG: 9.75s  local:4/4/100%/13.8s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 4 AVG: 10.00s  local:4/4/100%/14.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 4 AVG: 10.25s  local:4/4/100%/14.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 4 AVG: 10.50s  local:4/4/100%/14.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 42s Left: 4 AVG: 10.75s  local:4/4/100%/14.8s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 42s Left: 4 AVG: 11.00s  local:4/4/100%/15.0s [K   [5/] Task task-2-clarity_readability: ✅ Complete
+ETA: 28s Left: 3 AVG: 8.80s  local:3/5/100%/12.0s [KETA: 27s Left: 3 AVG: 8.80s  local:3/5/100%/12.0s [KETA: 26s Left: 3 AVG: 8.80s  local:3/5/100%/12.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 26s Left: 3 AVG: 9.00s  local:3/5/100%/12.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 26s Left: 3 AVG: 9.20s  local:3/5/100%/12.4s [KETA: 26s Left: 3 AVG: 9.20s  local:3/5/100%/12.4s [K   [6/] Task task-8-structural_analysis: ✅ Complete
+ETA: 16s Left: 2 AVG: 7.67s  local:2/6/100%/10.3s [KETA: 15s Left: 2 AVG: 7.67s  local:2/6/100%/10.3s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 15s Left: 2 AVG: 7.83s  local:2/6/100%/10.5s [KETA: 15s Left: 2 AVG: 7.83s  local:2/6/100%/10.5s [KETA: 15s Left: 2 AVG: 7.83s  local:2/6/100%/10.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 15s Left: 2 AVG: 8.00s  local:2/6/100%/10.7s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 15s Left: 2 AVG: 8.17s  local:2/6/100%/10.8s [KETA: 15s Left: 2 AVG: 8.17s  local:2/6/100%/10.8s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 15s Left: 2 AVG: 8.33s  local:2/6/100%/11.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 15s Left: 2 AVG: 8.50s  local:2/6/100%/11.2s [KETA: 15s Left: 2 AVG: 8.50s  local:2/6/100%/11.2s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 17s Left: 2 AVG: 8.67s  local:2/6/100%/11.3s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 17s Left: 2 AVG: 8.83s  local:2/6/100%/11.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 17s Left: 2 AVG: 9.00s  local:2/6/100%/11.7s [K   [7/] Task task-1-spelling_grammar: ✅ Complete
+ETA: 7s Left: 1 AVG: 7.71s  local:1/7/100%/10.0s [KETA: 7s Left: 1 AVG: 7.71s  local:1/7/100%/10.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 7s Left: 1 AVG: 7.86s  local:1/7/100%/10.1s [KETA: 7s Left: 1 AVG: 7.86s  local:1/7/100%/10.1s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 7s Left: 1 AVG: 8.00s  local:1/7/100%/10.3s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 8s Left: 1 AVG: 8.14s  local:1/7/100%/10.4s [KETA: 8s Left: 1 AVG: 8.14s  local:1/7/100%/10.4s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 8s Left: 1 AVG: 8.29s  local:1/7/100%/10.6s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 8s Left: 1 AVG: 8.43s  local:1/7/100%/10.7s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 8s Left: 1 AVG: 8.57s  local:1/7/100%/10.9s [K   [8/] Task task-7-argument_strength: ✅ Complete
+ETA: 0s Left: 0 AVG: 7.50s  local:0/8/100%/9.5s [KETA: 0s Left: 0 AVG: 7.50s  local:0/8/100%/9.5s [K
+
+✅ Phase 4 complete: All tasks finished
+
+📦 Phase 5: Collecting and validating findings...
+   Collected 52 findings, 52 after validation
+   By severity:
+     - Critical: 6
+     - Major: 29
+     - Minor: 17
+
+🔍 Phase 6: Analyzing patterns...
+   Identified 1 recurring patterns
+
+📝 Phase 7: Preparing synthesis...
+   Synthesis prompt created
+
+🎯 Phase 8: Running final synthesis...
+   Final report generated
+
+📊 Phase 9: Creating summary...
+
+✨ ANALYSIS COMPLETE!
+====================
+Outputs:
+  - Full report: outputs/doc3-20250710-145622/final-report.md
+  - All findings: outputs/doc3-20250710-145622/all-findings.json
+  - Executive summary: outputs/doc3-20250710-145622/executive-summary.json
+  - Task outputs: outputs/doc3-20250710-145622/tasks/
+
+Key metrics:
+{
+  "metadata": {
+    "generatedAt": "2025-07-10T21:58:56.046Z",
+    "findingsCount": 52,
+    "patternsIdentified": 1
+  },
+  "metrics": {
+    "totalIssues": 52,
+    "severityCounts": {
+      "critical": 6,
+      "major": 29,
+      "minor": 17
+    },
+    "categoryCounts": {
+      "argument_strength": 16,
+      "clarity_readability": 16,
+      "citation_accuracy": 3,
+      "factual_verification": 3,
+      "spelling_grammar": 2,
+      "logical_consistency": 6,
+      "structural_analysis": 6
+    },
+    "qualityScore": 0,
+    "issuesPerLine": 0.14
+  },
+  "topIssues": [
+    {
+      "line": 9,
+      "category": "argument_strength",
+      "issue": "Admits to lacking hard data while making sweeping claims throughout the document"
+    },
+    {
+      "line": 141,
+      "category": "argument_strength",
+      "issue": "Dismisses serious counterarguments about AI alignment without substantive engagement"
+    },
+    {
+      "line": 201,
+      "category": "argument_strength",
+      "issue": "Lists 5 substantive counterarguments then dismisses all without addressing any"
+    },
+    {
+      "line": 300,
+      "category": "argument_strength",
+      "issue": "Directly contradicts earlier claim that human intellectual bar is \"really low\""
+    },
+    {
+      "line": 301,
+      "category": "logical_consistency",
+      "issue": "Fundamentally contradicts framing AI intellectuals as an opportunity rather than necessity"
+    }
+  ],
+  "systematicProblems": [
+    {
+      "name": "Clarity Issue Clusters",
+      "severity": "major",
+      "occurrences": 2
+    }
+  ],
+  "hotspots": [
+    {
+      "line": 9,
+      "issueCount": 2,
+      "categories": [
+        "argument_strength",
+        "clarity_readability"
+      ]
+    },
+    {
+      "line": 12,
+      "issueCount": 2,
+      "categories": [
+        "factual_verification",
+        "spelling_grammar"
+      ]
+    },
+    {
+      "line": 23,
+      "issueCount": 2,
+      "categories": [
+        "logical_consistency",
+        "argument_strength"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Critical - Fundamental issues throughout",
+    "mostProblematicCategory": "argument_strength",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "504 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    },
+    {
+      "priority": 2,
+      "action": "Fix systematic issue: Clarity Issue Clusters",
+      "reason": "Sections with concentrated clarity problems"
+    },
+    {
+      "priority": 11,
+      "action": "Revise for clarity and readability",
+      "reason": "Numerous clarity issues impact comprehension"
+    }
+  ]
+}

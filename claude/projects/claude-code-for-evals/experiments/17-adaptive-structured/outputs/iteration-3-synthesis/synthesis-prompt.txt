@@ -1,0 +1,170 @@
+You are creating a final analysis report based on validated, structured findings.
+
+STRUCTURED FINDINGS SUMMARY
+==========================
+
+CRITICAL ISSUES (7):
+----------------------------------------
+
+[MATHEMATICAL ERROR]
+1. Line 71: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between cen...
+   Quote: "The R-square measure of correlation between two sets of data..."
+2. Line 71: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between cen...
+   Quote: "The R-square measure of correlation between two sets of data..."
+3. Line 75: This contradicts line 71 and is also incorrect. The angle θ = arccos(R), not arccos(R²). The inverse...
+   Quote: "Grant a factor correlated with an outcome, which we represen..."
+4. Line 71: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between cen...
+   Quote: "The R-square measure of correlation between two sets of data..."
+5. Line 75: The angle theta's cosine equals R (the correlation coefficient), not R². The inverse cosine (arccos)...
+   Quote: "Grant a factor correlated with an outcome, which we represen..."
+6. Line 71: This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between cen...
+   Quote: "The R-square measure of correlation between two sets of data..."
+
+[MISSING CONTENT]
+1. Line 59: Missing statistical calculation. The probability of at least one person being +2SD given 10 independ...
+   Quote: "with 10 people at +4SD, you wouldn't expect any of them to b..."
+
+MAJOR ISSUES (19):
+----------------------------------------
+
+[CLARITY ISSUE]
+1. Line 27: Sentence ends with "of this:" but provides no completion, making it unclear what the data represents...
+   Quote: "Look at this data (again convenience sampled from googling '..."
+2. Line 75: Missing verb and awkward phrasing makes this sentence difficult to parse. Should clarify the relatio...
+   Quote: "Grant a factor correlated with an outcome, which we represen..."
+3. Line 57: Latin term "ceteris paribus" with no explanation provided, and it's formatted as a link which adds c...
+   Quote: "So, [_ceteris paribus_](/lw/km6/why_the_tails_come_apart/b8p..."
+4. Line 89: The phrase "by the lights of my graphical intuition" is unnecessarily convoluted and unclear.
+   Quote: "I'm pretty sure this can be weakened: all that is needed, by..."
+
+[FACTUAL ERROR]
+1. Line 75: An R² of 0.5 means R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degr...
+   Quote: "an R-square of 0.5 (corresponding to an angle of sixty degre..."
+2. Line 87: Bill Gates has not been the richest person in America for several years. As of the document's 2014 d...
+   Quote: "if Bill Gates is ~+4SD in intelligence, despite being the ri..."
+
+[LOGICAL FLAW]
+1. Line 61: This contradicts the earlier setup where intelligence and conscientiousness were said to be "equally...
+   Quote: "the average wealth of the +4SD intelligence population is 1S..."
+2. Line 59: This reasoning is flawed. If the factors are truly independent as stipulated, each person has the sa...
+   Quote: "with 10 people at +4SD, you wouldn't expect any of them to b..."
+
+[MATHEMATICAL ERROR]
+1. Line 75: This should be "the inverse cosine equal to R" (the correlation coefficient), not R-squared. The ang...
+   Quote: "the inverse cosine equal the R-squared"
+2. Line 61: The ratio between population sizes at +4SD and +3SD is incorrect. Using normal distribution, +4SD re...
+   Quote: "if 10 at +4SD, around 500 at +3SD"
+3. Line 75: If R² = 0.5, then R ≈ 0.707, which corresponds to an angle of approximately 45 degrees, not 60 degre...
+   Quote: "an R-square of 0.5 (corresponding to an angle of sixty degre..."
+4. Line 99: You multiply by R (the correlation coefficient), not R², to convert z-scores between correlated norm...
+   Quote: "Another intuitive dividend is that this makes it clear why y..."
+
+[MISSING CONTENT]
+1. Line 39: Missing mathematical justification for why correlated distributions form ellipses. This requires exp...
+   Quote: "envelope of the distribution should form some sort of *ellip..."
+2. Line 57: Missing mathematical formulation of the model. Should specify how factors combine (e.g., W = αI + βC...
+   Quote: "Let's also say these are equally important to the outcome, i..."
+3. Line 89: Missing explanation of what multivariate CLT is and how it applies to the ellipse shape claim. This ...
+   Quote: "this depends on something like multivariate CLT"
+4. Line 75: Missing clarification that this should be "the angle whose cosine equals R (not R-squared)". Also mi...
+   Quote: "the inverse cosine equal the R-squared"
+5. Line 75: Missing calculation. If R² = 0.5, then R ≈ 0.707, and arccos(0.707) ≈ 45°, not 60°.
+   Quote: "an R-square of 0.5 (corresponding to an angle of sixty degre..."
+6. Line 95: Missing explanation of orthogonalization procedure or how to extract independent components from cor...
+   Quote: "one would need to take whatever component of the factors whi..."
+
+[SPELLING GRAMMAR]
+1. Line 15: Incorrect use of "although" with "but" - should be either "Although having a faster serve is better ...
+   Quote: "Maybe although having a faster serve is better all things be..."
+
+MINOR ISSUES (23):
+----------------------------------------
+
+[CLARITY ISSUE]
+1. Line 23: Redundant use of "comparing" and "compared", and duplicate word "crossing".
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+2. Line 23: Redundant use of "compared" and "comparing" makes the sentence awkward. Also contains duplicated wor...
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+3. Line 15: Awkward sentence structure with "Maybe although" followed by "but" creates confusion. Should be rest...
+   Quote: "Maybe although having a faster serve is better all things be..."
+4. Line 75: Starting a sentence with a quoted phrase ('Reading off) is awkward and unclear.
+   Quote: "'Reading off the expected outcome given a factor score is ju..."
+5. Line 83: Uses acronym "AMF" without prior definition, making it unclear for readers unfamiliar with this char...
+   Quote: "There may be spread betting or portfolio scenarios where thi..."
+6. Line 99: Missing verb - should be "multiply by R-squared" or similar. The omission makes the sentence confusi...
+   Quote: "Another intuitive dividend is that this makes it clear why y..."
+7. Line 17: Double "etc." is redundant and informal.
+   Quote: "the tallest aren't the heaviest, the smartest parents don't ..."
+
+[MATHEMATICAL ERROR]
+1. Line 99: Grammatical error that affects mathematical meaning. Should be "you can multiply by R" (not R-square...
+   Quote: "you can by R-squared to move between z-scores"
+2. Line 99: The text appears to have a typo ("can by" should likely be "can multiply by"), but more importantly,...
+   Quote: "Another intuitive dividend is that this makes it clear why y..."
+
+[MISSING CONTENT]
+1. Line 83: Footnote 6 referenced here appears to be about R² and z-scores (line 99), not about portfolio alloca...
+   Quote: "There may be spread betting or portfolio scenarios where thi..."
+2. Line 89: Missing precise definition of "concave" in this context. Should specify whether this means the level...
+   Quote: "the envelope be _concave_"
+3. Line 99: Likely typo ("by" should be "multiply by"), but also missing the complete formula: E[Y|X=x] = ρ(x-μₓ...
+   Quote: "why you can by R-squared to move between z-scores"
+
+[SPELLING GRAMMAR]
+1. Line 7: Extra space before opening bracket in the hyperlink
+   Quote: "to[ lifespan"
+2. Line 9: Extra space before opening bracket in the hyperlink
+   Quote: "tend[ to be very smart"
+3. Line 23: Word "crossing" is repeated twice
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+4. Line 23: Missing apostrophe - should be "pitcher's hand"
+   Quote: "baseball pitchers hand"
+5. Line 75: Incorrectly placed opening single quote at the beginning of the sentence
+   Quote: "'Reading off the expected outcome"
+6. Line 83: Missing space between period and footnote number - should be "sooner. (6)"
+   Quote: "spread funds sooner.(6)"
+7. Line 87: "America" should be capitalized
+   Quote: "richest man in america"
+8. Line 99: Typo - "by" should be "buy" or more likely "multiply by"
+   Quote: "why you can by R-squared"
+9. Line 23: Word repetition error - "crossing" appears twice.
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+10. Line 23: Word "crossing" is duplicated
+   Quote: "comparing the speed of a ball out of a baseball pitchers han..."
+11. Line 15: Awkward grammar - "Maybe although" construction is unclear, should be either "Maybe having" or "Alth...
+   Quote: "Maybe although having a faster serve is better all things be..."
+
+Create a professional report with:
+
+1. **Executive Summary** (2-3 paragraphs)
+   - Overall document quality assessment
+   - Most critical issues identified
+   - Key recommendations
+
+2. **Critical Issues** (if any exist)
+   - Explain each with context
+   - Impact on document validity
+   - Required fixes
+
+3. **Major Issues** 
+   - Group by type
+   - Provide examples
+   - Suggest improvements
+
+4. **Minor Issues**
+   - Brief listing
+   - Quick fixes
+
+5. **Positive Aspects**
+   - What the document does well
+   - Strong points to preserve
+
+6. **Recommendations**
+   - Prioritized action items
+   - Specific next steps
+
+7. **Technical Summary**
+   - Total issues by category
+   - Coverage assessment
+
+Format as professional markdown. Be specific and actionable.

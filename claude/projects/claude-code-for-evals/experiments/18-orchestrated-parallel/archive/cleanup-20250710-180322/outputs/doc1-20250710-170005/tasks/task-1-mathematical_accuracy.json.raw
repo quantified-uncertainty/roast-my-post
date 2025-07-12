@@ -1,0 +1,23 @@
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 75
+Quote: "totalHourChange * mean(inputs.avgWage)"
+Issue: Should use consistent statistical operations - either sample from both distributions or take means of both
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 123
+Quote: "String(quantile(impact.percentChange, 0.05), ".1f")"
+Issue: 5th percentile should come before 95th percentile for proper CI ordering
+[/FINDING]
+
+[FINDING]
+Category: mathematical_accuracy
+Severity: minor
+Line: 125
+Quote: "String(quantile(impact.percentChange, 0.95), ".1f")"
+Issue: 95th percentile should come after 5th percentile for proper CI ordering
+[/FINDING]

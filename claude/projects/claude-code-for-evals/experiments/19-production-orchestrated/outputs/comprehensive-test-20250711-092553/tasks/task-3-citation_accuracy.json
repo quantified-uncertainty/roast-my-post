@@ -1,0 +1,151 @@
+{
+  "taskType": "citation_accuracy",
+  "findings": [
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 3,
+      "quote": "The US unemployment rate reached 3.5% in December 2024",
+      "issue": "Incorrect statistic - BLS data shows 4.1% unemployment in December 2024. Source: bls.gov",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.981Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "critical",
+      "line": 3,
+      "quote": "6.3% peak during the pandemic in April 2020",
+      "issue": "False data - April 2020 unemployment was 14.7%, not 6.3%. Source: bls.gov/opub/ted/2020",
+      "sourceUrl": "bls.gov/opub/ted/2020",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 6,
+      "quote": "Inflation, as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024",
+      "issue": "No source provided; November 2024 CPI data not found. Latest is May 2025 at 2.4%. Source: bls.gov",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 10,
+      "quote": "US working-age population (ages 15-64) is approximately 210 million people",
+      "issue": "No source provided; 2019 Census shows 213.6M for ages 15-64. No 2024 data found",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 10,
+      "quote": "Labor force participation rate stands at 63.4% as of late 2024",
+      "issue": "No source provided; BLS shows 62.5% in December 2024, not 63.4%. Source: bls.gov",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 12,
+      "quote": "productivity growth measured 2.3% in the third quarter of 2024",
+      "issue": "BLS reports 2.2% for Q3 2024, not 2.3%. Source: bls.gov/opub/ted/2024",
+      "sourceUrl": "bls.gov/opub/ted/2024",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "critical",
+      "line": 16,
+      "quote": "A recent Stanford study found that remote work increases productivity by 13%",
+      "issue": "Wrong publication - Ctrip study was in Quarterly Journal of Economics 2015, not AER 2023",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 16,
+      "quote": "published in the American Economic Review in 2023",
+      "issue": "No such study exists; Stanford 2023 research shows remote work decreases productivity 10-20%",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 19,
+      "quote": "Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025",
+      "issue": "CBO projects 1.9-2.0% for 2025, not 2.1%. Source: cbo.gov/publication/60870",
+      "sourceUrl": "cbo.gov/publication/60870",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 19,
+      "quote": "The World Bank estimates global GDP growth at 2.9% for the same period",
+      "issue": "World Bank cut 2025 forecast to 2.3%, not 2.9%. Source: worldbank.org",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "critical",
+      "line": 23,
+      "quote": "The S&P 500 closed at 4,750 points on December 15, 2024",
+      "issue": "No data found; S&P 500 was above 5,800 in December 2024. Source: investing.com",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "critical",
+      "line": 23,
+      "quote": "Bitcoin traded at $42,300 as of the same date",
+      "issue": "Bitcoin was over $100,000 on Dec 15, 2024; $42,300 was Dec 2023 price. Source: statista.com",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "major",
+      "line": 25,
+      "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+      "issue": "WTI averaged $69.95 in November 2024, not $78. Source: statista.com",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    },
+    {
+      "category": "citation_accuracy",
+      "severity": "minor",
+      "line": 25,
+      "quote": "natural gas futures traded at $2.85 per MMBtu",
+      "issue": "No source provided; projections showed ~$3.10/MMBtu for November 2024. Source: eia.gov",
+      "source": "citation_accuracy",
+      "timestamp": "2025-07-11T16:33:33.982Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 14,
+    "validFindings": 14,
+    "errors": 0,
+    "errorDetails": []
+  },
+  "usage": {
+    "input_tokens": 863,
+    "output_tokens": 432,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.002589,
+    "output_cost_usd": 0.0064800000000000005,
+    "total_cost_usd": 0.009069,
+    "model_used": "claude-4-sonnet",
+    "tracked_at": "2025-07-11T16:33:34.048Z"
+  }
+}

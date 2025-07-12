@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-11T03:33:18.471Z",
+    "findingsCount": 23,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 23,
+    "severityCounts": {
+      "critical": 2,
+      "major": 11,
+      "minor": 10
+    },
+    "categoryCounts": {
+      "citation_accuracy": 13,
+      "statistical_validity": 4,
+      "logical_consistency": 6
+    },
+    "qualityScore": 37,
+    "issuesPerLine": 0.79
+  },
+  "topIssues": [
+    {
+      "line": 3,
+      "category": "citation_accuracy",
+      "issue": "Grossly incorrect - actual April 2020 rate was 14.7%. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm"
+    },
+    {
+      "line": 25,
+      "category": "citation_accuracy",
+      "issue": "Grossly incorrect - Bitcoin was above $90,000 in December 2024. Source: statista.com/statistics/326707/bitcoin-price-index/"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 3,
+      "issueCount": 4,
+      "categories": [
+        "citation_accuracy",
+        "statistical_validity"
+      ]
+    },
+    {
+      "line": 5,
+      "issueCount": 2,
+      "categories": [
+        "logical_consistency",
+        "citation_accuracy"
+      ]
+    },
+    {
+      "line": 18,
+      "issueCount": 2,
+      "categories": [
+        "citation_accuracy"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Critical - Fundamental issues throughout",
+    "mostProblematicCategory": "citation_accuracy",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "190 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "findings": [
+    {
+      "source": "task-1-structural_analysis",
+      "timestamp": "2025-07-10T19:42:17.907Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 23,
+      "quote": "comparing the speed of a ball out of a baseball pitchers hand compared to its speed crossing crossing the plate",
+      "issue": "Word \"crossing\" is duplicated"
+    },
+    {
+      "source": "task-1-structural_analysis",
+      "timestamp": "2025-07-10T19:42:17.907Z",
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 15,
+      "quote": "Maybe although having a faster serve is better all things being equal, but focusing too heavily",
+      "issue": "Awkward grammar - \"Maybe although\" construction is unclear, should be either \"Maybe having\" or \"Although having\""
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "mathematical_error",
+      "severity": "critical",
+      "line": 71,
+      "quote": "The R-square measure of correlation between two sets of data is the same as the cosine of the angle",
+      "issue": "This is incorrect. The correlation coefficient R (not R²) equals the cosine of the angle between centered vectors. R-squared is the square of the correlation coefficient."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 39,
+      "quote": "envelope of the distribution should form some sort of *ellipse*",
+      "issue": "Missing mathematical justification for why correlated distributions form ellipses. This requires explanation of bivariate normal distributions and their level curves."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 57,
+      "quote": "Let's also say these are equally important to the outcome, independent of one another and are normally distributed",
+      "issue": "Missing mathematical formulation of the model. Should specify how factors combine (e.g., W = αI + βC where α = β = 0.5) and what \"equally important\" means mathematically."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 89,
+      "quote": "this depends on something like multivariate CLT",
+      "issue": "Missing explanation of what multivariate CLT is and how it applies to the ellipse shape claim. This is a critical mathematical foundation."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "critical",
+      "line": 59,
+      "quote": "with 10 people at +4SD, you wouldn't expect any of them to be +2SD in conscientiousness",
+      "issue": "Missing statistical calculation. The probability of at least one person being +2SD given 10 independent samples is 1-(1-0.0228)^10 ≈ 0.21, not negligible."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 75,
+      "quote": "the inverse cosine equal the R-squared",
+      "issue": "Missing clarification that this should be \"the angle whose cosine equals R (not R-squared)\". Also missing derivation of the vector representation."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 75,
+      "quote": "an R-square of 0.5 (corresponding to an angle of sixty degrees)",
+      "issue": "Missing calculation. If R² = 0.5, then R ≈ 0.707, and arccos(0.707) ≈ 45°, not 60°."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "minor",
+      "line": 89,
+      "quote": "the envelope be _concave_",
+      "issue": "Missing precise definition of \"concave\" in this context. Should specify whether this means the level curves of the probability density function."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "major",
+      "line": 95,
+      "quote": "one would need to take whatever component of the factors which are independent of one another",
+      "issue": "Missing explanation of orthogonalization procedure or how to extract independent components from correlated factors."
+    },
+    {
+      "source": "task-2-technical_gaps",
+      "timestamp": "2025-07-10T19:42:17.908Z",
+      "category": "missing_content",
+      "severity": "minor",
+      "line": 99,
+      "quote": "why you can by R-squared to move between z-scores",
+      "issue": "Likely typo (\"by\" should be \"multiply by\"), but also missing the complete formula: E[Y|X=x] = ρ(x-μₓ)σᵧ/σₓ + μᵧ."
+    }
+  ],
+  "stats": {
+    "totalTasks": 2,
+    "successfulTasks": 2,
+    "totalFindings": 12,
+    "bySeverity": {
+      "critical": 2,
+      "major": 6,
+      "minor": 4
+    },
+    "byCategory": {
+      "spelling_grammar": 2,
+      "mathematical_error": 1,
+      "missing_content": 9
+    }
+  }
+}

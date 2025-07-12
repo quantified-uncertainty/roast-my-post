@@ -1,0 +1,22 @@
+{
+  "Examine the mathematical claims and statistical concepts for accuracy, especially the R-squared/cosine relationship and the geometric explanation": true,
+  "Analyze the logical flow and consistency of arguments, particularly the transition between different explanations": true,
+  "Check the examples and data references for accuracy and appropriateness (NBA heights, tennis serves, IQ correlations)": true,
+  "Review the clarity of explanations and identify areas where concepts could be confusing or misleading": true,
+  "Evaluate the formatting, broken links, image references, and overall document structure": true,
+  "Examine the practical implications and real-world applications of the 'tails falling apart' concept - are the conclusions actionable and well-supported?": true,
+  "Analyze potential counterarguments or alternative explanations that the author may have overlooked or inadequately addressed": true,
+  "Review the statistical methodology more deeply, including assumptions made about distributions, independence, and the validity of extrapolations": true,
+  "Check for internal contradictions between different sections and evaluate whether the geometric intuition properly aligns with the mathematical claims": true,
+  "Assess the pedagogical effectiveness - does the essay successfully convey complex statistical concepts to its intended audience?": true,
+  "Examine the statistical assumptions and their validity - particularly the assumption of bivariate normal distributions and when this breaks down in real-world scenarios": true,
+  "Analyze the causal reasoning and directionality issues - does the essay properly distinguish between correlation degradation due to selection vs fundamental changes in relationships?": true,
+  "Evaluate the mathematical rigor of the cosine/R-squared relationship derivation and check if all steps are justified": true,
+  "Review the essay's treatment of measurement error, noise, and their impact on correlation at the extremes": true,
+  "Assess whether the essay adequately addresses the difference between population correlations and sample correlations, especially in the tails": true,
+  "Re-categorize the 57 existing findings into proper categories (mathematical_errors, statistical_issues, logical_flaws, clarity_problems, technical_accuracy)": true,
+  "Examine the essay's treatment of non-linear relationships and how they behave at extremes - this seems underexplored": true,
+  "Analyze the essay's discussion of range restriction and its mathematical implications on correlation": true,
+  "Check for missing discussion of alternative correlation measures (Spearman, Kendall) that might behave differently in tails": true,
+  "Evaluate whether the essay addresses regression to the mean and its relationship to correlation degradation": true
+}

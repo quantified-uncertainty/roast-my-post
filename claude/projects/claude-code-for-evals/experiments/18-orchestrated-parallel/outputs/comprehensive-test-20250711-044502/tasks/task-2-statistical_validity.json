@@ -1,0 +1,38 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 5,
+      "quote": "This represents a significant improvement",
+      "issue": "No statistical test provided to justify \"significant\" improvement claim",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T11:45:19.907Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 17,
+      "quote": "remote work increases productivity by 13%",
+      "issue": "Missing confidence intervals, p-values, or error margins for 13% claim",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T11:45:19.908Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 17,
+      "quote": "study, published in the American Economic Review in 2023",
+      "issue": "Sample size of 1,000 may limit generalizability to broader population",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T11:45:19.908Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 3,
+    "validFindings": 3,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

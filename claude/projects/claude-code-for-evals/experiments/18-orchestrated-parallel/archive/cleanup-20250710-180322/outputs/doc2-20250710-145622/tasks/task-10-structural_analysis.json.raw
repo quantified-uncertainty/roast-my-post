@@ -1,0 +1,63 @@
+[FINDING]
+Category: structural_analysis
+Severity: major
+Line: 12
+Quote: "Once we expand to other star systems, we may begin"
+Issue: Abstract/summary paragraph appears before Introduction heading without clear labeling
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: minor
+Line: 14
+Quote: "Introduction"
+Issue: Introduction section disproportionately long compared to other major sections
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: major
+Line: 91
+Quote: "Unknowns"
+Issue: Section on unknowns appears before probability analysis sections, disrupting logical flow
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: critical
+Line: 162
+Quote: "Some key takeaways and hot takes to disagree with me on"
+Issue: Document lacks proper conclusion section, ending with informal "hot takes" instead
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: major
+Line: 171
+Quote: "Edit: Adding some further reading"
+Issue: Edit note disrupts document flow and should be integrated into main text or appendix
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: minor
+Line: 31
+Quote: "Threats Limited to a One Planet Civilisation"
+Issue: Inconsistent heading formatting - subsections use dashes while main sections use equals signs
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: major
+Line: 180
+Quote: "1. These solar system x-risks were unlikely"
+Issue: Footnotes section (72 entries) too extensive, suggesting poor content integration
+[/FINDING]
+
+[FINDING]
+Category: structural_analysis
+Severity: critical
+Line: 28
+Quote: "Existential risks to a Galactic Civilisation"
+Issue: Missing methodology section explaining threat identification and categorization approach
+[/FINDING]

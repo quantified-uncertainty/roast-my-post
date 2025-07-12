@@ -1,0 +1,56 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 4,
+      "quote": "The US working age population is 205-215 million people.",
+      "issue": "Range provided without specifying year or source for verification",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:04:59.873Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 5,
+      "quote": "The average hourly wage in the US is $25-35.",
+      "issue": "Wide range without specifying mean, median, or data source",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:04:59.874Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 6,
+      "quote": "Typical full-time work is 1800-2000 hours per year.",
+      "issue": "Range presented without defining \"typical\" or distribution",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:04:59.874Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 7,
+      "quote": "Income elasticity of labor supply from lottery studies is -0.05 to -0.15.",
+      "issue": "Confidence intervals and sample sizes not specified for estimates",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:04:59.874Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 8,
+      "quote": "The US GDP was $27 trillion in 2023.",
+      "issue": "No specification of nominal vs real GDP or quarter referenced",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:04:59.874Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

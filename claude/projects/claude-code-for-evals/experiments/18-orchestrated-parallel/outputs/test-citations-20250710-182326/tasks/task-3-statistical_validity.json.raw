@@ -1,0 +1,15 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 11
+Quote: "remote work increases productivity by 13%"
+Issue: No sample size, confidence intervals, or effect size context provided for this statistical claim
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 13
+Quote: "meditation reduces anxiety by 30%"
+Issue: Percentage reduction lacks baseline, measurement scale, or statistical significance information
+[/FINDING]

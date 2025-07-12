@@ -1,0 +1,23 @@
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 11
+Quote: "lightly edited using Claude"
+Issue: No explanation or reference provided for what "Claude" is
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 126
+Quote: "Elicit, Perplexity, and recently Deep Research"
+Issue: Elicit and Perplexity mentioned without links while Deep Research has one
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 219
+Quote: "Tetlock's work has demonstrated that most intellectual claims are suspect"
+Issue: Significant research claim lacks specific citation or reference
+[/FINDING]

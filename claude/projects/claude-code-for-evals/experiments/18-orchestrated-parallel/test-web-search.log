@@ -1,0 +1,243 @@
+🎭 ORCHESTRATED PARALLEL ANALYSIS
+================================
+Document: test-web-search.md
+
+📊 Phase 1: Analyzing document characteristics with LLM...
+   Running LLM-based document classification...
+   Document type detected: empirical_research
+   Flaw density: high
+   Analysis depth: comprehensive
+   Features: empirical_claims
+   Reasoning: Document consists entirely of empirical claims presented as facts. Contains multiple factual errors (Python created in 1991 not 1995, Amazon founded in 1994 not 1992) requiring thorough fact-checking and source verification.
+
+📋 Phase 2: Generating task list...
+   Generated 3 analysis tasks
+
+✍️  Phase 3: Creating task prompts...
+Created 3 prompts in outputs/test-web-search-20250710-182604/prompts
+   Created 3 prompts
+
+🚀 Phase 4: Running parallel analysis (max 6 concurrent)...
+   Progress:
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+
+Computers / CPU threads / Max jobs to run
+1:local / 10 / 6
+
+Computer:jobs running/jobs completed/%of started jobs/Average seconds to complete
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [KETA: 0s Left: 3 AVG: 0.00s  local:3/0/100%/0.0s [K   [1/] Task task-3-statistical_validity: ✅ Complete
+ETA: 0s Left: 2 AVG: 0.00s  local:2/1/100%/7.0s [KETA: 0s Left: 2 AVG: 0.00s  local:2/1/100%/7.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 2s Left: 2 AVG: 1.00s  local:2/1/100%/8.0s [KETA: 2s Left: 2 AVG: 1.00s  local:2/1/100%/8.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 2s Left: 2 AVG: 2.00s  local:2/1/100%/9.0s [KETA: 3s Left: 2 AVG: 2.00s  local:2/1/100%/9.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 4s Left: 2 AVG: 3.00s  local:2/1/100%/10.0s [KETA: 4s Left: 2 AVG: 3.00s  local:2/1/100%/10.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 5s Left: 2 AVG: 4.00s  local:2/1/100%/11.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 7s Left: 2 AVG: 5.00s  local:2/1/100%/12.0s [KETA: 8s Left: 2 AVG: 5.00s  local:2/1/100%/12.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 9s Left: 2 AVG: 6.00s  local:2/1/100%/13.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 10s Left: 2 AVG: 7.00s  local:2/1/100%/14.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 12s Left: 2 AVG: 8.00s  local:2/1/100%/15.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 14s Left: 2 AVG: 9.00s  local:2/1/100%/16.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 16s Left: 2 AVG: 10.00s  local:2/1/100%/17.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 18s Left: 2 AVG: 12.00s  local:2/1/100%/19.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 21s Left: 2 AVG: 13.00s  local:2/1/100%/20.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 21s Left: 2 AVG: 14.00s  local:2/1/100%/21.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 25s Left: 2 AVG: 15.00s  local:2/1/100%/22.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 25s Left: 2 AVG: 16.00s  local:2/1/100%/23.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 2 AVG: 17.00s  local:2/1/100%/24.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 29s Left: 2 AVG: 18.00s  local:2/1/100%/25.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 2 AVG: 19.00s  local:2/1/100%/26.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 33s Left: 2 AVG: 20.00s  local:2/1/100%/27.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 2 AVG: 21.00s  local:2/1/100%/28.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 2 AVG: 22.00s  local:2/1/100%/29.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 37s Left: 2 AVG: 23.00s  local:2/1/100%/30.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 43s Left: 2 AVG: 24.00s  local:2/1/100%/31.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 43s Left: 2 AVG: 25.00s  local:2/1/100%/32.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 43s Left: 2 AVG: 26.00s  local:2/1/100%/33.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 50s Left: 2 AVG: 28.00s  local:2/1/100%/35.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 50s Left: 2 AVG: 29.00s  local:2/1/100%/36.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 50s Left: 2 AVG: 30.00s  local:2/1/100%/37.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 57s Left: 2 AVG: 31.00s  local:2/1/100%/38.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 57s Left: 2 AVG: 32.00s  local:2/1/100%/39.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 57s Left: 2 AVG: 33.00s  local:2/1/100%/40.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 57s Left: 2 AVG: 34.00s  local:2/1/100%/41.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 65s Left: 2 AVG: 35.00s  local:2/1/100%/42.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 65s Left: 2 AVG: 36.00s  local:2/1/100%/43.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 65s Left: 2 AVG: 37.00s  local:2/1/100%/44.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 65s Left: 2 AVG: 38.00s  local:2/1/100%/45.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 73s Left: 2 AVG: 39.00s  local:2/1/100%/46.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 73s Left: 2 AVG: 40.00s  local:2/1/100%/47.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 73s Left: 2 AVG: 41.00s  local:2/1/100%/48.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 73s Left: 2 AVG: 42.00s  local:2/1/100%/49.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 73s Left: 2 AVG: 43.00s  local:2/1/100%/50.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 83s Left: 2 AVG: 44.00s  local:2/1/100%/51.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 83s Left: 2 AVG: 46.00s  local:2/1/100%/53.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 83s Left: 2 AVG: 47.00s  local:2/1/100%/54.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 83s Left: 2 AVG: 48.00s  local:2/1/100%/55.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 49.00s  local:2/1/100%/56.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 50.00s  local:2/1/100%/57.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 51.00s  local:2/1/100%/58.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 52.00s  local:2/1/100%/59.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 53.00s  local:2/1/100%/60.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 93s Left: 2 AVG: 54.00s  local:2/1/100%/61.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 55.00s  local:2/1/100%/62.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 56.00s  local:2/1/100%/63.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 57.00s  local:2/1/100%/64.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 58.00s  local:2/1/100%/65.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 59.00s  local:2/1/100%/66.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 105s Left: 2 AVG: 60.00s  local:2/1/100%/67.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 61.00s  local:2/1/100%/68.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 62.00s  local:2/1/100%/70.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 64.00s  local:2/1/100%/71.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 65.00s  local:2/1/100%/72.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 66.00s  local:2/1/100%/73.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 117s Left: 2 AVG: 67.00s  local:2/1/100%/74.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 68.00s  local:2/1/100%/75.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 69.00s  local:2/1/100%/76.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 70.00s  local:2/1/100%/77.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 71.00s  local:2/1/100%/78.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 72.00s  local:2/1/100%/79.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 73.00s  local:2/1/100%/80.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 74.00s  local:2/1/100%/81.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 131s Left: 2 AVG: 75.00s  local:2/1/100%/82.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 76.00s  local:2/1/100%/83.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 77.00s  local:2/1/100%/84.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 78.00s  local:2/1/100%/85.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 79.00s  local:2/1/100%/86.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 81.00s  local:2/1/100%/88.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 82.00s  local:2/1/100%/89.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 83.00s  local:2/1/100%/90.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 147s Left: 2 AVG: 84.00s  local:2/1/100%/91.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 85.00s  local:2/1/100%/92.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 86.00s  local:2/1/100%/93.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 87.00s  local:2/1/100%/94.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 88.00s  local:2/1/100%/95.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 89.00s  local:2/1/100%/96.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 90.00s  local:2/1/100%/97.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 165s Left: 2 AVG: 91.00s  local:2/1/100%/98.0s [K   [2/] Task task-1-factual_verification: ✅ Complete
+ETA: 59s Left: 1 AVG: 45.50s  local:1/2/100%/49.0s [KETA: 50s Left: 1 AVG: 45.50s  local:1/2/100%/49.0s [KETA: 47s Left: 1 AVG: 45.50s  local:1/2/100%/49.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 46.00s  local:1/2/100%/49.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 46.50s  local:1/2/100%/50.0s [KETA: 46s Left: 1 AVG: 46.50s  local:1/2/100%/50.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 47.00s  local:1/2/100%/50.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 47.50s  local:1/2/100%/51.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 48.00s  local:1/2/100%/51.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 48.50s  local:1/2/100%/52.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 49.00s  local:1/2/100%/52.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 49.50s  local:1/2/100%/53.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 50.00s  local:1/2/100%/53.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 50.50s  local:1/2/100%/54.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 51.00s  local:1/2/100%/54.5s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 51.50s  local:1/2/100%/55.0s [Ksh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+ETA: 46s Left: 1 AVG: 52.00s  local:1/2/100%/55.5s [K

@@ -1,0 +1,38 @@
+{
+  "taskType": "mathematical_accuracy",
+  "findings": [
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 75,
+      "quote": "totalHourChange * mean(inputs.avgWage)",
+      "issue": "Should use consistent statistical operations - either sample from both distributions or take means of both",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T00:00:26.089Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 123,
+      "quote": "String(quantile(impact.percentChange, 0.05), \".1f\")",
+      "issue": "5th percentile should come before 95th percentile for proper CI ordering",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T00:00:26.090Z"
+    },
+    {
+      "category": "mathematical_accuracy",
+      "severity": "minor",
+      "line": 125,
+      "quote": "String(quantile(impact.percentChange, 0.95), \".1f\")",
+      "issue": "95th percentile should come after 5th percentile for proper CI ordering",
+      "source": "mathematical_accuracy",
+      "timestamp": "2025-07-11T00:00:26.090Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 3,
+    "validFindings": 3,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

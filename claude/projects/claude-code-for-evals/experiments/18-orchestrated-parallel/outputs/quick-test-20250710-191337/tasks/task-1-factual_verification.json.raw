@@ -1,0 +1,7 @@
+[FINDING]
+Category: factual_verification
+Severity: major
+Line: 3
+Quote: "The US unemployment rate is 3.5% in 2024."
+Issue: BLS data shows 4.0-4.2% range in 2024, not 3.5%. Source: bls.gov/news.release/empsit.nr0.htm
+[/FINDING]

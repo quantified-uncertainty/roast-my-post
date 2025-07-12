@@ -1,0 +1,47 @@
+
+📋 Prompt-Based Document Analysis
+==================================================
+Document: test-documents/doc1.md
+Job ID: doc1-1752290546496-7264e2b1
+Selected prompts: 1
+Output: outputs/doc1-1752290546496-7264e2b1
+
+1️⃣  Chunking document...
+   Created 1 chunks
+2️⃣  Creating jobs from prompt templates...
+   Creating 1 jobs (1 chunks × 1 prompts)
+
+📊 Job Summary by Prompt Type:
+   Logical Error Detection: 1 jobs
+
+   Estimated time: 1 minutes
+   Estimated cost: $0.01
+
+📊 Job Status:
+Total Jobs: 1
+✅ Completed: 0 (0%)
+⏳ Pending: 1
+🔄 Running: 0
+❌ Failed: 0
+
+3️⃣  Running analysis jobs...
+   Progress: 1/1
+
+4️⃣  Processing results...
+   Total findings: 8
+   Verification requests: 2
+
+==================================================
+
+📊 Job Status:
+Total Jobs: 1
+✅ Completed: 1 (100%)
+⏳ Pending: 0
+🔄 Running: 0
+❌ Failed: 0
+
+Completed by prompt type:
+  Logical Error Detection: 1
+
+✅ Analysis complete!
+View results: outputs/doc1-1752290546496-7264e2b1/dashboard.md

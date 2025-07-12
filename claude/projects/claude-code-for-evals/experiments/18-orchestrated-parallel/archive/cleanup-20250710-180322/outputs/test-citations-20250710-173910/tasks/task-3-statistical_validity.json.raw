@@ -1,0 +1,15 @@
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 10
+Quote: "productivity by 13%"
+Issue: Lacks context on measurement method, sample size, or confidence intervals
+[/FINDING]
+
+[FINDING]
+Category: statistical_validity
+Severity: major
+Line: 12
+Quote: "reduces anxiety by 30%"
+Issue: No effect size, confidence interval, or measurement scale specified
+[/FINDING]

@@ -1,0 +1,182 @@
+[
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "US unemployment rate reached 3.5% in December 2024",
+    "needsVerification": false,
+    "method": "verify with Bureau of Labor Statistics data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "6.3% unemployment peak during pandemic in April 2020",
+    "needsVerification": false,
+    "method": "verify with historical BLS data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Federal Reserve's federal funds rate is 5.25-5.50%",
+    "needsVerification": false,
+    "method": "verify with current Fed data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "This is the highest level since 2007",
+    "needsVerification": false,
+    "method": "verify with historical Fed data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "CPI inflation was 3.1% year-over-year in November 2024",
+    "needsVerification": false,
+    "method": "verify with BLS CPI data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "US working-age population (ages 15-64) is approximately 210 million people",
+    "needsVerification": false,
+    "method": "verify with Census Bureau data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Labor force participation rate stands at 63.4% as of late 2024",
+    "needsVerification": false,
+    "method": "verify with BLS data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Average hourly earnings increased by 4.1% year-over-year",
+    "needsVerification": false,
+    "method": "verify with BLS wage data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Productivity growth measured 2.3% in Q3 2024",
+    "needsVerification": false,
+    "method": "verify with BLS productivity data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Stanford study found remote work increases productivity by 13%",
+    "needsVerification": false,
+    "method": "verify study existence and findings"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Study published in American Economic Review in 2023",
+    "needsVerification": false,
+    "method": "verify publication details"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Study tracked 1,000 workers over 9 months",
+    "needsVerification": false,
+    "method": "verify study methodology"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "CBO projects GDP growth at 2.1% for 2025",
+    "needsVerification": false,
+    "method": "verify with CBO's 2024 economic outlook"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "World Bank estimates global GDP growth at 2.9% for 2025",
+    "needsVerification": false,
+    "method": "verify with World Bank projections"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "S&P 500 closed at 4,750 points on December 15, 2024",
+    "needsVerification": false,
+    "method": "verify with market data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Bitcoin traded at $42,300 on December 15, 2024",
+    "needsVerification": false,
+    "method": "verify with crypto market data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "WTI crude oil averaged $78 per barrel in November 2024",
+    "needsVerification": false,
+    "method": "verify with EIA data"
+  },
+  {
+    "type": "claim",
+    "jobId": "job-1",
+    "promptKey": "factual_claims",
+    "chunkId": "chunk-1",
+    "line": 0,
+    "claim": "Natural gas futures traded at $2.85 per MMBtu",
+    "needsVerification": false,
+    "method": "verify with commodity market data"
+  }
+]

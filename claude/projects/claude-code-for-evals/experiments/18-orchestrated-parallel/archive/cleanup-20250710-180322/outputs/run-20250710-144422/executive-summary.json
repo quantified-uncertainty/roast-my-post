@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "generatedAt": "2025-07-10T21:55:48.137Z",
+    "findingsCount": 26,
+    "patternsIdentified": 0
+  },
+  "metrics": {
+    "totalIssues": 26,
+    "severityCounts": {
+      "critical": 1,
+      "major": 8,
+      "minor": 17
+    },
+    "categoryCounts": {
+      "spelling_grammar": 5,
+      "statistical_validity": 7,
+      "clarity_readability": 5,
+      "code_quality": 7,
+      "mathematical_accuracy": 2
+    },
+    "qualityScore": 49,
+    "issuesPerLine": 0.2
+  },
+  "topIssues": [
+    {
+      "line": 75,
+      "category": "statistical_validity",
+      "issue": "GDP impact calculation oversimplified - ignores multiplier effects and productivity differences"
+    }
+  ],
+  "systematicProblems": [],
+  "hotspots": [
+    {
+      "line": 125,
+      "issueCount": 3,
+      "categories": [
+        "spelling_grammar",
+        "clarity_readability",
+        "code_quality"
+      ]
+    },
+    {
+      "line": 122,
+      "issueCount": 2,
+      "categories": [
+        "spelling_grammar",
+        "code_quality"
+      ]
+    }
+  ],
+  "assessment": {
+    "overall": "Poor - Major revision needed",
+    "mostProblematicCategory": "statistical_validity",
+    "recommendedPriority": "critical",
+    "estimatedEffort": "144 minutes"
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Address all critical issues immediately",
+      "reason": "Critical issues invalidate key points or cause serious misunderstanding"
+    }
+  ]
+}

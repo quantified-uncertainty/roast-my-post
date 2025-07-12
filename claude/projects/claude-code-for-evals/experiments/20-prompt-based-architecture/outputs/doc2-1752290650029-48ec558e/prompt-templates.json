@@ -1,0 +1,23 @@
+{
+  "logical_errors": {
+    "name": "Logical Error Detection",
+    "description": "Find logical inconsistencies and contradictions",
+    "prompt": "Find logical errors in this text section.\n\nFor each potential logical error:\n1. Identify the specific claims or statements involved\n2. Explain why they might be contradictory or inconsistent\n3. Rate severity: critical (invalidates main argument), major (significant flaw), minor (small inconsistency)\n\nUse this format for each finding:\nFINDING: [line] | [severity] | [quote] | [explanation]\n\nIf you need to verify claims, note them as:\nNEEDS_VERIFICATION: [claim] | [suggested search query]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "verify_claim",
+      "check_definition"
+    ],
+    "estimatedTokens": 2000
+  },
+  "factual_claims": {
+    "name": "Factual Claim Verification",
+    "description": "Identify and verify factual claims",
+    "prompt": "Identify all factual claims in this text section.\n\nFor each factual claim:\n1. Extract the specific claim\n2. Determine if it needs verification (statistics, dates, quotes, etc.)\n3. Suggest how to verify it\n\nFormat:\nCLAIM: [line] | [claim text] | [verification needed: yes/no] | [verification method]\n\nFor claims needing verification, also add:\nVERIFY: [claim] | [search query] | [expected source type]\n\nText section (lines {startLine}-{endLine}):\n{content}",
+    "tools": [
+      "web_search",
+      "verify_statistic",
+      "check_source"
+    ],
+    "estimatedTokens": 2500
+  }
+}

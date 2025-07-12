@@ -1,0 +1,47 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 45,
+      "quote": "normal({ p5: -0.15, p95: -0.05 })",
+      "issue": "Normal distribution with only percentiles specified may not uniquely define parameters",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:21:32.346Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 50,
+      "quote": "normal({ p5: -0.1, p95: 0 })",
+      "issue": "Normal distribution with only percentiles specified may not uniquely define parameters",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:21:32.347Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 76,
+      "quote": "mean(inputs.avgWage)",
+      "issue": "Taking mean of already uncertain wage distribution may not properly propagate uncertainty",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:21:32.347Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 128,
+      "quote": "90% CI",
+      "issue": "Claims 90% CI but uses 5th and 95th percentiles which form a 90% credible interval, not confidence interval",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:21:32.347Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 4,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

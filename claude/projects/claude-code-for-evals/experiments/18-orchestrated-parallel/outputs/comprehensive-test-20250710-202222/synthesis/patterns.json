@@ -1,0 +1,211 @@
+{
+  "byCategory": {
+    "citation_accuracy": 13,
+    "statistical_validity": 4,
+    "logical_consistency": 6
+  },
+  "bySeverity": {
+    "critical": 2,
+    "major": 11,
+    "minor": 10
+  },
+  "hotspots": [
+    {
+      "line": 3,
+      "issueCount": 4,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 3,
+          "quote": "6.3% peak during the pandemic in April 2020",
+          "issue": "Grossly incorrect - actual April 2020 rate was 14.7%. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-1",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 3,
+          "quote": "The US unemployment rate reached 3.5% in December 2024",
+          "issue": "Incorrect data - actual rate was 4.1% in December 2024. Source: cnbc.com/2025/01/10/jobs-report-december-2024.html",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.167Z",
+          "id": "finding-2",
+          "validated": true
+        },
+        {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 3,
+          "quote": "The US unemployment rate reached 3.5% in December 2024",
+          "issue": "Future date reference - document cannot contain December 2024 data if written before that date",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T03:22:39.648Z",
+          "id": "finding-3",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 3,
+          "quote": "according to recent data",
+          "issue": "Vague citation lacking specific source - should cite Bureau of Labor Statistics",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-4",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 5,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 5,
+          "quote": "reached 3.5% in December 2024",
+          "issue": "December 2024 is in the future relative to the document's apparent creation date",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T03:22:42.151Z",
+          "id": "finding-5",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 5,
+          "quote": "as measured by the Consumer Price Index, was 3.1% year-over-year in November 2024",
+          "issue": "Incorrect data - actual November 2024 CPI was 2.7%. Source: cnbc.com/2024/12/11/cpi-inflation-november-2024",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-6",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 18,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 18,
+          "quote": "A recent Stanford study found that remote work increases productivity by 13%",
+          "issue": "Misattributed - 13% figure is from older Chinese study, not recent work. Source: nber.org/system/files/working_papers/w18871/w18871.pdf",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-14",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 18,
+          "quote": "published in the American Economic Review in 2023",
+          "issue": "Cannot verify publication - no 2023 AER article found with these details",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-15",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 21,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 21,
+          "quote": "Congressional Budget Office's 2024 economic outlook, GDP growth is projected at 2.1% for 2025",
+          "issue": "Incorrect - CBO projects 1.9% for 2025, not 2.1%. Source: cbo.gov/publication/60870",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-16",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 21,
+          "quote": "The World Bank estimates global GDP growth at 2.9% for the same period",
+          "issue": "Incorrect - World Bank projects 2.7% for 2025, not 2.9%. Source: worldbank.org/en/news/press-release/2025/01/16/gep-january-2025-press-release",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-17",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 25,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "critical",
+          "line": 25,
+          "quote": "Bitcoin traded at $42,300 as of the same date",
+          "issue": "Grossly incorrect - Bitcoin was above $90,000 in December 2024. Source: statista.com/statistics/326707/bitcoin-price-index/",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-19",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 25,
+          "quote": "The S&P 500 closed at 4,750 points on December 15, 2024",
+          "issue": "Incorrect - S&P 500 was around 5,800-6,000 in mid-December 2024. Source: finance.yahoo.com/quote/%5EGSPC/history/",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-20",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 27,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "logical_consistency",
+          "severity": "major",
+          "line": 27,
+          "quote": "closed at 4,750 points on December 15, 2024",
+          "issue": "Specific future date (Dec 15, 2024) cited as historical fact",
+          "source": "logical_consistency",
+          "timestamp": "2025-07-11T03:22:42.152Z",
+          "id": "finding-21",
+          "validated": true
+        },
+        {
+          "category": "citation_accuracy",
+          "severity": "minor",
+          "line": 27,
+          "quote": "Oil prices (WTI crude) averaged $78 per barrel in November 2024",
+          "issue": "Incorrect - WTI averaged $69.95 in November 2024. Source: statista.com/statistics/279941/west-texas-intermediate-wti-crude-oil-price/",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-11T03:29:02.170Z",
+          "id": "finding-22",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [],
+  "statistics": {
+    "total": 23,
+    "averagePerLine": "0.79",
+    "mostCommonCategory": "citation_accuracy",
+    "mostCommonSeverity": "major"
+  }
+}

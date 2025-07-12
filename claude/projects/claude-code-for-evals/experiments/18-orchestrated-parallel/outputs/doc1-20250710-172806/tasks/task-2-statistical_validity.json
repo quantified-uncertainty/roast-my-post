@@ -1,0 +1,83 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 32,
+      "quote": "Based on empirical studies of lottery winners and inheritance recipients.",
+      "issue": "Extrapolating from lottery/inheritance studies to UBI may not be statistically valid due to different behavioral contexts",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.810Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 24,
+      "quote": "mx([25 to 35, 15 to 100], [0.9, 0.1])",
+      "issue": "Mixture weights (0.9, 0.1) lack justification for wage distribution",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 30,
+      "quote": "mx([1800 to 2000, 1000 to 2500], [0.9, 0.1])",
+      "issue": "Mixture weights (0.9, 0.1) for work hours lack empirical basis",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 35,
+      "quote": "normal({ p5: -0.15, p95: -0.05 })",
+      "issue": "Using normal distribution for bounded elasticity parameter may produce invalid values outside economic bounds",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 40,
+      "quote": "normal({ p5: -0.1, p95: 0 })",
+      "issue": "Normal distribution for substitution effect could yield positive values contradicting the stated negative effect",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "critical",
+      "line": 60,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "Taking mean of wage after multiplication ignores correlation structure and may underestimate uncertainty",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 99,
+      "quote": "responses likely vary by:\\n    - Income level (poorer workers may reduce hours more)",
+      "issue": "Model assumes uniform effects despite acknowledging heterogeneous responses, potentially biasing estimates",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 114,
+      "quote": "90% CI: \" + String(quantile(impact.percentChange, 0.05), \".1f\")",
+      "issue": "Confidence interval interpretation unclear given mixture of uncertainty sources (population, parameters, model)",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T00:28:32.811Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 8,
+    "validFindings": 8,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

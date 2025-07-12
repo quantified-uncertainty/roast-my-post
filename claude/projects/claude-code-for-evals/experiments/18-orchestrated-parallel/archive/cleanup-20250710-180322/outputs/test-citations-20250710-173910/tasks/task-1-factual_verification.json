@@ -1,0 +1,56 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 6,
+      "quote": "The US unemployment rate is 3.5% as of 2024",
+      "issue": "BLS data shows 4.1% (Oct 2024). Source: bls.gov/opub/ted/2024",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:44:07.106Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 7,
+      "quote": "Average hourly earnings increased by 4.1% year-over-year",
+      "issue": "BLS reports real wage growth 0.6-1.4% in 2024. Source: bls.gov/opub/ted/2024",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:44:07.107Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 11,
+      "quote": "According to a recent Harvard study, remote work increases productivity by 13%",
+      "issue": "No Harvard study found with this claim. Source: hbs.edu/faculty/Pages/item.aspx?num=66633",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:44:07.107Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 13,
+      "quote": "A 2023 meta-analysis found that meditation reduces anxiety by 30%",
+      "issue": "No 2023 study found with 30% figure. Effect sizes 0.22-0.41 typical. Source: frontiersin.org/journals/public-health",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:44:07.107Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 18,
+      "quote": "Life expectancy in the US is 76.4 years",
+      "issue": "CDC reports 78.4 years for 2023 (latest). Source: cdc.gov/nchs/products/databriefs/db521.htm",
+      "source": "factual_verification",
+      "timestamp": "2025-07-11T00:44:07.107Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 5,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

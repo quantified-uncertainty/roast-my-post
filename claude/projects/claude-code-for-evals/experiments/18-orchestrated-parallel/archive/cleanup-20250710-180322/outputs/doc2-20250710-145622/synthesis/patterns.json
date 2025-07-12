@@ -1,0 +1,137 @@
+{
+  "byCategory": {
+    "argument_strength": 10,
+    "clarity_readability": 15,
+    "factual_verification": 4,
+    "logical_consistency": 9,
+    "structural_analysis": 8,
+    "citation_accuracy": 8,
+    "statistical_validity": 1,
+    "mathematical_accuracy": 2,
+    "spelling_grammar": 1
+  },
+  "bySeverity": {
+    "critical": 9,
+    "major": 24,
+    "minor": 25
+  },
+  "hotspots": [
+    {
+      "line": 6,
+      "issueCount": 3,
+      "findings": [
+        {
+          "category": "argument_strength",
+          "severity": "critical",
+          "line": 6,
+          "quote": "the eventual creation of a galaxy-ending x-risk seems almost inevitable",
+          "issue": "Extreme claim lacks sufficient evidence; assumes cumulative probability without considering mitigation or interdependence",
+          "source": "argument_strength",
+          "timestamp": "2025-07-10T21:57:02.992Z",
+          "id": "finding-1",
+          "validated": true
+        },
+        {
+          "category": "clarity_readability",
+          "severity": "major",
+          "line": 6,
+          "quote": "they need it needs to be in place",
+          "issue": "Grammar error - should be \"it needs to be in place\"",
+          "source": "clarity_readability",
+          "timestamp": "2025-07-10T21:57:39.310Z",
+          "id": "finding-2",
+          "validated": true
+        },
+        {
+          "category": "clarity_readability",
+          "severity": "minor",
+          "line": 6,
+          "quote": "self-propagating expansion of human civilisation",
+          "issue": "Technical term \"self-propagating\" used without explanation",
+          "source": "clarity_readability",
+          "timestamp": "2025-07-10T21:57:39.311Z",
+          "id": "finding-3",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 14,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "citation_accuracy",
+          "severity": "major",
+          "line": 14,
+          "quote": "responded to the post on his blog](https://aleph.se/andart2/space/the-end-of-the-worlds/ )",
+          "issue": "Missing closing bracket after URL, incorrect citation formatting",
+          "source": "citation_accuracy",
+          "timestamp": "2025-07-10T21:57:31.895Z",
+          "id": "finding-7",
+          "validated": true
+        },
+        {
+          "category": "structural_analysis",
+          "severity": "minor",
+          "line": 14,
+          "quote": "Introduction",
+          "issue": "Introduction section disproportionately long compared to other major sections",
+          "source": "structural_analysis",
+          "timestamp": "2025-07-10T21:57:34.473Z",
+          "id": "finding-8",
+          "validated": true
+        }
+      ]
+    },
+    {
+      "line": 180,
+      "issueCount": 2,
+      "findings": [
+        {
+          "category": "structural_analysis",
+          "severity": "major",
+          "line": 180,
+          "quote": "1. These solar system x-risks were unlikely",
+          "issue": "Footnotes section (72 entries) too extensive, suggesting poor content integration",
+          "source": "structural_analysis",
+          "timestamp": "2025-07-10T21:57:34.474Z",
+          "id": "finding-37",
+          "validated": true
+        },
+        {
+          "category": "argument_strength",
+          "severity": "major",
+          "line": 180,
+          "quote": "I'd assume that I've listed less than 50% of the actual number of galactic x-risks",
+          "issue": "Admits fundamental uncertainty while making definitive policy recommendations",
+          "source": "argument_strength",
+          "timestamp": "2025-07-10T21:57:02.993Z",
+          "id": "finding-38",
+          "validated": true
+        }
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "type": "quality_cluster",
+      "name": "Clarity Issue Clusters",
+      "description": "Sections with concentrated clarity problems",
+      "instances": 1,
+      "severity": "major",
+      "clusters": [
+        {
+          "startLine": 6,
+          "endLine": 52,
+          "issueCount": 9
+        }
+      ]
+    }
+  ],
+  "statistics": {
+    "total": 58,
+    "averagePerLine": "0.11",
+    "mostCommonCategory": "clarity_readability",
+    "mostCommonSeverity": "minor"
+  }
+}

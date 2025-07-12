@@ -1,0 +1,74 @@
+{
+  "taskType": "factual_verification",
+  "findings": [
+    {
+      "category": "factual_verification",
+      "severity": "critical",
+      "line": 7,
+      "quote": "Date: Fri Jun 27 2025 15:54:07 GMT-0700",
+      "issue": "Document dated in the future (June 27, 2025) when current date is January 2025",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:54.996Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 257,
+      "quote": "Toby Ord gave at EAG London 2025",
+      "issue": "References a future event (EAG London 2025) as if it already occurred",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:54.997Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "minor",
+      "line": 274,
+      "quote": "Metaculus predicts 2116 (25%), 2248 (median), >2500 (75%)",
+      "issue": "Metaculus predictions change over time; these specific percentages may be outdated",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:54.997Z"
+    },
+    {
+      "category": "factual_verification",
+      "severity": "major",
+      "line": 344,
+      "quote": "Toby Ord. 2025. Forecasting can get easier over longer timeframes. EAG London 2025.",
+      "issue": "Citation references future conference presentation as if already delivered",
+      "source": "factual_verification",
+      "timestamp": "2025-07-10T21:56:54.997Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 6,
+    "validFindings": 4,
+    "errors": 2,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: factual_verification\nSeverity: major\nLine: 194\nQuote: \"SU(5) is disproven because observational evidence indicates that the proton's half life is way longer than the theory predicts\"\nIssue: While SU(5) is ruled out, it's due to proton lifetime lower limits, not measured half-life\n[/FINDING]",
+        "parsed": {
+          "category": "factual_verification",
+          "severity": "major",
+          "line": 194,
+          "quote": "SU(5) is disproven because observational evidence indicates that the proton's half life is way longer than the theory predicts",
+          "issue": "While SU(5) is ruled out, it's due to proton lifetime lower limits, not measured half-life",
+          "source": "factual_verification",
+          "timestamp": "2025-07-10T21:56:54.997Z"
+        },
+        "reason": "Validation failed"
+      },
+      {
+        "raw": "[FINDING]\nCategory: factual_verification\nSeverity: minor\nLine: 472\nQuote: \"1 in 2.8 quadrillion chance of a binary black hole approaching the Solar System in the next 100 years\"\nIssue: Extremely specific probability claim lacks clear source verification\n[/FINDING]",
+        "parsed": {
+          "category": "factual_verification",
+          "severity": "minor",
+          "line": 472,
+          "quote": "1 in 2.8 quadrillion chance of a binary black hole approaching the Solar System in the next 100 years",
+          "issue": "Extremely specific probability claim lacks clear source verification",
+          "source": "factual_verification",
+          "timestamp": "2025-07-10T21:56:54.997Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}

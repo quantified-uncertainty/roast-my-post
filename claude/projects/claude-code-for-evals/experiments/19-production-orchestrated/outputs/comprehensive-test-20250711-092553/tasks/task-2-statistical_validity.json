@@ -1,0 +1,58 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 3,
+      "quote": "US unemployment rate reached 3.5% in December 2024",
+      "issue": "Claims December 2024 data when current date is July 2025 - should clarify if referring to past December",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T16:26:13.450Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 5,
+      "quote": "November 2024",
+      "issue": "References November 2024 data without specifying it's historical (8 months ago from current date)",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T16:26:13.450Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 17,
+      "quote": "December 15, 2024",
+      "issue": "References specific December 2024 date without clarifying it's historical data from 7 months ago",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T16:26:13.450Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 19,
+      "quote": "November 2024",
+      "issue": "References November 2024 prices without indicating this is 8-month old data",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T16:26:13.450Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 4,
+    "validFindings": 4,
+    "errors": 0,
+    "errorDetails": []
+  },
+  "usage": {
+    "input_tokens": 212,
+    "output_tokens": 106,
+    "estimated": true,
+    "warning": "Could not extract exact usage, using estimates",
+    "input_cost_usd": 0.0006360000000000001,
+    "output_cost_usd": 0.00159,
+    "total_cost_usd": 0.002226,
+    "model_used": "claude-4-sonnet",
+    "tracked_at": "2025-07-11T16:26:13.510Z"
+  }
+}

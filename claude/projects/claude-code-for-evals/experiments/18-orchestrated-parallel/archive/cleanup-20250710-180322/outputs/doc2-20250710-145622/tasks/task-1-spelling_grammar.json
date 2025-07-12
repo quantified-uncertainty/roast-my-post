@@ -1,0 +1,20 @@
+{
+  "taskType": "spelling_grammar",
+  "findings": [
+    {
+      "category": "spelling_grammar",
+      "severity": "minor",
+      "line": 551,
+      "quote": "include:ozone destruction",
+      "issue": "Missing space after colon - should be \"include: ozone\"",
+      "source": "spelling_grammar",
+      "timestamp": "2025-07-10T21:57:29.326Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 1,
+    "validFindings": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}

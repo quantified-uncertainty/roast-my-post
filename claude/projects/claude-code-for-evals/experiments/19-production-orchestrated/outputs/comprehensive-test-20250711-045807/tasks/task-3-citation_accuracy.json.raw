@@ -1,0 +1,105 @@
+Based on my analysis of the document, I found multiple citation accuracy issues:
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 3
+Quote: "The US unemployment rate reached 3.5% in December 2024"
+Issue: Incorrect data. Actual rate was 4.1% in December 2024. Source: cnbc.com/2025/01/10/jobs-report-december-2024.html
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 3
+Quote: "6.3% peak during the pandemic in April 2020"
+Issue: Incorrect data. Actual rate was 14.7% in April 2020. Source: bls.gov/opub/ted/2020/unemployment-rate-rises-to-record-high-14-point-7-percent-in-april-2020.htm
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 9
+Quote: "The US working-age population (ages 15-64) is approximately 210 million people"
+Issue: Slightly outdated. May 2025 data shows 211.8 million. Source: fred.stlouisfed.org/series/LFWA64TTUSM647S
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 9
+Quote: "Labor force participation rate stands at 63.4% as of late 2024"
+Issue: Incorrect data. December 2024 rate was 62.5%. Source: bls.gov/charts/employment-situation/civilian-labor-force-participation-rate.htm
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 11
+Quote: "productivity growth measured 2.3% in the third quarter of 2024"
+Issue: Data is for Q2 2024, not Q3. Q3 2024 growth was 2.2%. Source: bls.gov/opub/ted/2024/productivity-up-2-2-percent-in-third-quarter-2024.htm
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 15
+Quote: "Stanford study found that remote work increases productivity by 13%"
+Issue: Study was 2015 Ctrip experiment, not 2023. Recent Stanford research shows 10-20% productivity decrease for fully remote. Source: siepr.stanford.edu/publications/working-paper/evolution-working-home
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 15
+Quote: "published in the American Economic Review in 2023"
+Issue: No such publication found. The 13% finding was from 2015 Ctrip study. Source: gsb.stanford.edu/faculty-research/working-papers/does-working-home-work-evidence-chinese-experiment
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 17
+Quote: "GDP growth is projected at 2.1% for 2025"
+Issue: CBO projects 1.9% for 2025, not 2.1%. Source: cbo.gov/publication/60870
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 17
+Quote: "World Bank estimates global GDP growth at 2.9% for the same period"
+Issue: World Bank revised 2025 global growth to 2.3% in June 2025. Source: cnbc.com/2025/06/10/world-bank-cuts-2025-growth-outlook-to-2point3percent-as-trade-tariffs-weigh.html
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 21
+Quote: "The S&P 500 closed at 4,750 points on December 15, 2024"
+Issue: Cannot verify. S&P 500 was above 6,000 in Nov 2024; this would be major decline. Source needed for verification.
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: major
+Line: 21
+Quote: "Bitcoin traded at $42,300 as of the same date"
+Issue: Incorrect data. Bitcoin closed at $93,429 on Dec 31, 2024 and was above $100,000 earlier in December. Source: statmuse.com/money/ask/bitcoin-value-graph-december-2024
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 23
+Quote: "Oil prices (WTI crude) averaged $78 per barrel in November 2024"
+Issue: Incorrect data. WTI averaged $69.95 per barrel in November 2024. Source: statista.com/statistics/279941/west-texas-intermediate-wti-crude-oil-price/
+[/FINDING]
+
+[FINDING]
+Category: citation_accuracy
+Severity: minor
+Line: 23
+Quote: "natural gas futures traded at $2.85 per MMBtu"
+Issue: November 2024 NYMEX contract expired at $2.32 per MMBtu, not $2.85. Source: eia.gov/naturalgas/weekly/
+[/FINDING]

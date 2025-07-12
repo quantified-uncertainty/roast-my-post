@@ -1,0 +1,21 @@
+{
+  "type": "empirical_research",
+  "features": [
+    "empirical_claims",
+    "mathematical_content"
+  ],
+  "flawDensity": "high",
+  "analysisDepth": "comprehensive",
+  "reasoning": "Document contains numerous economic statistics, research claims from Stanford study, and projections from authoritative sources. High density of verifiable facts and quantitative data requires comprehensive fact-checking and validation of statistical claims.",
+  "statistics": {
+    "lineCount": 25,
+    "wordCount": 218,
+    "characterCount": 1387
+  },
+  "recommendations": [
+    "factual_verification",
+    "statistical_validity",
+    "citation_accuracy",
+    "logical_consistency"
+  ]
+}

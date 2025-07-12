@@ -1,0 +1,64 @@
+{
+  "taskType": "statistical_validity",
+  "findings": [
+    {
+      "category": "statistical_validity",
+      "severity": "major",
+      "line": 31,
+      "quote": "incomeElasticity = normal({ p5: -0.15, p95: -0.05 })",
+      "issue": "Assumes normal distribution for elasticity parameter without justification from empirical studies",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:04:40.668Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "minor",
+      "line": 53,
+      "quote": "gdpImpact = totalHourChange * mean(inputs.avgWage)",
+      "issue": "GDP impact calculation oversimplified - doesn't account for multiplier effects or economic complexity",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:04:40.668Z"
+    },
+    {
+      "category": "statistical_validity",
+      "severity": "critical",
+      "line": 82,
+      "quote": "The model assumes uniform effects across demographics",
+      "issue": "Assuming uniform effects invalidates results - labor supply elasticity varies significantly by income level",
+      "source": "statistical_validity",
+      "timestamp": "2025-07-11T01:04:40.668Z"
+    }
+  ],
+  "metadata": {
+    "totalMatches": 5,
+    "validFindings": 3,
+    "errors": 2,
+    "errorDetails": [
+      {
+        "raw": "[FINDING]\nCategory: statistical_validity\nSeverity: minor\nLine: 89\nQuote: \"90% CI: \" + String(quantile(impact.percentChange, 0.05), \".1f\") + \"% to \" + String(quantile(impact.percentChange, 0.95), \".1f\")\nIssue: Using 5th and 95th percentiles to construct confidence interval without verifying distribution assumptions\n[/FINDING]",
+        "parsed": {
+          "category": "statistical_validity",
+          "severity": "minor",
+          "line": 89,
+          "issue": "Using 5th and 95th percentiles to construct confidence interval without verifying distribution assumptions",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T01:04:40.667Z"
+        },
+        "reason": "Validation failed"
+      },
+      {
+        "raw": "[FINDING]\nCategory: statistical_validity\nSeverity: major\nLine: 45\nQuote: \"incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))\"\nIssue: Linear elasticity application may not hold for large income changes or across income distributions\n[/FINDING]",
+        "parsed": {
+          "category": "statistical_validity",
+          "severity": "major",
+          "line": 45,
+          "quote": "incomeEffect = inputs.incomeElasticity * (inputs.ubiAmount / (inputs.avgWage * inputs.baseWorkHours))",
+          "issue": "Linear elasticity application may not hold for large income changes or across income distributions",
+          "source": "statistical_validity",
+          "timestamp": "2025-07-11T01:04:40.668Z"
+        },
+        "reason": "Validation failed"
+      }
+    ]
+  }
+}
