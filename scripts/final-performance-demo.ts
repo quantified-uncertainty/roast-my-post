@@ -19,22 +19,23 @@ Practice makes perfect. The more you write, the better you'll become at avoiding
 
   return {
     id: "reliable-doc",
+    slug: "reliable-document-test",
     title: "Writing Quality Test",
     author: "Test",
     content,
-    importUrl: "test",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/reliable-test",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 };
 
 const agent: Agent = {
   id: "final-test-agent",
   name: "Grammar Checker",
-  agentVersionId: "v1",
+  version: "v1",
   primaryInstructions: "Find all spelling, grammar, punctuation, and capitalization errors.",
-  purpose: "ASSESSOR",
   description: "Final test agent",
   providesGrades: true,
   extendedCapabilityId: "spelling-grammar"

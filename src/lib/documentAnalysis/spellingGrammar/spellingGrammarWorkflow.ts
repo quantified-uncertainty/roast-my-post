@@ -7,6 +7,7 @@ import { convertHighlightsToComments } from "./highlightConverter";
 import type { ChunkWithLineNumbers, SpellingGrammarHighlight } from "./types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { logger } from "@/lib/logger";
+import { ANALYSIS_MODEL } from "../../../types/openai";
 
 /**
  * Split document content into chunks with line number tracking
@@ -126,14 +127,12 @@ export async function analyzeSpellingGrammarDocument(
       
       // Create a task result for this chunk
       tasks.push({
-        taskName: `Analyze chunk ${i + 1}`,
-        status: "success" as const,
-        duration: Date.now() - startTime,
-        metadata: {
-          chunkIndex: i,
-          linesAnalyzed: chunk.lines.length,
-          errorsFound: chunkHighlights.length
-        }
+        name: `Analyze chunk ${i + 1}`,
+        modelName: ANALYSIS_MODEL,
+        priceInCents: 0, // Cost tracking handled elsewhere
+        timeInSeconds: (Date.now() - startTime) / 1000,
+        log: `Analyzed chunk ${i + 1}: ${chunkHighlights.length} errors found`,
+        llmInteractions: []
       });
     }
     

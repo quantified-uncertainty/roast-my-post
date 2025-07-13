@@ -22,21 +22,22 @@ Despite these limitations, the potential applications of AI are enormus. From he
 As we look to the future, its clear that AI will play an increasingly important role in our society. The question is not whether AI will transform our world, but how we can ensure that this transformation benefits everyone. We must carefully consider the ethical implications of AI and work to create systems that are fair, transparent, and aligned with human values.
 
 In conclusion, while AI presents both opportunities and chalenges, one thing is certain: the future belongs to those who can harness it's power responsibly.`,
-    importUrl: "https://example.com/ai-article",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    slug: "ai-revolution-test",
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/ai-article",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 
   const grammarAgent: Agent = {
     id: "grammar-test",
     name: "Grammar Checker",
-    agentVersionId: "v1",
+    version: "v1",
     primaryInstructions: "Find all spelling, grammar, punctuation, and capitalization errors. Be thorough and precise.",
-    purpose: "ASSESSOR",
     description: "Checks documents for spelling and grammar errors",
     providesGrades: true,
-    extendedCapabilityId: "spelling-grammar-"
+    extendedCapabilityId: "spelling-grammar"
   };
 
   test("analyzes real document with multiple error types", async () => {
@@ -91,8 +92,8 @@ In conclusion, while AI presents both opportunities and chalenges, one thing is 
     // Check tasks
     expect(result.tasks.length).toBeGreaterThan(0);
     result.tasks.forEach(task => {
-      expect(task.status).toBe("success");
-      expect(task.metadata).toHaveProperty("errorsFound");
+      expect(task.log).toContain("Analyzed chunk");
+      expect(task.log).toContain("errors found");
     });
   }, TIMEOUT);
 

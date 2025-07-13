@@ -181,14 +181,12 @@ export async function analyzeSpellingGrammarDocumentParallel(
       allHighlights.push(...result.highlights);
       
       tasks.push({
-        taskName: `Analyze chunk ${result.chunkIndex + 1}`,
-        status: "success" as const,
-        duration: result.duration,
-        metadata: {
-          chunkIndex: result.chunkIndex,
-          linesAnalyzed: result.chunk.lines.length,
-          errorsFound: result.highlights.length
-        }
+        name: `Analyze chunk ${result.chunkIndex + 1}`,
+        modelName: "claude-3-haiku", // Default model for parallel processing
+        priceInCents: 0, // Cost tracking handled elsewhere
+        timeInSeconds: result.duration / 1000,
+        log: `Analyzed chunk ${result.chunkIndex + 1}: ${result.highlights.length} errors found`,
+        llmInteractions: []
       });
     }
     

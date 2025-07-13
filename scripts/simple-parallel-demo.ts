@@ -42,18 +42,19 @@ Chapter 5: Conclusion
 In conclustion, parallel processing offers significent performance improvements for spelling and grammar checking. By processing multiple chunks simultaniously, we can reduce the total analysis time while maintaining the same level of acuracy.
 
 The key is finding the right balence between speed and resource utilization. With proper tunning, parallel processing can make grammar checking much more efficent for large documents.`,
-  importUrl: "test",
-  platform: "test",
-  createdAt: new Date(),
-  updatedAt: new Date()
+  slug: "simple-parallel-demo",
+  publishedDate: new Date().toISOString(),
+  url: "https://example.com/simple-parallel-demo",
+  platforms: ["test"],
+  reviews: [],
+  intendedAgents: []
 };
 
 const agent: Agent = {
   id: "demo-agent",
   name: "Grammar Checker",
-  agentVersionId: "v1",
+  version: "v1",
   primaryInstructions: "Find all spelling, grammar, punctuation, and capitalization errors.",
-  purpose: "ASSESSOR",
   description: "Demo agent",
   providesGrades: true,
   extendedCapabilityId: "spelling-grammar"

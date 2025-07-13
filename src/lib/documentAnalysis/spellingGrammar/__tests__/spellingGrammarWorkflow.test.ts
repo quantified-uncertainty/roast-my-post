@@ -11,27 +11,28 @@ const mockAnalyzeChunk = analyzeChunk as jest.MockedFunction<typeof analyzeChunk
 describe("analyzeSpellingGrammarDocument", () => {
   const mockDocument: Document = {
     id: "test-doc",
+    slug: "test-document",
     title: "Test Document",
     author: "Test Author",
     content: `This is a test document with some spelling and grammer errors.
 I will recieve the package tommorow.
 The team are working hard on the project.
 Its a beautiful day outside.`,
-    importUrl: "https://example.com/test",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/test",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 
   const mockAgent: Agent = {
     id: "test-agent",
     name: "Grammar Checker",
-    agentVersionId: "v1",
+    version: "v1",
     primaryInstructions: "Find spelling and grammar errors",
-    purpose: "ASSESSOR",
     description: "Checks for spelling and grammar",
     providesGrades: true,
-    extendedCapabilityId: "spelling-grammar-"
+    extendedCapabilityId: "spelling-grammar"
   };
 
   beforeEach(() => {
@@ -40,45 +41,38 @@ Its a beautiful day outside.`,
 
   test("splits document into chunks and aggregates results", async () => {
     // Mock analyzeChunk to return different errors for each chunk
-    mockAnalyzeChunk
-      .mockResolvedValueOnce([
-        {
-          lineStart: 1,
-          lineEnd: 1,
-          highlightedText: "grammer",
-          description: "Spelling error: should be 'grammar'"
-        }
-      ])
-      .mockResolvedValueOnce([
-        {
-          lineStart: 2,
-          lineEnd: 2,
-          highlightedText: "recieve",
-          description: "Spelling error: should be 'receive'"
-        },
-        {
-          lineStart: 2,
-          lineEnd: 2,
-          highlightedText: "tommorow",
-          description: "Spelling error: should be 'tomorrow'"
-        }
-      ])
-      .mockResolvedValueOnce([
-        {
-          lineStart: 3,
-          lineEnd: 3,
-          highlightedText: "are",
-          description: "Subject-verb disagreement: 'team' is singular, use 'is'"
-        }
-      ])
-      .mockResolvedValueOnce([
-        {
-          lineStart: 4,
-          lineEnd: 4,
-          highlightedText: "Its",
-          description: "Missing apostrophe: should be 'It's'"
-        }
-      ]);
+    mockAnalyzeChunk.mockResolvedValueOnce([
+      {
+        lineStart: 1,
+        lineEnd: 1,
+        highlightedText: "grammer",
+        description: "Spelling error: should be 'grammar'"
+      },
+      {
+        lineStart: 2,
+        lineEnd: 2,
+        highlightedText: "recieve",
+        description: "Spelling error: should be 'receive'"
+      },
+      {
+        lineStart: 2,
+        lineEnd: 2,
+        highlightedText: "tommorow",
+        description: "Spelling error: should be 'tomorrow'"
+      },
+      {
+        lineStart: 3,
+        lineEnd: 3,
+        highlightedText: "are",
+        description: "Subject-verb disagreement: 'team' is singular, use 'is'"
+      },
+      {
+        lineStart: 4,
+        lineEnd: 4,
+        highlightedText: "Its",
+        description: "Missing apostrophe: should be 'It's'"
+      }
+    ]);
 
     const result = await analyzeSpellingGrammarDocument(
       mockDocument,
@@ -86,8 +80,8 @@ Its a beautiful day outside.`,
       10
     );
 
-    // Should have called analyzeChunk 4 times (one per line/chunk in this case)
-    expect(mockAnalyzeChunk).toHaveBeenCalledTimes(4);
+    // Should have called analyzeChunk once for this small document
+    expect(mockAnalyzeChunk).toHaveBeenCalledTimes(1);
 
     // Check the result structure
     expect(result).toHaveProperty("thinking", "");
@@ -118,14 +112,15 @@ Its a beautiful day outside.`,
     expect(result.summary).toContain("Found 5 spelling/grammar errors");
 
     // Check tasks
-    expect(result.tasks).toHaveLength(4); // One per chunk
+    expect(result.tasks).toHaveLength(1); // One chunk for this small document
     result.tasks.forEach((task, index) => {
-      expect(task.taskName).toBe(`Analyze chunk ${index + 1}`);
-      expect(task.status).toBe("success");
+      expect(task.name).toBe(`Analyze chunk ${index + 1}`);
+      expect(task.log).toContain(`Analyzed chunk ${index + 1}`);
     });
   });
 
   test("handles documents with no errors", async () => {
+    mockAnalyzeChunk.mockClear();
     mockAnalyzeChunk.mockResolvedValue([]);
 
     const cleanDocument: Document = {
@@ -154,6 +149,7 @@ Its a beautiful day outside.`,
       description: `Error ${i}`
     }));
 
+    mockAnalyzeChunk.mockClear();
     mockAnalyzeChunk.mockResolvedValue(manyErrors);
 
     const result = await analyzeSpellingGrammarDocument(

@@ -14,9 +14,8 @@ describe("Comprehensive Spelling & Grammar Integration Tests", () => {
   const grammarAgent: Agent = {
     id: "grammar-test",
     name: "Grammar Checker",
-    agentVersionId: "v1",
+    version: "v1",
     primaryInstructions: "Find all spelling, grammar, punctuation, and capitalization errors. Be thorough and precise.",
-    purpose: "ASSESSOR",
     description: "Checks documents for spelling and grammar errors",
     providesGrades: true,
     extendedCapabilityId: "spelling-grammar"
@@ -56,10 +55,12 @@ Conclusion
 Kubernetes has revolutionized the way we deploy and manage applications. While it have a steep learning curve, the benefits it provide in terms of scalability, reliability, and maintainability make it worth the investment. As more organizations adopt cloud-native architectures, Kubernetes skill will become increasingly valuable.
 
 Remember: with great power come great responsibility. Always test your configurations thoroughly before deploying to production!`,
-    importUrl: "https://example.com/k8s-intro",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    slug: "technical-documentation",
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/k8s-intro",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 
   const expectedTechnicalErrors = [
@@ -129,10 +130,12 @@ Sarah Chen
 Marketing Director
 
 PS - Dont forget about the team meeting on friday at 2pm!`,
-    importUrl: "https://example.com/business-email",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    slug: "business-communication",
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/business-email",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 
   const expectedEmailErrors = [
@@ -192,10 +195,12 @@ Our analysis reveal several important patterns:
 4. Time of day mattered - late night usage was particulary problematic
 
 These finding suggests that its not just the amount of time spent on social media, but also how and when its used that effects mental health outcomes.`,
-    importUrl: "https://example.com/academic-paper",
-    platform: "test",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    slug: "academic-research-paper",
+    publishedDate: new Date().toISOString(),
+    url: "https://example.com/academic-paper",
+    platforms: ["test"],
+    reviews: [],
+    intendedAgents: []
   };
 
   const expectedAcademicErrors = [
