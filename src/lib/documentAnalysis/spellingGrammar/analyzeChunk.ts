@@ -8,7 +8,8 @@ import { logger } from "@/lib/logger";
  */
 export async function analyzeChunk(
   chunk: ChunkWithLineNumbers,
-  agentContext: AgentContext
+  agentContext: AgentContext,
+  maxRetries: number = 3
 ): Promise<SpellingGrammarHighlight[]> {
   // Don't process empty chunks
   if (!chunk.content.trim()) {
@@ -70,95 +71,133 @@ Special cases to watch for:
 - "The reason is because" → highlight "is because of" or "is because" (redundant)
 - For compound proper nouns, you may highlight them together if they form a single entity (e.g., "united states" as one error)`;
 
-  try {
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 2000,
-      temperature: DEFAULT_TEMPERATURE,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-      tools: [
-        {
-          name: "report_errors",
-          description: "Report spelling and grammar errors found in the text",
-          input_schema: {
-            type: "object",
-            properties: {
-              errors: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    lineStart: {
-                      type: "number",
-                      description: "Starting line number where the error occurs (from the provided line numbers)",
+  // Retry logic for handling intermittent LLM failures
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Add a small delay between retries to avoid rate limiting
+      if (attempt > 1) {
+        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff: 2s, 4s, 8s
+        logger.info(`Retrying chunk analysis (attempt ${attempt}/${maxRetries}) after ${delay}ms delay`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      const response = await anthropic.messages.create({
+        model: ANALYSIS_MODEL,
+        max_tokens: 2000,
+        temperature: DEFAULT_TEMPERATURE,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+        tools: [
+          {
+            name: "report_errors",
+            description: "Report spelling and grammar errors found in the text",
+            input_schema: {
+              type: "object",
+              properties: {
+                errors: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      lineStart: {
+                        type: "number",
+                        description: "Starting line number where the error occurs (from the provided line numbers)",
+                      },
+                      lineEnd: {
+                        type: "number",
+                        description: "Ending line number where the error occurs (same as lineStart for single-line errors)",
+                      },
+                      highlightedText: {
+                        type: "string",
+                        description: "ONLY the problematic word(s). For spelling: just the misspelled word. For grammar: just the incorrect word(s). Be precise and minimal.",
+                      },
+                      description: {
+                        type: "string",
+                        description: "Clear explanation of the error and suggested correction. Format: 'Error type: [explanation]. Suggested correction: [correction]'",
+                      },
                     },
-                    lineEnd: {
-                      type: "number",
-                      description: "Ending line number where the error occurs (same as lineStart for single-line errors)",
-                    },
-                    highlightedText: {
-                      type: "string",
-                      description: "ONLY the problematic word(s). For spelling: just the misspelled word. For grammar: just the incorrect word(s). Be precise and minimal.",
-                    },
-                    description: {
-                      type: "string",
-                      description: "Clear explanation of the error and suggested correction. Format: 'Error type: [explanation]. Suggested correction: [correction]'",
-                    },
+                    required: ["lineStart", "lineEnd", "highlightedText", "description"],
                   },
-                  required: ["lineStart", "lineEnd", "highlightedText", "description"],
                 },
               },
+              required: ["errors"],
             },
-            required: ["errors"],
           },
-        },
-      ],
-      tool_choice: { type: "tool", name: "report_errors" },
-    });
+        ],
+        tool_choice: { type: "tool", name: "report_errors" },
+      });
 
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "report_errors") {
-      logger.error("No tool use response from Anthropic for spelling/grammar analysis");
-      return [];
+      const toolUse = response.content.find((c) => c.type === "tool_use");
+      if (!toolUse || toolUse.name !== "report_errors") {
+        logger.error(`No tool use response from Anthropic (attempt ${attempt}/${maxRetries})`);
+        if (attempt === maxRetries) {
+          return [];
+        }
+        continue;
+      }
+
+      const result = toolUse.input as { errors: SpellingGrammarHighlight[] };
+      
+      // Ensure result has errors array
+      if (!result || !Array.isArray(result.errors)) {
+        logger.error(`Invalid response structure from LLM (attempt ${attempt}/${maxRetries})`, {
+          result,
+          toolUseName: toolUse.name,
+          toolUseInput: toolUse.input,
+          responseId: response.id,
+          attempt
+        });
+        if (attempt === maxRetries) {
+          return [];
+        }
+        continue;
+      }
+      
+      // Validate and clean the results
+      const validatedHighlights = result.errors.filter(error => {
+        // Ensure line numbers are within the chunk
+        const minLine = chunk.startLineNumber;
+        const maxLine = chunk.startLineNumber + chunk.lines.length - 1;
+        
+        if (error.lineStart < minLine || error.lineEnd > maxLine) {
+          logger.warn(`Invalid line numbers: ${error.lineStart}-${error.lineEnd} not in range ${minLine}-${maxLine}`);
+          return false;
+        }
+        
+        // Ensure highlighted text is not empty
+        if (!error.highlightedText.trim()) {
+          logger.warn("Empty highlighted text in error");
+          return false;
+        }
+        
+        // Ensure description is meaningful
+        if (!error.description || error.description.length < 10) {
+          logger.warn("Invalid or too short description");
+          return false;
+        }
+        
+        return true;
+      });
+
+      // Success! Return the validated highlights
+      if (attempt > 1) {
+        logger.info(`Chunk analysis succeeded on attempt ${attempt}`);
+      }
+      return validatedHighlights;
+
+    } catch (error) {
+      logger.error(`Error analyzing chunk (attempt ${attempt}/${maxRetries}):`, error);
+      if (attempt === maxRetries) {
+        throw error;
+      }
     }
-
-    const result = toolUse.input as { errors: SpellingGrammarHighlight[] };
-    
-    // Validate and clean the results
-    const validatedHighlights = result.errors.filter(error => {
-      // Ensure line numbers are within the chunk
-      const minLine = chunk.startLineNumber;
-      const maxLine = chunk.startLineNumber + chunk.lines.length - 1;
-      
-      if (error.lineStart < minLine || error.lineEnd > maxLine) {
-        logger.warn(`Invalid line numbers: ${error.lineStart}-${error.lineEnd} not in range ${minLine}-${maxLine}`);
-        return false;
-      }
-      
-      // Ensure highlighted text is not empty
-      if (!error.highlightedText.trim()) {
-        logger.warn("Empty highlighted text in error");
-        return false;
-      }
-      
-      // Ensure description is meaningful
-      if (!error.description || error.description.length < 10) {
-        logger.warn("Invalid or too short description");
-        return false;
-      }
-      
-      return true;
-    });
-
-    return validatedHighlights;
-  } catch (error) {
-    logger.error("Error analyzing chunk for spelling/grammar:", error);
-    throw error;
   }
+
+  // This should never be reached, but just in case
+  return [];
 }

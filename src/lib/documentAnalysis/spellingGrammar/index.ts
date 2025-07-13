@@ -8,6 +8,8 @@
 
 export { analyzeChunk } from "./analyzeChunk";
 export { convertHighlightsToComments, validateConvertedHighlights } from "./highlightConverter";
+export { analyzeSpellingGrammarDocument } from "./spellingGrammarWorkflow";
+export { analyzeSpellingGrammarDocumentParallel } from "./parallelSpellingGrammarWorkflow";
 export type { 
   ChunkWithLineNumbers, 
   SpellingGrammarHighlight,

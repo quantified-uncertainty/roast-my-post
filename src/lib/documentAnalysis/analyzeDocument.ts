@@ -30,7 +30,7 @@ export async function analyzeDocument(
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
   
-  if (agentInfo.extendedCapabilityId === "spelling-grammar-") {
+  if (agentInfo.extendedCapabilityId === "spelling-grammar") {
     logger.info(`Using spelling/grammar workflow for agent ${agentInfo.name}`);
     return await analyzeSpellingGrammarDocument(document, agentInfo, targetHighlights);
   }
