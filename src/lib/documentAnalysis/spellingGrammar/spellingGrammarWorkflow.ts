@@ -166,10 +166,9 @@ export async function analyzeSpellingGrammarDocument(
     // Sort comments by position in document
     comments.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
     
-    // Limit to target number of highlights if specified
-    const finalHighlights = targetHighlights > 0 
-      ? comments.slice(0, targetHighlights)
-      : comments;
+    // For spelling/grammar, show all errors found (don't limit by targetHighlights)
+    // since users want to see all spelling and grammar mistakes
+    const finalHighlights = comments;
     
     // Generate analysis and summary
     const { analysis, summary, grade } = generateSpellingGrammarAnalysis(

@@ -203,7 +203,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
           cost_in_cents: evalVersion.job.costInCents,
           attempts: evalVersion.job.attempts,
           error: evalVersion.job.error,
-          tasks: evalVersion.job.tasks.map((task) => {
+          tasks: evalVersion.job.tasks?.map((task) => {
             const taskData: {
               name: string;
               model: string | null;
@@ -216,7 +216,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
               model: task.modelName,
               price_in_cents: task.priceInCents,
               time_in_seconds: task.timeInSeconds,
-              log: task.log ? JSON.parse(task.log) : null,
+              log: task.log ? (() => {
+                try {
+                  return JSON.parse(task.log);
+                } catch (e) {
+                  // If JSON parsing fails, return the raw string
+                  return task.log;
+                }
+              })() : null,
             };
             
             if (showLlmInteractions) {
@@ -231,7 +238,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
             }
             
             return taskData;
-          }),
+          }) || [],
         } : null,
       };
     });
@@ -295,9 +302,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
       },
     });
   } catch (error) {
-    // Error is handled by returning error response
+    console.error("Export error:", error);
+    // Return more detailed error in development
+    const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error 
+      ? error.message 
+      : "Failed to export agent data";
+    
     return NextResponse.json(
-      { error: "Failed to export agent data" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

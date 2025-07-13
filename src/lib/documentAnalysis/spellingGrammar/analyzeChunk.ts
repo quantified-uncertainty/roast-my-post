@@ -30,7 +30,13 @@ Important guidelines:
 - Provide clear, actionable corrections
 - Be specific about what should be changed
 - Focus on clarity and correctness
-- CRITICAL: For highlightedText, be PRECISE and highlight ONLY the problematic word(s), not entire sentences`;
+- CRITICAL: For highlightedText, be PRECISE and highlight ONLY the problematic word(s), not entire sentences
+
+Context awareness:
+- Accept colloquialisms and informal language (e.g., "jankily", "kinda", "gonna") unless they're clearly typos
+- Recognize that some documents may be informal (blog posts, forum posts) vs formal (academic papers)
+- Stylistic emphasis (e.g., "rational reason") should NOT be marked as errors
+- Common internet/tech conventions (e.g., "[...]" for truncation) are acceptable`;
 
   const userPrompt = `Please analyze the following text for spelling and grammar errors. The text is provided with line numbers.
 

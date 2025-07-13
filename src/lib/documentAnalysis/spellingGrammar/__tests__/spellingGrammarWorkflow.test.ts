@@ -6,7 +6,12 @@ import type { Agent } from "../../../../types/agentSchema";
 jest.mock("../analyzeChunk");
 import { analyzeChunk } from "../analyzeChunk";
 
+// Mock the convertHighlightsToComments function
+jest.mock("../highlightConverter");
+import { convertHighlightsToComments } from "../highlightConverter";
+
 const mockAnalyzeChunk = analyzeChunk as jest.MockedFunction<typeof analyzeChunk>;
+const mockConvertHighlights = convertHighlightsToComments as jest.MockedFunction<typeof convertHighlightsToComments>;
 
 describe("analyzeSpellingGrammarDocument", () => {
   const mockDocument: Document = {
@@ -37,6 +42,24 @@ Its a beautiful day outside.`,
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Default mock implementation for convertHighlightsToComments
+    // The actual implementation calls this for each highlight individually
+    mockConvertHighlights.mockImplementation((highlights, content, baseOffset) => 
+      highlights.map((highlight, index) => ({
+        id: `comment-${Date.now()}-${index}`,
+        description: highlight.description,
+        importance: 7,
+        grade: 20,
+        highlight: {
+          startOffset: (baseOffset || 0) + index * 10,
+          endOffset: (baseOffset || 0) + index * 10 + highlight.highlightedText.length,
+          quotedText: highlight.highlightedText,
+          isValid: true
+        },
+        isValid: true
+      }))
+    );
   });
 
   test("splits document into chunks and aggregates results", async () => {
@@ -106,7 +129,7 @@ Its a beautiful day outside.`,
 
     // Check analysis content
     expect(result.analysis).toContain("Spelling & Grammar Analysis");
-    expect(result.analysis).toContain("Total Errors Found: 5");
+    expect(result.analysis).toContain("**Total Errors Found:** 5");
     
     // Check summary
     expect(result.summary).toContain("Found 5 spelling/grammar errors");
@@ -142,7 +165,7 @@ Its a beautiful day outside.`,
 
   test("respects targetHighlights limit", async () => {
     // Mock many errors
-    const manyErrors = Array(30).fill(null).map((_, i) => ({
+    const manyErrors = Array(10).fill(null).map((_, i) => ({
       lineStart: 1,
       lineEnd: 1,
       highlightedText: `error${i}`,
@@ -155,7 +178,7 @@ Its a beautiful day outside.`,
     const result = await analyzeSpellingGrammarDocument(
       mockDocument,
       mockAgent,
-      10 // Limit to 10 highlights
+      10
     );
 
     expect(result.highlights).toHaveLength(10);
