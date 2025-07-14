@@ -311,17 +311,17 @@ export async function analyzeSpellingGrammarDocument(
     });
     
     // Create detailed error type breakdown for the log
-    const errorTypeBreakdown = processedResults.consolidatedErrors.reduce((acc, group) => {
+    const errorTypeBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: any) => {
       acc[group.errorType] = (acc[group.errorType] || 0) + group.count;
       return acc;
     }, {} as Record<string, number>);
     
     const errorBreakdownStr = Object.entries(errorTypeBreakdown)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
       .map(([type, count]) => `${count} ${type}`)
       .join(', ');
     
-    const severityBreakdown = processedResults.consolidatedErrors.reduce((acc, group) => {
+    const severityBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: any) => {
       acc[group.severity] = (acc[group.severity] || 0) + group.count;
       return acc;
     }, {} as Record<string, number>);
@@ -433,7 +433,7 @@ export async function analyzeSpellingGrammarDocument(
     const errorsByType: Record<string, number> = {};
     const errorsBySeverity: Record<string, number> = { high: 0, medium: 0, low: 0 };
     
-    processedResults.consolidatedErrors.forEach(group => {
+    processedResults.consolidatedErrors.forEach((group: any) => {
       errorsByType[group.errorType] = (errorsByType[group.errorType] || 0) + group.count;
       errorsBySeverity[group.severity] += group.count;
     });
@@ -539,7 +539,7 @@ function generateSmartAnalysis(
 ): string {
   // Categorize unique errors by type
   const errorTypeBreakdown: Record<string, number> = {};
-  processedResults.consolidatedErrors.forEach(group => {
+  processedResults.consolidatedErrors.forEach((group: any) => {
     errorTypeBreakdown[group.errorType] = (errorTypeBreakdown[group.errorType] || 0) + 1;
   });
   
@@ -581,7 +581,7 @@ ${grade >= 95 ? '**✅ Excellent!** Very few errors found - professional quality
   '**Major problems.** Extensive errors severely impact readability.'}
 
 ### Most Common Issues
-${processedResults.consolidatedErrors.slice(0, 3).map((group, i) => {
+${processedResults.consolidatedErrors.slice(0, 3).map((group: any, i: number) => {
   const emoji = getErrorGroupEmoji(group);
   return `${i + 1}. ${emoji} **${group.baseError}** - ${group.count} occurrence${group.count === 1 ? '' : 's'}`;
 }).join('\n')}
