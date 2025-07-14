@@ -3,30 +3,25 @@ import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { TaskResult } from "../shared/types";
 import { analyzeChunk } from "./analyzeChunk";
-import { convertHighlightsToComments } from "./highlightConverter";
-import type { ChunkWithLineNumbers, SpellingGrammarHighlight } from "./types";
+import type { SpellingGrammarHighlight } from "./types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { logger } from "@/lib/logger";
 import { ANALYSIS_MODEL } from "../../../types/openai";
 import { detectDocumentConventions } from "./detectConventions";
-import { postProcessErrors, createConsolidatedComment, calculateSmartGrade } from "./postProcessing";
+import { postProcessErrors, calculateSmartGrade } from "./postProcessing";
 import type { ProcessedResults, ErrorGroup } from "./postProcessing";
 import { calculateCost, mapModelToCostModel } from "@/utils/costCalculator";
-import { getErrorGroupEmoji, getErrorTypeLabel } from "./utils";
+import { getErrorGroupEmoji } from "./utils";
 import type { DocumentConventions } from "./detectConventions";
 import { 
   EMPTY_DOCUMENT_RESPONSE, 
   DEFAULT_CHUNK_SIZE,
-  SEVERITY_TO_IMPORTANCE,
-  SEVERITY_TO_GRADE,
-  GRADE_THRESHOLDS,
   ERROR_DENSITY_WORD_BASE,
   LOG_PREFIXES
 } from "./constants";
 import {
   processErrorGroupToComments,
   createConventionWarningComment,
-  calculateTokenTotals,
   createErrorTypeBreakdown,
   formatErrorBreakdown,
   createChunkLogMessage
@@ -74,6 +69,10 @@ export async function analyzeSpellingGrammarDocument(
     const conventions = conventionResult.conventions;
     logger.info(`Detected conventions: ${conventions.language} English, ${conventions.documentType} document`);
     
+    // Create document processor for efficient operations
+    const docProcessor = new DocumentProcessor(fullContent);
+    const wordCount = docProcessor.getWordCount();
+    
     // Calculate cost for convention detection
     let conventionCost = 0;
     if (conventionResult.usage) {
@@ -96,9 +95,6 @@ export async function analyzeSpellingGrammarDocument(
     });
     
     // Stage 2: Analyze chunks with convention context
-    // Create document processor for efficient operations
-    const docProcessor = new DocumentProcessor(fullContent);
-    const wordCount = docProcessor.getWordCount();
     
     // Split into chunks
     const chunks = docProcessor.splitIntoChunks(DEFAULT_CHUNK_SIZE);
@@ -173,7 +169,7 @@ export async function analyzeSpellingGrammarDocument(
           const costModel = mapModelToCostModel(ANALYSIS_MODEL);
           const costResult = calculateCost(costModel, usage.input_tokens || 0, usage.output_tokens || 0);
           chunkCost = costResult.totalCost; // Already in dollars
-        } catch (e) {
+        } catch {
           // Ignore cost calculation errors
         }
       }
@@ -308,7 +304,7 @@ export async function analyzeSpellingGrammarDocument(
         id: document.id,
         title: document.title || "Untitled",
         wordCount,
-        characterCount: content.length,
+        characterCount: fullContent.length,
         language: conventions.language,
         formality: conventions.formality,
         documentType: conventions.documentType

@@ -50,10 +50,16 @@ Its a beautiful day outside.`,
     
     // Default mock implementation for detectDocumentConventions
     mockDetectConventions.mockResolvedValue({
-      language: 'US',
-      documentType: 'casual',
-      formality: 'informal',
-      examples: []
+      conventions: {
+        language: 'US',
+        documentType: 'casual',
+        formality: 'informal',
+        examples: []
+      },
+      usage: {
+        input_tokens: 100,
+        output_tokens: 50
+      }
     });
     
     // Default mock implementation for convertHighlightsToComments
@@ -93,22 +99,22 @@ Its a beautiful day outside.`,
         },
         {
           lineStart: 2,
-        lineEnd: 2,
-        highlightedText: "tommorow",
-        description: "Spelling error: should be 'tomorrow'"
-      },
-      {
-        lineStart: 3,
-        lineEnd: 3,
-        highlightedText: "are",
-        description: "Subject-verb disagreement: 'team' is singular, use 'is'"
-      },
-      {
-        lineStart: 4,
-        lineEnd: 4,
-        highlightedText: "Its",
-        description: "Missing apostrophe: should be 'It's'"
-      }
+          lineEnd: 2,
+          highlightedText: "tommorow",
+          description: "Spelling error: should be 'tomorrow'"
+        },
+        {
+          lineStart: 3,
+          lineEnd: 3,
+          highlightedText: "are",
+          description: "Subject-verb disagreement: 'team' is singular, use 'is'"
+        },
+        {
+          lineStart: 4,
+          lineEnd: 4,
+          highlightedText: "Its",
+          description: "Missing apostrophe: should be 'It's'"
+        }
       ]
     });
 

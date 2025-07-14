@@ -1,8 +1,8 @@
 import { anthropic, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
-import type { ChunkWithLineNumbers, SpellingGrammarHighlight, AgentContext, ChunkAnalysisResult, LLMInteraction } from "./types";
+import type { ChunkWithLineNumbers, SpellingGrammarHighlight, AgentContext, ChunkAnalysisResult } from "./types";
+import type { LLMInteraction } from "@/types/llm";
 import { logger } from "@/lib/logger";
 import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from "./constants";
-import { ChunkAnalysisError, wrapError } from "./errors";
 
 /**
  * Analyzes a chunk of text for spelling and grammar errors
@@ -166,9 +166,15 @@ Special cases to watch for:
             highlights: [], 
             usage: response.usage,
             llmInteraction: {
-              modelName: ANALYSIS_MODEL,
-              error: 'No tool use in response',
-              attempt
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+                { role: 'assistant', content: 'Error: No tool use in response' }
+              ],
+              usage: {
+                input_tokens: response.usage?.input_tokens || 0,
+                output_tokens: response.usage?.output_tokens || 0
+              }
             }
           };
         }
@@ -239,24 +245,16 @@ Special cases to watch for:
         model: ANALYSIS_MODEL
       });
       
-      // Create LLM interaction record
+      // Create LLM interaction record with messages array
       const llmInteraction: LLMInteraction = {
-        modelName: ANALYSIS_MODEL,
-        startTime: Date.now(),
-        usage: response.usage,
-        prompt: {
-          system: systemPrompt,
-          user: userPrompt
-        },
-        response: {
-          highlights: validatedHighlights,
-          rawResponse: result
-        },
-        metadata: {
-          chunkIndex: chunk.startLineNumber,
-          chunkLines: chunk.lines.length,
-          attempt,
-          retryReason: attempt > 1 ? 'Previous attempt failed' : undefined
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+          { role: 'assistant', content: JSON.stringify(result) }
+        ],
+        usage: {
+          input_tokens: response.usage?.input_tokens || 0,
+          output_tokens: response.usage?.output_tokens || 0
         }
       };
       
@@ -278,6 +276,11 @@ Special cases to watch for:
   return { 
     highlights: [],
     usage: { input_tokens: 0, output_tokens: 0 },
-    llmInteraction: { error: 'Max retries exhausted' }
+    llmInteraction: {
+      messages: [
+        { role: 'assistant', content: 'Error: Max retries exhausted' }
+      ],
+      usage: { input_tokens: 0, output_tokens: 0 }
+    }
   };
 }

@@ -2,6 +2,8 @@
  * Types for spelling and grammar analysis
  */
 
+import type { LLMInteraction } from "@/types/llm";
+
 /**
  * A chunk of document content with line number information
  */
@@ -57,26 +59,6 @@ export interface TokenUsage {
   total_tokens?: number;
 }
 
-/**
- * LLM interaction record
- */
-export interface LLMInteraction {
-  modelName: string;
-  startTime?: number;
-  usage?: TokenUsage;
-  prompt?: {
-    system: string;
-    user: string;
-  };
-  response?: {
-    highlights: SpellingGrammarHighlight[];
-    rawResponse?: unknown;
-  };
-  error?: string;
-  metadata?: Record<string, unknown>;
-  context?: Record<string, unknown>;
-  attempt?: number;
-}
 
 /**
  * Result from analyzing a chunk

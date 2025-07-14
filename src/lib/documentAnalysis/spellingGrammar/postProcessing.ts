@@ -351,7 +351,7 @@ export function createConsolidatedComment(
   
   if (group.count <= 2) {
     // For 1-2 occurrences, return individual comments with emoji and formatted description
-    return group.examples.map((example, index) => {
+    return group.examples.map((example) => {
       // Create inline format with emoji and type label
       const typeLabel = getErrorTypeLabel(group.errorType);
       const cleanedDescription = cleanErrorDescription(example.description, group.errorType);

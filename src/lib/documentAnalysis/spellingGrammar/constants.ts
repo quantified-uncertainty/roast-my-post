@@ -27,15 +27,18 @@ export const GRADE_THRESHOLDS = {
 export const ERROR_DENSITY_WORD_BASE = 100; // errors per X words
 
 // Empty document response
+import type { Comment } from "../../../types/documentSchema";
+import type { TaskResult } from "../shared/types";
+
 export const EMPTY_DOCUMENT_RESPONSE = {
   thinking: "",
   analysis: "## Spelling & Grammar Analysis\n\nThe document is empty.",
   summary: "No spelling or grammar errors detected.",
   grade: 100,
   selfCritique: undefined,
-  highlights: [],
-  tasks: []
-} as const;
+  highlights: [] as Comment[],
+  tasks: [] as TaskResult[]
+};
 
 // Importance and grade mapping based on severity
 export const SEVERITY_TO_IMPORTANCE = {

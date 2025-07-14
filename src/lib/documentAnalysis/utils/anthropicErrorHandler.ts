@@ -7,7 +7,7 @@ export class AnthropicError extends Error {
   constructor(
     message: string,
     public statusCode?: number,
-    public originalError?: any
+    public originalError?: unknown
   ) {
     super(message);
     this.name = 'AnthropicError';
@@ -19,9 +19,12 @@ export class AnthropicError extends Error {
  * @param error - The error object from Anthropic API
  * @throws {AnthropicError} - A standardized error with user-friendly message
  */
-export function handleAnthropicError(error: any): never {
+export function handleAnthropicError(error: unknown): never {
+  // Type guard for error with status
+  const errorWithStatus = error as { status?: number; message?: string; toString?: () => string };
+  
   // Rate limiting
-  if (error?.status === 429) {
+  if (errorWithStatus?.status === 429) {
     throw new AnthropicError(
       "Anthropic API rate limit exceeded. Please try again in a moment.",
       429,
@@ -30,7 +33,7 @@ export function handleAnthropicError(error: any): never {
   }
 
   // Quota/billing issues
-  if (error?.status === 402) {
+  if (errorWithStatus?.status === 402) {
     throw new AnthropicError(
       "Anthropic API quota exceeded. Please check your billing.",
       402,
@@ -39,7 +42,7 @@ export function handleAnthropicError(error: any): never {
   }
 
   // Authentication issues
-  if (error?.status === 401) {
+  if (errorWithStatus?.status === 401) {
     throw new AnthropicError(
       "Anthropic API authentication failed. Please check your API key.",
       401,
@@ -48,19 +51,19 @@ export function handleAnthropicError(error: any): never {
   }
 
   // Server errors
-  if (error?.status && error.status >= 500) {
+  if (errorWithStatus?.status && errorWithStatus.status >= 500) {
     throw new AnthropicError(
-      `Anthropic API server error (${error.status}). Please try again later.`,
-      error.status,
+      `Anthropic API server error (${errorWithStatus.status}). Please try again later.`,
+      errorWithStatus.status,
       error
     );
   }
 
   // Generic error
-  const message = error?.message || error?.toString() || 'Unknown error';
+  const message = errorWithStatus?.message || errorWithStatus?.toString?.() || 'Unknown error';
   throw new AnthropicError(
     `Anthropic API error: ${message}`,
-    error?.status,
+    errorWithStatus?.status,
     error
   );
 }
@@ -69,7 +72,7 @@ export function handleAnthropicError(error: any): never {
  * Helper to format JSON strings with proper escaping
  * Used to prevent JSON parsing errors in LLM responses
  */
-export function formatFixing(jsonSchema: any): string {
+export function formatFixing(jsonSchema: unknown): string {
   return JSON.stringify(jsonSchema, null, 2)
     .replace(/"/g, '\"')
     .replace(/\n/g, '\\n');

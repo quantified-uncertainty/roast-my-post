@@ -5,10 +5,10 @@
 import { ValidationError } from "./errors";
 import { 
   MIN_CHUNK_SIZE, 
-  MAX_CHUNK_SIZE,
-  GRADE_THRESHOLDS 
+  MAX_CHUNK_SIZE
 } from "./constants";
 import type { SpellingGrammarHighlight } from "./types";
+import type { Comment } from "../../../types/documentSchema";
 
 /**
  * Validate document size
@@ -90,12 +90,15 @@ export function validateHighlightOffsets(
 /**
  * Validate comment before adding to results
  */
-export function validateComment(comment: any): void {
-  if (!comment.highlight) {
+export function validateComment(comment: unknown): void {
+  // Type guard
+  const commentObj = comment as Comment;
+  
+  if (!commentObj.highlight) {
     throw new ValidationError('Comment missing highlight', comment);
   }
   
-  const { startOffset, endOffset, quotedText } = comment.highlight;
+  const { startOffset, endOffset, quotedText } = commentObj.highlight;
   
   if (typeof startOffset !== 'number' || startOffset < 0) {
     throw new ValidationError(

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { documentWithEvaluationsInclude, fullEvaluationInclude } from "./prisma-fragments";
+import { fullEvaluationInclude } from "./prisma-fragments";
 
 /**
  * Fetches evaluation data with all necessary includes for sidebar display

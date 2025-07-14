@@ -6,7 +6,7 @@ export class SpellingGrammarError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly context?: Record<string, any>
+    public readonly context?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'SpellingGrammarError';
@@ -19,7 +19,7 @@ export class ChunkAnalysisError extends SpellingGrammarError {
     public readonly chunkIndex: number,
     public readonly attempt: number,
     public readonly maxRetries: number,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(
       `Chunk ${chunkIndex} analysis failed: ${message} (attempt ${attempt}/${maxRetries})`,
@@ -31,7 +31,7 @@ export class ChunkAnalysisError extends SpellingGrammarError {
 }
 
 export class ConventionDetectionError extends SpellingGrammarError {
-  constructor(message: string, context?: Record<string, any>) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(
       `Convention detection failed: ${message}`,
       'CONVENTION_DETECTION_ERROR',
@@ -42,7 +42,7 @@ export class ConventionDetectionError extends SpellingGrammarError {
 }
 
 export class ValidationError extends SpellingGrammarError {
-  constructor(message: string, invalidData: any, context?: Record<string, any>) {
+  constructor(message: string, invalidData: unknown, context?: Record<string, unknown>) {
     super(
       message,
       'VALIDATION_ERROR',
@@ -58,12 +58,15 @@ export class ValidationError extends SpellingGrammarError {
 export function wrapError(
   error: unknown,
   message: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): SpellingGrammarError {
   if (error instanceof SpellingGrammarError) {
-    // Add additional context to existing error
-    error.context = { ...error.context, ...context };
-    return error;
+    // Return new error with combined context
+    return new SpellingGrammarError(
+      error.message,
+      error.code,
+      { ...error.context, ...context }
+    );
   }
   
   const originalError = error instanceof Error ? error.message : String(error);

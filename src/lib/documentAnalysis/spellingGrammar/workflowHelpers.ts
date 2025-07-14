@@ -9,7 +9,6 @@ import { convertHighlightsToComments } from "./highlightConverter";
 import { getErrorGroupEmoji, getErrorTypeLabel } from "./utils";
 import { DocumentProcessor } from "./documentProcessor";
 import { SEVERITY_TO_IMPORTANCE, SEVERITY_TO_GRADE } from "./constants";
-import { logger } from "@/lib/logger";
 
 /**
  * Process highlights for a single error group into comments
