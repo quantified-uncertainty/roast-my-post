@@ -1,6 +1,8 @@
 import { anthropic, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
-import type { ChunkWithLineNumbers, SpellingGrammarHighlight, AgentContext } from "./types";
+import type { ChunkWithLineNumbers, SpellingGrammarHighlight, AgentContext, ChunkAnalysisResult, LLMInteraction } from "./types";
 import { logger } from "@/lib/logger";
+import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from "./constants";
+import { ChunkAnalysisError, wrapError } from "./errors";
 
 /**
  * Analyzes a chunk of text for spelling and grammar errors
@@ -9,8 +11,8 @@ import { logger } from "@/lib/logger";
 export async function analyzeChunk(
   chunk: ChunkWithLineNumbers,
   agentContext: AgentContext,
-  maxRetries: number = 3
-): Promise<{ highlights: SpellingGrammarHighlight[], usage?: any }> {
+  maxRetries: number = MAX_RETRIES
+): Promise<ChunkAnalysisResult> {
   // Don't process empty chunks
   if (!chunk.content.trim()) {
     return { highlights: [] };
@@ -100,8 +102,8 @@ Special cases to watch for:
     try {
       // Add a small delay between retries to avoid rate limiting
       if (attempt > 1) {
-        const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff: 2s, 4s, 8s
-        logger.info(`Retrying chunk analysis (attempt ${attempt}/${maxRetries}) after ${delay}ms delay`);
+        const delay = Math.pow(2, attempt - 1) * RETRY_BASE_DELAY_MS;
+        logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Retrying (attempt ${attempt}/${maxRetries}) after ${delay}ms delay`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
@@ -158,14 +160,22 @@ Special cases to watch for:
 
       const toolUse = response.content.find((c) => c.type === "tool_use");
       if (!toolUse || toolUse.name !== "report_errors") {
-        logger.error(`No tool use response from Anthropic (attempt ${attempt}/${maxRetries})`);
+        logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response from Anthropic (attempt ${attempt}/${maxRetries})`);
         if (attempt === maxRetries) {
-          return { highlights: [], usage: response.usage };
+          return { 
+            highlights: [], 
+            usage: response.usage,
+            llmInteraction: {
+              modelName: ANALYSIS_MODEL,
+              error: 'No tool use in response',
+              attempt
+            }
+          };
         }
         continue;
       }
 
-      const result = toolUse.input as { errors: SpellingGrammarHighlight[] };
+      const result = toolUse.input as { errors: Array<SpellingGrammarHighlight & { errorType?: string; severity?: string }> };
       
       // Ensure result has errors array
       if (!result || !Array.isArray(result.errors)) {
@@ -219,7 +229,32 @@ Special cases to watch for:
         outputTokens: response.usage?.output_tokens
       });
       
-      return { highlights: validatedHighlights, usage: response.usage };
+      // Create LLM interaction record
+      const llmInteraction: LLMInteraction = {
+        modelName: ANALYSIS_MODEL,
+        startTime: Date.now(),
+        usage: response.usage,
+        prompt: {
+          system: systemPrompt,
+          user: userPrompt
+        },
+        response: {
+          highlights: validatedHighlights,
+          rawResponse: result
+        },
+        metadata: {
+          chunkIndex: chunk.startLineNumber,
+          chunkLines: chunk.lines.length,
+          attempt,
+          retryReason: attempt > 1 ? 'Previous attempt failed' : undefined
+        }
+      };
+      
+      return { 
+        highlights: validatedHighlights, 
+        usage: response.usage,
+        llmInteraction 
+      };
 
     } catch (error) {
       logger.error(`Error analyzing chunk (attempt ${attempt}/${maxRetries}):`, error);
@@ -230,5 +265,9 @@ Special cases to watch for:
   }
 
   // This should never be reached, but just in case
-  return { highlights: [] };
+  return { 
+    highlights: [],
+    usage: { input_tokens: 0, output_tokens: 0 },
+    llmInteraction: { error: 'Max retries exhausted' }
+  };
 }

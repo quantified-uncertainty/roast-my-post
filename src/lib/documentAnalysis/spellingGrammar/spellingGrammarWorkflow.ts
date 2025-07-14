@@ -12,9 +12,26 @@ import { detectDocumentConventions } from "./detectConventions";
 import { postProcessErrors, createConsolidatedComment, calculateSmartGrade } from "./postProcessing";
 import type { ProcessedResults, ErrorGroup } from "./postProcessing";
 import { calculateCost, mapModelToCostModel } from "@/utils/costCalculator";
-import { splitIntoChunks, getCharacterOffsetForLine, getErrorGroupEmoji, getErrorTypeLabel } from "./utils";
+import { getErrorGroupEmoji, getErrorTypeLabel } from "./utils";
 import type { DocumentConventions } from "./detectConventions";
-
+import { 
+  EMPTY_DOCUMENT_RESPONSE, 
+  DEFAULT_CHUNK_SIZE,
+  SEVERITY_TO_IMPORTANCE,
+  SEVERITY_TO_GRADE,
+  GRADE_THRESHOLDS,
+  ERROR_DENSITY_WORD_BASE,
+  LOG_PREFIXES
+} from "./constants";
+import {
+  processErrorGroupToComments,
+  createConventionWarningComment,
+  calculateTokenTotals,
+  createErrorTypeBreakdown,
+  formatErrorBreakdown,
+  createChunkLogMessage
+} from "./workflowHelpers";
+import { DocumentProcessor } from "./documentProcessor";
 
 /**
  * Complete spelling and grammar analysis workflow
@@ -43,35 +60,44 @@ export async function analyzeSpellingGrammarDocument(
     
     // Handle empty documents
     if (!fullContent.trim()) {
-      logger.info("Document is empty, no analysis needed");
-      return {
-        thinking: "",
-        analysis: "## Spelling & Grammar Analysis\n\nThe document is empty.",
-        summary: "No spelling or grammar errors detected.",
-        grade: 100,
-        selfCritique: undefined,
-        highlights: [],
-        tasks: []
-      };
+      logger.info(`${LOG_PREFIXES.WORKFLOW} Document is empty, no analysis needed`);
+      return EMPTY_DOCUMENT_RESPONSE;
     }
     
     // Stage 1: Detect document conventions
     logger.info("Stage 1: Detecting document conventions");
-    const conventions = await detectDocumentConventions(fullContent);
+    const conventionResult = await detectDocumentConventions(fullContent);
+    const conventions = conventionResult.conventions;
     logger.info(`Detected conventions: ${conventions.language} English, ${conventions.documentType} document`);
+    
+    // Calculate cost for convention detection
+    let conventionCost = 0;
+    if (conventionResult.usage) {
+      try {
+        const costModel = mapModelToCostModel(ANALYSIS_MODEL);
+        const costResult = calculateCost(costModel, conventionResult.usage.input_tokens || 0, conventionResult.usage.output_tokens || 0);
+        conventionCost = costResult.totalCost;
+      } catch (e) {
+        logger.warn("Could not calculate convention detection cost", { error: e });
+      }
+    }
     
     tasks.push({
       name: "Detect document conventions",
       modelName: ANALYSIS_MODEL,
-      priceInDollars: 0,
+      priceInDollars: conventionCost,
       timeInSeconds: (Date.now() - startTime) / 1000,
-      log: `Detected ${conventions.language} English, ${conventions.documentType} document type, ${conventions.formality} formality. Document has ${fullContent.split(/\s+/).length} words across ${fullContent.split('\n').length} lines.`,
+      log: `Detected ${conventions.language} English, ${conventions.documentType} document type, ${conventions.formality} formality. Document has ${wordCount} words across ${docProcessor.getLineCount()} lines.`,
       llmInteractions: []
     });
     
     // Stage 2: Analyze chunks with convention context
+    // Create document processor for efficient operations
+    const docProcessor = new DocumentProcessor(fullContent);
+    const wordCount = docProcessor.getWordCount();
+    
     // Split into chunks
-    const chunks = splitIntoChunks(fullContent);
+    const chunks = docProcessor.splitIntoChunks(DEFAULT_CHUNK_SIZE);
     logger.info(`Stage 2: Analyzing ${chunks.length} chunks for spelling/grammar errors`);
     
     // Analyze each chunk
@@ -122,7 +148,8 @@ export async function analyzeSpellingGrammarDocument(
       return {
         chunkIndex: i,
         highlights: result.highlights,
-        usage: result.usage
+        usage: result.usage,
+        llmInteraction: result.llmInteraction
       };
     });
     
@@ -133,7 +160,7 @@ export async function analyzeSpellingGrammarDocument(
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     
-    chunkResults.forEach(({ chunkIndex, highlights, usage }) => {
+    chunkResults.forEach(({ chunkIndex, highlights, usage, llmInteraction }) => {
       allHighlights.push(...highlights);
       
       // Track token usage if available
@@ -160,19 +187,8 @@ export async function analyzeSpellingGrammarDocument(
       }
       
       // Create detailed log with error types
-      const errorTypes = highlights.reduce((acc, h) => {
-        const type = h.description.toLowerCase().includes('spelling') ? 'spelling' :
-                     h.description.toLowerCase().includes('grammar') ? 'grammar' :
-                     h.description.toLowerCase().includes('punctuation') ? 'punctuation' :
-                     h.description.toLowerCase().includes('capitalization') ? 'capitalization' :
-                     'other';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      const errorSummary = Object.entries(errorTypes)
-        .map(([type, count]) => `${count} ${type}`)
-        .join(', ');
+      const errorTypes = createErrorTypeBreakdown(highlights);
+      const errorSummary = formatErrorBreakdown(errorTypes);
       
       logger.info(`Chunk ${chunkIndex + 1} cost: $${chunkCost.toFixed(8)}`);
       
@@ -181,8 +197,8 @@ export async function analyzeSpellingGrammarDocument(
         modelName: ANALYSIS_MODEL,
         priceInDollars: chunkCost,
         timeInSeconds: (Date.now() - chunkStartTime) / 1000,
-        log: `Analyzed chunk ${chunkIndex + 1} (lines ${chunks[chunkIndex].startLineNumber}-${chunks[chunkIndex].startLineNumber + chunks[chunkIndex].lines.length - 1}): ${highlights.length} errors found${errorSummary ? ` (${errorSummary})` : ''}`,
-        llmInteractions: []
+        log: createChunkLogMessage(chunkIndex, chunks[chunkIndex], highlights, errorTypes),
+        llmInteractions: llmInteraction ? [llmInteraction] : []
       });
     });
     
@@ -237,66 +253,13 @@ export async function analyzeSpellingGrammarDocument(
     
     // Add convention warning if needed
     if (processedResults.conventionIssues) {
-      comments.push({
-        description: `🔄 Consistency: ${processedResults.conventionIssues.description}`,
-        importance: 9,
-        grade: 10,
-        highlight: {
-          startOffset: 0,
-          endOffset: 50, // Just highlight the beginning
-          quotedText: fullContent.slice(0, 50) + "...",
-          isValid: true
-        },
-        isValid: true
-      });
+      comments.push(createConventionWarningComment(processedResults.conventionIssues, fullContent));
     }
     
     // Convert error groups to comments
     for (const errorGroup of processedResults.consolidatedErrors) {
-      for (const highlight of errorGroup.examples.slice(0, errorGroup.count > 2 ? 1 : errorGroup.count)) {
-        // Calculate the character offset for the start of the line
-        const lineStartOffset = getCharacterOffsetForLine(fullContent, highlight.lineStart);
-        
-        // Get the content of the lines involved in this highlight
-        const lines = fullContent.split('\n');
-        const highlightLines = lines.slice(highlight.lineStart - 1, highlight.lineEnd);
-        const highlightContent = highlightLines.join('\n');
-        
-        // Convert to comments using relative line numbers
-        const relativeHighlight: SpellingGrammarHighlight = {
-          ...highlight,
-          lineStart: 1,
-          lineEnd: highlight.lineEnd - highlight.lineStart + 1,
-          // Add count info to description if it's a consolidated error
-          description: errorGroup.count > 2 
-            ? `${highlight.description} (Found ${errorGroup.count} times throughout document)`
-            : highlight.description
-        };
-        
-        const chunkComments = convertHighlightsToComments(
-          [relativeHighlight],
-          highlightContent,
-          lineStartOffset
-        );
-        
-        // Adjust importance and grade based on severity and frequency
-        chunkComments.forEach(comment => {
-          comment.importance = errorGroup.severity === 'high' ? 8 : 
-                              errorGroup.severity === 'medium' ? 5 : 3;
-          comment.grade = errorGroup.severity === 'high' ? 20 : 
-                         errorGroup.severity === 'medium' ? 40 : 60;
-          // Comments from postProcessing already have emoji format
-          // Only add if not already formatted (check for emoji at start)
-          const startsWithEmoji = /^[\u{1F300}-\u{1F9FF}]|^[\u{2600}-\u{27BF}]/u.test(comment.description);
-          if (!startsWithEmoji) {
-            const emoji = getErrorGroupEmoji(errorGroup);
-            const typeLabel = getErrorTypeLabel(errorGroup.errorType);
-            comment.description = `${emoji} ${typeLabel}: ${comment.description}`;
-          }
-        });
-        
-        comments.push(...chunkComments);
-      }
+      const errorComments = processErrorGroupToComments(errorGroup, fullContent, docProcessor);
+      comments.push(...errorComments);
     }
     
     // Sort comments by position in document
@@ -307,8 +270,6 @@ export async function analyzeSpellingGrammarDocument(
     const finalHighlights = comments;
     
     // Generate analysis and summary with smart scoring
-    const { content } = getDocumentFullContent(document);
-    const wordCount = content.split(/\s+/).length;
     const grade = calculateSmartGrade(processedResults, wordCount);
     
     const analysis = generateSmartAnalysis(
@@ -451,7 +412,7 @@ This document was analyzed for spelling, grammar, punctuation, and capitalizatio
 - **Unique Errors Found:** ${processedResults.uniqueErrorCount}
 - **Total Occurrences:** ${processedResults.totalErrorCount}
 - **Document Length:** ~${Math.round(wordCount / 10) * 10} words
-- **Error Density:** ${errorDensity.toFixed(2)} unique errors per 100 words
+- **Error Density:** ${errorDensity.toFixed(2)} unique errors per ${ERROR_DENSITY_WORD_BASE} words
 
 ### Error Breakdown by Type
 ${Object.entries(errorTypeBreakdown)

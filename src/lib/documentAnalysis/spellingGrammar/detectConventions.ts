@@ -8,23 +8,34 @@ export interface DocumentConventions {
   examples: string[];
 }
 
+export interface ConventionDetectionResult {
+  conventions: DocumentConventions;
+  usage?: {
+    input_tokens: number;
+    output_tokens: number;
+  };
+}
+
 /**
  * Detects the language convention and document type from a sample of text
  */
 export async function detectDocumentConventions(
   content: string,
   sampleSize: number = 2000
-): Promise<DocumentConventions> {
+): Promise<ConventionDetectionResult> {
   // Take a sample from the beginning of the document
   const sample = content.slice(0, sampleSize);
   
   // If sample is too short, return defaults
   if (sample.length < 100) {
     return {
-      language: 'unknown',
-      documentType: 'unknown',
-      formality: 'mixed',
-      examples: []
+      conventions: {
+        language: 'unknown',
+        documentType: 'unknown',
+        formality: 'mixed',
+        examples: []
+      },
+      usage: { input_tokens: 0, output_tokens: 0 }
     };
   }
 
@@ -110,33 +121,48 @@ Provide specific examples from the text that support your conclusions.`;
     if (!toolUse || toolUse.name !== "report_conventions") {
       logger.error("No tool use response from convention detection");
       return {
-        language: 'unknown',
-        documentType: 'unknown',
-        formality: 'mixed',
-        examples: []
+        conventions: {
+          language: 'unknown',
+          documentType: 'unknown',
+          formality: 'mixed',
+          examples: []
+        },
+        usage: response.usage
       };
     }
 
-    const result = toolUse.input as any;
+    const result = toolUse.input as {
+      language: 'US' | 'UK' | 'mixed' | 'unknown';
+      documentType: 'academic' | 'blog' | 'technical' | 'casual' | 'unknown';
+      formality: 'formal' | 'informal' | 'mixed';
+      examples: string[];
+      reasoning: string;
+    };
     logger.info(`Detected conventions: ${result.language} English, ${result.documentType} document, ${result.formality} style`, {
       reasoning: result.reasoning
     });
 
     return {
-      language: result.language,
-      documentType: result.documentType,
-      formality: result.formality,
-      examples: result.examples
+      conventions: {
+        language: result.language,
+        documentType: result.documentType,
+        formality: result.formality,
+        examples: result.examples
+      },
+      usage: response.usage
     };
 
   } catch (error) {
     logger.error("Error detecting document conventions:", error);
     // Return sensible defaults on error
     return {
-      language: 'unknown',
-      documentType: 'unknown', 
-      formality: 'mixed',
-      examples: []
+      conventions: {
+        language: 'unknown',
+        documentType: 'unknown', 
+        formality: 'mixed',
+        examples: []
+      },
+      usage: { input_tokens: 0, output_tokens: 0 }
     };
   }
 }

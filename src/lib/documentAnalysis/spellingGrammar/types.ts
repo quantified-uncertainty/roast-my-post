@@ -26,6 +26,10 @@ export interface SpellingGrammarHighlight {
   highlightedText: string;
   /** Clear explanation of the error and suggested correction */
   description: string;
+  /** Error type (spelling, grammar, punctuation, etc.) */
+  errorType?: string;
+  /** Severity level (high, medium, low) */
+  severity?: string;
 }
 
 /**
@@ -42,4 +46,46 @@ export interface AgentContext {
     documentType: 'academic' | 'blog' | 'technical' | 'casual' | 'unknown';
     formality: 'formal' | 'informal' | 'mixed';
   };
+}
+
+/**
+ * Token usage from LLM
+ */
+export interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens?: number;
+}
+
+/**
+ * LLM interaction record
+ */
+export interface LLMInteraction {
+  modelName: string;
+  startTime?: number;
+  usage?: TokenUsage;
+  prompt?: {
+    system: string;
+    user: string;
+  };
+  response?: {
+    highlights: SpellingGrammarHighlight[];
+    rawResponse?: unknown;
+  };
+  error?: string;
+  metadata?: Record<string, unknown>;
+  context?: Record<string, unknown>;
+  attempt?: number;
+}
+
+/**
+ * Result from analyzing a chunk
+ */
+export interface ChunkAnalysisResult {
+  /** Detected highlights/errors */
+  highlights: SpellingGrammarHighlight[];
+  /** Token usage from the LLM */
+  usage?: TokenUsage;
+  /** LLM interaction for tracking */
+  llmInteraction?: LLMInteraction;
 }
