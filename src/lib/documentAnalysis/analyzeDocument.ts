@@ -5,7 +5,7 @@ import type { Comment } from "../../types/documentSchema";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
-import { analyzeSpellingGrammarDocument } from "./spellingGrammar/spellingGrammarWorkflow";
+import { analyzeSpellingGrammarDocument } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 
