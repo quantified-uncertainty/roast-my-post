@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from '../constants';
 import { SpellingGrammarError } from '../domain';
 import { categorizeError, determineSeverity } from '../application';
+import { withRetry } from '../../shared/retryUtils';
 
 export interface LLMResponse {
   errors: SpellingGrammarError[];
@@ -36,93 +37,69 @@ export class SpellingGrammarLLMClient {
     systemPrompt: string,
     userPrompt: string
   ): Promise<LLMResponse> {
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-      try {
-        // Add delay between retries
-        if (attempt > 1) {
-          const delay = Math.pow(2, attempt - 1) * RETRY_BASE_DELAY_MS;
-          logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Retrying (attempt ${attempt}/${this.maxRetries}) after ${delay}ms delay`);
-          await this.delay(delay);
-        }
+    let lastResponse: any = null;
 
-        const response = await anthropic.messages.create({
-          model: this.model,
-          max_tokens: 8000,
-          temperature: this.temperature,
-          system: [
-            {
-              type: "text",
-              text: systemPrompt,
-              cache_control: { type: "ephemeral" }
-            }
-          ],
-          messages: [
-            {
-              role: "user",
-              content: userPrompt,
-            },
-          ],
-          tools: [this.getErrorReportingTool()],
-          tool_choice: { type: "tool", name: "report_errors" },
-        });
-
-        const result = this.extractToolResponse(response);
-        if (!result) {
-          const isLastAttempt = attempt === this.maxRetries;
-          
-          if (isLastAttempt) {
-            logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} All retries exhausted for tool use response`);
-            return this.createEmptyResponse(response.usage, 'No tool use in response after all retries');
-          } else {
-            logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response, retrying attempt ${attempt + 1}/${this.maxRetries}`);
-            continue;
+    const analyzeWithRetry = async (): Promise<LLMResponse> => {
+      const response = await anthropic.messages.create({
+        model: this.model,
+        max_tokens: 8000,
+        temperature: this.temperature,
+        system: [
+          {
+            type: "text",
+            text: systemPrompt,
+            cache_control: { type: "ephemeral" }
           }
-        }
-
-        const errors = this.parseErrors(result);
-        const llmInteraction = this.createInteraction(systemPrompt, userPrompt, result, response.usage);
-
-        if (attempt > 1) {
-          logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Succeeded on attempt ${attempt}`);
-        }
-
-        logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
-          inputTokens: response.usage?.input_tokens,
-          outputTokens: response.usage?.output_tokens,
-          model: this.model
-        });
-
-        return {
-          errors,
-          usage: {
-            input_tokens: response.usage?.input_tokens || 0,
-            output_tokens: response.usage?.output_tokens || 0
+        ],
+        messages: [
+          {
+            role: "user",
+            content: userPrompt,
           },
-          llmInteraction
-        };
+        ],
+        tools: [this.getErrorReportingTool()],
+        tool_choice: { type: "tool", name: "report_errors" },
+      });
 
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const isLastAttempt = attempt === this.maxRetries;
-        
-        logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Error analyzing text (attempt ${attempt}/${this.maxRetries})`, {
-          error: errorMessage,
-          isLastAttempt,
-          model: this.model,
-          temperature: this.temperature
-        });
-        
-        if (isLastAttempt) {
-          logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} All retry attempts exhausted, throwing error`);
-          throw error;
-        } else {
-          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Retrying after error: ${errorMessage}`);
-        }
+      lastResponse = response;
+
+      const result = this.extractToolResponse(response);
+      if (!result) {
+        throw new Error('No tool use in response');
       }
-    }
 
-    // Should never reach here
-    return this.createEmptyResponse({ input_tokens: 0, output_tokens: 0 }, 'Max retries exhausted');
+      const errors = this.parseErrors(result);
+      const llmInteraction = this.createInteraction(systemPrompt, userPrompt, result, response.usage);
+
+      logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
+        inputTokens: response.usage?.input_tokens,
+        outputTokens: response.usage?.output_tokens,
+        model: this.model
+      });
+
+      return {
+        errors,
+        usage: {
+          input_tokens: response.usage?.input_tokens || 0,
+          output_tokens: response.usage?.output_tokens || 0
+        },
+        llmInteraction
+      };
+    };
+
+    try {
+      return await withRetry(analyzeWithRetry, {
+        maxRetries: this.maxRetries,
+        baseDelayMs: RETRY_BASE_DELAY_MS,
+        logPrefix: LOG_PREFIXES.CHUNK_ANALYSIS
+      });
+    } catch (error) {
+      // If all retries failed and we have a response, return empty result
+      if (lastResponse?.usage) {
+        return this.createEmptyResponse(lastResponse.usage, 'No tool use in response after all retries');
+      }
+      throw error;
+    }
   }
 
   /**
@@ -331,10 +308,4 @@ export class SpellingGrammarLLMClient {
     }
   }
 
-  /**
-   * Delay helper
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }

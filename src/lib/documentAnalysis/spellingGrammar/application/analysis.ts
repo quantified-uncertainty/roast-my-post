@@ -3,7 +3,8 @@
  */
 
 import type { DocumentChunk, AnalysisContext, SpellingGrammarError } from '../domain';
-import { ErrorType, ErrorSeverity } from '../domain';
+import { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
+import { categorizeError as categorizeErrorShared, determineSeverity as determineSeverityShared } from '../../shared/errorCategorization';
 
 /**
  * Build convention-aware context for LLM
@@ -173,49 +174,12 @@ export function validateError(
  * Categorize error based on description
  */
 export function categorizeError(description: string): ErrorType {
-  const desc = description.toLowerCase();
-  
-  if (desc.includes('spelling') || desc.includes('misspell')) {
-    return ErrorType.SPELLING;
-  } else if (desc.includes('punctuation') || desc.includes('comma') || desc.includes('period') || desc.includes('space after')) {
-    return ErrorType.PUNCTUATION;
-  } else if (desc.includes('capital')) {
-    return ErrorType.CAPITALIZATION;
-  } else if (desc.includes('grammar') || desc.includes('verb') || desc.includes('subject')) {
-    return ErrorType.GRAMMAR;
-  } else if (desc.includes('word choice') || desc.includes('word confusion')) {
-    return ErrorType.WORD_CHOICE;
-  } else if (desc.includes('consistency') || desc.includes('american') || desc.includes('british')) {
-    return ErrorType.CONSISTENCY;
-  }
-  
-  return ErrorType.OTHER;
+  return categorizeErrorShared(description) as ErrorType;
 }
 
 /**
  * Determine error severity based on type and description
  */
 export function determineSeverity(errorType: ErrorType, description: string): ErrorSeverity {
-  const desc = description.toLowerCase();
-  
-  // Low severity: citation formatting, spacing issues
-  if (desc.includes('citation') || desc.includes('footnote') || 
-      desc.includes('space after') || desc.includes('missing space') ||
-      desc.includes('space before citation')) {
-    return ErrorSeverity.LOW;
-  }
-  
-  // High severity: actual misspellings, wrong words, significant grammar errors
-  if (errorType === ErrorType.SPELLING && !desc.includes('consistency') && !desc.includes('correct')) {
-    return ErrorSeverity.HIGH;
-  }
-  if (errorType === ErrorType.GRAMMAR && !desc.includes('style') && !desc.includes('preference')) {
-    return ErrorSeverity.HIGH;
-  }
-  if (errorType === ErrorType.WORD_CHOICE) {
-    return ErrorSeverity.HIGH;
-  }
-  
-  // Everything else is medium
-  return ErrorSeverity.MEDIUM;
+  return determineSeverityShared(errorType as any, description) as ErrorSeverity;
 }

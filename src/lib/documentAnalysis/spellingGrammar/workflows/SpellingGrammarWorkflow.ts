@@ -310,20 +310,7 @@ export class SpellingGrammarWorkflow {
       });
 
       // Calculate cost
-      let chunkCost = 0;
-      if (response.usage) {
-        try {
-          const costModel = mapModelToCostModel(ANALYSIS_MODEL);
-          const costResult = calculateCost(
-            costModel,
-            response.usage.input_tokens,
-            response.usage.output_tokens
-          );
-          chunkCost = costResult.totalCost;
-        } catch (e) {
-          // Ignore cost calculation errors
-        }
-      }
+      const chunkCost = calculateLLMCost(ANALYSIS_MODEL, response.usage);
 
       // Create task
       tasks.push({

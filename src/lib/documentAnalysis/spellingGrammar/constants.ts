@@ -40,18 +40,9 @@ export const EMPTY_DOCUMENT_RESPONSE = {
   tasks: [] as TaskResult[]
 };
 
-// Importance and grade mapping based on severity
-export const SEVERITY_TO_IMPORTANCE = {
-  high: 8,
-  medium: 5,
-  low: 3
-} as const;
-
-export const SEVERITY_TO_GRADE = {
-  high: 20,
-  medium: 40,
-  low: 60
-} as const;
+// Import severity mappings from shared module
+import { SEVERITY_TO_IMPORTANCE, SEVERITY_TO_GRADE } from '../shared/errorCategorization';
+export { SEVERITY_TO_IMPORTANCE, SEVERITY_TO_GRADE };
 
 // Error type classifications
 export const ERROR_TYPE_PATTERNS = {

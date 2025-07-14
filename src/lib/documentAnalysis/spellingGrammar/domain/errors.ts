@@ -3,6 +3,8 @@
  * These are immutable value objects representing core concepts
  */
 
+import { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
+
 /**
  * Represents a spelling or grammar error found in the document
  */
@@ -36,27 +38,7 @@ export class SpellingGrammarError {
   }
 }
 
-/**
- * Error types
- */
-export enum ErrorType {
-  SPELLING = 'spelling',
-  GRAMMAR = 'grammar',
-  PUNCTUATION = 'punctuation',
-  CAPITALIZATION = 'capitalization',
-  WORD_CHOICE = 'word_choice',
-  CONSISTENCY = 'consistency',
-  OTHER = 'other'
-}
-
-/**
- * Error severity levels
- */
-export enum ErrorSeverity {
-  HIGH = 'high',
-  MEDIUM = 'medium',
-  LOW = 'low'
-}
+// Error types and severity are imported from shared module
 
 /**
  * A group of similar errors
