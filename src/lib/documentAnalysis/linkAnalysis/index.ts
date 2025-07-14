@@ -32,7 +32,7 @@ No URLs were found in this document. This analysis focuses on link validation, s
       task: {
         name: "generateLinkAnalysis",
         modelName: "none",
-        priceInCents: 0,
+        priceInDollars: 0,
         timeInSeconds: 0,
         log: JSON.stringify({ message: "No URLs found" }, null, 2),
         llmInteractions: [],
@@ -73,7 +73,7 @@ No URLs were found in this document. This analysis focuses on link validation, s
     task: {
       name: "generateLinkAnalysis",
       modelName: "none",
-      priceInCents: 0, // No LLM costs anymore
+      priceInDollars: 0, // No LLM costs anymore
       timeInSeconds,
       log: JSON.stringify({
         message: `Validated ${urls.length} URLs`,

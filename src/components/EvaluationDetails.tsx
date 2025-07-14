@@ -35,7 +35,7 @@ interface EvaluationDetailsProps {
       id: string;
       name: string;
       modelName: string;
-      priceInCents: number;
+      priceInDollars: number;
       timeInSeconds?: number | null;
       log?: string | null;
       createdAt: Date;
@@ -202,6 +202,7 @@ export function EvaluationDetails({
                       ...task,
                       log: task.log || null,
                       timeInSeconds: task.timeInSeconds || null,
+                      priceInDollars: task.priceInDollars || 0,
                     })),
                     costInCents: job.costInCents || 0,
                     llmThinking: job.llmThinking || "",

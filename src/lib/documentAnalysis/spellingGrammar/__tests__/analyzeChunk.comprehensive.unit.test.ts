@@ -55,10 +55,10 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
       });
 
       // Should return exactly what we mocked
-      expect(highlights).toHaveLength(mockErrors.length);
+      expect(highlights.highlights || highlights).toHaveLength(mockErrors.length);
       
       // Verify each highlight matches (but the analyzeChunk returns absolute line numbers)
-      highlights.forEach((highlight, index) => {
+      highlights.highlights.forEach((highlight, index) => {
         expect(highlight.lineStart).toBe(testCase.expectedErrors[index].lineStart);
         expect(highlight.lineEnd).toBe(testCase.expectedErrors[index].lineEnd);
         expect(highlight.highlightedText).toBe(mockErrors[index].highlightedText);
@@ -67,7 +67,7 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
 
       // Test conversion to comments
       // Need to convert absolute line numbers back to relative for the converter
-      const relativeHighlights = highlights.map(h => ({
+      const relativeHighlights = highlights.highlights.map(h => ({
         ...h,
         lineStart: h.lineStart - testCase.chunk.startLineNumber + 1,
         lineEnd: h.lineEnd - testCase.chunk.startLineNumber + 1
@@ -79,7 +79,7 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
         0
       );
 
-      expect(comments).toHaveLength(highlights.length);
+      expect(comments).toHaveLength(highlights.highlights.length);
       comments.forEach(comment => {
         expect(comment.isValid).toBe(true);
         expect(comment.highlight.isValid).toBe(true);
@@ -121,8 +121,8 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
       primaryInstructions: "Test filtering"
     });
 
-    expect(highlights).toHaveLength(1);
-    expect(highlights[0].highlightedText).toBe("valid");
+    expect(highlights.highlights || highlights).toHaveLength(1);
+    expect(highlights.highlights[0].highlightedText).toBe("valid");
   });
 
   // Test empty chunk handling
@@ -138,7 +138,7 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
       primaryInstructions: "Test empty"
     });
 
-    expect(highlights).toEqual([]);
+    expect(highlights.highlights || highlights).toEqual([]);
     expect(mockAnthropicCreate).not.toHaveBeenCalled();
   });
 
@@ -204,7 +204,7 @@ describe("Performance Tests", () => {
     });
     const endTime = Date.now();
 
-    expect(highlights).toEqual([]);
+    expect(highlights.highlights || highlights).toEqual([]);
     expect(endTime - startTime).toBeLessThan(1000); // Should complete in under 1 second
   });
 });

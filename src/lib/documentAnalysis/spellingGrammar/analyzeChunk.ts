@@ -10,10 +10,10 @@ export async function analyzeChunk(
   chunk: ChunkWithLineNumbers,
   agentContext: AgentContext,
   maxRetries: number = 3
-): Promise<SpellingGrammarHighlight[]> {
+): Promise<{ highlights: SpellingGrammarHighlight[], usage?: any }> {
   // Don't process empty chunks
   if (!chunk.content.trim()) {
-    return [];
+    return { highlights: [] };
   }
 
   // Format the chunk with line numbers for the LLM
@@ -21,10 +21,27 @@ export async function analyzeChunk(
     .map((line, index) => `Line ${chunk.startLineNumber + index}: ${line}`)
     .join("\n");
 
+  // Build convention-aware context
+  const conventionContext = agentContext.conventions ? `
+Document conventions detected:
+- Language: ${agentContext.conventions.language} English
+- Document type: ${agentContext.conventions.documentType}
+- Formality: ${agentContext.conventions.formality}
+
+Based on these conventions:
+${agentContext.conventions.language === 'US' ? '- Use American spelling (color, organize, center)' : ''}
+${agentContext.conventions.language === 'UK' ? '- Use British spelling (colour, organise, centre)' : ''}
+${agentContext.conventions.language === 'mixed' ? '- Document uses mixed spelling conventions - only flag actual misspellings, not US/UK variations' : ''}
+${agentContext.conventions.documentType === 'academic' ? '- Apply formal academic writing standards' : ''}
+${agentContext.conventions.documentType === 'blog' ? '- Allow informal language and colloquialisms' : ''}
+${agentContext.conventions.documentType === 'technical' ? '- Expect technical terms and formal structure' : ''}
+${agentContext.conventions.documentType === 'casual' ? '- Be lenient with informal writing style' : ''}
+` : '';
+
   const systemPrompt = `You are a professional proofreader and grammar checker. Your task is to identify spelling and grammar errors in the provided text.
 
 ${agentContext.primaryInstructions}
-
+${conventionContext}
 Important guidelines:
 - Only highlight actual errors, not stylistic preferences
 - Provide clear, actionable corrections
@@ -36,7 +53,8 @@ Context awareness:
 - Accept colloquialisms and informal language (e.g., "jankily", "kinda", "gonna") unless they're clearly typos
 - Recognize that some documents may be informal (blog posts, forum posts) vs formal (academic papers)
 - Stylistic emphasis (e.g., "rational reason") should NOT be marked as errors
-- Common internet/tech conventions (e.g., "[...]" for truncation) are acceptable`;
+- Common internet/tech conventions (e.g., "[...]" for truncation) are acceptable
+- If document conventions are detected, respect them and don't flag convention-consistent spelling as errors`;
 
   const userPrompt = `Please analyze the following text for spelling and grammar errors. The text is provided with line numbers.
 
@@ -142,7 +160,7 @@ Special cases to watch for:
       if (!toolUse || toolUse.name !== "report_errors") {
         logger.error(`No tool use response from Anthropic (attempt ${attempt}/${maxRetries})`);
         if (attempt === maxRetries) {
-          return [];
+          return { highlights: [], usage: response.usage };
         }
         continue;
       }
@@ -159,7 +177,7 @@ Special cases to watch for:
           attempt
         });
         if (attempt === maxRetries) {
-          return [];
+          return { highlights: [], usage: response.usage };
         }
         continue;
       }
@@ -190,11 +208,18 @@ Special cases to watch for:
         return true;
       });
 
-      // Success! Return the validated highlights
+      // Success! Return the validated highlights with usage data
       if (attempt > 1) {
         logger.info(`Chunk analysis succeeded on attempt ${attempt}`);
       }
-      return validatedHighlights;
+      
+      logger.debug(`Chunk analysis usage:`, {
+        usage: response.usage,
+        inputTokens: response.usage?.input_tokens,
+        outputTokens: response.usage?.output_tokens
+      });
+      
+      return { highlights: validatedHighlights, usage: response.usage };
 
     } catch (error) {
       logger.error(`Error analyzing chunk (attempt ${attempt}/${maxRetries}):`, error);
@@ -205,5 +230,5 @@ Special cases to watch for:
   }
 
   // This should never be reached, but just in case
-  return [];
+  return { highlights: [] };
 }

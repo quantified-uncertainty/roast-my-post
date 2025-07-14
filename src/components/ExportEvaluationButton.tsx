@@ -35,7 +35,7 @@ interface ExportEvaluationButtonProps {
           id: string;
           name: string;
           modelName: string;
-          priceInCents: number;
+          priceInDollars: number;
           timeInSeconds?: number | null;
           log?: string | null;
           createdAt: Date | string;

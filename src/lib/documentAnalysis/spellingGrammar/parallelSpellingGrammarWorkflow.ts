@@ -137,18 +137,18 @@ export async function analyzeSpellingGrammarDocumentParallel(
         logger.info(`Analyzing chunk ${chunkIndex + 1}/${chunks.length} (lines ${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1})`);
         
         try {
-          const chunkHighlights = await analyzeChunk(chunk, {
+          const result = await analyzeChunk(chunk, {
             agentName: agentInfo.name,
             primaryInstructions: agentInfo.primaryInstructions || "Find all spelling, grammar, punctuation, and capitalization errors."
           });
           
           const duration = Date.now() - chunkStartTime;
-          logger.info(`Found ${chunkHighlights.length} errors in chunk ${chunkIndex + 1} (${duration}ms)`);
+          logger.info(`Found ${result.highlights.length} errors in chunk ${chunkIndex + 1} (${duration}ms)`);
           
           return {
             chunkIndex,
             chunk,
-            highlights: chunkHighlights,
+            highlights: result.highlights,
             duration
           };
         } catch (error) {
@@ -183,7 +183,7 @@ export async function analyzeSpellingGrammarDocumentParallel(
       tasks.push({
         name: `Analyze chunk ${result.chunkIndex + 1}`,
         modelName: "claude-3-haiku", // Default model for parallel processing
-        priceInCents: 0, // Cost tracking handled elsewhere
+        priceInDollars: 0, // Cost tracking handled elsewhere
         timeInSeconds: result.duration / 1000,
         log: `Analyzed chunk ${result.chunkIndex + 1}: ${result.highlights.length} errors found`,
         llmInteractions: []

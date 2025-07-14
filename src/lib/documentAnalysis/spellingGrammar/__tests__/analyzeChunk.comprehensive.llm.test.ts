@@ -15,12 +15,12 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       console.log(`Content preview: "${testCase.chunk.content.substring(0, 50)}..."`);
       
       // Analyze the chunk with real Claude API
-      const highlights = await analyzeChunk(testCase.chunk, {
+      const result = await analyzeChunk(testCase.chunk, {
         agentName: "Comprehensive Grammar Test",
         primaryInstructions: "Find all spelling, grammar, punctuation, and capitalization errors. Be thorough and precise. Report the exact line numbers where errors occur."
       });
 
-      console.log(`\nClaude found ${highlights.length} errors, expected ${testCase.expectedErrors.length}`);
+      console.log(`\nClaude found ${result.highlights.length} errors, expected ${testCase.expectedErrors.length}`);
 
       // Check that we found errors at the expected locations
       // Claude might highlight larger chunks than expected, so check if the expected text is contained
@@ -28,7 +28,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       
       // For each expected error, check if Claude found it (even as part of a larger highlight)
       testCase.expectedErrors.forEach(expected => {
-        const found = highlights.some(h => 
+        const found = result.highlights.some(h => 
           h.lineStart === expected.lineStart &&
           h.highlightedText.includes(expected.highlightedText)
         );
@@ -44,7 +44,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       // Log what was found vs expected
       const missed = [...expectedLocations].filter(loc => !foundErrors.has(loc));
       const foundLocations = new Set(
-        highlights.map(h => `${h.lineStart}:${h.highlightedText}`)
+        result.highlights.map(h => `${h.lineStart}:${h.highlightedText}`)
       );
       const extra = [...foundLocations].filter(loc => !expectedLocations.has(loc));
 
@@ -56,7 +56,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       }
 
       // For each found error, log the details
-      highlights.forEach((h, i) => {
+      result.highlights.forEach((h, i) => {
         console.log(`\n[${i + 1}] Line ${h.lineStart}: "${h.highlightedText}"`);
         console.log(`    ${h.description}`);
       });
@@ -69,7 +69,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       expect(accuracy).toBeGreaterThanOrEqual(0.6);
 
       // Test highlight conversion with correct line number adjustment
-      const relativeHighlights = highlights.map(h => ({
+      const relativeHighlights = result.highlights.map(h => ({
         ...h,
         lineStart: h.lineStart - testCase.chunk.startLineNumber + 1,
         lineEnd: h.lineEnd - testCase.chunk.startLineNumber + 1
@@ -86,7 +86,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       expect(isValid).toBe(true);
 
       // Ensure all highlights have proper descriptions
-      highlights.forEach(highlight => {
+      result.highlights.forEach(highlight => {
         expect(highlight.description).toBeTruthy();
         expect(highlight.description.length).toBeGreaterThan(10);
         // Should mention correction or explanation
@@ -94,7 +94,7 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       });
 
       // Verify line numbers are correct
-      highlights.forEach(highlight => {
+      result.highlights.forEach(highlight => {
         expect(highlight.lineStart).toBeGreaterThanOrEqual(testCase.chunk.startLineNumber);
         expect(highlight.lineStart).toBeLessThanOrEqual(testCase.chunk.startLineNumber + testCase.chunk.lines.length - 1);
         expect(highlight.lineEnd).toBeGreaterThanOrEqual(highlight.lineStart);
@@ -116,22 +116,22 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       ]
     };
 
-    const highlights = await analyzeChunk(chunk, {
+    const result = await analyzeChunk(chunk, {
       agentName: "Consistency Test",
       primaryInstructions: "Find spelling errors and be consistent in your explanations"
     });
 
     // All "recieve" errors should be found
-    const receiveErrors = highlights.filter(h => h.highlightedText.includes("recieve"));
+    const receiveErrors = result.highlights.filter((h: any) => h.highlightedText.includes("recieve"));
     expect(receiveErrors.length).toBeGreaterThanOrEqual(3);
 
     // All should mention "receive" as the correction
-    receiveErrors.forEach(error => {
+    receiveErrors.forEach((error: any) => {
       expect(error.description.toLowerCase()).toContain("receive");
     });
 
     console.log("\n=== Consistency Test Results ===");
-    receiveErrors.forEach((error, i) => {
+    receiveErrors.forEach((error: any, i: number) => {
       console.log(`[${i + 1}] Line ${error.lineStart}: ${error.description}`);
     });
   }, TIMEOUT);
@@ -144,15 +144,15 @@ describe("Comprehensive Spelling & Grammar Analysis with Claude", () => {
       lines: ["This have an error on line 99999."]
     };
 
-    const highlights = await analyzeChunk(chunk, {
+    const result = await analyzeChunk(chunk, {
       agentName: "High Line Number Test",
       primaryInstructions: "Find grammar errors"
     });
 
     // Should find the "have" error
-    expect(highlights.length).toBeGreaterThanOrEqual(1);
+    expect(result.highlights.length).toBeGreaterThanOrEqual(1);
     
-    const haveError = highlights.find(h => h.highlightedText.includes("have"));
+    const haveError = result.highlights.find((h: any) => h.highlightedText.includes("have"));
     expect(haveError).toBeDefined();
     expect(haveError?.lineStart).toBe(99999);
     
@@ -177,13 +177,13 @@ describe("Test Coverage Analysis", () => {
     let totalFound = 0;
 
     for (const testCase of spotCheckCases) {
-      const highlights = await analyzeChunk(testCase.chunk, {
+      const result = await analyzeChunk(testCase.chunk, {
         agentName: "Summary Test",
         primaryInstructions: "Find spelling and grammar errors"
       });
       
       totalExpected += testCase.expectedErrors.length;
-      totalFound += highlights.length;
+      totalFound += result.highlights.length;
     }
 
     console.log(`\nSpot check (first 3 cases):`);

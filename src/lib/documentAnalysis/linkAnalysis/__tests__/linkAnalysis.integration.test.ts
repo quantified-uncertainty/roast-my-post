@@ -61,7 +61,7 @@ You can also check out this non-existent site: https://broken-research-site-1234
       mockAgent
     );
 
-    expect(result.task.priceInCents).toBe(0); // No LLM calls needed
+    expect(result.task.priceInDollars).toBe(0); // No LLM calls needed
     expect(result.outputs.thinking).toContain("No URLs were found");
     expect(result.linkAnalysisResults).toHaveLength(0);
     

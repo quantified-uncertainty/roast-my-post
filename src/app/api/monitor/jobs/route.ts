@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             modelName: true,
-            priceInCents: true,
+            priceInDollars: true,
             timeInSeconds: true,
             log: true,
             createdAt: true,

@@ -207,14 +207,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
             const taskData: {
               name: string;
               model: string | null;
-              price_in_cents: number | null;
+              price_in_dollars: number | null;
               time_in_seconds: number | null;
               log: any;
               llm_interactions?: any;
             } = {
               name: task.name,
               model: task.modelName,
-              price_in_cents: task.priceInCents,
+              price_in_dollars: Number(task.priceInDollars),
               time_in_seconds: task.timeInSeconds,
               log: task.log ? (() => {
                 try {

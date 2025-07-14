@@ -5,7 +5,7 @@ import type { LLMInteraction } from "../../../types/llm";
 export interface TaskResult {
   name: string;
   modelName: string;
-  priceInCents: number;
+  priceInDollars: number;
   timeInSeconds: number;
   log: string;
   llmInteractions: LLMInteraction[];

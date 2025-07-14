@@ -39,7 +39,7 @@ interface Job {
     id: string;
     name: string;
     modelName: string;
-    priceInCents: number;
+    priceInDollars: number;
     timeInSeconds: number | null;
     log: string | null;
     createdAt: Date;
@@ -277,7 +277,14 @@ export default function JobsMonitorPage() {
               </div>
 
               {/* Reuse JobDetails component for expanded info */}
-              <JobDetails job={selectedJob} />
+              <JobDetails job={{
+                ...selectedJob,
+                createdAt: selectedJob.createdAt,
+                tasks: selectedJob.tasks?.map(task => ({
+                  ...task,
+                  priceInDollars: Number(task.priceInDollars)
+                }))
+              }} />
             </div>
           ) : (
             <div className="bg-white shadow rounded-lg p-6 text-center">

@@ -159,7 +159,7 @@ export async function extractHighlightsFromAnalysis(
       task: {
         name: "extractHighlightsFromAnalysis",
         modelName: "EXTRACTION_ONLY",
-        priceInCents: 0,
+        priceInDollars: 0,
         timeInSeconds,
         log: JSON.stringify(logDetails, null, 2),
         llmInteractions: [],
@@ -310,7 +310,7 @@ export async function extractHighlightsFromAnalysis(
     task: {
       name: "extractHighlightsFromAnalysis",
       modelName: ANALYSIS_MODEL,
-      priceInCents: cost,
+      priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
       llmInteractions: [interaction],

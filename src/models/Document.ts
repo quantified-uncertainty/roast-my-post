@@ -84,7 +84,7 @@ type DocumentWithRelations = {
           id: string;
           name: string;
           modelName: string;
-          priceInCents: number;
+          priceInDollars: number;
           timeInSeconds: number | null;
           log: string | null;
           createdAt: Date;
@@ -237,7 +237,7 @@ export class DocumentModel {
                     id: task.id,
                     name: task.name,
                     modelName: task.modelName,
-                    priceInCents: task.priceInCents,
+                    priceInDollars: Number(task.priceInDollars),
                     timeInSeconds: task.timeInSeconds,
                     log: task.log,
                     llmInteractions: (task as any).llmInteractions,

@@ -36,4 +36,10 @@ export interface AgentContext {
   agentName: string;
   /** Primary instructions for the agent */
   primaryInstructions: string;
+  /** Detected document conventions (optional) */
+  conventions?: {
+    language: 'US' | 'UK' | 'mixed' | 'unknown';
+    documentType: 'academic' | 'blog' | 'technical' | 'casual' | 'unknown';
+    formality: 'formal' | 'informal' | 'mixed';
+  };
 }

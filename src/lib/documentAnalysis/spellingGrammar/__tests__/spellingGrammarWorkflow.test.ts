@@ -10,8 +10,13 @@ import { analyzeChunk } from "../analyzeChunk";
 jest.mock("../highlightConverter");
 import { convertHighlightsToComments } from "../highlightConverter";
 
+// Mock the detectDocumentConventions function
+jest.mock("../detectConventions");
+import { detectDocumentConventions } from "../detectConventions";
+
 const mockAnalyzeChunk = analyzeChunk as jest.MockedFunction<typeof analyzeChunk>;
 const mockConvertHighlights = convertHighlightsToComments as jest.MockedFunction<typeof convertHighlightsToComments>;
+const mockDetectConventions = detectDocumentConventions as jest.MockedFunction<typeof detectDocumentConventions>;
 
 describe("analyzeSpellingGrammarDocument", () => {
   const mockDocument: Document = {
@@ -43,6 +48,14 @@ Its a beautiful day outside.`,
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Default mock implementation for detectDocumentConventions
+    mockDetectConventions.mockResolvedValue({
+      language: 'US',
+      documentType: 'casual',
+      formality: 'informal',
+      examples: []
+    });
+    
     // Default mock implementation for convertHighlightsToComments
     // The actual implementation calls this for each highlight individually
     mockConvertHighlights.mockImplementation((highlights, content, baseOffset) => 
@@ -64,21 +77,22 @@ Its a beautiful day outside.`,
 
   test("splits document into chunks and aggregates results", async () => {
     // Mock analyzeChunk to return different errors for each chunk
-    mockAnalyzeChunk.mockResolvedValueOnce([
-      {
-        lineStart: 1,
-        lineEnd: 1,
-        highlightedText: "grammer",
-        description: "Spelling error: should be 'grammar'"
-      },
-      {
-        lineStart: 2,
-        lineEnd: 2,
-        highlightedText: "recieve",
-        description: "Spelling error: should be 'receive'"
-      },
-      {
-        lineStart: 2,
+    mockAnalyzeChunk.mockResolvedValueOnce({
+      highlights: [
+        {
+          lineStart: 1,
+          lineEnd: 1,
+          highlightedText: "grammer",
+          description: "Spelling error: should be 'grammar'"
+        },
+        {
+          lineStart: 2,
+          lineEnd: 2,
+          highlightedText: "recieve",
+          description: "Spelling error: should be 'receive'"
+        },
+        {
+          lineStart: 2,
         lineEnd: 2,
         highlightedText: "tommorow",
         description: "Spelling error: should be 'tomorrow'"
@@ -95,7 +109,8 @@ Its a beautiful day outside.`,
         highlightedText: "Its",
         description: "Missing apostrophe: should be 'It's'"
       }
-    ]);
+      ]
+    });
 
     const result = await analyzeSpellingGrammarDocument(
       mockDocument,
@@ -129,22 +144,21 @@ Its a beautiful day outside.`,
 
     // Check analysis content
     expect(result.analysis).toContain("Spelling & Grammar Analysis");
-    expect(result.analysis).toContain("**Total Errors Found:** 5");
+    expect(result.analysis).toContain("**Unique Errors Found:** 5");
     
     // Check summary
-    expect(result.summary).toContain("Found 5 spelling/grammar errors");
+    expect(result.summary).toContain("Found 5 unique error");
 
-    // Check tasks
-    expect(result.tasks).toHaveLength(1); // One chunk for this small document
-    result.tasks.forEach((task, index) => {
-      expect(task.name).toBe(`Analyze chunk ${index + 1}`);
-      expect(task.log).toContain(`Analyzed chunk ${index + 1}`);
-    });
+    // Check tasks (convention detection + 1 chunk + post-processing)
+    expect(result.tasks).toHaveLength(3);
+    expect(result.tasks[0].name).toBe("Detect document conventions");
+    expect(result.tasks[1].name).toBe("Analyze chunk 1");
+    expect(result.tasks[2].name).toBe("Post-process and deduplicate errors");
   });
 
   test("handles documents with no errors", async () => {
     mockAnalyzeChunk.mockClear();
-    mockAnalyzeChunk.mockResolvedValue([]);
+    mockAnalyzeChunk.mockResolvedValue({ highlights: [] });
 
     const cleanDocument: Document = {
       ...mockDocument,
@@ -159,7 +173,7 @@ Its a beautiful day outside.`,
 
     expect(result.highlights).toHaveLength(0);
     expect(result.summary).toBe("No spelling or grammar errors detected.");
-    expect(result.analysis).toContain("No spelling or grammar errors were detected");
+    expect(result.analysis).toContain("Excellent!");
     expect(result.grade).toBeGreaterThanOrEqual(90);
   });
 
@@ -173,7 +187,7 @@ Its a beautiful day outside.`,
     }));
 
     mockAnalyzeChunk.mockClear();
-    mockAnalyzeChunk.mockResolvedValue(manyErrors);
+    mockAnalyzeChunk.mockResolvedValue({ highlights: manyErrors });
 
     const result = await analyzeSpellingGrammarDocument(
       mockDocument,
@@ -195,7 +209,7 @@ Its a beautiful day outside.`,
       content: largeContent
     };
 
-    mockAnalyzeChunk.mockResolvedValue([]);
+    mockAnalyzeChunk.mockResolvedValue({ highlights: [] });
 
     await analyzeSpellingGrammarDocument(largeDocument, mockAgent, 10);
 

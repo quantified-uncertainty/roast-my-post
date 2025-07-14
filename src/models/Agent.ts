@@ -386,7 +386,7 @@ export class AgentModel {
                   id: true,
                   name: true,
                   modelName: true,
-                  priceInCents: true,
+                  priceInDollars: true,
                   timeInSeconds: true,
                   log: true,
                   createdAt: true,

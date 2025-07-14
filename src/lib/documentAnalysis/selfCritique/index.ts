@@ -198,7 +198,7 @@ ${evaluationText}`;
     task: {
       name: "generateSelfCritique",
       modelName: ANALYSIS_MODEL,
-      priceInCents: cost,
+      priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
       llmInteractions: [interaction],
