@@ -149,7 +149,7 @@ Overall, this is a well-structured test document.
       expect(result.outputs.highlights[0].highlight.startOffset).toBeDefined();
       expect(result.outputs.highlights[0].highlight.endOffset).toBeDefined();
       expect(result.task.name).toBe("extractHighlightsFromAnalysis");
-      expect(result.task.priceInCents).toBe(0); // Should be free extraction
+      expect(result.task.priceInDollars).toBe(0); // Should be free extraction
     });
 
     it.skip("should fall back to LLM extraction when no insights provided", async () => {
@@ -198,7 +198,7 @@ Overall, this is a well-structured test document.
 
       expect(result.outputs.highlights).toHaveLength(1);
       expect(result.outputs.highlights[0].description).toContain("Extracted Highlight");
-      expect(result.task.priceInCents).toBeGreaterThan(0); // Should have cost for LLM
+      expect(result.task.priceInDollars).toBeGreaterThan(0); // Should have cost for LLM
     });
   });
 });

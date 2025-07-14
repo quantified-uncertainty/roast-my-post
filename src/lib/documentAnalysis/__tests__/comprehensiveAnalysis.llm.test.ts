@@ -111,7 +111,7 @@ What are your thoughts on AI in education? How can we balance innovation with th
     
     console.log(`=== Task Performance ===`);
     result.tasks.forEach(task => {
-      console.log(`${task.name}: ${task.timeInSeconds}s, $${(task.priceInCents / 100).toFixed(2)}`);
+      console.log(`${task.name}: ${task.timeInSeconds}s, $${task.priceInDollars.toFixed(2)}`);
     });
   }, 120000); // 120 second timeout for comprehensive analysis API calls
 });

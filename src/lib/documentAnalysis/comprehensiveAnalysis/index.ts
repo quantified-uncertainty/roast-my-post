@@ -12,10 +12,8 @@ import {
   withTimeout,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
 } from "../../../types/openai";
-import {
-  calculateApiCost,
-  mapModelToCostModel,
-} from "../../../utils/costCalculator";
+import { calculateApiCost } from "../../../utils/costCalculator";
+import { calculateLLMCost } from "../shared/costUtils";
 import type { TaskResult } from "../shared/types";
 import { getComprehensiveAnalysisPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
@@ -222,13 +220,7 @@ export async function generateComprehensiveAnalysis(
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateApiCost(
-    {
-      input_tokens: interaction.usage.input_tokens,
-      output_tokens: interaction.usage.output_tokens,
-    },
-    mapModelToCostModel(ANALYSIS_MODEL)
-  );
+  const cost = calculateLLMCost(ANALYSIS_MODEL, interaction.usage);
 
   const logDetails = createLogDetails(
     "generateComprehensiveAnalysis",
@@ -256,7 +248,7 @@ export async function generateComprehensiveAnalysis(
     task: {
       name: "generateComprehensiveAnalysis",
       modelName: ANALYSIS_MODEL,
-      priceInCents: cost,
+      priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
       llmInteractions: [interaction],

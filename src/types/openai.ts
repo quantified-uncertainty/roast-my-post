@@ -5,6 +5,10 @@ import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const HELICONE_API_KEY = process.env.HELICONE_API_KEY;
+const HELICONE_CACHE_ENABLED = process.env.HELICONE_CACHE_ENABLED === "true";
+const HELICONE_CACHE_MAX_AGE = process.env.HELICONE_CACHE_MAX_AGE || "3600";
+const HELICONE_CACHE_BUCKET_MAX_SIZE = process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || "20";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 if (!ANTHROPIC_API_KEY) {
@@ -22,9 +26,21 @@ if (!OPENROUTER_API_KEY) {
 export const SEARCH_MODEL = process.env.SEARCH_MODEL || "openai/gpt-4.1"; // For search tasks still using OpenRouter
 export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514"; // Using Anthropic directly
 
-// Anthropic client for analysis tasks
+// Anthropic client for analysis tasks with Helicone integration
 export const anthropic = new Anthropic({
   apiKey: ANTHROPIC_API_KEY,
+  ...(HELICONE_API_KEY && {
+    baseURL: "https://anthropic.helicone.ai",
+    defaultHeaders: {
+      "Helicone-Auth": `Bearer ${HELICONE_API_KEY}`,
+      ...(HELICONE_CACHE_ENABLED && {
+        "Helicone-Cache-Enabled": "true",
+        "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
+        "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
+        "Helicone-Cache-Seed": "spelling-grammar-v1",
+      })
+    }
+  })
 });
 
 // OpenAI client via OpenRouter for search tasks

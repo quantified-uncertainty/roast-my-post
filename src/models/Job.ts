@@ -439,7 +439,7 @@ export class JobModel {
           data: {
             name: task.name,
             modelName: task.modelName,
-            priceInCents: task.priceInCents,
+            priceInDollars: task.priceInDollars,
             timeInSeconds: task.timeInSeconds,
             log: task.log,
             llmInteractions: task.llmInteractions as any, // Cast for Prisma Json type
@@ -531,7 +531,7 @@ ${tasks
 ### ${task.name}
 - Model: ${task.modelName}
 - Time: ${task.timeInSeconds}s
-- Cost: $${(task.priceInCents / 100).toFixed(6)}
+- Cost: $${task.priceInDollars.toFixed(6)}
 - Interactions: ${task.llmInteractions.length}
 ${task.llmInteractions
   .map(

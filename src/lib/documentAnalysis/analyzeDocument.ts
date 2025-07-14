@@ -5,6 +5,7 @@ import type { Comment } from "../../types/documentSchema";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
+import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 
@@ -27,6 +28,15 @@ export async function analyzeDocument(
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
     logger.info(`Using link analysis workflow for agent ${agentInfo.name}`);
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
+  }
+  
+  if (agentInfo.extendedCapabilityId === "spelling-grammar") {
+    logger.info(`Using spelling/grammar workflow for agent ${agentInfo.name} (parallel execution)`);
+    return await analyzeSpellingGrammar(document, agentInfo, {
+      targetHighlights,
+      executionMode: 'parallel',
+      maxConcurrency: 5
+    });
   }
 
   logger.info(

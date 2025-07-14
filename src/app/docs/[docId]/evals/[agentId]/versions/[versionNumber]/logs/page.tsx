@@ -168,7 +168,10 @@ export default async function VersionLogsPage({ params }: PageProps) {
                 {/* Task Details */}
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks</h3>
-                  <TaskDisplayClient tasks={job.tasks || []} />
+                  <TaskDisplayClient tasks={(job.tasks || []).map(task => ({
+                    ...task,
+                    priceInDollars: Number(task.priceInDollars)
+                  }))} />
                 </div>
               </div>
             </div>

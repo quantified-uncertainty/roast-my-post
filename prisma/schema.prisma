@@ -254,7 +254,7 @@ model Task {
   id              String   @id @default(uuid())
   name            String
   modelName       String
-  priceInCents    Int
+  priceInDollars  Decimal  @db.Decimal(10, 6)
   timeInSeconds   Int?
   log             String?
   createdAt       DateTime @default(now())

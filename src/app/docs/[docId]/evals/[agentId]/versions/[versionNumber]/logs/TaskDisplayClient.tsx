@@ -6,7 +6,7 @@ interface Task {
   id: string;
   name: string;
   modelName: string;
-  priceInCents: number;
+  priceInDollars: number;
   timeInSeconds: number | null;
   log: string | null;
   llmInteractions?: any; // JSON field from database
@@ -29,7 +29,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
     );
   }
 
-  const totalCost = tasks.reduce((sum, task) => sum + task.priceInCents, 0);
+  const totalCost = tasks.reduce((sum, task) => sum + task.priceInDollars, 0);
   const totalTime = tasks.reduce((sum, task) => sum + (task.timeInSeconds || 0), 0);
 
   const toggleTask = (taskId: string) => {
@@ -81,7 +81,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
                 }`}>
                   {task.modelName}
                 </span>
-                <span>${(task.priceInCents / 100).toFixed(4)}</span>
+                <span>${task.priceInDollars.toFixed(6)}</span>
                 {task.timeInSeconds && (
                   <span className="text-gray-600">
                     {task.timeInSeconds < 60 
@@ -335,7 +335,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
       <div className="mt-4 rounded-lg bg-blue-50 p-4">
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-blue-900">Total Cost:</span>
-          <span className="text-blue-700">${(totalCost / 100).toFixed(4)}</span>
+          <span className="text-blue-700">${totalCost.toFixed(4)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between text-sm">
           <span className="font-medium text-blue-900">Total Time:</span>

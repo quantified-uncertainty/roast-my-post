@@ -12,7 +12,7 @@ interface Task {
   id: string;
   name: string;
   modelName: string;
-  priceInCents: number;
+  priceInDollars: number;
   timeInSeconds: number | null;
   log: string | null;
   llmInteractions?: any; // JSON field from database (optional in schema)
@@ -96,7 +96,7 @@ function TaskItem({ task, index }: { task: Task; index: number }) {
           <span className="rounded bg-gray-200 px-2 py-1">
             {task.modelName}
           </span>
-          <span>${(task.priceInCents / 100).toFixed(4)}</span>
+          <span>${task.priceInDollars.toFixed(6)}</span>
           {task.timeInSeconds && <span>{task.timeInSeconds}s</span>}
         </div>
       </div>
@@ -247,12 +247,10 @@ export function TaskLogs({ selectedVersion }: TaskLogsProps) {
           <span className="font-medium text-blue-900">Total Cost:</span>
           <span className="text-blue-700">
             $
-            {(
-              selectedVersion.job.tasks.reduce(
-                (sum, task) => sum + task.priceInCents,
-                0
-              ) / 100
-            ).toFixed(4)}
+            {selectedVersion.job.tasks.reduce(
+              (sum, task) => sum + task.priceInDollars,
+              0
+            ).toFixed(6)}
           </span>
         </div>
         <div className="mt-1 flex items-center justify-between text-sm">

@@ -8,6 +8,19 @@ import {
 import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";
 
+// Helper function to safely convert Decimal to number
+function convertPriceToNumber(price: any): number {
+  if (price === null || price === undefined) return 0;
+  if (typeof price === 'number') return price;
+  if (typeof price === 'string') {
+    const parsed = parseFloat(price);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  if (typeof price === 'object' && price.toNumber) return price.toNumber();
+  const converted = Number(price);
+  return isNaN(converted) ? 0 : converted;
+}
+
 type DocumentWithRelations = {
   id: string;
   publishedDate: Date;
@@ -84,7 +97,7 @@ type DocumentWithRelations = {
           id: string;
           name: string;
           modelName: string;
-          priceInCents: number;
+          priceInDollars: number;
           timeInSeconds: number | null;
           log: string | null;
           createdAt: Date;
@@ -237,7 +250,7 @@ export class DocumentModel {
                     id: task.id,
                     name: task.name,
                     modelName: task.modelName,
-                    priceInCents: task.priceInCents,
+                    priceInDollars: convertPriceToNumber(task.priceInDollars),
                     timeInSeconds: task.timeInSeconds,
                     log: task.log,
                     llmInteractions: (task as any).llmInteractions,
