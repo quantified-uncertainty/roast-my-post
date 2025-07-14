@@ -47,9 +47,15 @@ export class SpellingGrammarLLMClient {
 
         const response = await anthropic.messages.create({
           model: this.model,
-          max_tokens: 2000,
+          max_tokens: 8000,
           temperature: this.temperature,
-          system: systemPrompt,
+          system: [
+            {
+              type: "text",
+              text: systemPrompt,
+              cache_control: { type: "ephemeral" }
+            }
+          ],
           messages: [
             {
               role: "user",
@@ -62,10 +68,15 @@ export class SpellingGrammarLLMClient {
 
         const result = this.extractToolResponse(response);
         if (!result) {
-          if (attempt === this.maxRetries) {
-            return this.createEmptyResponse(response.usage, 'No tool use in response');
+          const isLastAttempt = attempt === this.maxRetries;
+          
+          if (isLastAttempt) {
+            logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} All retries exhausted for tool use response`);
+            return this.createEmptyResponse(response.usage, 'No tool use in response after all retries');
+          } else {
+            logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response, retrying attempt ${attempt + 1}/${this.maxRetries}`);
+            continue;
           }
-          continue;
         }
 
         const errors = this.parseErrors(result);
@@ -91,9 +102,21 @@ export class SpellingGrammarLLMClient {
         };
 
       } catch (error) {
-        logger.error(`Error analyzing text (attempt ${attempt}/${this.maxRetries}):`, error);
-        if (attempt === this.maxRetries) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isLastAttempt = attempt === this.maxRetries;
+        
+        logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Error analyzing text (attempt ${attempt}/${this.maxRetries})`, {
+          error: errorMessage,
+          isLastAttempt,
+          model: this.model,
+          temperature: this.temperature
+        });
+        
+        if (isLastAttempt) {
+          logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} All retry attempts exhausted, throwing error`);
           throw error;
+        } else {
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Retrying after error: ${errorMessage}`);
         }
       }
     }
@@ -147,18 +170,53 @@ export class SpellingGrammarLLMClient {
    * Extract tool response from Anthropic response
    */
   private extractToolResponse(response: any): any {
+    // Enhanced error logging to capture response structure
+    if (!response.content || !Array.isArray(response.content)) {
+      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid response structure`, {
+        hasContent: !!response.content,
+        contentType: typeof response.content,
+        responseId: response.id,
+        responseKeys: Object.keys(response || {}),
+        fullResponse: JSON.stringify(response, null, 2)
+      });
+      return null;
+    }
+
     const toolUse = response.content.find((c: any) => c.type === "tool_use");
     if (!toolUse || toolUse.name !== "report_errors") {
-      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response from Anthropic`);
+      // Capture detailed debugging information
+      const textContent = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text);
+      
+      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response from Anthropic`, {
+        responseId: response.id,
+        contentTypes: response.content.map((c: any) => c.type),
+        toolUseName: toolUse?.name,
+        hasToolUse: !!toolUse,
+        textContent: textContent,
+        fullContent: response.content,
+        usage: response.usage
+      });
+
+      // Check if response has text content that looks like analysis results
+      if (textContent.length > 0) {
+        const combinedText = textContent.join(' ');
+        const fallbackResult = this.tryParseTextResponse(combinedText);
+        if (fallbackResult) {
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Successfully parsed fallback text response`);
+          return fallbackResult;
+        }
+      }
+
       return null;
     }
 
     const result = toolUse.input as { errors: any[] };
     if (!result || !Array.isArray(result.errors)) {
-      logger.error(`Invalid response structure from LLM`, {
+      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid tool use structure from LLM`, {
         result,
         toolUseName: toolUse.name,
-        responseId: response.id
+        responseId: response.id,
+        toolUseInput: toolUse.input
       });
       return null;
     }
@@ -227,6 +285,50 @@ export class SpellingGrammarLLMClient {
         }
       }
     };
+  }
+
+  /**
+   * Try to parse text response as fallback when tool use fails
+   */
+  private tryParseTextResponse(text: string): { errors: any[] } | null {
+    try {
+      // Handle common patterns in plain text responses
+      const lowerText = text.toLowerCase();
+      
+      // Pattern 1: "analyzed chunk X: Y errors found" or "0 errors found"
+      if (lowerText.includes('0 errors found') || 
+          lowerText.includes('no errors') ||
+          lowerText.includes('no spelling') ||
+          lowerText.includes('no grammar')) {
+        logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Fallback parsing: detected no errors pattern`);
+        return { errors: [] };
+      }
+
+      // Pattern 2: "analyzed chunk X: Y errors found" where Y > 0
+      const errorCountMatch = text.match(/(\d+)\s+errors?\s+found/i);
+      if (errorCountMatch) {
+        const errorCount = parseInt(errorCountMatch[1]);
+        if (errorCount === 0) {
+          logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Fallback parsing: extracted 0 errors from count`);
+          return { errors: [] };
+        } else {
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Fallback parsing: ${errorCount} errors mentioned but no details provided`);
+          // We can't extract the actual errors from plain text, so return empty
+          // but log this as a notable case
+          return { errors: [] };
+        }
+      }
+
+      // If we can't parse it, return null to continue with normal error handling
+      logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Fallback parsing failed: unrecognized text pattern`, {
+        textPreview: text.substring(0, 200)
+      });
+      return null;
+
+    } catch (error) {
+      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Error in fallback text parsing:`, error);
+      return null;
+    }
   }
 
   /**

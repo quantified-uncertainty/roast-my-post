@@ -56,10 +56,29 @@ DATABASE_URL="postgresql://user:password@localhost:5432/roast_my_post"
 NEXTAUTH_URL="http://localhost:3000"
 AUTH_SECRET="generate-a-secure-random-string"
 ANTHROPIC_API_KEY="your-anthropic-key"
+HELICONE_API_KEY="your-helicone-key-optional"
 OPENROUTER_API_KEY="your-openrouter-key"
 EMAIL_FROM="noreply@yourdomain.com"
 AUTH_RESEND_KEY="your-resend-api-key"
 ```
+
+**Optional: Helicone Integration**
+
+To enable monitoring of Anthropic API usage through Helicone:
+1. Create a [Helicone account](https://helicone.ai)
+2. Add your Helicone API key to `HELICONE_API_KEY` in `.env`
+3. All Anthropic API calls will automatically route through Helicone for monitoring and analytics
+
+**Optional: Helicone Prompt Caching**
+
+To enable prompt caching for improved performance and cost savings:
+```bash
+HELICONE_CACHE_ENABLED=true          # Enable prompt caching
+HELICONE_CACHE_MAX_AGE=3600          # Cache duration in seconds (1 hour)
+HELICONE_CACHE_BUCKET_MAX_SIZE=1000  # Max cache entries per bucket
+```
+
+Prompt caching can significantly reduce API costs for repeated similar requests.
 
 4. Set up the database:
 ```bash

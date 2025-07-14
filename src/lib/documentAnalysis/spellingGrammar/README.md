@@ -13,13 +13,18 @@ This module provides document analysis for spelling and grammar errors using LLM
 
 ```
 spellingGrammar/
-├── analyzeChunk.ts             # Core LLM analysis function
-├── highlightConverter.ts       # Converts line-based to character offsets
-├── spellingGrammarWorkflow.ts  # Complete document analysis workflow
-├── types.ts                    # TypeScript interfaces
-├── testCases.ts               # 20+ comprehensive test cases
-├── index.ts                   # Module exports
-└── __tests__/                 # Comprehensive test suite
+├── workflows/
+│   └── SpellingGrammarWorkflow.ts    # Main workflow orchestrator
+├── infrastructure/
+│   ├── llmClient.ts                  # LLM client with retry/fallback logic
+│   └── documentProcessor.ts         # Document chunking and processing
+├── domain/                           # Core domain models
+├── application/                      # Business logic and error processing
+├── highlightConverter.ts             # Converts line-based to character offsets
+├── types.ts                         # TypeScript interfaces
+├── testCases.ts                     # 20+ comprehensive test cases
+├── index.ts                         # Module exports
+└── __tests__/                       # Comprehensive test suite
 ```
 
 ## Usage
@@ -40,26 +45,25 @@ const agent = {
 const result = await analyzeDocument(document, agent);
 ```
 
-### Direct Chunk Analysis
+### Direct Workflow Analysis
 
 ```typescript
-import { analyzeChunk, convertHighlightsToComments } from './spellingGrammar';
+import { SpellingGrammarWorkflow } from './workflows/SpellingGrammarWorkflow';
 
-// Create a chunk with line numbers
-const chunk: ChunkWithLineNumbers = {
-  content: "This have an error.",
-  startLineNumber: 10,
-  lines: ["This have an error."]
-};
+const workflow = new SpellingGrammarWorkflow();
 
-// Analyze for errors
-const highlights = await analyzeChunk(chunk, {
-  agentName: "Grammar Agent",
-  primaryInstructions: "Find spelling and grammar errors"
+// Analyze complete document
+const result = await workflow.analyze(document, agent, {
+  executionMode: 'sequential', // or 'parallel'
+  maxConcurrency: 3
 });
 
-// Convert to UI format
-const comments = convertHighlightsToComments(highlights, fullDocumentContent);
+// result contains:
+// - highlights: Comment[] (ready for UI)
+// - analysis: string (detailed report)
+// - summary: string (brief summary)
+// - grade: number (quality score)
+// - tasks: TaskResult[] (cost/timing info)
 ```
 
 ## Highlight Format

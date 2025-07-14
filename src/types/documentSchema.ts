@@ -31,7 +31,7 @@ export const TaskSchema = z.object({
   id: z.string(),
   name: z.string(),
   modelName: z.string(),
-  priceInDollars: z.number(),
+  priceInDollars: z.coerce.number(),
   timeInSeconds: z.number().nullable(),
   log: z.string().nullable(),
   llmInteractions: z.any().nullable(), // JSON field storing LLMInteraction[]

@@ -338,15 +338,25 @@ export class SpellingGrammarWorkflow {
       return validErrors;
 
     } catch (error) {
-      logger.error(`${LOG_PREFIXES.ERROR} Chunk ${index + 1} failed`, { error });
+      const errorMessage = error instanceof Error ? error.message : String(error);
       
-      // Create failed task
+      logger.error(`${LOG_PREFIXES.ERROR} Chunk ${index + 1} failed`, { 
+        error: errorMessage,
+        chunkInfo: {
+          index: index + 1,
+          totalChunks,
+          lineRange: `${chunk.startLineNumber}-${chunk.endLineNumber}`,
+          characters: chunk.characterCount
+        }
+      });
+      
+      // Create failed task with detailed error information
       tasks.push({
         name: `Analyze chunk ${index + 1}`,
         modelName: ANALYSIS_MODEL,
         priceInDollars: 0,
         timeInSeconds: (Date.now() - chunkStartTime) / 1000,
-        log: `Failed to analyze chunk ${index + 1}: ${error}`,
+        log: `FAILED to analyze chunk ${index + 1} (lines ${chunk.startLineNumber}-${chunk.endLineNumber}): ${errorMessage}. This chunk was skipped and may contain undetected errors.`,
         llmInteractions: []
       });
 
