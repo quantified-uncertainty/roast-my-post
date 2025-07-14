@@ -166,20 +166,7 @@ export class SpellingGrammarWorkflow {
     logger.info(`Detected conventions: ${conventions.language} English, ${conventions.documentType} document`);
 
     // Calculate cost
-    let conventionCost = 0;
-    if (conventionResult.usage) {
-      try {
-        const costModel = mapModelToCostModel(ANALYSIS_MODEL);
-        const costResult = calculateCost(
-          costModel,
-          conventionResult.usage.input_tokens || 0,
-          conventionResult.usage.output_tokens || 0
-        );
-        conventionCost = costResult.totalCost;
-      } catch (e) {
-        logger.warn("Could not calculate convention detection cost", { error: e });
-      }
-    }
+    const conventionCost = calculateLLMCost(ANALYSIS_MODEL, conventionResult.usage);
 
     const docProcessor = new DocumentProcessor(content);
     tasks.push({
