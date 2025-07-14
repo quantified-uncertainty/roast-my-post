@@ -44,42 +44,28 @@ ${agentContext.conventions.documentType === 'casual' ? '- Be lenient with inform
 
 ${agentContext.primaryInstructions}
 ${conventionContext}
-Important guidelines:
-- Only highlight actual errors, not stylistic preferences
-- Provide clear, actionable corrections
-- Be specific about what should be changed
-- Focus on clarity and correctness
-- CRITICAL: For highlightedText, be PRECISE and highlight ONLY the problematic word(s), not entire sentences
 
-Context awareness:
-- Accept colloquialisms and informal language (e.g., "jankily", "kinda", "gonna") unless they're clearly typos
-- Recognize that some documents may be informal (blog posts, forum posts) vs formal (academic papers)
-- Stylistic emphasis (e.g., "rational reason") should NOT be marked as errors
-- Common internet/tech conventions (e.g., "[...]" for truncation) are acceptable
-- If document conventions are detected, respect them and don't flag convention-consistent spelling as errors`;
+## Analysis Instructions
 
-  const userPrompt = `Please analyze the following text for spelling and grammar errors. The text is provided with line numbers.
-
-${numberedContent}
-
-Identify all spelling and grammar errors. For each error:
-1. Use the EXACT line number(s) from the text above
+For each error you find:
+1. Use the EXACT line number(s) from the text
 2. For highlightedText, include ONLY the problematic word(s):
    - Spelling errors: just the misspelled word (e.g., "recieve" not "I will recieve the package")
-   - Grammar errors: just the incorrect word(s) (e.g., "are" not "The team are playing well")
+   - Grammar errors: just the incorrect word(s) (e.g., "are" not "The team are playing well")  
    - Punctuation errors: the word with missing/wrong punctuation (e.g., "Hello,how" not the full sentence)
    - Word confusion: just the confused word (e.g., "Your" not "Your the best!")
    - IMPORTANT: Report each error separately, even if they are adjacent
 3. Provide a clear explanation and correction
 
-Examples of CORRECT highlighting:
+## Examples of Correct Highlighting
 - highlightedText: "recieve" → description: "Spelling error: should be 'receive'"
 - highlightedText: "are" → description: "Subject-verb disagreement: 'team' is singular, use 'is'"
 - highlightedText: "Its" → description: "Missing apostrophe: should be 'It's' (contraction of 'it is')"
 - highlightedText: "Hello,how" → description: "Punctuation error: missing space after comma"
 - highlightedText: "fine.Thanks" → description: "Punctuation error: missing space after period"
 
-IMPORTANT: Report each distinct error as a separate entry. Don't combine multiple errors into one highlight.
+## Focus Areas
+Report each distinct error as a separate entry. Don't combine multiple errors into one highlight.
 
 Focus on objective errors like:
 - Spelling mistakes
@@ -91,11 +77,29 @@ Focus on objective errors like:
 - Mixed constructions (like "the reason is because" which should be "the reason is that")
 - Tense consistency within sentences
 
-Special cases to watch for:
+## Special Cases to Watch For
 - "Yesterday I go" → highlight "go" (should be "went")
 - Missing period at end of sentence → highlight the last word without period
 - "The reason is because" → highlight "is because of" or "is because" (redundant)
-- For compound proper nouns, you may highlight them together if they form a single entity (e.g., "united states" as one error)`;
+- For compound proper nouns, you may highlight them together if they form a single entity (e.g., "united states" as one error)
+
+## Important Guidelines
+- Only highlight actual errors, not stylistic preferences
+- Provide clear, actionable corrections
+- Be specific about what should be changed
+- Focus on clarity and correctness
+- CRITICAL: For highlightedText, be PRECISE and highlight ONLY the problematic word(s), not entire sentences
+
+## Context Awareness
+- Accept colloquialisms and informal language (e.g., "jankily", "kinda", "gonna") unless they're clearly typos
+- Recognize that some documents may be informal (blog posts, forum posts) vs formal (academic papers)
+- Stylistic emphasis (e.g., "rational reason") should NOT be marked as errors
+- Common internet/tech conventions (e.g., "[...]" for truncation) are acceptable
+- If document conventions are detected, respect them and don't flag convention-consistent spelling as errors`;
+
+  const userPrompt = `Analyze the following text for spelling and grammar errors. The text is provided with line numbers.
+
+${numberedContent}`;
 
   // Retry logic for handling intermittent LLM failures
   for (let attempt = 1; attempt <= maxRetries; attempt++) {

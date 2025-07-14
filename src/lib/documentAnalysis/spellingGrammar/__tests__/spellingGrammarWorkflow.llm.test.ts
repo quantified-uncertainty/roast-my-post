@@ -1,4 +1,4 @@
-import { analyzeSpellingGrammarDocument } from "../index";
+import { analyzeSpellingGrammar } from "../index";
 import type { Document } from "../../../../types/documents";
 import type { Agent } from "../../../../types/agentSchema";
 
@@ -41,10 +41,10 @@ In conclusion, while AI presents both opportunities and chalenges, one thing is 
   };
 
   test("analyzes real document with multiple error types", async () => {
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       testDocument,
       grammarAgent,
-      50 // Allow up to 50 highlights to see all errors
+      { targetHighlights: 50 } // Allow up to 50 highlights to see all errors
     );
 
     console.log(`\n=== Spelling & Grammar Analysis Results ===`);
@@ -103,10 +103,10 @@ In conclusion, while AI presents both opportunities and chalenges, one thing is 
       content: ""
     };
 
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       emptyDoc,
       grammarAgent,
-      10
+      { targetHighlights: 10 }
     );
 
     expect(result.highlights).toHaveLength(0);
@@ -124,10 +124,10 @@ Line 4: Another correct line.
 Line 5: This line contain multiple erors.`
     };
 
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       multiLineDoc,
       grammarAgent,
-      20
+      { targetHighlights: 20 }
     );
 
     // Should find errors on lines 1, 3, and 5

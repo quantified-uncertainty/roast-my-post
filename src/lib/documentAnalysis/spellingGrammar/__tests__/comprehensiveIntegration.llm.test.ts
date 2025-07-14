@@ -1,4 +1,4 @@
-import { analyzeSpellingGrammarDocument, analyzeSpellingGrammarDocumentParallel } from "../index";
+import { analyzeSpellingGrammar } from "../index";
 import type { Document } from "../../../../types/documents";
 import type { Agent } from "../../../../types/agentSchema";
 
@@ -290,10 +290,10 @@ These finding suggests that its not just the amount of time spent on social medi
 
   // Test 1: Technical Documentation (Sequential)
   test("analyzes technical documentation with known errors", async () => {
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       technicalDoc,
       grammarAgent,
-      100 // Allow many highlights to catch all errors
+      { targetHighlights: 100 } // Allow many highlights to catch all errors
     );
 
     const { accuracy } = analyzeResults(
@@ -311,11 +311,14 @@ These finding suggests that its not just the amount of time spent on social medi
 
   // Test 2: Business Email (Parallel)
   test("analyzes business email with parallel processing", async () => {
-    const result = await analyzeSpellingGrammarDocumentParallel(
+    const result = await analyzeSpellingGrammar(
       businessEmailDoc,
       grammarAgent,
-      100,
-      3 // Process 3 chunks at a time
+      { 
+        targetHighlights: 100,
+        executionMode: 'parallel',
+        maxConcurrency: 3 // Process 3 chunks at a time
+      }
     );
 
     const { accuracy } = analyzeResults(
@@ -336,20 +339,26 @@ These finding suggests that its not just the amount of time spent on social medi
     
     // Sequential processing
     const sequentialStart = Date.now();
-    const sequentialResult = await analyzeSpellingGrammarDocument(
+    const sequentialResult = await analyzeSpellingGrammar(
       academicDoc,
       grammarAgent,
-      100
+      { 
+        targetHighlights: 100,
+        executionMode: 'sequential'
+      }
     );
     const sequentialTime = Date.now() - sequentialStart;
 
     // Parallel processing
     const parallelStart = Date.now();
-    const parallelResult = await analyzeSpellingGrammarDocumentParallel(
+    const parallelResult = await analyzeSpellingGrammar(
       academicDoc,
       grammarAgent,
-      100,
-      5 // Process 5 chunks at a time
+      { 
+        targetHighlights: 100,
+        executionMode: 'parallel',
+        maxConcurrency: 5 // Process 5 chunks at a time
+      }
     );
     const parallelTime = Date.now() - parallelStart;
 
@@ -403,11 +412,14 @@ Best Practices:
 Always use specific image tags, not "latest". This ensures reproducible deployments.`
     };
 
-    const result = await analyzeSpellingGrammarDocumentParallel(
+    const result = await analyzeSpellingGrammar(
       cleanDoc,
       grammarAgent,
-      20,
-      3
+      { 
+        targetHighlights: 20,
+        executionMode: 'parallel',
+        maxConcurrency: 3
+      }
     );
 
     console.log(`\n=== Clean Document Test ===`);

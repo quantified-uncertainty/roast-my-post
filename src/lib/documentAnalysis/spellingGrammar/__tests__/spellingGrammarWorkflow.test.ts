@@ -1,10 +1,10 @@
-import { analyzeSpellingGrammarDocument } from "../index";
+import { analyzeSpellingGrammar } from "../index";
 import type { Document } from "../../../../types/documents";
 import type { Agent } from "../../../../types/agentSchema";
 
-// Mock the analyzeChunk function
-jest.mock("../analyzeChunk");
-import { analyzeChunk } from "../analyzeChunk";
+// Mock the LLM client
+jest.mock("../infrastructure/llmClient");
+import { SpellingGrammarLLMClient } from "../infrastructure/llmClient";
 
 // Mock the convertHighlightsToComments function
 jest.mock("../highlightConverter");
@@ -14,11 +14,11 @@ import { convertHighlightsToComments } from "../highlightConverter";
 jest.mock("../detectConventions");
 import { detectDocumentConventions } from "../detectConventions";
 
-const mockAnalyzeChunk = analyzeChunk as jest.MockedFunction<typeof analyzeChunk>;
+const mockLLMClient = SpellingGrammarLLMClient as jest.MockedClass<typeof SpellingGrammarLLMClient>;
 const mockConvertHighlights = convertHighlightsToComments as jest.MockedFunction<typeof convertHighlightsToComments>;
 const mockDetectConventions = detectDocumentConventions as jest.MockedFunction<typeof detectDocumentConventions>;
 
-describe("analyzeSpellingGrammarDocument", () => {
+describe("analyzeSpellingGrammar", () => {
   const mockDocument: Document = {
     id: "test-doc",
     slug: "test-document",
@@ -82,50 +82,65 @@ Its a beautiful day outside.`,
   });
 
   test("splits document into chunks and aggregates results", async () => {
-    // Mock analyzeChunk to return different errors for each chunk
-    mockAnalyzeChunk.mockResolvedValueOnce({
-      highlights: [
+    // Mock LLM client to return different errors for each chunk
+    const mockAnalyzeText = mockLLMClient.prototype.analyzeText as jest.MockedFunction<any>;
+    mockAnalyzeText.mockResolvedValueOnce({
+      errors: [
         {
           lineStart: 1,
           lineEnd: 1,
           highlightedText: "grammer",
-          description: "Spelling error: should be 'grammar'"
+          description: "Spelling error: should be 'grammar'",
+          errorType: "spelling",
+          severity: "high"
         },
         {
           lineStart: 2,
           lineEnd: 2,
           highlightedText: "recieve",
-          description: "Spelling error: should be 'receive'"
+          description: "Spelling error: should be 'receive'",
+          errorType: "spelling",
+          severity: "high"
         },
         {
           lineStart: 2,
           lineEnd: 2,
           highlightedText: "tommorow",
-          description: "Spelling error: should be 'tomorrow'"
+          description: "Spelling error: should be 'tomorrow'",
+          errorType: "spelling",
+          severity: "high"
         },
         {
           lineStart: 3,
           lineEnd: 3,
           highlightedText: "are",
-          description: "Subject-verb disagreement: 'team' is singular, use 'is'"
+          description: "Subject-verb disagreement: 'team' is singular, use 'is'",
+          errorType: "grammar",
+          severity: "high"
         },
         {
           lineStart: 4,
           lineEnd: 4,
           highlightedText: "Its",
-          description: "Missing apostrophe: should be 'It's'"
+          description: "Missing apostrophe: should be 'It's'",
+          errorType: "punctuation",
+          severity: "medium"
         }
-      ]
+      ],
+      usage: {
+        input_tokens: 500,
+        output_tokens: 100
+      }
     });
 
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       mockDocument,
       mockAgent,
-      10
+      { targetHighlights: 10 }
     );
 
-    // Should have called analyzeChunk once for this small document
-    expect(mockAnalyzeChunk).toHaveBeenCalledTimes(1);
+    // Should have called analyzeText once for this small document
+    expect(mockAnalyzeText).toHaveBeenCalledTimes(1);
 
     // Check the result structure
     expect(result).toHaveProperty("thinking", "");
@@ -150,7 +165,7 @@ Its a beautiful day outside.`,
 
     // Check analysis content
     expect(result.analysis).toContain("Spelling & Grammar Analysis");
-    expect(result.analysis).toContain("**Unique Errors Found:** 5");
+    expect(result.analysis).toContain("Unique Errors Found:** 5");
     
     // Check summary
     expect(result.summary).toContain("Found 5 unique error");
@@ -163,18 +178,25 @@ Its a beautiful day outside.`,
   });
 
   test("handles documents with no errors", async () => {
-    mockAnalyzeChunk.mockClear();
-    mockAnalyzeChunk.mockResolvedValue({ highlights: [] });
+    const mockAnalyzeText = mockLLMClient.prototype.analyzeText as jest.MockedFunction<any>;
+    mockAnalyzeText.mockClear();
+    mockAnalyzeText.mockResolvedValue({ 
+      errors: [],
+      usage: {
+        input_tokens: 100,
+        output_tokens: 20
+      }
+    });
 
     const cleanDocument: Document = {
       ...mockDocument,
       content: "This is a perfectly written document with no errors."
     };
 
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       cleanDocument,
       mockAgent,
-      10
+      { targetHighlights: 10 }
     );
 
     expect(result.highlights).toHaveLength(0);
@@ -189,16 +211,25 @@ Its a beautiful day outside.`,
       lineStart: 1,
       lineEnd: 1,
       highlightedText: `error${i}`,
-      description: `Error ${i}`
+      description: `Error ${i}`,
+      errorType: "spelling",
+      severity: "medium"
     }));
 
-    mockAnalyzeChunk.mockClear();
-    mockAnalyzeChunk.mockResolvedValue({ highlights: manyErrors });
+    const mockAnalyzeText = mockLLMClient.prototype.analyzeText as jest.MockedFunction<any>;
+    mockAnalyzeText.mockClear();
+    mockAnalyzeText.mockResolvedValue({ 
+      errors: manyErrors,
+      usage: {
+        input_tokens: 300,
+        output_tokens: 150
+      }
+    });
 
-    const result = await analyzeSpellingGrammarDocument(
+    const result = await analyzeSpellingGrammar(
       mockDocument,
       mockAgent,
-      10
+      { targetHighlights: 10 }
     );
 
     expect(result.highlights).toHaveLength(10);
@@ -215,20 +246,25 @@ Its a beautiful day outside.`,
       content: largeContent
     };
 
-    mockAnalyzeChunk.mockResolvedValue({ highlights: [] });
+    const mockAnalyzeText = mockLLMClient.prototype.analyzeText as jest.MockedFunction<any>;
+    mockAnalyzeText.mockResolvedValue({ 
+      errors: [],
+      usage: {
+        input_tokens: 500,
+        output_tokens: 50
+      }
+    });
 
-    await analyzeSpellingGrammarDocument(largeDocument, mockAgent, 10);
+    await analyzeSpellingGrammar(largeDocument, mockAgent, { targetHighlights: 10 });
 
     // Should have been called multiple times due to chunking
-    expect(mockAnalyzeChunk.mock.calls.length).toBeGreaterThan(1);
+    expect(mockAnalyzeText.mock.calls.length).toBeGreaterThan(1);
     
-    // Check that chunks have proper line numbers
-    const firstChunkCall = mockAnalyzeChunk.mock.calls[0][0];
-    expect(firstChunkCall.startLineNumber).toBe(1);
-    
-    if (mockAnalyzeChunk.mock.calls.length > 1) {
-      const secondChunkCall = mockAnalyzeChunk.mock.calls[1][0];
-      expect(secondChunkCall.startLineNumber).toBeGreaterThan(1);
-    }
+    // Each call should have system and user prompts
+    mockAnalyzeText.mock.calls.forEach((call: any) => {
+      expect(call).toHaveLength(2); // systemPrompt, userPrompt
+      expect(typeof call[0]).toBe('string'); // systemPrompt
+      expect(typeof call[1]).toBe('string'); // userPrompt
+    });
   });
 });

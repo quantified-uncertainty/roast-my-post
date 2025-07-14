@@ -13,37 +13,6 @@ import type { Document } from '../../../types/documents';
 // Create singleton workflow instance
 const workflow = new SpellingGrammarWorkflow();
 
-/**
- * Analyze document for spelling and grammar errors (sequential execution)
- * @deprecated Use analyzeSpellingGrammar with executionMode option instead
- */
-export async function analyzeSpellingGrammarDocument(
-  document: Document,
-  agentInfo: Agent,
-  targetHighlights?: number
-) {
-  return workflow.analyze(document, agentInfo, {
-    targetHighlights,
-    executionMode: 'sequential'
-  });
-}
-
-/**
- * Analyze document for spelling and grammar errors (parallel execution)
- * @deprecated Use analyzeSpellingGrammar with executionMode option instead
- */
-export async function analyzeSpellingGrammarDocumentParallel(
-  document: Document,
-  agentInfo: Agent,
-  targetHighlights?: number,
-  maxConcurrency?: number
-) {
-  return workflow.analyze(document, agentInfo, {
-    targetHighlights,
-    executionMode: 'parallel',
-    maxConcurrency
-  });
-}
 
 /**
  * Analyze document for spelling and grammar errors
