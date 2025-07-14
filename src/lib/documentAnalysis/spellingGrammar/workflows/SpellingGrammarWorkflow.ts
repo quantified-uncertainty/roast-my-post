@@ -11,7 +11,7 @@ import type { LLMInteraction } from '@/types/llm';
 
 import { getDocumentFullContent } from '../../../../utils/documentContentHelpers';
 import { logger } from '@/lib/logger';
-import { calculateCost, mapModelToCostModel } from '@/utils/costCalculator';
+import { calculateLLMCost } from '../../shared/costUtils';
 import { ANALYSIS_MODEL } from '../../../../types/openai';
 
 import {
@@ -51,7 +51,7 @@ import {
 
 import { detectDocumentConventions } from '../detectConventions';
 import { convertHighlightsToComments } from '../highlightConverter';
-import { getErrorGroupEmoji, getErrorTypeLabel } from '../utils';
+import { getErrorGroupEmoji, getErrorTypeLabel } from '../../shared/errorCategorization';
 
 export interface WorkflowOptions {
   targetHighlights?: number; // Ignored for spelling/grammar

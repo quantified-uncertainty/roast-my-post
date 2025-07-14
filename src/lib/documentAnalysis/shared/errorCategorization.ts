@@ -93,3 +93,53 @@ export const SEVERITY_TO_GRADE: Record<ErrorSeverity, number> = {
   [ErrorSeverity.MEDIUM]: 40,
   [ErrorSeverity.LOW]: 60
 };
+
+/**
+ * Get emoji for error group based on severity and type
+ */
+export function getErrorGroupEmoji(errorGroup: { severity: string; errorType: string }): string {
+  // High severity - critical errors that must be fixed
+  if (errorGroup.severity === 'high') {
+    if (errorGroup.errorType === 'spelling') return '🔴';
+    if (errorGroup.errorType === 'grammar') return '❌';
+    if (errorGroup.errorType === 'word_choice') return '⚠️';
+    return '‼️';
+  }
+  
+  // Medium severity
+  if (errorGroup.severity === 'medium') {
+    if (errorGroup.errorType === 'capitalization') return '🔤';
+    if (errorGroup.errorType === 'punctuation') return '📍';
+    if (errorGroup.errorType === 'consistency') return '🔄';
+    return '⚡';
+  }
+  
+  // Low severity
+  if (errorGroup.errorType === 'punctuation') return '💭';
+  if (errorGroup.errorType === 'other') return '💡';
+  return '📌';
+}
+
+/**
+ * Get error type label for display
+ */
+export function getErrorTypeLabel(errorType: string): string {
+  switch (errorType) {
+    case 'spelling':
+      return 'Spelling';
+    case 'grammar':
+      return 'Grammar';
+    case 'punctuation':
+      return 'Punctuation';
+    case 'capitalization':
+      return 'Capitalization';
+    case 'word_choice':
+      return 'Word choice';
+    case 'consistency':
+      return 'Consistency';
+    case 'other':
+      return 'Style';
+    default:
+      return 'Error';
+  }
+}

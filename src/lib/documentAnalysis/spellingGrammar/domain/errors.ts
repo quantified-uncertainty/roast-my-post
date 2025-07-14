@@ -38,7 +38,8 @@ export class SpellingGrammarError {
   }
 }
 
-// Error types and severity are imported from shared module
+// Re-export error types and severity from shared module for backward compatibility
+export { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
 
 /**
  * A group of similar errors

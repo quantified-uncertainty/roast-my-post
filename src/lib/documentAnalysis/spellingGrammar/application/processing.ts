@@ -7,10 +7,9 @@ import {
   ErrorGroup,
   ProcessedErrorResults,
   ConventionIssue,
-  DocumentConventions,
-  ErrorType,
-  ErrorSeverity
+  DocumentConventions
 } from '../domain';
+import { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
 
 /**
  * Group similar errors together

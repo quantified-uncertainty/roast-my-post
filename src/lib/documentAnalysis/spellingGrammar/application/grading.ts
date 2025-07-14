@@ -2,7 +2,8 @@
  * Pure functions for grade calculation
  */
 
-import { ProcessedErrorResults, ErrorSeverity } from '../domain';
+import { ProcessedErrorResults } from '../domain';
+import { ErrorSeverity } from '../../shared/errorCategorization';
 import { GRADE_THRESHOLDS, ERROR_DENSITY_WORD_BASE } from '../constants';
 
 /**
