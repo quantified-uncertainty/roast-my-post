@@ -1,4 +1,4 @@
-import { analyzeSpellingGrammarDocument } from "../spellingGrammarWorkflow";
+import { analyzeSpellingGrammarDocument } from "../index";
 import type { Document } from "../../../../types/documents";
 import type { Agent } from "../../../../types/agentSchema";
 
