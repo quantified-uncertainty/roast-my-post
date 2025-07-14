@@ -7,67 +7,8 @@ import { convertHighlightsToComments } from "./highlightConverter";
 import type { ChunkWithLineNumbers, SpellingGrammarHighlight } from "./types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { logger } from "@/lib/logger";
+import { splitIntoChunks, getCharacterOffsetForLine } from "./utils";
 
-/**
- * Split document content into chunks with line number tracking
- */
-function splitIntoChunks(
-  content: string,
-  maxChunkSize: number = 3000
-): ChunkWithLineNumbers[] {
-  const lines = content.split('\n');
-  const chunks: ChunkWithLineNumbers[] = [];
-  
-  let currentChunk: string[] = [];
-  let currentChunkStartLine = 1;
-  let currentChunkCharCount = 0;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineLength = line.length + 1; // +1 for newline
-    
-    // If adding this line would exceed chunk size, create a new chunk
-    if (currentChunkCharCount + lineLength > maxChunkSize && currentChunk.length > 0) {
-      chunks.push({
-        content: currentChunk.join('\n'),
-        startLineNumber: currentChunkStartLine,
-        lines: [...currentChunk]
-      });
-      
-      currentChunk = [line];
-      currentChunkStartLine = i + 1; // Line numbers are 1-based
-      currentChunkCharCount = lineLength;
-    } else {
-      currentChunk.push(line);
-      currentChunkCharCount += lineLength;
-    }
-  }
-  
-  // Don't forget the last chunk
-  if (currentChunk.length > 0) {
-    chunks.push({
-      content: currentChunk.join('\n'),
-      startLineNumber: currentChunkStartLine,
-      lines: currentChunk
-    });
-  }
-  
-  return chunks;
-}
-
-/**
- * Calculate character offset for a given line number in the full content
- */
-function getCharacterOffsetForLine(content: string, lineNumber: number): number {
-  const lines = content.split('\n');
-  let offset = 0;
-  
-  for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-    offset += lines[i].length + 1; // +1 for newline
-  }
-  
-  return offset;
-}
 
 /**
  * Complete spelling and grammar analysis workflow with PARALLEL chunk processing

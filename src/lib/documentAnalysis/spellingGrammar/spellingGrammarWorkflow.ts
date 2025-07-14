@@ -10,118 +10,11 @@ import { logger } from "@/lib/logger";
 import { ANALYSIS_MODEL } from "../../../types/openai";
 import { detectDocumentConventions } from "./detectConventions";
 import { postProcessErrors, createConsolidatedComment, calculateSmartGrade } from "./postProcessing";
+import type { ProcessedResults, ErrorGroup } from "./postProcessing";
 import { calculateCost, mapModelToCostModel } from "@/utils/costCalculator";
+import { splitIntoChunks, getCharacterOffsetForLine, getErrorGroupEmoji, getErrorTypeLabel } from "./utils";
+import type { DocumentConventions } from "./detectConventions";
 
-/**
- * Split document content into chunks with line number tracking
- */
-function splitIntoChunks(
-  content: string,
-  maxChunkSize: number = 3000
-): ChunkWithLineNumbers[] {
-  const lines = content.split('\n');
-  const chunks: ChunkWithLineNumbers[] = [];
-  
-  let currentChunk: string[] = [];
-  let currentChunkStartLine = 1;
-  let currentChunkCharCount = 0;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineLength = line.length + 1; // +1 for newline
-    
-    // If adding this line would exceed chunk size, create a new chunk
-    if (currentChunkCharCount + lineLength > maxChunkSize && currentChunk.length > 0) {
-      chunks.push({
-        content: currentChunk.join('\n'),
-        startLineNumber: currentChunkStartLine,
-        lines: [...currentChunk]
-      });
-      
-      currentChunk = [line];
-      currentChunkStartLine = i + 1; // Line numbers are 1-based
-      currentChunkCharCount = lineLength;
-    } else {
-      currentChunk.push(line);
-      currentChunkCharCount += lineLength;
-    }
-  }
-  
-  // Don't forget the last chunk
-  if (currentChunk.length > 0) {
-    chunks.push({
-      content: currentChunk.join('\n'),
-      startLineNumber: currentChunkStartLine,
-      lines: currentChunk
-    });
-  }
-  
-  return chunks;
-}
-
-/**
- * Calculate character offset for a given line number in the full content
- */
-function getCharacterOffsetForLine(content: string, lineNumber: number): number {
-  const lines = content.split('\n');
-  let offset = 0;
-  
-  for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-    offset += lines[i].length + 1; // +1 for newline
-  }
-  
-  return offset;
-}
-
-/**
- * Get emoji for error group based on severity and type
- */
-function getErrorGroupEmoji(errorGroup: import("./postProcessing").ErrorGroup): string {
-  // High severity - critical errors that must be fixed
-  if (errorGroup.severity === 'high') {
-    if (errorGroup.errorType === 'spelling') return '🔴';
-    if (errorGroup.errorType === 'grammar') return '❌';
-    if (errorGroup.errorType === 'word_choice') return '⚠️';
-    return '‼️';
-  }
-  
-  // Medium severity
-  if (errorGroup.severity === 'medium') {
-    if (errorGroup.errorType === 'capitalization') return '🔤';
-    if (errorGroup.errorType === 'punctuation') return '📍';
-    if (errorGroup.errorType === 'consistency') return '🔄';
-    return '⚡';
-  }
-  
-  // Low severity
-  if (errorGroup.errorType === 'punctuation') return '💭';
-  if (errorGroup.errorType === 'other') return '💡';
-  return '📌';
-}
-
-/**
- * Get error type label for inline format
- */
-function getErrorTypeLabel(errorType: string): string {
-  switch (errorType) {
-    case 'spelling':
-      return 'Spelling';
-    case 'grammar':
-      return 'Grammar';
-    case 'punctuation':
-      return 'Punctuation';
-    case 'capitalization':
-      return 'Capitalization';
-    case 'word_choice':
-      return 'Word choice';
-    case 'consistency':
-      return 'Consistency';
-    case 'other':
-      return 'Style';
-    default:
-      return 'Error';
-  }
-}
 
 /**
  * Complete spelling and grammar analysis workflow
@@ -311,7 +204,7 @@ export async function analyzeSpellingGrammarDocument(
     });
     
     // Create detailed error type breakdown for the log
-    const errorTypeBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: any) => {
+    const errorTypeBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: ErrorGroup) => {
       acc[group.errorType] = (acc[group.errorType] || 0) + group.count;
       return acc;
     }, {} as Record<string, number>);
@@ -321,7 +214,7 @@ export async function analyzeSpellingGrammarDocument(
       .map(([type, count]) => `${count} ${type}`)
       .join(', ');
     
-    const severityBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: any) => {
+    const severityBreakdown = processedResults.consolidatedErrors.reduce((acc: Record<string, number>, group: ErrorGroup) => {
       acc[group.severity] = (acc[group.severity] || 0) + group.count;
       return acc;
     }, {} as Record<string, number>);
@@ -433,7 +326,7 @@ export async function analyzeSpellingGrammarDocument(
     const errorsByType: Record<string, number> = {};
     const errorsBySeverity: Record<string, number> = { high: 0, medium: 0, low: 0 };
     
-    processedResults.consolidatedErrors.forEach((group: any) => {
+    processedResults.consolidatedErrors.forEach((group: ErrorGroup) => {
       errorsByType[group.errorType] = (errorsByType[group.errorType] || 0) + group.count;
       errorsBySeverity[group.severity] += group.count;
     });
@@ -532,14 +425,14 @@ export async function analyzeSpellingGrammarDocument(
  * Generate smart analysis based on processed results
  */
 function generateSmartAnalysis(
-  processedResults: import("./postProcessing").ProcessedResults,
+  processedResults: ProcessedResults,
   wordCount: number,
   grade: number,
-  conventions: import("./detectConventions").DocumentConventions
+  conventions: DocumentConventions
 ): string {
   // Categorize unique errors by type
   const errorTypeBreakdown: Record<string, number> = {};
-  processedResults.consolidatedErrors.forEach((group: any) => {
+  processedResults.consolidatedErrors.forEach((group: ErrorGroup) => {
     errorTypeBreakdown[group.errorType] = (errorTypeBreakdown[group.errorType] || 0) + 1;
   });
   
@@ -581,7 +474,7 @@ ${grade >= 95 ? '**✅ Excellent!** Very few errors found - professional quality
   '**Major problems.** Extensive errors severely impact readability.'}
 
 ### Most Common Issues
-${processedResults.consolidatedErrors.slice(0, 3).map((group: any, i: number) => {
+${processedResults.consolidatedErrors.slice(0, 3).map((group: ErrorGroup, i: number) => {
   const emoji = getErrorGroupEmoji(group);
   return `${i + 1}. ${emoji} **${group.baseError}** - ${group.count} occurrence${group.count === 1 ? '' : 's'}`;
 }).join('\n')}
