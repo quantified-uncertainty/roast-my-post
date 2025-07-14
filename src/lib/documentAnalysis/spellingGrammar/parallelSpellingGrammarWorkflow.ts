@@ -17,6 +17,7 @@ import {
 } from "./constants";
 import { ANALYSIS_MODEL } from "../../../types/openai";
 import { calculateCost, mapModelToCostModel } from "@/utils/costCalculator";
+import { validateDocumentSize, validateConcurrency } from "./validation";
 
 /**
  * Complete spelling and grammar analysis workflow with PARALLEL chunk processing
@@ -47,9 +48,13 @@ export async function analyzeSpellingGrammarDocumentParallel(
       return EMPTY_DOCUMENT_RESPONSE;
     }
     
+    // Validate inputs
+    validateDocumentSize(fullContent);
+    const validatedConcurrency = validateConcurrency(maxConcurrency);
+    
     // Split into chunks
     const chunks = splitIntoChunks(fullContent, DEFAULT_CHUNK_SIZE);
-    logger.info(`Split document into ${chunks.length} chunks for parallel spelling/grammar analysis`);
+    logger.info(`${LOG_PREFIXES.WORKFLOW} Split document into ${chunks.length} chunks for parallel analysis`);
     
     // Process chunks in parallel with concurrency limit
     const startTime = Date.now();
@@ -63,8 +68,8 @@ export async function analyzeSpellingGrammarDocumentParallel(
     }>[] = [];
     
     // Process chunks in batches
-    for (let i = 0; i < chunks.length; i += maxConcurrency) {
-      const batch = chunks.slice(i, Math.min(i + maxConcurrency, chunks.length));
+    for (let i = 0; i < chunks.length; i += validatedConcurrency) {
+      const batch = chunks.slice(i, Math.min(i + validatedConcurrency, chunks.length));
       const batchStartTime = Date.now();
       
       const batchPromises = batch.map(async (chunk, batchIndex) => {
@@ -77,7 +82,10 @@ export async function analyzeSpellingGrammarDocumentParallel(
           await new Promise(resolve => setTimeout(resolve, staggerDelay));
         }
         
-        logger.info(`Analyzing chunk ${chunkIndex + 1}/${chunks.length} (lines ${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1})`);
+        logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Starting chunk ${chunkIndex + 1}/${chunks.length}`, {
+          lineRange: `${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1}`,
+          characters: chunk.content.length
+        });
         
         try {
           const result = await analyzeChunk(chunk, {
@@ -86,7 +94,10 @@ export async function analyzeSpellingGrammarDocumentParallel(
           });
           
           const duration = Date.now() - chunkStartTime;
-          logger.info(`Found ${result.highlights.length} errors in chunk ${chunkIndex + 1} (${duration}ms)`);
+          logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Chunk ${chunkIndex + 1} complete`, {
+            errorsFound: result.highlights.length,
+            durationMs: duration
+          });
           
           return {
             chunkIndex,
@@ -97,7 +108,7 @@ export async function analyzeSpellingGrammarDocumentParallel(
             llmInteraction: result.llmInteraction
           };
         } catch (error) {
-          logger.error(`Error analyzing chunk ${chunkIndex + 1}:`, error);
+          logger.error(`${LOG_PREFIXES.ERROR} Chunk ${chunkIndex + 1} failed`, { error });
           return {
             chunkIndex,
             chunk,
@@ -111,7 +122,10 @@ export async function analyzeSpellingGrammarDocumentParallel(
       const batchResults = await Promise.all(batchPromises);
       chunkPromises.push(...batchResults.map(r => Promise.resolve(r)));
       
-      logger.info(`Completed batch ${Math.floor(i / maxConcurrency) + 1}/${Math.ceil(chunks.length / maxConcurrency)} in ${Date.now() - batchStartTime}ms`);
+      logger.info(`${LOG_PREFIXES.WORKFLOW} Batch ${Math.floor(i / validatedConcurrency) + 1}/${Math.ceil(chunks.length / validatedConcurrency)} complete`, {
+        durationMs: Date.now() - batchStartTime,
+        chunksProcessed: batch.length
+      });
     }
     
     // Wait for all chunks to complete
@@ -138,7 +152,7 @@ export async function analyzeSpellingGrammarDocumentParallel(
           const costResult = calculateCost(costModel, result.usage.input_tokens || 0, result.usage.output_tokens || 0);
           chunkCost = costResult.totalCost;
         } catch (e) {
-          logger.warn(`Could not calculate cost for chunk ${result.chunkIndex + 1}`, { error: e });
+          logger.warn(`${LOG_PREFIXES.WORKFLOW} Cost calculation failed for chunk ${result.chunkIndex + 1}`, { error: e });
         }
       }
       
@@ -193,7 +207,12 @@ export async function analyzeSpellingGrammarDocumentParallel(
       Date.now() - startTime
     );
     
-    logger.info(`Parallel spelling/grammar analysis complete: ${allHighlights.length} total errors found in ${Date.now() - startTime}ms`);
+    logger.info(`${LOG_PREFIXES.WORKFLOW} Parallel analysis complete`, {
+      totalErrors: allHighlights.length,
+      chunksProcessed: chunks.length,
+      durationMs: Date.now() - startTime,
+      tokensUsed: { input: totalInputTokens, output: totalOutputTokens }
+    });
     
     return {
       thinking: "", // No thinking step for spelling/grammar
@@ -205,7 +224,7 @@ export async function analyzeSpellingGrammarDocumentParallel(
       tasks
     };
   } catch (error) {
-    logger.error("Error in parallel spelling/grammar analysis workflow:", error);
+    logger.error(`${LOG_PREFIXES.ERROR} Parallel workflow failed`, { error });
     throw error;
   }
 }

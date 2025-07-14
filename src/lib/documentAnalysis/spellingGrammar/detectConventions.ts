@@ -1,5 +1,6 @@
 import { anthropic, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
 import { logger } from "@/lib/logger";
+import { LOG_PREFIXES } from "./constants";
 
 export interface DocumentConventions {
   language: 'US' | 'UK' | 'mixed' | 'unknown';
@@ -119,7 +120,7 @@ Provide specific examples from the text that support your conclusions.`;
 
     const toolUse = response.content.find((c) => c.type === "tool_use");
     if (!toolUse || toolUse.name !== "report_conventions") {
-      logger.error("No tool use response from convention detection");
+      logger.error(`${LOG_PREFIXES.WORKFLOW} No tool use response from convention detection`);
       return {
         conventions: {
           language: 'unknown',
@@ -138,8 +139,12 @@ Provide specific examples from the text that support your conclusions.`;
       examples: string[];
       reasoning: string;
     };
-    logger.info(`Detected conventions: ${result.language} English, ${result.documentType} document, ${result.formality} style`, {
-      reasoning: result.reasoning
+    logger.info(`${LOG_PREFIXES.WORKFLOW} Detected conventions`, {
+      language: `${result.language} English`,
+      documentType: result.documentType,
+      formality: result.formality,
+      reasoning: result.reasoning,
+      exampleCount: result.examples.length
     });
 
     return {
@@ -153,7 +158,7 @@ Provide specific examples from the text that support your conclusions.`;
     };
 
   } catch (error) {
-    logger.error("Error detecting document conventions:", error);
+    logger.error(`${LOG_PREFIXES.ERROR} Failed to detect document conventions`, { error });
     // Return sensible defaults on error
     return {
       conventions: {

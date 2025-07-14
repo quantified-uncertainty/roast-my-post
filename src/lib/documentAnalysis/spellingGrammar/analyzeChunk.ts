@@ -199,19 +199,29 @@ Special cases to watch for:
         const maxLine = chunk.startLineNumber + chunk.lines.length - 1;
         
         if (error.lineStart < minLine || error.lineEnd > maxLine) {
-          logger.warn(`Invalid line numbers: ${error.lineStart}-${error.lineEnd} not in range ${minLine}-${maxLine}`);
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid line numbers`, {
+            errorLines: `${error.lineStart}-${error.lineEnd}`,
+            validRange: `${minLine}-${maxLine}`,
+            chunkIndex: chunk.startLineNumber
+          });
           return false;
         }
         
         // Ensure highlighted text is not empty
         if (!error.highlightedText.trim()) {
-          logger.warn("Empty highlighted text in error");
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Empty highlighted text`, {
+            error,
+            chunkIndex: chunk.startLineNumber
+          });
           return false;
         }
         
         // Ensure description is meaningful
         if (!error.description || error.description.length < 10) {
-          logger.warn("Invalid or too short description");
+          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid description`, {
+            description: error.description,
+            chunkIndex: chunk.startLineNumber
+          });
           return false;
         }
         
@@ -220,13 +230,13 @@ Special cases to watch for:
 
       // Success! Return the validated highlights with usage data
       if (attempt > 1) {
-        logger.info(`Chunk analysis succeeded on attempt ${attempt}`);
+        logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Succeeded on attempt ${attempt}`);
       }
       
-      logger.debug(`Chunk analysis usage:`, {
-        usage: response.usage,
+      logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
         inputTokens: response.usage?.input_tokens,
-        outputTokens: response.usage?.output_tokens
+        outputTokens: response.usage?.output_tokens,
+        model: ANALYSIS_MODEL
       });
       
       // Create LLM interaction record

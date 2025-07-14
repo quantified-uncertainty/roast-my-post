@@ -32,6 +32,7 @@ import {
   createChunkLogMessage
 } from "./workflowHelpers";
 import { DocumentProcessor } from "./documentProcessor";
+import { validateDocumentSize, validateComment, validateGrade } from "./validation";
 
 /**
  * Complete spelling and grammar analysis workflow
@@ -64,8 +65,11 @@ export async function analyzeSpellingGrammarDocument(
       return EMPTY_DOCUMENT_RESPONSE;
     }
     
+    // Validate document size
+    validateDocumentSize(fullContent);
+    
     // Stage 1: Detect document conventions
-    logger.info("Stage 1: Detecting document conventions");
+    logger.info(`${LOG_PREFIXES.WORKFLOW} Stage 1: Detecting document conventions`);
     const conventionResult = await detectDocumentConventions(fullContent);
     const conventions = conventionResult.conventions;
     logger.info(`Detected conventions: ${conventions.language} English, ${conventions.documentType} document`);
@@ -98,19 +102,17 @@ export async function analyzeSpellingGrammarDocument(
     
     // Split into chunks
     const chunks = docProcessor.splitIntoChunks(DEFAULT_CHUNK_SIZE);
-    logger.info(`Stage 2: Analyzing ${chunks.length} chunks for spelling/grammar errors`);
+    logger.info(`${LOG_PREFIXES.WORKFLOW} Stage 2: Analyzing ${chunks.length} chunks for spelling/grammar errors`);
     
     // Analyze each chunk
     const chunkStartTime = Date.now();
     const chunkPromises = chunks.map(async (chunk, i) => {
-      logger.info(`Analyzing chunk ${i + 1}/${chunks.length}`, {
-        chunk: {
-          index: i + 1,
-          totalChunks: chunks.length,
-          lineRange: `${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1}`,
-          characters: chunk.content.length,
-          preview: chunk.content.substring(0, 100).replace(/\n/g, ' ') + (chunk.content.length > 100 ? '...' : '')
-        }
+      logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Analyzing chunk ${i + 1}/${chunks.length}`, {
+        index: i + 1,
+        totalChunks: chunks.length,
+        lineRange: `${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1}`,
+        characters: chunk.content.length,
+        preview: chunk.content.substring(0, 100).replace(/\n/g, ' ') + (chunk.content.length > 100 ? '...' : '')
       });
       
       const result = await analyzeChunk(chunk, {
@@ -123,26 +125,16 @@ export async function analyzeSpellingGrammarDocument(
         }
       });
       
-      logger.info(`Found ${result.highlights.length} errors in chunk ${i + 1}`, {
-        chunk: {
-          index: i + 1,
-          lines: `${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1}`,
-          charactersProcessed: chunk.content.length,
-          errorsFound: result.highlights.length,
-          errorTypes: result.highlights.reduce((acc, h) => {
-            const type = h.description.toLowerCase().includes('spelling') ? 'spelling' :
-                         h.description.toLowerCase().includes('grammar') ? 'grammar' :
-                         h.description.toLowerCase().includes('punctuation') ? 'punctuation' :
-                         h.description.toLowerCase().includes('capitalization') ? 'capitalization' :
-                         'other';
-            acc[type] = (acc[type] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>),
-          usage: result.usage ? {
-            inputTokens: result.usage.input_tokens,
-            outputTokens: result.usage.output_tokens
-          } : null
-        }
+      logger.info(`${LOG_PREFIXES.CHUNK_ANALYSIS} Chunk ${i + 1} completed`, {
+        index: i + 1,
+        lineRange: `${chunk.startLineNumber}-${chunk.startLineNumber + chunk.lines.length - 1}`,
+        charactersProcessed: chunk.content.length,
+        errorsFound: result.highlights.length,
+        errorTypes: createErrorTypeBreakdown(result.highlights),
+        tokenUsage: result.usage ? {
+          input: result.usage.input_tokens,
+          output: result.usage.output_tokens
+        } : null
       });
       
       return {
@@ -190,7 +182,7 @@ export async function analyzeSpellingGrammarDocument(
       const errorTypes = createErrorTypeBreakdown(highlights);
       const errorSummary = formatErrorBreakdown(errorTypes);
       
-      logger.info(`Chunk ${chunkIndex + 1} cost: $${chunkCost.toFixed(8)}`);
+      logger.debug(`${LOG_PREFIXES.WORKFLOW} Chunk ${chunkIndex + 1} cost: $${chunkCost.toFixed(8)}`);
       
       tasks.push({
         name: `Analyze chunk ${chunkIndex + 1}`,
@@ -203,7 +195,7 @@ export async function analyzeSpellingGrammarDocument(
     });
     
     // Stage 3: Post-process and deduplicate errors
-    logger.info("Stage 3: Post-processing and deduplicating errors", {
+    logger.info(`${LOG_PREFIXES.POST_PROCESSING} Stage 3: Post-processing and deduplicating errors`, {
       totalHighlightsBeforeProcessing: allHighlights.length,
       uniqueErrors: new Set(allHighlights.map(h => h.highlightedText)).size
     });
@@ -211,12 +203,12 @@ export async function analyzeSpellingGrammarDocument(
     
     const processedResults = postProcessErrors(allHighlights, conventions);
     
-    logger.info("Post-processing complete", {
+    logger.info(`${LOG_PREFIXES.POST_PROCESSING} Complete`, {
       uniqueErrorsFound: processedResults.uniqueErrorCount,
       totalOccurrences: processedResults.totalErrorCount,
       consolidatedGroups: processedResults.consolidatedErrors.length,
       hasConventionIssues: !!processedResults.conventionIssues,
-      duration: `${Date.now() - postProcessingStartTime}ms`
+      durationMs: Date.now() - postProcessingStartTime
     });
     
     // Create detailed error type breakdown for the log
@@ -262,7 +254,14 @@ export async function analyzeSpellingGrammarDocument(
       comments.push(...errorComments);
     }
     
-    // Sort comments by position in document
+    // Validate and sort comments by position in document
+    comments.forEach(comment => {
+      try {
+        validateComment(comment);
+      } catch (error) {
+        logger.warn(`Invalid comment excluded: ${error}`, { comment });
+      }
+    });
     comments.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
     
     // For spelling/grammar, we should show all errors, not limit by targetHighlights
@@ -270,7 +269,7 @@ export async function analyzeSpellingGrammarDocument(
     const finalHighlights = comments;
     
     // Generate analysis and summary with smart scoring
-    const grade = calculateSmartGrade(processedResults, wordCount);
+    const grade = validateGrade(calculateSmartGrade(processedResults, wordCount));
     
     const analysis = generateSmartAnalysis(
       processedResults,
@@ -377,7 +376,7 @@ export async function analyzeSpellingGrammarDocument(
       tasks
     };
   } catch (error) {
-    logger.error("Error in spelling/grammar analysis workflow:", error);
+    logger.error(`${LOG_PREFIXES.ERROR} Workflow failed`, { error });
     throw error;
   }
 }
