@@ -16,6 +16,7 @@ The system works in several phases:
 - Uses natural language plugin descriptions for routing decisions
 - Batches chunks for efficient LLM calls
 - Caches routing decisions for similar chunks
+- **LLM Interaction Tracking**: All router LLM calls are tracked with tokens, timing, and costs
 - Each plugin provides `name()` and `promptForWhenToUse()`
 
 ### Plugin Interface
@@ -68,6 +69,13 @@ const results = await manager.analyzeDocument(documentText, {
 console.log(results.summary);
 console.log(results.statistics);
 console.log(results.recommendations);
+
+// Access router LLM interactions for monitoring
+const routerInteractions = manager.getRouterLLMInteractions();
+console.log(`Router made ${routerInteractions.length} LLM calls`);
+routerInteractions.forEach(interaction => {
+  console.log(`- ${interaction.model}: ${interaction.tokensUsed.total} tokens in ${interaction.duration}ms`);
+});
 ```
 
 ## Creating Custom Plugins
@@ -119,6 +127,36 @@ class CustomPlugin extends BasePlugin<MyState> {
 # Test routing system
 npx tsx scripts/test-plugin-routing.ts
 
+# Test router LLM tracking
+npx tsx src/lib/documentAnalysis/plugin-system/test-router-tracking.ts
+
 # Test full system
 npx tsx scripts/test-plugin-system.ts
+```
+
+## LLM Interaction Monitoring
+
+The system provides comprehensive tracking of all LLM interactions:
+
+### Router-Level Tracking
+- All routing decisions are tracked with detailed metrics
+- Token usage (prompt + completion tokens)
+- Response timing and timestamps
+- Model information (typically claude-3-haiku-20240307)
+
+### Integration with Analysis Pipeline
+- Router interactions are included in final `TaskResult` objects
+- Token costs are automatically calculated and included in statistics
+- Monitoring systems can access routing metrics via `getRouterLLMInteractions()`
+
+### Accessing Router Metrics
+```typescript
+// Get all router interactions
+const interactions = pluginManager.getRouterLLMInteractions();
+
+// Get the most recent router call
+const lastCall = pluginManager.getLastRouterLLMInteraction();
+
+// Clear tracking data (useful for fresh analysis)
+pluginManager.clearRouterLLMInteractions();
 ```

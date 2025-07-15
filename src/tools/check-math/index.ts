@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { createAnthropicClient } from '@/types/openai';
-import { ANALYSIS_MODEL } from '@/types/openai';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 export interface MathError {
   lineStart: number;
@@ -131,56 +130,25 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     errors: MathError[];
     llmInteraction: PluginLLMInteraction;
   }> {
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
-
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    const requestParams = {
-      model: ANALYSIS_MODEL,
-      max_tokens: 4000,
-      temperature: 0,
-      system: [
-        {
-          type: "text" as const,
-          text: systemPrompt,
-          cache_control: { type: "ephemeral" as const }
-        }
-      ],
+    const result = await callClaudeWithTool<{ errors: any[] }>({
+      system: systemPrompt,
       messages: [{
-        role: "user" as const,
+        role: "user",
         content: userPrompt
       }],
-      tools: [this.getMathErrorReportingTool(input.maxErrors || 50)],
-      tool_choice: { type: "tool" as const, name: "report_math_errors" }
-    };
+      max_tokens: 4000,
+      temperature: 0,
+      toolName: "report_math_errors",
+      toolDescription: "Report mathematical errors found in the text",
+      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50)
+    });
 
-    const response = await anthropic.messages.create(requestParams);
+    const errors = this.parseErrors(result.toolResult.errors);
 
-    // Create LLMInteraction immediately from actual request/response data
-    const llmInteraction: PluginLLMInteraction = {
-      model: requestParams.model,
-      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    };
-
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    if (!toolUse || toolUse.name !== "report_math_errors") {
-      throw new Error('No valid tool use in response');
-    }
-
-    const result = toolUse.input as { errors: any[] };
-    const errors = this.parseErrors(result.errors);
-
-    return { errors, llmInteraction };
+    return { errors, llmInteraction: result.interaction };
   }
   
   private buildSystemPrompt(): string {
@@ -232,42 +200,38 @@ ${input.context ? `\nContext: ${input.context}` : ''}
 Report any mathematical errors found with detailed explanations and corrections.`;
   }
   
-  private getMathErrorReportingTool(maxErrors: number) {
+  private getMathErrorReportingToolSchema(maxErrors: number) {
     return {
-      name: "report_math_errors",
-      description: "Report mathematical errors found in the text",
-      input_schema: {
-        type: "object" as const,
-        properties: {
-          errors: {
-            type: "array",
-            description: `List of mathematical errors found (limit to ${maxErrors} most important)`,
-            items: {
-              type: "object",
-              properties: {
-                lineStart: {
-                  type: "number",
-                  description: "Starting line number where the error occurs",
-                },
-                lineEnd: {
-                  type: "number",
-                  description: "Ending line number where the error occurs",
-                },
-                highlightedText: {
-                  type: "string",
-                  description: "The mathematical expression or statement containing the error",
-                },
-                description: {
-                  type: "string",
-                  description: "Clear explanation of the mathematical error and the correct solution",
-                },
+      type: "object" as const,
+      properties: {
+        errors: {
+          type: "array",
+          description: `List of mathematical errors found (limit to ${maxErrors} most important)`,
+          items: {
+            type: "object",
+            properties: {
+              lineStart: {
+                type: "number",
+                description: "Starting line number where the error occurs",
               },
-              required: ["lineStart", "lineEnd", "highlightedText", "description"],
+              lineEnd: {
+                type: "number",
+                description: "Ending line number where the error occurs",
+              },
+              highlightedText: {
+                type: "string",
+                description: "The mathematical expression or statement containing the error",
+              },
+              description: {
+                type: "string",
+                description: "Clear explanation of the mathematical error and the correct solution",
+              },
             },
+            required: ["lineStart", "lineEnd", "highlightedText", "description"],
           },
         },
-        required: ["errors"],
       },
+      required: ["errors"],
     };
   }
   

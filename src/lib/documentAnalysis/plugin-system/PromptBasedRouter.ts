@@ -2,9 +2,10 @@
  * Prompt-based router that uses LLM to decide which plugins process which chunks
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
 import { RoutingPlan } from './RoutingPlan';
+import { createAnthropicClient } from '@/types/openai';
+import { PluginLLMInteraction } from '@/types/llm';
 
 const ROUTING_MODEL = 'claude-3-haiku-20240307'; // Fast model for routing
 
@@ -13,6 +14,7 @@ export class PromptBasedRouter {
   private routingCache: Map<string, string[]> = new Map();
   private batchSize: number = 10;
   private maxCacheSize: number = 1000;
+  private llmInteractions: PluginLLMInteraction[] = [];
 
   registerPlugin(plugin: AnalysisPlugin): void {
     this.availablePlugins.set(plugin.name(), plugin);
@@ -127,9 +129,8 @@ Do not include any explanation or other text, just the JSON array.`;
 
     try {
       // Call routing model
-      const anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
-      });
+      const startTime = Date.now();
+      const anthropic = createAnthropicClient();
       const response = await anthropic.messages.create({
         model: ROUTING_MODEL,
         max_tokens: 1000,
@@ -137,6 +138,21 @@ Do not include any explanation or other text, just the JSON array.`;
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }]
       });
+
+      // Track LLM interaction for monitoring
+      const llmInteraction: PluginLLMInteraction = {
+        model: ROUTING_MODEL,
+        prompt: `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`,
+        response: JSON.stringify(response.content),
+        tokensUsed: {
+          prompt: response.usage.input_tokens,
+          completion: response.usage.output_tokens,
+          total: response.usage.input_tokens + response.usage.output_tokens
+        },
+        timestamp: new Date(),
+        duration: Date.now() - startTime
+      };
+      this.llmInteractions.push(llmInteraction);
 
       // Parse response
       const routingArrays = this.parseRoutingResponse(response);
@@ -276,5 +292,17 @@ Do not include any explanation or other text, just the JSON array.`;
 
   setBatchSize(size: number): void {
     this.batchSize = size;
+  }
+
+  getLLMInteractions(): PluginLLMInteraction[] {
+    return [...this.llmInteractions];
+  }
+
+  clearLLMInteractions(): void {
+    this.llmInteractions = [];
+  }
+
+  getLastLLMInteraction(): PluginLLMInteraction | undefined {
+    return this.llmInteractions[this.llmInteractions.length - 1];
   }
 }

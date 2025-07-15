@@ -99,10 +99,10 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
 
     return {
       findings,
-      llmCalls: [result.llmInteraction],
+      llmCalls: result.llmInteractions,
       metadata: {
-        tokensUsed: result.llmInteraction.tokensUsed.total,
-        processingTime: result.llmInteraction.duration
+        tokensUsed: result.llmInteractions.reduce((total, interaction) => total + interaction.tokensUsed.total, 0),
+        processingTime: result.llmInteractions.reduce((total, interaction) => total + interaction.duration, 0)
       },
     };
   }

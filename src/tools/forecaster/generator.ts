@@ -5,15 +5,12 @@
 
 import {
   PluginLLMInteraction,
-  LLMMessage,
 } from "@/types/llm";
 import {
-  ANALYSIS_MODEL,
-  createAnthropicClient,
   DEFAULT_TIMEOUT,
   withTimeout,
 } from "@/types/openai";
-import { Anthropic } from "@anthropic-ai/sdk";
+import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
 import { logger } from "@/lib/logger";
 
 interface ForecastResponse {
@@ -36,8 +33,7 @@ async function generateSingleForecast(
   callNumber: number
 ): Promise<{ forecast: ForecastResponse; interaction: PluginLLMInteraction }> {
   // Add timestamp and random seed to prevent caching
-  const startTime = Date.now();
-  const timestamp = startTime;
+  const timestamp = Date.now();
   const randomSeed = Math.random();
 
   // Random prefix to break cache patterns
@@ -67,72 +63,41 @@ ${options.context ? `\nContext: ${options.context}` : ""}
 
 Think carefully and provide your forecast. Random seed: ${Math.random()}`;
 
-  const messages: LLMMessage[] = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userPrompt },
-  ];
-
-  const anthropic = createAnthropicClient();
-
-  const response = await withTimeout(
-    anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1000,
-      temperature: 0.8, // Increased for more variation
+  const result = await withTimeout(
+    callClaudeWithTool<ForecastResponse>({
+      model: MODEL_CONFIG.forecasting,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
-      tools: [
-        {
-          name: "provide_forecast",
-          description: "Provide a probability forecast with reasoning",
-          input_schema: {
-            type: "object",
-            properties: {
-              probability: {
-                type: "number",
-                minimum: 0,
-                maximum: 100,
-                description:
-                  "Probability estimate (0-100 with one decimal place, e.g. 65.2)",
-              },
-              reasoning: {
-                type: "string",
-                description: "One-sentence description of your reasoning",
-              },
-            },
-            required: ["probability", "reasoning"],
+      max_tokens: 1000,
+      temperature: 0.8, // Increased for more variation
+      toolName: "provide_forecast",
+      toolDescription: "Provide a probability forecast with reasoning",
+      toolSchema: {
+        type: "object",
+        properties: {
+          probability: {
+            type: "number",
+            minimum: 0,
+            maximum: 100,
+            description:
+              "Probability estimate (0-100 with one decimal place, e.g. 65.2)",
+          },
+          reasoning: {
+            type: "string",
+            description: "One-sentence description of your reasoning",
           },
         },
-      ],
-      tool_choice: { type: "tool", name: "provide_forecast" },
+        required: ["probability", "reasoning"],
+      },
     }),
     DEFAULT_TIMEOUT,
     `Forecast generation timed out after ${DEFAULT_TIMEOUT / 60000} minutes`
   );
 
-  const toolUse = response.content.find((c) => c.type === "tool_use") as
-    | Anthropic.ToolUseBlock
-    | undefined;
-  if (!toolUse?.input) {
-    throw new Error("No forecast generated");
-  }
-
-  const forecast = toolUse.input as ForecastResponse;
-
-  const interaction: PluginLLMInteraction = {
-    model: ANALYSIS_MODEL,
-    prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-    response: JSON.stringify(response.content),
-    tokensUsed: {
-      prompt: response.usage.input_tokens,
-      completion: response.usage.output_tokens,
-      total: response.usage.input_tokens + response.usage.output_tokens
-    },
-    timestamp: new Date(),
-    duration: Date.now() - startTime
+  return { 
+    forecast: result.toolResult, 
+    interaction: result.interaction 
   };
-
-  return { forecast, interaction };
 }
 
 /**

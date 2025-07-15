@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { createAnthropicClient } from '@/types/openai';
-import { ANALYSIS_MODEL } from '@/types/openai';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { Anthropic } from '@anthropic-ai/sdk';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 // Define types for the tool
 export interface ExtractedForecast {
@@ -101,9 +99,6 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
   }
   
   private async extractForecasts(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedForecast[]> {
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
-    
     const systemPrompt = `Extract any forecast-like statements from the text. Look for:
 - Predictions about future events
 - Probability estimates
@@ -113,58 +108,38 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
 
     const userPrompt = `Extract forecasts from this text:\n\n${text}`;
     
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1000,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ forecasts: ExtractedForecast[] }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      tools: [{
-        name: "extract_forecasts",
-        description: "Extract forecast statements from text",
-        input_schema: {
-          type: "object",
-          properties: {
-            forecasts: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The forecast statement" },
-                  probability: { type: "number", description: "Probability if stated (0-100)" },
-                  timeframe: { type: "string", description: "Time period if mentioned" },
-                  topic: { type: "string", description: "What the forecast is about" }
-                },
-                required: ["text", "topic"]
-              }
+      max_tokens: 1000,
+      temperature: 0,
+      toolName: "extract_forecasts",
+      toolDescription: "Extract forecast statements from text",
+      toolSchema: {
+        type: "object",
+        properties: {
+          forecasts: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "The forecast statement" },
+                probability: { type: "number", description: "Probability if stated (0-100)" },
+                timeframe: { type: "string", description: "Time period if mentioned" },
+                topic: { type: "string", description: "What the forecast is about" }
+              },
+              required: ["text", "topic"]
             }
-          },
-          required: ["forecasts"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "extract_forecasts" }
-    });
+          }
+        },
+        required: ["forecasts"]
+      }
+    }, llmInteractions);
 
-    // Track LLM interaction
-    llmInteractions.push({
-      model: ANALYSIS_MODEL,
-      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    });
-
-    const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;
-    const input = toolUse?.input as { forecasts?: ExtractedForecast[] } | undefined;
-    return input?.forecasts || [];
+    return result.toolResult.forecasts || [];
   }
   
   private async selectForecastsForAnalysis(
@@ -174,9 +149,6 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
     llmInteractions: PluginLLMInteraction[]
   ): Promise<Array<ExtractedForecast & { worthDetailedAnalysis: boolean; reasoning?: string }>> {
     if (forecasts.length === 0) return [];
-    
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
     
     const systemPrompt = `You are a forecast analyst. Given a list of extracted forecasts and agent instructions, 
 select which forecasts are worth detailed probability analysis (which costs 6 LLM calls each).
@@ -193,55 +165,36 @@ Select up to ${maxCount} forecasts.`;
 
     const userPrompt = `Select which of these forecasts deserve detailed analysis:\n\n${JSON.stringify(forecasts, null, 2)}`;
     
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1500,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ selections: Array<{ index: number; reasoning: string }> }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      tools: [{
-        name: "select_forecasts",
-        description: "Select forecasts for detailed analysis",
-        input_schema: {
-          type: "object",
-          properties: {
-            selections: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  index: { type: "number", description: "Index of the forecast in the input array" },
-                  reasoning: { type: "string", description: "Why this forecast was selected" }
-                },
-                required: ["index", "reasoning"]
-              }
+      max_tokens: 1500,
+      temperature: 0,
+      toolName: "select_forecasts",
+      toolDescription: "Select forecasts for detailed analysis",
+      toolSchema: {
+        type: "object",
+        properties: {
+          selections: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                index: { type: "number", description: "Index of the forecast in the input array" },
+                reasoning: { type: "string", description: "Why this forecast was selected" }
+              },
+              required: ["index", "reasoning"]
             }
-          },
-          required: ["selections"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "select_forecasts" }
-    });
+          }
+        },
+        required: ["selections"]
+      }
+    }, llmInteractions);
 
-    // Track LLM interaction
-    llmInteractions.push({
-      model: ANALYSIS_MODEL,
-      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    });
-
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    const selections = toolUse?.input?.selections || [];
+    const selections = result.toolResult.selections || [];
     
     // Mark selected forecasts
     return forecasts.map((forecast, index) => {

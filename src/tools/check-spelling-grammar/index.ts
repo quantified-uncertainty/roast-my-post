@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { LLMInteraction } from '@/lib/documentAnalysis/plugin-system/types';
+import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { ANALYSIS_MODEL, createAnthropicClient } from '@/types/openai';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 export interface SpellingGrammarError {
   text: string;
@@ -31,7 +31,7 @@ export interface CheckSpellingGrammarOutput {
     count: number;
   }>;
   recommendations: string[];
-  llmInteraction: LLMInteraction;
+  llmInteractions: PluginLLMInteraction[];
 }
 
 // Input schema
@@ -61,7 +61,7 @@ const outputSchema = z.object({
     count: z.number().describe('Number of occurrences')
   })).describe('Common error patterns identified'),
   recommendations: z.array(z.string()).describe('Recommendations for improving the text'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
+  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging')
 });
 
 export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, CheckSpellingGrammarOutput> {
@@ -80,20 +80,23 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   async execute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<CheckSpellingGrammarOutput> {
     context.logger.info(`[CheckSpellingGrammarTool] Checking text (${input.text.length} chars)`);
     
+    const llmInteractions: PluginLLMInteraction[] = [];
+    
     try {
-      const result = await this.checkSpellingGrammar(input);
+      const { errors, interaction } = await this.checkSpellingGrammar(input);
+      llmInteractions.push(interaction);
       
       // Generate summary statistics
       const summary = {
-        totalErrors: result.errors.length,
-        spellingErrors: result.errors.filter(e => e.type === 'spelling').length,
-        grammarErrors: result.errors.filter(e => e.type === 'grammar').length,
-        styleErrors: result.errors.filter(e => e.type === 'style').length
+        totalErrors: errors.length,
+        spellingErrors: errors.filter(e => e.type === 'spelling').length,
+        grammarErrors: errors.filter(e => e.type === 'grammar').length,
+        styleErrors: errors.filter(e => e.type === 'style').length
       };
       
       // Identify common patterns
       const patternCounts = new Map<string, number>();
-      result.errors.forEach(error => {
+      errors.forEach(error => {
         const count = patternCounts.get(error.type) || 0;
         patternCounts.set(error.type, count + 1);
       });
@@ -103,14 +106,14 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
         .sort((a, b) => b.count - a.count);
       
       // Generate recommendations
-      const recommendations = this.generateRecommendations(result.errors, summary);
+      const recommendations = this.generateRecommendations(errors, summary);
       
       return {
-        errors: result.errors,
+        errors,
         summary,
         commonPatterns,
         recommendations,
-        llmInteraction: result.llmInteraction
+        llmInteractions
       };
     } catch (error) {
       context.logger.error('[CheckSpellingGrammarTool] Error checking spelling/grammar:', error);
@@ -120,11 +123,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   
   private async checkSpellingGrammar(input: CheckSpellingGrammarInput): Promise<{
     errors: SpellingGrammarError[];
-    llmInteraction: LLMInteraction;
+    interaction: PluginLLMInteraction;
   }> {
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
-
     const systemPrompt = `You are a proofreading assistant. Identify spelling, grammar, and${input.includeStyle ? ' major style' : ''} issues in text.
 
 Focus on:
@@ -142,62 +142,44 @@ ${input.context ? `\nContext: ${input.context}` : ''}
 
 Report any errors found with suggested corrections.`;
 
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1500,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ errors: SpellingGrammarError[] }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      tools: [{
-        name: "report_errors",
-        description: "Report spelling, grammar, and style errors",
-        input_schema: {
-          type: "object",
-          properties: {
-            errors: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The incorrect text" },
-                  correction: { type: "string", description: "Suggested correction" },
-                  type: {
-                    type: "string",
-                    enum: input.includeStyle ? ["spelling", "grammar", "style"] : ["spelling", "grammar"],
-                    description: "Type of error"
-                  },
-                  context: { type: "string", description: "Context around the error (optional)" }
+      max_tokens: 1500,
+      temperature: 0,
+      toolName: "report_errors",
+      toolDescription: "Report spelling, grammar, and style errors",
+      toolSchema: {
+        type: "object",
+        properties: {
+          errors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "The incorrect text" },
+                correction: { type: "string", description: "Suggested correction" },
+                type: {
+                  type: "string",
+                  enum: input.includeStyle ? ["spelling", "grammar", "style"] : ["spelling", "grammar"],
+                  description: "Type of error"
                 },
-                required: ["text", "correction", "type"]
-              }
+                context: { type: "string", description: "Context around the error (optional)" }
+              },
+              required: ["text", "correction", "type"]
             }
-          },
-          required: ["errors"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "report_errors" }
+          }
+        },
+        required: ["errors"]
+      }
     });
 
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    const errors = toolUse?.input?.errors || [];
+    const errors = result.toolResult.errors || [];
 
-    const llmInteraction: LLMInteraction = {
-      model: ANALYSIS_MODEL,
-      prompt: userPrompt,
-      response: JSON.stringify({ errors }),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    };
-
-    return { errors, llmInteraction };
+    return { errors, interaction: result.interaction };
   }
   
   private generateRecommendations(errors: SpellingGrammarError[], summary: CheckSpellingGrammarOutput['summary']): string[] {

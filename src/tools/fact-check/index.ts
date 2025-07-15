@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { createAnthropicClient } from '@/types/openai';
-import { ANALYSIS_MODEL } from '@/types/openai';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 export interface Claim {
   id: string;
@@ -173,57 +172,48 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     claims: Claim[];
     interaction: PluginLLMInteraction;
   }> {
-    const startTime = Date.now();
-    
-    const anthropic = createAnthropicClient();
-    
     const prompt = this.buildExtractionPrompt(text, context);
     
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1500,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ claims: any[] }>({
       system: "You are a fact extraction system. Extract verifiable factual claims from text.",
       messages: [{
         role: "user",
         content: prompt
       }],
-      tools: [{
-        name: "extract_claims",
-        description: "Extract factual claims from text",
-        input_schema: {
-          type: "object",
-          properties: {
-            claims: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The exact claim" },
-                  topic: { type: "string", description: "Topic/category of the claim" },
-                  importance: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "Importance of verifying this claim"
-                  },
-                  specificity: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "How specific/verifiable the claim is"
-                  }
+      max_tokens: 1500,
+      temperature: 0,
+      toolName: "extract_claims",
+      toolDescription: "Extract factual claims from text",
+      toolSchema: {
+        type: "object",
+        properties: {
+          claims: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "The exact claim" },
+                topic: { type: "string", description: "Topic/category of the claim" },
+                importance: {
+                  type: "string",
+                  enum: ["high", "medium", "low"],
+                  description: "Importance of verifying this claim"
                 },
-                required: ["text", "topic", "importance", "specificity"]
-              }
+                specificity: {
+                  type: "string",
+                  enum: ["high", "medium", "low"],
+                  description: "How specific/verifiable the claim is"
+                }
+              },
+              required: ["text", "topic", "importance", "specificity"]
             }
-          },
-          required: ["claims"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "extract_claims" }
+          }
+        },
+        required: ["claims"]
+      }
     });
 
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    const extractedClaims = toolUse?.input?.claims || [];
+    const extractedClaims = result.toolResult.claims || [];
     
     // Convert to our Claim format with IDs
     const claims: Claim[] = extractedClaims.map((claim: any, index: number) => ({
@@ -235,20 +225,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
       context: context
     }));
     
-    const interaction: PluginLLMInteraction = {
-      model: ANALYSIS_MODEL,
-      prompt: prompt,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    };
-    
-    return { claims, interaction };
+    return { claims, interaction: result.interaction };
   }
   
   private async verifyClaim(claim: Claim): Promise<{
@@ -259,63 +236,44 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     };
     interaction: PluginLLMInteraction;
   }> {
-    const startTime = Date.now();
-    
-    const anthropic = createAnthropicClient();
-    
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 500,
-      temperature: 0,
+    const result = await callClaudeWithTool<{
+      verified: boolean;
+      confidence: string;
+      explanation: string;
+      requiresCurrentData: boolean;
+    }>({
       system: "You are a fact-checking assistant. Assess claims based on your training data.",
       messages: [{
         role: "user",
         content: `Fact-check this claim: "${claim.text}"\n\nNote: Use your training data to assess if this claim is likely true or false. If you're uncertain or the claim involves recent events after your training cutoff, indicate that verification requires current data.`
       }],
-      tools: [{
-        name: "verify_claim",
-        description: "Verify a factual claim",
-        input_schema: {
-          type: "object",
-          properties: {
-            verified: { type: "boolean", description: "Whether the claim appears to be true" },
-            confidence: { 
-              type: "string", 
-              enum: ["high", "medium", "low"],
-              description: "Confidence in the verification"
-            },
-            explanation: { type: "string", description: "Explanation of the verification" },
-            requiresCurrentData: { type: "boolean", description: "Whether current data is needed" }
+      max_tokens: 500,
+      temperature: 0,
+      toolName: "verify_claim",
+      toolDescription: "Verify a factual claim",
+      toolSchema: {
+        type: "object",
+        properties: {
+          verified: { type: "boolean", description: "Whether the claim appears to be true" },
+          confidence: { 
+            type: "string", 
+            enum: ["high", "medium", "low"],
+            description: "Confidence in the verification"
           },
-          required: ["verified", "confidence", "explanation", "requiresCurrentData"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "verify_claim" }
+          explanation: { type: "string", description: "Explanation of the verification" },
+          requiresCurrentData: { type: "boolean", description: "Whether current data is needed" }
+        },
+        required: ["verified", "confidence", "explanation", "requiresCurrentData"]
+      }
     });
-
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    const verificationResult = toolUse?.input || { verified: true, explanation: "Could not verify" };
-    
-    const interaction: PluginLLMInteraction = {
-      model: ANALYSIS_MODEL,
-      prompt: `Fact-check this claim: "${claim.text}"`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    };
     
     return {
       result: {
         claim,
-        verified: verificationResult.verified,
-        explanation: verificationResult.explanation
+        verified: result.toolResult.verified,
+        explanation: result.toolResult.explanation
       },
-      interaction
+      interaction: result.interaction
     };
   }
   

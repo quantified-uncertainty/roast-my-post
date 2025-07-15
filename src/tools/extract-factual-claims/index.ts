@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { createAnthropicClient } from '@/types/openai';
-import { ANALYSIS_MODEL } from '@/types/openai';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { Anthropic } from '@anthropic-ai/sdk';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 // Define types for the tool
 export interface ExtractedClaim {
@@ -125,9 +123,6 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
   }
   
   private async extractClaims(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedClaim[]> {
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
-    
     const systemPrompt = `You are a fact extraction system. Extract verifiable factual claims from text.
 
 Look for:
@@ -150,66 +145,46 @@ For each claim, assess:
 
     const userPrompt = `Extract factual claims from this text:\n\n${text}`;
     
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1500,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ claims: ExtractedClaim[] }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      tools: [{
-        name: "extract_claims",
-        description: "Extract factual claims from text",
-        input_schema: {
-          type: "object",
-          properties: {
-            claims: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The exact claim" },
-                  topic: { type: "string", description: "Topic/category of the claim" },
-                  importance: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "Importance of verifying this claim"
-                  },
-                  specificity: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "How specific/verifiable the claim is"
-                  }
+      max_tokens: 1500,
+      temperature: 0,
+      toolName: "extract_claims",
+      toolDescription: "Extract factual claims from text",
+      toolSchema: {
+        type: "object",
+        properties: {
+          claims: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "The exact claim" },
+                topic: { type: "string", description: "Topic/category of the claim" },
+                importance: {
+                  type: "string",
+                  enum: ["high", "medium", "low"],
+                  description: "Importance of verifying this claim"
                 },
-                required: ["text", "topic", "importance", "specificity"]
-              }
+                specificity: {
+                  type: "string",
+                  enum: ["high", "medium", "low"],
+                  description: "How specific/verifiable the claim is"
+                }
+              },
+              required: ["text", "topic", "importance", "specificity"]
             }
-          },
-          required: ["claims"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "extract_claims" }
-    });
+          }
+        },
+        required: ["claims"]
+      }
+    }, llmInteractions);
 
-    // Track LLM interaction
-    llmInteractions.push({
-      model: ANALYSIS_MODEL,
-      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    });
-
-    const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;
-    const input = toolUse?.input as { claims?: ExtractedClaim[] } | undefined;
-    return input?.claims || [];
+    return result.toolResult.claims || [];
   }
   
   private markClaimsForVerification(claims: ExtractedClaim[], prioritize: boolean): ExtractedClaim[] {
@@ -229,9 +204,6 @@ For each claim, assess:
   ): Promise<ClaimContradiction[]> {
     if (claims.length < 2) return [];
     
-    const startTime = Date.now();
-    const anthropic = createAnthropicClient();
-    
     const systemPrompt = `You are a contradiction detection system. Analyze a list of factual claims and identify any that contradict each other.
 
 Two claims contradict if:
@@ -244,60 +216,39 @@ Provide specific explanations for why claims contradict.`;
 
     const userPrompt = `Identify contradictions in these claims:\n\n${claims.map((claim, i) => `${i + 1}. ${claim.text} (Topic: ${claim.topic})`).join('\n')}`;
     
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1000,
-      temperature: 0,
+    const result = await callClaudeWithTool<{ contradictions: Array<{ claim1Index: number; claim2Index: number; explanation: string }> }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      tools: [{
-        name: "detect_contradictions",
-        description: "Detect contradictions between factual claims",
-        input_schema: {
-          type: "object",
-          properties: {
-            contradictions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  claim1Index: { type: "number", description: "Index of first contradicting claim (1-based)" },
-                  claim2Index: { type: "number", description: "Index of second contradicting claim (1-based)" },
-                  explanation: { type: "string", description: "Why these claims contradict" }
-                },
-                required: ["claim1Index", "claim2Index", "explanation"]
-              }
+      max_tokens: 1000,
+      temperature: 0,
+      toolName: "detect_contradictions",
+      toolDescription: "Detect contradictions between factual claims",
+      toolSchema: {
+        type: "object",
+        properties: {
+          contradictions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                claim1Index: { type: "number", description: "Index of first contradicting claim (1-based)" },
+                claim2Index: { type: "number", description: "Index of second contradicting claim (1-based)" },
+                explanation: { type: "string", description: "Why these claims contradict" }
+              },
+              required: ["claim1Index", "claim2Index", "explanation"]
             }
-          },
-          required: ["contradictions"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "detect_contradictions" }
-    });
-
-    // Track LLM interaction
-    llmInteractions.push({
-      model: ANALYSIS_MODEL,
-      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
-      response: JSON.stringify(response.content),
-      tokensUsed: {
-        prompt: response.usage.input_tokens,
-        completion: response.usage.output_tokens,
-        total: response.usage.input_tokens + response.usage.output_tokens
-      },
-      timestamp: new Date(),
-      duration: Date.now() - startTime
-    });
-
-    const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;
-    const result = toolUse?.input as { contradictions?: Array<{ claim1Index: number; claim2Index: number; explanation: string }> } | undefined;
+          }
+        },
+        required: ["contradictions"]
+      }
+    }, llmInteractions);
     
-    if (!result?.contradictions) return [];
+    if (!result.toolResult.contradictions) return [];
     
-    return result.contradictions.map(contradiction => ({
+    return result.toolResult.contradictions.map(contradiction => ({
       claim1: claims[contradiction.claim1Index - 1]?.text || '',
       claim2: claims[contradiction.claim2Index - 1]?.text || '',
       explanation: contradiction.explanation

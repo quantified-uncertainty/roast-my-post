@@ -159,6 +159,12 @@ export class PluginManager {
       });
     }
 
+    // Include router LLM interactions in token count
+    const routerInteractions = this.router.getLLMInteractions();
+    routerInteractions.forEach(interaction => {
+      totalTokens += interaction.tokensUsed.total;
+    });
+
     // Create summary
     const summaryParts: string[] = [];
     
@@ -235,5 +241,18 @@ export class PluginManager {
 
   clearRoutingCache(): void {
     this.router.clearCache();
+  }
+
+  // Router LLM interaction methods for monitoring
+  getRouterLLMInteractions() {
+    return this.router.getLLMInteractions();
+  }
+
+  clearRouterLLMInteractions(): void {
+    this.router.clearLLMInteractions();
+  }
+
+  getLastRouterLLMInteraction() {
+    return this.router.getLastLLMInteraction();
   }
 }

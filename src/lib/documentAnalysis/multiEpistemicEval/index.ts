@@ -18,6 +18,24 @@ import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { generateSelfCritique } from "../selfCritique";
 import type { SelfCritiqueInput } from "../selfCritique";
+import type { PluginLLMInteraction, LLMInteraction } from "../../../types/llm";
+
+/**
+ * Convert PluginLLMInteraction to LLMInteraction format for TaskResult
+ */
+function convertPluginLLMInteraction(pluginInteraction: PluginLLMInteraction): LLMInteraction {
+  return {
+    messages: [
+      { role: "system", content: pluginInteraction.prompt.split('\n\nUSER: ')[0].replace('SYSTEM: ', '') },
+      { role: "user", content: pluginInteraction.prompt.split('\n\nUSER: ')[1] || pluginInteraction.prompt },
+      { role: "assistant", content: pluginInteraction.response }
+    ],
+    usage: {
+      input_tokens: pluginInteraction.tokensUsed.prompt,
+      output_tokens: pluginInteraction.tokensUsed.completion
+    }
+  };
+}
 
 export async function analyzeWithMultiEpistemicEval(
   document: Document,
@@ -68,13 +86,17 @@ export async function analyzeWithMultiEpistemicEval(
     const pluginDuration = Date.now() - pluginStartTime;
     logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
     
+    // Get router LLM interactions for accurate tracking
+    const routerInteractions = manager.getRouterLLMInteractions();
+    const routerTokens = routerInteractions.reduce((sum, interaction) => sum + interaction.tokensUsed.total, 0);
+    
     tasks.push({
       name: 'Plugin Analysis',
       modelName: 'claude-3-haiku-20240307',
-      priceInDollars: 0.01,
+      priceInDollars: pluginResults.statistics.tokensUsed * 0.00000025, // Approximate cost based on total tokens
       timeInSeconds: pluginDuration / 1000,
-      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, found ${pluginResults.statistics.totalFindings} findings`,
-      llmInteractions: []
+      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, found ${pluginResults.statistics.totalFindings} findings. Router used ${routerTokens} tokens in ${routerInteractions.length} routing calls.`,
+      llmInteractions: routerInteractions.map(convertPluginLLMInteraction)
     });
     
     // Step 2: Format results into structured findings
