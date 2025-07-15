@@ -6,15 +6,17 @@ import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
     },
-  },
+  })),
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
 }));
+
+import { createAnthropicClient } from "../../../types/openai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({

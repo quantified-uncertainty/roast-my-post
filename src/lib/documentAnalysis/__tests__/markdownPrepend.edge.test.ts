@@ -5,16 +5,18 @@ import type { Agent } from "../../../types/agentSchema";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
     },
-  },
+  })),
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
   HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
+
+import { createAnthropicClient } from "../../../types/openai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -32,13 +34,22 @@ describe("markdownPrepend Edge Cases", () => {
     providesGrades: false,
   };
 
+  let mockAnthropicCreate: jest.MockedFunction<any>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
   });
 
   describe("Highlights spanning prepend/content boundary", () => {
     test("handles highlight that starts in prepend and ends in content", async () => {
-      const { anthropic } = require("../../../types/openai");
       
       const documentContent = "This is the first line of actual content.\nMore content here.";
       const mockDocument = createTestDocument(documentContent, {
@@ -72,7 +83,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -131,7 +142,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -181,7 +192,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       // Should not throw
       await expect(
@@ -217,7 +228,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       await expect(
         generateComprehensiveAnalysis(mockDocument, mockAgent, 500, 0)
@@ -256,7 +267,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const analysisResult = await generateComprehensiveAnalysis(
         singleLineDoc,
@@ -303,7 +314,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -349,7 +360,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       // Should handle special characters without breaking
       await expect(
@@ -390,7 +401,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const analysisResult = await generateComprehensiveAnalysis(
         unicodeDoc,
@@ -437,7 +448,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
       const startTime = Date.now();
       
