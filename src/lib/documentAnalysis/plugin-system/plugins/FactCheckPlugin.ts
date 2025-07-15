@@ -1,12 +1,12 @@
 /**
- * Fact checking plugin
+ * Fact checking plugin - uses FactCheck tool for core functionality
  */
 
 import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
-import Anthropic from '@anthropic-ai/sdk';
-import { ANALYSIS_MODEL } from '../../../../types/openai';
+import FactCheckTool from '../../../../tools/fact-check';
+import { logger } from '../../../../lib/logger';
 
 interface FactCheckState {
   claims: Array<{
@@ -70,35 +70,39 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
-    const { result, interaction } = await this.trackLLMCall(
-      ANALYSIS_MODEL,
-      this.buildExtractionPrompt(chunk),
-      () => this.extractClaims(chunk)
-    );
+    // Use the FactCheck tool to analyze this chunk
+    const toolResult = await FactCheckTool.run({
+      text: chunk.text,
+      context: chunk.getExpandedContext(100),
+      maxClaims: 10,
+      verifyHighPriority: false // Don't verify in processChunk, save for synthesize
+    }, {
+      userId: 'plugin-system',
+      logger
+    });
 
     const findings: Finding[] = [];
 
-    // Store claims for later verification
-    result.claims.forEach(claim => {
+    // Convert tool claims to plugin state format
+    toolResult.claims.forEach(claim => {
       const claimId = `${chunk.id}-${this.state.claims.length}`;
       this.state.claims.push({
         id: claimId,
         text: claim.text,
         chunkId: chunk.id,
-        context: chunk.getExpandedContext(100),
+        context: claim.context || chunk.getExpandedContext(100),
         topic: claim.topic,
-        needsVerification: claim.importance === 'high' || claim.specificity === 'high'
+        needsVerification: claim.importance === 'high' || claim.specificity === 'high',
+        verified: claim.verified,
+        explanation: claim.explanation
       });
-
-      // Note: We don't verify immediately in processChunk
-      // This is done in synthesize() to batch verifications
     });
 
-    // Check for contradictions with existing claims
-    const newContradictions = this.checkForContradictions(result.claims);
-    this.state.contradictions.push(...newContradictions);
+    // Add contradictions to state
+    this.state.contradictions.push(...toolResult.contradictions);
 
-    newContradictions.forEach(contradiction => {
+    // Convert contradictions to findings
+    toolResult.contradictions.forEach(contradiction => {
       findings.push({
         type: 'contradiction',
         severity: 'high',
@@ -106,30 +110,56 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       });
     });
 
+    // Calculate total metadata from tool interactions
+    const totalTokens = toolResult.llmInteractions.reduce((sum, interaction) => sum + (interaction.tokensUsed?.total || 0), 0);
+    const totalDuration = toolResult.llmInteractions.reduce((sum, interaction) => sum + (interaction.duration || 0), 0);
+
     return {
       findings,
-      llmCalls: [interaction],
+      llmCalls: toolResult.llmInteractions,
       metadata: {
-        tokensUsed: interaction.tokensUsed.total,
-        processingTime: interaction.duration
+        tokensUsed: totalTokens,
+        processingTime: totalDuration
       }
     };
   }
 
   async synthesize(): Promise<SynthesisResult> {
-    // Prioritize claims for fact-checking
-    const claimsToVerify = this.state.claims
-      .filter(claim => claim.needsVerification)
-      .slice(0, 10); // Limit to 10 most important claims
+    // If we have claims that need verification, use the tool to verify them
+    const claimsToVerify = this.state.claims.filter(claim => claim.needsVerification);
+    
+    if (claimsToVerify.length === 0) {
+      return {
+        summary: `Analyzed ${this.state.claims.length} claims. No high-priority claims found for verification. Found ${this.state.contradictions.length} contradictions.`,
+        findings: this.state.contradictions.map(contradiction => ({
+          type: 'contradiction',
+          severity: 'medium',
+          message: contradiction.explanation
+        })),
+        recommendations: this.generateRecommendations(0, this.state.contradictions.length),
+        llmCalls: []
+      };
+    }
 
-    // Verify claims using web search
-    const verificationResults = await this.verifyClaims(claimsToVerify);
+    // Create a text block with all claims for batch verification
+    const claimsText = claimsToVerify.map(claim => `${claim.text} (Topic: ${claim.topic})`).join('\n');
+
+    // Use the tool to verify claims
+    const toolResult = await FactCheckTool.run({
+      text: claimsText,
+      context: 'Claims extracted from document for verification',
+      maxClaims: claimsToVerify.length,
+      verifyHighPriority: true
+    }, {
+      userId: 'plugin-system',
+      logger
+    });
 
     const findings: Finding[] = [];
-    const llmCalls: any[] = [];
 
-    verificationResults.forEach(result => {
-      if (result.verified === false) {
+    // Process verification results
+    toolResult.verificationResults.forEach(result => {
+      if (!result.verified) {
         findings.push({
           type: 'false_claim',
           severity: 'high',
@@ -137,14 +167,11 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         });
       }
       
-      const claim = this.state.claims.find(c => c.id === result.claim.id);
-      if (claim) {
-        claim.verified = result.verified;
-        claim.explanation = result.explanation;
-      }
-
-      if (result.llmCall) {
-        llmCalls.push(result.llmCall);
+      // Update state with verification results
+      const stateClaim = this.state.claims.find(c => c.text === result.claim.text);
+      if (stateClaim) {
+        stateClaim.verified = result.verified;
+        stateClaim.explanation = result.explanation;
       }
     });
 
@@ -157,9 +184,9 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       });
     });
 
-    const verifiedCount = verificationResults.filter(r => r.verified === true).length;
-    const falseCount = verificationResults.filter(r => r.verified === false).length;
-    const summary = `Analyzed ${this.state.claims.length} claims. Verified ${claimsToVerify.length} high-priority claims: ${verifiedCount} true, ${falseCount} false. Found ${this.state.contradictions.length} contradictions.`;
+    const verifiedCount = toolResult.verificationResults.filter(r => r.verified).length;
+    const falseCount = toolResult.verificationResults.filter(r => !r.verified).length;
+    const summary = `Analyzed ${this.state.claims.length} claims. Verified ${toolResult.verificationResults.length} high-priority claims: ${verifiedCount} true, ${falseCount} false. Found ${this.state.contradictions.length} contradictions.`;
 
     const recommendations = this.generateRecommendations(falseCount, this.state.contradictions.length);
 
@@ -167,7 +194,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       summary,
       findings,
       recommendations,
-      llmCalls
+      llmCalls: toolResult.llmInteractions
     };
   }
 
@@ -178,191 +205,6 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     };
   }
 
-  private buildExtractionPrompt(chunk: TextChunk): string {
-    return `Extract all factual claims from this text that could potentially be verified. Focus on specific, objective statements.
-
-Text to analyze:
-${chunk.text}
-
-For each claim, identify:
-1. The exact claim text
-2. The topic/category
-3. Importance (high/medium/low)
-4. Specificity (high/medium/low)`;
-  }
-
-  private async extractClaims(chunk: TextChunk): Promise<{
-    claims: Array<{
-      text: string;
-      topic: string;
-      importance: 'high' | 'medium' | 'low';
-      specificity: 'high' | 'medium' | 'low';
-    }>;  
-  }> {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
-      max_tokens: 1500,
-      temperature: 0,
-      system: "You are a fact extraction system. Extract verifiable factual claims from text.",
-      messages: [{
-        role: "user",
-        content: this.buildExtractionPrompt(chunk)
-      }],
-      tools: [{
-        name: "extract_claims",
-        description: "Extract factual claims from text",
-        input_schema: {
-          type: "object",
-          properties: {
-            claims: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The exact claim" },
-                  topic: { type: "string", description: "Topic/category of the claim" },
-                  importance: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "Importance of verifying this claim"
-                  },
-                  specificity: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "How specific/verifiable the claim is"
-                  }
-                },
-                required: ["text", "topic", "importance", "specificity"]
-              }
-            }
-          },
-          required: ["claims"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "extract_claims" }
-    });
-
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    return toolUse?.input || { claims: [] };
-  }
-
-  private checkForContradictions(newClaims: any[]): Array<{
-    claim1: string;
-    claim2: string;
-    explanation: string;
-  }> {
-    const contradictions: Array<{
-      claim1: string;
-      claim2: string;
-      explanation: string;
-    }> = [];
-
-    // Simple contradiction detection - in production, this would be more sophisticated
-    newClaims.forEach(newClaim => {
-      this.state.claims.forEach(existingClaim => {
-        if (this.areContradictory(newClaim, existingClaim)) {
-          contradictions.push({
-            claim1: existingClaim.text,
-            claim2: newClaim.text,
-            explanation: `These claims appear to contradict each other about ${newClaim.topic}`
-          });
-        }
-      });
-    });
-
-    return contradictions;
-  }
-
-  private areContradictory(claim1: any, claim2: any): boolean {
-    // Simplified logic - in production would use more sophisticated NLP
-    if (claim1.topic !== claim2.topic) return false;
-    
-    // Check for opposing numbers or dates
-    const numbers1 = claim1.text.match(/\d+/g) || [];
-    const numbers2 = claim2.text.match(/\d+/g) || [];
-    
-    if (numbers1.length > 0 && numbers2.length > 0 && 
-        numbers1.some((n1: string) => numbers2.some((n2: string) => n1 !== n2))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  private async verifyClaims(claims: any[]): Promise<Array<{
-    claim: any;
-    verified: boolean;
-    explanation: string;
-    llmCall?: any;
-  }>> {
-    // In production, this would use web search API
-    // For now, we'll use Claude's knowledge with appropriate caveats
-    
-    const verifications = await Promise.all(
-      claims.map(claim => this.verifySingleClaim(claim))
-    );
-
-    return verifications;
-  }
-
-  private async verifySingleClaim(claim: any): Promise<{
-    claim: any;
-    verified: boolean;
-    explanation: string;
-    llmCall?: any;
-  }> {
-    const { result, interaction } = await this.trackLLMCall(
-      ANALYSIS_MODEL,
-      `Fact-check this claim: "${claim.text}"\n\nNote: Use your training data to assess if this claim is likely true or false. If you're uncertain or the claim involves recent events after your training cutoff, indicate that verification requires current data.`,
-      async () => {
-        const anthropic = new Anthropic({
-          apiKey: process.env.ANTHROPIC_API_KEY,
-        });
-        const response = await anthropic.messages.create({
-          model: ANALYSIS_MODEL,
-          max_tokens: 500,
-          temperature: 0,
-          system: "You are a fact-checking assistant. Assess claims based on your training data.",
-          messages: [{
-            role: "user",
-            content: `Fact-check this claim: "${claim.text}"`
-          }],
-          tools: [{
-            name: "verify_claim",
-            description: "Verify a factual claim",
-            input_schema: {
-              type: "object",
-              properties: {
-                verified: { type: "boolean", description: "Whether the claim appears to be true" },
-                confidence: { 
-                  type: "string", 
-                  enum: ["high", "medium", "low"],
-                  description: "Confidence in the verification"
-                },
-                explanation: { type: "string", description: "Explanation of the verification" },
-                requiresCurrentData: { type: "boolean", description: "Whether current data is needed" }
-              },
-              required: ["verified", "confidence", "explanation", "requiresCurrentData"]
-            }
-          }],
-          tool_choice: { type: "tool", name: "verify_claim" }
-        });
-
-        const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-        return toolUse?.input || { verified: true, explanation: "Could not verify" };
-      }
-    );
-
-    return {
-      claim,
-      verified: result.verified,
-      explanation: result.explanation,
-      llmCall: interaction
-    };
-  }
 
   private generateRecommendations(falseCount: number, contradictionCount: number): string[] {
     const recommendations: string[] = [];

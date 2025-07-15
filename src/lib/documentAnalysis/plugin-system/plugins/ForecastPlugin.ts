@@ -7,7 +7,8 @@ import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types'
 import { TextChunk } from '../TextChunk';
 import Anthropic from '@anthropic-ai/sdk';
 import { ANALYSIS_MODEL } from '../../../../types/openai';
-import { generateForecast } from '../../narrow-epistemic-evals/forecaster';
+import forecasterTool from '../../../../tools/forecaster/index';
+import { logger } from '../../../../lib/logger';
 
 interface ForecastState {
   predictions: Array<{
@@ -23,7 +24,7 @@ interface ForecastState {
   ourForecasts: Array<{
     predictionId: string;
     ourProbability: number;
-    ourConfidence: 'low' | 'medium' | 'high';
+    ourConsensus: 'low' | 'medium' | 'high';
     reasoning: string;
     agreesWithAuthor: boolean;
   }>;
@@ -126,20 +127,22 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
     // Generate our own forecasts
     for (const prediction of predictionsToForecast) {
       try {
-        const forecast = await generateForecast({
+        const forecast = await forecasterTool.execute({
           question: this.convertToForecastQuestion(prediction),
           context: prediction.context,
-          timeframe: prediction.timeframe,
           numForecasts: 4, // Fewer for efficiency in batch processing
           usePerplexity: false // Could enable if needed
+        }, {
+          userId: 'forecast-plugin',
+          logger: logger
         });
 
         const ourForecast = {
           predictionId: prediction.id,
-          ourProbability: forecast.forecast.probability,
-          ourConfidence: forecast.forecast.confidence,
-          reasoning: forecast.forecast.description,
-          agreesWithAuthor: this.checkAgreement(prediction.probability, forecast.forecast.probability)
+          ourProbability: forecast.probability,
+          ourConsensus: forecast.consensus,
+          reasoning: forecast.description,
+          agreesWithAuthor: this.checkAgreement(prediction.probability, forecast.probability)
         };
 
         this.state.ourForecasts.push(ourForecast);
@@ -159,10 +162,7 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
         }
 
         // Track LLM calls from forecast generation
-        forecast.individual_forecasts.forEach(f => {
-          // Note: The forecaster module doesn't currently return LLM interactions
-          // This would need to be enhanced in the forecaster module
-        });
+        llmCalls.push(...forecast.llmInteractions);
       } catch (error) {
         console.error(`Failed to forecast for prediction ${prediction.id}:`, error);
       }

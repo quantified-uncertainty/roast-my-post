@@ -31,18 +31,9 @@ export interface Finding {
   metadata?: Record<string, any>;
 }
 
-export interface LLMInteraction {
-  model: string;
-  prompt: string;
-  response: string;
-  tokensUsed: {
-    prompt: number;
-    completion: number;
-    total: number;
-  };
-  timestamp: Date;
-  duration: number;
-}
+// Re-export from shared types to avoid duplication
+import type { PluginLLMInteraction } from '@/types/llm';
+export type LLMInteraction = PluginLLMInteraction;
 
 export interface ChunkResult {
   findings?: Finding[];
