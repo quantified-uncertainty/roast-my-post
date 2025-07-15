@@ -1,4 +1,5 @@
-import { createAnthropicClient, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
+import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import { DEFAULT_TEMPERATURE } from "../../../types/openai";
 import { logger } from "@/lib/logger";
 import { LOG_PREFIXES } from "./constants";
 
@@ -66,8 +67,14 @@ Look for:
 Provide specific examples from the text that support your conclusions.`;
 
   try {
-    const response = await createAnthropicClient().messages.create({
-      model: ANALYSIS_MODEL,
+    const { response, toolResult } = await callClaudeWithTool<{
+      language: 'US' | 'UK' | 'mixed' | 'unknown';
+      documentType: 'academic' | 'blog' | 'technical' | 'casual' | 'unknown';
+      formality: 'formal' | 'informal' | 'mixed';
+      examples: string[];
+      reasoning: string;
+    }>({
+      model: MODEL_CONFIG.analysis,
       max_tokens: 1000,
       temperature: DEFAULT_TEMPERATURE,
       system: systemPrompt,
@@ -77,82 +84,56 @@ Provide specific examples from the text that support your conclusions.`;
           content: userPrompt,
         },
       ],
-      tools: [
-        {
-          name: "report_conventions",
-          description: "Report the detected language conventions and document type",
-          input_schema: {
-            type: "object",
-            properties: {
-              language: {
-                type: "string",
-                enum: ["US", "UK", "mixed", "unknown"],
-                description: "The detected spelling convention"
-              },
-              documentType: {
-                type: "string",
-                enum: ["academic", "blog", "technical", "casual", "unknown"],
-                description: "The type of document"
-              },
-              formality: {
-                type: "string",
-                enum: ["formal", "informal", "mixed"],
-                description: "The formality level of the writing"
-              },
-              examples: {
-                type: "array",
-                items: {
-                  type: "string"
-                },
-                description: "Specific examples from the text supporting the conclusions"
-              },
-              reasoning: {
-                type: "string",
-                description: "Brief explanation of the detection logic"
-              }
-            },
-            required: ["language", "documentType", "formality", "examples", "reasoning"],
+      toolName: "report_conventions",
+      toolDescription: "Report the detected language conventions and document type",
+      toolSchema: {
+        type: "object",
+        properties: {
+          language: {
+            type: "string",
+            enum: ["US", "UK", "mixed", "unknown"],
+            description: "The detected spelling convention"
           },
+          documentType: {
+            type: "string",
+            enum: ["academic", "blog", "technical", "casual", "unknown"],
+            description: "The type of document"
+          },
+          formality: {
+            type: "string",
+            enum: ["formal", "informal", "mixed"],
+            description: "The formality level of the writing"
+          },
+          examples: {
+            type: "array",
+            items: {
+              type: "string"
+            },
+            description: "Specific examples from the text supporting the conclusions"
+          },
+          reasoning: {
+            type: "string",
+            description: "Brief explanation of the detection logic"
+          }
         },
-      ],
-      tool_choice: { type: "tool", name: "report_conventions" },
+        required: ["language", "documentType", "formality", "examples", "reasoning"],
+      },
     });
 
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "report_conventions") {
-      logger.error(`${LOG_PREFIXES.WORKFLOW} No tool use response from convention detection`);
-      return {
-        conventions: {
-          language: 'unknown',
-          documentType: 'unknown',
-          formality: 'mixed',
-          examples: []
-        },
-        usage: response.usage
-      };
-    }
-
-    const result = toolUse.input as {
-      language: 'US' | 'UK' | 'mixed' | 'unknown';
-      documentType: 'academic' | 'blog' | 'technical' | 'casual' | 'unknown';
-      formality: 'formal' | 'informal' | 'mixed';
-      examples: string[];
-      reasoning: string;
-    };
     logger.info(`${LOG_PREFIXES.WORKFLOW} Detected conventions`, {
-      language: `${result.language} English`,
-      documentType: result.documentType,
-      formality: result.formality,
-      reasoning: result.reasoning,
-      exampleCount: result.examples.length
+      language: `${toolResult.language} English`,
+      documentType: toolResult.documentType,
+      formality: toolResult.formality,
+      reasoning: toolResult.reasoning,
+      exampleCount: toolResult.examples.length
     });
 
     return {
       conventions: {
-        language: result.language,
-        documentType: result.documentType,
-        formality: result.formality,
-        examples: result.examples
+        language: toolResult.language,
+        documentType: toolResult.documentType,
+        formality: toolResult.formality,
+        examples: toolResult.examples
       },
       usage: response.usage
     };

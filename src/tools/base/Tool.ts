@@ -8,6 +8,8 @@ export interface ToolConfig {
   version: string;
   category: 'analysis' | 'research' | 'utility';
   costEstimate?: string;
+  path?: string; // UI route path
+  status?: 'stable' | 'experimental' | 'beta';
 }
 
 export interface ToolContext {

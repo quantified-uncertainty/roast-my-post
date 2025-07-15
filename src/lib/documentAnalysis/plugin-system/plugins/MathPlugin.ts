@@ -5,7 +5,7 @@
 import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
-import { createAnthropicClient, ANALYSIS_MODEL } from '../../../../types/openai';
+import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 interface MathState {
   equations: Array<{
@@ -68,7 +68,7 @@ export class MathPlugin extends BasePlugin<MathState> {
 
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
     const { result, interaction } = await this.trackLLMCall(
-      ANALYSIS_MODEL,
+      MODEL_CONFIG.analysis,
       this.buildExtractionPrompt(chunk),
       () => this.extractAndVerifyMath(chunk)
     );
@@ -170,9 +170,16 @@ For each mathematical expression found:
       location?: { start: number; end: number };
     }>;
   }> {
-    const anthropic = createAnthropicClient();
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
+    const { toolResult } = await callClaudeWithTool<{
+      equations: Array<{
+        equation: string;
+        context: string;
+        isCorrect: boolean;
+        error?: string;
+        location?: { start: number; end: number };
+      }>;
+    }>({
+      model: MODEL_CONFIG.analysis,
       max_tokens: 1500,
       temperature: 0,
       system: "You are a mathematical verification system. Extract and verify all mathematical content.",
@@ -180,41 +187,37 @@ For each mathematical expression found:
         role: "user",
         content: this.buildExtractionPrompt(chunk)
       }],
-      tools: [{
-        name: "report_math_content",
-        description: "Report mathematical content found in the text",
-        input_schema: {
-          type: "object",
-          properties: {
-            equations: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  equation: { type: "string", description: "The mathematical expression" },
-                  context: { type: "string", description: "Surrounding context" },
-                  isCorrect: { type: "boolean", description: "Whether the math is correct" },
-                  error: { type: "string", description: "Error description if incorrect" },
-                  location: {
-                    type: "object",
-                    properties: {
-                      start: { type: "number" },
-                      end: { type: "number" }
-                    }
+      toolName: "report_math_content",
+      toolDescription: "Report mathematical content found in the text",
+      toolSchema: {
+        type: "object",
+        properties: {
+          equations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                equation: { type: "string", description: "The mathematical expression" },
+                context: { type: "string", description: "Surrounding context" },
+                isCorrect: { type: "boolean", description: "Whether the math is correct" },
+                error: { type: "string", description: "Error description if incorrect" },
+                location: {
+                  type: "object",
+                  properties: {
+                    start: { type: "number" },
+                    end: { type: "number" }
                   }
-                },
-                required: ["equation", "context", "isCorrect"]
-              }
+                }
+              },
+              required: ["equation", "context", "isCorrect"]
             }
-          },
-          required: ["equations"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "report_math_content" }
+          }
+        },
+        required: ["equations"]
+      }
     });
 
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    return toolUse?.input || { equations: [] };
+    return toolResult || { equations: [] };
   }
 
   private analyzeErrorPatterns(): {

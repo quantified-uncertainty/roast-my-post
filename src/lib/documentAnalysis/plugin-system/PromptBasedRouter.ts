@@ -4,10 +4,8 @@
 
 import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
 import { RoutingPlan } from './RoutingPlan';
-import { createAnthropicClient } from '@/types/openai';
 import { RichLLMInteraction } from '@/types/llm';
-
-const ROUTING_MODEL = 'claude-3-haiku-20240307'; // Fast model for routing
+import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 export class PromptBasedRouter {
   private availablePlugins: Map<string, AnalysisPlugin> = new Map();
@@ -128,31 +126,14 @@ Do not include any explanation or other text, just the JSON array.`;
     const userPrompt = this.buildBatchPrompt(uncachedChunks);
 
     try {
-      // Call routing model
-      const startTime = Date.now();
-      const anthropic = createAnthropicClient();
-      const response = await anthropic.messages.create({
-        model: ROUTING_MODEL,
+      // Call routing model using wrapper
+      const { response, interaction } = await callClaude({
+        model: MODEL_CONFIG.routing,
         max_tokens: 1000,
         temperature: 0,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }]
-      });
-
-      // Track LLM interaction for monitoring
-      const llmInteraction: RichLLMInteraction = {
-        model: ROUTING_MODEL,
-        prompt: `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`,
-        response: JSON.stringify(response.content),
-        tokensUsed: {
-          prompt: response.usage.input_tokens,
-          completion: response.usage.output_tokens,
-          total: response.usage.input_tokens + response.usage.output_tokens
-        },
-        timestamp: new Date(),
-        duration: Date.now() - startTime
-      };
-      this.llmInteractions.push(llmInteraction);
+      }, this.llmInteractions);
 
       // Parse response
       const routingArrays = this.parseRoutingResponse(response);

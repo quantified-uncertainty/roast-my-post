@@ -1,6 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient, ANALYSIS_MODEL } from '@/types/openai';
 import { RichLLMInteraction } from '@/types/llm';
+import { withRetry } from '@/lib/documentAnalysis/shared/retryUtils';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -40,12 +41,30 @@ function buildPromptString(
   return prompt.trim();
 }
 
+function isRetryableError(error: any): boolean {
+  // Check if this is an Anthropic API error
+  if (error?.status) {
+    const status = error.status;
+    // Retry on rate limits (429) and server errors (5xx)
+    return status === 429 || (status >= 500 && status < 600);
+  }
+  
+  // Check for network/timeout errors
+  if (error?.code) {
+    const code = error.code;
+    return code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND';
+  }
+  
+  return false;
+}
+
 /**
  * Centralized Claude API wrapper that automatically handles:
  * - Helicone integration via createAnthropicClient()
  * - LLM interaction tracking with RichLLMInteraction format
  * - Consistent error handling and token counting
  * - Model configuration centralization
+ * - Automatic retry with exponential backoff for retryable errors
  */
 export async function callClaude(
   options: ClaudeCallOptions,
@@ -57,15 +76,43 @@ export async function callClaude(
   // Use centralized model config if not specified
   const model = options.model || MODEL_CONFIG.analysis;
   
-  const response = await anthropic.messages.create({
-    model,
-    max_tokens: options.max_tokens || 4000,
-    temperature: options.temperature ?? 0,
-    system: options.system,
-    messages: options.messages,
-    tools: options.tools,
-    tool_choice: options.tool_choice
-  });
+  // Make API call with retry logic for retryable errors
+  const response = await withRetry(
+    async () => {
+      try {
+        const requestOptions: any = {
+          model,
+          max_tokens: options.max_tokens || 4000,
+          temperature: options.temperature ?? 0,
+          messages: options.messages
+        };
+        
+        if (options.system) requestOptions.system = options.system;
+        if (options.tools) requestOptions.tools = options.tools;
+        if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
+        
+        const result = await anthropic.messages.create(requestOptions);
+        
+        // Validate response structure
+        if (!result || !result.content || !result.usage) {
+          throw new Error('Malformed response from Claude API');
+        }
+        
+        return result;
+      } catch (error) {
+        // Only retry if the error is retryable
+        if (!isRetryableError(error)) {
+          throw error;
+        }
+        throw error; // Will be retried by withRetry
+      }
+    },
+    {
+      maxRetries: 3, // 3 total attempts (withRetry counts from 1 to maxRetries)
+      baseDelayMs: 1000,
+      logPrefix: '[Claude API]'
+    }
+  );
 
   // Automatically create interaction with proper format
   const interaction: RichLLMInteraction = {
@@ -116,8 +163,11 @@ export async function callClaudeWithTool<T>(
   const toolUse = result.response.content.find((c): c is Anthropic.Messages.ToolUseBlock => 
     c.type === "tool_use"
   );
-  if (!toolUse || toolUse.name !== options.toolName) {
-    throw new Error(`Expected tool use for ${options.toolName}`);
+  if (!toolUse) {
+    throw new Error('No tool use found in response');
+  }
+  if (toolUse.name !== options.toolName) {
+    throw new Error(`Expected tool use for ${options.toolName}, got ${toolUse.name}`);
   }
 
   return {

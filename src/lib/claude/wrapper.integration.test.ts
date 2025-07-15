@@ -7,6 +7,7 @@ import { anthropic } from '@/types/openai';
 // Mock the createAnthropicClient
 jest.mock('@/types/openai', () => ({
   createAnthropicClient: jest.fn(),
+  ANALYSIS_MODEL: 'claude-sonnet-4-20250514',
   anthropic: {
     Messages: {
       MessageCreateParams: {},
@@ -62,7 +63,8 @@ describe('Claude Wrapper Integration Tests', () => {
       expect(mockClient.messages.create).toHaveBeenCalledWith({
         messages: [{ role: 'user', content: 'What is 2+2?' }],
         max_tokens: 100,
-        model: MODEL_CONFIG.analysis
+        model: MODEL_CONFIG.analysis,
+        temperature: 0
       });
 
       // Verify response
@@ -142,7 +144,7 @@ describe('Claude Wrapper Integration Tests', () => {
 
       // Should attempt 3 times (initial + 2 retries)
       expect(mockClient.messages.create).toHaveBeenCalledTimes(3);
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe('callClaudeWithTool', () => {
@@ -264,7 +266,7 @@ describe('Claude Wrapper Integration Tests', () => {
 
       // Should not retry for 401
       expect(mockClient.messages.create).toHaveBeenCalledTimes(1);
-    });
+    }, 10000); // Increase timeout to 10 seconds
 
     it('should handle malformed responses gracefully', async () => {
       mockClient.messages.create.mockResolvedValueOnce({

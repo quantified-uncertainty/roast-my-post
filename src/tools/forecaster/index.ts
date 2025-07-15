@@ -59,7 +59,9 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
     description: 'Generate probability forecasts using multiple independent Claude analyses',
     version: '1.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.05 per forecast (6 Claude calls)'
+    costEstimate: '~$0.05 per forecast (6 Claude calls)',
+    path: '/tools/forecaster-simple',
+    status: 'experimental' as const
   };
   
   inputSchema = inputSchema;

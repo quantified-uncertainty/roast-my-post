@@ -4,11 +4,38 @@ import { Tool } from './Tool';
 import { ToolResponse } from './types';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
+import { standardRateLimit, getClientIdentifier } from '@/lib/rate-limiter';
 
 export function createToolRoute<TInput, TOutput>(tool: Tool<TInput, TOutput>) {
   return async function POST(request: NextRequest): Promise<NextResponse<ToolResponse<TOutput>>> {
     try {
+      // Rate limiting for expensive LLM operations
+      const clientId = getClientIdentifier(request);
+      const { success: rateLimitSuccess } = await standardRateLimit.check(clientId);
+      
+      if (!rateLimitSuccess) {
+        return NextResponse.json(
+          { 
+            success: false,
+            toolId: tool.config.id,
+            error: 'Rate limit exceeded' 
+          },
+          { status: 429 }
+        );
+      }
+      
       const userId = await authenticateRequest(request);
+      if (!userId) {
+        return NextResponse.json(
+          { 
+            success: false,
+            toolId: tool.config.id,
+            error: 'Authentication required' 
+          },
+          { status: 401 }
+        );
+      }
+      
       const body = await request.json();
       
       const context = {

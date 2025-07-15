@@ -3,8 +3,7 @@
  * Handles verification of results that can't be exactly matched
  */
 
-import { createAnthropicClient } from '../../types/openai';
-import { ANALYSIS_MODEL } from '../../types/openai';
+import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 export interface TestCase<TInput, TExpected> {
   id: string;
@@ -77,46 +76,41 @@ ${context.matchingCriteria ? `Additional criteria: ${context.matchingCriteria}` 
 Evaluate if the actual output matches the expected output according to the criteria.`;
 
   try {
-    const anthropic = createAnthropicClient();
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
+    const result = await callClaudeWithTool<{
+      matches: boolean;
+      score: number;
+      reasoning: string;
+    }>({
+      model: MODEL_CONFIG.analysis,
       max_tokens: 1000,
       temperature: 0,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
-      tools: [{
-        name: "evaluate_match",
-        description: "Evaluate if actual output matches expected output",
-        input_schema: {
-          type: "object",
-          properties: {
-            matches: {
-              type: "boolean",
-              description: "True if outputs match within acceptable tolerance"
-            },
-            score: {
-              type: "number",
-              minimum: 0,
-              maximum: 1,
-              description: "Numerical score from 0-1 indicating match quality"
-            },
-            reasoning: {
-              type: "string",
-              description: "Detailed explanation of the evaluation"
-            }
+      toolName: "evaluate_match",
+      toolDescription: "Evaluate if actual output matches expected output",
+      toolSchema: {
+        type: "object",
+        properties: {
+          matches: {
+            type: "boolean",
+            description: "True if outputs match within acceptable tolerance"
           },
-          required: ["matches", "score", "reasoning"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "evaluate_match" }
+          score: {
+            type: "number",
+            minimum: 0,
+            maximum: 1,
+            description: "Numerical score from 0-1 indicating match quality"
+          },
+          reasoning: {
+            type: "string",
+            description: "Detailed explanation of the evaluation"
+          }
+        },
+        required: ["matches", "score", "reasoning"]
+      }
     });
 
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    if (toolUse?.input) {
-      return toolUse.input;
-    }
-    
-    throw new Error("No tool use in response");
+    return result.toolResult;
     
   } catch (error) {
     console.error('Fuzzy match evaluation failed:', error);

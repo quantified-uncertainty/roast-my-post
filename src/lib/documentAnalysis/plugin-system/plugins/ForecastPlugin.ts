@@ -5,8 +5,7 @@
 import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
-import Anthropic from '@anthropic-ai/sdk';
-import { ANALYSIS_MODEL } from '../../../../types/openai';
+import { callClaudeWithTool, MODEL_CONFIG } from '../../../claude/wrapper';
 import forecasterTool from '../../../../tools/forecaster/index';
 import { logger } from '../../../../lib/logger';
 
@@ -74,7 +73,7 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
 
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
     const { result, interaction } = await this.trackLLMCall(
-      ANALYSIS_MODEL,
+      MODEL_CONFIG.analysis,
       this.buildExtractionPrompt(chunk),
       () => this.extractPredictions(chunk)
     );
@@ -214,11 +213,15 @@ For each prediction, identify:
       topic: string;
     }>;
   }> {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-    const response = await anthropic.messages.create({
-      model: ANALYSIS_MODEL,
+    const { toolResult } = await callClaudeWithTool<{
+      predictions: Array<{
+        text: string;
+        timeframe?: string;
+        probability?: number;
+        topic: string;
+      }>;
+    }>({
+      model: MODEL_CONFIG.analysis,
       max_tokens: 1500,
       temperature: 0,
       system: "You are a prediction extraction system. Extract forecasts and predictions from text.",
@@ -226,39 +229,35 @@ For each prediction, identify:
         role: "user",
         content: this.buildExtractionPrompt(chunk)
       }],
-      tools: [{
-        name: "extract_predictions",
-        description: "Extract predictions and forecasts",
-        input_schema: {
-          type: "object",
-          properties: {
-            predictions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  text: { type: "string", description: "The prediction text" },
-                  timeframe: { type: "string", description: "When this is predicted to happen" },
-                  probability: { 
-                    type: "number", 
-                    minimum: 0,
-                    maximum: 100,
-                    description: "Probability if stated (0-100)" 
-                  },
-                  topic: { type: "string", description: "Topic/domain of the prediction" }
+      toolName: "extract_predictions",
+      toolDescription: "Extract predictions and forecasts",
+      toolSchema: {
+        type: "object",
+        properties: {
+          predictions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string", description: "The prediction text" },
+                timeframe: { type: "string", description: "When this is predicted to happen" },
+                probability: { 
+                  type: "number", 
+                  minimum: 0,
+                  maximum: 100,
+                  description: "Probability if stated (0-100)" 
                 },
-                required: ["text", "topic"]
-              }
+                topic: { type: "string", description: "Topic/domain of the prediction" }
+              },
+              required: ["text", "topic"]
             }
-          },
-          required: ["predictions"]
-        }
-      }],
-      tool_choice: { type: "tool", name: "extract_predictions" }
+          }
+        },
+        required: ["predictions"]
+      }
     });
 
-    const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
-    return toolUse?.input || { predictions: [] };
+    return toolResult || { predictions: [] };
   }
 
   private assessConfidence(prediction: any, chunk: TextChunk): 'low' | 'medium' | 'high' {

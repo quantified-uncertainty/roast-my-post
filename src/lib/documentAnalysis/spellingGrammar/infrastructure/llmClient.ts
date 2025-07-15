@@ -3,8 +3,9 @@
  * Handles API calls, retries, and error handling
  */
 
-import { createAnthropicClient, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from '../../../../types/openai';
-import type { LLMInteraction } from '@/types/llm';
+import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import type { LLMInteraction, RichLLMInteraction } from '@/types/llm';
+import { DEFAULT_TEMPERATURE } from '../../../../types/openai';
 import { logger } from '@/lib/logger';
 import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from '../constants';
 import { SpellingGrammarError } from '../domain';
@@ -25,7 +26,7 @@ export interface LLMResponse {
  */
 export class SpellingGrammarLLMClient {
   constructor(
-    private readonly model: string = ANALYSIS_MODEL,
+    private readonly model: string = MODEL_CONFIG.analysis,
     private readonly temperature: number = DEFAULT_TEMPERATURE,
     private readonly maxRetries: number = MAX_RETRIES
   ) {}
@@ -37,54 +38,67 @@ export class SpellingGrammarLLMClient {
     systemPrompt: string,
     userPrompt: string
   ): Promise<LLMResponse> {
-    let lastResponse: any = null;
+    let lastUsage: any = null;
+    const interactions: RichLLMInteraction[] = [];
 
     const analyzeWithRetry = async (): Promise<LLMResponse> => {
-      const response = await createAnthropicClient().messages.create({
-        model: this.model,
-        max_tokens: 8000,
-        temperature: this.temperature,
-        system: [
-          {
-            type: "text",
-            text: systemPrompt,
-            cache_control: { type: "ephemeral" }
-          }
-        ],
-        messages: [
-          {
-            role: "user",
-            content: userPrompt,
+      const toolDefinition = this.getErrorReportingTool();
+      
+      try {
+        const result = await callClaudeWithTool<{ errors: any[] }>({
+          model: this.model,
+          system: systemPrompt,
+          messages: [
+            {
+              role: "user",
+              content: userPrompt,
+            },
+          ],
+          toolName: toolDefinition.name,
+          toolDescription: toolDefinition.description,
+          toolSchema: toolDefinition.input_schema,
+          max_tokens: 8000,
+          temperature: this.temperature
+        }, interactions);
+
+        lastUsage = result.response.usage;
+
+        const errors = this.parseErrors(result.toolResult);
+        const llmInteraction = this.createInteractionFromRich(result.interaction, result.toolResult);
+
+        logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
+          inputTokens: result.response.usage?.input_tokens,
+          outputTokens: result.response.usage?.output_tokens,
+          model: this.model
+        });
+
+        return {
+          errors,
+          usage: {
+            input_tokens: result.response.usage?.input_tokens || 0,
+            output_tokens: result.response.usage?.output_tokens || 0
           },
-        ],
-        tools: [this.getErrorReportingTool()],
-        tool_choice: { type: "tool", name: "report_errors" },
-      });
-
-      lastResponse = response;
-
-      const result = this.extractToolResponse(response);
-      if (!result) {
-        throw new Error('No tool use in response');
+          llmInteraction
+        };
+      } catch (error) {
+        // Check if it's a tool use error that might contain a text response
+        if (error instanceof Error && error.message.includes('Expected tool use') && interactions.length > 0) {
+          const lastInteraction = interactions[interactions.length - 1];
+          const fallbackResult = this.tryParseTextResponse(lastInteraction.response);
+          if (fallbackResult) {
+            logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Successfully parsed fallback text response`);
+            return {
+              errors: this.parseErrors(fallbackResult),
+              usage: {
+                input_tokens: lastInteraction.tokensUsed.prompt,
+                output_tokens: lastInteraction.tokensUsed.completion
+              },
+              llmInteraction: this.createInteractionFromRich(lastInteraction, fallbackResult)
+            };
+          }
+        }
+        throw error;
       }
-
-      const errors = this.parseErrors(result);
-      const llmInteraction = this.createInteraction(systemPrompt, userPrompt, result, response.usage);
-
-      logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
-        inputTokens: response.usage?.input_tokens,
-        outputTokens: response.usage?.output_tokens,
-        model: this.model
-      });
-
-      return {
-        errors,
-        usage: {
-          input_tokens: response.usage?.input_tokens || 0,
-          output_tokens: response.usage?.output_tokens || 0
-        },
-        llmInteraction
-      };
     };
 
     try {
@@ -94,9 +108,14 @@ export class SpellingGrammarLLMClient {
         logPrefix: LOG_PREFIXES.CHUNK_ANALYSIS
       });
     } catch (error) {
-      // If all retries failed and we have a response, return empty result
-      if (lastResponse?.usage) {
-        return this.createEmptyResponse(lastResponse.usage, 'No tool use in response after all retries');
+      // If all retries failed and we have usage info, return empty result
+      if (lastUsage || interactions.length > 0) {
+        const usage = lastUsage || (interactions.length > 0 ? {
+          input_tokens: interactions[interactions.length - 1].tokensUsed.prompt,
+          output_tokens: interactions[interactions.length - 1].tokensUsed.completion
+        } : { input_tokens: 0, output_tokens: 0 });
+        
+        return this.createEmptyResponse(usage, 'No tool use in response after all retries');
       }
       throw error;
     }
@@ -143,63 +162,6 @@ export class SpellingGrammarLLMClient {
     };
   }
 
-  /**
-   * Extract tool response from Anthropic response
-   */
-  private extractToolResponse(response: any): any {
-    // Enhanced error logging to capture response structure
-    if (!response.content || !Array.isArray(response.content)) {
-      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid response structure`, {
-        hasContent: !!response.content,
-        contentType: typeof response.content,
-        responseId: response.id,
-        responseKeys: Object.keys(response || {}),
-        fullResponse: JSON.stringify(response, null, 2)
-      });
-      return null;
-    }
-
-    const toolUse = response.content.find((c: any) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "report_errors") {
-      // Capture detailed debugging information
-      const textContent = response.content.filter((c: any) => c.type === "text").map((c: any) => c.text);
-      
-      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} No tool use response from Anthropic`, {
-        responseId: response.id,
-        contentTypes: response.content.map((c: any) => c.type),
-        toolUseName: toolUse?.name,
-        hasToolUse: !!toolUse,
-        textContent: textContent,
-        fullContent: response.content,
-        usage: response.usage
-      });
-
-      // Check if response has text content that looks like analysis results
-      if (textContent.length > 0) {
-        const combinedText = textContent.join(' ');
-        const fallbackResult = this.tryParseTextResponse(combinedText);
-        if (fallbackResult) {
-          logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Successfully parsed fallback text response`);
-          return fallbackResult;
-        }
-      }
-
-      return null;
-    }
-
-    const result = toolUse.input as { errors: any[] };
-    if (!result || !Array.isArray(result.errors)) {
-      logger.error(`${LOG_PREFIXES.CHUNK_ANALYSIS} Invalid tool use structure from LLM`, {
-        result,
-        toolUseName: toolUse.name,
-        responseId: response.id,
-        toolUseInput: toolUse.input
-      });
-      return null;
-    }
-
-    return result;
-  }
 
   /**
    * Parse errors from LLM response
@@ -221,23 +183,33 @@ export class SpellingGrammarLLMClient {
   }
 
   /**
-   * Create LLM interaction record
+   * Create LLM interaction record from RichLLMInteraction
    */
-  private createInteraction(
-    systemPrompt: string,
-    userPrompt: string,
-    result: any,
-    usage: any
+  private createInteractionFromRich(
+    richInteraction: RichLLMInteraction,
+    result: any
   ): LLMInteraction {
+    // Parse prompt to extract system and user messages
+    const promptParts = richInteraction.prompt.split('\n\n');
+    let systemContent = '';
+    let userContent = '';
+    
+    if (promptParts[0].startsWith('SYSTEM:')) {
+      systemContent = promptParts[0].replace('SYSTEM: ', '');
+      userContent = promptParts.slice(1).join('\n\n').replace('USER: ', '');
+    } else {
+      userContent = richInteraction.prompt.replace('USER: ', '');
+    }
+
     return {
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-        { role: 'assistant', content: JSON.stringify(result) }
+        ...(systemContent ? [{ role: 'system' as const, content: systemContent }] : []),
+        { role: 'user' as const, content: userContent },
+        { role: 'assistant' as const, content: JSON.stringify(result) }
       ],
       usage: {
-        input_tokens: usage?.input_tokens || 0,
-        output_tokens: usage?.output_tokens || 0
+        input_tokens: richInteraction.tokensUsed.prompt,
+        output_tokens: richInteraction.tokensUsed.completion
       }
     };
   }
@@ -269,6 +241,21 @@ export class SpellingGrammarLLMClient {
    */
   private tryParseTextResponse(text: string): { errors: any[] } | null {
     try {
+      // First try to parse as JSON (the response might be a stringified JSON)
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type === 'text') {
+          // This is the Claude response format
+          const textContent = parsed.map((item: any) => item.text || '').join(' ');
+          return this.tryParseTextResponse(textContent);
+        }
+        if (parsed.errors && Array.isArray(parsed.errors)) {
+          return parsed;
+        }
+      } catch (e) {
+        // Not JSON, continue with text parsing
+      }
+
       // Handle common patterns in plain text responses
       const lowerText = text.toLowerCase();
       

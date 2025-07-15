@@ -1,7 +1,7 @@
 import { ExtractForecastingClaimsTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
-import { testData } from '@/lib/claude/testUtils';
+import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
@@ -405,7 +405,14 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
       
       // Mock extraction
       mockClaudeToolResponse({
-        forecasts: testData.forecastingClaims.forecasts
+        forecasts: [{
+          id: 'forecast-1',
+          claim: 'AI will surpass human intelligence by 2050',
+          probability: 0.3,
+          confidence: 'medium',
+          timeframe: '2050',
+          category: 'Technology'
+        }]
       });
       
       // Mock selection

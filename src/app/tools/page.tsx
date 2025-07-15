@@ -4,23 +4,19 @@
  */
 
 import Link from 'next/link';
-import { tools } from '@/lib/tools/registry';
+import { toolRegistry } from '@/tools/registry';
 import { BeakerIcon, ChartBarIcon, MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
-  forecasting: ChartBarIcon,
   analysis: MagnifyingGlassIcon,
-  extraction: CpuChipIcon,
-  testing: BeakerIcon,
-  research: MagnifyingGlassIcon
+  research: MagnifyingGlassIcon,
+  utility: CpuChipIcon
 };
 
 const categoryColors = {
-  forecasting: 'bg-blue-50 text-blue-700 border-blue-200',
   analysis: 'bg-green-50 text-green-700 border-green-200',
-  extraction: 'bg-purple-50 text-purple-700 border-purple-200',
-  testing: 'bg-orange-50 text-orange-700 border-orange-200',
-  research: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+  research: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  utility: 'bg-purple-50 text-purple-700 border-purple-200'
 };
 
 const statusColors = {
@@ -30,6 +26,7 @@ const statusColors = {
 };
 
 export default function ToolsIndexPage() {
+  const tools = toolRegistry.getMetadata();
   const toolsByCategory = tools.reduce((acc, tool) => {
     if (!acc[tool.category]) {
       acc[tool.category] = [];
@@ -61,21 +58,26 @@ export default function ToolsIndexPage() {
               </div>
               
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {categoryTools.map(tool => (
-                  <Link
-                    key={tool.id}
-                    href={tool.path}
-                    className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor}`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold">{tool.name}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${statusColors[tool.status]}`}>
-                        {tool.status}
-                      </span>
-                    </div>
-                    <p className="text-sm opacity-90">{tool.description}</p>
-                  </Link>
-                ))}
+                {categoryTools.map(tool => {
+                  const toolPath = tool.path || `/tools/${tool.id}`;
+                  const toolStatus = tool.status || 'experimental';
+                  
+                  return (
+                    <Link
+                      key={tool.id}
+                      href={toolPath}
+                      className={`block p-6 rounded-lg border-2 transition-all hover:shadow-lg ${categoryColor}`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-lg font-semibold">{tool.name}</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[toolStatus]}`}>
+                          {toolStatus}
+                        </span>
+                      </div>
+                      <p className="text-sm opacity-90">{tool.description}</p>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           );
