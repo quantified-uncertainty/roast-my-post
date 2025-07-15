@@ -22,6 +22,8 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
+import { createAnthropicClient } from "../../../types/openai";
+
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {
     id: "test-agent-1",
