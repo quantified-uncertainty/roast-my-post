@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import FactCheckTool from './index';
 import { logger } from '@/lib/logger';
-import { testData } from '@/lib/claude/testUtils';
+import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
@@ -113,10 +113,22 @@ describe('FactCheckTool', () => {
       
       // Mock the extraction response
       mockClaudeToolResponse({
-        claims: testData.factualClaims.claims.map((claim, index) => ({
-          id: `claim-${index}`,
-          ...claim
-        }))
+        claims: [
+          {
+            id: 'claim-1',
+            text: 'The Berlin Wall fell in 1989',
+            topic: 'Historical events',
+            importance: 'high',
+            specificity: 'high'
+          },
+          {
+            id: 'claim-2',
+            text: 'Water boils at 100°C at sea level',
+            topic: 'Science',
+            importance: 'medium',
+            specificity: 'high'
+          }
+        ]
       });
 
       const input = {

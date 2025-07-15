@@ -4,7 +4,7 @@
  */
 
 import {
-  PluginLLMInteraction,
+  RichLLMInteraction,
 } from "@/types/llm";
 import {
   DEFAULT_TIMEOUT,
@@ -31,7 +31,7 @@ interface ForecastGeneratorOptions {
 async function generateSingleForecast(
   options: ForecastGeneratorOptions,
   callNumber: number
-): Promise<{ forecast: ForecastResponse; interaction: PluginLLMInteraction }> {
+): Promise<{ forecast: ForecastResponse; interaction: RichLLMInteraction }> {
   // Add timestamp and random seed to prevent caching
   const timestamp = Date.now();
   const randomSeed = Math.random();
@@ -212,7 +212,7 @@ export async function generateForecastWithAggregation(
     std_dev: number;
   };
   outliers_removed: ForecastResponse[];
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }> {
   console.log(`\n🔮 Generating forecast for: ${options.question}`);
   console.log(
@@ -221,7 +221,7 @@ export async function generateForecastWithAggregation(
 
   // If using Perplexity, enhance context with research
   let enhancedOptions = options;
-  let perplexityInteraction: PluginLLMInteraction | null = null;
+  let perplexityInteraction: RichLLMInteraction | null = null;
   
   if (options.usePerplexity) {
     try {
@@ -258,7 +258,7 @@ export async function generateForecastWithAggregation(
 
   // Generate forecasts in parallel
   console.log(`  🚀 Launching ${options.numForecasts} parallel forecasts...`);
-  const llmInteractions: PluginLLMInteraction[] = [];
+  const llmInteractions: RichLLMInteraction[] = [];
   
   // Add Perplexity interaction if we used it
   if (perplexityInteraction) {

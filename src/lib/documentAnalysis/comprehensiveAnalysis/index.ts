@@ -171,7 +171,7 @@ export async function generateComprehensiveAnalysis(
     }
   }
 
-  // Convert PluginLLMInteraction to LLMInteraction format for backwards compatibility
+  // Convert RichLLMInteraction to LLMInteraction format for backwards compatibility
   const llmInteraction: LLMInteraction = {
     messages: [
       { role: "system", content: systemMessage },

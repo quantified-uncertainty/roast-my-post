@@ -32,8 +32,8 @@ export interface Finding {
 }
 
 // Re-export from shared types to avoid duplication
-import type { PluginLLMInteraction } from '@/types/llm';
-export type LLMInteraction = PluginLLMInteraction;
+import type { RichLLMInteraction } from '@/types/llm';
+export type LLMInteraction = RichLLMInteraction;
 
 export interface ChunkResult {
   findings?: Finding[];

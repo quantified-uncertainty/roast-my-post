@@ -18,21 +18,21 @@ import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { generateSelfCritique } from "../selfCritique";
 import type { SelfCritiqueInput } from "../selfCritique";
-import type { PluginLLMInteraction, LLMInteraction } from "../../../types/llm";
+import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
 
 /**
- * Convert PluginLLMInteraction to LLMInteraction format for TaskResult
+ * Convert RichLLMInteraction to LLMInteraction format for TaskResult
  */
-function convertPluginLLMInteraction(pluginInteraction: PluginLLMInteraction): LLMInteraction {
+function convertRichLLMInteraction(richInteraction: RichLLMInteraction): LLMInteraction {
   return {
     messages: [
-      { role: "system", content: pluginInteraction.prompt.split('\n\nUSER: ')[0].replace('SYSTEM: ', '') },
-      { role: "user", content: pluginInteraction.prompt.split('\n\nUSER: ')[1] || pluginInteraction.prompt },
-      { role: "assistant", content: pluginInteraction.response }
+      { role: "system", content: richInteraction.prompt.split('\n\nUSER: ')[0].replace('SYSTEM: ', '') },
+      { role: "user", content: richInteraction.prompt.split('\n\nUSER: ')[1] || richInteraction.prompt },
+      { role: "assistant", content: richInteraction.response }
     ],
     usage: {
-      input_tokens: pluginInteraction.tokensUsed.prompt,
-      output_tokens: pluginInteraction.tokensUsed.completion
+      input_tokens: richInteraction.tokensUsed.prompt,
+      output_tokens: richInteraction.tokensUsed.completion
     }
   };
 }
@@ -96,7 +96,7 @@ export async function analyzeWithMultiEpistemicEval(
       priceInDollars: pluginResults.statistics.tokensUsed * 0.00000025, // Approximate cost based on total tokens
       timeInSeconds: pluginDuration / 1000,
       log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, found ${pluginResults.statistics.totalFindings} findings. Router used ${routerTokens} tokens in ${routerInteractions.length} routing calls.`,
-      llmInteractions: routerInteractions.map(convertPluginLLMInteraction)
+      llmInteractions: routerInteractions.map(convertRichLLMInteraction)
     });
     
     // Step 2: Format results into structured findings

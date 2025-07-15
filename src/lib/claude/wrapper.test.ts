@@ -1,5 +1,5 @@
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 
 describe('Claude Wrapper', () => {
   // Skip if no API keys
@@ -7,7 +7,7 @@ describe('Claude Wrapper', () => {
   
   skipIfNoKeys('callClaude integration', () => {
     it('should make a simple call and track interaction', async () => {
-      const interactions: PluginLLMInteraction[] = [];
+      const interactions: RichLLMInteraction[] = [];
       
       const result = await callClaude({
         messages: [{ role: 'user', content: 'What is 2+2? Answer briefly.' }],
@@ -32,7 +32,7 @@ describe('Claude Wrapper', () => {
     }, 30000);
 
     it('should work with tool calling', async () => {
-      const interactions: PluginLLMInteraction[] = [];
+      const interactions: RichLLMInteraction[] = [];
       
       const result = await callClaudeWithTool<{ answer: number }>({
         messages: [{ role: 'user', content: 'Calculate 5 + 3' }],

@@ -1,11 +1,11 @@
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 
 /**
  * Test utilities for working with Claude wrapper in tests
  */
 
 // Helper to create a mock LLM interaction
-export const createMockLLMInteraction = (overrides?: Partial<PluginLLMInteraction>): PluginLLMInteraction => ({
+export const createMockLLMInteraction = (overrides?: Partial<RichLLMInteraction>): RichLLMInteraction => ({
   model: 'claude-sonnet-4-20250514',
   prompt: 'Test prompt',
   response: 'Test response',
@@ -20,7 +20,7 @@ export const createMockLLMInteraction = (overrides?: Partial<PluginLLMInteractio
 });
 
 // Helper to verify LLM interaction structure
-export const expectValidLLMInteraction = (interaction: PluginLLMInteraction) => {
+export const expectValidLLMInteraction = (interaction: RichLLMInteraction) => {
   expect(interaction).toMatchObject({
     model: expect.any(String),
     prompt: expect.any(String),
@@ -36,7 +36,7 @@ export const expectValidLLMInteraction = (interaction: PluginLLMInteraction) => 
 };
 
 // Helper to calculate total token usage from interactions
-export const calculateTotalTokenUsage = (interactions: PluginLLMInteraction[]) => {
+export const calculateTotalTokenUsage = (interactions: RichLLMInteraction[]) => {
   return interactions.reduce((acc, interaction) => ({
     prompt: acc.prompt + interaction.tokensUsed.prompt,
     completion: acc.completion + interaction.tokensUsed.completion,
@@ -52,46 +52,16 @@ export const createMockClaudeError = (message: string, statusCode: number = 500)
   return error;
 };
 
-// Common test data for tools
-export const testData = {
-  factualClaims: {
-    claims: [
-      {
-        text: 'The Berlin Wall fell in 1989',
-        topic: 'Historical events',
-        importance: 'high' as const,
-        specificity: 'high' as const
-      },
-      {
-        text: 'Water boils at 100°C at sea level',
-        topic: 'Science',
-        importance: 'medium' as const,
-        specificity: 'high' as const
-      }
-    ]
-  },
-  forecastingClaims: {
-    forecasts: [
-      {
-        id: 'forecast-1',
-        claim: 'AI will surpass human intelligence by 2050',
-        probability: 0.3,
-        confidence: 'medium' as const,
-        timeframe: '2050',
-        category: 'Technology'
-      }
-    ]
-  },
-  mathProblems: {
-    problems: [
-      {
-        expression: '2 + 2',
-        location: 'Line 1',
-        context: 'Simple addition',
-        result: 4,
-        isCorrect: true,
-        explanation: 'Correct calculation'
-      }
-    ]
-  }
+// Helper to create mock tool results of any type
+export const createMockToolResult = <T extends Record<string, any>>(result: T): T => result;
+
+// Helper to create a series of mock LLM interactions for testing
+export const createMockInteractionChain = (count: number): RichLLMInteraction[] => {
+  return Array.from({ length: count }, (_, i) => 
+    createMockLLMInteraction({
+      prompt: `Test prompt ${i + 1}`,
+      response: `Test response ${i + 1}`,
+      duration: 100 + i * 50
+    })
+  );
 };

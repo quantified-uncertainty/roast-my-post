@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
@@ -30,7 +30,7 @@ export interface ExtractForecastingClaimsOutput {
   }>;
   totalFound: number;
   selectedForAnalysis: number;
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }
 
 // Input validation schema
@@ -73,7 +73,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
   async execute(input: ExtractForecastingClaimsInput, context: ToolContext): Promise<ExtractForecastingClaimsOutput> {
     context.logger.info(`[ExtractForecastingClaims] Analyzing text for forecasting claims`);
     
-    const llmInteractions: PluginLLMInteraction[] = [];
+    const llmInteractions: RichLLMInteraction[] = [];
     
     // Step 1: Extract forecasts from text
     const extractedForecasts = await this.extractForecasts(input.text, llmInteractions);
@@ -98,7 +98,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
     };
   }
   
-  private async extractForecasts(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedForecast[]> {
+  private async extractForecasts(text: string, llmInteractions: RichLLMInteraction[]): Promise<ExtractedForecast[]> {
     const systemPrompt = `Extract any forecast-like statements from the text. Look for:
 - Predictions about future events
 - Probability estimates
@@ -146,7 +146,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
     forecasts: ExtractedForecast[],
     agentInstructions: string,
     maxCount: number,
-    llmInteractions: PluginLLMInteraction[]
+    llmInteractions: RichLLMInteraction[]
   ): Promise<Array<ExtractedForecast & { worthDetailedAnalysis: boolean; reasoning?: string }>> {
     if (forecasts.length === 0) return [];
     

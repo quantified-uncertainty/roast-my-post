@@ -1,6 +1,6 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient, ANALYSIS_MODEL } from '@/types/openai';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -21,7 +21,7 @@ export interface ClaudeCallOptions {
 
 export interface ClaudeCallResult {
   response: Anthropic.Message;
-  interaction: PluginLLMInteraction;
+  interaction: RichLLMInteraction;
 }
 
 function buildPromptString(
@@ -43,13 +43,13 @@ function buildPromptString(
 /**
  * Centralized Claude API wrapper that automatically handles:
  * - Helicone integration via createAnthropicClient()
- * - LLM interaction tracking with PluginLLMInteraction format
+ * - LLM interaction tracking with RichLLMInteraction format
  * - Consistent error handling and token counting
  * - Model configuration centralization
  */
 export async function callClaude(
   options: ClaudeCallOptions,
-  previousInteractions?: PluginLLMInteraction[]
+  previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
   const anthropic = createAnthropicClient();
@@ -68,7 +68,7 @@ export async function callClaude(
   });
 
   // Automatically create interaction with proper format
-  const interaction: PluginLLMInteraction = {
+  const interaction: RichLLMInteraction = {
     model,
     prompt: buildPromptString(options.system, options.messages),
     response: JSON.stringify(response.content),
@@ -98,7 +98,7 @@ export async function callClaudeWithTool<T>(
     toolDescription: string;
     toolSchema: Anthropic.Messages.Tool.InputSchema;
   },
-  previousInteractions?: PluginLLMInteraction[]
+  previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult & { toolResult: T }> {
   const toolOptions: ClaudeCallOptions = {
     ...options,

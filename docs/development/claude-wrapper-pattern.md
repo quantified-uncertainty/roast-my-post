@@ -89,7 +89,7 @@ const errors = result.toolResult.errors;
 For tracking multiple LLM calls in a single operation:
 
 ```typescript
-const llmInteractions: PluginLLMInteraction[] = [];
+const llmInteractions: RichLLMInteraction[] = [];
 
 // First call
 await callClaude({
@@ -145,7 +145,7 @@ const response = await anthropic.messages.create({
 });
 
 // Manual interaction tracking
-const interaction: PluginLLMInteraction = {
+const interaction: RichLLMInteraction = {
   model: 'claude-3-5-sonnet-20241022',
   prompt: `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`,
   response: JSON.stringify(response.content),
@@ -195,7 +195,7 @@ When implementing a feature that makes multiple LLM calls, accumulate interactio
 
 ```typescript
 export async function analyzeDocument(doc: Document) {
-  const llmInteractions: PluginLLMInteraction[] = [];
+  const llmInteractions: RichLLMInteraction[] = [];
   
   // Multiple analysis steps
   const { response: summary } = await callClaude({
@@ -328,7 +328,7 @@ describe('Claude Integration', () => {
 
 ```typescript
 export async function analyzeDocument(content: string) {
-  const llmInteractions: PluginLLMInteraction[] = [];
+  const llmInteractions: RichLLMInteraction[] = [];
   
   const { toolResult } = await callClaudeWithTool<{
     summary: string;
@@ -367,7 +367,7 @@ export async function processWithFeedback(
   initialContent: string,
   feedbackRounds: number = 2
 ) {
-  const llmInteractions: PluginLLMInteraction[] = [];
+  const llmInteractions: RichLLMInteraction[] = [];
   let currentContent = initialContent;
   
   for (let round = 0; round < feedbackRounds; round++) {

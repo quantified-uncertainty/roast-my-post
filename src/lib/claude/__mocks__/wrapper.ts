@@ -1,11 +1,11 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { ClaudeCallOptions, ClaudeCallResult } from '../wrapper';
 
 // Mock implementation of callClaude
 export const callClaude = jest.fn(async (
   params: ClaudeCallOptions,
-  interactions?: PluginLLMInteraction[]
+  interactions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> => {
   // Default mock response
   const mockResponse: Anthropic.Messages.Message = {
@@ -26,7 +26,7 @@ export const callClaude = jest.fn(async (
     }
   };
 
-  const mockInteraction: PluginLLMInteraction = {
+  const mockInteraction: RichLLMInteraction = {
     model: params.model || 'claude-sonnet-4-20250514',
     prompt: JSON.stringify(params.messages),
     response: 'Mock response',
@@ -61,7 +61,7 @@ export const callClaudeWithTool = jest.fn(async <T extends Record<string, any>>(
     model?: string;
     max_tokens?: number;
   },
-  interactions?: PluginLLMInteraction[]
+  interactions?: RichLLMInteraction[]
 ) => {
   // Default mock tool response
   const mockToolResult = {} as T;
@@ -89,7 +89,7 @@ export const callClaudeWithTool = jest.fn(async <T extends Record<string, any>>(
     }
   };
 
-  const mockInteraction: PluginLLMInteraction = {
+  const mockInteraction: RichLLMInteraction = {
     model: params.model || 'claude-sonnet-4-20250514',
     prompt: JSON.stringify(params.messages),
     response: JSON.stringify(mockToolResult),
@@ -141,7 +141,7 @@ export const mockClaudeResponse = (response: string, tokens = { input: 100, outp
       }
     };
 
-    const mockInteraction: PluginLLMInteraction = {
+    const mockInteraction: RichLLMInteraction = {
       model: params.model || 'claude-sonnet-4-20250514',
       prompt: JSON.stringify(params.messages),
       response: response,
@@ -194,7 +194,7 @@ export const mockClaudeToolResponse = <T extends Record<string, any>>(
       }
     };
 
-    const mockInteraction: PluginLLMInteraction = {
+    const mockInteraction: RichLLMInteraction = {
       model: params.model || 'claude-sonnet-4-20250514',
       prompt: JSON.stringify(params.messages),
       response: JSON.stringify(toolResult),

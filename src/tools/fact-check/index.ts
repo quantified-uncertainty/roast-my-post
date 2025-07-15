@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
@@ -43,7 +43,7 @@ export interface FactCheckOutput {
     contradictions: number;
   };
   recommendations: string[];
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }
 
 const inputSchema = z.object({
@@ -106,7 +106,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
   async execute(input: FactCheckInput, context: ToolContext): Promise<FactCheckOutput> {
     context.logger.info(`[FactCheckTool] Analyzing text for factual claims (${input.text.length} chars)`);
     
-    const llmInteractions: PluginLLMInteraction[] = [];
+    const llmInteractions: RichLLMInteraction[] = [];
     
     try {
       // Extract claims from text
@@ -170,7 +170,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
   
   private async extractClaims(text: string, context?: string): Promise<{
     claims: Claim[];
-    interaction: PluginLLMInteraction;
+    interaction: RichLLMInteraction;
   }> {
     const prompt = this.buildExtractionPrompt(text, context);
     
@@ -234,7 +234,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
       verified: boolean;
       explanation: string;
     };
-    interaction: PluginLLMInteraction;
+    interaction: RichLLMInteraction;
   }> {
     const result = await callClaudeWithTool<{
       verified: boolean;

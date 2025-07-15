@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
@@ -34,7 +34,7 @@ export interface ExtractFactualClaimsOutput {
     low: ExtractedClaim[];
   };
   totalClaims: number;
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }
 
 // Claim schema
@@ -94,7 +94,7 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
   async execute(input: ExtractFactualClaimsInput, context: ToolContext): Promise<ExtractFactualClaimsOutput> {
     context.logger.info(`[ExtractFactualClaims] Analyzing text for factual claims`);
     
-    const llmInteractions: PluginLLMInteraction[] = [];
+    const llmInteractions: RichLLMInteraction[] = [];
     
     // Extract factual claims from text
     const extractedClaims = await this.extractClaims(input.text, llmInteractions);
@@ -122,7 +122,7 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
     };
   }
   
-  private async extractClaims(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedClaim[]> {
+  private async extractClaims(text: string, llmInteractions: RichLLMInteraction[]): Promise<ExtractedClaim[]> {
     const systemPrompt = `You are a fact extraction system. Extract verifiable factual claims from text.
 
 Look for:
@@ -200,7 +200,7 @@ For each claim, assess:
   
   private async detectContradictions(
     claims: ExtractedClaim[], 
-    llmInteractions: PluginLLMInteraction[]
+    llmInteractions: RichLLMInteraction[]
   ): Promise<ClaimContradiction[]> {
     if (claims.length < 2) return [];
     

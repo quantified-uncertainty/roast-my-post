@@ -1,6 +1,6 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { createMockClaudeError, expectValidLLMInteraction } from './testUtils';
 import { anthropic } from '@/types/openai';
 
@@ -52,7 +52,7 @@ describe('Claude Wrapper Integration Tests', () => {
 
       mockClient.messages.create.mockResolvedValueOnce(mockResponse);
 
-      const interactions: PluginLLMInteraction[] = [];
+      const interactions: RichLLMInteraction[] = [];
       const result = await callClaude({
         messages: [{ role: 'user', content: 'What is 2+2?' }],
         max_tokens: 100
@@ -168,7 +168,7 @@ describe('Claude Wrapper Integration Tests', () => {
         usage: { input_tokens: 100, output_tokens: 50 }
       });
 
-      const interactions: PluginLLMInteraction[] = [];
+      const interactions: RichLLMInteraction[] = [];
       const result = await callClaudeWithTool<typeof mockToolResult>({
         messages: [{ role: 'user', content: 'Calculate the answer' }],
         toolName: 'calculate',
@@ -287,7 +287,7 @@ describe('Claude Wrapper Integration Tests', () => {
         { usage: { input_tokens: 200, output_tokens: 100 } }
       ];
 
-      const interactions: PluginLLMInteraction[] = [];
+      const interactions: RichLLMInteraction[] = [];
 
       for (const [index, response] of responses.entries()) {
         mockClient.messages.create.mockResolvedValueOnce({

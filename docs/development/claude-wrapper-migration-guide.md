@@ -70,7 +70,7 @@ async function analyzeText(text: string) {
 const startTime = Date.now();
 const response = await anthropic.messages.create({ /* ... */ });
 
-const interaction: PluginLLMInteraction = {
+const interaction: RichLLMInteraction = {
   model: 'claude-3-5-sonnet-20241022',
   prompt: buildPromptString(system, messages),
   response: JSON.stringify(response.content),
@@ -88,7 +88,7 @@ llmInteractions.push(interaction);
 
 **After:**
 ```typescript
-const llmInteractions: PluginLLMInteraction[] = [];
+const llmInteractions: RichLLMInteraction[] = [];
 
 const { response, interaction } = await callClaude({
   system,
@@ -231,7 +231,7 @@ const decision = response.content[0].text.trim();
 **Before:**
 ```typescript
 export async function complexAnalysis(doc: Document) {
-  const interactions: PluginLLMInteraction[] = [];
+  const interactions: RichLLMInteraction[] = [];
   const anthropic = createAnthropicClient();
   
   // First analysis
@@ -258,7 +258,7 @@ export async function complexAnalysis(doc: Document) {
 **After:**
 ```typescript
 export async function complexAnalysis(doc: Document) {
-  const llmInteractions: PluginLLMInteraction[] = [];
+  const llmInteractions: RichLLMInteraction[] = [];
   
   // First analysis - tracking is automatic
   const { response: response1 } = await callClaude({

@@ -21,8 +21,8 @@ export interface CommentLLMInteraction extends LLMInteraction {
   failedCommentsCount: number;
 }
 
-// Plugin/Tool LLMInteraction format - more detailed tracking
-export interface PluginLLMInteraction {
+// Rich LLMInteraction format - detailed tracking for all LLM calls
+export interface RichLLMInteraction {
   model: string;
   prompt: string;
   response: string;
@@ -34,3 +34,4 @@ export interface PluginLLMInteraction {
   timestamp: Date;
   duration: number;
 }
+

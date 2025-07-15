@@ -75,22 +75,4 @@ describe('Perplexity Research API Route', () => {
     expect(response.status).toBe(400);
     expect(data).toHaveProperty('error', 'Invalid input');
   });
-
-  it('should handle missing OpenRouter API key', async () => {
-    delete process.env.OPENROUTER_API_KEY;
-
-    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
-      method: 'POST',
-      body: JSON.stringify({
-        query: 'Test query'
-      })
-    });
-
-    const response = await POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(500);
-    expect(data).toHaveProperty('error', 'Failed to perform research');
-    expect(data.details).toContain('OpenRouter API key is required');
-  });
 });

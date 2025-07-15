@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import CheckMathTool from './index';
 import { logger } from '@/lib/logger';
-import { testData } from '@/lib/claude/testUtils';
+import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
 
 // Mock Claude wrapper
@@ -235,12 +235,12 @@ describe('CheckMathTool', () => {
   describe('output validation', () => {
     it('should produce valid output structure', async () => {
       mockToolResponse({
-        errors: testData.mathProblems.problems.map(p => ({
+        errors: [{
           lineStart: 1,
           lineEnd: 1,
-          highlightedText: p.expression,
-          description: p.explanation
-        }))
+          highlightedText: '2 + 2',
+          description: 'Correct calculation'
+        }]
       });
 
       const input = {

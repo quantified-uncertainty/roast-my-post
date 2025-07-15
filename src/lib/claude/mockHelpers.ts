@@ -1,4 +1,4 @@
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
 /**

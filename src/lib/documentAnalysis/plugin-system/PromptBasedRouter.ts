@@ -5,7 +5,7 @@
 import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
 import { RoutingPlan } from './RoutingPlan';
 import { createAnthropicClient } from '@/types/openai';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 
 const ROUTING_MODEL = 'claude-3-haiku-20240307'; // Fast model for routing
 
@@ -14,7 +14,7 @@ export class PromptBasedRouter {
   private routingCache: Map<string, string[]> = new Map();
   private batchSize: number = 10;
   private maxCacheSize: number = 1000;
-  private llmInteractions: PluginLLMInteraction[] = [];
+  private llmInteractions: RichLLMInteraction[] = [];
 
   registerPlugin(plugin: AnalysisPlugin): void {
     this.availablePlugins.set(plugin.name(), plugin);
@@ -140,7 +140,7 @@ Do not include any explanation or other text, just the JSON array.`;
       });
 
       // Track LLM interaction for monitoring
-      const llmInteraction: PluginLLMInteraction = {
+      const llmInteraction: RichLLMInteraction = {
         model: ROUTING_MODEL,
         prompt: `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`,
         response: JSON.stringify(response.content),
@@ -294,7 +294,7 @@ Do not include any explanation or other text, just the JSON array.`;
     this.batchSize = size;
   }
 
-  getLLMInteractions(): PluginLLMInteraction[] {
+  getLLMInteractions(): RichLLMInteraction[] {
     return [...this.llmInteractions];
   }
 
@@ -302,7 +302,7 @@ Do not include any explanation or other text, just the JSON array.`;
     this.llmInteractions = [];
   }
 
-  getLastLLMInteraction(): PluginLLMInteraction | undefined {
+  getLastLLMInteraction(): RichLLMInteraction | undefined {
     return this.llmInteractions[this.llmInteractions.length - 1];
   }
 }

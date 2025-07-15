@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Tool } from '../base/Tool';
 import { ToolContext } from '../base/Tool';
 import { generateForecastWithAggregation } from './generator';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 
 // Define types explicitly to avoid inference issues with defaults
@@ -25,7 +25,7 @@ export interface ForecasterOutput {
     mean: number;
     stdDev: number;
   };
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }
 
 // Simplified input schema

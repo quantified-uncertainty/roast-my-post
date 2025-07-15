@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { PerplexityClient } from './client';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 
 // Define types for the tool
@@ -17,7 +17,7 @@ export interface PerplexityResearchOutput {
   sources: Array<{ title: string; url: string; snippet: string }>;
   keyFindings: string[];
   forecastingContext?: string;
-  llmInteraction: PluginLLMInteraction;
+  llmInteraction: RichLLMInteraction;
 }
 
 // Input validation schema
@@ -118,7 +118,7 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
       const totalInputTokens = (usage?.prompt_tokens || 0) + (forecastingUsage?.prompt_tokens || 0);
       const totalOutputTokens = (usage?.completion_tokens || 0) + (forecastingUsage?.completion_tokens || 0);
       
-      const llmInteraction: PluginLLMInteraction = {
+      const llmInteraction: RichLLMInteraction = {
         model: 'perplexity/sonar',
         prompt: input.query,
         response: JSON.stringify({

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
@@ -31,7 +31,7 @@ export interface CheckSpellingGrammarOutput {
     count: number;
   }>;
   recommendations: string[];
-  llmInteractions: PluginLLMInteraction[];
+  llmInteractions: RichLLMInteraction[];
 }
 
 // Input schema
@@ -80,7 +80,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   async execute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<CheckSpellingGrammarOutput> {
     context.logger.info(`[CheckSpellingGrammarTool] Checking text (${input.text.length} chars)`);
     
-    const llmInteractions: PluginLLMInteraction[] = [];
+    const llmInteractions: RichLLMInteraction[] = [];
     
     try {
       const { errors, interaction } = await this.checkSpellingGrammar(input);
@@ -123,7 +123,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   
   private async checkSpellingGrammar(input: CheckSpellingGrammarInput): Promise<{
     errors: SpellingGrammarError[];
-    interaction: PluginLLMInteraction;
+    interaction: RichLLMInteraction;
   }> {
     const systemPrompt = `You are a proofreading assistant. Identify spelling, grammar, and${input.includeStyle ? ' major style' : ''} issues in text.
 

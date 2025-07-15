@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { PluginLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
@@ -34,7 +34,7 @@ export interface CheckMathOutput {
     count: number;
   }>;
   recommendations: string[];
-  llmInteraction: PluginLLMInteraction;
+  llmInteraction: RichLLMInteraction;
 }
 
 // Input schema
@@ -131,7 +131,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
   
   private async checkMathAccuracy(input: CheckMathInput): Promise<{
     errors: MathError[];
-    llmInteraction: PluginLLMInteraction;
+    llmInteraction: RichLLMInteraction;
   }> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
