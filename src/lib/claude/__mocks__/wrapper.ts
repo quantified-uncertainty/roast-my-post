@@ -20,7 +20,9 @@ export const callClaude = jest.fn(async (
       input_tokens: 100,
       output_tokens: 50,
       cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 0
+      cache_read_input_tokens: 0,
+      server_tool_use: null,
+      service_tier: null
     }
   };
 
@@ -79,7 +81,11 @@ export const callClaudeWithTool = jest.fn(async <T extends Record<string, any>>(
     stop_sequence: null,
     usage: {
       input_tokens: 150,
-      output_tokens: 75
+      output_tokens: 75,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      server_tool_use: null,
+      service_tier: null
     }
   };
 
@@ -121,13 +127,17 @@ export const mockClaudeResponse = (response: string, tokens = { input: 100, outp
       id: 'msg_test',
       type: 'message',
       role: 'assistant',
-      content: [{ type: 'text', text: response }],
+      content: [{ type: 'text', text: response, citations: [] }],
       model: params.model || 'claude-sonnet-4-20250514',
       stop_reason: 'end_turn',
       stop_sequence: null,
       usage: {
         input_tokens: tokens.input,
-        output_tokens: tokens.output
+        output_tokens: tokens.output,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        server_tool_use: null,
+        service_tier: null
       }
     };
 
@@ -176,7 +186,11 @@ export const mockClaudeToolResponse = <T extends Record<string, any>>(
       stop_sequence: null,
       usage: {
         input_tokens: tokens.input,
-        output_tokens: tokens.output
+        output_tokens: tokens.output,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        server_tool_use: null,
+        service_tier: null
       }
     };
 

@@ -109,7 +109,7 @@ describe('FactCheckTool', () => {
 
   describe('execute with mocked wrapper', () => {
     it('should extract claims and check for contradictions', async () => {
-      const tool = factCheckTool;
+      const tool = FactCheckTool;
       
       // Mock the extraction response
       mockClaudeToolResponse({
@@ -135,7 +135,7 @@ describe('FactCheckTool', () => {
     });
 
     it('should verify high priority claims when requested', async () => {
-      const tool = factCheckTool;
+      const tool = FactCheckTool;
       
       // Mock extraction
       mockClaudeToolResponse({
@@ -169,7 +169,7 @@ describe('FactCheckTool', () => {
     });
 
     it('should handle empty text gracefully', async () => {
-      const tool = factCheckTool;
+      const tool = FactCheckTool;
       
       // Mock empty claims response
       mockClaudeToolResponse({

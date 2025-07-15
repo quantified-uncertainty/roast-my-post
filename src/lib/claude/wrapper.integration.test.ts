@@ -1,3 +1,4 @@
+import { Anthropic } from '@anthropic-ai/sdk';
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
 import { PluginLLMInteraction } from '@/types/llm';
 import { createMockClaudeError, expectValidLLMInteraction } from './testUtils';
