@@ -4,6 +4,7 @@ import { createAnthropicClient } from '@/types/openai';
 import { ANALYSIS_MODEL } from '@/types/openai';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
+import { Anthropic } from '@anthropic-ai/sdk';
 
 // Define types for the tool
 export interface ExtractedForecast {
@@ -83,7 +84,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
     const analyzedForecasts = await this.selectForecastsForAnalysis(
       extractedForecasts,
       input.agentInstructions || 'Select the most important and impactful predictions',
-      input.maxDetailedAnalysis,
+      input.maxDetailedAnalysis ?? 3,
       llmInteractions
     );
     
@@ -100,6 +101,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
   }
   
   private async extractForecasts(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedForecast[]> {
+    const startTime = Date.now();
     const anthropic = createAnthropicClient();
     
     const systemPrompt = `Extract any forecast-like statements from the text. Look for:
@@ -148,15 +150,16 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
 
     // Track LLM interaction
     llmInteractions.push({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-        { role: "assistant", content: JSON.stringify(response.content) }
-      ],
-      usage: {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens
-      }
+      model: ANALYSIS_MODEL,
+      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+      response: JSON.stringify(response.content),
+      tokensUsed: {
+        prompt: response.usage.input_tokens,
+        completion: response.usage.output_tokens,
+        total: response.usage.input_tokens + response.usage.output_tokens
+      },
+      timestamp: new Date(),
+      duration: Date.now() - startTime
     });
 
     const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;
@@ -172,6 +175,7 @@ export class ExtractForecastingClaimsTool extends Tool<ExtractForecastingClaimsI
   ): Promise<Array<ExtractedForecast & { worthDetailedAnalysis: boolean; reasoning?: string }>> {
     if (forecasts.length === 0) return [];
     
+    const startTime = Date.now();
     const anthropic = createAnthropicClient();
     
     const systemPrompt = `You are a forecast analyst. Given a list of extracted forecasts and agent instructions, 
@@ -224,15 +228,16 @@ Select up to ${maxCount} forecasts.`;
 
     // Track LLM interaction
     llmInteractions.push({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-        { role: "assistant", content: JSON.stringify(response.content) }
-      ],
-      usage: {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens
-      }
+      model: ANALYSIS_MODEL,
+      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+      response: JSON.stringify(response.content),
+      tokensUsed: {
+        prompt: response.usage.input_tokens,
+        completion: response.usage.output_tokens,
+        total: response.usage.input_tokens + response.usage.output_tokens
+      },
+      timestamp: new Date(),
+      duration: Date.now() - startTime
     });
 
     const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;

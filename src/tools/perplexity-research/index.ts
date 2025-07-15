@@ -119,27 +119,26 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
       const totalOutputTokens = (usage?.completion_tokens || 0) + (forecastingUsage?.completion_tokens || 0);
       
       const llmInteraction: PluginLLMInteraction = {
-        messages: [
-          {
-            role: "user",
-            content: input.query
-          },
-          {
-            role: "assistant",
-            content: JSON.stringify({
-              summary: researchResult.summary,
-              keyFindings: researchResult.keyFindings,
-              sources: researchResult.sources,
-              ...(forecastingContext && { forecastingContext })
-            })
-          }
-        ],
-        usage: {
-          input_tokens: totalInputTokens || Math.ceil((input.query.length + 200) / 4),
-          output_tokens: totalOutputTokens || Math.ceil((researchResult.summary.length + 
+        model: 'perplexity/sonar',
+        prompt: input.query,
+        response: JSON.stringify({
+          summary: researchResult.summary,
+          keyFindings: researchResult.keyFindings,
+          sources: researchResult.sources,
+          ...(forecastingContext && { forecastingContext })
+        }),
+        tokensUsed: {
+          prompt: totalInputTokens || Math.ceil((input.query.length + 200) / 4),
+          completion: totalOutputTokens || Math.ceil((researchResult.summary.length + 
             researchResult.keyFindings.join('').length + 
-            (forecastingContext?.length || 0)) / 4)
-        }
+            (forecastingContext?.length || 0)) / 4),
+          total: (totalInputTokens || Math.ceil((input.query.length + 200) / 4)) + 
+                 (totalOutputTokens || Math.ceil((researchResult.summary.length + 
+                   researchResult.keyFindings.join('').length + 
+                   (forecastingContext?.length || 0)) / 4))
+        },
+        timestamp: new Date(),
+        duration: endTime - startTime
       };
       
       const timeInSeconds = Math.round((endTime - startTime) / 1000);

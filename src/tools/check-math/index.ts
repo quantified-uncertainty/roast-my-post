@@ -131,29 +131,46 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     errors: MathError[];
     llmInteraction: PluginLLMInteraction;
   }> {
+    const startTime = Date.now();
     const anthropic = createAnthropicClient();
 
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    const response = await anthropic.messages.create({
+    const requestParams = {
       model: ANALYSIS_MODEL,
       max_tokens: 4000,
       temperature: 0,
       system: [
         {
-          type: "text",
+          type: "text" as const,
           text: systemPrompt,
-          cache_control: { type: "ephemeral" }
+          cache_control: { type: "ephemeral" as const }
         }
       ],
       messages: [{
-        role: "user",
+        role: "user" as const,
         content: userPrompt
       }],
       tools: [this.getMathErrorReportingTool(input.maxErrors || 50)],
-      tool_choice: { type: "tool", name: "report_math_errors" }
-    });
+      tool_choice: { type: "tool" as const, name: "report_math_errors" }
+    };
+
+    const response = await anthropic.messages.create(requestParams);
+
+    // Create LLMInteraction immediately from actual request/response data
+    const llmInteraction: PluginLLMInteraction = {
+      model: requestParams.model,
+      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+      response: JSON.stringify(response.content),
+      tokensUsed: {
+        prompt: response.usage.input_tokens,
+        completion: response.usage.output_tokens,
+        total: response.usage.input_tokens + response.usage.output_tokens
+      },
+      timestamp: new Date(),
+      duration: Date.now() - startTime
+    };
 
     const toolUse = response.content.find((c: any) => c.type === "tool_use") as any;
     if (!toolUse || toolUse.name !== "report_math_errors") {
@@ -162,21 +179,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
 
     const result = toolUse.input as { errors: any[] };
     const errors = this.parseErrors(result.errors);
-
-    const llmInteraction: PluginLLMInteraction = {
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-        {
-          role: "assistant",
-          content: JSON.stringify({ errors })
-        }
-      ],
-      usage: {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens,
-      },
-    };
 
     return { errors, llmInteraction };
   }

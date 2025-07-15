@@ -4,6 +4,7 @@ import { createAnthropicClient } from '@/types/openai';
 import { ANALYSIS_MODEL } from '@/types/openai';
 import { PluginLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
+import { Anthropic } from '@anthropic-ai/sdk';
 
 // Define types for the tool
 export interface ExtractedClaim {
@@ -101,7 +102,7 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
     const extractedClaims = await this.extractClaims(input.text, llmInteractions);
     
     // Mark claims that need verification
-    const claimsWithVerification = this.markClaimsForVerification(extractedClaims, input.prioritizeVerification);
+    const claimsWithVerification = this.markClaimsForVerification(extractedClaims, input.prioritizeVerification ?? true);
     
     // Check for contradictions if requested
     let contradictions: ClaimContradiction[] = [];
@@ -124,6 +125,7 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
   }
   
   private async extractClaims(text: string, llmInteractions: PluginLLMInteraction[]): Promise<ExtractedClaim[]> {
+    const startTime = Date.now();
     const anthropic = createAnthropicClient();
     
     const systemPrompt = `You are a fact extraction system. Extract verifiable factual claims from text.
@@ -193,15 +195,16 @@ For each claim, assess:
 
     // Track LLM interaction
     llmInteractions.push({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-        { role: "assistant", content: JSON.stringify(response.content) }
-      ],
-      usage: {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens
-      }
+      model: ANALYSIS_MODEL,
+      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+      response: JSON.stringify(response.content),
+      tokensUsed: {
+        prompt: response.usage.input_tokens,
+        completion: response.usage.output_tokens,
+        total: response.usage.input_tokens + response.usage.output_tokens
+      },
+      timestamp: new Date(),
+      duration: Date.now() - startTime
     });
 
     const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;
@@ -226,6 +229,7 @@ For each claim, assess:
   ): Promise<ClaimContradiction[]> {
     if (claims.length < 2) return [];
     
+    const startTime = Date.now();
     const anthropic = createAnthropicClient();
     
     const systemPrompt = `You are a contradiction detection system. Analyze a list of factual claims and identify any that contradict each other.
@@ -276,15 +280,16 @@ Provide specific explanations for why claims contradict.`;
 
     // Track LLM interaction
     llmInteractions.push({
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-        { role: "assistant", content: JSON.stringify(response.content) }
-      ],
-      usage: {
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens
-      }
+      model: ANALYSIS_MODEL,
+      prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+      response: JSON.stringify(response.content),
+      tokensUsed: {
+        prompt: response.usage.input_tokens,
+        completion: response.usage.output_tokens,
+        total: response.usage.input_tokens + response.usage.output_tokens
+      },
+      timestamp: new Date(),
+      duration: Date.now() - startTime
     });
 
     const toolUse = response.content.find((c) => c.type === "tool_use") as Anthropic.ToolUseBlock | undefined;

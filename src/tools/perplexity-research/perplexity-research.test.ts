@@ -77,7 +77,8 @@ describe('PerplexityResearchTool', () => {
       expect(result.keyFindings).toHaveLength(2);
       expect(result.sources).toHaveLength(1);
       expect(result.llmInteraction).toBeDefined();
-      expect(result.llmInteraction.messages).toHaveLength(2);
+      expect(result.llmInteraction.prompt).toBeTruthy();
+      expect(result.llmInteraction.response).toBeTruthy();
       
       expect(mockClient.query).toHaveBeenCalled();
     });
@@ -123,8 +124,8 @@ describe('PerplexityResearchTool', () => {
       expect(result.summary).toBe('Quantum computing has seen significant advances...');
       expect(result.keyFindings).toHaveLength(3);
       expect(result.sources).toHaveLength(2);
-      expect(result.llmInteraction.usage.input_tokens).toBeGreaterThan(0);
-      expect(result.llmInteraction.usage.output_tokens).toBeGreaterThan(0);
+      expect(result.llmInteraction.tokensUsed.prompt).toBeGreaterThan(0);
+      expect(result.llmInteraction.tokensUsed.completion).toBeGreaterThan(0);
     });
     
     it('should include forecasting context when requested', async () => {

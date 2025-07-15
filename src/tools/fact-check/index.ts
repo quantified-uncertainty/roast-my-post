@@ -238,7 +238,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     const interaction: PluginLLMInteraction = {
       model: ANALYSIS_MODEL,
       prompt: prompt,
-      response: JSON.stringify(extractedClaims),
+      response: JSON.stringify(response.content),
       tokensUsed: {
         prompt: response.usage.input_tokens,
         completion: response.usage.output_tokens,
@@ -299,7 +299,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     const interaction: PluginLLMInteraction = {
       model: ANALYSIS_MODEL,
       prompt: `Fact-check this claim: "${claim.text}"`,
-      response: verificationResult.explanation,
+      response: JSON.stringify(response.content),
       tokensUsed: {
         prompt: response.usage.input_tokens,
         completion: response.usage.output_tokens,

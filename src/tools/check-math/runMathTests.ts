@@ -23,8 +23,8 @@ async function runMathAnalysis(input: MathTestInput): Promise<any> {
   return {
     errorCount: result.errors.length,
     errors: result.errors.map(error => ({
-      highlightedText: error.text,
-      errorType: error.type,
+      highlightedText: error.highlightedText,
+      errorType: error.errorType,
       severity: error.severity,
       description: error.description,
       lineStart: error.lineStart,

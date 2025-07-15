@@ -95,7 +95,7 @@ describe('CheckMathTool', () => {
       expect(result.summary.totalErrors).toBe(result.errors.length);
       expect(result.summary.calculationErrors).toBeGreaterThan(0);
       expect(result.llmInteraction).toBeDefined();
-      expect(result.llmInteraction.usage.input_tokens).toBeGreaterThan(0);
+      expect(result.llmInteraction.tokensUsed.prompt).toBeGreaterThan(0);
     });
 
     it('should handle text with no math errors', async () => {

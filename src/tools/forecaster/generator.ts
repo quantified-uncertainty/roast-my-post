@@ -36,7 +36,8 @@ async function generateSingleForecast(
   callNumber: number
 ): Promise<{ forecast: ForecastResponse; interaction: PluginLLMInteraction }> {
   // Add timestamp and random seed to prevent caching
-  const timestamp = Date.now();
+  const startTime = Date.now();
+  const timestamp = startTime;
   const randomSeed = Math.random();
 
   // Random prefix to break cache patterns
@@ -119,17 +120,16 @@ Think carefully and provide your forecast. Random seed: ${Math.random()}`;
   const forecast = toolUse.input as ForecastResponse;
 
   const interaction: PluginLLMInteraction = {
-    messages: [
-      ...messages,
-      {
-        role: "assistant",
-        content: JSON.stringify({ forecast }),
-      },
-    ],
-    usage: {
-      input_tokens: response.usage.input_tokens,
-      output_tokens: response.usage.output_tokens,
+    model: ANALYSIS_MODEL,
+    prompt: `${systemPrompt}\n\nUser: ${userPrompt}`,
+    response: JSON.stringify(response.content),
+    tokensUsed: {
+      prompt: response.usage.input_tokens,
+      completion: response.usage.output_tokens,
+      total: response.usage.input_tokens + response.usage.output_tokens
     },
+    timestamp: new Date(),
+    duration: Date.now() - startTime
   };
 
   return { forecast, interaction };

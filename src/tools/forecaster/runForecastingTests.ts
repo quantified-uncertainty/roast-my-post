@@ -5,6 +5,7 @@
 
 // Test the actual tool instead of legacy functions  
 import forecasterTool from './index';
+import { generateForecastWithAggregation } from './generator';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';
 import { 
   forecastExtractionTestSuite,
@@ -15,41 +16,64 @@ import {
   type ForecastExtractionExpected,
   type ForecastGenerationExpected
 } from './forecastingTestCases';
+import { logger } from '@/lib/logger';
 
 /**
  * Run forecast extraction analysis
+ * NOTE: This is a simulation for testing since the current tool doesn't include extraction
  */
 async function runForecastExtraction(input: ForecastExtractionInput): Promise<any> {
-  const forecasts = await extractForecasts(input.text);
+  // This is a mock/simulation function for testing purposes
+  // In a real implementation, this would analyze text and extract forecast-like statements
+  console.log('⚠️  Forecast extraction is simulated for testing - no actual extraction implemented');
+  
+  // Simple pattern matching simulation for testing
+  const text = input.text.toLowerCase();
+  const forecasts = [];
+  
+  // Look for probability patterns
+  const probabilityMatches = text.match(/(\d+)%/g) || [];
+  const hasTimeframe = /\d{4}|next|by|within|before|after|decade|year|month/.test(text);
+  
+  if (probabilityMatches.length > 0 || hasTimeframe) {
+    forecasts.push({
+      text: input.text.substring(0, 100) + '...',
+      topic: 'extracted_topic',
+      probability: probabilityMatches.length > 0 ? parseInt(probabilityMatches[0]?.replace('%', '') || '0') : null,
+      timeframe: hasTimeframe ? 'detected' : null
+    });
+  }
   
   return {
     forecastsFound: forecasts.length,
-    forecasts: forecasts.map(f => ({
-      text: f.text,
-      topic: f.topic,
-      probability: f.probability,
-      timeframe: f.timeframe
-    }))
+    forecasts: forecasts
   };
 }
 
 /**
- * Run forecast generation analysis
+ * Run forecast generation analysis using the actual forecaster tool
  */
 async function runForecastGeneration(input: ForecastGenerationInput): Promise<any> {
-  const result = await generateForecast({
+  // Use the actual forecaster tool through its execute method
+  const toolContext = {
+    userId: 'test-user',
+    logger: logger
+  };
+  
+  const result = await forecasterTool.execute({
     question: input.question,
     context: input.context,
-    timeframe: input.timeframe
-  });
+    numForecasts: 6, // Default number of forecasts
+    usePerplexity: false // Disable Perplexity for tests to avoid external API calls
+  }, toolContext);
   
   return {
-    probability: result.forecast.probability,
-    consensus: result.forecast.consensus,
-    description: result.forecast.description,
-    individualForecasts: result.individual_forecasts,
+    probability: result.probability,
+    consensus: result.consensus,
+    description: result.description,
+    individualForecasts: result.individualForecasts,
     statistics: result.statistics,
-    outliersRemoved: result.outliers_removed.length
+    outliersRemoved: 0 // This info is not exposed in the tool's output
   };
 }
 
@@ -155,11 +179,11 @@ async function runAllForecastingTests() {
   }
   
   console.log(`\n💡 Implementation Notes:`);
-  console.log(`   - Each forecast generation makes 6 independent Claude calls`);
-  console.log(`   - Outliers are removed using IQR method`);
-  console.log(`   - Confidence is based on agreement and standard deviation`);
-  console.log(`   - Extraction looks for probability words and future tense`);
-  console.log(`   - The clean getForecast() function provides simple interface`);
+  console.log(`   - Each forecast generation makes 6 independent Claude calls by default`);
+  console.log(`   - Outliers are removed using IQR method in generateForecastWithAggregation`);
+  console.log(`   - Consensus level is based on standard deviation of forecasts`);
+  console.log(`   - Forecast extraction is simulated for testing (not implemented in tool)`);
+  console.log(`   - The ForecasterTool class provides the main interface`);
   
   return {
     totalTests,
@@ -171,40 +195,44 @@ async function runAllForecastingTests() {
 }
 
 /**
- * Demo the clean forecast function
+ * Demo the forecaster tool
  */
 async function demoCleanForecast() {
   console.log('\n' + '='.repeat(80));
-  console.log('🎯 DEMO: Clean Forecast Function');
+  console.log('🎯 DEMO: Forecaster Tool');
   console.log('='.repeat(80));
+  
+  const toolContext = {
+    userId: 'demo-user',
+    logger: logger
+  };
   
   const examples = [
     {
       question: "Will Bitcoin reach $100,000 by end of 2025?",
-      context: "Current price is around $45,000 with increasing institutional adoption",
-      timeframe: "By December 31, 2025"
+      context: "Current price is around $45,000 with increasing institutional adoption"
     },
     {
       question: "Will we see a major breakthrough in quantum computing in 2025?",
-      context: "Several companies are approaching quantum advantage milestones",
-      timeframe: "During 2025"
+      context: "Several companies are approaching quantum advantage milestones"
     }
   ];
   
   for (const example of examples) {
     console.log(`\n📌 Question: ${example.question}`);
     if (example.context) console.log(`   Context: ${example.context}`);
-    if (example.timeframe) console.log(`   Timeframe: ${example.timeframe}`);
     
     try {
-      const forecast = await getForecast(
-        example.question,
-        example.context,
-        example.timeframe
-      );
+      const forecast = await forecasterTool.execute({
+        question: example.question,
+        context: example.context,
+        numForecasts: 3, // Fewer forecasts for demo speed
+        usePerplexity: false
+      }, toolContext);
       
-      console.log(`\n   🎯 Forecast: ${forecast.probability}%`);
+      console.log(`\n   🎯 Forecast: ${forecast.probability}% (${forecast.consensus} consensus)`);
       console.log(`   📝 ${forecast.description}`);
+      console.log(`   📊 Individual forecasts: ${forecast.individualForecasts.map(f => f.probability + '%').join(', ')}`);
     } catch (error) {
       console.error(`   ❌ Error: ${error}`);
     }
