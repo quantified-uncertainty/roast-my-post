@@ -50,6 +50,12 @@ export default function ClientLayout({
               >
                 Self-Ranking
               </Link>
+              <Link
+                href="/tools"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Tools
+              </Link>
               <AuthHeader />
             </nav>
           </div>

@@ -6,6 +6,7 @@ import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { analyzeSpellingGrammar } from "./spellingGrammar";
+import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 
@@ -36,6 +37,14 @@ export async function analyzeDocument(
       targetHighlights,
       executionMode: 'parallel',
       maxConcurrency: 5
+    });
+  }
+  
+  if (agentInfo.extendedCapabilityId === "multi-epistemic-eval") {
+    logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
+    return await analyzeWithMultiEpistemicEval(document, agentInfo, {
+      targetHighlights,
+      enableForecasting: false // Disabled by default due to cost
     });
   }
 

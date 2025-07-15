@@ -1,0 +1,219 @@
+/**
+ * Multi-Epistemic Evaluation workflow for document analysis
+ */
+
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documents";
+import type { Comment } from "../../../types/documentSchema";
+import type { TaskResult } from "../shared/types";
+import { logger } from "@/lib/logger";
+import { 
+  PluginManager,
+  MathPlugin,
+  SpellingPlugin,
+  FactCheckPlugin,
+  ForecastPlugin
+} from '../plugin-system';
+import { extractHighlightsFromAnalysis } from "../highlightExtraction";
+import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
+import { generateSelfCritique } from "../selfCritique";
+import type { SelfCritiqueInput } from "../selfCritique";
+
+export async function analyzeWithMultiEpistemicEval(
+  document: Document,
+  agentInfo: Agent,
+  options: {
+    targetHighlights?: number;
+    enableForecasting?: boolean;
+  } = {}
+): Promise<{
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade?: number;
+  selfCritique?: string;
+  highlights: Comment[];
+  tasks: TaskResult[];
+}> {
+  const tasks: TaskResult[] = [];
+  const targetHighlights = options.targetHighlights || 5;
+  
+  try {
+    // Step 1: Run plugin-based analysis
+    logger.info(`Starting multi-epistemic evaluation...`);
+    const pluginStartTime = Date.now();
+    
+    const manager = new PluginManager();
+    
+    // Register plugins
+    const plugins = [
+      new MathPlugin(),
+      new SpellingPlugin(),
+      new FactCheckPlugin()
+    ];
+    
+    // Only add ForecastPlugin if explicitly enabled (it's expensive)
+    if (options.enableForecasting) {
+      plugins.push(new ForecastPlugin());
+    }
+    
+    manager.registerPlugins(plugins);
+    
+    // Run analysis
+    const pluginResults = await manager.analyzeDocument(document.content, {
+      chunkSize: 1000,
+      chunkByParagraphs: true
+    });
+    
+    const pluginDuration = Date.now() - pluginStartTime;
+    logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
+    
+    tasks.push({
+      task: 'Plugin Analysis',
+      result: 'success',
+      details: {
+        chunks: pluginResults.statistics.totalChunks,
+        findings: pluginResults.statistics.totalFindings,
+        duration: pluginDuration
+      }
+    });
+    
+    // Step 2: Format results into structured findings
+    const structuredFindings = formatPluginFindings(pluginResults);
+    
+    // Step 3: Create enhanced agent with plugin findings
+    const enhancedAgent = {
+      ...agentInfo,
+      primaryInstructions: `${agentInfo.primaryInstructions}\n\nPlugin Analysis Results:\n${structuredFindings}`
+    };
+    
+    // Step 4: Generate comprehensive analysis using the findings
+    logger.info(`Generating comprehensive analysis from plugin findings...`);
+    const analysisResult = await generateComprehensiveAnalysis(
+      document,
+      enhancedAgent,
+      500, // targetWordCount
+      targetHighlights
+    );
+    
+    logger.info(
+      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}`
+    );
+    tasks.push(analysisResult.task);
+    
+    // Step 5: Extract highlights from the analysis
+    logger.info(`Extracting highlights...`);
+    const highlightResult = await extractHighlightsFromAnalysis(
+      document,
+      agentInfo,
+      analysisResult.outputs,
+      targetHighlights
+    );
+    
+    logger.info(
+      `Extracted ${highlightResult.outputs.highlights.length} highlights`
+    );
+    tasks.push(highlightResult.task);
+    
+    // Step 6: Generate self-critique if enabled
+    let selfCritique: string | undefined;
+    if (agentInfo.selfCritiqueInstructions) {
+      logger.info(`Generating self-critique...`);
+      try {
+        const critiqueInput: SelfCritiqueInput = {
+          summary: analysisResult.outputs.summary,
+          analysis: analysisResult.outputs.analysis,
+          grade: analysisResult.outputs.grade,
+          highlights: highlightResult.outputs.highlights.map((h) => ({
+            title: h.reason || "Highlight",
+            text: h.text
+          }))
+        };
+        const critiqueResult = await generateSelfCritique(critiqueInput, agentInfo);
+        selfCritique = critiqueResult.outputs.selfCritique;
+        tasks.push(critiqueResult.task);
+      } catch (error) {
+        logger.error("Self-critique generation failed:", error);
+        tasks.push({
+          task: 'Self-Critique',
+          result: 'error',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+    
+    return {
+      thinking: "", // Comprehensive analysis doesn't provide thinking
+      analysis: analysisResult.outputs.analysis,
+      summary: analysisResult.outputs.summary,
+      grade: analysisResult.outputs.grade,
+      selfCritique,
+      highlights: highlightResult.outputs.highlights,
+      tasks
+    };
+    
+  } catch (error) {
+    logger.error("Multi-epistemic evaluation failed:", error);
+    throw error;
+  }
+}
+
+/**
+ * Format plugin findings into a structured summary
+ */
+function formatPluginFindings(results: any): string {
+  const sections: string[] = [];
+  
+  // Overall statistics
+  sections.push(`OVERALL STATISTICS:
+- Total chunks analyzed: ${results.statistics.totalChunks}
+- Total findings: ${results.statistics.totalFindings}
+- Critical findings: ${countCriticalFindings(results)}`);
+  
+  // Findings by type
+  const findingsByType: string[] = [];
+  for (const [type, count] of Array.from(results.statistics.findingsByType.entries())) {
+    findingsByType.push(`  - ${type}: ${count}`);
+  }
+  if (findingsByType.length > 0) {
+    sections.push(`\nFINDINGS BY TYPE:\n${findingsByType.join('\n')}`);
+  }
+  
+  // Plugin summaries
+  for (const [pluginName, pluginResult] of Array.from(results.pluginResults.entries())) {
+    const criticalFindings = pluginResult.findings
+      .filter((f: any) => f.severity === 'high' || f.severity === 'medium')
+      .slice(0, 5);
+    
+    let pluginSection = `\n${pluginName.toUpperCase()} ANALYSIS:\n${pluginResult.summary}`;
+    
+    if (criticalFindings.length > 0) {
+      pluginSection += '\nKey findings:';
+      criticalFindings.forEach((f: any) => {
+        pluginSection += `\n  - [${f.severity}] ${f.message}`;
+      });
+    }
+    
+    sections.push(pluginSection);
+  }
+  
+  // Recommendations
+  if (results.recommendations.length > 0) {
+    sections.push(`\nRECOMMENDATIONS:\n${results.recommendations.map((r: string) => `- ${r}`).join('\n')}`);
+  }
+  
+  return sections.join('\n\n');
+}
+
+/**
+ * Count critical (high/medium severity) findings
+ */
+function countCriticalFindings(results: any): number {
+  let count = 0;
+  for (const [_, pluginResult] of Array.from(results.pluginResults.entries())) {
+    count += pluginResult.findings.filter((f: any) => 
+      f.severity === 'high' || f.severity === 'medium'
+    ).length;
+  }
+  return count;
+}

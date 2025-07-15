@@ -13,21 +13,35 @@ The math checker analyzes text chunks (100-400 words) for mathematical errors in
 
 ## Files
 
+### Math Error Checker
 - `mathChecker.ts` - Core implementation with LLM-based math error detection
 - `advancedMathTestCases.ts` - Test cases with subtle mathematical errors across various domains
 - `errorExplanation.md` - Detailed explanations of deliberate errors in test cases
 
+### Fact Checker
+- `factChecker.ts` - Web search-based fact verification system
+- Extracts verifiable claims from text
+- Generates targeted search queries
+- Assesses source credibility
+- Provides evidence-based verdicts
+
 ## Usage
 
-The math checker is integrated into the main project. Run tests using:
+Both systems are integrated into the main project. Run tests using:
 
 ```bash
-# From project root
+# Math Error Checker
 npm run test:math-checker           # Basic test
 npm run test:math-checker:advanced  # Advanced mathematical errors
+npm run test:math-checker:reliability # Consistency testing
+
+# Fact Checker
+npm run test:fact-checker           # Mock implementation demo
+npm run test:fact-checker:live      # Live web search demo
+npm run demo:fact-checker           # Interactive demonstration
 ```
 
-The implementation uses the shared Anthropic client from the main project and respects the project's caching and configuration settings.
+The implementations use the shared Anthropic client and web search capabilities from the main project.
 
 ## Example Output
 
