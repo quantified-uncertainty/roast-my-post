@@ -175,7 +175,7 @@ function formatPluginFindings(results: any): string {
   // Findings by type
   const findingsByType: string[] = [];
   if (results.statistics.findingsByType instanceof Map) {
-    for (const [type, count] of Array.from(results.statistics.findingsByType.entries())) {
+    for (const [type, count] of results.statistics.findingsByType.entries()) {
       findingsByType.push(`  - ${type}: ${count}`);
     }
   }
@@ -185,7 +185,7 @@ function formatPluginFindings(results: any): string {
   
   // Plugin summaries
   if (results.pluginResults instanceof Map) {
-    for (const [pluginName, pluginResult] of Array.from(results.pluginResults.entries())) {
+    for (const [pluginName, pluginResult] of results.pluginResults.entries()) {
       const criticalFindings = pluginResult.findings
         .filter((f: any) => f.severity === 'high' || f.severity === 'medium')
         .slice(0, 5);
@@ -217,7 +217,7 @@ function formatPluginFindings(results: any): string {
 function countCriticalFindings(results: any): number {
   let count = 0;
   if (results.pluginResults instanceof Map) {
-    for (const [_, pluginResult] of Array.from(results.pluginResults.entries())) {
+    for (const [_, pluginResult] of results.pluginResults.entries()) {
       count += pluginResult.findings.filter((f: any) => 
         f.severity === 'high' || f.severity === 'medium'
       ).length;
