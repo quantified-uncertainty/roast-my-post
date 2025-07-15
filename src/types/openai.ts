@@ -11,47 +11,72 @@ const HELICONE_CACHE_MAX_AGE = process.env.HELICONE_CACHE_MAX_AGE || "3600";
 const HELICONE_CACHE_BUCKET_MAX_SIZE = process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || "20";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-if (!ANTHROPIC_API_KEY) {
-  throw new Error(
-    "❌ Missing Anthropic API key. Set ANTHROPIC_API_KEY in .env"
-  );
+// Validate API keys only when actually creating clients (not at import time)
+function validateAnthropicKey() {
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error(
+      "❌ Missing Anthropic API key. Set ANTHROPIC_API_KEY in .env"
+    );
+  }
 }
 
-if (!OPENROUTER_API_KEY) {
-  throw new Error(
-    "❌ Missing OpenRouter API key. Set OPENROUTER_API_KEY in .env"
-  );
+function validateOpenRouterKey() {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error(
+      "❌ Missing OpenRouter API key. Set OPENROUTER_API_KEY in .env"
+    );
+  }
 }
 
 export const SEARCH_MODEL = process.env.SEARCH_MODEL || "openai/gpt-4.1"; // For search tasks still using OpenRouter
 export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514"; // Using Anthropic directly
 
-// Anthropic client for analysis tasks with Helicone integration
-export const anthropic = new Anthropic({
-  apiKey: ANTHROPIC_API_KEY,
-  ...(HELICONE_API_KEY && {
-    baseURL: "https://anthropic.helicone.ai",
-    defaultHeaders: {
-      "Helicone-Auth": `Bearer ${HELICONE_API_KEY}`,
-      ...(HELICONE_CACHE_ENABLED && {
-        "Helicone-Cache-Enabled": "true",
-        "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
-        "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
-        "Helicone-Cache-Seed": "spelling-grammar-v1",
-      })
-    }
-  })
-});
+// Lazy Anthropic client factory for analysis tasks with Helicone integration
+export function createAnthropicClient(): Anthropic {
+  validateAnthropicKey();
+  return new Anthropic({
+    apiKey: ANTHROPIC_API_KEY,
+    ...(HELICONE_API_KEY && {
+      baseURL: "https://anthropic.helicone.ai",
+      defaultHeaders: {
+        "Helicone-Auth": `Bearer ${HELICONE_API_KEY}`,
+        ...(HELICONE_CACHE_ENABLED && {
+          "Helicone-Cache-Enabled": "true",
+          "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
+          "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
+          "Helicone-Cache-Seed": "spelling-grammar-v1",
+        })
+      }
+    })
+  });
+}
 
-// OpenAI client via OpenRouter for search tasks
-export const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://github.com/ozziegooen/roast-my-post",
-    "X-Title": "roast-my-post",
-  },
-});
+// Legacy export for backwards compatibility (but don't initialize at import time)
+export const anthropic = {
+  get messages() {
+    return createAnthropicClient().messages;
+  }
+};
+
+// Lazy OpenAI client factory via OpenRouter for search tasks
+export function createOpenAIClient(): OpenAI {
+  validateOpenRouterKey();
+  return new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: OPENROUTER_API_KEY,
+    defaultHeaders: {
+      "HTTP-Referer": "https://github.com/ozziegooen/roast-my-post",
+      "X-Title": "roast-my-post",
+    },
+  });
+}
+
+// Legacy export for backwards compatibility  
+export const openai = {
+  get chat() {
+    return createOpenAIClient().chat;
+  }
+};
 
 export const DEFAULT_TEMPERATURE = 0.1; // Lower temperature for more deterministic results
 export const DEFAULT_TIMEOUT = 300000; // 5 minutes default timeout for LLM requests

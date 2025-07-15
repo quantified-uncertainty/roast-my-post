@@ -5,7 +5,7 @@ import type { Comment } from "../../../types/documentSchema";
 import type { LLMInteraction, LLMMessage } from "../../../types/llm";
 import {
   ANALYSIS_MODEL,
-  anthropic,
+  createAnthropicClient,
   DEFAULT_TEMPERATURE,
   withTimeout,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
@@ -186,7 +186,7 @@ export async function extractHighlightsFromAnalysis(
 
   try {
     response = await withTimeout(
-      anthropic.messages.create({
+      createAnthropicClient().messages.create({
         model: ANALYSIS_MODEL,
         max_tokens: 4000,
         temperature: DEFAULT_TEMPERATURE,

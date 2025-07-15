@@ -7,7 +7,7 @@ import type {
 } from "../../../types/llm";
 import {
   ANALYSIS_MODEL,
-  anthropic,
+  createAnthropicClient,
   DEFAULT_TEMPERATURE,
   withTimeout,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
@@ -117,6 +117,7 @@ export async function generateComprehensiveAnalysis(
       tool_choice: { type: "tool", name: "provide_comprehensive_analysis" },
     };
 
+    const anthropic = createAnthropicClient();
     response = await withTimeout(
       anthropic.messages.create(apiParams),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,

@@ -3,7 +3,7 @@
  * Handles API calls, retries, and error handling
  */
 
-import { anthropic, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from '../../../../types/openai';
+import { createAnthropicClient, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from '../../../../types/openai';
 import type { LLMInteraction } from '@/types/llm';
 import { logger } from '@/lib/logger';
 import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from '../constants';
@@ -40,7 +40,7 @@ export class SpellingGrammarLLMClient {
     let lastResponse: any = null;
 
     const analyzeWithRetry = async (): Promise<LLMResponse> => {
-      const response = await anthropic.messages.create({
+      const response = await createAnthropicClient().messages.create({
         model: this.model,
         max_tokens: 8000,
         temperature: this.temperature,

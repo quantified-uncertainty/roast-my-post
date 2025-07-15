@@ -1,4 +1,4 @@
-import { anthropic, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
+import { createAnthropicClient, ANALYSIS_MODEL, DEFAULT_TEMPERATURE } from "../../../types/openai";
 import { logger } from "@/lib/logger";
 import { LOG_PREFIXES } from "./constants";
 
@@ -66,7 +66,7 @@ Look for:
 Provide specific examples from the text that support your conclusions.`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await createAnthropicClient().messages.create({
       model: ANALYSIS_MODEL,
       max_tokens: 1000,
       temperature: DEFAULT_TEMPERATURE,

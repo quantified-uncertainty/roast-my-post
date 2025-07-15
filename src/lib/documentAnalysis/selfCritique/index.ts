@@ -6,7 +6,7 @@ import type {
 } from "../../../types/llm";
 import {
   ANALYSIS_MODEL,
-  anthropic,
+  createAnthropicClient,
   DEFAULT_TEMPERATURE,
   withTimeout,
   SELF_CRITIQUE_TIMEOUT,
@@ -112,7 +112,7 @@ ${evaluationText}`;
     };
 
     response = (await withTimeout(
-      anthropic.messages.create(apiParams),
+      createAnthropicClient().messages.create(apiParams),
       SELF_CRITIQUE_TIMEOUT,
       `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
     )) as any; // Type assertion to avoid complex union type issues
