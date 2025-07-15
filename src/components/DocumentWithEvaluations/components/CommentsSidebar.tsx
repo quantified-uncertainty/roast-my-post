@@ -2,7 +2,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import type { Comment } from "@/types/documentSchema";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { CheckCircleIcon, StarIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 
 import { CommentsSidebarProps } from "../types";
 import { getImportancePhrase } from "../utils";
@@ -18,7 +18,6 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
  */
 export function CommentsSidebar({
   comments,
-  activeTag,
   expandedTag,
   onCommentHover,
   onCommentClick,

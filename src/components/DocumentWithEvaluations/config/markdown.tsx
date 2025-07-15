@@ -1,8 +1,6 @@
 import React from "react";
 
-// @ts-ignore - ESM modules are handled by Next.js
 import rehypeRaw from "rehype-raw";
-// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
 export const MARKDOWN_PLUGINS = {

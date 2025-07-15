@@ -1,6 +1,5 @@
 "use client";
 
-// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
 
 import type { Comment } from "@/types/documentSchema";

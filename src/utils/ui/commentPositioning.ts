@@ -1,5 +1,5 @@
 import type { Comment } from "@/types/documentSchema";
-// @ts-ignore - No types available for markdown-truncate
+// @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
 
 interface CommentPosition {

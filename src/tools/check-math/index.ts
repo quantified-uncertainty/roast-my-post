@@ -89,19 +89,22 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     try {
       const result = await this.checkMathAccuracy(input);
       
+      // Limit errors to maxErrors
+      const limitedErrors = result.errors.slice(0, input.maxErrors || 50);
+      
       // Generate summary statistics
       const summary = {
-        totalErrors: result.errors.length,
-        calculationErrors: result.errors.filter(e => e.errorType === 'calculation').length,
-        logicErrors: result.errors.filter(e => e.errorType === 'logic').length,
-        unitErrors: result.errors.filter(e => e.errorType === 'unit').length,
-        notationErrors: result.errors.filter(e => e.errorType === 'notation').length,
-        conceptualErrors: result.errors.filter(e => e.errorType === 'conceptual').length
+        totalErrors: limitedErrors.length,
+        calculationErrors: limitedErrors.filter(e => e.errorType === 'calculation').length,
+        logicErrors: limitedErrors.filter(e => e.errorType === 'logic').length,
+        unitErrors: limitedErrors.filter(e => e.errorType === 'unit').length,
+        notationErrors: limitedErrors.filter(e => e.errorType === 'notation').length,
+        conceptualErrors: limitedErrors.filter(e => e.errorType === 'conceptual').length
       };
       
       // Identify common patterns
       const patternCounts = new Map<string, number>();
-      result.errors.forEach(error => {
+      limitedErrors.forEach(error => {
         const count = patternCounts.get(error.errorType) || 0;
         patternCounts.set(error.errorType, count + 1);
       });
@@ -111,10 +114,10 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
         .sort((a, b) => b.count - a.count);
       
       // Generate recommendations
-      const recommendations = this.generateRecommendations(result.errors, summary);
+      const recommendations = this.generateRecommendations(limitedErrors, summary);
       
       return {
-        errors: result.errors,
+        errors: limitedErrors,
         summary,
         commonPatterns,
         recommendations,
@@ -146,7 +149,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50)
     });
 
-    const errors = this.parseErrors(result.toolResult.errors);
+    const errors = this.parseErrors(result.toolResult?.errors);
 
     return { errors, llmInteraction: result.interaction };
   }
@@ -236,6 +239,10 @@ Report any mathematical errors found with detailed explanations and corrections.
   }
   
   private parseErrors(errors: any[]): MathError[] {
+    if (!errors || !Array.isArray(errors)) {
+      return [];
+    }
+    
     return errors.map(error => {
       const errorType = this.categorizeError(error.description);
       const severity = this.determineSeverity(errorType, error.description);
@@ -293,6 +300,11 @@ Report any mathematical errors found with detailed explanations and corrections.
   
   private generateRecommendations(errors: MathError[], summary: CheckMathOutput['summary']): string[] {
     const recommendations: string[] = [];
+    
+    if (summary.totalErrors === 0) {
+      recommendations.push('No mathematical errors found in the text.');
+      return recommendations;
+    }
     
     if (summary.totalErrors > 10) {
       recommendations.push('Consider having a mathematician or subject matter expert review the content');

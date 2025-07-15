@@ -8,6 +8,8 @@ This directory contains organized documentation for the roast-my-post project.
 Development guides and technical documentation
 
 - **[agents.md](development/agents.md)** - Agent system architecture, configuration, and management
+- **[claude-wrapper-pattern.md](development/claude-wrapper-pattern.md)** - Claude API wrapper pattern for consistent LLM interactions
+- **[claude-wrapper-migration-guide.md](development/claude-wrapper-migration-guide.md)** - Step-by-step guide for migrating to the Claude wrapper
 - **[database.md](development/database.md)** - Database operations, safety procedures, and best practices *(coming soon)*
 - **[architecture.md](development/architecture.md)** - System architecture overview *(coming soon)*
 
@@ -46,6 +48,7 @@ Security documentation and procedures
 ### For Developers
 - **Getting Started**: See main [README.md](../README.md)
 - **Agent Development**: [development/agents.md](development/agents.md)
+- **Claude API Integration**: [development/claude-wrapper-pattern.md](development/claude-wrapper-pattern.md)
 - **Ephemeral Experiments**: [features/ephemeral-experiments.md](features/ephemeral-experiments.md)
 - **Security Guidelines**: [security/authentication.md](security/authentication.md)
 - **Code Quality**: [operations/health-checks.md](operations/health-checks.md)

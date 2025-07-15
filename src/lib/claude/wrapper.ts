@@ -13,8 +13,8 @@ export interface ClaudeCallOptions {
   model?: string;
   system?: string;
   messages: Array<{ role: "user" | "assistant"; content: string }>;
-  tools?: any[];
-  tool_choice?: any;
+  tools?: Anthropic.Messages.Tool[];
+  tool_choice?: Anthropic.Messages.ToolChoice;
   max_tokens?: number;
   temperature?: number;
 }
@@ -96,7 +96,7 @@ export async function callClaudeWithTool<T>(
   options: Omit<ClaudeCallOptions, 'tool_choice'> & {
     toolName: string;
     toolDescription: string;
-    toolSchema: any;
+    toolSchema: Anthropic.Messages.Tool.InputSchema;
   },
   previousInteractions?: PluginLLMInteraction[]
 ): Promise<ClaudeCallResult & { toolResult: T }> {
@@ -113,7 +113,9 @@ export async function callClaudeWithTool<T>(
   const result = await callClaude(toolOptions, previousInteractions);
   
   // Extract tool result
-  const toolUse = result.response.content.find((c: any) => c.type === "tool_use") as any;
+  const toolUse = result.response.content.find((c): c is Anthropic.Messages.ToolUseBlock => 
+    c.type === "tool_use"
+  );
   if (!toolUse || toolUse.name !== options.toolName) {
     throw new Error(`Expected tool use for ${options.toolName}`);
   }

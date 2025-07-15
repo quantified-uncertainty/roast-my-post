@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import FactCheckTool from './index';
 import { logger } from '@/lib/logger';
+import { testData } from '@/lib/claude/testUtils';
 
-// Mock Anthropic since we're testing the tool structure, not the LLM
-jest.mock('@anthropic-ai/sdk');
+// Mock Claude wrapper
+jest.mock('@/lib/claude/wrapper');
+import { mockClaudeToolResponse } from '@/lib/claude/__mocks__/wrapper';
 
 describe('FactCheckTool', () => {
   const mockContext = { 
@@ -102,6 +104,88 @@ describe('FactCheckTool', () => {
       expect(() => {
         FactCheckTool.outputSchema.parse(output);
       }).not.toThrow();
+    });
+  });
+
+  describe('execute with mocked wrapper', () => {
+    it('should extract claims and check for contradictions', async () => {
+      const tool = factCheckTool;
+      
+      // Mock the extraction response
+      mockClaudeToolResponse({
+        claims: testData.factualClaims.claims.map((claim, index) => ({
+          id: `claim-${index}`,
+          ...claim
+        }))
+      });
+
+      const input = {
+        text: "The Berlin Wall fell in 1989. Water boils at 100°C at sea level.",
+        maxClaims: 10,
+        verifyHighPriority: false
+      };
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.claims).toHaveLength(2);
+      expect(result.claims[0].text).toBe('The Berlin Wall fell in 1989');
+      expect(result.summary.totalClaims).toBe(2);
+      expect(result.llmInteractions).toHaveLength(1);
+      expect(result.llmInteractions[0].model).toBe('claude-sonnet-4-20250514');
+    });
+
+    it('should verify high priority claims when requested', async () => {
+      const tool = factCheckTool;
+      
+      // Mock extraction
+      mockClaudeToolResponse({
+        claims: [{
+          id: 'claim-1',
+          text: 'Important historical fact',
+          topic: 'History',
+          importance: 'high',
+          specificity: 'high'
+        }]
+      });
+
+      // Mock verification
+      mockClaudeToolResponse({
+        verified: true,
+        explanation: 'This fact has been verified as accurate',
+        sources: ['Historical records']
+      });
+
+      const input = {
+        text: "Important historical fact",
+        verifyHighPriority: true
+      };
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.verificationResults).toHaveLength(1);
+      expect(result.verificationResults[0].verified).toBe(true);
+      expect(result.summary.verifiedClaims).toBe(1);
+      expect(result.llmInteractions).toHaveLength(2); // extraction + verification
+    });
+
+    it('should handle empty text gracefully', async () => {
+      const tool = factCheckTool;
+      
+      // Mock empty claims response
+      mockClaudeToolResponse({
+        claims: []
+      });
+
+      const input = {
+        text: "Just opinions, no facts here.",
+        maxClaims: 10
+      };
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.claims).toHaveLength(0);
+      expect(result.summary.totalClaims).toBe(0);
+      expect(result.recommendations).toContain('No factual claims were found in the text.');
     });
   });
 });

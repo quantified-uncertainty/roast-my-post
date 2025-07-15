@@ -1,15 +1,11 @@
 import { ExtractForecastingClaimsTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
+import { testData } from '@/lib/claude/testUtils';
 
-// Mock Anthropic
-jest.mock('@anthropic-ai/sdk', () => ({
-  Anthropic: jest.fn().mockImplementation(() => ({
-    messages: {
-      create: jest.fn()
-    }
-  }))
-}));
+// Mock Claude wrapper
+jest.mock('@/lib/claude/wrapper');
+import { mockClaudeToolResponse } from '@/lib/claude/__mocks__/wrapper';
 
 // Mock the Anthropic client factory
 jest.mock('@/types/openai', () => ({
@@ -271,6 +267,157 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       
       expect(result.forecasts).toHaveLength(0);
       expect(result.totalFound).toBe(0);
+    });
+  });
+});
+
+describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
+  const tool = new ExtractForecastingClaimsTool();
+  const mockContext: ToolContext = {
+    userId: 'test-user',
+    logger: { 
+      info: jest.fn(), 
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn()
+    } as any
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('input validation', () => {
+    it('should validate required fields', async () => {
+      const invalidInput = {}; // Missing text
+      
+      await expect(tool.run(invalidInput, mockContext))
+        .rejects.toThrow(z.ZodError);
+    });
+    
+    it('should validate text length limits', async () => {
+      const invalidInput = { text: 'a'.repeat(10001) }; // Too long
+      
+      await expect(tool.run(invalidInput, mockContext))
+        .rejects.toThrow(z.ZodError);
+    });
+  });
+
+  describe('execute with mocked wrapper', () => {
+    it('should extract and analyze forecasting claims successfully', async () => {
+      const input = {
+        text: 'AI will surpass human intelligence by 2050. There is a 70% chance of recession in 2025.',
+        maxDetailedAnalysis: 2
+      };
+      
+      // Mock extraction response
+      mockClaudeToolResponse({
+        forecasts: [
+          {
+            text: 'AI will surpass human intelligence by 2050',
+            topic: 'Artificial intelligence',
+            timeframe: '2050'
+          },
+          {
+            text: 'There is a 70% chance of recession in 2025',
+            topic: 'Economic recession',
+            probability: 70,
+            timeframe: '2025'
+          }
+        ]
+      });
+      
+      // Mock selection response
+      mockClaudeToolResponse({
+        selections: [
+          { index: 0, reasoning: 'Significant technological prediction with clear timeframe' },
+          { index: 1, reasoning: 'Quantified economic forecast with specific probability' }
+        ]
+      });
+      
+      const result = await tool.execute(input, mockContext);
+      
+      expect(result.forecasts).toHaveLength(2);
+      expect(result.totalFound).toBe(2);
+      expect(result.selectedForAnalysis).toBe(2);
+      expect(result.llmInteractions).toHaveLength(2);
+      
+      // Check selection results
+      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
+      expect(result.forecasts[1].worthDetailedAnalysis).toBe(true);
+      expect(result.forecasts[0].reasoning).toBe('Significant technological prediction with clear timeframe');
+    });
+    
+    it('should handle text with no forecasts', async () => {
+      const input = {
+        text: 'This is just descriptive text about the past with no predictions.'
+      };
+      
+      // Mock empty extraction response
+      mockClaudeToolResponse({
+        forecasts: []
+      });
+      
+      const result = await tool.execute(input, mockContext);
+      
+      expect(result.forecasts).toHaveLength(0);
+      expect(result.totalFound).toBe(0);
+      expect(result.selectedForAnalysis).toBe(0);
+      expect(result.llmInteractions).toHaveLength(1);
+    });
+
+    it('should limit selections to maxDetailedAnalysis', async () => {
+      const input = {
+        text: 'Multiple predictions here',
+        maxDetailedAnalysis: 1
+      };
+      
+      // Mock extraction with 3 forecasts
+      mockClaudeToolResponse({
+        forecasts: [
+          { text: 'Forecast 1', topic: 'Topic 1' },
+          { text: 'Forecast 2', topic: 'Topic 2' },
+          { text: 'Forecast 3', topic: 'Topic 3' }
+        ]
+      });
+      
+      // Mock selection of only 1 (due to limit)
+      mockClaudeToolResponse({
+        selections: [
+          { index: 0, reasoning: 'Most relevant forecast' }
+        ]
+      });
+      
+      const result = await tool.execute(input, mockContext);
+      
+      expect(result.totalFound).toBe(3);
+      expect(result.selectedForAnalysis).toBe(1);
+      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
+      expect(result.forecasts[1].worthDetailedAnalysis).toBe(false);
+      expect(result.forecasts[2].worthDetailedAnalysis).toBe(false);
+    });
+
+    it('should use agent instructions when provided', async () => {
+      const input = {
+        text: 'Economic and tech predictions',
+        agentInstructions: 'Focus on economic predictions only'
+      };
+      
+      // Mock extraction
+      mockClaudeToolResponse({
+        forecasts: testData.forecastingClaims.forecasts
+      });
+      
+      // Mock selection
+      mockClaudeToolResponse({
+        selections: []
+      });
+      
+      const result = await tool.execute(input, mockContext);
+      
+      // Verify agent instructions were included in prompts
+      expect(result.llmInteractions).toHaveLength(2);
+      expect(result.llmInteractions[1].prompt).toContain('Focus on economic predictions only');
     });
   });
 });

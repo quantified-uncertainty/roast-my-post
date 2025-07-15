@@ -1,9 +1,6 @@
 import { notFound } from "next/navigation";
-// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
-// @ts-ignore - ESM modules are handled by Next.js
 import rehypeRaw from "rehype-raw";
-// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
 import { prisma } from "@/lib/prisma";

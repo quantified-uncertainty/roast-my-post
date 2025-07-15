@@ -3,7 +3,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CopyMarkdownButton } from "@/components/CopyMarkdownButton";
-import { EXTERNAL_URLS } from "@/lib/constants";
 
 const roadmapContent = `# Roadmap
 

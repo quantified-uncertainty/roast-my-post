@@ -211,6 +211,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - Created shared articleImport library to eliminate duplication between API route and CLI script
 - Replaced OpenAI with Claude + tool use for metadata extraction and content cleaning
 - Fixed JSDOM configuration to prevent CSS/JS spam in console logs
+- **New Claude Wrapper Pattern**: Centralized all Claude API calls through `@/lib/claude/wrapper` for consistent interaction tracking, error handling, and Helicone integration. See `/docs/development/claude-wrapper-pattern.md` for usage guide.
 
 ## Commands
 - `npm run dev` - Development server

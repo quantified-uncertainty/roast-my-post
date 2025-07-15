@@ -1,7 +1,6 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { EXTERNAL_URLS } from "@/lib/constants";
 
 const aboutContent = `
 # About Roast My Post

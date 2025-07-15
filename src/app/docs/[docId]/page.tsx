@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-// @ts-ignore - No types available for markdown-truncate
+// @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
 import Link from "next/link";
 import { notFound } from "next/navigation";

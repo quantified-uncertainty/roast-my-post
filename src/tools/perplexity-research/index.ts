@@ -82,7 +82,7 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
         context.logger.warn('[PerplexityResearch] Structured research failed, using fallback mode');
         
         const basicResponse = await client.query(input.query);
-        usage = basicResponse.usage;
+        usage = basicResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
         
         // Parse basic response into structured format
         researchResult = {
