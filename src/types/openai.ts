@@ -54,7 +54,7 @@ export function createAnthropicClient(): Anthropic {
 // Legacy export for backwards compatibility (but don't initialize at import time)
 export const anthropic = {
   messages: {
-    create: (...args: any[]) => createAnthropicClient().messages.create(...args)
+    create: (params: Anthropic.MessageCreateParams) => createAnthropicClient().messages.create(params)
   }
 };
 

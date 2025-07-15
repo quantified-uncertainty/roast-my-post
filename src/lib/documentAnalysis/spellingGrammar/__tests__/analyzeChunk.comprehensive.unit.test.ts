@@ -220,13 +220,23 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
 
 // Performance test
 describe("Performance Tests", () => {
-  const mockAnthropicCreate = anthropic.messages.create as jest.MockedFunction<
-    typeof anthropic.messages.create
+  const mockCreateAnthropicClient = createAnthropicClient as jest.MockedFunction<
+    typeof createAnthropicClient
   >;
+  let mockAnthropicCreate: jest.MockedFunction<any>;
   let llmClient: SpellingGrammarLLMClient;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    mockCreateAnthropicClient.mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+    
     llmClient = new SpellingGrammarLLMClient();
   });
 
