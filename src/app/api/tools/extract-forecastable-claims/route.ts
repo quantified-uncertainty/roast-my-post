@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractForecasts } from '@/lib/documentAnalysis/narrow-epistemic-evals/forecaster';
-import { anthropic, ANALYSIS_MODEL } from '@/types/openai';
+import { ANALYSIS_MODEL } from '@/types/openai';
 import { z } from 'zod';
+import Anthropic from '@anthropic-ai/sdk';
 
 const requestSchema = z.object({
   text: z.string().min(1).max(10000),
@@ -15,6 +16,10 @@ async function selectForecastsForAnalysis(
   maxCount: number
 ): Promise<any[]> {
   if (forecasts.length === 0) return [];
+  
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
   
   const systemPrompt = `You are a forecast analyst. Given a list of extracted forecasts and agent instructions, 
 select which forecasts are worth detailed probability analysis (which costs 6 LLM calls each).

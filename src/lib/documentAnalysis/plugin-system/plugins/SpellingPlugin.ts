@@ -5,7 +5,8 @@
 import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
-import { anthropic, ANALYSIS_MODEL } from '../../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { ANALYSIS_MODEL } from '../../../../types/openai';
 
 interface SpellingState {
   errors: Array<{
@@ -171,6 +172,9 @@ Report any errors found with suggested corrections.`;
       type: 'spelling' | 'grammar' | 'style';
     }>;
   }> {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
     const response = await anthropic.messages.create({
       model: ANALYSIS_MODEL,
       max_tokens: 1000,

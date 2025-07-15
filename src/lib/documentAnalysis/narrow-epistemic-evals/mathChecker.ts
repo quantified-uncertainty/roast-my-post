@@ -3,7 +3,8 @@
  * Based on the spelling/grammar checker pattern but focused on mathematical correctness
  */
 
-import { anthropic, ANALYSIS_MODEL } from '../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { ANALYSIS_MODEL } from '../../../types/openai';
 
 // Types
 export interface MathError {
@@ -40,6 +41,9 @@ export async function analyzeMathChunk(chunk: TextChunk): Promise<AnalysisResult
   const userPrompt = buildUserPrompt(chunk);
 
   try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
     const response = await anthropic.messages.create({
       model: ANALYSIS_MODEL,
       max_tokens: 4000,

@@ -3,7 +3,8 @@
  * Handles verification of results that can't be exactly matched
  */
 
-import { anthropic, ANALYSIS_MODEL } from '../../../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { ANALYSIS_MODEL } from '../../../../../types/openai';
 
 export interface TestCase<TInput, TExpected> {
   id: string;
@@ -76,6 +77,9 @@ ${context.matchingCriteria ? `Additional criteria: ${context.matchingCriteria}` 
 Evaluate if the actual output matches the expected output according to the criteria.`;
 
   try {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
     const response = await anthropic.messages.create({
       model: ANALYSIS_MODEL,
       max_tokens: 1000,

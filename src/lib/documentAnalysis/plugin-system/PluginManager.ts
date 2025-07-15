@@ -5,7 +5,6 @@
 import { PromptBasedRouter } from './PromptBasedRouter';
 import { AnalysisPlugin, DocumentProfile, SynthesisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
-import { anthropic } from '../../../types/openai';
 
 export interface DocumentAnalysisResult {
   summary: string;

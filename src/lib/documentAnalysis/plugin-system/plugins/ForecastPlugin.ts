@@ -5,7 +5,8 @@
 import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
-import { anthropic, ANALYSIS_MODEL } from '../../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { ANALYSIS_MODEL } from '../../../../types/openai';
 import { generateForecast } from '../../narrow-epistemic-evals/forecaster';
 
 interface ForecastState {
@@ -213,6 +214,9 @@ For each prediction, identify:
       topic: string;
     }>;
   }> {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
     const response = await anthropic.messages.create({
       model: ANALYSIS_MODEL,
       max_tokens: 1500,

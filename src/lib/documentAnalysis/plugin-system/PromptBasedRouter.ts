@@ -2,7 +2,7 @@
  * Prompt-based router that uses LLM to decide which plugins process which chunks
  */
 
-import { anthropic } from '../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
 import { RoutingPlan } from './RoutingPlan';
 
@@ -127,6 +127,9 @@ Do not include any explanation or other text, just the JSON array.`;
 
     try {
       // Call routing model
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
       const response = await anthropic.messages.create({
         model: ROUTING_MODEL,
         max_tokens: 1000,

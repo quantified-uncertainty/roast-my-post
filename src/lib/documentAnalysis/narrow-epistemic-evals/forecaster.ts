@@ -3,7 +3,8 @@
  * Uses multiple Claude calls to generate robust predictions
  */
 
-import { anthropic, ANALYSIS_MODEL } from '../../../types/openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { ANALYSIS_MODEL } from '../../../types/openai';
 
 export interface ForecastingQuestion {
   question: string;
@@ -47,6 +48,9 @@ export interface ExtractedForecast {
  * Extract forecast-like statements from text
  */
 export async function extractForecasts(text: string): Promise<ExtractedForecast[]> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
   const response = await anthropic.messages.create({
     model: ANALYSIS_MODEL,
     max_tokens: 1000,
@@ -127,6 +131,9 @@ ${question.timeframe ? `\nTimeframe: ${question.timeframe}` : ''}
 
 Think carefully and provide your forecast. Random seed: ${Math.random()}`;
 
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
   const response = await anthropic.messages.create({
     model: ANALYSIS_MODEL,
     max_tokens: 1500,
