@@ -105,7 +105,7 @@ export class ClaudeWrapperMocks {
       ...responseOverrides
     };
 
-    return jest.fn().mockResolvedValue(mockResponse);
+    return jest.fn().mockResolvedValue(mockResponse) as any;
   }
 
   static createMockCallClaudeWithTool<T = any>(toolResultOverrides: any = {}) {
@@ -126,7 +126,7 @@ export class ClaudeWrapperMocks {
       interaction: TestDataFactory.createMockLLMInteraction()
     };
 
-    return jest.fn().mockResolvedValue(mockResponse);
+    return jest.fn().mockResolvedValue(mockResponse) as any;
   }
 
   static createMockWrapperModule() {
@@ -255,7 +255,7 @@ export class APITestUtils {
  * Database test utilities
  */
 export class DatabaseTestUtils {
-  static createMockPrismaClient() {
+  static createMockPrismaClient(): any {
     return {
       document: {
         findUnique: jest.fn(),
@@ -279,19 +279,19 @@ export class DatabaseTestUtils {
         delete: jest.fn()
       },
       $transaction: jest.fn()
-    };
+    } as any;
   }
 
   static mockPrismaFindUnique(client: any, table: string, result: any): void {
-    client[table].findUnique.mockResolvedValue(result);
+    (client[table].findUnique as any).mockResolvedValue(result);
   }
 
   static mockPrismaFindMany(client: any, table: string, results: any[]): void {
-    client[table].findMany.mockResolvedValue(results);
+    (client[table].findMany as any).mockResolvedValue(results);
   }
 
   static mockPrismaCreate(client: any, table: string, result: any): void {
-    client[table].create.mockResolvedValue(result);
+    (client[table].create as any).mockResolvedValue(result);
   }
 }
 
