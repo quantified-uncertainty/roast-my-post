@@ -216,21 +216,27 @@ async function demoCleanForecast() {
 async function runSpecificSuite(suiteName: string) {
   console.log(`🔮 Running ${suiteName} Forecasting Suite\n`);
   
-  let suite;
-  let testFunction;
+  const timeout = suiteName.toLowerCase() === 'extraction' ? 30000 : 180000;
+  let results;
   
   switch (suiteName.toLowerCase()) {
     case 'extraction':
-      suite = forecastExtractionTestSuite;
-      testFunction = runForecastExtraction;
+      results = await runTestSuite(forecastExtractionTestSuite, runForecastExtraction, {
+        useExactMatch: false,
+        timeout
+      });
       break;
     case 'generation':
-      suite = forecastGenerationTestSuite;
-      testFunction = runForecastGeneration;
+      results = await runTestSuite(forecastGenerationTestSuite, runForecastGeneration, {
+        useExactMatch: false,
+        timeout
+      });
       break;
     case 'edge':
-      suite = forecastEdgeCasesTestSuite;
-      testFunction = runForecastGeneration;
+      results = await runTestSuite(forecastEdgeCasesTestSuite, runForecastGeneration, {
+        useExactMatch: false,
+        timeout
+      });
       break;
     default:
       console.error(`Unknown suite: ${suiteName}`);
@@ -238,13 +244,7 @@ async function runSpecificSuite(suiteName: string) {
       process.exit(1);
   }
   
-  const timeout = suiteName.toLowerCase() === 'extraction' ? 30000 : 180000;
-  const results = await runTestSuite(suite, testFunction, {
-    useExactMatch: false,
-    timeout
-  });
-  
-  if (results.summary.failed > 0) {
+  if (results && results.summary.failed > 0) {
     displayDetailedResults(results.results, true);
   }
   

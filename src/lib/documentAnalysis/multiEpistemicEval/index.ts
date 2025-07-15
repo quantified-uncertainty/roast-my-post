@@ -46,7 +46,7 @@ export async function analyzeWithMultiEpistemicEval(
     const manager = new PluginManager();
     
     // Register plugins
-    const plugins = [
+    const plugins: any[] = [
       new MathPlugin(),
       new SpellingPlugin(),
       new FactCheckPlugin()
@@ -69,13 +69,12 @@ export async function analyzeWithMultiEpistemicEval(
     logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
     
     tasks.push({
-      task: 'Plugin Analysis',
-      result: 'success',
-      details: {
-        chunks: pluginResults.statistics.totalChunks,
-        findings: pluginResults.statistics.totalFindings,
-        duration: pluginDuration
-      }
+      name: 'Plugin Analysis',
+      modelName: 'claude-3-haiku-20240307',
+      priceInDollars: 0.01,
+      timeInSeconds: pluginDuration / 1000,
+      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, found ${pluginResults.statistics.totalFindings} findings`,
+      llmInteractions: []
     });
     
     // Step 2: Format results into structured findings
@@ -125,8 +124,8 @@ export async function analyzeWithMultiEpistemicEval(
           analysis: analysisResult.outputs.analysis,
           grade: analysisResult.outputs.grade,
           highlights: highlightResult.outputs.highlights.map((h) => ({
-            title: h.reason || "Highlight",
-            text: h.text
+            title: h.description || "Highlight",
+            text: h.highlight.quotedText
           }))
         };
         const critiqueResult = await generateSelfCritique(critiqueInput, agentInfo);
@@ -135,9 +134,12 @@ export async function analyzeWithMultiEpistemicEval(
       } catch (error) {
         logger.error("Self-critique generation failed:", error);
         tasks.push({
-          task: 'Self-Critique',
-          result: 'error',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          name: 'Self-Critique',
+          modelName: 'claude-3-sonnet-20241022',
+          priceInDollars: 0.005,
+          timeInSeconds: 5,
+          log: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          llmInteractions: []
         });
       }
     }
@@ -172,29 +174,33 @@ function formatPluginFindings(results: any): string {
   
   // Findings by type
   const findingsByType: string[] = [];
-  for (const [type, count] of Array.from(results.statistics.findingsByType.entries())) {
-    findingsByType.push(`  - ${type}: ${count}`);
+  if (results.statistics.findingsByType instanceof Map) {
+    for (const [type, count] of Array.from(results.statistics.findingsByType.entries())) {
+      findingsByType.push(`  - ${type}: ${count}`);
+    }
   }
   if (findingsByType.length > 0) {
     sections.push(`\nFINDINGS BY TYPE:\n${findingsByType.join('\n')}`);
   }
   
   // Plugin summaries
-  for (const [pluginName, pluginResult] of Array.from(results.pluginResults.entries())) {
-    const criticalFindings = pluginResult.findings
-      .filter((f: any) => f.severity === 'high' || f.severity === 'medium')
-      .slice(0, 5);
-    
-    let pluginSection = `\n${pluginName.toUpperCase()} ANALYSIS:\n${pluginResult.summary}`;
-    
-    if (criticalFindings.length > 0) {
-      pluginSection += '\nKey findings:';
-      criticalFindings.forEach((f: any) => {
-        pluginSection += `\n  - [${f.severity}] ${f.message}`;
-      });
+  if (results.pluginResults instanceof Map) {
+    for (const [pluginName, pluginResult] of Array.from(results.pluginResults.entries())) {
+      const criticalFindings = pluginResult.findings
+        .filter((f: any) => f.severity === 'high' || f.severity === 'medium')
+        .slice(0, 5);
+      
+      let pluginSection = `\n${pluginName.toUpperCase()} ANALYSIS:\n${pluginResult.summary}`;
+      
+      if (criticalFindings.length > 0) {
+        pluginSection += '\nKey findings:';
+        criticalFindings.forEach((f: any) => {
+          pluginSection += `\n  - [${f.severity}] ${f.message}`;
+        });
+      }
+      
+      sections.push(pluginSection);
     }
-    
-    sections.push(pluginSection);
   }
   
   // Recommendations
@@ -210,10 +216,12 @@ function formatPluginFindings(results: any): string {
  */
 function countCriticalFindings(results: any): number {
   let count = 0;
-  for (const [_, pluginResult] of Array.from(results.pluginResults.entries())) {
-    count += pluginResult.findings.filter((f: any) => 
-      f.severity === 'high' || f.severity === 'medium'
-    ).length;
+  if (results.pluginResults instanceof Map) {
+    for (const [_, pluginResult] of Array.from(results.pluginResults.entries())) {
+      count += pluginResult.findings.filter((f: any) => 
+        f.severity === 'high' || f.severity === 'medium'
+      ).length;
+    }
   }
   return count;
 }
