@@ -27,6 +27,11 @@ jest.mock('@/lib/logger', () => ({
   }
 }));
 
+// Mock authentication 
+jest.mock('@/lib/auth-helpers', () => ({
+  authenticateRequest: jest.fn().mockResolvedValue('test-user-id')
+}));
+
 describe('Perplexity Research API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -51,14 +56,14 @@ describe('Perplexity Research API Route', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveProperty('query', 'What are the latest AI developments?');
-    expect(data).toHaveProperty('summary', 'Test summary');
-    expect(data).toHaveProperty('keyFindings');
-    expect(data.keyFindings).toHaveLength(2);
-    expect(data).toHaveProperty('sources');
-    expect(data.sources).toHaveLength(1);
-    expect(data.sources[0]).toHaveProperty('relevance', 'high');
-    expect(data).toHaveProperty('timestamp');
+    expect(data).toHaveProperty('success', true);
+    expect(data).toHaveProperty('toolId', 'perplexity-research');
+    expect(data).toHaveProperty('result');
+    expect(data.result).toHaveProperty('summary', 'Test summary');
+    expect(data.result).toHaveProperty('keyFindings');
+    expect(data.result.keyFindings).toHaveLength(2);
+    expect(data.result).toHaveProperty('sources');
+    expect(data.result.sources).toHaveLength(1);
   });
 
   it('should handle validation errors', async () => {

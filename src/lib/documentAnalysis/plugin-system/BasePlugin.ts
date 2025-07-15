@@ -4,6 +4,7 @@
 
 import { AnalysisPlugin, ChunkResult, SynthesisResult, RoutingExample, LLMInteraction } from './types';
 import { TextChunk } from './TextChunk';
+import { estimateTokens } from '../../tokenUtils';
 
 export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState> {
   protected state: TState;
@@ -46,15 +47,18 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
       const result = await llmCall();
       const duration = Date.now() - startTime;
 
-      // TODO: Implement proper token counting
+      const promptTokens = estimateTokens(prompt);
+      const responseText = JSON.stringify(result);
+      const completionTokens = estimateTokens(responseText);
+      
       const interaction: LLMInteraction = {
         model,
         prompt,
-        response: JSON.stringify(result),
+        response: responseText,
         tokensUsed: {
-          prompt: Math.floor(prompt.length / 4), // Rough estimate
-          completion: 100, // Placeholder
-          total: Math.floor(prompt.length / 4) + 100
+          prompt: promptTokens,
+          completion: completionTokens,
+          total: promptTokens + completionTokens
         },
         timestamp: new Date(),
         duration
@@ -68,9 +72,9 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
         prompt,
         response: `Error: ${error}`,
         tokensUsed: {
-          prompt: Math.floor(prompt.length / 4),
+          prompt: estimateTokens(prompt),
           completion: 0,
-          total: Math.floor(prompt.length / 4)
+          total: estimateTokens(prompt)
         },
         timestamp: new Date(),
         duration

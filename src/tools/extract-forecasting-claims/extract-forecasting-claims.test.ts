@@ -5,7 +5,8 @@ import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
-import { mockClaudeToolResponse } from '@/lib/claude/__mocks__/wrapper';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
+const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
 
 // Mock the Anthropic client factory
 jest.mock('@/types/openai', () => ({
@@ -310,30 +311,50 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
         maxDetailedAnalysis: 2
       };
       
-      // Mock extraction response
-      mockClaudeToolResponse({
-        forecasts: [
-          {
-            text: 'AI will surpass human intelligence by 2050',
-            topic: 'Artificial intelligence',
-            timeframe: '2050'
-          },
-          {
-            text: 'There is a 70% chance of recession in 2025',
-            topic: 'Economic recession',
-            probability: 70,
-            timeframe: '2025'
-          }
-        ]
-      });
+      const mockInteraction = createMockLLMInteraction();
       
-      // Mock selection response
-      mockClaudeToolResponse({
-        selections: [
-          { index: 0, reasoning: 'Significant technological prediction with clear timeframe' },
-          { index: 1, reasoning: 'Quantified economic forecast with specific probability' }
-        ]
-      });
+      // Mock extraction call with interaction tracking
+      mockCallClaudeWithTool
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction,
+            toolResult: {
+              forecasts: [
+                {
+                  text: 'AI will surpass human intelligence by 2050',
+                  topic: 'Artificial intelligence',
+                  timeframe: '2050'
+                },
+                {
+                  text: 'There is a 70% chance of recession in 2025',
+                  topic: 'Economic recession',
+                  probability: 70,
+                  timeframe: '2025'
+                }
+              ]
+            }
+          };
+        })
+        // Mock selection call with interaction tracking
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction,
+            toolResult: {
+              selections: [
+                { index: 0, reasoning: 'Significant technological prediction with clear timeframe' },
+                { index: 1, reasoning: 'Quantified economic forecast with specific probability' }
+              ]
+            }
+          };
+        });
       
       const result = await tool.execute(input, mockContext);
       
@@ -353,9 +374,20 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
         text: 'This is just descriptive text about the past with no predictions.'
       };
       
+      const mockInteraction = createMockLLMInteraction();
+      
       // Mock empty extraction response
-      mockClaudeToolResponse({
-        forecasts: []
+      mockCallClaudeWithTool.mockImplementationOnce(async (options, interactions) => {
+        if (interactions) {
+          interactions.push(mockInteraction);
+        }
+        return {
+          response: {} as any,
+          interaction: mockInteraction,
+          toolResult: {
+            forecasts: []
+          }
+        };
       });
       
       const result = await tool.execute(input, mockContext);
@@ -372,21 +404,41 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
         maxDetailedAnalysis: 1
       };
       
-      // Mock extraction with 3 forecasts
-      mockClaudeToolResponse({
-        forecasts: [
-          { text: 'Forecast 1', topic: 'Topic 1' },
-          { text: 'Forecast 2', topic: 'Topic 2' },
-          { text: 'Forecast 3', topic: 'Topic 3' }
-        ]
-      });
+      const mockInteraction = createMockLLMInteraction();
       
-      // Mock selection of only 1 (due to limit)
-      mockClaudeToolResponse({
-        selections: [
-          { index: 0, reasoning: 'Most relevant forecast' }
-        ]
-      });
+      // Mock extraction with 3 forecasts
+      mockCallClaudeWithTool
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction,
+            toolResult: {
+              forecasts: [
+                { text: 'Forecast 1', topic: 'Topic 1' },
+                { text: 'Forecast 2', topic: 'Topic 2' },
+                { text: 'Forecast 3', topic: 'Topic 3' }
+              ]
+            }
+          };
+        })
+        // Mock selection of only 1 (due to limit)
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction,
+            toolResult: {
+              selections: [
+                { index: 0, reasoning: 'Most relevant forecast' }
+              ]
+            }
+          };
+        });
       
       const result = await tool.execute(input, mockContext);
       
@@ -403,28 +455,42 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
         agentInstructions: 'Focus on economic predictions only'
       };
       
-      // Mock extraction
-      mockClaudeToolResponse({
-        forecasts: [{
-          id: 'forecast-1',
-          claim: 'AI will surpass human intelligence by 2050',
-          probability: 0.3,
-          confidence: 'medium',
-          timeframe: '2050',
-          category: 'Technology'
-        }]
+      const mockInteraction = createMockLLMInteraction({
+        prompt: 'Extract forecasts from this text:\n\nEconomic and tech predictions'
       });
       
-      // Mock selection
-      mockClaudeToolResponse({
-        selections: []
+      // Mock extraction
+      mockCallClaudeWithTool.mockImplementationOnce(async (options, interactions) => {
+        if (interactions) {
+          interactions.push(mockInteraction);
+        }
+        return {
+          response: {} as any,
+          interaction: mockInteraction,
+          toolResult: {
+            forecasts: [{
+              text: 'AI will surpass human intelligence by 2050',
+              topic: 'Technology',
+              timeframe: '2050'
+            }]
+          }
+        };
       });
       
       const result = await tool.execute(input, mockContext);
       
-      // Verify agent instructions were included in prompts
-      expect(result.llmInteractions).toHaveLength(2);
-      expect(result.llmInteractions[1].prompt).toContain('Focus on economic predictions only');
+      // Verify agent instructions were included in prompts  
+      expect(result.llmInteractions).toHaveLength(1);
+      expect(mockCallClaudeWithTool).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: expect.arrayContaining([
+            expect.objectContaining({
+              content: expect.stringContaining('Focus on economic predictions only')
+            })
+          ])
+        }),
+        expect.any(Array)
+      );
     });
   });
 });

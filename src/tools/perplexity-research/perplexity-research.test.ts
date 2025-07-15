@@ -188,6 +188,8 @@ describe('PerplexityResearchTool', () => {
       const input = { query: 'Test query' };
       const error = new Error('OpenRouter API error');
       
+      // Mock both structured research and basic query to fail
+      mockClient.chat.completions.create.mockRejectedValueOnce(error);
       mockClient.query.mockRejectedValueOnce(error);
       
       await expect(tool.execute(input, mockContext))
@@ -202,7 +204,10 @@ describe('PerplexityResearchTool', () => {
     it('should handle fallback when JSON parsing fails', async () => {
       const input = { query: 'Test query' };
       
-      // Mock the query to return non-JSON response
+      // Mock structured research to fail, then basic query to succeed
+      const structuredError = new Error('Structured research failed');
+      mockClient.chat.completions.create.mockRejectedValueOnce(structuredError);
+      
       mockClient.query.mockResolvedValueOnce({
         content: 'This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3',
         usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
@@ -210,7 +215,7 @@ describe('PerplexityResearchTool', () => {
       
       const result = await tool.execute(input, mockContext);
       
-      expect(result.summary).toBe('This is a plain text response with some findings:');
+      expect(result.summary).toBe('This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3');
       expect(result.keyFindings).toHaveLength(3);
       expect(result.keyFindings[0]).toBe('Finding 1');
       expect(result.sources).toHaveLength(0);

@@ -2,8 +2,11 @@ import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
 import { RichLLMInteraction } from '@/types/llm';
 
 describe('Claude Wrapper', () => {
-  // Skip if no API keys
-  const skipIfNoKeys = !process.env.ANTHROPIC_API_KEY ? describe.skip : describe;
+  // Skip if no API keys or in CI environment
+  const hasValidApiKey = process.env.ANTHROPIC_API_KEY && 
+    process.env.ANTHROPIC_API_KEY !== 'test-key' && 
+    !process.env.CI;
+  const skipIfNoKeys = !hasValidApiKey ? describe.skip : describe;
   
   skipIfNoKeys('callClaude integration', () => {
     it('should make a simple call and track interaction', async () => {

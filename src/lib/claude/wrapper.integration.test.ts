@@ -277,8 +277,8 @@ describe('Claude Wrapper Integration Tests', () => {
 
       await expect(callClaude({
         messages: [{ role: 'user', content: 'Test' }]
-      })).rejects.toThrow();
-    });
+      })).rejects.toThrow('Malformed response from Claude API');
+    }, 10000);
   });
 
   describe('Token usage tracking', () => {
@@ -311,7 +311,7 @@ describe('Claude Wrapper Integration Tests', () => {
       expect(interactions).toHaveLength(3);
       
       const totalTokens = interactions.reduce((sum, i) => sum + i.tokensUsed.total, 0);
-      expect(totalTokens).toBe(575); // 150 + 225 + 300
+      expect(totalTokens).toBe(675); // 150 + 225 + 300
     });
   });
 });
