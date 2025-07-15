@@ -32,6 +32,20 @@ describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
     providesGrades: false,
   };
 
+  let mockAnthropicCreate: jest.MockedFunction<any>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+  });
+
   const mockDocumentContent = `This is line 1 with some content.
 Line 2 has different text here.
 Line 3 contains important information.
@@ -51,7 +65,6 @@ Line 5 has the final content.`;
   });
 
   test("all highlights from comprehensive analysis should become highlights", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
@@ -108,7 +121,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     // Step 1: Generate comprehensive analysis with 5 target highlights
     const analysisResult = await generateComprehensiveAnalysis(
@@ -145,7 +158,6 @@ Line 5 has the final content.`;
   });
 
   test("handles line number mismatches with fuzzy matching", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
@@ -183,7 +195,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,
@@ -204,7 +216,6 @@ Line 5 has the final content.`;
   });
 
   test("skips invalid highlights gracefully", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Mock response with some invalid highlights
     const mockAnalysisResponse = {
@@ -238,7 +249,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,

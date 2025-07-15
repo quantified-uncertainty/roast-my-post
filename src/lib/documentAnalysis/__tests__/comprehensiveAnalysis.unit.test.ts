@@ -34,6 +34,20 @@ describe("Comprehensive Analysis Unit Tests", () => {
     providesGrades: true,
   };
 
+  let mockAnthropicCreate: jest.MockedFunction<any>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+  });
+
   const mockDocument: Document = {
     id: "test-doc-1",
     slug: "test-doc",
@@ -104,8 +118,7 @@ Overall, this is a well-structured test document.
         },
       };
 
-      const { anthropic } = require("../../../types/openai");
-      anthropic.messages.create.mockResolvedValue(mockResponse);
+      mockAnthropicCreate.mockResolvedValue(mockResponse);
 
       const result = await generateComprehensiveAnalysis(mockDocument, mockAgent, 1000);
 
@@ -188,8 +201,7 @@ Overall, this is a well-structured test document.
         },
       };
 
-      const { anthropic } = require("../../../types/openai");
-      anthropic.messages.create.mockResolvedValue(mockResponse);
+      mockAnthropicCreate.mockResolvedValue(mockResponse);
 
       const result = await extractHighlightsFromAnalysis(
         mockDocument,
