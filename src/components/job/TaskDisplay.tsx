@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { formatTaskPrice, formatDuration } from "@/lib/job/formatters";
 
