@@ -99,4 +99,7 @@ export interface EvaluationContentProps {
   compact?: boolean;
   context?: 'document' | 'agent' | 'monitor';
   maxWidth?: 'none' | 'full' | '4xl' | '6xl';
+  
+  // Export data (optional - for export functionality)
+  evaluationData?: any;
 }

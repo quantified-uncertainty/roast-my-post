@@ -4,8 +4,7 @@ import { EvaluationComments } from "@/components/EvaluationComments";
 import { extractHeadings } from "@/lib/evaluation/headingExtractor";
 import { EvaluationSection } from "./EvaluationSection";
 import { MarkdownWithHeadings } from "./MarkdownWithHeadings";
-import { AgentInfoSection } from "./AgentInfoSection";
-import { RunStatsSection } from "./RunStatsSection";
+import { EvaluationDetailsSection } from "./EvaluationDetailsSection";
 import { EvaluationNavigation } from "./EvaluationNavigation";
 import type { EvaluationContentProps } from "@/lib/evaluation/types";
 
@@ -26,7 +25,8 @@ export function EvaluationContent({
   isStale = false,
   showNavigation = true,
   compact = false,
-  maxWidth = '4xl'
+  maxWidth = '4xl',
+  evaluationData
 }: EvaluationContentProps) {
   // Extract headings from each section
   const analysisHeadings = analysis ? extractHeadings(analysis, 2) : []; // Only H2 for analysis
@@ -42,8 +42,8 @@ export function EvaluationContent({
       subItems: []
     },
     { 
-      id: 'agent-info', 
-      label: 'Agent Information', 
+      id: 'evaluation-details', 
+      label: 'Evaluation Details', 
       show: true,
       subItems: []
     },
@@ -74,12 +74,6 @@ export function EvaluationContent({
       label: 'Self-Critique', 
       show: !!selfCritique,
       subItems: selfCritiqueHeadings.map(h => ({ ...h, id: `self-critique-${h.id}`, level: h.level || 1 }))
-    },
-    { 
-      id: 'run-stats', 
-      label: 'Run Stats', 
-      show: !!(costInCents || durationInSeconds),
-      subItems: []
     },
   ].filter(item => item.show);
 
@@ -116,12 +110,16 @@ export function EvaluationContent({
           </EvaluationSection>
         )}
 
-        {/* Agent Information Section */}
-        <AgentInfoSection
+        {/* Evaluation Details Section */}
+        <EvaluationDetailsSection
           agentName={agentName}
           agentDescription={agentDescription}
           grade={grade}
           ephemeralBatch={ephemeralBatch}
+          costInCents={costInCents}
+          durationInSeconds={durationInSeconds}
+          createdAt={createdAt}
+          evaluationData={evaluationData}
         />
 
         {/* Analysis Section */}
@@ -176,12 +174,6 @@ export function EvaluationContent({
           </EvaluationSection>
         )}
 
-        {/* Run Stats Section */}
-        <RunStatsSection
-          durationInSeconds={durationInSeconds}
-          costInCents={costInCents}
-          createdAt={createdAt}
-        />
       </div>
 
       {/* Sticky Navigation Sidebar */}
