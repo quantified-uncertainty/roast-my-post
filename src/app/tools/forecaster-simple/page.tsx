@@ -49,7 +49,11 @@ export default function SimpleForecasterPage() {
       }
 
       const data = await response.json();
-      setResult(data);
+      if (data.success && data.result) {
+        setResult(data.result);
+      } else {
+        throw new Error(data.error || 'Unknown error occurred');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

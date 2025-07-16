@@ -279,5 +279,5 @@ Provide specific explanations for why claims contradict.`;
 }
 
 // Export singleton instance
-const extractFactualClaimsTool = new ExtractFactualClaimsTool();
+export const extractFactualClaimsTool = new ExtractFactualClaimsTool();
 export default extractFactualClaimsTool;

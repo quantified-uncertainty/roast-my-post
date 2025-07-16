@@ -13,6 +13,7 @@ import {
   RoutingExample,
   SynthesisResult,
 } from "../types";
+import { LocationUtils } from "../../utils/LocationUtils";
 
 interface SpellingState {
   errors: Array<{
@@ -21,6 +22,8 @@ interface SpellingState {
     type: "spelling" | "grammar" | "style";
     chunkId: string;
     context: string;
+    lineNumber?: number;
+    lineText?: string;
   }>;
   commonPatterns: Map<string, number>;
 }
@@ -72,6 +75,9 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
     );
 
     const findings: Finding[] = [];
+    
+    // Create location utils for this chunk
+    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Process errors
     result.errors.forEach((error) => {
@@ -85,10 +91,41 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       const count = this.state.commonPatterns.get(error.type) || 0;
       this.state.commonPatterns.set(error.type, count + 1);
 
+      // Try to find the error text in the chunk
+      const errorPosition = chunk.text.indexOf(error.text);
+      let locationHint: Finding['locationHint'] = undefined;
+      
+      if (errorPosition !== -1) {
+        // Get line info within the chunk
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          errorPosition, 
+          errorPosition + error.text.length
+        );
+        
+        if (locationInfo) {
+          // If chunk has global line info, adjust the line numbers
+          if (chunk.metadata?.lineInfo) {
+            locationHint = {
+              lineNumber: chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1,
+              lineText: locationInfo.start.lineText,
+              matchText: error.text,
+            };
+          } else {
+            // Use chunk-relative line numbers
+            locationHint = {
+              lineNumber: locationInfo.start.lineNumber,
+              lineText: locationInfo.start.lineText,
+              matchText: error.text,
+            };
+          }
+        }
+      }
+
       findings.push({
         type: `${error.type}_error`,
         severity: "low",
         message: `${error.type} error: "${error.text}" → "${error.correction}"`,
+        locationHint,
         metadata: {
           original: error.text,
           suggestion: error.correction,

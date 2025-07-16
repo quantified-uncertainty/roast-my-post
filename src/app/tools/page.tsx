@@ -86,24 +86,63 @@ export default function ToolsIndexPage() {
 
       <div className="mt-12 space-y-4">
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">Auto-Generated Form Demo</h3>
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">🚀 Auto-Generated Forms Available!</h3>
           <p className="text-sm text-blue-800 mb-3">
-            We're testing auto-generated forms from Zod schemas. Compare these versions:
+            We've implemented auto-generated forms from Zod schemas. Try these new versions:
           </p>
-          <div className="flex gap-4">
-            <Link
-              href="/tools/math-checker"
-              className="text-sm bg-white px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50"
-            >
-              Math Checker (Original)
-            </Link>
-            <Link
-              href="/tools/math-checker-auto"
-              className="text-sm bg-white px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50"
-            >
-              Math Checker (Auto-Generated)
-            </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-blue-900 uppercase tracking-wide">Analysis Tools</h4>
+              <Link
+                href="/tools/math-checker-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Math Checker (Auto)
+              </Link>
+              <Link
+                href="/tools/forecaster-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Simple Forecaster (Auto)
+              </Link>
+              <Link
+                href="/tools/fact-check-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Fact Checker (Auto)
+              </Link>
+              <Link
+                href="/tools/check-spelling-grammar-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Spelling & Grammar (Auto)
+              </Link>
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-blue-900 uppercase tracking-wide">Extraction & Research</h4>
+              <Link
+                href="/tools/extract-forecasting-claims-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Extract Forecasting Claims (Auto)
+              </Link>
+              <Link
+                href="/tools/extract-factual-claims-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Extract Factual Claims (Auto)
+              </Link>
+              <Link
+                href="/tools/perplexity-research-auto"
+                className="block text-sm bg-white px-3 py-2 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+              >
+                ✨ Perplexity Research (Auto)
+              </Link>
+            </div>
           </div>
+          <p className="text-xs text-blue-700 mt-4">
+            These auto-generated versions use the same API endpoints but with cleaner, consistent UI.
+          </p>
         </div>
         
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
