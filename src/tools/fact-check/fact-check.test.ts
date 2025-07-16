@@ -2,10 +2,15 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import FactCheckTool from './index';
 import { logger } from '@/lib/logger';
 import { createMockLLMInteraction } from '@/lib/claude/testUtils';
+import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
-import { mockClaudeToolResponse } from '@/lib/claude/__mocks__/wrapper';
+import { callClaudeWithTool } from '@/lib/claude/wrapper';
+
+// Get the mocked function and setup helper
+const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe('FactCheckTool', () => {
   const mockContext = { 
@@ -111,18 +116,16 @@ describe('FactCheckTool', () => {
     it('should extract claims and check for contradictions', async () => {
       const tool = FactCheckTool;
       
-      // Mock the extraction response
-      mockClaudeToolResponse({
+      // Mock the extraction response - this response should match what the extractClaims method expects
+      mockToolResponse({
         claims: [
           {
-            id: 'claim-1',
             text: 'The Berlin Wall fell in 1989',
             topic: 'Historical events',
             importance: 'high',
             specificity: 'high'
           },
           {
-            id: 'claim-2',
             text: 'Water boils at 100°C at sea level',
             topic: 'Science',
             importance: 'medium',
@@ -149,10 +152,9 @@ describe('FactCheckTool', () => {
     it('should verify high priority claims when requested', async () => {
       const tool = FactCheckTool;
       
-      // Mock extraction
-      mockClaudeToolResponse({
+      // Mock extraction response (first call)
+      mockToolResponse({
         claims: [{
-          id: 'claim-1',
           text: 'Important historical fact',
           topic: 'History',
           importance: 'high',
@@ -160,11 +162,12 @@ describe('FactCheckTool', () => {
         }]
       });
 
-      // Mock verification
-      mockClaudeToolResponse({
+      // Mock verification response (second call)
+      mockToolResponse({
         verified: true,
+        confidence: 'high',
         explanation: 'This fact has been verified as accurate',
-        sources: ['Historical records']
+        requiresCurrentData: false
       });
 
       const input = {
@@ -184,7 +187,7 @@ describe('FactCheckTool', () => {
       const tool = FactCheckTool;
       
       // Mock empty claims response
-      mockClaudeToolResponse({
+      mockToolResponse({
         claims: []
       });
 
