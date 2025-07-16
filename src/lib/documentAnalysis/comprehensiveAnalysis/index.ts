@@ -1,24 +1,19 @@
 import type { Agent } from "../../../types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
-import type {
-  LLMInteraction,
-  LLMMessage,
-} from "../../../types/llm";
+import type { LLMInteraction } from "../../../types/llm";
 import {
-  ANALYSIS_MODEL,
-  anthropic,
-  DEFAULT_TEMPERATURE,
   withTimeout,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
+  DEFAULT_TEMPERATURE,
 } from "../../../types/openai";
-import { calculateApiCost } from "../../../utils/costCalculator";
 import { calculateLLMCost } from "../shared/costUtils";
 import type { TaskResult } from "../shared/types";
 import { getComprehensiveAnalysisPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { shouldIncludeGrade } from "../shared/agentContext";
-import { handleAnthropicError, formatFixing } from "../utils/anthropicErrorHandler";
+import { handleAnthropicError } from "../utils/anthropicErrorHandler";
+import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
@@ -47,14 +42,9 @@ export async function generateComprehensiveAnalysis(
     targetHighlights
   );
 
-  const messages: LLMMessage[] = [
-    { role: "system", content: systemMessage },
-    { role: "user", content: userMessage },
-  ];
-
+  let validationResult: ComprehensiveAnalysisOutputs;
   let response;
-  let validationResult;
-  let rawResponse;
+  let interaction;
 
   // Build properties dynamically
   const analysisProperties: any = {
@@ -90,38 +80,28 @@ export async function generateComprehensiveAnalysis(
   }
 
   try {
-    // Build the API request parameters
-    const apiParams: any = {
-      model: ANALYSIS_MODEL,
-      max_tokens: 8000,
-      temperature: DEFAULT_TEMPERATURE,
-      system: systemMessage,
-      messages: [
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
-      tools: [
-        {
-          name: "provide_comprehensive_analysis",
-          description:
-            "Provide your complete response including summary, main content document, and structured highlight insights",
-          input_schema: {
-            type: "object",
-            properties: analysisProperties,
-            required: ["summary", "analysis", "highlightInsights"],
-          },
-        },
-      ],
-      tool_choice: { type: "tool", name: "provide_comprehensive_analysis" },
-    };
-
-    response = await withTimeout(
-      anthropic.messages.create(apiParams),
+    const result = await withTimeout(
+      callClaudeWithTool<ComprehensiveAnalysisOutputs>({
+        model: MODEL_CONFIG.analysis,
+        system: systemMessage,
+        messages: [{ role: "user", content: userMessage }],
+        max_tokens: 8000,
+        temperature: DEFAULT_TEMPERATURE,
+        toolName: "provide_comprehensive_analysis",
+        toolDescription: "Provide your complete response including summary, main content document, and structured highlight insights",
+        toolSchema: {
+          type: "object",
+          properties: analysisProperties,
+          required: ["summary", "analysis", "highlightInsights"],
+        }
+      }),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
     );
+
+    response = result.response;
+    interaction = result.interaction;
+    validationResult = result.toolResult;
   } catch (error: any) {
     logger.error(
       "❌ Anthropic API error in comprehensive analysis generation:",
@@ -130,106 +110,93 @@ export async function generateComprehensiveAnalysis(
     handleAnthropicError(error);
   }
 
-  try {
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "provide_comprehensive_analysis") {
-      throw new Error(
-        "No tool use response from Anthropic for comprehensive analysis generation"
-      );
-    }
-
-    validationResult = toolUse.input as ComprehensiveAnalysisOutputs;
-
-    // Validate that required fields are present and non-empty
-    if (
-      !validationResult.summary ||
-      validationResult.summary.trim().length === 0
-    ) {
-      throw new Error("Anthropic response missing or empty 'summary' field");
-    }
-    if (
-      !validationResult.analysis ||
-      validationResult.analysis.trim().length === 0
-    ) {
-      throw new Error("Anthropic response missing or empty 'analysis' field");
-    }
-    if (
-      !validationResult.highlightInsights ||
-      !Array.isArray(validationResult.highlightInsights)
-    ) {
-      throw new Error("Anthropic response missing or invalid 'highlightInsights' field");
-    }
-
-    // Post-process to fix formatting issues from JSON tool use
-    const fixFormatting = (text: string): string => {
-      return text
-        .replace(/\\n/g, "\n") // Convert escaped newlines to actual newlines
-        .replace(/\\"/g, '"') // Convert escaped quotes
-        .replace(/\\\\/g, "\\") // Convert escaped backslashes
-        .trim();
-    };
-
-    validationResult.summary = fixFormatting(validationResult.summary);
-    validationResult.analysis = fixFormatting(validationResult.analysis);
-    
-    // Fix formatting in highlight insights
-    validationResult.highlightInsights = validationResult.highlightInsights.map(insight => ({
-      ...insight,
-      suggestedHighlight: fixFormatting(insight.suggestedHighlight),
-    }));
-    
-    // Validate highlight count
-    if (validationResult.highlightInsights.length < targetHighlights - 1) {
-      logger.warn(
-        `⚠️ Generated ${validationResult.highlightInsights.length} highlights but requested ${targetHighlights}. ` +
-        `Agent may have found fewer noteworthy points.`
-      );
-      
-      // If we got significantly fewer highlights, consider retrying with stronger instructions
-      if (validationResult.highlightInsights.length < Math.max(1, targetHighlights * 0.6)) {
-        logger.info(
-          `🔄 Attempting retry due to low highlight count (${validationResult.highlightInsights.length}/${targetHighlights})`
-        );
-        
-        // Add a retry flag to track this
-        const retryMessage = `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
-          `Each highlight should reference a specific part of the document. ` +
-          `If you cannot find ${targetHighlights} distinct points, create highlights for the most important sections.`;
-        
-        // For now, just log this - full retry implementation would require restructuring
-        logger.info(`Retry message would be: ${retryMessage}`);
-      }
-    }
-
-    rawResponse = JSON.stringify(validationResult);
-  } catch (error) {
-    logger.error('❌ Failed to parse or validate Anthropic response:', error);
-    throw new Error(
-      `Failed to process Anthropic response: ${error instanceof Error ? error.message : error}`
-    );
+  // Validate that required fields are present and non-empty
+  if (
+    !validationResult.summary ||
+    validationResult.summary.trim().length === 0
+  ) {
+    throw new Error("Anthropic response missing or empty 'summary' field");
+  }
+  if (
+    !validationResult.analysis ||
+    validationResult.analysis.trim().length === 0
+  ) {
+    throw new Error("Anthropic response missing or empty 'analysis' field");
+  }
+  if (
+    !validationResult.highlightInsights ||
+    !Array.isArray(validationResult.highlightInsights)
+  ) {
+    throw new Error("Anthropic response missing or invalid 'highlightInsights' field");
   }
 
-  const interaction: LLMInteraction = {
-    messages: [...messages, { role: "assistant", content: rawResponse }],
+  // Post-process to fix formatting issues from JSON tool use
+  const fixFormatting = (text: string): string => {
+    return text
+      .replace(/\\n/g, "\n") // Convert escaped newlines to actual newlines
+      .replace(/\\"/g, '"') // Convert escaped quotes
+      .replace(/\\\\/g, "\\") // Convert escaped backslashes
+      .trim();
+  };
+
+  validationResult.summary = fixFormatting(validationResult.summary);
+  validationResult.analysis = fixFormatting(validationResult.analysis);
+  
+  // Fix formatting in highlight insights
+  validationResult.highlightInsights = validationResult.highlightInsights.map(insight => ({
+    ...insight,
+    suggestedHighlight: fixFormatting(insight.suggestedHighlight),
+  }));
+  
+  // Validate highlight count
+  if (validationResult.highlightInsights.length < targetHighlights - 1) {
+    logger.warn(
+      `⚠️ Generated ${validationResult.highlightInsights.length} highlights but requested ${targetHighlights}. ` +
+      `Agent may have found fewer noteworthy points.`
+    );
+    
+    // If we got significantly fewer highlights, consider retrying with stronger instructions
+    if (validationResult.highlightInsights.length < Math.max(1, targetHighlights * 0.6)) {
+      logger.info(
+        `🔄 Attempting retry due to low highlight count (${validationResult.highlightInsights.length}/${targetHighlights})`
+      );
+      
+      // Add a retry flag to track this
+      const retryMessage = `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
+        `Each highlight should reference a specific part of the document. ` +
+        `If you cannot find ${targetHighlights} distinct points, create highlights for the most important sections.`;
+      
+      // For now, just log this - full retry implementation would require restructuring
+      logger.info(`Retry message would be: ${retryMessage}`);
+    }
+  }
+
+  // Convert RichLLMInteraction to LLMInteraction format for backwards compatibility
+  const llmInteraction: LLMInteraction = {
+    messages: [
+      { role: "system", content: systemMessage },
+      { role: "user", content: userMessage },
+      { role: "assistant", content: JSON.stringify(validationResult) }
+    ],
     usage: {
-      input_tokens: response.usage.input_tokens,
-      output_tokens: response.usage.output_tokens,
+      input_tokens: interaction.tokensUsed.prompt,
+      output_tokens: interaction.tokensUsed.completion,
     },
   };
 
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(ANALYSIS_MODEL, interaction.usage);
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, llmInteraction.usage);
 
   const logDetails = createLogDetails(
     "generateComprehensiveAnalysis",
-    ANALYSIS_MODEL,
+    MODEL_CONFIG.analysis,
     startTime,
     endTime,
     cost,
-    interaction.usage.input_tokens,
-    interaction.usage.output_tokens,
+    interaction.tokensUsed.prompt,
+    interaction.tokensUsed.completion,
     {
       targetWordCount,
       agentName: agentInfo.name,
@@ -247,11 +214,11 @@ export async function generateComprehensiveAnalysis(
   return {
     task: {
       name: "generateComprehensiveAnalysis",
-      modelName: ANALYSIS_MODEL,
+      modelName: MODEL_CONFIG.analysis,
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [interaction],
+      llmInteractions: [llmInteraction],
     },
     outputs: validationResult,
   };

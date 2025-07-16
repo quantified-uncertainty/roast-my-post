@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ClockIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { JobStatusIndicator } from "./JobStatusIndicator";
 

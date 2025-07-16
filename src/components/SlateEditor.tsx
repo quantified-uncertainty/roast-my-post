@@ -9,9 +9,7 @@ import React, {
 } from "react";
 import Image from 'next/image';
 
-// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
-// @ts-ignore - ESM modules are handled by Next.js
 import remarkParse from "remark-parse";
 import { remarkToSlate } from "remark-slate-transformer";
 import {
@@ -27,7 +25,6 @@ import {
   Slate,
   withReact,
 } from "slate-react";
-// @ts-ignore - ESM modules are handled by Next.js
 import { unified } from "unified";
 
 // Import our improved hooks for Phase 2

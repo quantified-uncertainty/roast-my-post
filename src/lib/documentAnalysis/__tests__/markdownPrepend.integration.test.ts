@@ -7,16 +7,18 @@ import type { Agent } from "../../../types/agentSchema";
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
     },
-  },
+  })),
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
   HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
+
+import { createAnthropicClient } from "../../../types/openai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -50,12 +52,21 @@ describe("markdownPrepend Integration Tests", () => {
     providesGrades: false,
   };
 
+  let mockAnthropicCreate: jest.MockedFunction<any>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
   });
 
   test("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Create a document with prepend
     const documentContent = `This is the main content of the document.
@@ -110,7 +121,7 @@ And some more content on the final line.`;
       usage: { input_tokens: 100, output_tokens: 200 },
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     // Step 1: Generate comprehensive analysis
     const analysisResult = await generateComprehensiveAnalysis(
@@ -184,7 +195,7 @@ And some more content on the final line.`;
       usage: { input_tokens: 100, output_tokens: 150 },
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockLinkAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockLinkAnalysisResponse);
 
     // Run link analysis workflow
     const result = await analyzeLinkDocument(

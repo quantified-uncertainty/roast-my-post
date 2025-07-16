@@ -7,25 +7,35 @@ import { buildSystemPrompt, buildUserPrompt } from "../application";
 
 // Mock the anthropic module
 jest.mock("../../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
     },
-  },
+  })),
   ANALYSIS_MODEL: "claude-3-opus-20240229",
   DEFAULT_TEMPERATURE: 0.3,
 }));
 
-import { anthropic } from "../../../../types/openai";
+import { createAnthropicClient } from "../../../../types/openai";
 
 describe("Comprehensive Unit Tests with Test Cases", () => {
-  const mockAnthropicCreate = anthropic.messages.create as jest.MockedFunction<
-    typeof anthropic.messages.create
+  const mockCreateAnthropicClient = createAnthropicClient as jest.MockedFunction<
+    typeof createAnthropicClient
   >;
+  let mockAnthropicCreate: jest.MockedFunction<any>;
   let llmClient: SpellingGrammarLLMClient;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    mockCreateAnthropicClient.mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+    
     llmClient = new SpellingGrammarLLMClient();
   });
 
@@ -210,13 +220,23 @@ describe("Comprehensive Unit Tests with Test Cases", () => {
 
 // Performance test
 describe("Performance Tests", () => {
-  const mockAnthropicCreate = anthropic.messages.create as jest.MockedFunction<
-    typeof anthropic.messages.create
+  const mockCreateAnthropicClient = createAnthropicClient as jest.MockedFunction<
+    typeof createAnthropicClient
   >;
+  let mockAnthropicCreate: jest.MockedFunction<any>;
   let llmClient: SpellingGrammarLLMClient;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    mockCreateAnthropicClient.mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+    
     llmClient = new SpellingGrammarLLMClient();
   });
 

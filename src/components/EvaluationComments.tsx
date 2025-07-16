@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 
-// @ts-ignore - ESM modules are handled by Next.js
 import ReactMarkdown from "react-markdown";
-// @ts-ignore - ESM modules are handled by Next.js
 import remarkGfm from "remark-gfm";
 
 // Database comment type (different from the documentSchema Comment type)

@@ -64,6 +64,7 @@ npm run test:ci          # What runs in GitHub Actions
 - OpenAI API calls
 - Expensive operations (> $0.01 per test)
 - Example: `comprehensiveAnalysis.llm.test.ts`
+- See [Claude Wrapper Pattern](./claude-wrapper-pattern.md) for testing with mocks
 
 ### Environment Guards
 

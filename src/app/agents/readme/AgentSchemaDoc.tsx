@@ -12,7 +12,6 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// @ts-ignore - Next.js supports importing raw text from markdown files
 import MARKDOWN_CONTENT from "./agent-schema-documentation.md";
 
 export function AgentSchemaDoc() {

@@ -211,14 +211,23 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - Created shared articleImport library to eliminate duplication between API route and CLI script
 - Replaced OpenAI with Claude + tool use for metadata extraction and content cleaning
 - Fixed JSDOM configuration to prevent CSS/JS spam in console logs
+- **New Claude Wrapper Pattern**: Centralized all Claude API calls through `@/lib/claude/wrapper` for consistent interaction tracking, error handling, and Helicone integration. See `/docs/development/claude-wrapper-pattern.md` for usage guide.
 
 ## Commands
 - `npm run dev` - Development server
   - **IMPORTANT**: Always check if dev server is already running on port 3000 first (use `lsof -i :3000` or try http://localhost:3000)
   - The user often has the dev server already running, so check before starting a new instance
-- `npm run typecheck` - Type checking
+- `npm run lint` - ESLint for code style and quality
+- `npm run typecheck` - TypeScript type checking
 - `npm run db:push` - Push schema changes (now uses safe wrapper)
 - `npm run process-jobs` - Manual job processing
+
+### Code Quality Checks
+**IMPORTANT**: When making code changes, always run BOTH:
+1. `npm run lint` - Checks code style and quality (ESLint)
+2. `npm run typecheck` - Checks TypeScript types
+
+The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does not mean "no TypeScript errors". You must run both commands to ensure code quality.
 
 ### Worktree Management (for parallel development)
 - `./scripts/worktree-manager.sh create <branch>` - Create new worktree with automatic setup

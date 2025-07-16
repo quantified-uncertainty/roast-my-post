@@ -13,7 +13,7 @@ jest.mock("../../../lib/logger", () => ({
 
 // Mock the entire openai module
 jest.mock("../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn().mockResolvedValue({
         content: [{
@@ -26,7 +26,7 @@ jest.mock("../../../types/openai", () => ({
         usage: { input_tokens: 100, output_tokens: 50 }
       })
     }
-  },
+  })),
   withTimeout: jest.fn((fn, timeout) => fn)
 }));
 

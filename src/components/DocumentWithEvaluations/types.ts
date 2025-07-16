@@ -13,7 +13,6 @@ export interface EvaluationState {
 
 export interface CommentsSidebarProps {
   comments: Comment[];
-  activeTag: string | null;
   expandedTag: string | null;
   onCommentHover: (tag: string | null) => void;
   onCommentClick: (tag: string | null) => void;

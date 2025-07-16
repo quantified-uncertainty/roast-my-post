@@ -5,6 +5,7 @@ import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
 import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
+import { estimateTokens } from "@/lib/tokenUtils";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
@@ -246,7 +247,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     // Estimate token count for context window info
     const fullContent = JSON.stringify(evaluationData);
     const charCount = fullContent.length;
-    const estimatedTokens = Math.ceil(charCount / 4); // Rough estimate: 4 chars per token
+    const estimatedTokens = estimateTokens(fullContent);
 
     // Transform to YAML-friendly structure
     const exportData = {

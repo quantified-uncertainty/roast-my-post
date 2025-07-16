@@ -2,15 +2,14 @@ import type { Agent } from "../../../types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
-import type { LLMInteraction, LLMMessage } from "../../../types/llm";
+import type { LLMInteraction, LLMMessage, RichLLMInteraction } from "../../../types/llm";
 import {
-  ANALYSIS_MODEL,
-  anthropic,
   DEFAULT_TEMPERATURE,
   withTimeout,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
 } from "../../../types/openai";
-import { calculateApiCost } from "../../../utils/costCalculator";
+import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import type { Anthropic } from '@anthropic-ai/sdk';
 import { calculateLLMCost } from "../shared/costUtils";
 import type { HighlightAnalysisOutputs, TaskResult } from "../shared/types";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
@@ -181,15 +180,55 @@ export async function extractHighlightsFromAnalysis(
     { role: "user", content: userMessage },
   ];
 
-  let response;
   let highlights: Comment[] = [];
+  const richInteractions: RichLLMInteraction[] = [];
 
   try {
-    response = await withTimeout(
-      anthropic.messages.create({
-        model: ANALYSIS_MODEL,
-        max_tokens: 4000,
-        temperature: DEFAULT_TEMPERATURE,
+    const toolSchema: Anthropic.Messages.Tool.InputSchema = {
+      type: "object",
+      properties: {
+        highlights: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              description: {
+                type: "string",
+                description: "Highlight text (100-300 words) starting with a clear, concise statement of the main point",
+              },
+              highlight: {
+                type: "object",
+                properties: {
+                  startLineIndex: {
+                    type: "number",
+                    description: "Starting line number (0-based)",
+                  },
+                  endLineIndex: {
+                    type: "number",
+                    description: "Ending line number (0-based)",
+                  },
+                  startCharacters: {
+                    type: "string",
+                    description: "First ~6 characters of the highlighted text",
+                  },
+                  endCharacters: {
+                    type: "string",
+                    description: "Last ~6 characters of the highlighted text",
+                  },
+                },
+                required: ["startLineIndex", "endLineIndex", "startCharacters", "endCharacters"],
+              },
+            },
+            required: ["description", "highlight"],
+          },
+        },
+      },
+      required: ["highlights"],
+    };
+
+    const { response, interaction, toolResult } = await withTimeout(
+      callClaudeWithTool<{ highlights: LineBasedHighlight[] }>({
+        model: MODEL_CONFIG.analysis,
         system: systemMessage,
         messages: [
           {
@@ -197,97 +236,48 @@ export async function extractHighlightsFromAnalysis(
             content: userMessage,
           },
         ],
-        tools: [
-          {
-            name: "provide_highlights",
-            description: "Extract and format highlights based on the comprehensive analysis",
-            input_schema: {
-              type: "object",
-              properties: {
-                highlights: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      description: {
-                        type: "string",
-                        description: "Highlight text (100-300 words) starting with a clear, concise statement of the main point",
-                      },
-                      highlight: {
-                        type: "object",
-                        properties: {
-                          startLineIndex: {
-                            type: "number",
-                            description: "Starting line number (0-based)",
-                          },
-                          endLineIndex: {
-                            type: "number",
-                            description: "Ending line number (0-based)",
-                          },
-                          startCharacters: {
-                            type: "string",
-                            description: "First ~6 characters of the highlighted text",
-                          },
-                          endCharacters: {
-                            type: "string",
-                            description: "Last ~6 characters of the highlighted text",
-                          },
-                        },
-                        required: ["startLineIndex", "endLineIndex", "startCharacters", "endCharacters"],
-                      },
-                    },
-                    required: ["description", "highlight"],
-                  },
-                },
-              },
-              required: ["highlights"],
-            },
-          },
-        ],
-        tool_choice: { type: "tool", name: "provide_highlights" },
-      }),
+        max_tokens: 4000,
+        temperature: DEFAULT_TEMPERATURE,
+        toolName: "provide_highlights",
+        toolDescription: "Extract and format highlights based on the comprehensive analysis",
+        toolSchema,
+      }, richInteractions),
       HIGHLIGHT_EXTRACTION_TIMEOUT,
       `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
     );
-
-    const toolUse = response.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.name !== "provide_highlights") {
-      throw new Error("No tool use response from Anthropic for highlight extraction");
-    }
-
-    const result = toolUse.input as { highlights: LineBasedHighlight[] };
     
     // Convert line-based to character-based highlights
     // Get the full content with prepend (same as what was shown to the LLM)
     const { content: fullContent } = getDocumentFullContent(document);
-    highlights = await validateAndConvertHighlights(result.highlights, fullContent);
+    highlights = await validateAndConvertHighlights(toolResult.highlights, fullContent);
 
   } catch (error: any) {
     logger.error('Error in highlight extraction:', error);
     throw error;
   }
 
-  const interaction: LLMInteraction = {
+  // Convert RichLLMInteraction to legacy LLMInteraction format for backwards compatibility
+  const legacyInteraction: LLMInteraction = {
     messages: [...messages, { role: "assistant", content: JSON.stringify({ highlights }) }],
     usage: {
-      input_tokens: response.usage.input_tokens,
-      output_tokens: response.usage.output_tokens,
+      input_tokens: richInteractions[0]?.tokensUsed.prompt || 0,
+      output_tokens: richInteractions[0]?.tokensUsed.completion || 0,
     },
   };
 
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(ANALYSIS_MODEL, interaction.usage);
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, legacyInteraction.usage);
 
   const logDetails = createLogDetails(
     "extractHighlightsFromAnalysis",
-    ANALYSIS_MODEL,
+    MODEL_CONFIG.analysis,
     startTime,
     endTime,
     cost,
-    interaction.usage.input_tokens,
-    interaction.usage.output_tokens,
+    legacyInteraction.usage.input_tokens,
+    legacyInteraction.usage.output_tokens,
     {
       targetHighlights,
       agentName: agentInfo.name,
@@ -301,11 +291,11 @@ export async function extractHighlightsFromAnalysis(
   return {
     task: {
       name: "extractHighlightsFromAnalysis",
-      modelName: ANALYSIS_MODEL,
+      modelName: MODEL_CONFIG.analysis,
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [interaction],
+      llmInteractions: [legacyInteraction],
     },
     outputs: {
       highlights,

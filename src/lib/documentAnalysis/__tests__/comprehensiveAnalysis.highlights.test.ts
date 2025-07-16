@@ -6,11 +6,11 @@ import { createTestDocument, adjustLineReferences, adjustLineReference, getPrepe
 
 // Mock the Anthropic client
 jest.mock("../../../types/openai", () => ({
-  anthropic: {
+  createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
     },
-  },
+  })),
   ANALYSIS_MODEL: "claude-sonnet-test",
   DEFAULT_TEMPERATURE: 0.1,
   withTimeout: jest.fn((promise) => promise),
@@ -22,6 +22,8 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
+import { createAnthropicClient } from "../../../types/openai";
+
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {
     id: "test-agent-1",
@@ -31,6 +33,20 @@ describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
     primaryInstructions: "Test instructions",
     providesGrades: false,
   };
+
+  let mockAnthropicCreate: jest.MockedFunction<any>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Set up the mock for createAnthropicClient
+    mockAnthropicCreate = jest.fn();
+    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
+      messages: {
+        create: mockAnthropicCreate,
+      },
+    } as any);
+  });
 
   const mockDocumentContent = `This is line 1 with some content.
 Line 2 has different text here.
@@ -51,7 +67,6 @@ Line 5 has the final content.`;
   });
 
   test("all highlights from comprehensive analysis should become highlights", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
@@ -108,7 +123,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     // Step 1: Generate comprehensive analysis with 5 target highlights
     const analysisResult = await generateComprehensiveAnalysis(
@@ -145,7 +160,6 @@ Line 5 has the final content.`;
   });
 
   test("handles line number mismatches with fuzzy matching", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Get the number of lines added by prepend
     const prependLineCount = getPrependLineCount(mockDocument);
@@ -183,7 +197,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,
@@ -204,7 +218,6 @@ Line 5 has the final content.`;
   });
 
   test("skips invalid highlights gracefully", async () => {
-    const { anthropic } = require("../../../types/openai");
     
     // Mock response with some invalid highlights
     const mockAnalysisResponse = {
@@ -238,7 +251,7 @@ Line 5 has the final content.`;
       usage: { input_tokens: 100, output_tokens: 200 }
     };
 
-    anthropic.messages.create.mockResolvedValueOnce(mockAnalysisResponse);
+    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,
