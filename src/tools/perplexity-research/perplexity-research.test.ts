@@ -24,7 +24,12 @@ describe('PerplexityResearchTool', () => {
   };
   
   const mockClient = {
-    query: jest.fn()
+    query: jest.fn(),
+    chat: {
+      completions: {
+        create: jest.fn()
+      }
+    }
   };
   
   beforeEach(() => {
@@ -188,9 +193,8 @@ describe('PerplexityResearchTool', () => {
       const input = { query: 'Test query' };
       const error = new Error('OpenRouter API error');
       
-      // Mock both structured research and basic query to fail
-      mockClient.chat.completions.create.mockRejectedValueOnce(error);
-      mockClient.query.mockRejectedValueOnce(error);
+      // Mock the query method to reject for both structured and fallback calls
+      mockClient.query.mockRejectedValue(error);
       
       await expect(tool.execute(input, mockContext))
         .rejects.toThrow('OpenRouter API error');
@@ -204,14 +208,13 @@ describe('PerplexityResearchTool', () => {
     it('should handle fallback when JSON parsing fails', async () => {
       const input = { query: 'Test query' };
       
-      // Mock structured research to fail, then basic query to succeed
-      const structuredError = new Error('Structured research failed');
-      mockClient.chat.completions.create.mockRejectedValueOnce(structuredError);
-      
-      mockClient.query.mockResolvedValueOnce({
-        content: 'This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3',
-        usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
-      });
+      // Mock first query call (structured research) to fail, then second query call to succeed
+      mockClient.query
+        .mockRejectedValueOnce(new Error('Structured research failed'))
+        .mockResolvedValueOnce({
+          content: 'This is a plain text response with some findings:\n- Finding 1\n- Finding 2\n- Finding 3',
+          usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
+        });
       
       const result = await tool.execute(input, mockContext);
       

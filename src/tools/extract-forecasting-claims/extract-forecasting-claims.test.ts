@@ -455,39 +455,60 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
         agentInstructions: 'Focus on economic predictions only'
       };
       
-      const mockInteraction = createMockLLMInteraction({
+      const mockInteraction1 = createMockLLMInteraction({
         prompt: 'Extract forecasts from this text:\n\nEconomic and tech predictions'
       });
       
-      // Mock extraction
-      mockCallClaudeWithTool.mockImplementationOnce(async (options, interactions) => {
-        if (interactions) {
-          interactions.push(mockInteraction);
-        }
-        return {
-          response: {} as any,
-          interaction: mockInteraction,
-          toolResult: {
-            forecasts: [{
-              text: 'AI will surpass human intelligence by 2050',
-              topic: 'Technology',
-              timeframe: '2050'
-            }]
-          }
-        };
+      const mockInteraction2 = createMockLLMInteraction({
+        prompt: 'Select forecasts for analysis'
       });
+      
+      // Mock extraction
+      mockCallClaudeWithTool
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction1);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction1,
+            toolResult: {
+              forecasts: [{
+                text: 'AI will surpass human intelligence by 2050',
+                topic: 'Technology',
+                timeframe: '2050'
+              }]
+            }
+          };
+        })
+        // Mock selection call
+        .mockImplementationOnce(async (options, interactions) => {
+          if (interactions) {
+            interactions.push(mockInteraction2);
+          }
+          return {
+            response: {} as any,
+            interaction: mockInteraction2,
+            toolResult: {
+              selections: [{
+                index: 0,
+                reasoning: 'Relevant technological prediction'
+              }]
+            }
+          };
+        });
       
       const result = await tool.execute(input, mockContext);
       
-      // Verify agent instructions were included in prompts  
-      expect(result.llmInteractions).toHaveLength(1);
-      expect(mockCallClaudeWithTool).toHaveBeenCalledWith(
+      // Verify both calls were made  
+      expect(result.llmInteractions).toHaveLength(2);
+      expect(mockCallClaudeWithTool).toHaveBeenCalledTimes(2);
+      
+      // Verify agent instructions were included in selection call (second call)
+      expect(mockCallClaudeWithTool).toHaveBeenNthCalledWith(
+        2,
         expect.objectContaining({
-          messages: expect.arrayContaining([
-            expect.objectContaining({
-              content: expect.stringContaining('Focus on economic predictions only')
-            })
-          ])
+          system: expect.stringContaining('Focus on economic predictions only')
         }),
         expect.any(Array)
       );

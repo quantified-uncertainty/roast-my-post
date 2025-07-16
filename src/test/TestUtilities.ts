@@ -105,7 +105,7 @@ export class ClaudeWrapperMocks {
       ...responseOverrides
     };
 
-    return jest.fn().mockResolvedValue(mockResponse) as any;
+    return jest.fn<any>().mockResolvedValue(mockResponse) as any;
   }
 
   static createMockCallClaudeWithTool<T = any>(toolResultOverrides: any = {}) {
@@ -126,7 +126,7 @@ export class ClaudeWrapperMocks {
       interaction: TestDataFactory.createMockLLMInteraction()
     };
 
-    return jest.fn().mockResolvedValue(mockResponse) as any;
+    return jest.fn<any>().mockResolvedValue(mockResponse) as any;
   }
 
   static createMockWrapperModule() {
@@ -220,8 +220,8 @@ export class APITestUtils {
       method,
       url: mockUrl.toString(),
       headers: new Map(Object.entries(headers)),
-      json: jest.fn().mockResolvedValue(body),
-      text: jest.fn().mockResolvedValue(body ? JSON.stringify(body) : ''),
+      json: jest.fn<any>().mockResolvedValue(body),
+      text: jest.fn<any>().mockResolvedValue(body ? JSON.stringify(body) : ''),
       ip: '127.0.0.1'
     } as any;
 
