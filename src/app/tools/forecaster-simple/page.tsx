@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { forecasterTool } from '@/tools/forecaster';
 
 interface ForecastResult {
   probability: number;
@@ -19,10 +20,18 @@ interface ForecastResult {
 }
 
 export default function SimpleForecasterPage() {
+  // Get schema constraints from the tool's description
+  // These are now aligned with the tool's actual schema
+  const questionMaxLength = 500; // From schema: max(500)
+  const contextMaxLength = 1000; // From schema: max(1000)
+  const numForecastsMin = 1; // Updated from schema: min(1)
+  const numForecastsMax = 20; // From schema: max(20)
+  const numForecastsDefault = 6; // From schema: default(6)
+
   const [question, setQuestion] = useState('');
   const [context, setContext] = useState('');
   const [timeframe, setTimeframe] = useState('');
-  const [numForecasts, setNumForecasts] = useState(6);
+  const [numForecasts, setNumForecasts] = useState(numForecastsDefault);
   const [usePerplexity, setUsePerplexity] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ForecastResult | null>(null);
@@ -85,8 +94,10 @@ export default function SimpleForecasterPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
             placeholder="e.g., Will SpaceX successfully land humans on Mars by 2035?"
+            maxLength={questionMaxLength}
             required
           />
+          <p className="text-xs text-gray-500 mt-1">{question.length}/{questionMaxLength} characters</p>
         </div>
 
         <div>
@@ -100,7 +111,9 @@ export default function SimpleForecasterPage() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
             placeholder="e.g., SpaceX has announced plans for Mars missions, current technology state..."
+            maxLength={contextMaxLength}
           />
+          <p className="text-xs text-gray-500 mt-1">{context.length}/{contextMaxLength} characters</p>
         </div>
 
         <div>
@@ -126,12 +139,12 @@ export default function SimpleForecasterPage() {
               type="number"
               id="numForecasts"
               value={numForecasts}
-              onChange={(e) => setNumForecasts(parseInt(e.target.value) || 6)}
-              min={3}
-              max={20}
+              onChange={(e) => setNumForecasts(parseInt(e.target.value) || numForecastsDefault)}
+              min={numForecastsMin}
+              max={numForecastsMax}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">3-20 forecasts (default: 6)</p>
+            <p className="text-xs text-gray-500 mt-1">{numForecastsMin}-{numForecastsMax} forecasts (default: {numForecastsDefault})</p>
           </div>
 
           <div>

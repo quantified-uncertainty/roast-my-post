@@ -74,6 +74,8 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       }
     );
 
+    logger.debug(`SpellingPlugin: Found ${result.errors.length} errors in chunk ${chunk.id}`);
+
     const findings: Finding[] = [];
     
     // Create location utils for this chunk
@@ -180,6 +182,32 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
 
     const findings: Finding[] = [];
 
+    // First, add individual error findings with location hints
+    this.state.errors.forEach((error) => {
+      const finding: Finding = {
+        type: `${error.type}_error`,
+        severity: "low",
+        message: `${error.type} error: "${error.text}" → "${error.correction}"`,
+        metadata: {
+          original: error.text,
+          suggestion: error.correction,
+          errorType: error.type,
+          chunkId: error.chunkId,
+        }
+      };
+      
+      // Add location hint if available
+      if (error.lineNumber && error.lineText) {
+        finding.locationHint = {
+          lineNumber: error.lineNumber,
+          lineText: error.lineText,
+          matchText: error.text,
+        };
+      }
+      
+      findings.push(finding);
+    });
+
     // Add finding for systematic issues
     if (totalErrors > 20) {
       findings.push({
@@ -189,7 +217,7 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       });
     }
 
-    // Add findings for repeated errors
+    // Add findings for repeated errors (but not as individual highlights)
     commonErrors.forEach((error) => {
       if (error.count > 2) {
         findings.push({
