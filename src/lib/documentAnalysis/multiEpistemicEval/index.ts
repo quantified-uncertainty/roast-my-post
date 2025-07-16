@@ -106,14 +106,33 @@ export async function analyzeWithMultiEpistemicEval(
     
     // Collect all findings from all plugins
     const allFindings: any[] = [];
+    
+    // First check if we have SPELLING plugin results
     if (pluginResults.pluginResults instanceof Map) {
-      for (const [_, pluginResult] of pluginResults.pluginResults.entries()) {
-        allFindings.push(...pluginResult.findings);
+      const spellingResult = pluginResults.pluginResults.get('SPELLING');
+      if (spellingResult) {
+        logger.info(`SPELLING plugin has ${spellingResult.findings.length} findings`);
+        
+        // The SpellingPlugin stores detailed error info in its state
+        // but only returns high-level findings in synthesize()
+        // For now, we'll need to use what's available in the synthesis
+        allFindings.push(...spellingResult.findings);
+      }
+      
+      // Also collect from other plugins
+      for (const [pluginName, pluginResult] of pluginResults.pluginResults.entries()) {
+        if (pluginName !== 'SPELLING') {
+          allFindings.push(...pluginResult.findings);
+        }
       }
     }
     
+    logger.info(`Total findings from all plugins: ${allFindings.length}`);
+    
     // Filter findings with location hints and convert to highlights
     const findingsWithLocation = filterFindingsWithLocationHints(allFindings);
+    logger.info(`Findings with location hints: ${findingsWithLocation.length}`);
+    
     const convertedHighlights = convertFindingsToHighlights(
       findingsWithLocation,
       document.content
