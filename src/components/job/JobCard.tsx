@@ -1,43 +1,11 @@
 import Link from "next/link";
 import { JobStatusBadge, JobStatusIcon } from "./JobStatusBadge";
 import { formatCost, formatDuration, formatRelativeDate } from "@/lib/job/formatters";
+import { JobData } from "@/lib/job/types";
+import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/lib/job/transformers";
 
 interface JobCardProps {
-  job: {
-    id: string;
-    status: string;
-    createdAt: string | Date;
-    durationInSeconds?: number | null;
-    costInCents?: number | null;
-    attempts?: number;
-    originalJobId?: string | null;
-    evaluation?: {
-      document: {
-        id: string;
-        versions: Array<{
-          title: string;
-        }>;
-      };
-      agent: {
-        id: string;
-        versions: Array<{
-          name: string;
-        }>;
-      };
-    };
-    document?: {
-      id: string;
-      title: string;
-    };
-    agent?: {
-      id: string;
-      name: string;
-    };
-    batch?: {
-      id: string;
-      name?: string;
-    };
-  };
+  job: JobData;
   onClick?: () => void;
   isSelected?: boolean;
   showDocument?: boolean;
@@ -55,10 +23,10 @@ export function JobCard({
   showBatch = false,
   compact = false 
 }: JobCardProps) {
-  const documentTitle = job.evaluation?.document.versions[0]?.title || job.document?.title || 'Unknown Document';
-  const agentName = job.evaluation?.agent.versions[0]?.name || job.agent?.name || 'Unknown Agent';
-  const documentId = job.evaluation?.document.id || job.document?.id;
-  const agentId = job.evaluation?.agent.id || job.agent?.id;
+  const documentInfo = getDocumentInfo(job);
+  const agentInfo = getAgentInfo(job);
+  const batchInfo = getBatchInfo(job);
+  const retryText = getRetryText(job);
 
   return (
     <div
@@ -71,12 +39,12 @@ export function JobCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <h4 className="font-medium text-gray-900">
-              {showDocument && documentTitle}
+              {showDocument && documentInfo.title}
               {!showDocument && `Job ${job.id.slice(0, 8)}`}
             </h4>
-            {job.originalJobId && (
+            {retryText && (
               <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                retry #{(job.attempts || 0) + 1}
+                {retryText}
               </span>
             )}
           </div>
@@ -84,10 +52,10 @@ export function JobCard({
           <div className="text-sm text-gray-500 space-y-1">
             {showAgent && (
               <div>
-                Agent: {agentName}
-                {agentId && (
+                Agent: {agentInfo.name}
+                {agentInfo.id && (
                   <Link 
-                    href={`/agents/${agentId}`}
+                    href={`/agents/${agentInfo.id}`}
                     className="ml-1 text-blue-600 hover:text-blue-800"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -97,10 +65,10 @@ export function JobCard({
               </div>
             )}
             
-            {showDocument && documentId && (
+            {showDocument && documentInfo.id && (
               <div>
                 <Link 
-                  href={`/docs/${documentId}`}
+                  href={`/docs/${documentInfo.id}`}
                   className="text-blue-600 hover:text-blue-800 text-xs"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -109,9 +77,9 @@ export function JobCard({
               </div>
             )}
             
-            {showBatch && job.batch && (
+            {showBatch && batchInfo && (
               <div className="text-blue-600">
-                Batch: {job.batch.name || `#${job.batch.id.slice(0, 8)}`}
+                Batch: {batchInfo.name}
               </div>
             )}
             

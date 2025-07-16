@@ -1,33 +1,26 @@
 import { JobStatusBadge } from "./JobStatusBadge";
 import { formatCost, formatDuration, formatDate } from "@/lib/job/formatters";
+import { JobData } from "@/lib/job/types";
+import { getRetryText } from "@/lib/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
 
 interface JobSummaryProps {
-  job: {
-    id: string;
-    status: string;
-    createdAt: string | Date;
-    completedAt?: string | Date | null;
-    startedAt?: string | Date | null;
-    durationInSeconds?: number | null;
-    costInCents?: number | null;
-    attempts?: number;
-    originalJobId?: string | null;
-    error?: string | null;
-  };
+  job: JobData;
   showError?: boolean;
   compact?: boolean;
 }
 
 export function JobSummary({ job, showError = true, compact = false }: JobSummaryProps) {
+  const retryText = getRetryText(job);
+  
   return (
     <div className={`${compact ? 'space-y-2' : 'space-y-4'}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium text-gray-900">
           Job Details
-          {job.originalJobId && (
+          {retryText && (
             <span className="ml-2 text-sm bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-normal">
-              Retry #{(job.attempts || 0) + 1}
+              {retryText}
             </span>
           )}
         </h3>
