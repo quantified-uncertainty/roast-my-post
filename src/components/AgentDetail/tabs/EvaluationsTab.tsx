@@ -1,8 +1,7 @@
 import Link from "next/link";
 
 import { GradeBadge } from "@/components/GradeBadge";
-import { EvaluationDetailsPanel } from "@/components/EvaluationDetailsPanel";
-import type { EvaluationTab } from "@/components/EvaluationDetails";
+import { EvaluationContent } from "@/components/evaluation";
 import type { Agent } from "@/types/agentSchema";
 
 import { StatusBadge, StatusIcon } from "../components";
@@ -18,8 +17,8 @@ interface EvaluationsTabProps {
   evalsLoading: boolean;
   selectedEvaluation: AgentEvaluation | null;
   setSelectedEvaluation: (evaluation: AgentEvaluation | null) => void;
-  evalDetailsTab: EvaluationTab;
-  setEvalDetailsTab: (tab: EvaluationTab) => void;
+  evalDetailsTab: string;
+  setEvalDetailsTab: (tab: string) => void;
   selectedVersion: number | null;
   setSelectedVersion: (version: number | null) => void;
   evalsBatchFilter: string | null;
@@ -207,38 +206,68 @@ export function EvaluationsTab({
           {/* Evaluation Details */}
           <div className="col-span-8">
             {selectedEvaluation ? (
-              <EvaluationDetailsPanel
-                evaluation={{
-                  id: selectedEvaluation.id,
-                  evaluationId: selectedEvaluation.evaluationId,
-                  documentId: selectedEvaluation.documentId,
-                  documentTitle: selectedEvaluation.documentTitle,
-                  agentId: agent.id,
-                  agentName: agent.name,
-                  agentVersion: `${agent.name} v${selectedEvaluation.agentVersion}${
-                    selectedEvaluation.agentVersionName
-                      ? ` - ${selectedEvaluation.agentVersionName}`
-                      : ""
-                  }`,
-                  evaluationVersion: selectedEvaluation.evaluationVersion,
-                  grade: selectedEvaluation.grade !== undefined ? selectedEvaluation.grade : null,
-                  jobStatus: selectedEvaluation.jobStatus,
-                  createdAt: selectedEvaluation.createdAt,
-                  summary: selectedEvaluation.summary,
-                  analysis: selectedEvaluation.analysis,
-                  selfCritique: selectedEvaluation.selfCritique,
-                  comments: selectedEvaluation.comments,
-                  job: selectedEvaluation.job,
-                }}
-                activeTab={evalDetailsTab}
-                setActiveTab={setEvalDetailsTab}
-                statusIcon={
-                  selectedEvaluation.jobStatus && (
-                    <StatusIcon status={selectedEvaluation.jobStatus} />
-                  )
-                }
-                showAllEvaluationsLink={false}
-              />
+              <div className="bg-white shadow rounded-lg p-6">
+                {/* Header with agent context */}
+                <div className="mb-6 border-b pb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {selectedEvaluation.documentTitle}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Agent v{selectedEvaluation.agentVersion} • {formatDate(selectedEvaluation.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {selectedEvaluation.jobStatus && (
+                        <StatusIcon status={selectedEvaluation.jobStatus} />
+                      )}
+                      <Link
+                        href={`/docs/${selectedEvaluation.documentId}/evals/${agent.id}`}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        View Full Details →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Use new EvaluationContent component */}
+                <EvaluationContent
+                  summary={selectedEvaluation.summary}
+                  analysis={selectedEvaluation.analysis || ""}
+                  thinking={selectedEvaluation.job?.llmThinking}
+                  selfCritique={selectedEvaluation.selfCritique === null ? undefined : selectedEvaluation.selfCritique}
+                  comments={selectedEvaluation.comments?.map(comment => ({
+                    id: comment.id,
+                    description: comment.description,
+                    importance: comment.importance ?? null,
+                    grade: comment.grade ?? null,
+                    evaluationVersionId: selectedEvaluation.evaluationId,
+                    highlightId: comment.id,
+                    highlight: {
+                      id: comment.id,
+                      startOffset: 0,
+                      endOffset: 0,
+                      quotedText: comment.title || "",
+                      prefix: null,
+                      error: null,
+                      isValid: true
+                    }
+                  })) || []}
+                  agentName={agent.name}
+                  agentDescription={agent.description}
+                  grade={selectedEvaluation.grade}
+                  ephemeralBatch={null}
+                  costInCents={selectedEvaluation.costInCents}
+                  durationInSeconds={null}
+                  createdAt={selectedEvaluation.createdAt}
+                  isStale={false}
+                  showNavigation={false}
+                  compact={true}
+                  maxWidth="full"
+                />
+              </div>
             ) : (
               <div className="rounded-lg bg-white p-12 text-center shadow">
                 <p className="text-gray-500">
