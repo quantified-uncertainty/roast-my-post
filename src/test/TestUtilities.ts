@@ -3,12 +3,76 @@
  */
 
 import { jest } from '@jest/globals';
+import type { Anthropic } from '@anthropic-ai/sdk';
+import type { RichLLMInteraction } from '@/types/llm';
+import type { NextRequest } from 'next/server';
 
 /**
  * Mock data factories for consistent test data generation
  */
+// Type definitions for mock data
+export interface MockDocument {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MockAgent {
+  id: string;
+  name: string;
+  primaryInstructions: string;
+  selfCritiqueInstructions: string;
+}
+
+export interface MockEvaluation {
+  id: string;
+  documentId: string;
+  agentId: string;
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade: number;
+  createdAt: Date;
+}
+
+export interface MockChunk {
+  id: string;
+  text: string;
+  metadata: {
+    position: { start: number; end: number };
+  };
+}
+
+export interface MockFinding {
+  type: string;
+  severity: 'high' | 'medium' | 'low';
+  message: string;
+  metadata: {
+    category: string;
+    chunkId: string;
+  };
+}
+
+export interface MockChunkResult {
+  findings: MockFinding[];
+  llmCalls: RichLLMInteraction[];
+  metadata: {
+    tokensUsed: number;
+    processingTime: number;
+  };
+}
+
+export interface MockSynthesisResult {
+  summary: string;
+  findings: MockFinding[];
+  recommendations: string[];
+  llmCalls: RichLLMInteraction[];
+}
+
 export class TestDataFactory {
-  static createMockDocument(overrides: Partial<any> = {}) {
+  static createMockDocument(overrides: Partial<MockDocument> = {}): MockDocument {
     return {
       id: 'test-doc-1',
       title: 'Test Document',
@@ -19,7 +83,7 @@ export class TestDataFactory {
     };
   }
 
-  static createMockAgent(overrides: Partial<any> = {}) {
+  static createMockAgent(overrides: Partial<MockAgent> = {}): MockAgent {
     return {
       id: 'test-agent-1',
       name: 'Test Agent',
@@ -29,7 +93,7 @@ export class TestDataFactory {
     };
   }
 
-  static createMockEvaluation(overrides: Partial<any> = {}) {
+  static createMockEvaluation(overrides: Partial<MockEvaluation> = {}): MockEvaluation {
     return {
       id: 'test-eval-1',
       documentId: 'test-doc-1',
@@ -43,7 +107,7 @@ export class TestDataFactory {
     };
   }
 
-  static createMockChunk(overrides: Partial<any> = {}) {
+  static createMockChunk(overrides: Partial<MockChunk> = {}): MockChunk {
     return {
       id: 'test-chunk-1',
       text: 'This is test chunk content.',
@@ -54,9 +118,8 @@ export class TestDataFactory {
     };
   }
 
-  static createMockLLMInteraction(overrides: Partial<any> = {}) {
+  static createMockLLMInteraction(overrides: Partial<RichLLMInteraction> = {}): RichLLMInteraction {
     return {
-      id: 'test-interaction-1',
       model: 'claude-3-sonnet-20240229',
       prompt: 'Test prompt',
       response: 'Test response',
@@ -65,14 +128,13 @@ export class TestDataFactory {
         completion: 150,
         total: 250
       },
-      cost: 0.01,
       duration: 1500,
       timestamp: new Date(),
       ...overrides
     };
   }
 
-  static createMockFinding(overrides: Partial<any> = {}) {
+  static createMockFinding(overrides: Partial<MockFinding> = {}): MockFinding {
     return {
       type: 'error',
       severity: 'medium' as const,
@@ -89,9 +151,26 @@ export class TestDataFactory {
 /**
  * Claude API wrapper mock utilities
  */
+// Claude wrapper mock types
+export interface MockClaudeResponse {
+  response: {
+    id: string;
+    content: Array<{ type: string; text?: string; id?: string; name?: string; input?: any }>;
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+    };
+  };
+  interaction: RichLLMInteraction;
+}
+
+export interface MockClaudeToolResponse<T> extends MockClaudeResponse {
+  toolResult: T;
+}
+
 export class ClaudeWrapperMocks {
-  static createMockCallClaude(responseOverrides: any = {}) {
-    const mockResponse = {
+  static createMockCallClaude(responseOverrides: Partial<MockClaudeResponse> = {}) {
+    const mockResponse: MockClaudeResponse = {
       response: {
         id: 'msg_test',
         content: [{ type: 'text', text: 'Mock response' }],
@@ -99,17 +178,20 @@ export class ClaudeWrapperMocks {
           input_tokens: 100,
           output_tokens: 150
         },
-        ...responseOverrides.response
+        ...(responseOverrides.response || {})
       },
-      interaction: TestDataFactory.createMockLLMInteraction(responseOverrides.interaction),
-      ...responseOverrides
+      interaction: TestDataFactory.createMockLLMInteraction(
+        responseOverrides.interaction as Partial<RichLLMInteraction> || {}
+      )
     };
 
-    return jest.fn<any>().mockResolvedValue(mockResponse) as any;
+    const fn = jest.fn();
+    fn.mockResolvedValue(mockResponse);
+    return fn;
   }
 
-  static createMockCallClaudeWithTool<T = any>(toolResultOverrides: any = {}) {
-    const mockResponse = {
+  static createMockCallClaudeWithTool<T = any>(toolResultOverrides: Partial<T> = {}) {
+    const mockResponse: MockClaudeToolResponse<T> = {
       response: {
         id: 'msg_test',
         content: [{ type: 'tool_use', id: 'tool_test', name: 'test_tool', input: {} }],
@@ -122,11 +204,13 @@ export class ClaudeWrapperMocks {
         items: [],
         summary: 'Mock tool result',
         ...toolResultOverrides
-      },
+      } as T,
       interaction: TestDataFactory.createMockLLMInteraction()
     };
 
-    return jest.fn<any>().mockResolvedValue(mockResponse) as any;
+    const fn = jest.fn();
+    fn.mockResolvedValue(mockResponse);
+    return fn;
   }
 
   static createMockWrapperModule() {
@@ -144,9 +228,26 @@ export class ClaudeWrapperMocks {
 /**
  * Plugin system test utilities
  */
+// Plugin system types
+export interface MockPluginState {
+  items: any[];
+  errors: any[];
+  [key: string]: any;
+}
+
+export interface MockBasePlugin {
+  state: MockPluginState;
+  clearState: jest.MockedFunction<() => void>;
+  processChunk: jest.MockedFunction<any>;
+  synthesize: jest.MockedFunction<any>;
+  trackLLMCall: jest.MockedFunction<any>;
+  name: jest.MockedFunction<() => string>;
+  promptForWhenToUse: jest.MockedFunction<() => string>;
+}
+
 export class PluginTestUtils {
-  static createMockBasePlugin(stateOverrides: any = {}) {
-    const mockState = {
+  static createMockBasePlugin(stateOverrides: Partial<MockPluginState> = {}): MockBasePlugin {
+    const mockState: MockPluginState = {
       items: [],
       errors: [],
       ...stateOverrides
@@ -156,20 +257,20 @@ export class PluginTestUtils {
       state: mockState,
       clearState: jest.fn(() => {
         Object.keys(mockState).forEach(key => {
-          if (Array.isArray(mockState[key])) {
-            mockState[key].length = 0;
+          if (Array.isArray(mockState[key as keyof MockPluginState])) {
+            (mockState[key as keyof MockPluginState] as any[]).length = 0;
           }
         });
-      }),
+      }) as jest.MockedFunction<() => void>,
       processChunk: jest.fn(),
       synthesize: jest.fn(),
       trackLLMCall: jest.fn(),
-      name: jest.fn().mockReturnValue('MOCK_PLUGIN'),
-      promptForWhenToUse: jest.fn().mockReturnValue('Mock plugin usage prompt')
+      name: jest.fn().mockReturnValue('MOCK_PLUGIN') as jest.MockedFunction<() => string>,
+      promptForWhenToUse: jest.fn().mockReturnValue('Mock plugin usage prompt') as jest.MockedFunction<() => string>
     };
   }
 
-  static createMockChunkResult(overrides: Partial<any> = {}) {
+  static createMockChunkResult(overrides: Partial<MockChunkResult> = {}): MockChunkResult {
     return {
       findings: [],
       llmCalls: [],
@@ -181,7 +282,7 @@ export class PluginTestUtils {
     };
   }
 
-  static createMockSynthesisResult(overrides: Partial<any> = {}) {
+  static createMockSynthesisResult(overrides: Partial<MockSynthesisResult> = {}): MockSynthesisResult {
     return {
       summary: 'Mock synthesis summary',
       findings: [],
@@ -220,14 +321,22 @@ export class APITestUtils {
       method,
       url: mockUrl.toString(),
       headers: new Map(Object.entries(headers)),
-      json: jest.fn<any>().mockResolvedValue(body),
-      text: jest.fn<any>().mockResolvedValue(body ? JSON.stringify(body) : ''),
+      json: (() => {
+        const fn = jest.fn();
+        fn.mockResolvedValue(body);
+        return fn;
+      })(),
+      text: (() => {
+        const fn = jest.fn();
+        fn.mockResolvedValue(body ? JSON.stringify(body) : '');
+        return fn;
+      })(),
       ip: '127.0.0.1'
     } as any;
 
     // Add Headers-like methods
-    mockRequest.headers.get = jest.fn((key: string) => headers[key] || null);
-    mockRequest.headers.has = jest.fn((key: string) => key in headers);
+    (mockRequest.headers as any).get = jest.fn((key: string) => headers[key] || null);
+    (mockRequest.headers as any).has = jest.fn((key: string) => key in headers);
 
     return mockRequest;
   }
@@ -254,8 +363,24 @@ export class APITestUtils {
 /**
  * Database test utilities
  */
+// Database mock types
+export interface MockPrismaTable {
+  findUnique: jest.MockedFunction<any>;
+  findMany: jest.MockedFunction<any>;
+  create: jest.MockedFunction<any>;
+  update: jest.MockedFunction<any>;
+  delete: jest.MockedFunction<any>;
+}
+
+export interface MockPrismaClient {
+  document: MockPrismaTable;
+  agent: MockPrismaTable;
+  evaluation: MockPrismaTable;
+  $transaction: jest.MockedFunction<any>;
+}
+
 export class DatabaseTestUtils {
-  static createMockPrismaClient(): any {
+  static createMockPrismaClient(): MockPrismaClient {
     return {
       document: {
         findUnique: jest.fn(),
@@ -279,19 +404,22 @@ export class DatabaseTestUtils {
         delete: jest.fn()
       },
       $transaction: jest.fn()
-    } as any;
+    };
   }
 
-  static mockPrismaFindUnique(client: any, table: string, result: any): void {
-    (client[table].findUnique as any).mockResolvedValue(result);
+  static mockPrismaFindUnique(client: MockPrismaClient, table: keyof MockPrismaClient, result: any): void {
+    if (table === '$transaction') return;
+    (client[table] as MockPrismaTable).findUnique.mockResolvedValue(result);
   }
 
-  static mockPrismaFindMany(client: any, table: string, results: any[]): void {
-    (client[table].findMany as any).mockResolvedValue(results);
+  static mockPrismaFindMany(client: MockPrismaClient, table: keyof MockPrismaClient, results: any[]): void {
+    if (table === '$transaction') return;
+    (client[table] as MockPrismaTable).findMany.mockResolvedValue(results);
   }
 
-  static mockPrismaCreate(client: any, table: string, result: any): void {
-    (client[table].create as any).mockResolvedValue(result);
+  static mockPrismaCreate(client: MockPrismaClient, table: keyof MockPrismaClient, result: any): void {
+    if (table === '$transaction') return;
+    (client[table] as MockPrismaTable).create.mockResolvedValue(result);
   }
 }
 
@@ -299,7 +427,7 @@ export class DatabaseTestUtils {
  * Assertion helpers for common test patterns
  */
 export class TestAssertions {
-  static expectLLMInteraction(interaction: any, expectedModel?: string) {
+  static expectLLMInteraction(interaction: RichLLMInteraction, expectedModel?: string) {
     expect(interaction).toHaveProperty('id');
     expect(interaction).toHaveProperty('model');
     expect(interaction).toHaveProperty('tokensUsed');
@@ -311,7 +439,7 @@ export class TestAssertions {
     }
   }
 
-  static expectFinding(finding: any, expectedType?: string, expectedSeverity?: string) {
+  static expectFinding(finding: MockFinding, expectedType?: string, expectedSeverity?: string) {
     expect(finding).toHaveProperty('type');
     expect(finding).toHaveProperty('severity');
     expect(finding).toHaveProperty('message');
@@ -324,7 +452,7 @@ export class TestAssertions {
     }
   }
 
-  static expectChunkResult(result: any) {
+  static expectChunkResult(result: MockChunkResult) {
     expect(result).toHaveProperty('findings');
     expect(result).toHaveProperty('llmCalls');
     expect(result).toHaveProperty('metadata');
@@ -332,7 +460,7 @@ export class TestAssertions {
     expect(Array.isArray(result.llmCalls)).toBe(true);
   }
 
-  static expectSynthesisResult(result: any) {
+  static expectSynthesisResult(result: MockSynthesisResult) {
     expect(result).toHaveProperty('summary');
     expect(result).toHaveProperty('findings');
     expect(result).toHaveProperty('recommendations');
@@ -377,7 +505,7 @@ export class TestEnvironment {
  */
 export class PluginSystemTestUtils {
   static async runPluginChunkTest(
-    plugin: any,
+    plugin: MockBasePlugin,
     inputText: string,
     expectedFindingCount?: number
   ) {
@@ -394,7 +522,7 @@ export class PluginSystemTestUtils {
   }
 
   static async runPluginSynthesisTest(
-    plugin: any,
+    plugin: MockBasePlugin,
     expectedRecommendationCount?: number
   ) {
     const result = await plugin.synthesize();

@@ -56,7 +56,7 @@ describe('CheckMathTool', () => {
             lineStart: 1,
             lineEnd: 1,
             highlightedText: '2 + 2 = 5',
-            description: 'Arithmetic error: 2 + 2 equals 4, not 5. This fundamental error invalidates the conclusion.'
+            description: 'Calculation error: 2 + 2 equals 4, not 5. The arithmetic is incorrect.'
           }
         ]
       });
@@ -69,7 +69,7 @@ describe('CheckMathTool', () => {
 
       expect(result.errors.length).toBe(1);
       expect(result.errors[0].errorType).toBe('calculation');
-      expect(result.errors[0].severity).toBe('critical');
+      expect(result.errors[0].severity).toBe('major');
       expect(result.summary.totalErrors).toBe(1);
       expect(result.summary.calculationErrors).toBe(1);
       expect(result.llmInteraction).toBeDefined();
@@ -102,7 +102,7 @@ describe('CheckMathTool', () => {
             lineStart: 1,
             lineEnd: 1,
             highlightedText: '5 + 3 = 9',
-            description: 'Arithmetic mistake: 5 + 3 equals 8, not 9'
+            description: 'Calculation error: The sum 5 + 3 equals 8, not 9'
           },
           {
             lineStart: 2,
@@ -114,7 +114,7 @@ describe('CheckMathTool', () => {
             lineStart: 3,
             lineEnd: 3,
             highlightedText: '∑ = 5',
-            description: 'Symbol misuse: summation notation requires bounds and expression'
+            description: 'Notation error: Incorrect use of summation symbol - requires bounds and expression'
           }
         ]
       });

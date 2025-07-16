@@ -82,15 +82,15 @@ export type RouteHandler<T = any> = (
  */
 class AuthUtils {
   static async authenticateRequest(request: NextRequest): Promise<string | undefined> {
-    // This is a placeholder - replace with actual auth logic
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return undefined;
     }
     
-    // TODO: Validate token and return user ID
-    // For now, return a mock user ID
-    return 'mock-user-id';
+    // TODO: Implement actual token validation
+    // SECURITY: This method must be implemented before production use
+    // Current implementation throws to prevent security vulnerability
+    throw new Error('Authentication not implemented - do not use in production');
   }
 
   static async isAdmin(userId: string): Promise<boolean> {

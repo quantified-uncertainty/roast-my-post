@@ -3,6 +3,7 @@ import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 
 export interface MathError {
   lineStart: number;
@@ -259,43 +260,25 @@ Report any mathematical errors found with detailed explanations and corrections.
   }
   
   private categorizeError(description: string): MathError['errorType'] {
-    const lowerDesc = description.toLowerCase();
+    const { type, confidence } = categorizeErrorAdvanced(description);
     
-    if (lowerDesc.includes('calculation') || lowerDesc.includes('arithmetic') || 
-        lowerDesc.includes('sum') || lowerDesc.includes('product')) {
-      return 'calculation';
+    // Log low confidence categorizations for monitoring
+    if (confidence < 0.5) {
+      console.warn(`[CheckMathTool] Low confidence (${confidence}) categorization: ${type} for description: ${description.substring(0, 100)}...`);
     }
-    if (lowerDesc.includes('unit') || lowerDesc.includes('conversion')) {
-      return 'unit';
-    }
-    if (lowerDesc.includes('logic') || lowerDesc.includes('reasoning') || 
-        lowerDesc.includes('fallacy')) {
-      return 'logic';
-    }
-    if (lowerDesc.includes('notation') || lowerDesc.includes('symbol') || 
-        lowerDesc.includes('formula')) {
-      return 'notation';
-    }
-    return 'conceptual';
+    
+    return type;
   }
   
   private determineSeverity(errorType: MathError['errorType'], description: string): MathError['severity'] {
-    const lowerDesc = description.toLowerCase();
+    const { severity, confidence } = determineSeverityAdvanced(errorType, description);
     
-    // Critical: Errors that completely invalidate conclusions
-    if (lowerDesc.includes('completely wrong') || lowerDesc.includes('fundamental') ||
-        lowerDesc.includes('invalidates')) {
-      return 'critical';
+    // Log low confidence severity determinations for monitoring
+    if (confidence < 0.5) {
+      console.warn(`[CheckMathTool] Low confidence (${confidence}) severity: ${severity} for type: ${errorType}`);
     }
     
-    // Major: Significant errors that affect understanding
-    if (errorType === 'calculation' || errorType === 'unit' || 
-        lowerDesc.includes('incorrect') || lowerDesc.includes('significant')) {
-      return 'major';
-    }
-    
-    // Minor: Small errors or notation issues
-    return 'minor';
+    return severity;
   }
   
   private generateRecommendations(errors: MathError[], summary: CheckMathOutput['summary']): string[] {

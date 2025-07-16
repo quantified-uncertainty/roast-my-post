@@ -12,6 +12,7 @@ import {
 } from "@/types/openai";
 import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
 import { logger } from "@/lib/logger";
+import { getRandomElement, getPercentile } from "@/utils/safeArrayAccess";
 
 interface ForecastResponse {
   probability: number;
@@ -45,8 +46,7 @@ async function generateSingleForecast(
     "Evaluating the probability,",
     "Assessing this question,",
   ];
-  const prefix =
-    randomPrefixes[Math.floor(Math.random() * randomPrefixes.length)];
+  const prefix = getRandomElement(randomPrefixes, "Let me think about this.");
 
   const systemPrompt = `You are a careful forecaster. Given a question about a future event, provide:
 1. A probability estimate (0-100% with one decimal place, e.g., 65.2%)
@@ -135,8 +135,13 @@ function removeOutliers(forecasts: ForecastResponse[]): {
   const probabilities = forecasts.map((f) => f.probability);
   const sorted = [...probabilities].sort((a, b) => a - b);
 
-  const q1 = sorted[Math.floor(sorted.length * 0.25)];
-  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const q1 = getPercentile(sorted, 0.25);
+  const q3 = getPercentile(sorted, 0.75);
+  
+  // If we couldn't calculate quartiles, return all forecasts
+  if (isNaN(q1) || isNaN(q3)) {
+    return { cleaned: forecasts, outliers: [] };
+  }
   const iqr = q3 - q1;
 
   const lowerBound = q1 - 1.5 * iqr;

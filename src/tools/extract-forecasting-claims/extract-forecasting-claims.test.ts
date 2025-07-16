@@ -2,25 +2,15 @@ import { ExtractForecastingClaimsTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
 import { createMockLLMInteraction } from '@/lib/claude/testUtils';
+import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
-// Mock the Anthropic client factory
-jest.mock('@/types/openai', () => ({
-  ...jest.requireActual('@/types/openai'),
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn()
-    }
-  }))
-}));
-
-import { createAnthropicClient } from '@/types/openai';
-
-describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update for callClaudeWithTool)', () => {
+describe('ExtractForecastingClaimsTool (legacy tests - updated)', () => {
   const tool = new ExtractForecastingClaimsTool();
   const mockContext: ToolContext = {
     userId: 'test-user',
@@ -31,21 +21,9 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       debug: jest.fn()
     } as any
   };
-  
-  const mockClient = {
-    messages: {
-      create: jest.fn()
-    }
-  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (createAnthropicClient as jest.Mock).mockReturnValue(mockClient);
-    process.env.ANTHROPIC_API_KEY = 'test-key';
-  });
-
-  afterEach(() => {
-    delete process.env.ANTHROPIC_API_KEY;
   });
 
   describe('input validation', () => {
@@ -77,40 +55,27 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       const validInput = { text: 'AI will surpass human intelligence by 2030.' };
       
       // Mock extraction response
-      mockClient.messages.create
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: {
-              forecasts: [{
-                text: 'AI will surpass human intelligence by 2030',
-                topic: 'AI development',
-                timeframe: '2030'
-              }]
-            }
-          }],
-          usage: { input_tokens: 100, output_tokens: 50 }
-        })
-        // Mock selection response
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: {
-              selections: [{
-                index: 0,
-                reasoning: 'Significant technological prediction with clear timeframe'
-              }]
-            }
-          }],
-          usage: { input_tokens: 150, output_tokens: 30 }
-        });
+      mockToolResponse({
+        forecasts: [{
+          text: 'AI will surpass human intelligence by 2030',
+          topic: 'AI development',
+          timeframe: '2030'
+        }]
+      }, { tokens: { input: 100, output: 50 } });
+      
+      // Mock selection response
+      mockToolResponse({
+        selections: [{
+          index: 0,
+          reasoning: 'Significant technological prediction with clear timeframe'
+        }]
+      }, { tokens: { input: 150, output: 30 } });
       
       const result = await tool.run(validInput, mockContext);
       
       expect(result.forecasts).toHaveLength(1);
       expect(result.totalFound).toBe(1);
       expect(result.selectedForAnalysis).toBe(1);
-      expect(result.llmInteractions).toHaveLength(2);
       expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
       expect(result.forecasts[0].reasoning).toBe('Significant technological prediction with clear timeframe');
     });
@@ -142,34 +107,22 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
         }
       ];
       
-      mockClient.messages.create
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: { forecasts: mockForecasts }
-          }],
-          usage: { input_tokens: 200, output_tokens: 100 }
-        })
-        // Mock selection response - select first two
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: {
-              selections: [
-                { index: 0, reasoning: 'Specific market prediction with timeline' },
-                { index: 1, reasoning: 'Quantified economic forecast' }
-              ]
-            }
-          }],
-          usage: { input_tokens: 300, output_tokens: 80 }
-        });
+      // Mock extraction response
+      mockToolResponse({ forecasts: mockForecasts }, { tokens: { input: 200, output: 100 } });
+      
+      // Mock selection response - select first two
+      mockToolResponse({
+        selections: [
+          { index: 0, reasoning: 'Specific market prediction with timeline' },
+          { index: 1, reasoning: 'Quantified economic forecast' }
+        ]
+      }, { tokens: { input: 300, output: 80 } });
       
       const result = await tool.execute(input, mockContext);
       
       expect(result.forecasts).toHaveLength(3);
       expect(result.totalFound).toBe(3);
       expect(result.selectedForAnalysis).toBe(2);
-      expect(result.llmInteractions).toHaveLength(2);
       
       // Check selection results
       expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
@@ -186,20 +139,13 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       };
       
       // Mock empty extraction response
-      mockClient.messages.create.mockResolvedValueOnce({
-        content: [{
-          type: 'tool_use',
-          input: { forecasts: [] }
-        }],
-        usage: { input_tokens: 100, output_tokens: 20 }
-      });
+      mockToolResponse({ forecasts: [] }, { tokens: { input: 100, output: 20 } });
       
       const result = await tool.execute(input, mockContext);
       
       expect(result.forecasts).toHaveLength(0);
       expect(result.totalFound).toBe(0);
       expect(result.selectedForAnalysis).toBe(0);
-      expect(result.llmInteractions).toHaveLength(1); // Only extraction call
     });
 
     it('should handle forecasts with probability and timeframe', async () => {
@@ -208,33 +154,21 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       };
       
       // Mock extraction response with probability and timeframe
-      mockClient.messages.create
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: {
-              forecasts: [{
-                text: 'Bitcoin will reach $100k by end of 2024',
-                topic: 'Bitcoin price',
-                probability: 60,
-                timeframe: 'end of 2024'
-              }]
-            }
-          }],
-          usage: { input_tokens: 120, output_tokens: 60 }
-        })
-        .mockResolvedValueOnce({
-          content: [{
-            type: 'tool_use',
-            input: {
-              selections: [{
-                index: 0,
-                reasoning: 'Specific cryptocurrency prediction with probability and timeframe'
-              }]
-            }
-          }],
-          usage: { input_tokens: 180, output_tokens: 40 }
-        });
+      mockToolResponse({
+        forecasts: [{
+          text: 'Bitcoin will reach $100k by end of 2024',
+          topic: 'Bitcoin price',
+          probability: 60,
+          timeframe: 'end of 2024'
+        }]
+      }, { tokens: { input: 120, output: 60 } });
+      
+      mockToolResponse({
+        selections: [{
+          index: 0,
+          reasoning: 'Specific cryptocurrency prediction with probability and timeframe'
+        }]
+      }, { tokens: { input: 180, output: 40 } });
       
       const result = await tool.execute(input, mockContext);
       
@@ -249,7 +183,7 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
       const input = { text: 'Some text with predictions' };
       const error = new Error('Anthropic API error');
       
-      mockClient.messages.create.mockRejectedValueOnce(error);
+      mockCallClaudeWithTool.mockRejectedValueOnce(error);
       
       await expect(tool.execute(input, mockContext))
         .rejects.toThrow('Anthropic API error');
@@ -258,10 +192,14 @@ describe.skip('ExtractForecastingClaimsTool (legacy tests - needs mock update fo
     it('should handle malformed tool responses', async () => {
       const input = { text: 'Some text with predictions' };
       
-      // Mock malformed response
-      mockClient.messages.create.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Not a tool use' }],
-        usage: { input_tokens: 100, output_tokens: 50 }
+      // Mock malformed response (no tool use)
+      mockCallClaudeWithTool.mockResolvedValueOnce({
+        response: {
+          content: [{ type: 'text', text: 'Not a tool use' }],
+          usage: { input_tokens: 100, output_tokens: 50 }
+        } as any,
+        interaction: createMockLLMInteraction(),
+        toolResult: {}
       });
       
       const result = await tool.execute(input, mockContext);

@@ -3,6 +3,7 @@ import FactCheckTool from './index';
 import { logger } from '@/lib/logger';
 import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
+import { mockClaims, mockVerificationResults, mockOutputStructures, mockInputs } from './__fixtures__/mockData';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
@@ -39,21 +40,13 @@ describe('FactCheckTool', () => {
     });
 
     it('should accept valid input', () => {
-      const input = {
-        text: "The unemployment rate was 3.7% in December 2023.",
-        context: "Economic data",
-        maxClaims: 10,
-        verifyHighPriority: true
-      };
-      
       expect(() => {
-        FactCheckTool.inputSchema.parse(input);
+        FactCheckTool.inputSchema.parse(mockInputs.validInput);
       }).not.toThrow();
     });
 
     it('should apply defaults for optional fields', () => {
-      const input = { text: "Some factual claim here." };
-      const parsed = FactCheckTool.inputSchema.parse(input);
+      const parsed = FactCheckTool.inputSchema.parse(mockInputs.minimalInput);
       
       expect(parsed.maxClaims).toBe(20);
       expect(parsed.verifyHighPriority).toBe(true);
@@ -70,44 +63,8 @@ describe('FactCheckTool', () => {
 
   describe('output schema', () => {
     it('should validate complete output structure', () => {
-      const output = {
-        claims: [{
-          id: 'claim-1',
-          text: 'Test claim',
-          topic: 'economics',
-          importance: 'high' as const,
-          specificity: 'high' as const,
-          verified: true,
-          explanation: 'This is correct'
-        }],
-        contradictions: [{
-          claim1: 'First claim',
-          claim2: 'Second claim',
-          explanation: 'These contradict'
-        }],
-        verificationResults: [{
-          claim: {
-            id: 'claim-1',
-            text: 'Test claim',
-            topic: 'economics',
-            importance: 'high' as const,
-            specificity: 'high' as const
-          },
-          verified: true,
-          explanation: 'Verified as correct'
-        }],
-        summary: {
-          totalClaims: 1,
-          verifiedClaims: 1,
-          falseClaims: 0,
-          contradictions: 1
-        },
-        recommendations: ['Check sources'],
-        llmInteractions: []
-      };
-      
       expect(() => {
-        FactCheckTool.outputSchema.parse(output);
+        FactCheckTool.outputSchema.parse(mockOutputStructures.complete);
       }).not.toThrow();
     });
   });
@@ -118,27 +75,10 @@ describe('FactCheckTool', () => {
       
       // Mock the extraction response - this response should match what the extractClaims method expects
       mockToolResponse({
-        claims: [
-          {
-            text: 'The Berlin Wall fell in 1989',
-            topic: 'Historical events',
-            importance: 'high',
-            specificity: 'high'
-          },
-          {
-            text: 'Water boils at 100°C at sea level',
-            topic: 'Science',
-            importance: 'medium',
-            specificity: 'high'
-          }
-        ]
+        claims: [mockClaims.historical, mockClaims.scientific]
       });
 
-      const input = {
-        text: "The Berlin Wall fell in 1989. Water boils at 100°C at sea level.",
-        maxClaims: 10,
-        verifyHighPriority: false
-      };
+      const input = mockInputs.historicalAndScientific;
 
       const result = await tool.execute(input, mockContext);
 
@@ -163,12 +103,7 @@ describe('FactCheckTool', () => {
       });
 
       // Mock verification response (second call)
-      mockToolResponse({
-        verified: true,
-        confidence: 'high',
-        explanation: 'This fact has been verified as accurate',
-        requiresCurrentData: false
-      });
+      mockToolResponse(mockVerificationResults.highConfidence);
 
       const input = {
         text: "Important historical fact",
@@ -191,10 +126,7 @@ describe('FactCheckTool', () => {
         claims: []
       });
 
-      const input = {
-        text: "Just opinions, no facts here.",
-        maxClaims: 10
-      };
+      const input = mockInputs.opinionsOnly;
 
       const result = await tool.execute(input, mockContext);
 
