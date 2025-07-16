@@ -333,6 +333,9 @@ ${context}`;
   private generateRecommendations(summary: FactCheckOutput['summary'], contradictionCount: number): string[] {
     const recommendations: string[] = [];
 
+    if (summary.totalClaims === 0) {
+      recommendations.push('No factual claims were found in the text.');
+    }
     if (summary.falseClaims > 0) {
       recommendations.push('Verify and correct false claims before publication');
     }
