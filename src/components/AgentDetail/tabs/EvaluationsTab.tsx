@@ -236,8 +236,8 @@ export function EvaluationsTab({
                 <EvaluationContent
                   summary={selectedEvaluation.summary}
                   analysis={selectedEvaluation.analysis || ""}
-                  thinking={selectedEvaluation.job?.llmThinking}
-                  selfCritique={selectedEvaluation.selfCritique === null ? undefined : selectedEvaluation.selfCritique}
+                  thinking={selectedEvaluation.job?.llmThinking ?? undefined}
+                  selfCritique={selectedEvaluation.selfCritique ?? undefined}
                   comments={selectedEvaluation.comments?.map(comment => ({
                     id: comment.id,
                     description: comment.description,
