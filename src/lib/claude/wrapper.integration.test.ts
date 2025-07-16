@@ -257,8 +257,15 @@ describe('Claude Wrapper Integration Tests', () => {
 
   describe('Error handling', () => {
     it('should handle non-retryable errors immediately', async () => {
+      // Reset the mock completely to ensure clean state
+      mockClient.messages.create.mockReset();
+      
       const mockError = createMockClaudeError('Invalid API key', 401);
-      mockClient.messages.create.mockRejectedValueOnce(mockError);
+      
+      // Use mockImplementation instead of mockRejectedValueOnce to be more explicit
+      mockClient.messages.create.mockImplementation(() => {
+        throw mockError;
+      });
 
       await expect(callClaude({
         messages: [{ role: 'user', content: 'Test' }]

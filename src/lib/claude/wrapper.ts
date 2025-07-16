@@ -76,43 +76,60 @@ export async function callClaude(
   // Use centralized model config if not specified
   const model = options.model || MODEL_CONFIG.analysis;
   
-  // Make API call with retry logic for retryable errors
-  const response = await withRetry(
-    async () => {
-      try {
-        const requestOptions: any = {
-          model,
-          max_tokens: options.max_tokens || 4000,
-          temperature: options.temperature ?? 0,
-          messages: options.messages
-        };
-        
-        if (options.system) requestOptions.system = options.system;
-        if (options.tools) requestOptions.tools = options.tools;
-        if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
-        
-        const result = await anthropic.messages.create(requestOptions);
-        
-        // Validate response structure
-        if (!result || !result.content || !result.usage) {
-          throw new Error('Malformed response from Claude API');
-        }
-        
-        return result;
-      } catch (error) {
-        // Only retry if the error is retryable
-        if (!isRetryableError(error)) {
-          throw error;
-        }
-        throw error; // Will be retried by withRetry
+  // Make API call with manual retry logic for retryable errors only
+  let response: Anthropic.Messages.Message;
+  let lastError: any = null;
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Add delay between retries (exponential backoff)
+      if (attempt > 1) {
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-    },
-    {
-      maxRetries: 3, // 3 total attempts (withRetry counts from 1 to maxRetries)
-      baseDelayMs: 1000,
-      logPrefix: '[Claude API]'
+
+      const requestOptions: any = {
+        model,
+        max_tokens: options.max_tokens || 4000,
+        temperature: options.temperature ?? 0,
+        messages: options.messages
+      };
+      
+      if (options.system) requestOptions.system = options.system;
+      if (options.tools) requestOptions.tools = options.tools;
+      if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
+      
+      const result = await anthropic.messages.create(requestOptions);
+      
+      // Validate response structure
+      if (!result || !result.content || !result.usage) {
+        throw new Error('Malformed response from Claude API');
+      }
+      
+      response = result;
+      break; // Success, exit retry loop
+      
+    } catch (error) {
+      lastError = error;
+      
+      // If error is not retryable, throw immediately
+      if (!isRetryableError(error)) {
+        throw error;
+      }
+      
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Otherwise, continue to next retry attempt
     }
-  );
+  }
+  
+  if (!response!) {
+    throw lastError || new Error('Max retries exhausted');
+  }
 
   // Automatically create interaction with proper format
   const interaction: RichLLMInteraction = {
