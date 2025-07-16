@@ -34,6 +34,7 @@ async function getAvailableAgents(docId: string) {
   const agents = await prisma.agent.findMany({
     where: {
       id: { notIn: existingAgentIds },
+      ephemeralBatchId: null, // Exclude ephemeral agents
     },
     include: {
       versions: {
