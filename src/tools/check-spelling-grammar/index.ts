@@ -228,4 +228,5 @@ Report any errors found with suggested corrections.`;
 }
 
 // Export singleton instance
-export default new CheckSpellingGrammarTool();
+const checkSpellingGrammarTool = new CheckSpellingGrammarTool();
+export default checkSpellingGrammarTool;

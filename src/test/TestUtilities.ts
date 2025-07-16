@@ -185,9 +185,7 @@ export class ClaudeWrapperMocks {
       )
     };
 
-    const fn = jest.fn();
-    fn.mockResolvedValue(mockResponse);
-    return fn;
+    return jest.fn<() => Promise<MockClaudeResponse>>().mockResolvedValue(mockResponse);
   }
 
   static createMockCallClaudeWithTool<T = any>(toolResultOverrides: Partial<T> = {}) {
@@ -208,9 +206,7 @@ export class ClaudeWrapperMocks {
       interaction: TestDataFactory.createMockLLMInteraction()
     };
 
-    const fn = jest.fn();
-    fn.mockResolvedValue(mockResponse);
-    return fn;
+    return jest.fn<() => Promise<MockClaudeToolResponse<T>>>().mockResolvedValue(mockResponse);
   }
 
   static createMockWrapperModule() {
@@ -321,16 +317,8 @@ export class APITestUtils {
       method,
       url: mockUrl.toString(),
       headers: new Map(Object.entries(headers)),
-      json: (() => {
-        const fn = jest.fn();
-        fn.mockResolvedValue(body);
-        return fn;
-      })(),
-      text: (() => {
-        const fn = jest.fn();
-        fn.mockResolvedValue(body ? JSON.stringify(body) : '');
-        return fn;
-      })(),
+      json: jest.fn<() => Promise<any>>().mockResolvedValue(body),
+      text: jest.fn<() => Promise<string>>().mockResolvedValue(body ? JSON.stringify(body) : ''),
       ip: '127.0.0.1'
     } as any;
 

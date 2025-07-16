@@ -209,4 +209,5 @@ Select up to ${maxCount} forecasts.`;
 }
 
 // Export singleton instance
-export default new ExtractForecastingClaimsTool();
+const extractForecastingClaimsTool = new ExtractForecastingClaimsTool();
+export default extractForecastingClaimsTool;

@@ -363,4 +363,5 @@ ${context}`;
 }
 
 // Export singleton instance
-export default new FactCheckTool();
+const factCheckTool = new FactCheckTool();
+export default factCheckTool;

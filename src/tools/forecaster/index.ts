@@ -108,4 +108,5 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
 }
 
 // Export singleton instance
-export default new ForecasterTool();
+const forecasterTool = new ForecasterTool();
+export default forecasterTool;

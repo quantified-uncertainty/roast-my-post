@@ -263,4 +263,5 @@ Keep the response concise and focused on information directly relevant to foreca
 }
 
 // Export singleton instance
-export default new PerplexityResearchTool();
+const perplexityResearchTool = new PerplexityResearchTool();
+export default perplexityResearchTool;
