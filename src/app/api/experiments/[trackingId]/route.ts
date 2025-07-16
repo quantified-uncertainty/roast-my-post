@@ -223,12 +223,101 @@ export async function DELETE(
 
     // Delete in a transaction to handle foreign key constraints properly
     await prisma.$transaction(async (tx) => {
-      // First delete all jobs associated with this batch
+      // First, delete all jobs in this batch
       await tx.job.deleteMany({
         where: { agentEvalBatchId: batch.id },
       });
 
-      // Then delete the batch (cascade will handle ephemeral agent and documents)
+      // For ephemeral batches, we need to clean up ephemeral data
+      if (batch.isEphemeral) {
+        // Check if the agent is ephemeral (belongs to this batch)
+        const agent = await tx.agent.findUnique({
+          where: { id: batch.agentId },
+          select: { ephemeralBatchId: true }
+        });
+        
+        // If the agent is ephemeral, delete ALL its evaluations
+        if (agent?.ephemeralBatchId === batch.id) {
+          const allAgentEvaluations = await tx.evaluation.findMany({
+            where: { agentId: batch.agentId },
+            select: { id: true }
+          });
+          
+          const allEvaluationIds = allAgentEvaluations.map(e => e.id);
+          
+          // Delete evaluation comments for all agent evaluations
+          if (allEvaluationIds.length > 0) {
+            await tx.evaluationComment.deleteMany({
+              where: { 
+                evaluationVersion: { 
+                  evaluationId: { in: allEvaluationIds } 
+                }
+              }
+            });
+          }
+          
+          // Delete evaluation versions for all agent evaluations
+          if (allEvaluationIds.length > 0) {
+            await tx.evaluationVersion.deleteMany({
+              where: { evaluationId: { in: allEvaluationIds } }
+            });
+          }
+          
+          // Delete all evaluations by this ephemeral agent
+          if (allEvaluationIds.length > 0) {
+            await tx.evaluation.deleteMany({
+              where: { id: { in: allEvaluationIds } }
+            });
+          }
+        } else {
+          // If the agent is not ephemeral, only delete evaluations on ephemeral documents
+          const ephemeralDocuments = await tx.document.findMany({
+            where: { ephemeralBatchId: batch.id },
+            select: { id: true }
+          });
+          
+          const ephemeralDocumentIds = ephemeralDocuments.map(doc => doc.id);
+          
+          if (ephemeralDocumentIds.length > 0) {
+            const ephemeralEvaluations = await tx.evaluation.findMany({
+              where: { 
+                documentId: { in: ephemeralDocumentIds },
+                agentId: batch.agentId
+              },
+              select: { id: true }
+            });
+            
+            const ephemeralEvaluationIds = ephemeralEvaluations.map(e => e.id);
+            
+            // Delete evaluation comments for ephemeral evaluations
+            if (ephemeralEvaluationIds.length > 0) {
+              await tx.evaluationComment.deleteMany({
+                where: { 
+                  evaluationVersion: { 
+                    evaluationId: { in: ephemeralEvaluationIds } 
+                  }
+                }
+              });
+            }
+            
+            // Delete evaluation versions for ephemeral evaluations
+            if (ephemeralEvaluationIds.length > 0) {
+              await tx.evaluationVersion.deleteMany({
+                where: { evaluationId: { in: ephemeralEvaluationIds } }
+              });
+            }
+            
+            // Delete the ephemeral evaluations themselves
+            if (ephemeralEvaluationIds.length > 0) {
+              await tx.evaluation.deleteMany({
+                where: { id: { in: ephemeralEvaluationIds } }
+              });
+            }
+          }
+        }
+      }
+
+      // Finally delete the batch (cascade will handle ephemeral agent and documents)
       await tx.agentEvalBatch.delete({
         where: { id: batch.id },
       });
