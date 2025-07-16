@@ -7,12 +7,25 @@ import { RoutingPlan } from './RoutingPlan';
 import { RichLLMInteraction } from '@/types/llm';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
+export interface RouterConfig {
+  batchSize?: number;
+  maxCacheSize?: number;
+  maxPreviewLength?: number; // Max chars to show for routing decisions
+}
+
 export class PromptBasedRouter {
   private availablePlugins: Map<string, AnalysisPlugin> = new Map();
   private routingCache: Map<string, string[]> = new Map();
-  private batchSize: number = 10;
-  private maxCacheSize: number = 1000;
+  private batchSize: number;
+  private maxCacheSize: number;
+  private maxPreviewLength: number;
   private llmInteractions: RichLLMInteraction[] = [];
+  
+  constructor(config: RouterConfig = {}) {
+    this.batchSize = config.batchSize ?? 10;
+    this.maxCacheSize = config.maxCacheSize ?? 1000;
+    this.maxPreviewLength = config.maxPreviewLength ?? 2000; // Default to 2000 chars
+  }
 
   registerPlugin(plugin: AnalysisPlugin): void {
     this.availablePlugins.set(plugin.name(), plugin);
@@ -182,8 +195,9 @@ Do not include any explanation or other text, just the JSON array.`;
 
   private buildBatchPrompt(chunks: TextChunk[]): string {
     const chunkTexts = chunks.map((chunk, index) => {
-      const preview = chunk.text.length > 500 
-        ? chunk.text.slice(0, 500) + '...' 
+      // Truncate only if chunk exceeds maxPreviewLength
+      const preview = chunk.text.length > this.maxPreviewLength
+        ? chunk.text.slice(0, this.maxPreviewLength) + '...'
         : chunk.text;
       
       let chunkInfo = `Chunk ${index + 1}:\n${preview}`;

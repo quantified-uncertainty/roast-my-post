@@ -348,5 +348,5 @@ Report any mathematical errors found with detailed explanations and corrections.
 }
 
 // Export singleton instance
-const checkMathTool = new CheckMathTool();
+export const checkMathTool = new CheckMathTool();
 export default checkMathTool;

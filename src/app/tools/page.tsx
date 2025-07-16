@@ -84,11 +84,34 @@ export default function ToolsIndexPage() {
         })}
       </div>
 
-      <div className="mt-12 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-sm text-amber-800">
-          <strong>Note:</strong> These tools are experimental and may produce varying results. 
-          API costs apply for LLM calls. Use responsibly.
-        </p>
+      <div className="mt-12 space-y-4">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Auto-Generated Form Demo</h3>
+          <p className="text-sm text-blue-800 mb-3">
+            We're testing auto-generated forms from Zod schemas. Compare these versions:
+          </p>
+          <div className="flex gap-4">
+            <Link
+              href="/tools/math-checker"
+              className="text-sm bg-white px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              Math Checker (Original)
+            </Link>
+            <Link
+              href="/tools/math-checker-auto"
+              className="text-sm bg-white px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              Math Checker (Auto-Generated)
+            </Link>
+          </div>
+        </div>
+        
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-800">
+            <strong>Note:</strong> These tools are experimental and may produce varying results. 
+            API costs apply for LLM calls. Use responsibly.
+          </p>
+        </div>
       </div>
     </div>
   );
