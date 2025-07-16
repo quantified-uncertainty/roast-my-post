@@ -81,10 +81,11 @@ export function convertFindingToHighlight(
   };
 
   // Add grade if it makes sense based on severity
+  // Convert letter grades to numeric grades that match the database schema
   if (finding.severity === 'high') {
-    (comment as any).grade = 'D';
+    (comment as any).grade = 65; // D grade (60-69 range)
   } else if (finding.severity === 'medium') {
-    (comment as any).grade = 'C';
+    (comment as any).grade = 75; // C grade (70-79 range)
   }
 
   return comment;

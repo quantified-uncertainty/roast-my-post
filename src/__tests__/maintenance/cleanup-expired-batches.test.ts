@@ -1,9 +1,9 @@
-import { cleanupExpiredBatches } from "./cleanup-expired-batches";
-import { prisma } from "../../src/lib/prisma";
-import { logger } from "../../src/lib/logger";
+import { cleanupExpiredBatches } from "../../../scripts/maintenance/cleanup-expired-batches";
+import { prisma } from "../../lib/prisma";
+import { logger } from "../../lib/logger";
 
 // Mock dependencies
-jest.mock("../../src/lib/prisma", () => ({
+jest.mock("../../lib/prisma", () => ({
   prisma: {
     agentEvalBatch: {
       findMany: jest.fn(),
@@ -13,7 +13,7 @@ jest.mock("../../src/lib/prisma", () => ({
   },
 }));
 
-jest.mock("../../src/lib/logger", () => ({
+jest.mock("../../lib/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),

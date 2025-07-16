@@ -20,6 +20,7 @@ import { generateSelfCritique } from "../selfCritique";
 import type { SelfCritiqueInput } from "../selfCritique";
 import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
 import { convertFindingsToHighlights, filterFindingsWithLocationHints } from '../plugin-system/utils/findingToHighlight';
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
  * Convert RichLLMInteraction to LLMInteraction format for TaskResult
@@ -78,8 +79,11 @@ export async function analyzeWithMultiEpistemicEval(
     
     manager.registerPlugins(plugins);
     
-    // Run analysis
-    const pluginResults = await manager.analyzeDocument(document.content, {
+    // Get full document content with prepend (same as comprehensive analysis)
+    const { content: fullContent, prependLineCount } = getDocumentFullContent(document);
+    
+    // Run analysis on full content
+    const pluginResults = await manager.analyzeDocument(fullContent, {
       chunkSize: 1000,
       chunkByParagraphs: true
     });
@@ -135,7 +139,7 @@ export async function analyzeWithMultiEpistemicEval(
     
     const convertedHighlights = convertFindingsToHighlights(
       findingsWithLocation,
-      document.content
+      fullContent
     );
     pluginHighlights.push(...convertedHighlights);
     logger.info(`Converted ${pluginHighlights.length} plugin findings to highlights`);

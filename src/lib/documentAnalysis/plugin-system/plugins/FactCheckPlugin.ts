@@ -7,6 +7,7 @@ import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types'
 import { TextChunk } from '../TextChunk';
 import FactCheckTool from '../../../../tools/fact-check';
 import { logger } from '../../../../lib/logger';
+import { LocationUtils } from '../../utils/LocationUtils';
 
 interface FactCheckState {
   claims: Array<{
@@ -18,11 +19,15 @@ interface FactCheckState {
     needsVerification: boolean;
     verified?: boolean;
     explanation?: string;
+    lineNumber?: number;
+    lineText?: string;
   }>;
   contradictions: Array<{
     claim1: string;
     claim2: string;
     explanation: string;
+    lineNumber?: number;
+    lineText?: string;
   }>;
 }
 
@@ -82,10 +87,35 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     });
 
     const findings: Finding[] = [];
+    
+    // Create location utils for this chunk
+    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Convert tool claims to plugin state format
     toolResult.claims.forEach(claim => {
       const claimId = `${chunk.id}-${this.state.claims.length}`;
+      
+      // Try to find the claim text in the chunk to get line information
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      const claimPosition = chunk.text.indexOf(claim.text);
+      if (claimPosition !== -1) {
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          claimPosition,
+          claimPosition + claim.text.length
+        );
+        
+        if (locationInfo) {
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+          } else {
+            lineNumber = locationInfo.start.lineNumber;
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+      
       this.state.claims.push({
         id: claimId,
         text: claim.text,
@@ -94,20 +124,81 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         topic: claim.topic,
         needsVerification: claim.importance === 'high' || claim.specificity === 'high',
         verified: claim.verified,
-        explanation: claim.explanation
+        explanation: claim.explanation,
+        lineNumber,
+        lineText
       });
     });
 
     // Add contradictions to state
-    this.state.contradictions.push(...toolResult.contradictions);
+    toolResult.contradictions.forEach(contradiction => {
+      // Try to find line information for the first claim
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      const claim1Position = chunk.text.indexOf(contradiction.claim1);
+      if (claim1Position !== -1) {
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          claim1Position,
+          claim1Position + contradiction.claim1.length
+        );
+        
+        if (locationInfo) {
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+          } else {
+            lineNumber = locationInfo.start.lineNumber;
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+      
+      this.state.contradictions.push({
+        ...contradiction,
+        lineNumber,
+        lineText
+      });
+    });
 
     // Convert contradictions to findings
     toolResult.contradictions.forEach(contradiction => {
-      findings.push({
+      // Try to find line information for the first claim
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      const claim1Position = chunk.text.indexOf(contradiction.claim1);
+      if (claim1Position !== -1) {
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          claim1Position,
+          claim1Position + contradiction.claim1.length
+        );
+        
+        if (locationInfo) {
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+          } else {
+            lineNumber = locationInfo.start.lineNumber;
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+      
+      const finding: Finding = {
         type: 'contradiction',
-        severity: 'high',
+        severity: 'high' as const,
         message: `Contradicting claims found: "${contradiction.claim1}" vs "${contradiction.claim2}"`
-      });
+      };
+      
+      // Add location hint if available
+      if (lineNumber && lineText) {
+        finding.locationHint = {
+          lineNumber,
+          lineText,
+          matchText: contradiction.claim1,
+        };
+      }
+      
+      findings.push(finding);
     });
 
     // Calculate total metadata from tool interactions
@@ -160,11 +251,30 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     // Process verification results
     toolResult.verificationResults.forEach(result => {
       if (!result.verified) {
-        findings.push({
+        // Find the original claim in state to get location info
+        const stateClaim = this.state.claims.find(c => c.text === result.claim.text);
+        
+        const finding: Finding = {
           type: 'false_claim',
           severity: 'high',
-          message: `False claim: "${result.claim.text}" - ${result.explanation}`
-        });
+          message: `False claim: "${result.claim.text}"`,
+          metadata: {
+            claim: result.claim.text,
+            explanation: result.explanation,
+            chunkId: stateClaim?.chunkId,
+          }
+        };
+        
+        // Add location hint if available
+        if (stateClaim?.lineNumber && stateClaim?.lineText) {
+          finding.locationHint = {
+            lineNumber: stateClaim.lineNumber,
+            lineText: stateClaim.lineText,
+            matchText: result.claim.text,
+          };
+        }
+        
+        findings.push(finding);
       }
       
       // Update state with verification results
@@ -177,11 +287,26 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
 
     // Add contradiction findings
     this.state.contradictions.forEach(contradiction => {
-      findings.push({
+      const finding: Finding = {
         type: 'contradiction',
         severity: 'medium',
-        message: contradiction.explanation
-      });
+        message: contradiction.explanation,
+        metadata: {
+          claim1: contradiction.claim1,
+          claim2: contradiction.claim2,
+        }
+      };
+      
+      // Add location hint if available
+      if (contradiction.lineNumber && contradiction.lineText) {
+        finding.locationHint = {
+          lineNumber: contradiction.lineNumber,
+          lineText: contradiction.lineText,
+          matchText: contradiction.claim1,
+        };
+      }
+      
+      findings.push(finding);
     });
 
     const verifiedCount = toolResult.verificationResults.filter(r => r.verified).length;
