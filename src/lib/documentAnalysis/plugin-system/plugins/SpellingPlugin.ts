@@ -81,19 +81,11 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
 
     // Process errors
     result.errors.forEach((error) => {
-      this.state.errors.push({
-        ...error,
-        chunkId: chunk.id,
-        context: error.context || chunk.getContext(0, 50),
-      });
-
-      // Track patterns
-      const count = this.state.commonPatterns.get(error.type) || 0;
-      this.state.commonPatterns.set(error.type, count + 1);
-
       // Try to find the error text in the chunk
       const errorPosition = chunk.text.indexOf(error.text);
       let locationHint: Finding['locationHint'] = undefined;
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
       
       if (errorPosition !== -1) {
         // Get line info within the chunk
@@ -105,21 +97,36 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
         if (locationInfo) {
           // If chunk has global line info, adjust the line numbers
           if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
             locationHint = {
-              lineNumber: chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1,
+              lineNumber,
               lineText: locationInfo.start.lineText,
               matchText: error.text,
             };
           } else {
             // Use chunk-relative line numbers
+            lineNumber = locationInfo.start.lineNumber;
             locationHint = {
-              lineNumber: locationInfo.start.lineNumber,
+              lineNumber,
               lineText: locationInfo.start.lineText,
               matchText: error.text,
             };
           }
+          lineText = locationInfo.start.lineText;
         }
       }
+
+      this.state.errors.push({
+        ...error,
+        chunkId: chunk.id,
+        context: error.context || chunk.getContext(0, 50),
+        lineNumber,
+        lineText,
+      });
+
+      // Track patterns
+      const count = this.state.commonPatterns.get(error.type) || 0;
+      this.state.commonPatterns.set(error.type, count + 1);
 
       findings.push({
         type: `${error.type}_error`,

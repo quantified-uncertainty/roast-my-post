@@ -7,18 +7,15 @@ import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 interface ForecastResult {
   probability: number;
   description: string;
+  consensus: 'low' | 'medium' | 'high';
   individualForecasts: Array<{
     probability: number;
-    confidence: string;
     reasoning: string;
   }>;
   statistics: {
     mean: number;
-    median: number;
-    std_dev: number;
-    range: [number, number];
+    stdDev: number;
   };
-  outliersRemoved: number;
 }
 
 export default function SimpleForecasterPage() {
@@ -182,49 +179,41 @@ export default function SimpleForecasterPage() {
               Forecast: {result.probability.toFixed(1)}%
             </h2>
             <p className="text-gray-700">{result.description}</p>
+            <div className="mt-3">
+              <span className="text-sm font-medium text-blue-800">Consensus Level: </span>
+              <span className={`text-sm px-2 py-1 rounded-full ${
+                result.consensus === 'high' ? 'bg-green-100 text-green-800' :
+                result.consensus === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {result.consensus}
+              </span>
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold mb-4">Statistics</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Mean</p>
                 <p className="text-xl font-semibold">{result.statistics.mean.toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Median</p>
-                <p className="text-xl font-semibold">{result.statistics.median.toFixed(1)}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Std Dev</p>
-                <p className="text-xl font-semibold">{result.statistics.std_dev.toFixed(1)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Range</p>
-                <p className="text-xl font-semibold">
-                  {result.statistics.range[0]}-{result.statistics.range[1]}%
-                </p>
+                <p className="text-sm text-gray-600">Standard Deviation</p>
+                <p className="text-xl font-semibold">{result.statistics.stdDev.toFixed(1)}</p>
               </div>
             </div>
-            {result.outliersRemoved > 0 && (
-              <p className="mt-4 text-sm text-amber-600">
-                {result.outliersRemoved} outlier{result.outliersRemoved > 1 ? 's' : ''} removed
-              </p>
-            )}
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <h3 className="text-lg font-semibold mb-4">Individual Forecasts</h3>
             <div className="space-y-3">
-              {result.individualForecasts.map((forecast, i) => (
+              {result.individualForecasts.map((forecast: any, i) => (
                 <div key={i} className="border-l-4 border-gray-200 pl-4 py-2">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium">Forecast {i + 1}</span>
                     <span className="text-lg font-semibold">{forecast.probability.toFixed(1)}%</span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Confidence: <span className="capitalize">{forecast.confidence}</span>
-                  </p>
                   <p className="text-sm text-gray-700">{forecast.reasoning}</p>
                 </div>
               ))}
