@@ -113,6 +113,7 @@ export function EvaluationContent({
         {/* Evaluation Details Section */}
         <EvaluationDetailsSection
           agentName={agentName}
+          agentId={evaluationData?.agentId}
           agentDescription={agentDescription}
           grade={grade}
           ephemeralBatch={ephemeralBatch}
@@ -120,6 +121,8 @@ export function EvaluationContent({
           durationInSeconds={durationInSeconds}
           createdAt={createdAt}
           evaluationData={evaluationData}
+          documentId={evaluationData?.documentId}
+          evaluationId={evaluationData?.evaluationId}
         />
 
         {/* Analysis Section */}

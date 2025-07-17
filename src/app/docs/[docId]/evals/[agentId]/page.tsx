@@ -83,6 +83,7 @@ export default async function EvaluationPage({
             showNavigation={true}
             compact={false}
             maxWidth="4xl"
+            evaluationData={{ ...evaluation, agentId: evaluationData.agentId }}
           />
         </div>
         </div>

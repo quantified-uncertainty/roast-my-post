@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { EvaluationSection } from "./EvaluationSection";
@@ -15,6 +16,7 @@ import { CheckIcon } from "@heroicons/react/24/solid";
 
 interface EvaluationDetailsSectionProps {
   agentName: string;
+  agentId?: string;
   agentDescription?: string;
   grade?: number | null;
   ephemeralBatch?: {
@@ -25,6 +27,8 @@ interface EvaluationDetailsSectionProps {
   durationInSeconds?: number | null;
   createdAt?: string | Date;
   evaluationData?: any; // Full evaluation data for export
+  documentId?: string;
+  evaluationId?: string;
 }
 
 type ExportFormat = 'json' | 'yaml' | 'markdown';
@@ -32,16 +36,35 @@ type ExportDestination = 'clipboard' | 'file';
 
 export function EvaluationDetailsSection({
   agentName,
+  agentId,
   agentDescription,
   grade,
   ephemeralBatch,
   costInCents,
   durationInSeconds,
   createdAt,
-  evaluationData
+  evaluationData,
+  documentId,
+  evaluationId
 }: EvaluationDetailsSectionProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setExportDropdownOpen(false);
+      }
+    }
+
+    if (exportDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [exportDropdownOpen]);
 
   const handleExport = async (format: ExportFormat, destination: ExportDestination) => {
     if (!evaluationData) return;
@@ -102,7 +125,13 @@ export function EvaluationDetailsSection({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-semibold text-gray-900">{agentName}</h3>
+                {agentId ? (
+                  <Link href={`/agents/${agentId}`}>
+                    <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 hover:underline cursor-pointer">{agentName}</h3>
+                  </Link>
+                ) : (
+                  <h3 className="text-lg font-semibold text-gray-900">{agentName}</h3>
+                )}
                 {ephemeralBatch && ephemeralBatch.trackingId && (
                   <ExperimentalBadge 
                     trackingId={ephemeralBatch.trackingId}
@@ -157,14 +186,42 @@ export function EvaluationDetailsSection({
         </div>
       </div>
 
-      {/* Export Actions */}
-      {evaluationData && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
+      {/* Navigation and Export Actions */}
+      <div className="mt-6 pt-4 border-t border-gray-200 space-y-4">
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-700">Navigation</h4>
+          <div className="flex gap-2">
+            {documentId && agentId && (
+              <Link 
+                href={`/docs/${documentId}/evals/${agentId}`}
+                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Eval Page
+              </Link>
+            )}
+            {documentId && agentId && (
+              <Link 
+                href={`/docs/${documentId}/reader?evals=${agentId}`}
+                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Reader
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Export Actions */}
+        {evaluationData && (
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-gray-700">Export Evaluation</h4>
-            <div className="relative">
+            <div className="relative z-40">
               <button
-                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setButtonRect(rect);
+                  setExportDropdownOpen(!exportDropdownOpen);
+                }}
                 className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700"
               >
                 <ArrowDownTrayIcon className="h-4 w-4" />
@@ -176,8 +233,15 @@ export function EvaluationDetailsSection({
                 )}
               </button>
 
-              {exportDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              {exportDropdownOpen && buttonRect && (
+                <div 
+                  ref={dropdownRef}
+                  className="fixed w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+                  style={{
+                    top: buttonRect.bottom + 8,
+                    left: buttonRect.right - 224, // 224px = w-56 (14rem * 16px)
+                  }}
+                >
                   <div className="py-1">
                     <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b">
                       To Clipboard
@@ -218,8 +282,8 @@ export function EvaluationDetailsSection({
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </EvaluationSection>
   );
 }

@@ -266,6 +266,11 @@ export function EvaluationsTab({
                   showNavigation={false}
                   compact={true}
                   maxWidth="full"
+                  evaluationData={{
+                    agentId: agent.id,
+                    documentId: selectedEvaluation.documentId,
+                    evaluationId: selectedEvaluation.evaluationId
+                  }}
                 />
               </div>
             ) : (
