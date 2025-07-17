@@ -252,6 +252,9 @@ export function EvaluationDetailsSection({
                     setButtonRect(rect);
                     setExportDropdownOpen(!exportDropdownOpen);
                   }}
+                  aria-expanded={exportDropdownOpen}
+                  aria-haspopup="menu"
+                  aria-label="Export evaluation data"
                   className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
                 >
                   <ArrowDownTrayIcon className="h-4 w-4" />
@@ -266,6 +269,8 @@ export function EvaluationDetailsSection({
               {exportDropdownOpen && buttonRect && (
                 <div 
                   ref={dropdownRef}
+                  role="menu"
+                  aria-label="Export options"
                   className="fixed w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50"
                   style={{
                     top: buttonRect.bottom + 8,
@@ -280,6 +285,7 @@ export function EvaluationDetailsSection({
                       <button
                         key={`${format}-clipboard`}
                         onClick={() => handleExport(format, 'clipboard')}
+                        role="menuitem"
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         {copied === `${format}-clipboard` ? (
@@ -301,6 +307,7 @@ export function EvaluationDetailsSection({
                       <button
                         key={`${format}-file`}
                         onClick={() => handleExport(format, 'file')}
+                        role="menuitem"
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <ArrowDownTrayIcon className="h-4 w-4 mr-2" />

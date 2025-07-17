@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { formatTaskPrice, formatDuration } from "@/lib/job/formatters";
 
 interface Task {
@@ -32,8 +32,28 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
     );
   }
 
-  const totalCost = tasks.reduce((sum, task) => sum + task.priceInDollars, 0);
-  const totalTime = tasks.reduce((sum, task) => sum + (task.timeInSeconds || 0), 0);
+  // Memoize expensive calculations
+  const { totalCost, totalTime, parsedTasks } = useMemo(() => {
+    const parsed = tasks.map(task => {
+      let logData: any = {};
+      let summary = "No log data";
+      
+      try {
+        logData = task.log ? JSON.parse(task.log) : {};
+        summary = logData.summary || summary;
+      } catch (e) {
+        summary = task.log || summary;
+      }
+
+      return { ...task, logData, summary };
+    });
+
+    return {
+      totalCost: tasks.reduce((sum, task) => sum + task.priceInDollars, 0),
+      totalTime: tasks.reduce((sum, task) => sum + (task.timeInSeconds || 0), 0),
+      parsedTasks: parsed
+    };
+  }, [tasks]);
 
   const toggleTask = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
@@ -55,19 +75,9 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
 
   return (
     <div className="space-y-4">
-      {tasks.map((task, index) => {
-        let logData: any = {};
-        let summary = "No log data";
-        
-        try {
-          logData = task.log ? JSON.parse(task.log) : {};
-          summary = logData.summary || summary;
-        } catch (e) {
-          summary = task.log || summary;
-        }
-
+      {parsedTasks.map((task, index) => {
         const isExpanded = expandedTasks.has(task.id);
-        const truncatedSummary = summary.length > 200 ? summary.substring(0, 200) + "..." : summary;
+        const truncatedSummary = task.summary.length > 200 ? task.summary.substring(0, 200) + "..." : task.summary;
 
         return (
           <div key={task.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
@@ -117,16 +127,16 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
             {showExpandedDetails && isExpanded && (
               <div className="mt-4 space-y-3 border-t pt-4">
                 {/* Full summary if truncated */}
-                {summary.length > 200 && (
+                {task.summary.length > 200 && (
                   <div className="rounded border border-gray-200 bg-white p-3 text-sm text-gray-700">
                     <strong>Full Summary:</strong>
-                    <div className="mt-1">{summary}</div>
+                    <div className="mt-1">{task.summary}</div>
                   </div>
                 )}
 
                 {/* LLM Interactions */}
                 {(() => {
-                  const interactions = task.llmInteractions || logData.llmInteractions;
+                  const interactions = task.llmInteractions || task.logData.llmInteractions;
                   
                   if (interactions && Array.isArray(interactions) && interactions.length > 0) {
                     return (
@@ -258,30 +268,30 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                     );
                   }
                   
-                  if (!interactions && (logData.input || logData.output)) {
+                  if (!interactions && (task.logData.input || task.logData.output)) {
                     return (
                       <>
-                        {logData.input && (
+                        {task.logData.input && (
                           <div className="rounded border border-green-200 bg-green-50 p-3">
                             <h4 className="font-medium text-gray-900 mb-2">Input Prompt:</h4>
-                            {typeof logData.input === 'object' ? (
+                            {typeof task.logData.input === 'object' ? (
                               <pre className="overflow-x-auto rounded bg-white p-3 text-xs text-gray-800 border border-gray-200">
-                                {JSON.stringify(logData.input, null, 2)}
+                                {JSON.stringify(task.logData.input, null, 2)}
                               </pre>
                             ) : (
-                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{logData.input}</pre>
+                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{task.logData.input}</pre>
                             )}
                           </div>
                         )}
-                        {logData.output && (
+                        {task.logData.output && (
                           <div className="rounded border border-blue-200 bg-blue-50 p-3">
                             <h4 className="font-medium text-gray-900 mb-2">Output Response:</h4>
-                            {typeof logData.output === 'object' ? (
+                            {typeof task.logData.output === 'object' ? (
                               <pre className="overflow-x-auto rounded bg-white p-3 text-xs text-gray-800 border border-gray-200">
-                                {JSON.stringify(logData.output, null, 2)}
+                                {JSON.stringify(task.logData.output, null, 2)}
                               </pre>
                             ) : (
-                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{logData.output}</pre>
+                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{task.logData.output}</pre>
                             )}
                           </div>
                         )}
@@ -293,7 +303,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                 })()}
 
                 {/* Other log data fields */}
-                {Object.entries(logData).map(([key, value]) => {
+                {Object.entries(task.logData).map(([key, value]) => {
                   if (['summary', 'input', 'output', 'llmInteractions'].includes(key)) return null;
                   
                   return (

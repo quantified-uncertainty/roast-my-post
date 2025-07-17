@@ -36,10 +36,6 @@ export function JobSummary({ job, showError = true, compact = false }: JobSummar
           </div>
         </div>
 
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-1">Status</h4>
-          <JobStatusBadge status={job.status} />
-        </div>
 
         <div>
           <h4 className="text-sm font-medium text-gray-700 mb-1">Created</h4>
