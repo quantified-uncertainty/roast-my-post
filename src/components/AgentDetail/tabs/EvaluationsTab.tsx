@@ -4,7 +4,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationContent } from "@/components/evaluation";
 import type { Agent } from "@/types/agentSchema";
 
-import { StatusBadge, StatusIcon } from "../components";
+import { StatusIcon } from "../components";
 import type {
   AgentEvaluation,
   BatchSummary,

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 
 import { checkDocumentOwnership } from "@/lib/document-auth";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
