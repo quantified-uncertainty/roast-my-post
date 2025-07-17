@@ -135,11 +135,13 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
           claim.importance === 'high' || claim.specificity === 'high'
         ).slice(0, 10); // Limit to 10 verifications
         
-        for (const claim of claimsToVerify) {
-          const { result, interaction } = await this.verifyClaim(claim);
-          verificationResults.push(result);
-          llmInteractions.push(interaction);
-        }
+        // Parallelize claim verification for better performance
+        const verificationPromises = claimsToVerify.map(claim => this.verifyClaim(claim));
+        const verificationWithInteractions = await Promise.all(verificationPromises);
+        
+        // Extract results and interactions
+        verificationResults = verificationWithInteractions.map(v => v.result);
+        llmInteractions.push(...verificationWithInteractions.map(v => v.interaction));
       }
       
       // Generate summary
