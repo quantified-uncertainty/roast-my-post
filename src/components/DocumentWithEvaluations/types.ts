@@ -3,6 +3,7 @@ import type { Comment, Document, Evaluation } from "@/types/documentSchema";
 export interface DocumentWithReviewsProps {
   document: Document;
   isOwner?: boolean;
+  initialSelectedEvalIds?: string[];
 }
 
 export interface EvaluationState {
