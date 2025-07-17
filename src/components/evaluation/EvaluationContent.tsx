@@ -27,7 +27,8 @@ export function EvaluationContent({
   compact = false,
   maxWidth = '4xl',
   evaluationData,
-  isOnEvalPage = false
+  isOnEvalPage = false,
+  isOwner = false
 }: EvaluationContentProps) {
   // Extract headings from each section
   const analysisHeadings = analysis ? extractHeadings(analysis, 2) : []; // Only H2 for analysis
@@ -121,7 +122,7 @@ export function EvaluationContent({
           costInCents={costInCents}
           durationInSeconds={durationInSeconds}
           createdAt={createdAt}
-          evaluationData={evaluationData}
+          evaluationData={isOwner ? evaluationData : undefined}
           documentId={evaluationData?.documentId}
           evaluationId={evaluationData?.evaluationId}
           isOnEvalPage={isOnEvalPage}

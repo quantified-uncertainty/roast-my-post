@@ -105,4 +105,7 @@ export interface EvaluationContentProps {
   
   // Navigation options
   isOnEvalPage?: boolean;
+  
+  // Security
+  isOwner?: boolean;
 }

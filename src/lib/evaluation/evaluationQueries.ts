@@ -29,6 +29,7 @@ export async function getEvaluationForDisplay(docId: string, agentId: string) {
   return evaluation;
 }
 
+
 /**
  * Extract evaluation display data from a full evaluation object
  */
@@ -70,6 +71,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     allEvaluations: evaluation.document.evaluations || [],
   };
 }
+
 
 /**
  * Simplified query for getting basic evaluation data (for lists, etc.)

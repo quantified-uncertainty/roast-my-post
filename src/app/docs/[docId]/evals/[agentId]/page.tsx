@@ -27,9 +27,8 @@ export default async function EvaluationPage({
 
   const evaluationData = extractEvaluationDisplayData(evaluation);
   
-  // Check if current user owns the document
+  // Check if current user owns the document (for export functionality only)
   const isOwner = await checkDocumentOwnership(docId);
-
 
   return (
     <div className="h-full bg-gray-50 flex flex-col overflow-hidden">
@@ -84,6 +83,7 @@ export default async function EvaluationPage({
             maxWidth="4xl"
             evaluationData={{ ...evaluation, agentId: evaluationData.agentId }}
             isOnEvalPage={true}
+            isOwner={isOwner}
           />
         </div>
         </div>
