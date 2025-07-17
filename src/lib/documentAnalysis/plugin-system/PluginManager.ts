@@ -109,7 +109,7 @@ export class PluginManager {
     chunks: TextChunk[],
     routingPlan: any
   ): Promise<void> {
-    const maxConcurrency = 5; // Limit concurrent chunk processing to avoid API rate limits
+    const maxConcurrency = 20; // Increased from 5 - parallel processing working well, can handle more load
     
     // Create processing tasks for all chunks
     const chunkTasks = chunks.map((chunk, i) => ({
