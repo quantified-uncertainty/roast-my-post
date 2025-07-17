@@ -42,7 +42,7 @@ export function convertFindingToHighlight(
   // Try to find the text within the specified line range (with some tolerance)
   const lineRangeTolerance = 2; // Search 2 lines before and after
   const actualStartLine = Math.max(1, searchStartLine - lineRangeTolerance);
-  const actualEndLine = (searchEndLine || searchStartLine) + lineRangeTolerance;
+  const actualEndLine = Math.max(searchStartLine, searchEndLine || searchStartLine) + lineRangeTolerance;
   
   const locationResult = locationUtils.findTextInLineRange(
     matchText,
