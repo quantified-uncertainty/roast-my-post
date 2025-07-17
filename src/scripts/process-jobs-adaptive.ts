@@ -38,6 +38,13 @@ class AdaptiveJobProcessor {
   private startTime = new Date();
   private lastStaleCheckTime = new Date();
   private jobWorkerMap = new Map<string, number>(); // Track which worker is processing which job
+  
+  // Cache for timeout calculation to avoid repeated complex queries
+  private timeoutCache: { 
+    value: number; 
+    expiry: number; 
+    lastJobId?: string;
+  } = { value: WORKER_TIMEOUT_MS, expiry: 0 };
 
   constructor(maxWorkers: number = DEFAULT_MAX_WORKERS) {
     this.maxWorkers = maxWorkers;
@@ -118,13 +125,41 @@ class AdaptiveJobProcessor {
   }
 
   /**
-   * Get the timeout requirement for the next pending job
+   * Get the timeout requirement for the next pending job (with caching)
    */
   private async getNextJobTimeout(): Promise<number> {
-    // Find the next pending job to determine its timeout needs
-    const nextJob = await prisma.job.findFirst({
+    const now = Date.now();
+    const CACHE_TTL_MS = 5000; // Cache for 5 seconds to avoid excessive queries
+
+    // Check if cache is still valid
+    if (now < this.timeoutCache.expiry) {
+      return this.timeoutCache.value;
+    }
+
+    // Get just the job ID first to check if we need to do the full query
+    const nextJobIdOnly = await prisma.job.findFirst({
       where: { status: JobStatus.PENDING },
       orderBy: { createdAt: 'asc' },
+      select: { id: true }
+    });
+
+    if (!nextJobIdOnly) {
+      // No pending jobs, cache default timeout
+      this.timeoutCache = {
+        value: WORKER_TIMEOUT_MS,
+        expiry: now + CACHE_TTL_MS
+      };
+      return WORKER_TIMEOUT_MS;
+    }
+
+    // If it's the same job as last time and cache isn't too old, reuse result
+    if (nextJobIdOnly.id === this.timeoutCache.lastJobId && now < this.timeoutCache.expiry + 10000) {
+      return this.timeoutCache.value;
+    }
+
+    // Only do the expensive query if we need to
+    const nextJob = await prisma.job.findFirst({
+      where: { id: nextJobIdOnly.id },
       include: {
         evaluation: {
           include: {
@@ -145,11 +180,23 @@ class AdaptiveJobProcessor {
     });
 
     if (!nextJob) {
+      // Race condition - job was processed between queries
+      this.timeoutCache = {
+        value: WORKER_TIMEOUT_MS,
+        expiry: now + CACHE_TTL_MS
+      };
       return WORKER_TIMEOUT_MS;
     }
 
     const capability = nextJob.evaluation.agent.versions[0]?.extendedCapabilityId;
     const timeout = getAgentTimeout(capability);
+    
+    // Cache the result
+    this.timeoutCache = {
+      value: timeout,
+      expiry: now + CACHE_TTL_MS,
+      lastJobId: nextJobIdOnly.id
+    };
     
     // Log if using non-default timeout
     if (timeout !== WORKER_TIMEOUT_MS) {

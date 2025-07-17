@@ -337,10 +337,10 @@ function deduplicateHighlights(highlights: Comment[]): Comment[] {
       const currentStart = highlight.highlight.startOffset;
       const currentEnd = highlight.highlight.endOffset;
       
-      // Check for overlap
+      // Check for overlap (fixed off-by-one error)
       return (currentStart >= existingStart && currentStart < existingEnd) ||
              (currentEnd > existingStart && currentEnd <= existingEnd) ||
-             (currentStart <= existingStart && currentEnd >= existingEnd);
+             (currentStart < existingStart && currentEnd > existingEnd);
     });
     
     if (!overlaps) {
