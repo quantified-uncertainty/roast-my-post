@@ -9,6 +9,9 @@ import { ZodError } from "zod";
 
 export async function GET() {
   const dbAgents = await prisma.agent.findMany({
+    where: {
+      ephemeralBatchId: null, // Exclude ephemeral agents
+    },
     include: {
       versions: {
         orderBy: {

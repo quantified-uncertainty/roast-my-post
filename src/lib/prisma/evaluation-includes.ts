@@ -83,6 +83,7 @@ export const fullEvaluationInclude = {
   },
 } as const;
 
+
 // Include for evaluation with current job and tasks
 export const evaluationWithCurrentJob = {
   ...fullEvaluationInclude,

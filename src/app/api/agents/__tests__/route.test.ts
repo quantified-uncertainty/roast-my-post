@@ -77,6 +77,9 @@ describe('GET /api/agents', () => {
     });
     
     expect(prisma.agent.findMany).toHaveBeenCalledWith({
+      where: {
+        ephemeralBatchId: null,
+      },
       include: {
         versions: {
           orderBy: {

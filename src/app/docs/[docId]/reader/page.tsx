@@ -7,10 +7,13 @@ import { DocumentModel } from "@/models/Document";
 
 export default async function DocumentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ docId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const docId = resolvedParams.docId;
   const session = await auth();
   const currentUserId = session?.user?.id;
@@ -46,11 +49,25 @@ export default async function DocumentPage({
     ? document.submittedById === currentUserId
     : false;
 
+  // Parse evaluation filter from query params
+  const evalParam = resolvedSearchParams.evals;
+  const selectedEvalIds = evalParam
+    ? Array.isArray(evalParam)
+      ? evalParam
+      : typeof evalParam === 'string'
+      ? evalParam.split(',').filter(id => id.length > 0)
+      : [evalParam]
+    : undefined;
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1">
-          <DocumentWithEvaluations document={document} isOwner={isOwner} />
+          <DocumentWithEvaluations 
+            document={document} 
+            isOwner={isOwner}
+            initialSelectedEvalIds={selectedEvalIds}
+          />
         </div>
       </div>
     </div>

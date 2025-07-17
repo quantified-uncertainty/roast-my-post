@@ -1,4 +1,4 @@
-import { GET } from "./route";
+import { GET, DELETE } from "./route";
 import { prisma } from "@/lib/prisma";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { NextRequest } from "next/server";
@@ -8,10 +8,26 @@ jest.mock("@/lib/prisma", () => ({
   prisma: {
     agentEvalBatch: {
       findFirst: jest.fn(),
+      delete: jest.fn(),
     },
     evaluation: {
       findMany: jest.fn(),
+      deleteMany: jest.fn(),
     },
+    evaluationVersion: {
+      deleteMany: jest.fn(),
+    },
+    evaluationComment: {
+      deleteMany: jest.fn(),
+    },
+    job: {
+      findMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    document: {
+      findMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -327,6 +343,223 @@ describe("/api/experiments/[trackingId] GET", () => {
       expect(response.status).toBe(200);
       expect(data.id).toBe("batch-123");
       expect(new Date(data.expiresAt).getTime()).toBeLessThan(Date.now());
+    });
+  });
+});
+
+describe("/api/experiments/[trackingId] DELETE", () => {
+  const mockUserId = "user-123";
+  const mockTrackingId = "exp_test123";
+  
+  const mockRequest = () => {
+    return {} as NextRequest;
+  };
+
+  const mockParams = {
+    params: Promise.resolve({ trackingId: mockTrackingId }),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (authenticateRequest as jest.Mock).mockResolvedValue(mockUserId);
+  });
+
+  describe("Authentication", () => {
+    it("should return 401 if not authenticated", async () => {
+      (authenticateRequest as jest.Mock).mockResolvedValue(null);
+      
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(401);
+      expect(data.error).toBe("Unauthorized");
+    });
+  });
+
+  describe("Experiment Deletion", () => {
+    it("should successfully delete experiment with proper cascade", async () => {
+      const mockBatch = {
+        id: "batch-123",
+        trackingId: mockTrackingId,
+        userId: mockUserId,
+        isEphemeral: true,
+        agentId: "agent-123",
+        jobs: [] // No running jobs
+      };
+
+      const mockJobs = [
+        { evaluationId: "eval-1" },
+        { evaluationId: "eval-2" },
+      ];
+
+      const mockEphemeralDocuments = [
+        { id: "doc-1" },
+        { id: "doc-2" },
+      ];
+
+      const mockEphemeralEvaluations = [
+        { id: "eval-3" },
+      ];
+
+      // Mock the transaction function to call the callback
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+        const mockTx = {
+          job: {
+            findMany: jest.fn().mockResolvedValue(mockJobs),
+            deleteMany: jest.fn().mockResolvedValue({ count: 2 }),
+          },
+          agent: {
+            findUnique: jest.fn().mockResolvedValue({ ephemeralBatchId: "batch-123" }),
+          },
+          document: {
+            findMany: jest.fn().mockResolvedValue(mockEphemeralDocuments),
+          },
+          evaluation: {
+            findMany: jest.fn().mockResolvedValue(mockEphemeralEvaluations),
+            deleteMany: jest.fn().mockResolvedValue({ count: 3 }),
+          },
+          evaluationComment: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 5 }),
+          },
+          evaluationVersion: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 3 }),
+          },
+          agentEvalBatch: {
+            delete: jest.fn().mockResolvedValue(mockBatch),
+          },
+        };
+        return await callback(mockTx);
+      });
+
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      
+      // Verify the transaction was called
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it("should return 404 if experiment not found", async () => {
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(404);
+      expect(data.error).toBe("Experiment not found");
+    });
+
+    it("should return 400 if experiment has running jobs", async () => {
+      const mockBatch = {
+        id: "batch-123",
+        trackingId: mockTrackingId,
+        userId: mockUserId,
+        isEphemeral: true,
+        jobs: [{ id: "job-1", status: "RUNNING" }] // Has running job
+      };
+
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Cannot delete experiment with running jobs");
+    });
+
+    it("should handle foreign key constraint violations gracefully", async () => {
+      const mockBatch = {
+        id: "batch-123",
+        trackingId: mockTrackingId,
+        userId: mockUserId,
+        isEphemeral: true,
+        agentId: "agent-123",
+        jobs: []
+      };
+
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+
+      // Mock transaction to throw the specific foreign key error
+      (prisma.$transaction as jest.Mock).mockRejectedValue(
+        new Error("Foreign key constraint violated on the constraint: `EvaluationVersion_evaluationId_fkey`")
+      );
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(500);
+      expect(data.error).toBe("Failed to delete experiment");
+    });
+
+    it("should handle non-ephemeral batch deletion", async () => {
+      const mockBatch = {
+        id: "batch-123",
+        trackingId: mockTrackingId,
+        userId: mockUserId,
+        isEphemeral: false, // Not ephemeral
+        agentId: "agent-123",
+        jobs: []
+      };
+
+      const mockJobs = [
+        { evaluationId: "eval-1" },
+      ];
+
+      // Mock the transaction function
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
+        const mockTx = {
+          job: {
+            findMany: jest.fn().mockResolvedValue(mockJobs),
+            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          agent: {
+            findUnique: jest.fn().mockResolvedValue({ ephemeralBatchId: null }), // Not ephemeral
+          },
+          document: {
+            findMany: jest.fn().mockResolvedValue([]), // No ephemeral documents
+          },
+          evaluation: {
+            findMany: jest.fn().mockResolvedValue([]), // No additional evaluations
+            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          evaluationComment: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
+          evaluationVersion: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          agentEvalBatch: {
+            delete: jest.fn().mockResolvedValue(mockBatch),
+          },
+        };
+        return await callback(mockTx);
+      });
+
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockResolvedValue(mockBatch);
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should handle database errors gracefully", async () => {
+      (prisma.agentEvalBatch.findFirst as jest.Mock).mockRejectedValue(
+        new Error("Database connection error")
+      );
+
+      const response = await DELETE(mockRequest(), mockParams);
+      const data = await response.json();
+      
+      expect(response.status).toBe(500);
+      expect(data.error).toBe("Failed to delete experiment");
     });
   });
 });

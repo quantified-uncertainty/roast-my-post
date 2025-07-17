@@ -6,6 +6,7 @@ import {
   ChevronLeftIcon,
   CommandLineIcon,
 } from "@heroicons/react/24/outline";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { GradeBadge } from "../../GradeBadge";
 import type { Document } from "@/types/documentSchema";
@@ -27,9 +28,24 @@ export function EvaluationCardsHeader({
   isLargeMode = true,
   onToggleMode,
 }: EvaluationCardsHeaderProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   if (!document || !evaluationState) {
     return null;
   }
+
+  const updateUrlParams = (selectedIds: Set<string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (selectedIds.size === 0) {
+      params.delete('evals');
+    } else {
+      params.set('evals', Array.from(selectedIds).join(','));
+    }
+    
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const handleToggleAgent = (agentId: string) => {
     if (onEvaluationStateChange) {
@@ -39,10 +55,13 @@ export function EvaluationCardsHeader({
       } else {
         newSelectedIds.add(agentId);
       }
+      
       onEvaluationStateChange({
         ...evaluationState,
         selectedAgentIds: newSelectedIds,
       });
+      
+      updateUrlParams(newSelectedIds);
     }
   };
 

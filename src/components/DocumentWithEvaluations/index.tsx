@@ -12,6 +12,7 @@ import type { DocumentWithReviewsProps, EvaluationState } from "./types";
 export function DocumentWithEvaluations({
   document,
   isOwner = false,
+  initialSelectedEvalIds,
 }: DocumentWithReviewsProps) {
   const hasEvaluations = document.reviews && document.reviews.length > 0;
   
@@ -43,7 +44,13 @@ export function DocumentWithEvaluations({
   const [evaluationState, setEvaluationState] = useState<EvaluationState | null>(
     hasEvaluations
       ? {
-          selectedAgentIds: new Set(document.reviews.map((r) => r.agentId)),
+          selectedAgentIds: new Set(
+            initialSelectedEvalIds && initialSelectedEvalIds.length > 0
+              ? initialSelectedEvalIds.filter(id => 
+                  document.reviews.some(r => r.agentId === id)
+                )
+              : document.reviews.map((r) => r.agentId)
+          ),
           hoveredCommentId: null,
           expandedCommentId: null,
         }
