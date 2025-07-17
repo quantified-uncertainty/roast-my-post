@@ -8,9 +8,16 @@
 import 'dotenv/config';
 import { heliconeAPI } from '@/lib/helicone/api-client';
 import { logger } from '@/lib/logger';
+import { setupTestCleanup } from './test-cleanup-utils';
 
 async function testHeliconeIntegration() {
   console.log('🧪 Testing Helicone Session Integration...\n');
+
+  // Setup cleanup analysis
+  const cleanupManager = await setupTestCleanup({
+    beforeTests: true,
+    verbose: false
+  });
 
   try {
     // Test 1: Basic connectivity and session detection
@@ -78,6 +85,10 @@ async function testHeliconeIntegration() {
 
     console.log('\n✅ Helicone integration test completed!');
     
+    // Post-test cleanup analysis
+    console.log('\n─'.repeat(50));
+    await cleanupManager.logCleanupRecommendations();
+    
     // Provide recommendations
     console.log('\n💡 Recommendations:');
     if (!testResult.isWorking || testResult.sessionsFound === 0) {
@@ -88,6 +99,15 @@ async function testHeliconeIntegration() {
       console.log('   - Sessions are working correctly!');
       console.log('   - You can view sessions at https://helicone.ai/sessions');
       console.log('   - Use the API client to build custom dashboards or monitoring');
+    }
+    
+    // Add cleanup recommendations
+    const cleanupSuggestions = await cleanupManager.getCleanupSuggestions();
+    if (cleanupSuggestions.totalSessions > 0) {
+      console.log('\n🧹 Test Data Cleanup:');
+      cleanupSuggestions.recommendations.slice(0, 3).forEach(rec => {
+        console.log(`   - ${rec}`);
+      });
     }
 
   } catch (error) {

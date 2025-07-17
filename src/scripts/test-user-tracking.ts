@@ -5,14 +5,19 @@
 
 import 'dotenv/config';
 import { createJobSessionConfig, createHeliconeHeaders } from '../lib/helicone/sessions';
+import { createTestEnvironment } from './test-cleanup-utils';
 
 async function testUserTracking() {
   console.log('🧪 Testing Helicone User Tracking...\n');
 
+  // Setup test environment for cleanup tracking
+  const testEnv = createTestEnvironment('user-tracking');
+
   // Test 1: Session config without user ID
   console.log('1️⃣ Test without user ID:');
+  const testJobId1 = testEnv.sessionIdGenerator();
   const configWithoutUser = createJobSessionConfig(
-    'test-job-1',
+    testJobId1,
     null,
     'Test Agent',
     'Test Document',
@@ -26,8 +31,9 @@ async function testUserTracking() {
 
   // Test 2: Session config with user ID
   console.log('2️⃣ Test with user ID:');
+  const testJobId2 = testEnv.sessionIdGenerator();
   const configWithUser = createJobSessionConfig(
-    'test-job-2',
+    testJobId2,
     null,
     'Test Agent',
     'Test Document',
@@ -93,6 +99,16 @@ async function testUserTracking() {
     }
   } else {
     console.log('⚠️ HELICONE_API_KEY not found, skipping API test');
+  }
+
+  // Log test sessions created for cleanup tracking
+  const markedSessions = testEnv.getMarkedSessions();
+  if (markedSessions.length > 0) {
+    console.log('\n🧹 Test Sessions Created (for cleanup tracking):');
+    markedSessions.forEach((sessionId, i) => {
+      console.log(`   ${i + 1}. ${sessionId}`);
+    });
+    console.log('\n💡 These test sessions can be identified and cleaned up using the test-cleanup-utils');
   }
 }
 

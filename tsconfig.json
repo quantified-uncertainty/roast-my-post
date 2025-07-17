@@ -27,5 +27,5 @@
     ".next/types/**/*.ts",
     "src/utils/documentAnalysis.mts",
   ],
-  "exclude": ["node_modules", "mcp-server", "claude"],
+  "exclude": ["node_modules", "mcp-server", "claude", "scripts", "src/scripts"],
 }
