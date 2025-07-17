@@ -18,6 +18,7 @@ export interface ClaudeCallOptions {
   tool_choice?: Anthropic.Messages.ToolChoice;
   max_tokens?: number;
   temperature?: number;
+  heliconeHeaders?: Record<string, string>;
 }
 
 export interface ClaudeCallResult {
@@ -71,7 +72,7 @@ export async function callClaude(
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
-  const anthropic = createAnthropicClient();
+  const anthropic = createAnthropicClient(options.heliconeHeaders);
   
   // Use centralized model config if not specified
   const model = options.model || MODEL_CONFIG.analysis;

@@ -3,6 +3,8 @@ import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface SpellingGrammarError {
   text: string;
@@ -142,6 +144,15 @@ ${input.context ? `\nContext: ${input.context}` : ''}
 
 Report any errors found with suggested corrections.`;
 
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/spelling/check') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const result = await callClaudeWithTool<{ errors: SpellingGrammarError[] }>({
       system: systemPrompt,
       messages: [{
@@ -174,7 +185,8 @@ Report any errors found with suggested corrections.`;
           }
         },
         required: ["errors"]
-      }
+      },
+      heliconeHeaders
     });
 
     const errors = result.toolResult.errors || [];

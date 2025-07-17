@@ -53,10 +53,13 @@ import { detectDocumentConventions } from '../detectConventions';
 import { convertHighlightsToComments } from '../highlightConverter';
 import { getErrorGroupEmoji, getErrorTypeLabel } from '../../shared/errorCategorization';
 
+import type { HeliconeSessionConfig } from '../../../helicone/sessions';
+
 export interface WorkflowOptions {
   targetHighlights?: number; // Ignored for spelling/grammar
   executionMode?: 'sequential' | 'parallel';
   maxConcurrency?: number;
+  sessionConfig?: HeliconeSessionConfig;
 }
 
 export interface WorkflowResult {
@@ -89,7 +92,8 @@ export class SpellingGrammarWorkflow {
   ): Promise<WorkflowResult> {
     const {
       executionMode = 'sequential',
-      maxConcurrency = CONCURRENT_CHUNK_LIMIT
+      maxConcurrency = CONCURRENT_CHUNK_LIMIT,
+      sessionConfig
     } = options;
 
     const startTime = Date.now();
@@ -117,8 +121,8 @@ export class SpellingGrammarWorkflow {
       logger.info(`${LOG_PREFIXES.WORKFLOW} Stage 2: Analyzing ${chunks.length} chunks for spelling/grammar errors`);
 
       const allErrors = executionMode === 'parallel'
-        ? await this.analyzeChunksParallel(chunks, agentInfo, conventions, tasks, maxConcurrency)
-        : await this.analyzeChunksSequential(chunks, agentInfo, conventions, tasks);
+        ? await this.analyzeChunksParallel(chunks, agentInfo, conventions, tasks, maxConcurrency, sessionConfig)
+        : await this.analyzeChunksSequential(chunks, agentInfo, conventions, tasks, sessionConfig);
 
       // Stage 3: Process results
       const processedResults = await this.processResults(
@@ -188,14 +192,15 @@ export class SpellingGrammarWorkflow {
     chunks: DocumentChunk[],
     agentInfo: Agent,
     conventions: DocumentConventions,
-    tasks: TaskResult[]
+    tasks: TaskResult[],
+    sessionConfig?: HeliconeSessionConfig
   ): Promise<SpellingGrammarError[]> {
     const allErrors: SpellingGrammarError[] = [];
     const chunkStartTime = Date.now();
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const errors = await this.analyzeChunk(chunk, i, chunks.length, agentInfo, conventions, tasks);
+      const errors = await this.analyzeChunk(chunk, i, chunks.length, agentInfo, conventions, tasks, sessionConfig);
       allErrors.push(...errors);
     }
 
@@ -210,7 +215,8 @@ export class SpellingGrammarWorkflow {
     agentInfo: Agent,
     conventions: DocumentConventions,
     tasks: TaskResult[],
-    maxConcurrency: number
+    maxConcurrency: number,
+    sessionConfig?: HeliconeSessionConfig
   ): Promise<SpellingGrammarError[]> {
     const allErrors: SpellingGrammarError[] = [];
 
@@ -227,7 +233,7 @@ export class SpellingGrammarWorkflow {
           await this.delay(batchIndex * API_STAGGER_DELAY_MS);
         }
 
-        return this.analyzeChunk(chunk, chunkIndex, chunks.length, agentInfo, conventions, tasks);
+        return this.analyzeChunk(chunk, chunkIndex, chunks.length, agentInfo, conventions, tasks, sessionConfig);
       });
 
       const batchResults = await Promise.all(batchPromises);
@@ -251,7 +257,8 @@ export class SpellingGrammarWorkflow {
     totalChunks: number,
     agentInfo: Agent,
     conventions: DocumentConventions,
-    tasks: TaskResult[]
+    tasks: TaskResult[],
+    sessionConfig?: HeliconeSessionConfig
   ): Promise<SpellingGrammarError[]> {
     const chunkStartTime = Date.now();
 
@@ -273,7 +280,19 @@ export class SpellingGrammarWorkflow {
     const userPrompt = buildUserPrompt(chunk);
 
     try {
-      const response = await this.llmClient.analyzeText(systemPrompt, userPrompt);
+      // Create session config with chunk-specific path if provided
+      const chunkSessionConfig = sessionConfig ? {
+        ...sessionConfig,
+        sessionPath: `${sessionConfig.sessionPath}/chunk-${index}`,
+        customProperties: {
+          ...sessionConfig.customProperties,
+          ChunkIndex: index.toString(),
+          ChunkLines: `${chunk.startLineNumber}-${chunk.endLineNumber}`,
+          ChunkChars: chunk.characterCount.toString()
+        }
+      } : undefined;
+      
+      const response = await this.llmClient.analyzeText(systemPrompt, userPrompt, chunkSessionConfig);
 
       // Validate errors
       const validErrors = response.errors.filter(error => {

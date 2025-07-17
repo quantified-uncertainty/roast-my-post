@@ -7,6 +7,8 @@ import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types'
 import { TextChunk } from '../TextChunk';
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 import { LocationUtils } from '../../utils/LocationUtils';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 interface MathState {
   equations: Array<{
@@ -236,6 +238,15 @@ For each mathematical expression found:
       location?: { start: number; end: number };
     }>;
   }> {
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/math/extract') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const { toolResult } = await callClaudeWithTool<{
       equations: Array<{
         equation: string;
@@ -280,7 +291,8 @@ For each mathematical expression found:
           }
         },
         required: ["equations"]
-      }
+      },
+      heliconeHeaders
     });
 
     return toolResult || { equations: [] };
