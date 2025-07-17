@@ -7,8 +7,7 @@ import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
-import { TaskDisplayClient } from "../versions/[versionNumber]/logs/TaskDisplayClient";
-import { CopyButton } from "@/components/CopyButton";
+import { JobSummary, TaskDisplay } from "@/components/job";
 
 interface PageProps {
   params: Promise<{ 
@@ -123,67 +122,30 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
               </div>
               
               <div className="px-6 py-6">
-                {/* Job Status and Basic Info */}
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-1">Status</h3>
-                    <span className={cn(
-                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
-                      currentJob.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                      currentJob.status === 'FAILED' ? 'bg-red-100 text-red-800' : 
-                      'bg-yellow-100 text-yellow-800'
-                    )}>
-                      {currentJob.status.toLowerCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-1">Job ID</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-900 font-mono">{currentJob.id}</p>
-                      <CopyButton text={currentJob.id} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timestamps */}
-                {(currentJob.startedAt || currentJob.completedAt) && (
-                  <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {currentJob.startedAt && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-700 mb-1">Started</h3>
-                        <p className="text-sm text-gray-900">
-                          {new Date(currentJob.startedAt).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                    {currentJob.completedAt && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-700 mb-1">Completed</h3>
-                        <p className="text-sm text-gray-900">
-                          {new Date(currentJob.completedAt).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Error Message */}
-                {currentJob.error && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Error</h3>
-                    <div className="p-3 bg-red-50 rounded-md">
-                      <p className="text-sm text-red-800">{currentJob.error}</p>
-                    </div>
-                  </div>
-                )}
+                <JobSummary 
+                  job={{
+                    id: currentJob.id,
+                    status: currentJob.status,
+                    createdAt: currentJob.createdAt,
+                    completedAt: currentJob.completedAt,
+                    startedAt: currentJob.startedAt,
+                    durationInSeconds: currentJob.durationInSeconds,
+                    costInCents: currentJob.costInCents,
+                    attempts: currentJob.attempts,
+                    originalJobId: currentJob.originalJobId,
+                    error: currentJob.error
+                  }}
+                />
 
                 {/* Task Details */}
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks</h3>
-                  <TaskDisplayClient tasks={(currentJob.tasks || []).map(task => ({
-                    ...task,
-                    priceInDollars: Number(task.priceInDollars)
-                  }))} />
+                  <TaskDisplay 
+                    tasks={(currentJob.tasks || []).map(task => ({
+                      ...task,
+                      priceInDollars: Number(task.priceInDollars)
+                    }))} 
+                  />
                 </div>
               </div>
             </div>
@@ -194,6 +156,3 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
   );
 }
 
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}

@@ -9,8 +9,7 @@ import {
   PlayIcon
 } from "@heroicons/react/24/outline";
 import { GradeBadge } from "@/components/GradeBadge";
-import { EvaluationDetailsPanel } from "@/components/EvaluationDetailsPanel";
-import type { EvaluationTab } from "@/components/EvaluationDetails";
+import { EvaluationContent } from "@/components/evaluation";
 
 interface Evaluation {
   id: string;
@@ -107,7 +106,6 @@ const formatCost = (costInCents?: number) => {
 export default function EvaluationsMonitorPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [activeTab, setActiveTab] = useState<EvaluationTab>("analysis");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -235,27 +233,67 @@ export default function EvaluationsMonitorPage() {
         {/* Evaluation Details */}
         <div className="col-span-8">
           {selectedEvaluation && selectedVersion ? (
-            <EvaluationDetailsPanel
-              evaluation={{
-                id: selectedEvaluation.id,
-                documentId: selectedEvaluation.document.id,
-                documentTitle: selectedEvaluation.document.versions[0]?.title || 'Unknown Document',
-                agentId: selectedEvaluation.agent.id,
-                agentName: selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent',
-                agentVersion: `${selectedVersion.agentVersion.name} v${selectedVersion.agentVersion.version}`,
-                grade: selectedVersion.grade,
-                jobStatus: selectedJob?.status,
-                createdAt: selectedVersion.createdAt,
-                summary: selectedVersion.summary,
-                analysis: selectedVersion.analysis,
-                selfCritique: selectedVersion.selfCritique,
-                comments: selectedVersion.comments,
-                job: selectedVersion.job,
-              }}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              statusIcon={selectedJob && getStatusIcon(selectedJob.status)}
-            />
+            <div className="bg-white shadow rounded-lg p-6">
+              {/* Header with context */}
+              <div className="mb-6 border-b pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {selectedEvaluation.document.versions[0]?.title || 'Unknown Document'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {selectedVersion.agentVersion.name} v{selectedVersion.agentVersion.version} • {formatDate(selectedVersion.createdAt)}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {selectedJob && getStatusIcon(selectedJob.status)}
+                    <span className="text-sm text-gray-600">{selectedJob?.status}</span>
+                    <Link
+                      href={`/docs/${selectedEvaluation.document.id}/evals/${selectedEvaluation.agent.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      View Full Details →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Use new EvaluationContent component */}
+              <EvaluationContent
+                summary={selectedVersion.summary}
+                analysis={selectedVersion.analysis}
+                thinking={selectedVersion.job?.llmThinking ?? undefined}
+                selfCritique={selectedVersion.selfCritique ?? undefined}
+                comments={selectedVersion.comments.map((comment, index) => ({
+                  id: comment.id,
+                  description: comment.description,
+                  importance: comment.importance ?? null,
+                  grade: comment.grade ?? null,
+                  evaluationVersionId: selectedVersion.id,
+                  highlightId: comment.id,
+                  highlight: {
+                    id: comment.id,
+                    startOffset: 0,
+                    endOffset: 0,
+                    quotedText: comment.title,
+                    prefix: null,
+                    error: null,
+                    isValid: true
+                  }
+                }))}
+                agentName={selectedEvaluation.agent.versions[0]?.name || 'Unknown Agent'}
+                agentDescription={undefined}
+                grade={selectedVersion.grade}
+                ephemeralBatch={null}
+                costInCents={selectedVersion.job?.costInCents}
+                durationInSeconds={null}
+                createdAt={selectedVersion.createdAt}
+                isStale={false}
+                showNavigation={false}
+                compact={true}
+                maxWidth="full"
+              />
+            </div>
           ) : (
             <div className="bg-white shadow rounded-lg p-6 text-center">
               <div className="text-gray-500">Select an evaluation to view details</div>

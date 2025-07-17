@@ -1,10 +1,7 @@
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
-
-import { GradeBadge } from "@/components/GradeBadge";
 import { ExportEvaluationButton } from "@/components/ExportEvaluationButton";
+import { EvaluationContent } from "@/components/evaluation";
 import type { Evaluation } from "@/types/documentSchema";
+import Link from "next/link";
 import {
   ChatBubbleLeftIcon,
   DocumentTextIcon,
@@ -178,118 +175,54 @@ export function VersionDetails({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === "analysis" && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              {selectedVersion.grade !== undefined && (
-                <GradeBadge grade={selectedVersion.grade} />
-              )}
-              <div>
-                <h4 className="font-medium text-gray-900">Summary</h4>
-                <p className="text-sm text-gray-600">
-                  {selectedVersion.summary}
-                </p>
-              </div>
-            </div>
-            {selectedVersion.analysis && (
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4">
-                <div className="prose max-w-none break-words">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                  >
-                    {selectedVersion.analysis}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "comments" && (
-          <div className="space-y-4">
-            {selectedVersion.comments.map((comment, index) => (
-              <div
-                key={index}
-                className="rounded-lg border border-gray-200 bg-white p-4"
+        {activeTab === "logs" ? (
+          <TaskLogs selectedVersion={selectedVersion} />
+        ) : (
+          <div className="bg-white rounded-lg p-4">
+            <div className="mb-4">
+              <Link
+                href={`/docs/${documentId}/evals/${selectedReview?.agentId}`}
+                className="text-blue-600 hover:text-blue-800 text-sm"
               >
-                <div className="prose max-w-none">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                  >
-                    {comment.description}
-                  </ReactMarkdown>
-                </div>
-                {comment.highlight && (
-                  <>
-                    <div className="mt-2 rounded bg-yellow-50 p-2 text-sm">
-                      <div className="font-medium text-yellow-800">
-                        Highlighted Text:
-                      </div>
-                      <div className="mt-1 text-yellow-700">
-                        {comment.highlight.quotedText}
-                      </div>
-                    </div>
-                    <div className="mt-1 flex gap-4 text-xs text-gray-500">
-                      <span>Start: {comment.highlight.startOffset}</span>
-                      <span>End: {comment.highlight.endOffset}</span>
-                      {comment.highlight.prefix && (
-                        <span>Prefix: {comment.highlight.prefix}</span>
-                      )}
-                      {comment.importance !== undefined && (
-                        <span>Importance: {comment.importance}</span>
-                      )}
-                      {comment.grade !== undefined && (
-                        <span>Grade: {comment.grade}</span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTab === "thinking" && (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h2 className="mb-3 text-lg font-semibold text-gray-900">
-                LLM Thinking Process
-              </h2>
-              <div className="prose max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                >
-                  {selectedVersion.job?.llmThinking?.trim() ||
-                    "_No thinking process available for this version._"}
-                </ReactMarkdown>
-              </div>
+                View Full Evaluation Details →
+              </Link>
             </div>
+            <EvaluationContent
+              summary={selectedVersion.summary}
+              analysis={selectedVersion.analysis || ""}
+              thinking={selectedVersion.job?.llmThinking}
+              selfCritique={selectedVersion.selfCritique}
+              comments={selectedVersion.comments.map((comment, index) => ({
+                id: `comment-${index}`,
+                description: comment.description,
+                importance: comment.importance || null,
+                grade: comment.grade || null,
+                evaluationVersionId: `version-${index}`,
+                highlightId: `highlight-${index}`,
+                highlight: {
+                  id: `highlight-${index}`,
+                  startOffset: comment.highlight?.startOffset || 0,
+                  endOffset: comment.highlight?.endOffset || 0,
+                  quotedText: comment.highlight?.quotedText || "",
+                  prefix: comment.highlight?.prefix || null,
+                  error: null,
+                  isValid: comment.highlight?.isValid || true
+                }
+              }))}
+              agentName={selectedReview?.agent?.name || "Unknown Agent"}
+              agentDescription={selectedReview?.agent?.description}
+              grade={selectedVersion.grade}
+              ephemeralBatch={null}
+              costInCents={selectedVersion.job?.costInCents}
+              durationInSeconds={selectedVersion.job?.durationInSeconds}
+              createdAt={selectedVersion.createdAt}
+              isStale={selectedVersion.isStale || false}
+              showNavigation={false}
+              compact={true}
+              maxWidth="full"
+            />
           </div>
         )}
-
-        {activeTab === "selfCritique" && (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h2 className="mb-3 text-lg font-semibold text-gray-900">
-                Self-Critique
-              </h2>
-              <div className="prose max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw]}
-                >
-                  {selectedVersion.selfCritique?.trim() ||
-                    "_No self-critique available for this version._"}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "logs" && <TaskLogs selectedVersion={selectedVersion} />}
       </div>
     </div>
   );

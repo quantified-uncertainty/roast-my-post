@@ -6,7 +6,6 @@ import {
 import type { Agent } from "@/types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { AgentReview } from "@/types/evaluationSchema";
-import type { EvaluationTab } from "@/components/EvaluationDetails";
 
 import type {
   ActiveTab,
@@ -26,7 +25,7 @@ export function useAgentDetail(agent: Agent) {
   const [selectedEvaluation, setSelectedEvaluation] =
     useState<AgentEvaluation | null>(null);
   const [evalDetailsTab, setEvalDetailsTab] =
-    useState<EvaluationTab>("analysis");
+    useState<string>("analysis");
   const [loading, setLoading] = useState(true);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [evalsLoading, setEvalsLoading] = useState(false);

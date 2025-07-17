@@ -1,16 +1,8 @@
-import {
-  StatusBadge,
-  StatusIcon,
-} from "../components";
+import { JobCard } from "@/components/job";
 import type {
   BatchSummary,
   Job,
 } from "../types";
-import {
-  formatCost,
-  formatRelativeDate,
-  formatDuration,
-} from "../utils";
 
 interface JobsTabProps {
   jobs: Job[];
@@ -72,39 +64,30 @@ export function JobsTab({
       ) : (
         <div className="space-y-4">
           {jobs.map((job) => (
-            <div
+            <JobCard
               key={job.id}
-              className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-gray-900">
-                    {job.document.title}
-                    {job.originalJobId && (
-                      <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                        retry #{(job.attempts || 0) + 1}
-                      </span>
-                    )}
-                  </h4>
-                  <p className="text-sm text-gray-500">
-                    Agent: {job.agent.name} • Created {formatRelativeDate(job.createdAt)}
-                  </p>
-                  {job.batch && (
-                    <p className="text-sm text-blue-600">
-                      Batch: {job.batch.name || `#${job.batch.id.slice(0, 8)}`}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusIcon status={job.status} />
-                  <StatusBadge status={job.status} />
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                <span>{formatDuration(job.durationInSeconds)}</span>
-                <span>{formatCost(job.costInCents)}</span>
-              </div>
-            </div>
+              job={{
+                id: job.id,
+                status: job.status,
+                createdAt: job.createdAt,
+                durationInSeconds: job.durationInSeconds,
+                costInCents: job.costInCents,
+                attempts: job.attempts,
+                originalJobId: job.originalJobId,
+                document: {
+                  id: job.document.id,
+                  title: job.document.title
+                },
+                agent: {
+                  id: job.agent.id,
+                  name: job.agent.name
+                },
+                batch: job.batch
+              }}
+              showDocument={true}
+              showAgent={false}
+              showBatch={true}
+            />
           ))}
         </div>
       )}
