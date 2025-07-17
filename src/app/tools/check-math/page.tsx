@@ -26,7 +26,7 @@ export default function MathCheckerPage() {
     setErrors(null);
 
     try {
-      const response = await fetch('/api/tools/math-checker', {
+      const response = await fetch('/api/tools/check-math', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
