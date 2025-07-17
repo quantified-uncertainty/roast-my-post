@@ -42,7 +42,7 @@ export function convertFindingToHighlight(
   // Try to find the text within the specified line range (with some tolerance)
   const lineRangeTolerance = 2; // Search 2 lines before and after
   const actualStartLine = Math.max(1, searchStartLine - lineRangeTolerance);
-  const actualEndLine = searchEndLine + lineRangeTolerance;
+  const actualEndLine = Math.max(searchStartLine, searchEndLine || searchStartLine) + lineRangeTolerance;
   
   const locationResult = locationUtils.findTextInLineRange(
     matchText,
@@ -81,10 +81,11 @@ export function convertFindingToHighlight(
   };
 
   // Add grade if it makes sense based on severity
+  // Convert letter grades to numeric grades that match the database schema
   if (finding.severity === 'high') {
-    comment.grade = 'D';
+    (comment as any).grade = 65; // D grade (60-69 range)
   } else if (finding.severity === 'medium') {
-    comment.grade = 'C';
+    (comment as any).grade = 75; // C grade (70-79 range)
   }
 
   return comment;

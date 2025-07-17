@@ -1,239 +1,122 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import React from 'react';
+import { ToolPageTemplate } from '@/components/tools/form-generators';
 import { forecasterTool } from '@/tools/forecaster';
 
-interface ForecastResult {
-  probability: number;
-  description: string;
-  consensus: 'low' | 'medium' | 'high';
-  individualForecasts: Array<{
-    probability: number;
-    reasoning: string;
-  }>;
-  statistics: {
-    mean: number;
-    stdDev: number;
-  };
-}
-
-export default function SimpleForecasterPage() {
-  // Get schema constraints from the tool's description
-  // These are now aligned with the tool's actual schema
-  const questionMaxLength = 500; // From schema: max(500)
-  const contextMaxLength = 1000; // From schema: max(1000)
-  const numForecastsMin = 1; // Updated from schema: min(1)
-  const numForecastsMax = 20; // From schema: max(20)
-  const numForecastsDefault = 6; // From schema: default(6)
-
-  const [question, setQuestion] = useState('');
-  const [context, setContext] = useState('');
-  const [timeframe, setTimeframe] = useState('');
-  const [numForecasts, setNumForecasts] = useState(numForecastsDefault);
-  const [usePerplexity, setUsePerplexity] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ForecastResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await fetch('/api/tools/forecaster-simple', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, context, timeframe, numForecasts, usePerplexity }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      if (data.success && data.result) {
-        setResult(data.result);
-      } else {
-        throw new Error(data.error || 'Unknown error occurred');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function ForecasterAutoPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Simple Forecaster</h1>
-        <p className="text-gray-600">
-          Generate a probability forecast using 6 independent Claude analyses. The system will
-          remove outliers and provide an aggregated forecast with confidence levels.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label htmlFor="question" className="block text-sm font-medium text-gray-700 mb-1">
-            Forecasting Question <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="question"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={2}
-            placeholder="e.g., Will SpaceX successfully land humans on Mars by 2035?"
-            maxLength={questionMaxLength}
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">{question.length}/{questionMaxLength} characters</p>
-        </div>
-
-        <div>
-          <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-1">
-            Context (optional)
-          </label>
-          <textarea
-            id="context"
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={3}
-            placeholder="e.g., SpaceX has announced plans for Mars missions, current technology state..."
-            maxLength={contextMaxLength}
-          />
-          <p className="text-xs text-gray-500 mt-1">{context.length}/{contextMaxLength} characters</p>
-        </div>
-
-        <div>
-          <label htmlFor="timeframe" className="block text-sm font-medium text-gray-700 mb-1">
-            Timeframe (optional)
-          </label>
-          <input
-            type="text"
-            id="timeframe"
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g., By December 31, 2035"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="numForecasts" className="block text-sm font-medium text-gray-700 mb-1">
-              Number of Forecasts
-            </label>
-            <input
-              type="number"
-              id="numForecasts"
-              value={numForecasts}
-              onChange={(e) => setNumForecasts(parseInt(e.target.value) || numForecastsDefault)}
-              min={numForecastsMin}
-              max={numForecastsMax}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">{numForecastsMin}-{numForecastsMax} forecasts (default: {numForecastsDefault})</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Research Options
-            </label>
-            <div className="mt-2">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={usePerplexity}
-                  onChange={(e) => setUsePerplexity(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Use Perplexity for research
-                </span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                {usePerplexity ? '🔍 Will search for relevant context' : 'Using only provided context'}
+    <ToolPageTemplate
+      tool={forecasterTool}
+      formConfig={{
+        fieldOrder: ['question', 'context', 'numForecasts', 'usePerplexity'],
+        fieldConfigs: {
+          question: {
+            label: 'Forecasting Question',
+            placeholder: 'What would you like to forecast?',
+            helpText: 'A clear, specific question about a future event or outcome'
+          },
+          context: {
+            label: 'Additional Context',
+            placeholder: 'Provide any relevant background information...',
+            helpText: 'Optional context to help improve the forecast accuracy',
+            rows: 4
+          },
+          numForecasts: {
+            label: 'Number of Forecasts',
+            helpText: 'How many independent forecasts to generate (3-20)',
+            min: 3,
+            max: 20,
+            step: 1
+          },
+          usePerplexity: {
+            label: 'Use Perplexity Research',
+            helpText: 'Enable web research for more informed forecasts (adds ~$0.01 cost)'
+          }
+        },
+        submitButtonText: 'Generate Forecasts',
+        submitButtonColor: 'blue',
+        examples: [
+          {
+            name: 'Interest Rate Forecast',
+            description: 'Economic prediction with context',
+            data: {
+              question: 'Will the Federal Reserve raise interest rates by more than 0.5% in 2025?',
+              context: 'Current inflation is at 3.2%, unemployment at 4.1%, and the Fed has signaled a cautious approach.',
+              numForecasts: 6,
+              usePerplexity: true
+            }
+          },
+          {
+            name: 'Technology Prediction',
+            description: 'Simple tech forecast',
+            data: {
+              question: 'Will OpenAI release GPT-5 before July 2025?',
+              numForecasts: 8,
+              usePerplexity: false
+            }
+          },
+          {
+            name: 'Sports Outcome',
+            data: {
+              question: 'Will the Lakers make the NBA playoffs in the 2024-25 season?',
+              context: 'Current record: 15-12, LeBron James is healthy, Anthony Davis averaging 28 PPG',
+              numForecasts: 5,
+              usePerplexity: false
+            }
+          }
+        ]
+      }}
+      renderResults={(result) => {
+        const typedResult = result as any;
+        
+        return (
+          <div className="space-y-6">
+            {/* Main forecast result */}
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <h2 className="text-xl font-semibold mb-2">Forecast Result</h2>
+              <div className="text-3xl font-bold text-blue-900">
+                {(typedResult.aggregatedForecast * 100).toFixed(1)}%
+              </div>
+              <p className="text-sm text-blue-700 mt-1">
+                Aggregated probability from {typedResult.forecasts.length} independent forecasts
               </p>
             </div>
-          </div>
-        </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !question.trim()}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? `Generating ${numForecasts} Forecasts...` : 'Generate Forecast'}
-        </button>
-      </form>
-
-      {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
-        </div>
-      )}
-
-      {result && (
-        <div className="mt-8 space-y-6">
-          <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-            <h2 className="text-2xl font-bold text-blue-900 mb-2">
-              Forecast: {result.probability.toFixed(1)}%
-            </h2>
-            <p className="text-gray-700">{result.description}</p>
-            <div className="mt-3">
-              <span className="text-sm font-medium text-blue-800">Consensus Level: </span>
-              <span className={`text-sm px-2 py-1 rounded-full ${
-                result.consensus === 'high' ? 'bg-green-100 text-green-800' :
-                result.consensus === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {result.consensus}
-              </span>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold mb-4">Statistics</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Mean</p>
-                <p className="text-xl font-semibold">{result.statistics.mean.toFixed(1)}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Standard Deviation</p>
-                <p className="text-xl font-semibold">{result.statistics.stdDev.toFixed(1)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h3 className="text-lg font-semibold mb-4">Individual Forecasts</h3>
-            <div className="space-y-3">
-              {result.individualForecasts.map((forecast: any, i) => (
-                <div key={i} className="border-l-4 border-gray-200 pl-4 py-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium">Forecast {i + 1}</span>
-                    <span className="text-lg font-semibold">{forecast.probability.toFixed(1)}%</span>
+            {/* Individual forecasts */}
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold mb-4">Individual Forecasts</h3>
+              <div className="space-y-3">
+                {typedResult.forecasts.map((forecast: any, i: number) => (
+                  <div key={i} className="border-l-4 border-gray-300 pl-4">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-medium">Forecast {i + 1}</span>
+                      <span className="text-lg font-semibold">{(forecast.probability * 100).toFixed(1)}%</span>
+                    </div>
+                    <p className="text-sm text-gray-600">{forecast.reasoning}</p>
                   </div>
-                  <p className="text-sm text-gray-700">{forecast.reasoning}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* Analysis summary */}
+            {typedResult.analysis && (
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-semibold mb-2">Analysis Summary</h3>
+                <p className="text-gray-700 whitespace-pre-wrap">{typedResult.analysis}</p>
+              </div>
+            )}
+
+            {/* Research results if Perplexity was used */}
+            {typedResult.researchSummary && (
+              <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <h3 className="text-lg font-semibold mb-2">Research Summary</h3>
+                <p className="text-gray-700 whitespace-pre-wrap">{typedResult.researchSummary}</p>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-    </div>
+        );
+      }}
+    />
   );
 }

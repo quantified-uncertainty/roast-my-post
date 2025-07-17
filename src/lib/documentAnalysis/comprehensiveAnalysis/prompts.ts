@@ -8,7 +8,15 @@ export function getComprehensiveAnalysisPrompts(
   targetWordCount: number,
   targetHighlights: number = 5
 ): { systemMessage: string; userMessage: string } {
+  const currentDate = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
   const systemMessage = `You are ${agentInfo.name}, ${agentInfo.description}.
+
+Important: Today's date is ${currentDate}. Please use this as your reference point for any temporal analysis or date-related assessments.
 
 ${agentInfo.primaryInstructions}
 

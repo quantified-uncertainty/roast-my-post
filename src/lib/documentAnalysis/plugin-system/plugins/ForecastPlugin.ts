@@ -8,6 +8,7 @@ import { TextChunk } from '../TextChunk';
 import { callClaudeWithTool, MODEL_CONFIG } from '../../../claude/wrapper';
 import forecasterTool from '../../../../tools/forecaster/index';
 import { logger } from '../../../../lib/logger';
+import { LocationUtils } from '../../utils/LocationUtils';
 
 interface ForecastState {
   predictions: Array<{
@@ -19,6 +20,8 @@ interface ForecastState {
     probability?: number;
     topic: string;
     authorConfidence?: 'low' | 'medium' | 'high';
+    lineNumber?: number;
+    lineText?: string;
   }>;
   ourForecasts: Array<{
     predictionId: string;
@@ -79,10 +82,35 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
     );
 
     const findings: Finding[] = [];
+    
+    // Create location utils for this chunk
+    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Store predictions
     result.predictions.forEach(pred => {
       const predId = `${chunk.id}-${this.state.predictions.length}`;
+      
+      // Try to find the prediction text in the chunk to get line information
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      const predPosition = chunk.text.indexOf(pred.text);
+      if (predPosition !== -1) {
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          predPosition,
+          predPosition + pred.text.length
+        );
+        
+        if (locationInfo) {
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+          } else {
+            lineNumber = locationInfo.start.lineNumber;
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+      
       this.state.predictions.push({
         id: predId,
         text: pred.text,
@@ -91,19 +119,32 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
         timeframe: pred.timeframe,
         probability: pred.probability,
         topic: pred.topic,
-        authorConfidence: this.assessConfidence(pred, chunk)
+        authorConfidence: this.assessConfidence(pred, chunk),
+        lineNumber,
+        lineText
       });
 
-      findings.push({
+      const finding: Finding = {
         type: 'forecast',
-        severity: 'info',
+        severity: 'info' as const,
         message: `Prediction: ${pred.text}`,
         metadata: {
           timeframe: pred.timeframe,
           topic: pred.topic,
           probability: pred.probability
         }
-      });
+      };
+      
+      // Add location hint if available
+      if (lineNumber && lineText) {
+        finding.locationHint = {
+          lineNumber,
+          lineText,
+          matchText: pred.text,
+        };
+      }
+      
+      findings.push(finding);
     });
 
     return {
@@ -148,16 +189,28 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
 
         // Add finding if there's significant disagreement
         if (prediction.probability && !ourForecast.agreesWithAuthor) {
-          findings.push({
+          const finding: Finding = {
             type: 'forecast_disagreement',
             severity: 'medium',
             message: `Forecast disagreement on "${prediction.text}": Author says ${prediction.probability}%, our analysis suggests ${ourForecast.ourProbability}%`,
             metadata: {
               authorProbability: prediction.probability,
               ourProbability: ourForecast.ourProbability,
-              reasoning: ourForecast.reasoning
+              reasoning: ourForecast.reasoning,
+              chunkId: prediction.chunkId,
             }
-          });
+          };
+          
+          // Add location hint if available
+          if (prediction.lineNumber && prediction.lineText) {
+            finding.locationHint = {
+              lineNumber: prediction.lineNumber,
+              lineText: prediction.lineText,
+              matchText: prediction.text,
+            };
+          }
+          
+          findings.push(finding);
         }
 
         // Track LLM calls from forecast generation
@@ -353,10 +406,29 @@ For each prediction, identify:
     );
     
     if (highConfPredictions.length > 3) {
-      findings.push({
-        type: 'overconfidence',
-        severity: 'medium',
-        message: `${highConfPredictions.length} predictions show extreme confidence (>90% or <10%)`
+      // Add individual findings for each overconfident prediction
+      highConfPredictions.forEach(pred => {
+        const finding: Finding = {
+          type: 'overconfidence',
+          severity: 'medium',
+          message: `Overconfident prediction: "${pred.text}" (${pred.probability}%)`,
+          metadata: {
+            probability: pred.probability,
+            chunkId: pred.chunkId,
+            topic: pred.topic,
+          }
+        };
+        
+        // Add location hint if available
+        if (pred.lineNumber && pred.lineText) {
+          finding.locationHint = {
+            lineNumber: pred.lineNumber,
+            lineText: pred.lineText,
+            matchText: pred.text,
+          };
+        }
+        
+        findings.push(finding);
       });
     }
 
