@@ -235,11 +235,11 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     // Create a text block with all claims for batch verification
     const claimsText = claimsToVerify.map(claim => `${claim.text} (Topic: ${claim.topic})`).join('\n');
 
-    // Use the tool to verify claims
+    // Use the tool to verify claims (limit to 50 per tool validation)
     const toolResult = await FactCheckTool.run({
       text: claimsText,
       context: 'Claims extracted from document for verification',
-      maxClaims: claimsToVerify.length,
+      maxClaims: Math.min(50, claimsToVerify.length),
       verifyHighPriority: true
     }, {
       userId: 'plugin-system',
