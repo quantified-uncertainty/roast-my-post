@@ -232,14 +232,19 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       };
     }
 
-    // Create a text block with all claims for batch verification
-    const claimsText = claimsToVerify.map(claim => `${claim.text} (Topic: ${claim.topic})`).join('\n');
+    // Prioritize claims if we have more than 50 (tool limit)
+    const prioritizedClaims = claimsToVerify.length > 50 
+      ? this.prioritizeClaimsForVerification(claimsToVerify, 50)
+      : claimsToVerify;
+
+    // Create a text block with prioritized claims for batch verification
+    const claimsText = prioritizedClaims.map(claim => `${claim.text} (Topic: ${claim.topic})`).join('\n');
 
     // Use the tool to verify claims
     const toolResult = await FactCheckTool.run({
       text: claimsText,
       context: 'Claims extracted from document for verification',
-      maxClaims: claimsToVerify.length,
+      maxClaims: prioritizedClaims.length,
       verifyHighPriority: true
     }, {
       userId: 'plugin-system',
@@ -330,6 +335,32 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     };
   }
 
+
+  private prioritizeClaimsForVerification(claims: any[], maxCount: number): any[] {
+    // Prioritization strategy:
+    // 1. High importance + high specificity (most verifiable and important)
+    // 2. High importance + medium specificity 
+    // 3. Medium importance + high specificity
+    // 4. Others
+    
+    const sorted = [...claims].sort((a, b) => {
+      // Calculate priority score (higher = better)
+      const getScore = (claim: any) => {
+        let score = 0;
+        if (claim.importance === 'high') score += 10;
+        else if (claim.importance === 'medium') score += 5;
+        
+        if (claim.specificity === 'high') score += 10;
+        else if (claim.specificity === 'medium') score += 5;
+        
+        return score;
+      };
+      
+      return getScore(b) - getScore(a);
+    });
+    
+    return sorted.slice(0, maxCount);
+  }
 
   private generateRecommendations(falseCount: number, contradictionCount: number): string[] {
     const recommendations: string[] = [];
