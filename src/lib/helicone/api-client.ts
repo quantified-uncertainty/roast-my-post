@@ -75,40 +75,72 @@ export class HeliconeAPIClient {
    * Query requests from Helicone
    */
   async queryRequests(options: HeliconeQueryOptions): Promise<HeliconeQueryResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/request/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(options),
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/v1/request/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(options),
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Helicone API error: ${response.status} - ${error}`);
+      if (!response.ok) {
+        let errorMessage: string;
+        try {
+          const errorData = await response.text();
+          errorMessage = errorData || response.statusText;
+        } catch {
+          errorMessage = response.statusText;
+        }
+        
+        // Handle specific error cases
+        if (response.status === 429) {
+          throw new Error(`Helicone API rate limit exceeded (${response.status}): ${errorMessage}`);
+        } else if (response.status >= 500) {
+          throw new Error(`Helicone API server error (${response.status}): ${errorMessage}`);
+        } else if (response.status === 401) {
+          throw new Error(`Helicone API authentication failed (${response.status}): Invalid API key`);
+        } else {
+          throw new Error(`Helicone API error (${response.status}): ${errorMessage}`);
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Handle network errors and timeouts
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Network error connecting to Helicone API: ${error.message}`);
+      } else if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Helicone API request timeout (30s exceeded)');
+      }
+      // Re-throw other errors
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
    * Get requests for a specific session
    */
   async getSessionRequests(sessionId: string): Promise<HeliconeRequest[]> {
-    const result = await this.queryRequests({
-      filter: {
-        request: {
-          properties: {
-            'Helicone-Session-Id': { equals: sessionId }
+    try {
+      const result = await this.queryRequests({
+        filter: {
+          request: {
+            properties: {
+              'Helicone-Session-Id': { equals: sessionId }
+            }
           }
-        }
-      },
-      sort: { created_at: 'asc' },
-      limit: 100
-    });
+        },
+        sort: { created_at: 'asc' },
+        limit: 100
+      });
 
-    return result.data;
+      return result.data;
+    } catch (error) {
+      throw new Error(`Failed to get session requests for ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**
