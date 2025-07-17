@@ -24,24 +24,24 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
   const [expandedTasks, setExpandedTasks] = React.useState<Set<string>>(new Set());
   const [jsonViewMode, setJsonViewMode] = React.useState<'pretty' | 'compact'>('pretty');
 
-  if (!tasks || tasks.length === 0) {
-    return (
-      <div className="text-center text-gray-500">
-        No tasks available
-      </div>
-    );
-  }
-
-  // Memoize expensive calculations
+  // Memoize expensive calculations (must be before any early returns)
   const { totalCost, totalTime, parsedTasks } = useMemo(() => {
+    if (!tasks || tasks.length === 0) {
+      return {
+        totalCost: 0,
+        totalTime: 0,
+        parsedTasks: []
+      };
+    }
+
     const parsed = tasks.map(task => {
-      let logData: any = {};
+      let logData: Record<string, unknown> = {};
       let summary = "No log data";
       
       try {
         logData = task.log ? JSON.parse(task.log) : {};
-        summary = logData.summary || summary;
-      } catch (e) {
+        summary = (logData.summary as string) || summary;
+      } catch {
         summary = task.log || summary;
       }
 
@@ -54,6 +54,14 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
       parsedTasks: parsed
     };
   }, [tasks]);
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="text-center text-gray-500">
+        No tasks available
+      </div>
+    );
+  }
 
   const toggleTask = (taskId: string) => {
     const newExpanded = new Set(expandedTasks);
