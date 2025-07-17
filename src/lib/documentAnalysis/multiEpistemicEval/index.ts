@@ -19,6 +19,8 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { generateSelfCritique } from "../selfCritique";
 import type { SelfCritiqueInput } from "../selfCritique";
 import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
+import { convertFindingsToHighlights, filterFindingsWithLocationHints } from '../plugin-system/utils/findingToHighlight';
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 /**
  * Convert RichLLMInteraction to LLMInteraction format for TaskResult
@@ -77,8 +79,11 @@ export async function analyzeWithMultiEpistemicEval(
     
     manager.registerPlugins(plugins);
     
-    // Run analysis
-    const pluginResults = await manager.analyzeDocument(document.content, {
+    // Get full document content with prepend (same as comprehensive analysis)
+    const { content: fullContent, prependLineCount } = getDocumentFullContent(document);
+    
+    // Run analysis on full content
+    const pluginResults = await manager.analyzeDocument(fullContent, {
       chunkSize: 1000,
       chunkByParagraphs: true
     });
@@ -99,16 +104,56 @@ export async function analyzeWithMultiEpistemicEval(
       llmInteractions: routerInteractions.map(convertRichLLMInteraction)
     });
     
-    // Step 2: Format results into structured findings
+    // Step 2: Extract plugin-generated highlights
+    logger.info(`Converting plugin findings to highlights...`);
+    const pluginHighlights: Comment[] = [];
+    
+    // Collect all findings from all plugins
+    const allFindings: any[] = [];
+    
+    // First check if we have SPELLING plugin results
+    if (pluginResults.pluginResults instanceof Map) {
+      const spellingResult = pluginResults.pluginResults.get('SPELLING');
+      if (spellingResult) {
+        logger.info(`SPELLING plugin has ${spellingResult.findings.length} findings`);
+        
+        // The SpellingPlugin stores detailed error info in its state
+        // but only returns high-level findings in synthesize()
+        // For now, we'll need to use what's available in the synthesis
+        allFindings.push(...spellingResult.findings);
+      }
+      
+      // Also collect from other plugins
+      for (const [pluginName, pluginResult] of pluginResults.pluginResults.entries()) {
+        if (pluginName !== 'SPELLING') {
+          allFindings.push(...pluginResult.findings);
+        }
+      }
+    }
+    
+    logger.info(`Total findings from all plugins: ${allFindings.length}`);
+    
+    // Filter findings with location hints and convert to highlights
+    const findingsWithLocation = filterFindingsWithLocationHints(allFindings);
+    logger.info(`Findings with location hints: ${findingsWithLocation.length}`);
+    
+    const convertedHighlights = convertFindingsToHighlights(
+      findingsWithLocation,
+      fullContent
+    );
+    pluginHighlights.push(...convertedHighlights);
+    logger.info(`Converted ${pluginHighlights.length} plugin findings to highlights`);
+    
+    // Step 3: Format results into structured findings
     const structuredFindings = formatPluginFindings(pluginResults);
     
-    // Step 3: Create enhanced agent with plugin findings
+    // Step 4: Create enhanced agent with plugin findings
     const enhancedAgent = {
       ...agentInfo,
       primaryInstructions: `${agentInfo.primaryInstructions}\n\nPlugin Analysis Results:\n${structuredFindings}`
     };
     
-    // Step 4: Generate comprehensive analysis using the findings
+    // Step 5: Generate comprehensive analysis using the findings
     logger.info(`Generating comprehensive analysis from plugin findings...`);
     const analysisResult = await generateComprehensiveAnalysis(
       document,
@@ -166,13 +211,24 @@ export async function analyzeWithMultiEpistemicEval(
       }
     }
     
+    // Merge plugin highlights with LLM-generated highlights
+    // Plugin highlights come first as they are more precise
+    const allHighlights = [...pluginHighlights, ...highlightResult.outputs.highlights];
+    
+    // Deduplicate highlights that might overlap
+    const uniqueHighlights = deduplicateHighlights(allHighlights);
+    
+    logger.info(
+      `Final highlights: ${uniqueHighlights.length} (${pluginHighlights.length} from plugins, ${highlightResult.outputs.highlights.length} from LLM)`
+    );
+    
     return {
       thinking: "", // Comprehensive analysis doesn't provide thinking
       analysis: analysisResult.outputs.analysis,
       summary: analysisResult.outputs.summary,
       grade: analysisResult.outputs.grade,
       selfCritique,
-      highlights: highlightResult.outputs.highlights,
+      highlights: uniqueHighlights,
       tasks
     };
     
@@ -246,4 +302,39 @@ function countCriticalFindings(results: any): number {
     }
   }
   return count;
+}
+
+/**
+ * Deduplicate highlights based on overlapping positions
+ */
+function deduplicateHighlights(highlights: Comment[]): Comment[] {
+  if (highlights.length <= 1) return highlights;
+  
+  // Sort by start offset
+  const sorted = [...highlights].sort((a, b) => 
+    a.highlight.startOffset - b.highlight.startOffset
+  );
+  
+  const unique: Comment[] = [];
+  
+  for (const highlight of sorted) {
+    // Check if this highlight overlaps with any existing unique highlight
+    const overlaps = unique.some(existing => {
+      const existingStart = existing.highlight.startOffset;
+      const existingEnd = existing.highlight.endOffset;
+      const currentStart = highlight.highlight.startOffset;
+      const currentEnd = highlight.highlight.endOffset;
+      
+      // Check for overlap (fixed off-by-one error)
+      return (currentStart >= existingStart && currentStart < existingEnd) ||
+             (currentEnd > existingStart && currentEnd <= existingEnd) ||
+             (currentStart < existingStart && currentEnd > existingEnd);
+    });
+    
+    if (!overlaps) {
+      unique.push(highlight);
+    }
+  }
+  
+  return unique;
 }

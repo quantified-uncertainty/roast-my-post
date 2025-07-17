@@ -12,12 +12,18 @@ export interface TextChunk {
       start: number;
       end: number;
     };
+    lineInfo?: {
+      startLine: number; // 1-based line number
+      endLine: number; // 1-based line number
+      totalLines: number; // Number of lines in the chunk
+    };
   };
   
   // Helper methods
   getContext(position: number, windowSize?: number): string;
   getTextBefore(length: number): string;
   getTextAfter(length: number): string;
+  getLineNumber(charOffset: number): number | null; // Get line number for a character offset within the chunk
 }
 
 export interface Finding {
@@ -27,6 +33,13 @@ export interface Finding {
   location?: {
     start: number;
     end: number;
+  };
+  locationHint?: {
+    lineNumber?: number; // 1-based line number
+    lineText?: string; // The actual line text for context
+    matchText?: string; // The specific text that was found
+    startLineNumber?: number; // For multi-line findings
+    endLineNumber?: number; // For multi-line findings
   };
   metadata?: Record<string, any>;
 }

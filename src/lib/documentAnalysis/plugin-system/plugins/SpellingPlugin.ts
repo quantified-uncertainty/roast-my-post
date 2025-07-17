@@ -13,6 +13,7 @@ import {
   RoutingExample,
   SynthesisResult,
 } from "../types";
+import { LocationUtils } from "../../utils/LocationUtils";
 
 interface SpellingState {
   errors: Array<{
@@ -21,6 +22,8 @@ interface SpellingState {
     type: "spelling" | "grammar" | "style";
     chunkId: string;
     context: string;
+    lineNumber?: number;
+    lineText?: string;
   }>;
   commonPatterns: Map<string, number>;
 }
@@ -71,14 +74,56 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       }
     );
 
+    logger.debug(`SpellingPlugin: Found ${result.errors.length} errors in chunk ${chunk.id}`);
+
     const findings: Finding[] = [];
+    
+    // Create location utils for this chunk
+    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Process errors
     result.errors.forEach((error) => {
+      // Try to find the error text in the chunk
+      const errorPosition = chunk.text.indexOf(error.text);
+      let locationHint: Finding['locationHint'] = undefined;
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      if (errorPosition !== -1) {
+        // Get line info within the chunk
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          errorPosition, 
+          errorPosition + error.text.length
+        );
+        
+        if (locationInfo) {
+          // If chunk has global line info, adjust the line numbers
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+            locationHint = {
+              lineNumber,
+              lineText: locationInfo.start.lineText,
+              matchText: error.text,
+            };
+          } else {
+            // Use chunk-relative line numbers
+            lineNumber = locationInfo.start.lineNumber;
+            locationHint = {
+              lineNumber,
+              lineText: locationInfo.start.lineText,
+              matchText: error.text,
+            };
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+
       this.state.errors.push({
         ...error,
         chunkId: chunk.id,
         context: error.context || chunk.getContext(0, 50),
+        lineNumber,
+        lineText,
       });
 
       // Track patterns
@@ -89,6 +134,7 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
         type: `${error.type}_error`,
         severity: "low",
         message: `${error.type} error: "${error.text}" → "${error.correction}"`,
+        locationHint,
         metadata: {
           original: error.text,
           suggestion: error.correction,
@@ -136,6 +182,32 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
 
     const findings: Finding[] = [];
 
+    // First, add individual error findings with location hints
+    this.state.errors.forEach((error) => {
+      const finding: Finding = {
+        type: `${error.type}_error`,
+        severity: "low",
+        message: `${error.type} error: "${error.text}" → "${error.correction}"`,
+        metadata: {
+          original: error.text,
+          suggestion: error.correction,
+          errorType: error.type,
+          chunkId: error.chunkId,
+        }
+      };
+      
+      // Add location hint if available
+      if (error.lineNumber && error.lineText) {
+        finding.locationHint = {
+          lineNumber: error.lineNumber,
+          lineText: error.lineText,
+          matchText: error.text,
+        };
+      }
+      
+      findings.push(finding);
+    });
+
     // Add finding for systematic issues
     if (totalErrors > 20) {
       findings.push({
@@ -145,7 +217,7 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       });
     }
 
-    // Add findings for repeated errors
+    // Add findings for repeated errors (but not as individual highlights)
     commonErrors.forEach((error) => {
       if (error.count > 2) {
         findings.push({

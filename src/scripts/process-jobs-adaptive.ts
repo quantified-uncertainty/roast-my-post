@@ -7,6 +7,7 @@ import {
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { JobStatus } from "@prisma/client";
+import { getAgentTimeout, formatTimeout } from "@/config/agentTimeouts";
 
 // Configuration with environment variable support
 const DEFAULT_MAX_WORKERS = parseInt(process.env.ADAPTIVE_MAX_WORKERS || '5', 10);
@@ -37,6 +38,13 @@ class AdaptiveJobProcessor {
   private startTime = new Date();
   private lastStaleCheckTime = new Date();
   private jobWorkerMap = new Map<string, number>(); // Track which worker is processing which job
+  
+  // Cache for timeout calculation to avoid repeated complex queries
+  private timeoutCache: { 
+    value: number; 
+    expiry: number; 
+    lastJobId?: string;
+  } = { value: WORKER_TIMEOUT_MS, expiry: 0 };
 
   constructor(maxWorkers: number = DEFAULT_MAX_WORKERS) {
     this.maxWorkers = maxWorkers;
@@ -116,11 +124,96 @@ class AdaptiveJobProcessor {
     return count;
   }
 
+  /**
+   * Get the timeout requirement for the next pending job (with caching)
+   */
+  private async getNextJobTimeout(): Promise<number> {
+    const now = Date.now();
+    const CACHE_TTL_MS = 5000; // Cache for 5 seconds to avoid excessive queries
+
+    // Check if cache is still valid
+    if (now < this.timeoutCache.expiry) {
+      return this.timeoutCache.value;
+    }
+
+    // Get just the job ID first to check if we need to do the full query
+    const nextJobIdOnly = await prisma.job.findFirst({
+      where: { status: JobStatus.PENDING },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true }
+    });
+
+    if (!nextJobIdOnly) {
+      // No pending jobs, cache default timeout
+      this.timeoutCache = {
+        value: WORKER_TIMEOUT_MS,
+        expiry: now + CACHE_TTL_MS
+      };
+      return WORKER_TIMEOUT_MS;
+    }
+
+    // If it's the same job as last time and cache isn't too old, reuse result
+    if (nextJobIdOnly.id === this.timeoutCache.lastJobId && now < this.timeoutCache.expiry + 10000) {
+      return this.timeoutCache.value;
+    }
+
+    // Only do the expensive query if we need to
+    const nextJob = await prisma.job.findFirst({
+      where: { id: nextJobIdOnly.id },
+      include: {
+        evaluation: {
+          include: {
+            agent: {
+              include: {
+                versions: {
+                  orderBy: { version: 'desc' },
+                  take: 1,
+                  select: {
+                    extendedCapabilityId: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!nextJob) {
+      // Race condition - job was processed between queries
+      this.timeoutCache = {
+        value: WORKER_TIMEOUT_MS,
+        expiry: now + CACHE_TTL_MS
+      };
+      return WORKER_TIMEOUT_MS;
+    }
+
+    const capability = nextJob.evaluation.agent.versions[0]?.extendedCapabilityId;
+    const timeout = getAgentTimeout(capability);
+    
+    // Cache the result
+    this.timeoutCache = {
+      value: timeout,
+      expiry: now + CACHE_TTL_MS,
+      lastJobId: nextJobIdOnly.id
+    };
+    
+    // Log if using non-default timeout
+    if (timeout !== WORKER_TIMEOUT_MS) {
+      logger.info(`📊 Next job requires ${formatTimeout(timeout)} timeout (capability: ${capability})`);
+    }
+    
+    return timeout;
+  }
+
   private async spawnWorker(): Promise<void> {
     const workerId = this.nextWorkerId++;
+    
+    // Get timeout for the next job
+    const workerTimeout = await this.getNextJobTimeout();
 
     return new Promise((resolve, reject) => {
-      console.log(`🚀 Spawning worker ${workerId}...`);
+      console.log(`🚀 Spawning worker ${workerId} with ${formatTimeout(workerTimeout)} timeout...`);
 
       const childProcess = spawn("npm", ["run", "process-jobs"], {
         stdio: "pipe", // Always pipe to capture output
@@ -160,12 +253,12 @@ class AdaptiveJobProcessor {
       // Set timeout for hanging processes
       const timeout = setTimeout(async () => {
         if (!isResolved && !this.isShuttingDown) {
-          console.error(`\n⏰ Worker ${workerId} timeout after ${WORKER_TIMEOUT_MS/1000}s - terminating...`);
+          console.error(`\n⏰ Worker ${workerId} timeout after ${workerTimeout/1000}s - terminating...`);
           
           // Mark job as failed if worker was processing one
           if (worker.jobId) {
             console.error(`   🔥 Job ${worker.jobId} needs recovery (worker timeout)`);
-            await this.markJobAsFailed(worker.jobId, `Worker ${workerId} timed out after ${WORKER_TIMEOUT_MS/1000}s`);
+            await this.markJobAsFailed(worker.jobId, `Worker ${workerId} timed out after ${workerTimeout/1000}s`);
           }
           
           // Show what the worker was doing
@@ -185,7 +278,7 @@ class AdaptiveJobProcessor {
             }
           }, KILL_GRACE_PERIOD_MS);
         }
-      }, WORKER_TIMEOUT_MS);
+      }, workerTimeout);
 
       childProcess.on("error", (error) => {
         if (!isResolved) {

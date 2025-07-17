@@ -3,8 +3,11 @@
  */
 
 import { TextChunk as ITextChunk } from './types';
+import { LocationUtils } from '../utils/LocationUtils';
 
 export class TextChunk implements ITextChunk {
+  private locationUtils: LocationUtils;
+
   constructor(
     public id: string,
     public text: string,
@@ -15,8 +18,15 @@ export class TextChunk implements ITextChunk {
         start: number;
         end: number;
       };
+      lineInfo?: {
+        startLine: number;
+        endLine: number;
+        totalLines: number;
+      };
     }
-  ) {}
+  ) {
+    this.locationUtils = new LocationUtils(this.text);
+  }
 
   getContext(position: number, windowSize: number = 50): string {
     const start = Math.max(0, position - windowSize);
@@ -50,6 +60,22 @@ export class TextChunk implements ITextChunk {
     
     return `${startWords.join(' ')} [...] ${endWords.join(' ')}`;
   }
+
+  getLineNumber(charOffset: number): number | null {
+    // Convert character offset within this chunk to line number
+    const lineInfo = this.locationUtils.getLineInfo(charOffset);
+    if (!lineInfo) return null;
+    
+    // If we have global line info, adjust the line number
+    if (this.metadata?.lineInfo) {
+      // lineInfo.lineNumber is 1-based within the chunk
+      // We need to add it to the starting line of the chunk
+      return this.metadata.lineInfo.startLine + lineInfo.lineNumber - 1;
+    }
+    
+    // Otherwise return the line number within the chunk
+    return lineInfo.lineNumber;
+  }
 }
 
 /**
@@ -70,6 +96,9 @@ export function createChunks(
   } = options;
 
   const chunks: TextChunk[] = [];
+  
+  // Create location utils for the full document to get accurate line numbers
+  const docLocationUtils = new LocationUtils(text);
 
   if (chunkByParagraphs) {
     // Split by double newlines (paragraphs)
@@ -78,6 +107,9 @@ export function createChunks(
 
     paragraphs.forEach((para, index) => {
       if (para.trim()) {
+        const startInfo = docLocationUtils.getLineInfo(position);
+        const endInfo = docLocationUtils.getLineInfo(position + para.length);
+        
         chunks.push(new TextChunk(
           `chunk-${index}`,
           para.trim(),
@@ -85,7 +117,12 @@ export function createChunks(
             position: {
               start: position,
               end: position + para.length
-            }
+            },
+            lineInfo: startInfo && endInfo ? {
+              startLine: startInfo.lineNumber,
+              endLine: endInfo.lineNumber,
+              totalLines: endInfo.lineNumber - startInfo.lineNumber + 1
+            } : undefined
           }
         ));
       }
@@ -99,6 +136,9 @@ export function createChunks(
     while (position < text.length) {
       const end = Math.min(position + chunkSize, text.length);
       const chunkText = text.slice(position, end);
+      
+      const startInfo = docLocationUtils.getLineInfo(position);
+      const endInfo = docLocationUtils.getLineInfo(end - 1); // -1 to get the last actual character
 
       chunks.push(new TextChunk(
         `chunk-${chunkIndex}`,
@@ -107,7 +147,12 @@ export function createChunks(
           position: {
             start: position,
             end: end
-          }
+          },
+          lineInfo: startInfo && endInfo ? {
+            startLine: startInfo.lineNumber,
+            endLine: endInfo.lineNumber,
+            totalLines: endInfo.lineNumber - startInfo.lineNumber + 1
+          } : undefined
         }
       ));
 

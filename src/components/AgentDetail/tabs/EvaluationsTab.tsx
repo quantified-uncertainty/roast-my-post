@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationDetailsPanel } from "@/components/EvaluationDetailsPanel";
@@ -10,7 +11,7 @@ import type {
   AgentEvaluation,
   BatchSummary,
 } from "../types";
-import { formatCost, formatDate } from "../utils";
+import { formatCost, formatDate, formatDateWithTime } from "../utils";
 
 interface EvaluationsTabProps {
   agent: Agent;
@@ -44,14 +45,16 @@ export function EvaluationsTab({
   fetchEvaluations,
 }: EvaluationsTabProps) {
   // Auto-select first evaluation if none selected
-  if (!selectedEvaluation && evaluations.length > 0) {
-    const filtered = evaluations.filter(
-      (e) => selectedVersion === null || e.agentVersion === selectedVersion
-    );
-    if (filtered.length > 0) {
-      setSelectedEvaluation(filtered[0]);
+  useEffect(() => {
+    if (!selectedEvaluation && evaluations.length > 0) {
+      const filtered = evaluations.filter(
+        (e) => selectedVersion === null || e.agentVersion === selectedVersion
+      );
+      if (filtered.length > 0) {
+        setSelectedEvaluation(filtered[0]);
+      }
     }
-  }
+  }, [selectedEvaluation, evaluations, selectedVersion, setSelectedEvaluation]);
 
   return (
     <div className="w-full space-y-6">
@@ -142,6 +145,7 @@ export function EvaluationsTab({
                     selectedVersion === null ||
                     evalItem.agentVersion === selectedVersion
                 )
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((evalItem) => (
                   <div
                     key={evalItem.id}
@@ -178,7 +182,7 @@ export function EvaluationsTab({
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{formatDate(evalItem.createdAt)}</span>
+                      <span>{formatDateWithTime(evalItem.createdAt)}</span>
                       <div className="flex space-x-3">
                         {evalItem.costInCents !== undefined && (
                           <span>{formatCost(evalItem.costInCents || null)}</span>

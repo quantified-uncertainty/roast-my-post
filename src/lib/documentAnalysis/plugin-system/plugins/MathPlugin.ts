@@ -6,6 +6,7 @@ import { BasePlugin } from '../BasePlugin';
 import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
 import { TextChunk } from '../TextChunk';
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { LocationUtils } from '../../utils/LocationUtils';
 
 interface MathState {
   equations: Array<{
@@ -15,11 +16,17 @@ interface MathState {
     context: string;
     verified?: boolean;
     error?: string;
+    lineNumber?: number;
+    lineText?: string;
+    location?: { start: number; end: number };
   }>;
   errors: Array<{
     equation: string;
     error: string;
     chunkId: string;
+    lineNumber?: number;
+    lineText?: string;
+    location?: { start: number; end: number };
   }>;
 }
 
@@ -74,31 +81,71 @@ export class MathPlugin extends BasePlugin<MathState> {
     );
 
     const findings: Finding[] = [];
+    
+    // Create location utils for this chunk
+    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Process extracted equations
     result.equations.forEach(eq => {
+      // Calculate line information for the equation
+      let lineNumber: number | undefined;
+      let lineText: string | undefined;
+      
+      if (eq.location) {
+        const locationInfo = chunkLocationUtils.getLocationInfo(
+          eq.location.start,
+          eq.location.end
+        );
+        
+        if (locationInfo) {
+          if (chunk.metadata?.lineInfo) {
+            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
+          } else {
+            lineNumber = locationInfo.start.lineNumber;
+          }
+          lineText = locationInfo.start.lineText;
+        }
+      }
+
       this.state.equations.push({
         id: `${chunk.id}-${this.state.equations.length}`,
         text: eq.equation,
         chunkId: chunk.id,
         context: eq.context,
         verified: eq.isCorrect,
-        error: eq.error
+        error: eq.error,
+        lineNumber,
+        lineText,
+        location: eq.location
       });
 
       if (!eq.isCorrect && eq.error) {
         this.state.errors.push({
           equation: eq.equation,
           error: eq.error,
-          chunkId: chunk.id
-        });
-
-        findings.push({
-          type: 'math_error',
-          severity: 'medium',
-          message: `Math error in "${eq.equation}": ${eq.error}`,
+          chunkId: chunk.id,
+          lineNumber,
+          lineText,
           location: eq.location
         });
+
+        const finding: Finding = {
+          type: 'math_error',
+          severity: 'medium',
+          message: `Math error: ${eq.equation}`,
+          location: eq.location
+        };
+        
+        // Add location hint if available
+        if (lineNumber && lineText) {
+          finding.locationHint = {
+            lineNumber,
+            lineText,
+            matchText: eq.equation,
+          };
+        }
+        
+        findings.push(finding);
       }
     });
 
@@ -123,11 +170,30 @@ export class MathPlugin extends BasePlugin<MathState> {
     const summary = `Found ${totalEquations} mathematical expressions with ${errorCount} errors (${errorRate.toFixed(1)}% error rate). ${errorPatterns.summary}`;
 
     const findings: Finding[] = [
-      ...this.state.errors.map(error => ({
-        type: 'math_error',
-        severity: 'medium' as const,
-        message: `Math error: ${error.error} in "${error.equation}"`
-      })),
+      // Add individual error findings with location hints
+      ...this.state.errors.map(error => {
+        const finding: Finding = {
+          type: 'math_error',
+          severity: 'medium' as const,
+          message: `Math error: ${error.equation}`,
+          metadata: {
+            equation: error.equation,
+            error: error.error,
+            chunkId: error.chunkId,
+          }
+        };
+        
+        // Add location hint if available
+        if (error.lineNumber && error.lineText) {
+          finding.locationHint = {
+            lineNumber: error.lineNumber,
+            lineText: error.lineText,
+            matchText: error.equation,
+          };
+        }
+        
+        return finding;
+      }),
       ...errorPatterns.findings
     ];
 

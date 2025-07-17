@@ -2,7 +2,7 @@
  * Plugin Manager - Coordinates the entire document analysis process
  */
 
-import { PromptBasedRouter } from './PromptBasedRouter';
+import { PromptBasedRouter, RouterConfig } from './PromptBasedRouter';
 import { AnalysisPlugin, DocumentProfile, SynthesisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
 
@@ -19,12 +19,16 @@ export interface DocumentAnalysisResult {
   recommendations: string[];
 }
 
+export interface PluginManagerConfig {
+  routerConfig?: RouterConfig;
+}
+
 export class PluginManager {
   private router: PromptBasedRouter;
   private startTime: number = 0;
 
-  constructor() {
-    this.router = new PromptBasedRouter();
+  constructor(config: PluginManagerConfig = {}) {
+    this.router = new PromptBasedRouter(config.routerConfig);
   }
 
   registerPlugin(plugin: AnalysisPlugin): void {
