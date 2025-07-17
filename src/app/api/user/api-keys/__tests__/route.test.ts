@@ -2,7 +2,7 @@ import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
-import crypto from 'crypto';
+import { generateApiKey, hashApiKey } from '@/lib/crypto';
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -18,9 +18,9 @@ jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
 }));
 
-jest.mock('crypto', () => ({
-  randomBytes: jest.fn(),
-  createHash: jest.fn(),
+jest.mock('@/lib/crypto', () => ({
+  generateApiKey: jest.fn(),
+  hashApiKey: jest.fn(),
 }));
 
 describe('GET /api/user/api-keys', () => {

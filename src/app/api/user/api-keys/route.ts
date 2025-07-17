@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
 import { logger } from "@/lib/logger";
+import { generateApiKey, hashApiKey } from "@/lib/crypto";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequestSessionFirst(request);
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate a secure API key
-    const key = `rmp_${crypto.randomBytes(32).toString('hex')}`;
-    const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
+    const key = generateApiKey();
+    const hashedKey = hashApiKey(key);
 
     // Calculate expiration date if provided
     let expiresAt = null;
