@@ -189,10 +189,19 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     
     const result = await callClaudeWithTool<{ claims: any[] }>({
       system: `You are a fact extraction system. Extract verifiable factual claims from text.
-Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.`,
+Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.
+
+Instructions:
+- Extract all factual claims that could potentially be verified
+- Focus on specific, objective statements
+- For each claim, identify:
+  1. The exact claim text
+  2. The topic/category  
+  3. Importance (high/medium/low)
+  4. Specificity (high/medium/low)`,
       messages: [{
         role: "user",
-        content: prompt
+        content: `Text to analyze:\n${text}${context ? `\n\nAdditional context:\n${context}` : ''}`
       }],
       max_tokens: 1500,
       temperature: 0,
@@ -268,10 +277,16 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
       requiresCurrentData: boolean;
     }>({
       system: `You are a fact-checking assistant. Assess claims based on your training data.
-Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.`,
+Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.
+
+Instructions:
+- Use your training data to assess if claims are likely true or false
+- If you're uncertain or the claim involves recent events after your training cutoff, indicate that verification requires current data
+- Provide clear explanations for your assessments
+- Be objective and evidence-based in your analysis`,
       messages: [{
         role: "user",
-        content: `Fact-check this claim: "${claim.text}"\n\nNote: Use your training data to assess if this claim is likely true or false. If you're uncertain or the claim involves recent events after your training cutoff, indicate that verification requires current data.`
+        content: `Fact-check this claim: "${claim.text}"`
       }],
       max_tokens: 500,
       temperature: 0,
