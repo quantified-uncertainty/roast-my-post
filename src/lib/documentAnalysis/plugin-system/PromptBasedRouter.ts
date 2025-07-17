@@ -6,6 +6,8 @@ import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
 import { RoutingPlan } from './RoutingPlan';
 import { RichLLMInteraction } from '@/types/llm';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface RouterConfig {
   batchSize?: number;
@@ -139,13 +141,23 @@ Do not include any explanation or other text, just the JSON array.`;
     const userPrompt = this.buildBatchPrompt(uncachedChunks);
 
     try {
+      // Get session context if available
+      const currentSession = sessionContext.getSession();
+      const sessionConfig = currentSession ? 
+        sessionContext.withPath('/plugins/router/batch') : 
+        undefined;
+      const heliconeHeaders = sessionConfig ? 
+        createHeliconeHeaders(sessionConfig) : 
+        undefined;
+      
       // Call routing model using wrapper
       const { response, interaction } = await callClaude({
         model: MODEL_CONFIG.routing,
         max_tokens: 1000,
         temperature: 0,
         system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }]
+        messages: [{ role: "user", content: userPrompt }],
+        heliconeHeaders
       }, this.llmInteractions);
 
       // Parse response

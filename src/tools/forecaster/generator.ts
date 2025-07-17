@@ -13,6 +13,8 @@ import {
 import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
 import { logger } from "@/lib/logger";
 import { getRandomElement, getPercentile } from "@/utils/safeArrayAccess";
+import { sessionContext } from "@/lib/helicone/sessionContext";
+import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 
 interface ForecastResponse {
   probability: number;
@@ -63,6 +65,15 @@ ${options.context ? `\nContext: ${options.context}` : ""}
 
 Think carefully and provide your forecast. Random seed: ${Math.random()}`;
 
+  // Get session context if available
+  const currentSession = sessionContext.getSession();
+  const sessionConfig = currentSession ? 
+    sessionContext.withPath(`/plugins/forecast/generate-${callNumber}`) : 
+    undefined;
+  const heliconeHeaders = sessionConfig ? 
+    createHeliconeHeaders(sessionConfig) : 
+    undefined;
+
   const result = await withTimeout(
     callClaudeWithTool<ForecastResponse>({
       model: MODEL_CONFIG.forecasting,
@@ -89,6 +100,7 @@ Think carefully and provide your forecast. Random seed: ${Math.random()}`;
         },
         required: ["probability", "reasoning"],
       },
+      heliconeHeaders
     }),
     DEFAULT_TIMEOUT,
     `Forecast generation timed out after ${DEFAULT_TIMEOUT / 60000} minutes`

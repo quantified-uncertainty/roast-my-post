@@ -9,13 +9,14 @@ import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
+import type { HeliconeSessionConfig } from "../helicone/sessions";
 
 export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 500,
   targetHighlights: number = 5,
-  anthropicApiKey?: string
+  sessionConfig?: HeliconeSessionConfig
 ): Promise<{
   thinking: string;
   analysis: string;
@@ -36,7 +37,8 @@ export async function analyzeDocument(
     return await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
       executionMode: 'parallel',
-      maxConcurrency: 5
+      maxConcurrency: 5,
+      sessionConfig
     });
   }
   
@@ -44,7 +46,8 @@ export async function analyzeDocument(
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
     return await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
-      enableForecasting: false // Disabled by default due to cost
+      enableForecasting: false, // Disabled by default due to cost
+      sessionConfig
     });
   }
 
@@ -61,7 +64,8 @@ export async function analyzeDocument(
       document,
       agentInfo,
       targetWordCount,
-      targetHighlights
+      targetHighlights,
+      sessionConfig
     );
     logger.info(
       `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.highlightInsights.length}`

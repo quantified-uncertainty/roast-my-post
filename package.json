@@ -37,6 +37,8 @@
     "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts",
     "set-admin": "npx tsx scripts/set-admin.ts",
+    "test-helicone-sessions": "tsx src/scripts/test-helicone-sessions.ts",
+    "helicone-cost-report": "tsx src/scripts/helicone-cost-report.ts",
     "worktree:create": "./scripts/worktree-manager.sh create",
     "worktree:start": "./scripts/worktree-manager.sh start",
     "worktree:list": "./scripts/worktree-manager.sh list",

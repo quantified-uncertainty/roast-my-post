@@ -11,6 +11,8 @@ import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from '../constants';
 import { SpellingGrammarError } from '../domain';
 import { categorizeError, determineSeverity } from '../application';
 import { withRetry } from '../../shared/retryUtils';
+import type { HeliconeSessionConfig } from '../../../helicone/sessions';
+import { createHeliconeHeaders } from '../../../helicone/sessions';
 
 export interface LLMResponse {
   errors: SpellingGrammarError[];
@@ -36,7 +38,8 @@ export class SpellingGrammarLLMClient {
    */
   async analyzeText(
     systemPrompt: string,
-    userPrompt: string
+    userPrompt: string,
+    sessionConfig?: HeliconeSessionConfig
   ): Promise<LLMResponse> {
     let lastUsage: any = null;
     const interactions: RichLLMInteraction[] = [];
@@ -45,6 +48,9 @@ export class SpellingGrammarLLMClient {
       const toolDefinition = this.getErrorReportingTool();
       
       try {
+        // Prepare helicone headers if session config is provided
+        const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+        
         const result = await callClaudeWithTool<{ errors: any[] }>({
           model: this.model,
           system: systemPrompt,
@@ -58,7 +64,8 @@ export class SpellingGrammarLLMClient {
           toolDescription: toolDefinition.description,
           toolSchema: toolDefinition.input_schema,
           max_tokens: 8000,
-          temperature: this.temperature
+          temperature: this.temperature,
+          heliconeHeaders
         }, interactions);
 
         lastUsage = result.response.usage;

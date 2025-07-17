@@ -5,6 +5,8 @@
 import { PromptBasedRouter, RouterConfig } from './PromptBasedRouter';
 import { AnalysisPlugin, DocumentProfile, SynthesisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
+import type { HeliconeSessionConfig } from '../../helicone/sessions';
+import { sessionContext } from '../../helicone/sessionContext';
 
 export interface DocumentAnalysisResult {
   summary: string;
@@ -21,14 +23,17 @@ export interface DocumentAnalysisResult {
 
 export interface PluginManagerConfig {
   routerConfig?: RouterConfig;
+  sessionConfig?: HeliconeSessionConfig;
 }
 
 export class PluginManager {
   private router: PromptBasedRouter;
   private startTime: number = 0;
+  private sessionConfig?: HeliconeSessionConfig;
 
   constructor(config: PluginManagerConfig = {}) {
     this.router = new PromptBasedRouter(config.routerConfig);
+    this.sessionConfig = config.sessionConfig;
   }
 
   registerPlugin(plugin: AnalysisPlugin): void {
@@ -48,8 +53,14 @@ export class PluginManager {
     } = {}
   ): Promise<DocumentAnalysisResult> {
     this.startTime = Date.now();
-
-    // Phase 1: Create chunks
+    
+    // Set global session context for plugins
+    if (this.sessionConfig) {
+      sessionContext.setSession(this.sessionConfig);
+    }
+    
+    try {
+      // Phase 1: Create chunks
     console.log('📄 Creating document chunks...');
     const chunks = createChunks(text, {
       chunkSize: options.chunkSize || 1000,
@@ -76,6 +87,12 @@ export class PluginManager {
 
     console.log('\n✅ Analysis complete!');
     return analysis;
+    } finally {
+      // Clear session context
+      if (this.sessionConfig) {
+        sessionContext.clear();
+      }
+    }
   }
 
   async analyzeText(
