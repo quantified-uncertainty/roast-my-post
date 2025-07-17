@@ -287,7 +287,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                                 {JSON.stringify(task.logData.input, null, 2)}
                               </pre>
                             ) : (
-                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{task.logData.input}</pre>
+                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{String(task.logData.input)}</pre>
                             )}
                           </div>
                         )}
@@ -299,7 +299,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                                 {JSON.stringify(task.logData.output, null, 2)}
                               </pre>
                             ) : (
-                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{task.logData.output}</pre>
+                              <pre className="whitespace-pre-wrap text-sm text-gray-700">{String(task.logData.output)}</pre>
                             )}
                           </div>
                         )}
