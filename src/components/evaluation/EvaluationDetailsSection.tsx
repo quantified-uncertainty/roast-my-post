@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { Bot } from "lucide-react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { EvaluationSection } from "./EvaluationSection";
@@ -10,7 +11,10 @@ import {
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  DocumentTextIcon,
+  BookOpenIcon,
+  ChartBarIcon
 } from "@heroicons/react/24/outline";
 import { CheckIcon } from "@heroicons/react/24/solid";
 
@@ -29,6 +33,7 @@ interface EvaluationDetailsSectionProps {
   evaluationData?: any; // Full evaluation data for export
   documentId?: string;
   evaluationId?: string;
+  isOnEvalPage?: boolean;
 }
 
 type ExportFormat = 'json' | 'yaml' | 'markdown';
@@ -45,11 +50,13 @@ export function EvaluationDetailsSection({
   createdAt,
   evaluationData,
   documentId,
-  evaluationId
+  evaluationId,
+  isOnEvalPage = false
 }: EvaluationDetailsSectionProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -117,121 +124,144 @@ export function EvaluationDetailsSection({
     setExportDropdownOpen(false);
   };
 
+  // Truncate description if needed
+  const shouldTruncate = agentDescription && agentDescription.length > 150;
+  const displayDescription = shouldTruncate && !descriptionExpanded 
+    ? agentDescription.substring(0, 150) + '...' 
+    : agentDescription;
+
   return (
     <EvaluationSection id="evaluation-details" title="Evaluation Details">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Agent Information */}
-        <div className="lg:col-span-2">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {agentId ? (
-                  <Link href={`/agents/${agentId}`}>
-                    <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 hover:underline cursor-pointer">{agentName}</h3>
-                  </Link>
-                ) : (
-                  <h3 className="text-lg font-semibold text-gray-900">{agentName}</h3>
-                )}
-                {ephemeralBatch && ephemeralBatch.trackingId && (
-                  <ExperimentalBadge 
-                    trackingId={ephemeralBatch.trackingId}
-                    className="ml-2"
-                  />
+      <div className="space-y-6">
+        {/* Agent Information and Statistics Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Agent Information */}
+          <div className="lg:col-span-2">
+            <div className="flex items-start gap-4">
+              {/* Agent Icon */}
+              <div className="flex-shrink-0">
+                <Bot className="h-8 w-8 text-gray-600" />
+              </div>
+              
+              {/* Agent Details */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  {agentId ? (
+                    <Link href={`/agents/${agentId}`}>
+                      <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 hover:underline cursor-pointer">
+                        {agentName}
+                      </h3>
+                    </Link>
+                  ) : (
+                    <h3 className="text-lg font-semibold text-gray-900">{agentName}</h3>
+                  )}
+                  {grade !== undefined && grade !== null && (
+                    <GradeBadge grade={grade} variant="dark" size="sm" />
+                  )}
+                  {ephemeralBatch && ephemeralBatch.trackingId && (
+                    <ExperimentalBadge 
+                      trackingId={ephemeralBatch.trackingId}
+                    />
+                  )}
+                </div>
+                
+                {agentDescription && (
+                  <div>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {displayDescription}
+                    </p>
+                    {shouldTruncate && (
+                      <button
+                        onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                        className="text-sm text-blue-600 hover:text-blue-800 mt-1"
+                      >
+                        {descriptionExpanded ? 'Show less' : 'Show more'}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
-              {agentDescription && (
-                <p className="text-sm text-gray-600 mb-2">{agentDescription}</p>
+            </div>
+          </div>
+
+          {/* Run Statistics */}
+          <div className="lg:border-l lg:border-gray-200 lg:pl-6">
+            <h4 className="text-sm font-medium text-gray-700 mb-4">Run Statistics</h4>
+            <dl className="space-y-3">
+              {durationInSeconds !== undefined && durationInSeconds !== null && (
+                <div>
+                  <dt className="text-xs text-gray-500 uppercase tracking-wide">Duration</dt>
+                  <dd className="text-sm font-medium text-gray-900 mt-1">
+                    {formatDuration(durationInSeconds)}
+                  </dd>
+                </div>
+              )}
+              {costInCents !== undefined && costInCents !== null && (
+                <div>
+                  <dt className="text-xs text-gray-500 uppercase tracking-wide">Cost</dt>
+                  <dd className="text-sm font-medium text-gray-900 mt-1">
+                    {formatCost(costInCents)}
+                  </dd>
+                </div>
+              )}
+              {createdAt && (
+                <div>
+                  <dt className="text-xs text-gray-500 uppercase tracking-wide">Created</dt>
+                  <dd className="text-sm font-medium text-gray-900 mt-1">
+                    {formatDate(createdAt)}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </div>
+
+        {/* Actions Row - Navigation and Export */}
+        <div className="border-t border-gray-200 pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Left side - Navigation buttons */}
+            <div className="flex items-center gap-3">
+              {documentId && agentId && (
+                <>
+                  {!isOnEvalPage && (
+                    <Link 
+                      href={`/docs/${documentId}/evals/${agentId}`}
+                      className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <ChartBarIcon className="h-4 w-4" />
+                      Eval Details
+                    </Link>
+                  )}
+                  <Link 
+                    href={`/docs/${documentId}/reader?evals=${agentId}`}
+                    className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 transition-colors"
+                  >
+                    <BookOpenIcon className="h-4 w-4" />
+                    Reader
+                  </Link>
+                </>
               )}
             </div>
-            {grade !== undefined && grade !== null && (
-              <div className="ml-6 text-right">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Grade</p>
-                <div className="mt-1">
-                  <GradeBadge grade={grade} variant="dark" size="md" className="text-2xl px-4 py-1" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Run Statistics */}
-        <div className="border-l lg:border-l-gray-200 lg:pl-6">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Run Statistics</h4>
-          <div className="space-y-3">
-            {durationInSeconds !== undefined && durationInSeconds !== null && (
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Duration</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {formatDuration(durationInSeconds)}
-                </p>
-              </div>
-            )}
-            {costInCents !== undefined && costInCents !== null && (
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Cost</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {formatCost(costInCents)}
-                </p>
-              </div>
-            )}
-            {createdAt && (
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Created</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {formatDate(createdAt)}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation and Export Actions */}
-      <div className="mt-6 pt-4 border-t border-gray-200 space-y-4">
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-700">Navigation</h4>
-          <div className="flex gap-2">
-            {documentId && agentId && (
-              <Link 
-                href={`/docs/${documentId}/evals/${agentId}`}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                Eval Page
-              </Link>
-            )}
-            {documentId && agentId && (
-              <Link 
-                href={`/docs/${documentId}/reader?evals=${agentId}`}
-                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
-              >
-                Reader
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Export Actions */}
-        {evaluationData && (
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-gray-700">Export Evaluation</h4>
-            <div className="relative z-40">
-              <button
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setButtonRect(rect);
-                  setExportDropdownOpen(!exportDropdownOpen);
-                }}
-                className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700"
-              >
-                <ArrowDownTrayIcon className="h-4 w-4" />
-                Export
-                {exportDropdownOpen ? (
-                  <ChevronUpIcon className="h-4 w-4" />
-                ) : (
-                  <ChevronDownIcon className="h-4 w-4" />
-                )}
-              </button>
+            {/* Right side - Export button */}
+            {evaluationData && (
+              <div className="relative z-40">
+                <button
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setButtonRect(rect);
+                    setExportDropdownOpen(!exportDropdownOpen);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4" />
+                  Export
+                  {exportDropdownOpen ? (
+                    <ChevronUpIcon className="h-4 w-4" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4" />
+                  )}
+                </button>
 
               {exportDropdownOpen && buttonRect && (
                 <div 
@@ -280,9 +310,10 @@ export function EvaluationDetailsSection({
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </EvaluationSection>
   );

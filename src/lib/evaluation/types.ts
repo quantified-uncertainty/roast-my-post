@@ -102,4 +102,7 @@ export interface EvaluationContentProps {
   
   // Export data (optional - for export functionality)
   evaluationData?: any;
+  
+  // Navigation options
+  isOnEvalPage?: boolean;
 }
