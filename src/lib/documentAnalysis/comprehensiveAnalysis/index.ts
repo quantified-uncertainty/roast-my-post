@@ -14,6 +14,8 @@ import { createLogDetails } from "../shared/llmUtils";
 import { shouldIncludeGrade } from "../shared/agentContext";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
 import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import { createHeliconeHeaders } from "../../helicone/sessions";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
@@ -32,7 +34,8 @@ export async function generateComprehensiveAnalysis(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 2000,
-  targetHighlights: number = 5
+  targetHighlights: number = 5,
+  sessionConfig?: HeliconeSessionConfig
 ): Promise<{ task: TaskResult; outputs: ComprehensiveAnalysisOutputs }> {
   const startTime = Date.now();
   const { systemMessage, userMessage } = getComprehensiveAnalysisPrompts(
@@ -80,6 +83,9 @@ export async function generateComprehensiveAnalysis(
   }
 
   try {
+    // Prepare helicone headers if session config is provided
+    const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+    
     const result = await withTimeout(
       callClaudeWithTool<ComprehensiveAnalysisOutputs>({
         model: MODEL_CONFIG.analysis,
@@ -93,7 +99,8 @@ export async function generateComprehensiveAnalysis(
           type: "object",
           properties: analysisProperties,
           required: ["summary", "analysis", "highlightInsights"],
-        }
+        },
+        heliconeHeaders
       }),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`

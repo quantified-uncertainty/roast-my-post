@@ -9,6 +9,8 @@ import { callClaudeWithTool, MODEL_CONFIG } from '../../../claude/wrapper';
 import forecasterTool from '../../../../tools/forecaster/index';
 import { logger } from '../../../../lib/logger';
 import { LocationUtils } from '../../utils/LocationUtils';
+import { sessionContext } from '../../../helicone/sessionContext';
+import { createHeliconeHeaders } from '../../../helicone/sessions';
 
 interface ForecastState {
   predictions: Array<{
@@ -266,6 +268,15 @@ For each prediction, identify:
       topic: string;
     }>;
   }> {
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/forecast/extract') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const { toolResult } = await callClaudeWithTool<{
       predictions: Array<{
         text: string;
@@ -307,7 +318,8 @@ For each prediction, identify:
           }
         },
         required: ["predictions"]
-      }
+      },
+      heliconeHeaders
     });
 
     return toolResult || { predictions: [] };

@@ -21,6 +21,7 @@ import type { SelfCritiqueInput } from "../selfCritique";
 import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
 import { convertFindingsToHighlights, filterFindingsWithLocationHints } from '../plugin-system/utils/findingToHighlight';
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
 
 /**
  * Convert RichLLMInteraction to LLMInteraction format for TaskResult
@@ -45,6 +46,7 @@ export async function analyzeWithMultiEpistemicEval(
   options: {
     targetHighlights?: number;
     enableForecasting?: boolean;
+    sessionConfig?: HeliconeSessionConfig;
   } = {}
 ): Promise<{
   thinking: string;
@@ -63,7 +65,9 @@ export async function analyzeWithMultiEpistemicEval(
     logger.info(`Starting multi-epistemic evaluation...`);
     const pluginStartTime = Date.now();
     
-    const manager = new PluginManager();
+    const manager = new PluginManager({
+      sessionConfig: options.sessionConfig
+    });
     
     // Register plugins
     const plugins: any[] = [
@@ -155,11 +159,19 @@ export async function analyzeWithMultiEpistemicEval(
     
     // Step 5: Generate comprehensive analysis using the findings
     logger.info(`Generating comprehensive analysis from plugin findings...`);
+    
+    // Create session config for comprehensive analysis phase
+    const analysisSessionConfig = options.sessionConfig ? {
+      ...options.sessionConfig,
+      sessionPath: `${options.sessionConfig.sessionPath}/comprehensive-analysis`
+    } : undefined;
+    
     const analysisResult = await generateComprehensiveAnalysis(
       document,
       enhancedAgent,
       500, // targetWordCount
-      targetHighlights
+      targetHighlights,
+      analysisSessionConfig
     );
     
     logger.info(

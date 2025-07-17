@@ -15,6 +15,11 @@ import {
   calculateApiCost,
   mapModelToCostModel,
 } from "../utils/costCalculator";
+import {
+  createJobSessionConfig,
+  heliconeSessionsConfig,
+  SESSION_PATHS,
+} from "../lib/helicone/sessions";
 
 export class JobModel {
   /**
@@ -80,6 +85,7 @@ export class JobModel {
               },
               agent: {
                 include: {
+                  submittedBy: true,
                   versions: {
                     orderBy: {
                       version: "desc",
@@ -149,6 +155,7 @@ export class JobModel {
               },
               agent: {
                 include: {
+                  submittedBy: true,
                   versions: {
                     orderBy: {
                       version: "desc",
@@ -350,12 +357,48 @@ export class JobModel {
         agent: {
           versions: any[];
           id: string;
+          submittedBy?: {
+            id: string;
+            email?: string | null;
+          } | null;
         };
         id: string;
       };
     }
   ) {
     const startTime = Date.now(); // Start timing immediately
+    
+    // Create session configuration for Helicone tracking
+    let sessionConfig = null;
+    if (heliconeSessionsConfig.enabled && heliconeSessionsConfig.features.jobSessions) {
+      try {
+        const documentVersion = job.evaluation.document.versions[0];
+        const agentVersion = job.evaluation.agent.versions[0];
+        
+        if (documentVersion && agentVersion) {
+          sessionConfig = createJobSessionConfig(
+            job.id,
+            job.originalJobId,
+            agentVersion.name,
+            documentVersion.title,
+            SESSION_PATHS.JOB_START,
+            {
+              DocumentId: job.evaluation.document.id,
+              AgentId: job.evaluation.agent.id,
+              AgentVersion: agentVersion.version.toString(),
+              EvaluationId: job.evaluation.id,
+            },
+            job.evaluation.agent.submittedBy?.id
+          );
+          
+          console.log(`🔍 Starting job ${job.id} with Helicone session ${sessionConfig.sessionId}`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to create Helicone session config:', error);
+        // Continue without session tracking rather than failing the job
+      }
+    }
+    
     try {
       // Get the latest document version and agent version
       const documentVersion = job.evaluation.document.versions[0];
@@ -397,7 +440,14 @@ export class JobModel {
 
       // Analyze document
       console.log(`🧠 Analyzing document with agent ${agent.name}...`);
-      const analysisResult = await analyzeDocument(documentForAnalysis, agent);
+      
+      // Update session path for analysis phase
+      const analysisSessionConfig = sessionConfig ? {
+        ...sessionConfig,
+        sessionPath: SESSION_PATHS.ANALYSIS_COMPREHENSIVE,
+      } : undefined;
+      
+      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig);
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
@@ -560,12 +610,22 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         logs: logContent,
       });
 
+      // Log successful completion to session
+      if (sessionConfig) {
+        console.log(`✅ Job ${job.id} completed successfully with session ${sessionConfig.sessionId}`);
+      }
+
       return {
         job,
         logFilename,
         logContent,
       };
     } catch (error) {
+      // Log failure to session
+      if (sessionConfig) {
+        console.log(`❌ Job ${job.id} failed with session ${sessionConfig.sessionId}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      
       await this.markJobAsFailed(job.id, error);
       throw error;
     }

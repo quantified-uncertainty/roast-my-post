@@ -57,7 +57,7 @@ describe('Claude Wrapper', () => {
       
       expect(interactions).toHaveLength(1);
       expect(interactions[0].model).toBe(MODEL_CONFIG.analysis);
-    }, 30000);
+    }, 60000);
   });
 
   describe('callClaude unit tests', () => {

@@ -3,6 +3,8 @@ import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface Claim {
   id: string;
@@ -174,6 +176,15 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
   }> {
     const prompt = this.buildExtractionPrompt(text, context);
     
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/fact-check/extract-claims') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const result = await callClaudeWithTool<{ claims: any[] }>({
       system: `You are a fact extraction system. Extract verifiable factual claims from text.
 Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.`,
@@ -211,7 +222,8 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
           }
         },
         required: ["claims"]
-      }
+      },
+      heliconeHeaders
     });
 
     const extractedClaims = result.toolResult.claims || [];
@@ -237,6 +249,15 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
     };
     interaction: RichLLMInteraction;
   }> {
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/fact-check/verify-claim') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const result = await callClaudeWithTool<{
       verified: boolean;
       confidence: string;
@@ -266,7 +287,8 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
           requiresCurrentData: { type: "boolean", description: "Whether current data is needed" }
         },
         required: ["verified", "confidence", "explanation", "requiresCurrentData"]
-      }
+      },
+      heliconeHeaders
     });
     
     return {

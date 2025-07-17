@@ -32,7 +32,7 @@ export const SEARCH_MODEL = process.env.SEARCH_MODEL || "openai/gpt-4.1"; // For
 export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514"; // Using Anthropic directly
 
 // Lazy Anthropic client factory for analysis tasks with Helicone integration
-export function createAnthropicClient(): Anthropic {
+export function createAnthropicClient(additionalHeaders?: Record<string, string>): Anthropic {
   validateAnthropicKey();
   return new Anthropic({
     apiKey: ANTHROPIC_API_KEY,
@@ -45,7 +45,8 @@ export function createAnthropicClient(): Anthropic {
           "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
           "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
           "Helicone-Cache-Seed": "spelling-grammar-v1",
-        })
+        }),
+        ...additionalHeaders
       }
     })
   });
