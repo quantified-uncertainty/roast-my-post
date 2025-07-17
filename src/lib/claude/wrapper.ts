@@ -19,6 +19,7 @@ export interface ClaudeCallOptions {
   max_tokens?: number;
   temperature?: number;
   heliconeHeaders?: Record<string, string>;
+  enablePromptCaching?: boolean; // Enable Anthropic prompt caching
 }
 
 export interface ClaudeCallResult {
@@ -97,8 +98,33 @@ export async function callClaude(
         messages: options.messages
       };
       
-      if (options.system) requestOptions.system = options.system;
-      if (options.tools) requestOptions.tools = options.tools;
+      if (options.system) {
+        if (options.enablePromptCaching) {
+          // Add cache control for system prompt when caching is enabled
+          requestOptions.system = [
+            {
+              type: "text",
+              text: options.system,
+              cache_control: { type: "ephemeral" }
+            }
+          ];
+        } else {
+          requestOptions.system = options.system;
+        }
+      }
+      
+      if (options.tools) {
+        if (options.enablePromptCaching) {
+          // Add cache control for tools when caching is enabled
+          requestOptions.tools = options.tools.map(tool => ({
+            ...tool,
+            cache_control: { type: "ephemeral" }
+          }));
+        } else {
+          requestOptions.tools = options.tools;
+        }
+      }
+      
       if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
       
       const result = await anthropic.messages.create(requestOptions);

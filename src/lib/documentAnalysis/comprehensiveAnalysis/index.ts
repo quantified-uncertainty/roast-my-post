@@ -100,7 +100,8 @@ export async function generateComprehensiveAnalysis(
           properties: analysisProperties,
           required: ["summary", "analysis", "highlightInsights"],
         },
-        heliconeHeaders
+        heliconeHeaders,
+        enablePromptCaching: true // Enable caching for comprehensive analysis system prompt and tools
       }),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`

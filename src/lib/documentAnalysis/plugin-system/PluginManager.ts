@@ -109,28 +109,45 @@ export class PluginManager {
     chunks: TextChunk[],
     routingPlan: any
   ): Promise<void> {
-    // Process chunks in order
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      const plugins = routingPlan.getPluginsForChunk(chunk.id);
+    const maxConcurrency = 5; // Limit concurrent chunk processing to avoid API rate limits
+    
+    // Create processing tasks for all chunks
+    const chunkTasks = chunks.map((chunk, i) => ({
+      chunk,
+      index: i,
+      plugins: routingPlan.getPluginsForChunk(chunk.id)
+    })).filter(task => task.plugins.length > 0);
+
+    console.log(`   Processing ${chunkTasks.length} chunks with up to ${maxConcurrency} concurrent tasks...`);
+
+    // Process chunks in batches with controlled concurrency
+    for (let i = 0; i < chunkTasks.length; i += maxConcurrency) {
+      const batch = chunkTasks.slice(i, i + maxConcurrency);
       
-      if (plugins.length === 0) {
-        continue;
-      }
-
-      console.log(`   Processing chunk ${i + 1}/${chunks.length} with ${plugins.length} plugins...`);
-
-      // Process chunk with each assigned plugin
-      for (const pluginName of plugins) {
-        const plugin = this.router.getPlugin(pluginName);
-        if (plugin) {
-          try {
-            await plugin.processChunk(chunk);
-          } catch (error) {
-            console.error(`     Error in ${pluginName}:`, error);
-          }
+      const batchPromises = batch.map(async (task) => {
+        try {
+          console.log(`   Processing chunk ${task.index + 1}/${chunks.length} with ${task.plugins.length} plugins...`);
+          
+          // Process chunk with each assigned plugin in parallel
+          const pluginPromises = task.plugins.map(async (pluginName: string) => {
+            const plugin = this.router.getPlugin(pluginName);
+            if (plugin) {
+              try {
+                await plugin.processChunk(task.chunk);
+              } catch (error) {
+                console.error(`     Error in ${pluginName} for chunk ${task.index + 1}:`, error);
+              }
+            }
+          });
+          
+          await Promise.all(pluginPromises);
+        } catch (error) {
+          console.error(`     Error processing chunk ${task.index + 1}:`, error);
         }
-      }
+      });
+
+      // Wait for current batch to complete before starting next batch
+      await Promise.all(batchPromises);
     }
   }
 

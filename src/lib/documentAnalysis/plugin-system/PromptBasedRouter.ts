@@ -150,14 +150,15 @@ Do not include any explanation or other text, just the JSON array.`;
         createHeliconeHeaders(sessionConfig) : 
         undefined;
       
-      // Call routing model using wrapper
+      // Call routing model using wrapper with prompt caching
       const { response, interaction } = await callClaude({
         model: MODEL_CONFIG.routing,
         max_tokens: 1000,
         temperature: 0,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
-        heliconeHeaders
+        heliconeHeaders,
+        enablePromptCaching: true // Enable caching for routing system prompt
       }, this.llmInteractions);
 
       // Parse response

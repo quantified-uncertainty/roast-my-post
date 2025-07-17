@@ -223,7 +223,8 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
         },
         required: ["claims"]
       },
-      heliconeHeaders
+      heliconeHeaders,
+      enablePromptCaching: true // Enable caching for fact-check system prompt and tools
     });
 
     const extractedClaims = result.toolResult.claims || [];
@@ -288,7 +289,8 @@ Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'num
         },
         required: ["verified", "confidence", "explanation", "requiresCurrentData"]
       },
-      heliconeHeaders
+      heliconeHeaders,
+      enablePromptCaching: true // Enable caching for fact verification system prompt and tools
     });
     
     return {

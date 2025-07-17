@@ -292,7 +292,8 @@ For each mathematical expression found:
         },
         required: ["equations"]
       },
-      heliconeHeaders
+      heliconeHeaders,
+      enablePromptCaching: true // Enable caching for math plugin system prompt and tools
     });
 
     return toolResult || { equations: [] };

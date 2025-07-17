@@ -241,6 +241,7 @@ export async function extractHighlightsFromAnalysis(
         toolName: "provide_highlights",
         toolDescription: "Extract and format highlights based on the comprehensive analysis",
         toolSchema,
+        enablePromptCaching: true // Enable caching for highlight extraction system prompt and tools
       }, richInteractions),
       HIGHLIGHT_EXTRACTION_TIMEOUT,
       `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
