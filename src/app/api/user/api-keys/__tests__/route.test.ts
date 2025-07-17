@@ -125,14 +125,8 @@ describe('POST /api/user/api-keys', () => {
     const mockKey = 'rmp_1234567890abcdef'.padEnd(68, '0'); // rmp_ + 64 chars
     const mockHashedKey = 'hashed_key_value';
     
-    (crypto.randomBytes as jest.Mock).mockReturnValueOnce({
-      toString: () => '1234567890abcdef'.padEnd(64, '0'),
-    });
-    
-    (crypto.createHash as jest.Mock).mockReturnValueOnce({
-      update: jest.fn().mockReturnThis(),
-      digest: jest.fn().mockReturnValueOnce(mockHashedKey),
-    });
+    (generateApiKey as jest.Mock).mockReturnValueOnce(mockKey);
+    (hashApiKey as jest.Mock).mockReturnValueOnce(mockHashedKey);
     
     const createdKey = {
       id: 'key-123',
@@ -180,14 +174,9 @@ describe('POST /api/user/api-keys', () => {
   it('should create API key with expiration date', async () => {
     (authenticateRequestSessionFirst as jest.Mock).mockResolvedValueOnce(mockUser.id);
     
-    (crypto.randomBytes as jest.Mock).mockReturnValueOnce({
-      toString: () => '1234567890',
-    });
-    
-    (crypto.createHash as jest.Mock).mockReturnValueOnce({
-      update: jest.fn().mockReturnThis(),
-      digest: jest.fn().mockReturnValueOnce('hashed_key'),
-    });
+    const mockExpiringKey = 'rmp_1234567890';
+    (generateApiKey as jest.Mock).mockReturnValueOnce(mockExpiringKey);
+    (hashApiKey as jest.Mock).mockReturnValueOnce('hashed_key');
     
     const expiresAt = '2025-12-31T23:59:59Z';
     const createdKey = {
