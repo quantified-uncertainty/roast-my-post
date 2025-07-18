@@ -14,10 +14,10 @@ import type {
   Agent,
   AgentVersion,
   Document,
-  DocumentVersion,
   Evaluation,
   EvaluationVersion,
   Job,
+  Prisma,
 } from "../../node_modules/@prisma/client/index.js";
 import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
 
@@ -36,21 +36,6 @@ type EvaluationWithRelations = Evaluation & {
   })[];
 };
 
-type JobWithRelations = Job & {
-  evaluation: Evaluation & {
-    agent: AgentWithVersions;
-    document: Document;
-  };
-};
-
-type DocumentWithRelations = Document & {
-  versions: DocumentVersion[];
-  evaluations: (Evaluation & {
-    versions: (EvaluationVersion & {
-      job: Job | null;
-    })[];
-  })[];
-};
 
 const GetAgentsArgsSchema = z.object({
   limit: z.number().optional().default(10),
@@ -660,7 +645,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_failed_jobs": {
         const { limit, agentId } = GetFailedJobsArgsSchema.parse(args);
 
-        const where: { status: string; evaluation?: { agentId: string } } = { status: "FAILED" };
+        const where: Prisma.JobWhereInput = { status: "FAILED" };
         if (agentId) {
           where.evaluation = {
             agentId: agentId,
@@ -693,7 +678,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                failedJobs.map((job: JobWithRelations) => ({
+                failedJobs.map((job) => ({
                   id: job.id,
                   documentId: job.evaluation.documentId,
                   agentName:
@@ -714,7 +699,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "get_documents": {
         const { limit, searchTerm } = GetDocumentsArgsSchema.parse(args);
 
-        const where: { versions?: { some: { title: { contains: string; mode: string } } } } = {};
+        const where: Prisma.DocumentWhereInput = {};
         if (searchTerm) {
           where.versions = {
             some: {
@@ -754,7 +739,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: "text",
               text: JSON.stringify(
-                documents.map((doc: DocumentWithRelations) => {
+                documents.map((doc) => {
                   const latestVersion = doc.versions[0];
                   const evaluationCount = doc.evaluations.length;
                   const completedEvaluations = doc.evaluations.filter(
@@ -841,7 +826,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               platforms: doc.platforms,
               url: doc.url,
               publishedDate: doc.publishedDate,
-              evaluations: doc.reviews?.length || 0,
+              evaluations: doc.evaluations?.length || 0,
               matchedIn: searchContent ? "metadata or content" : "metadata",
             })),
           };
@@ -1674,6 +1659,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 async function main() {
   try {
+    // Log startup configuration for debugging
+    console.error("🔧 MCP Server Starting...");
+    console.error(`📍 Process ID: ${process.pid}`);
+    console.error(`🔑 API Key: ${process.env.ROAST_MY_POST_MCP_USER_API_KEY ? 
+      process.env.ROAST_MY_POST_MCP_USER_API_KEY.substring(0, 10) + '...' + 
+      process.env.ROAST_MY_POST_MCP_USER_API_KEY.slice(-4) : 
+      '❌ NOT SET'}`);
+    console.error(`🌐 API URL: ${process.env.ROAST_MY_POST_MCP_API_BASE_URL || '❌ NOT SET'}`);
+    console.error(`🗄️  Database: ${process.env.DATABASE_URL ? '✅ Configured' : '❌ NOT SET'}`);
+
     // Test database connection
     await prisma.$connect();
     console.error("✅ Database connected successfully");
@@ -1681,6 +1676,20 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("🚀 RoastMyPost MCP server running on stdio");
+
+    // Handle stdin EOF when parent process disconnects
+    process.stdin.on('end', async () => {
+      console.error("📌 Stdin closed, parent disconnected, shutting down...");
+      await prisma.$disconnect();
+      process.exit(0);
+    });
+
+    // Handle stdin errors
+    process.stdin.on('error', async (err) => {
+      console.error("📌 Stdin error, shutting down:", err.message);
+      await prisma.$disconnect();
+      process.exit(0);
+    });
 
     // Handle graceful shutdown
     process.on("SIGINT", async () => {

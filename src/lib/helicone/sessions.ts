@@ -114,16 +114,17 @@ export function createJobSessionConfig(
 }
 
 /**
- * Environment configuration for Helicone sessions
+ * Configuration for Helicone sessions
+ * All features are enabled by default
  */
 export const heliconeSessionsConfig = {
-  enabled: process.env.HELICONE_SESSIONS_ENABLED === "true",
+  enabled: true,
   
-  // Feature flags for gradual rollout
+  // Feature flags - all enabled
   features: {
-    jobSessions: process.env.HELICONE_JOB_SESSIONS_ENABLED !== "false", // enabled by default
-    detailedPaths: process.env.HELICONE_DETAILED_PATHS_ENABLED === "true",
-    customMetadata: process.env.HELICONE_CUSTOM_METADATA_ENABLED !== "false", // enabled by default
+    jobSessions: true,
+    detailedPaths: true,
+    customMetadata: true,
   }
 };
 

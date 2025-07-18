@@ -50,11 +50,14 @@ async function generateSingleForecast(
   ];
   const prefix = getRandomElement(randomPrefixes, "Let me think about this.");
 
+  const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
   const systemPrompt = `You are a careful forecaster. Given a question about a future event, provide:
 1. A probability estimate (0-100% with one decimal place, e.g., 65.2%)
 2. A one-sentence description of your reasoning
 
-Consider base rates, current evidence, and uncertainties.
+Current date: ${currentDate}
+
+Consider base rates, current evidence, and uncertainties. IMPORTANT: Pay attention to the current date when forecasting - if the question asks about an event that should have already occurred, note this in your reasoning.
 Important: Give a precise probability with one decimal place (e.g., 37.5%, not 38%).
 Keep the reasoning very brief - just one clear sentence.
 
