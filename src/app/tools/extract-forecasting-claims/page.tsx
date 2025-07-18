@@ -73,45 +73,59 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
       }}
       renderResults={(result) => {
         const typedResult = result as any;
+        const selectedForecasts = typedResult.forecasts?.filter((f: any) => f.worthDetailedAnalysis) || [];
         
         return (
           <div className="space-y-6">
             {/* Summary */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <p className="text-blue-900">
-                Extracted <span className="font-semibold">{typedResult.totalForecasts}</span> forecasting claims.
-                {typedResult.selectedForecasts && (
-                  <span> Selected {typedResult.selectedForecasts.length} for detailed analysis.</span>
+                Extracted <span className="font-semibold">{typedResult.totalFound || 0}</span> forecasting claims.
+                {selectedForecasts.length > 0 && (
+                  <span> Selected {selectedForecasts.length} for detailed analysis.</span>
                 )}
               </p>
             </div>
 
-            {/* Categorized forecasts */}
-            {typedResult.categorizedForecasts && (
+            {/* All forecasts list */}
+            {typedResult.forecasts && typedResult.forecasts.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Forecasts by Category</h3>
-                {Object.entries(typedResult.categorizedForecasts).map(([category, forecasts]: [string, any]) => (
-                  <div key={category} className="bg-white p-4 rounded-lg border border-gray-200">
-                    <h4 className="font-medium mb-2 capitalize">{category}</h4>
-                    <ul className="space-y-2">
-                      {(forecasts as any[]).map((forecast: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-700">• {forecast}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                <h3 className="text-lg font-semibold">All Extracted Forecasts</h3>
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <ul className="space-y-3">
+                    {typedResult.forecasts.map((forecast: any, i: number) => (
+                      <li key={i} className="border-b border-gray-100 pb-2 last:border-b-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900 font-medium">{forecast.text}</p>
+                            <div className="flex gap-4 mt-1 text-xs text-gray-600">
+                              <span>Topic: {forecast.topic}</span>
+                              {forecast.timeframe && <span>Timeframe: {forecast.timeframe}</span>}
+                              {forecast.probability && <span>Probability: {forecast.probability}%</span>}
+                            </div>
+                          </div>
+                          {forecast.worthDetailedAnalysis && (
+                            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                              Selected for analysis
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
 
-            {/* Detailed analyses */}
-            {typedResult.selectedForecasts && typedResult.selectedForecasts.length > 0 && (
+            {/* Selected forecasts with reasoning */}
+            {selectedForecasts.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Detailed Forecast Analyses</h3>
-                {typedResult.selectedForecasts.map((forecast: any, i: number) => (
+                <h3 className="text-lg font-semibold">Selected for Detailed Analysis</h3>
+                {selectedForecasts.map((forecast: any, i: number) => (
                   <div key={i} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                     <div className="mb-4">
                       <h4 className="font-semibold text-lg mb-2">Forecast {i + 1}</h4>
-                      <p className="font-medium text-gray-900">{forecast.claim}</p>
+                      <p className="font-medium text-gray-900">{forecast.text}</p>
                     </div>
                     
                     <div className="grid gap-4 text-sm">
@@ -122,73 +136,29 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
                         </div>
                       )}
                       
-                      {forecast.confidence && (
+                      {forecast.probability && (
                         <div>
-                          <span className="font-medium text-gray-600">Confidence Level:</span>
-                          <span className="ml-2">{forecast.confidence}</span>
+                          <span className="font-medium text-gray-600">Probability:</span>
+                          <span className="ml-2">{forecast.probability}%</span>
                         </div>
                       )}
                       
-                      {forecast.category && (
+                      {forecast.topic && (
                         <div>
-                          <span className="font-medium text-gray-600">Category:</span>
-                          <span className="ml-2 capitalize">{forecast.category}</span>
-                        </div>
-                      )}
-                      
-                      {forecast.specificity && (
-                        <div>
-                          <span className="font-medium text-gray-600">Specificity:</span>
-                          <span className="ml-2">{forecast.specificity}/10</span>
-                        </div>
-                      )}
-                      
-                      {forecast.verifiability && (
-                        <div>
-                          <span className="font-medium text-gray-600">Verifiability:</span>
-                          <span className="ml-2">{forecast.verifiability}</span>
-                        </div>
-                      )}
-                      
-                      {forecast.assumptions && forecast.assumptions.length > 0 && (
-                        <div>
-                          <span className="font-medium text-gray-600">Key Assumptions:</span>
-                          <ul className="mt-1 ml-2 space-y-1">
-                            {forecast.assumptions.map((assumption: string, idx: number) => (
-                              <li key={idx}>• {assumption}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {forecast.implications && (
-                        <div>
-                          <span className="font-medium text-gray-600">Implications:</span>
-                          <p className="mt-1">{forecast.implications}</p>
+                          <span className="font-medium text-gray-600">Topic:</span>
+                          <span className="ml-2">{forecast.topic}</span>
                         </div>
                       )}
                       
                       {forecast.reasoning && (
                         <div>
-                          <span className="font-medium text-gray-600">Analysis:</span>
+                          <span className="font-medium text-gray-600">Selection Reasoning:</span>
                           <p className="mt-1">{forecast.reasoning}</p>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {/* Key insights */}
-            {typedResult.keyInsights && typedResult.keyInsights.length > 0 && (
-              <div className="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
-                <h3 className="text-lg font-semibold mb-3">Key Insights</h3>
-                <ul className="space-y-2">
-                  {typedResult.keyInsights.map((insight: string, i: number) => (
-                    <li key={i} className="text-sm">• {insight}</li>
-                  ))}
-                </ul>
               </div>
             )}
           </div>

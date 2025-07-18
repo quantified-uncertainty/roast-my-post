@@ -13,11 +13,11 @@ import {
 } from './FormFields';
 
 // Map Zod types to form field components
-function getFieldComponent(schema: z.ZodTypeAny): React.ComponentType<any> | null {
+function getFieldComponent(schema: z.ZodTypeAny, fieldConfig?: any): React.ComponentType<any> | null {
   if (schema instanceof z.ZodString) {
-    // Check for multiline strings based on min length or description
+    // Check for multiline strings based on fieldConfig rows, min length, or description
     const description = (schema as any).description;
-    if (description?.includes('multiline') || (schema as any)._def.checks?.some((check: any) => check.kind === 'min' && check.value > 100)) {
+    if (fieldConfig?.rows || description?.includes('multiline') || (schema as any)._def.checks?.some((check: any) => check.kind === 'min' && check.value > 100)) {
       return TextareaField;
     }
     return TextInputField;
@@ -190,13 +190,12 @@ export function AutoToolForm<T extends Record<string, any>>({
       
       {/* Form fields */}
       {orderedFields.map(([fieldName, fieldSchema]) => {
-        const FieldComponent = getFieldComponent(fieldSchema as z.ZodTypeAny);
+        const fieldConfig = config.fieldConfigs?.[fieldName as keyof T];
+        const FieldComponent = getFieldComponent(fieldSchema as z.ZodTypeAny, fieldConfig);
         if (!FieldComponent) {
           // Skip unsupported field types
           return null;
         }
-        
-        const fieldConfig = config.fieldConfigs?.[fieldName as keyof T];
         const enumValues = getEnumValues(fieldSchema as z.ZodTypeAny);
         const required = isFieldRequired(fieldSchema as z.ZodTypeAny);
         

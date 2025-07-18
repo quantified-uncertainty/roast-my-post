@@ -87,17 +87,7 @@ Previous research have shown similar results, although the methodologies varied 
         const errorTypeColors = {
           spelling: 'bg-red-100 border-red-300 text-red-900',
           grammar: 'bg-orange-100 border-orange-300 text-orange-900',
-          punctuation: 'bg-yellow-100 border-yellow-300 text-yellow-900',
-          style: 'bg-blue-100 border-blue-300 text-blue-900',
-          consistency: 'bg-purple-100 border-purple-300 text-purple-900',
-          clarity: 'bg-indigo-100 border-indigo-300 text-indigo-900'
-        };
-        
-        const severityIcons = {
-          critical: '❌',
-          major: '⚠️',
-          minor: 'ℹ️',
-          suggestion: '💡'
+          style: 'bg-blue-100 border-blue-300 text-blue-900'
         };
         
         return (
@@ -127,16 +117,8 @@ Previous research have shown similar results, although the methodologies varied 
                     <span className="ml-2 font-medium">{typedResult.summary.grammarErrors}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Punctuation errors:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.punctuationErrors}</span>
-                  </div>
-                  <div>
                     <span className="text-gray-600">Style suggestions:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.styleIssues}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Readability score:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.readabilityScore}/100</span>
+                    <span className="ml-2 font-medium">{typedResult.summary.styleErrors}</span>
                   </div>
                 </div>
               </div>
@@ -160,28 +142,21 @@ Previous research have shown similar results, although the methodologies varied 
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">
-                          {severityIcons[error.severity as keyof typeof severityIcons] || '📝'}
-                        </span>
+                        <span className="text-lg">📝</span>
                         <span className="font-semibold capitalize">{error.type}</span>
-                        {error.lineNumber && (
-                          <span className="text-sm opacity-70">• Line {error.lineNumber}</span>
-                        )}
                       </div>
                       <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
-                        {error.severity}
+                        {error.type}
                       </span>
                     </div>
                     
                     <div className="mb-2">
                       <p className="text-sm mb-1">
-                        <span className="line-through text-red-700">{error.originalText}</span>
+                        <span className="line-through text-red-700">{error.text}</span>
                         {' → '}
-                        <span className="text-green-700 font-medium">{error.suggestion}</span>
+                        <span className="text-green-700 font-medium">{error.correction}</span>
                       </p>
                     </div>
-                    
-                    <p className="text-sm">{error.explanation}</p>
                     
                     {error.context && (
                       <div className="mt-2 p-2 bg-white bg-opacity-50 rounded text-xs">
