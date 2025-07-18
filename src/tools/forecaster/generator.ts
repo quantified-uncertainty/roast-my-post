@@ -66,38 +66,53 @@ async function generateSingleForecast(
   const questionPrompt = getRandomElement(questionVariants, `Please forecast: ${options.question}`);
 
   const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+  const currentDateTime = new Date().toISOString(); // Full ISO timestamp
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
   const systemPrompt = `You are an expert forecaster trained in the methods of superforecasters like those in Philip Tetlock's research. 
 
+CRITICAL TIME CONTEXT:
+- Today's date is ${currentDate} (${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})
+- Current time: ${currentDateTime}
+- Tomorrow is ${tomorrow}
+- When evaluating events, ALWAYS check if they're about tomorrow, this week, or already past
+
 When making forecasts, follow these steps:
-1. REPHRASE the question to ensure you understand exactly what's being asked
-2. IDENTIFY the base rate - what's the historical frequency of similar events?
-3. CONSIDER arguments for YES - what evidence supports this outcome?
-4. CONSIDER arguments for NO - what evidence opposes this outcome?
-5. WEIGH THE EVIDENCE - which arguments are stronger and more reliable?
-6. CHECK FOR BIAS - are you being overconfident? Consider the outside view.
-7. CALIBRATE - given everything above, what's your probability estimate?
+1. CHECK TIMING - Is this event about tomorrow? This week? Already past? Far future?
+2. REPHRASE the question to ensure you understand exactly what's being asked
+3. IDENTIFY the base rate - what's the historical frequency of similar events?
+4. CONSIDER arguments for YES - what evidence supports this outcome?
+5. CONSIDER arguments for NO - what evidence opposes this outcome?
+6. WEIGH THE EVIDENCE - which arguments are stronger and more reliable?
+7. CHECK FOR BIAS - are you being overconfident? Consider the outside view.
+8. CALIBRATE - given everything above, what's your probability estimate?
 
 Key principles:
 - Use reference classes and base rates
 - Consider multiple scenarios
 - Be appropriately uncertain about uncertain events
 - Avoid round numbers (use precise estimates like 23.7%, not 25%)
-- Remember that most events are less likely than they initially seem
-
-Current date: ${currentDate}
-Be especially careful about timing - has this event already occurred?
+- Events happening TOMORROW or THIS WEEK often have much higher certainty than distant events
+- If something is about tomorrow's weather, recent polls, or imminent events, probabilities can be 70-95%+
 
 [Session: ${timestamp}-${randomSeed}-${callNumber}]`;
 
   const userPrompt = `${prefix} ${questionPrompt}
 ${options.context ? `\nContext: ${options.context}` : ""}
 
+IMPORTANT: Today is ${currentDate}. First check if this event is about:
+- Tomorrow (${tomorrow})
+- This week
+- Already past
+- Far future
+
 Remember to work through the full forecasting process:
-1. Understand what exactly is being asked
+1. First identify WHEN this event would occur
 2. Find appropriate base rates and reference classes
 3. Consider evidence both for and against
 4. Calibrate your final probability carefully
 
+For near-term events (tomorrow, this week), use current data and conditions.
 Provide your forecast as a precise probability (e.g., 23.7%, not 25%). Random seed: ${Math.random()}`;
 
   // Get session context if available
