@@ -55,7 +55,13 @@ const outputSchema = z.object({
     mean: z.number(),
     stdDev: z.number()
   }).describe('Statistical summary of the forecasts'),
-  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging')
+  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging'),
+  cost: z.object({
+    totalUSD: z.number(),
+    totalInputTokens: z.number(),
+    totalOutputTokens: z.number(),
+    model: z.string()
+  }).optional().describe('Cost information for the forecast')
 }) satisfies z.ZodType<ForecasterOutput>;
 
 export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
