@@ -11,6 +11,7 @@ export interface ForecasterInput {
   context?: string;
   numForecasts?: number;
   usePerplexity?: boolean;
+  model?: string;
 }
 
 export interface ForecasterOutput {
@@ -39,7 +40,8 @@ const inputSchema = z.object({
   question: z.string().min(1).max(500).describe('The question to forecast'),
   context: z.string().max(1000).optional().describe('Additional context for the forecast'),
   numForecasts: z.number().min(1).max(20).optional().default(6).describe('Number of independent forecasts to generate'),
-  usePerplexity: z.boolean().optional().default(false).describe('Whether to use Perplexity for research')
+  usePerplexity: z.boolean().optional().default(false).describe('Whether to use Perplexity for research'),
+  model: z.string().optional().describe('Model to use for forecasting (e.g., claude-opus-4-20250514)')
 }) satisfies z.ZodType<ForecasterInput>;
 
 // Simplified output schema
@@ -87,7 +89,8 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
         question: input.question,
         context: input.context,
         numForecasts: input.numForecasts ?? 6,
-        usePerplexity: input.usePerplexity ?? false
+        usePerplexity: input.usePerplexity ?? false,
+        model: input.model
       });
       
       return {

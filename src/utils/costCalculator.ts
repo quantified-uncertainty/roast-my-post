@@ -21,6 +21,13 @@ export const OPENROUTER_PRICING = {
     imageInput: 4.8, // $4.8 per thousand input images
     context: 200_000, // 200K context window
   },
+  // Claude Opus 4
+  "anthropic/claude-opus-4": {
+    input: 15, // $15 per million input tokens
+    output: 75, // $75 per million output tokens
+    imageInput: 20, // Estimated $20 per thousand input images
+    context: 200_000, // 200K context window
+  },
   // GPT-4.1
   "openai/gpt-4.1": {
     input: 2, // $2 per million input tokens
@@ -42,6 +49,10 @@ export function mapModelToCostModel(model: string): ModelName {
     "claude-sonnet-4-20250514": "anthropic/claude-sonnet-4",
     "claude-sonnet-4": "anthropic/claude-sonnet-4",
     "anthropic/claude-sonnet-4": "anthropic/claude-sonnet-4",
+    "claude-opus-4-20250514": "anthropic/claude-opus-4",
+    "claude-opus-4-20250718": "anthropic/claude-opus-4",
+    "claude-opus-4": "anthropic/claude-opus-4",
+    "anthropic/claude-opus-4": "anthropic/claude-opus-4",
 
     // OpenAI models
     "gpt-4.1": "openai/gpt-4.1",
@@ -148,6 +159,19 @@ export function calculateApiCost(
   const defaultModel: ModelName = "anthropic/claude-sonnet-4";
   const modelToUse = model || defaultModel;
   const pricing = OPENROUTER_PRICING[modelToUse];
+  
+  if (!pricing) {
+    // If model not found in pricing, use default model pricing
+    const defaultPricing = OPENROUTER_PRICING[defaultModel];
+    const inputCostPerToken = defaultPricing.input / 1_000_000;
+    const outputCostPerToken = defaultPricing.output / 1_000_000;
+    
+    const inputCost = usage.input_tokens * inputCostPerToken;
+    const outputCost = usage.output_tokens * outputCostPerToken;
+    
+    return Math.round((inputCost + outputCost) * 100);
+  }
+  
   const inputCostPerToken = pricing.input / 1_000_000; // Convert to cost per token
   const outputCostPerToken = pricing.output / 1_000_000; // Convert to cost per token
 
@@ -166,7 +190,9 @@ export function calculateApiCost(
  */
 export function calculateApiCostInDollars(
   usage: { input_tokens: number; output_tokens: number } | undefined,
-  model?: ModelName
+  model?: ModelName | string
 ): number {
-  return calculateApiCost(usage, model) / 100;
+  // If model is a string, map it to the correct ModelName
+  const mappedModel = model ? mapModelToCostModel(model) : undefined;
+  return calculateApiCost(usage, mappedModel) / 100;
 }

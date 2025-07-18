@@ -27,6 +27,7 @@ interface ForecastGeneratorOptions {
   context?: string;
   numForecasts: number;
   usePerplexity: boolean;
+  model?: string;
 }
 
 /**
@@ -110,7 +111,7 @@ Provide your forecast as a precise probability (e.g., 23.7%, not 25%). Random se
 
   const result = await withTimeout(
     callClaudeWithTool<ForecastResponse>({
-      model: MODEL_CONFIG.forecasting,
+      model: options.model || MODEL_CONFIG.forecasting,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
       max_tokens: 1000,
@@ -275,10 +276,12 @@ export async function generateForecastWithAggregation(
     model: string;
   };
 }> {
+  const modelName = options.model || MODEL_CONFIG.forecasting;
   console.log(`\n🔮 Generating forecast for: ${options.question}`);
   console.log(
-    `Making ${options.numForecasts} independent forecasts${options.usePerplexity ? " (with Perplexity research)" : ""}...\n`
+    `Making ${options.numForecasts} independent forecasts${options.usePerplexity ? " (with Perplexity research)" : ""}...`
   );
+  console.log(`Using model: ${modelName}\n`);
 
   // If using Perplexity, enhance context with research
   let enhancedOptions = options;
@@ -390,9 +393,10 @@ export async function generateForecastWithAggregation(
     }
   });
   
+  const actualModel = options.model || MODEL_CONFIG.forecasting;
   const totalCostUSD = calculateApiCostInDollars(
-    { input_tokens: totalInputTokens, output_tokens: totalOutputTokens }
-    // Model parameter is optional, will use default calculation
+    { input_tokens: totalInputTokens, output_tokens: totalOutputTokens },
+    actualModel as any
   );
   
   console.log(`[Forecast Cost] Tokens: ${totalInputTokens} input, ${totalOutputTokens} output, Cost: $${totalCostUSD}`);
@@ -411,7 +415,7 @@ export async function generateForecastWithAggregation(
       totalUSD: totalCostUSD,
       totalInputTokens,
       totalOutputTokens,
-      model: MODEL_CONFIG.forecasting
+      model: actualModel
     }
   };
 }

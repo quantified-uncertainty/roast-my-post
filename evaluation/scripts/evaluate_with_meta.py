@@ -48,6 +48,10 @@ def call_forecaster(question: str, config: Dict[str, Any] = None) -> Dict[str, A
         "numForecasts": config.get("num_forecasts", 1) if config else 1  # Single forecast for efficiency
     }
     
+    # Add model parameter if specified
+    if config and config.get("model"):
+        payload["model"] = config["model"]
+    
     # Add any experimental parameters
     if config:
         payload.update(config.get("parameters", {}))
@@ -176,9 +180,23 @@ def load_dataset(dataset_name: str, limit: int = None) -> List[Dict[str, Any]]:
     
     elif dataset_name == "ai-curated":
         # Load AI-curated questions
-        with open(data_dir.parent.parent / "ai_curated_forecasts.json", 'r') as f:
+        with open(data_dir / "ai_curated_forecasts.json", 'r') as f:
             data = json.load(f)
             return data["questions"][:limit] if limit else data["questions"]
+    
+    elif dataset_name == "balanced":
+        # Load balanced dataset
+        with open(data_dir / "balanced_50_questions.json", 'r') as f:
+            data = json.load(f)
+            questions = data["questions"]
+            # Fix any probability issues
+            for q in questions:
+                prob = q.get("market_probability", 50)
+                # Normalize probabilities that are way out of range
+                while prob > 100:
+                    prob = prob / 100
+                q["market_probability"] = min(100, max(0, prob))
+            return questions[:limit] if limit else questions
     
     else:
         print(f"❌ Unknown dataset: {dataset_name}")
@@ -224,7 +242,13 @@ def run_evaluation(
     # Create Opik dataset and experiment with separate names
     client = opik.Opik()
     experiment_id = experiment_name or f"{dataset_name}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    dataset_id = f"{dataset_name}-dataset"
+    
+    # Create descriptive dataset name based on tool and content
+    if dataset_name == "current":
+        dataset_id = f"forecaster-current-{datetime.now().strftime('%Y%m%d')}"  # e.g., "forecaster-current-20250718"
+    else:
+        dataset_id = f"forecaster-{dataset_name}-{datetime.now().strftime('%Y%m%d')}"  # e.g., "forecaster-curated-20250718"
+    
     dataset = client.get_or_create_dataset(name=dataset_id)
     
     # Convert questions to Opik format with metadata
@@ -233,8 +257,8 @@ def run_evaluation(
         # Categorize the question
         categorized = categorize_question(q)
         
-        # Create item without id field
-        item = {k: v for k, v in q.items() if k != 'id'}
+        # Create item without id and source fields
+        item = {k: v for k, v in q.items() if k not in ['id', 'source']}
         
         # Add metadata fields
         for key, value in categorized['metadata'].items():
@@ -284,23 +308,30 @@ def run_evaluation(
             "output": output,
             "item": item,
             "cost_usd": total_cost,
-            # Also try adding cost as metadata
+            # Try multiple approaches for cost reporting
             "metadata": {
                 "cost_usd": total_cost,
                 "cost_formatted": f"${total_cost:.4f}",
                 "input_tokens": output.get('cost', {}).get('totalInputTokens', 0) if 'cost' in output else 0,
                 "output_tokens": output.get('cost', {}).get('totalOutputTokens', 0) if 'cost' in output else 0
-            }
+            },
+            # Also try as feedback scores (common pattern in Opik)
+            "feedback_scores": [
+                {"name": "cost_usd", "value": total_cost, "reason": "API cost for forecast generation"},
+                {"name": "input_tokens", "value": output.get('cost', {}).get('totalInputTokens', 0) if 'cost' in output else 0},
+                {"name": "output_tokens", "value": output.get('cost', {}).get('totalOutputTokens', 0) if 'cost' in output else 0}
+            ]
         }
         
         print(f" [DEBUG] Returning cost_usd: {result['cost_usd']}")
         print(f" [DEBUG] Metadata: {result['metadata']}")
+        print(f" [DEBUG] Feedback scores: {result['feedback_scores']}")
         return result
     
     # Prepare experiment configuration for Opik
     experiment_config = {
         "dataset": dataset_name,
-        "model": "claude-opus-4-20250514",
+        "model": config.get("model", "claude-opus-4-20250514") if config else "claude-opus-4-20250514",
         "timestamp": datetime.now().isoformat(),
         "forecaster_version": "v2-improved-categorized",
         "parallelization": 16,
@@ -343,7 +374,7 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate forecaster tool")
     parser.add_argument(
         "--dataset", 
-        choices=["current", "curated", "metaforecast", "ai-curated"],
+        choices=["current", "curated", "metaforecast", "ai-curated", "balanced"],
         default="current",
         help="Dataset to use for evaluation"
     )
