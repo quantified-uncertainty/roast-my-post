@@ -25,6 +25,10 @@ data/
 .DS_Store
 *.pem
 
+# Local setup and personal notes
+.local-setup/
+.mcp.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
