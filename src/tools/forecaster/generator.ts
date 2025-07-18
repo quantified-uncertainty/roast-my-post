@@ -106,6 +106,10 @@ When making forecasts, follow these steps:
 6. WEIGH THE EVIDENCE - which arguments are stronger and more reliable?
 7. CHECK FOR BIAS - are you being overconfident? Consider the outside view.
 8. CALIBRATE - given everything above, what's your probability estimate?
+   - If strong evidence points one way: 60-90%
+   - If overwhelming evidence or near-certain: 85-98%
+   - If highly uncertain: 20-40%
+   - If completely unknown: near 50%
 
 Key principles:
 - Use reference classes and base rates
@@ -118,6 +122,15 @@ Key principles:
 - High probability events (60-90%) are common for likely outcomes
 - Very high probability (90%+) is appropriate for near-certain events
 - Remember: markets with 75%+ probability often reflect strong evidence
+
+CALIBRATION EXAMPLES:
+- Incumbent party winning in safe district: 85-95%
+- Tomorrow's weather matching today's forecast: 70-85%
+- Favorite team winning against underdog: 65-80%
+- Unknown candidate winning major election: 5-20%
+- Coin flip or 50/50 scenario: 45-55%
+
+IMPORTANT: If you find yourself predicting <20% for many different questions, you're likely underestimating. Most well-defined events have probabilities in the 20-80% range.
 
 [Session: ${timestamp}-${randomSeed}-${callNumber}]`;
 
