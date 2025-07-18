@@ -1,0 +1,25 @@
+{
+  "consensus_thresholds": {
+    "high": 7.5,
+    "medium": 4.0,
+    "low": 0
+  },
+  "temperature_strategy": "varied",
+  "temperatures": [
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "prompt_improvements": {
+    "include_date": true,
+    "include_reference_class": true,
+    "encourage_extreme_probs": true,
+    "use_personas": true
+  },
+  "calibration_adjustments": {
+    "expansion_factor": 1.5,
+    "min_variation": 5.0
+  }
+}

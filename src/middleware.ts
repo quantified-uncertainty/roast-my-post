@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   // Generate a unique nonce for each request
-  const nonce = Buffer.from(globalThis.crypto.randomUUID()).toString('base64');
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   
   // Check if we're in development
   const isDev = process.env.NODE_ENV === 'development';

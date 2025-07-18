@@ -1,0 +1,5 @@
+requests>=2.31.0
+python-dotenv>=1.0.0
+opik>=1.0.0
+anthropic>=0.58.0
+numpy>=1.26.0

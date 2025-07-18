@@ -132,6 +132,83 @@ describe('ForecasterTool', () => {
       });
     });
     
+    it('should include cost data when available', async () => {
+      const input = {
+        question: 'Will AI surpass human intelligence by 2030?',
+        numForecasts: 3
+      };
+      
+      const mockResponse = {
+        forecast: {
+          probability: 45,
+          description: 'Based on analysis...',
+          consensus: 'medium' as const
+        },
+        individual_forecasts: [
+          { probability: 40, reasoning: 'Progress is steady but challenges remain' },
+          { probability: 50, reasoning: 'Exponential progress in key areas' },
+          { probability: 45, reasoning: 'Mixed signals from research community' }
+        ],
+        statistics: {
+          mean: 45,
+          std_dev: 5
+        },
+        outliers_removed: [],
+        llmInteractions: [
+          {
+            model: 'claude-opus-4-20250514',
+            prompt: 'Forecast question...',
+            response: 'Response...',
+            tokensUsed: { prompt: 1000, completion: 500, total: 1500 },
+            timestamp: new Date(),
+            duration: 1000
+          }
+        ],
+        cost: {
+          totalUSD: 0.0345,
+          totalInputTokens: 3000,
+          totalOutputTokens: 1500,
+          model: 'claude-opus-4-20250514'
+        }
+      };
+      
+      (generateForecastWithAggregation as jest.Mock).mockResolvedValueOnce(mockResponse);
+      
+      const result = await tool.execute(input, mockContext);
+      
+      expect(result.cost).toEqual({
+        totalUSD: 0.0345,
+        totalInputTokens: 3000,
+        totalOutputTokens: 1500,
+        model: 'claude-opus-4-20250514'
+      });
+    });
+    
+    it('should handle missing cost data gracefully', async () => {
+      const input = {
+        question: 'Will quantum computers break encryption by 2025?'
+      };
+      
+      const mockResponse = {
+        forecast: {
+          probability: 15,
+          description: 'Unlikely in this timeframe...',
+          consensus: 'high' as const
+        },
+        individual_forecasts: [],
+        statistics: { mean: 15, std_dev: 3 },
+        outliers_removed: [],
+        llmInteractions: []
+        // No cost field
+      };
+      
+      (generateForecastWithAggregation as jest.Mock).mockResolvedValueOnce(mockResponse);
+      
+      const result = await tool.execute(input, mockContext);
+      
+      expect(result.cost).toBeUndefined();
+    });
+    
   });
   
   describe('hooks', () => {

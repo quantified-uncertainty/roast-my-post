@@ -15,6 +15,7 @@ import { logger } from "@/lib/logger";
 import { getRandomElement, getPercentile } from "@/utils/safeArrayAccess";
 import { sessionContext } from "@/lib/helicone/sessionContext";
 import { createHeliconeHeaders } from "@/lib/helicone/sessions";
+import { calculateApiCostInDollars } from "@/utils/costCalculator";
 
 interface ForecastResponse {
   probability: number;
@@ -39,7 +40,7 @@ async function generateSingleForecast(
   const timestamp = Date.now();
   const randomSeed = Math.random();
 
-  // Random prefix to break cache patterns
+  // Random prefix and framing to encourage variation
   const randomPrefixes = [
     "Let me think about this.",
     "Considering the question,",
@@ -47,26 +48,56 @@ async function generateSingleForecast(
     "Looking at this forecast,",
     "Evaluating the probability,",
     "Assessing this question,",
+    "From my perspective,",
+    "Based on current trends,",
+    "Taking a different angle,",
   ];
   const prefix = getRandomElement(randomPrefixes, "Let me think about this.");
+  
+  // Add variation in how we ask the question
+  const questionVariants = [
+    `Please forecast: ${options.question}`,
+    `What is the probability that ${options.question}`,
+    `Estimate the likelihood: ${options.question}`,
+    `What are the chances that ${options.question}`,
+    `How likely is it that ${options.question}`,
+  ];
+  const questionPrompt = getRandomElement(questionVariants, `Please forecast: ${options.question}`);
 
   const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-  const systemPrompt = `You are a careful forecaster. Given a question about a future event, provide:
-1. A probability estimate (0-100% with one decimal place, e.g., 65.2%)
-2. A one-sentence description of your reasoning
+  const systemPrompt = `You are an expert forecaster trained in the methods of superforecasters like those in Philip Tetlock's research. 
+
+When making forecasts, follow these steps:
+1. REPHRASE the question to ensure you understand exactly what's being asked
+2. IDENTIFY the base rate - what's the historical frequency of similar events?
+3. CONSIDER arguments for YES - what evidence supports this outcome?
+4. CONSIDER arguments for NO - what evidence opposes this outcome?
+5. WEIGH THE EVIDENCE - which arguments are stronger and more reliable?
+6. CHECK FOR BIAS - are you being overconfident? Consider the outside view.
+7. CALIBRATE - given everything above, what's your probability estimate?
+
+Key principles:
+- Use reference classes and base rates
+- Consider multiple scenarios
+- Be appropriately uncertain about uncertain events
+- Avoid round numbers (use precise estimates like 23.7%, not 25%)
+- Remember that most events are less likely than they initially seem
 
 Current date: ${currentDate}
-
-Consider base rates, current evidence, and uncertainties. IMPORTANT: Pay attention to the current date when forecasting - if the question asks about an event that should have already occurred, note this in your reasoning.
-Important: Give a precise probability with one decimal place (e.g., 37.5%, not 38%).
-Keep the reasoning very brief - just one clear sentence.
+Be especially careful about timing - has this event already occurred?
 
 [Session: ${timestamp}-${randomSeed}-${callNumber}]`;
 
-  const userPrompt = `${prefix} ${Math.random() < 0.5 ? "Please forecast: " : "What is the probability that "}${options.question}
+  const userPrompt = `${prefix} ${questionPrompt}
 ${options.context ? `\nContext: ${options.context}` : ""}
 
-Think carefully and provide your forecast. Random seed: ${Math.random()}`;
+Remember to work through the full forecasting process:
+1. Understand what exactly is being asked
+2. Find appropriate base rates and reference classes
+3. Consider evidence both for and against
+4. Calibrate your final probability carefully
+
+Provide your forecast as a precise probability (e.g., 23.7%, not 25%). Random seed: ${Math.random()}`;
 
   // Get session context if available
   const currentSession = sessionContext.getSession();
@@ -83,7 +114,7 @@ Think carefully and provide your forecast. Random seed: ${Math.random()}`;
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
       max_tokens: 1000,
-      temperature: 0.8, // Increased for more variation
+      temperature: 0.3, // Lower temperature for more consistent reasoning
       toolName: "provide_forecast",
       toolDescription: "Provide a probability forecast with reasoning",
       toolSchema: {
@@ -94,11 +125,11 @@ Think carefully and provide your forecast. Random seed: ${Math.random()}`;
             minimum: 0,
             maximum: 100,
             description:
-              "Probability estimate (0-100 with one decimal place, e.g. 65.2)",
+              "Probability estimate (0-100 with one decimal place, e.g. 23.7, not 25)",
           },
           reasoning: {
             type: "string",
-            description: "One-sentence description of your reasoning",
+            description: "Brief summary of your reasoning process and key considerations",
           },
         },
         required: ["probability", "reasoning"],
@@ -181,12 +212,16 @@ function removeOutliers(forecasts: ForecastResponse[]): {
 
 /**
  * Determine consensus level based on standard deviation
+ * More reasonable thresholds for probability forecasts
  */
 function determineConsensusLevel(std_dev: number): "low" | "medium" | "high" {
-  // High disagreement (std dev > 15) means low consensus
-  if (std_dev > 15) {
+  // Standard deviation thresholds for consensus:
+  // - High consensus: forecasts within ~5 percentage points (std dev <= 2.5)
+  // - Medium consensus: forecasts within ~10 percentage points (std dev <= 5)
+  // - Low consensus: wider spread (std dev > 5)
+  if (std_dev > 5) {
     return "low";
-  } else if (std_dev > 10) {
+  } else if (std_dev > 2.5) {
     return "medium";
   } else {
     return "high";
@@ -233,6 +268,12 @@ export async function generateForecastWithAggregation(
   };
   outliers_removed: ForecastResponse[];
   llmInteractions: RichLLMInteraction[];
+  cost: {
+    totalUSD: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    model: string;
+  };
 }> {
   console.log(`\n🔮 Generating forecast for: ${options.question}`);
   console.log(
@@ -338,6 +379,24 @@ export async function generateForecastWithAggregation(
     `\n  Final forecast: ${stats.mean.toFixed(1)}% (${overallConsensus} consensus)`
   );
 
+  // Calculate total cost from all interactions
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+  
+  llmInteractions.forEach(interaction => {
+    if (interaction.tokensUsed) {
+      totalInputTokens += interaction.tokensUsed.prompt || 0;
+      totalOutputTokens += interaction.tokensUsed.completion || 0;
+    }
+  });
+  
+  const totalCostUSD = calculateApiCostInDollars(
+    { input_tokens: totalInputTokens, output_tokens: totalOutputTokens }
+    // Model parameter is optional, will use default calculation
+  );
+  
+  console.log(`[Forecast Cost] Tokens: ${totalInputTokens} input, ${totalOutputTokens} output, Cost: $${totalCostUSD}`);
+
   return {
     forecast: {
       probability: stats.mean,
@@ -348,5 +407,11 @@ export async function generateForecastWithAggregation(
     outliers_removed: outliers,
     statistics: stats,
     llmInteractions,
+    cost: {
+      totalUSD: totalCostUSD,
+      totalInputTokens,
+      totalOutputTokens,
+      model: MODEL_CONFIG.forecasting
+    }
   };
 }

@@ -26,6 +26,12 @@ export interface ForecasterOutput {
     stdDev: number;
   };
   llmInteractions: RichLLMInteraction[];
+  cost?: {
+    totalUSD: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    model: string;
+  };
 }
 
 // Simplified input schema
@@ -90,7 +96,8 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
           mean: result.statistics.mean,
           stdDev: result.statistics.std_dev
         },
-        llmInteractions: result.llmInteractions
+        llmInteractions: result.llmInteractions,
+        cost: result.cost
       };
     } catch (error) {
       context.logger.error('[ForecasterTool] Error generating forecast:', error);
