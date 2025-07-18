@@ -24,8 +24,8 @@ export default function ForecasterAutoPage() {
           },
           numForecasts: {
             label: 'Number of Forecasts',
-            helpText: 'How many independent forecasts to generate (3-20)',
-            min: 3,
+            helpText: 'How many independent forecasts to generate (1-20)',
+            min: 1,
             max: 20,
             step: 1
           },
@@ -108,46 +108,16 @@ export default function ForecasterAutoPage() {
             )}
 
             {/* Research results if Perplexity was used */}
-            {(() => {
-              // Find Perplexity research interaction in LLM interactions
-              const perplexityInteraction = typedResult.llmInteractions?.find((interaction: any) => 
-                interaction.tool === 'perplexity-research' || 
-                interaction.model?.includes('perplexity') ||
-                interaction.response?.summary
-              );
-              
-              if (perplexityInteraction?.response) {
-                const research = perplexityInteraction.response;
-                return (
-                  <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                    <h3 className="text-lg font-semibold mb-2">🔍 Research Summary</h3>
-                    {research.summary && (
-                      <div className="mb-4">
-                        <h4 className="font-medium mb-2">Summary:</h4>
-                        <p className="text-gray-700">{research.summary}</p>
-                      </div>
-                    )}
-                    {research.keyFindings && research.keyFindings.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-medium mb-2">Key Findings:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-gray-700">
-                          {research.keyFindings.map((finding: string, i: number) => (
-                            <li key={i}>{finding}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {research.forecastingContext && (
-                      <div>
-                        <h4 className="font-medium mb-2">Forecasting Context:</h4>
-                        <p className="text-gray-700 whitespace-pre-wrap">{research.forecastingContext}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            })()}
+            {typedResult.llmInteractions && typedResult.llmInteractions.length > 0 && (
+              <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <h3 className="text-lg font-semibold mb-2">🔍 Research Data (Debug)</h3>
+                <div className="bg-white p-4 rounded border overflow-auto max-h-96">
+                  <pre className="text-xs font-mono text-gray-800">
+                    {JSON.stringify(typedResult.llmInteractions, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
         );
       }}
