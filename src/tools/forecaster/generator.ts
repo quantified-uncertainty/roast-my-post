@@ -52,8 +52,28 @@ async function generateSingleForecast(
     "From my perspective,",
     "Based on current trends,",
     "Taking a different angle,",
+    "Here's my analysis:",
+    "After careful consideration,",
+    "Examining the evidence,",
+    "My assessment is:",
+    "Looking at the facts,",
+    "Breaking this down,",
   ];
   const prefix = getRandomElement(randomPrefixes, "Let me think about this.");
+  
+  // Add random perspective modifiers to increase variation
+  const perspectiveModifiers = [
+    "",
+    " Remember to consider both optimistic and pessimistic scenarios.",
+    " Focus on recent developments and current momentum.",
+    " Consider historical patterns but don't be bound by them.",
+    " Think about what information might be missing.",
+    " Consider tail risks and unexpected factors.",
+    " Focus on the most likely scenarios.",
+    " Don't anchor too strongly on base rates.",
+    " Consider how this might differ from similar past events.",
+  ];
+  const perspectiveModifier = getRandomElement(perspectiveModifiers, "");
   
   // Add variation in how we ask the question
   const questionVariants = [
@@ -89,11 +109,15 @@ When making forecasts, follow these steps:
 
 Key principles:
 - Use reference classes and base rates
-- Consider multiple scenarios
+- Consider multiple scenarios  
 - Be appropriately uncertain about uncertain events
 - Avoid round numbers (use precise estimates like 23.7%, not 25%)
 - Events happening TOMORROW or THIS WEEK often have much higher certainty than distant events
 - If something is about tomorrow's weather, recent polls, or imminent events, probabilities can be 70-95%+
+- Don't cluster predictions around 10-20% - use the FULL 0-100% range appropriately
+- High probability events (60-90%) are common for likely outcomes
+- Very high probability (90%+) is appropriate for near-certain events
+- Remember: markets with 75%+ probability often reflect strong evidence
 
 [Session: ${timestamp}-${randomSeed}-${callNumber}]`;
 
@@ -113,7 +137,9 @@ Remember to work through the full forecasting process:
 4. Calibrate your final probability carefully
 
 For near-term events (tomorrow, this week), use current data and conditions.
-Provide your forecast as a precise probability (e.g., 23.7%, not 25%). Random seed: ${Math.random()}`;
+Provide your forecast as a precise probability (e.g., 23.7%, not 25%).${perspectiveModifier}
+
+Variation seed: ${Math.random()} | Call ${callNumber} | Time: ${timestamp}`;
 
   // Get session context if available
   const currentSession = sessionContext.getSession();
@@ -130,7 +156,7 @@ Provide your forecast as a precise probability (e.g., 23.7%, not 25%). Random se
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
       max_tokens: 1000,
-      temperature: 0.3, // Lower temperature for more consistent reasoning
+      temperature: 0.8, // Higher temperature for more variation
       toolName: "provide_forecast",
       toolDescription: "Provide a probability forecast with reasoning",
       toolSchema: {
