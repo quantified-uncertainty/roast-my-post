@@ -221,9 +221,10 @@ def run_evaluation(
         if count > 0:
             print(f"   {range_name}: {count} questions")
     
-    # Create Opik dataset
+    # Create Opik dataset and experiment with separate names
     client = opik.Opik()
-    dataset_id = experiment_name or f"{dataset_name}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    experiment_id = experiment_name or f"{dataset_name}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    dataset_id = f"{dataset_name}-dataset"
     dataset = client.get_or_create_dataset(name=dataset_id)
     
     # Convert questions to Opik format with metadata
@@ -239,8 +240,7 @@ def run_evaluation(
         for key, value in categorized['metadata'].items():
             item[f'meta_{key}'] = value
         
-        # Will be populated during evaluation
-        item['cost_usd'] = 0.0
+        # Note: cost_usd will be populated during evaluation
         
         opik_items.append(item)
     
@@ -267,6 +267,9 @@ def run_evaluation(
         total_cost = 0.0
         if 'cost' in output and output['cost']:
             total_cost = output['cost'].get('totalUSD', 0.0)
+            print(f" [DEBUG] Cost data found: ${total_cost}")
+        else:
+            print(f" [DEBUG] No cost data found. Output keys: {list(output.keys())}")
         
         if 'error' not in output:
             cost_str = f" (Cost: ${total_cost:.4f})" if total_cost > 0 else ""
@@ -277,11 +280,22 @@ def run_evaluation(
         # Store cost in item for Opik
         item['cost_usd'] = total_cost
         
-        return {
+        result = {
             "output": output,
             "item": item,
-            "cost_usd": total_cost
+            "cost_usd": total_cost,
+            # Also try adding cost as metadata
+            "metadata": {
+                "cost_usd": total_cost,
+                "cost_formatted": f"${total_cost:.4f}",
+                "input_tokens": output.get('cost', {}).get('totalInputTokens', 0) if 'cost' in output else 0,
+                "output_tokens": output.get('cost', {}).get('totalOutputTokens', 0) if 'cost' in output else 0
+            }
         }
+        
+        print(f" [DEBUG] Returning cost_usd: {result['cost_usd']}")
+        print(f" [DEBUG] Metadata: {result['metadata']}")
+        return result
     
     # Prepare experiment configuration for Opik
     experiment_config = {
@@ -309,7 +323,7 @@ def run_evaluation(
     # Run evaluation
     print("\n🧪 Starting evaluation...")
     result = evaluate(
-        experiment_name=dataset_id,
+        experiment_name=experiment_id,
         dataset=dataset,
         task=eval_task,
         scoring_metrics=[
@@ -322,7 +336,8 @@ def run_evaluation(
     
     print(f"\n✅ Evaluation complete!")
     print(f"\n🔗 View results at: https://www.comet.com/opik/oagr/experiments")
-    print(f"   Experiment: {dataset_id}")
+    print(f"   Experiment: {experiment_id}")
+    print(f"   Dataset: {dataset_id}")
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate forecaster tool")
