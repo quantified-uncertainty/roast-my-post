@@ -1,0 +1,6 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "num_forecasts": 1,
+  "parameters": {},
+  "description": "Single forecast baseline using Claude Sonnet 4"
+}

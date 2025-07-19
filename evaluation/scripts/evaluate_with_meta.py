@@ -206,13 +206,18 @@ def run_evaluation(
     dataset_name: str, 
     experiment_name: str = None,
     limit: int = None,
-    config: Dict[str, Any] = None
+    config: Dict[str, Any] = None,
+    description: str = None
 ):
     """Run evaluation on specified dataset"""
     print(f"🚀 Running Forecast Evaluation")
     print(f"   Dataset: {dataset_name}")
     if limit:
         print(f"   Limit: {limit} questions")
+    if description:
+        print(f"   Description: {description}")
+    elif config and config.get("description"):
+        print(f"   Description: {config['description']}")
     print()
     
     # Load questions
@@ -339,10 +344,21 @@ def run_evaluation(
         "categories": list(distributions.keys())
     }
     
+    # Add description from command line if provided (takes precedence)
+    if description:
+        experiment_config["description"] = description
+        experiment_config["experiment_purpose"] = description
+    
     # Add config details if using custom configuration
     if config:
         experiment_config["custom_config"] = config
         experiment_config["num_forecasts"] = config.get("num_forecasts", 1)
+        
+        # Add description if provided
+        if "description" in config:
+            experiment_config["description"] = config["description"]
+            experiment_config["experiment_purpose"] = config["description"]
+        
         if "prompt_improvements" in config:
             experiment_config.update({
                 f"prompt_{k}": v for k, v in config["prompt_improvements"].items()
@@ -391,6 +407,10 @@ def main():
         "--config",
         help="Path to configuration JSON for experiments"
     )
+    parser.add_argument(
+        "--description",
+        help="Description of what this experiment is testing"
+    )
     
     args = parser.parse_args()
     
@@ -420,7 +440,8 @@ def main():
         dataset_name=args.dataset,
         experiment_name=args.experiment,
         limit=args.limit,
-        config=config
+        config=config,
+        description=args.description
     )
 
 if __name__ == "__main__":

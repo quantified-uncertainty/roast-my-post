@@ -1,4 +1,5 @@
 {
+  "description": "Testing comprehensive improvements: varied temperatures, personas, calibration adjustments",
   "consensus_thresholds": {
     "high": 7.5,
     "medium": 4.0,

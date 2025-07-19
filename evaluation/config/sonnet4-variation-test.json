@@ -1,0 +1,6 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "num_forecasts": 3,
+  "parameters": {},
+  "description": "Testing temperature and variation improvements"
+}
