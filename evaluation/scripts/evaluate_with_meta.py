@@ -378,7 +378,7 @@ def run_evaluation(
             LogScoreMetric()
         ],
         experiment_config=experiment_config,
-        task_threads=16  # Increased parallelization for speed
+        task_threads=8  # Balanced parallelization to avoid rate limits
     )
     
     print(f"\n✅ Evaluation complete!")
