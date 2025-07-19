@@ -7,7 +7,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
 import { Opik } from 'opik';
 import * as dotenv from 'dotenv';
@@ -21,7 +20,7 @@ interface ExperimentData {
   experiment_id: string;
   experiment_name: string;
   created_at: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null;
 }
 
 interface TraceData {
@@ -29,26 +28,48 @@ interface TraceData {
   trace_name: string;
   created_at: string;
   project_name: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null;
 }
 
 interface DatasetData {
   item_id: string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null;
 }
 
 interface OpikClient {
   experiments?: {
-    list?: (params?: any) => Promise<any[]>;
+    list?: (params?: { limit?: number }) => Promise<Array<{
+      id: string;
+      name?: string;
+      created_at?: string;
+      timestamp?: string;
+      metadata?: Record<string, unknown>;
+      feedback_scores?: Array<{ name: string; value: number }>;
+      metrics?: Record<string, number>;
+    }>>;
   };
   traces?: {
-    list?: (params?: any) => Promise<any[]>;
+    list?: (params?: { limit?: number }) => Promise<Array<{
+      id: string;
+      name?: string;
+      created_at?: string;
+      timestamp?: string;
+      project_name?: string;
+      input?: unknown;
+      output?: unknown;
+      metadata?: Record<string, unknown>;
+      feedback_scores?: Array<{ name: string; value: number }>;
+      tags?: string[];
+    }>>;
   };
   datasets?: {
-    list?: (params?: any) => Promise<any[]>;
-    get?: (id: string) => Promise<any>;
+    list?: (params?: { limit?: number }) => Promise<Array<{
+      id: string;
+      name?: string;
+    }>>;
+    get?: (id: string) => Promise<{ id: string; name?: string }>;
   };
-  getDatasetItems?: (params: { dataset_id: string; limit?: number }) => Promise<any[]>;
+  getDatasetItems?: (params: { dataset_id: string; limit?: number }) => Promise<Array<Record<string, unknown>>>;
 }
 
 class OpikExporter {
@@ -66,8 +87,7 @@ class OpikExporter {
 
     this.client = new Opik({
       apiKey: this.apiKey,
-      workspace: this.workspace,
-      baseURL: 'https://www.comet.com/opik/api/v1'
+      baseUrl: 'https://www.comet.com/opik/api/v1'
     }) as Opik & OpikClient;
   }
 
@@ -98,13 +118,13 @@ class OpikExporter {
         if (exp.metadata) {
           Object.entries(exp.metadata).forEach(([key, value]) => {
             headers.add(`metadata_${key}`);
-            expData[`metadata_${key}`] = typeof value === 'object' ? JSON.stringify(value) : value;
+            expData[`metadata_${key}`] = typeof value === 'object' ? JSON.stringify(value) : String(value);
           });
         }
 
         // Add feedback scores
         if (exp.feedback_scores) {
-          exp.feedback_scores.forEach((score: any) => {
+          exp.feedback_scores.forEach((score) => {
             headers.add(score.name);
             expData[score.name] = score.value;
           });
@@ -183,13 +203,13 @@ class OpikExporter {
         if (trace.metadata) {
           Object.entries(trace.metadata).forEach(([key, value]) => {
             headers.add(`metadata_${key}`);
-            traceData[`metadata_${key}`] = typeof value === 'object' ? JSON.stringify(value) : value;
+            traceData[`metadata_${key}`] = typeof value === 'object' ? JSON.stringify(value) : String(value);
           });
         }
 
         // Add feedback scores
         if (trace.feedback_scores) {
-          trace.feedback_scores.forEach((score: any) => {
+          trace.feedback_scores.forEach((score) => {
             headers.add(score.name);
             traceData[score.name] = score.value;
           });
@@ -243,23 +263,23 @@ class OpikExporter {
 
       for (const item of items) {
         const itemData: DatasetData = {
-          item_id: item.id || ''
+          item_id: String(item.id || '')
         };
 
         // Add all fields from the item
-        const processObject = (obj: any, prefix: string = '') => {
+        const processObject = (obj: Record<string, unknown>, prefix: string = '') => {
           Object.entries(obj).forEach(([key, value]) => {
             if (key === 'id' && prefix === '') return; // Skip root id
             
             const fieldName = prefix ? `${prefix}_${key}` : key;
             
             if (value && typeof value === 'object' && !Array.isArray(value)) {
-              processObject(value, fieldName);
+              processObject(value as Record<string, unknown>, fieldName);
             } else {
               headers.add(fieldName);
               itemData[fieldName] = Array.isArray(value) || typeof value === 'object' 
                 ? JSON.stringify(value) 
-                : value;
+                : String(value);
             }
           });
         };
@@ -342,7 +362,7 @@ class OpikExporter {
     console.log(`🔗 Dashboard: https://www.comet.com/opik/${this.workspace}/experiments`);
   }
 
-  private writeCSV(filename: string, data: any[], headers: string[]): void {
+  private writeCSV(filename: string, data: Array<Record<string, string | number | boolean | null>>, headers: string[]): void {
     const csv = stringify(data, {
       header: true,
       columns: headers
@@ -439,7 +459,7 @@ Examples:
     }
     
   } catch (error) {
-    console.error('❌ Script failed:', error);
+    console.error('❌ Script failed:', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }

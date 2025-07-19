@@ -98,9 +98,46 @@ The current forecaster scores:
 
 This indicates the forecaster clusters predictions too narrowly around 10-25% regardless of market probabilities.
 
+## Local Data Export (NEW!)
+
+You can now export evaluation results locally during runs for immediate analysis:
+
+```bash
+python evaluation/scripts/evaluate_with_meta.py \
+  --dataset current \
+  --export evaluation/exports
+```
+
+This creates:
+- **CSV file**: For pandas/Excel analysis
+- **JSON file**: Complete data with metadata
+- **Summary report**: Human-readable statistics
+
+See [docs/local-data-export.md](docs/local-data-export.md) for details.
+
 ## Exporting Data from Opik
 
-To export experiment results for further analysis:
+### TypeScript Export (Recommended)
+
+Use the TypeScript export script for consistency with the Next.js codebase:
+
+```bash
+# List available data
+npm run opik:export list
+
+# Export experiment results to CSV
+npm run opik:export experiments -- -o results.csv
+
+# Export detailed trace data
+npm run opik:export traces -- -l 1000
+
+# Export a specific dataset
+npm run opik:export dataset "dataset-name"
+```
+
+### Python Export (Alternative)
+
+If you prefer Python or need the original export functionality:
 
 ```bash
 # List available data
@@ -116,4 +153,4 @@ python evaluation/scripts/export_opik_data.py traces --limit 1000
 python evaluation/scripts/export_opik_data.py dataset "dataset-name"
 ```
 
-See `docs/export-opik-data.md` for detailed export instructions and analysis examples.
+See `scripts/README.md` for detailed export instructions and `docs/export-opik-data.md` for analysis examples.

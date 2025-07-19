@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import csv
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
@@ -207,7 +208,8 @@ def run_evaluation(
     experiment_name: str = None,
     limit: int = None,
     config: Dict[str, Any] = None,
-    description: str = None
+    description: str = None,
+    export_dir: str = None
 ):
     """Run evaluation on specified dataset"""
     print(f"🚀 Running Forecast Evaluation")
@@ -285,6 +287,9 @@ def run_evaluation(
     
     dataset.insert(opik_items)
     
+    # Create results collection list for local export
+    all_results = []
+    
     # Evaluation task
     def eval_task(item: Dict[str, Any]) -> Dict[str, Any]:
         print(f"\n🔮 {item['question'][:70]}...")
@@ -331,6 +336,38 @@ def run_evaluation(
         print(f" [DEBUG] Returning cost_usd: {result['cost_usd']}")
         print(f" [DEBUG] Metadata: {result['metadata']}")
         print(f" [DEBUG] Feedback scores: {result['feedback_scores']}")
+        
+        # Collect result for local export
+        export_row = {
+            'timestamp': datetime.now().isoformat(),
+            'experiment_id': experiment_id,
+            'dataset': dataset_name,
+            'question': item['question'],
+            'market_probability': item['market_probability'],
+            'forecast_probability': output.get('probability', None),
+            'forecast_description': output.get('description', ''),
+            'consensus': output.get('consensus', ''),
+            'error': output.get('error') if 'error' in output else None,
+            'cost_usd': total_cost,
+            'input_tokens': output.get('cost', {}).get('totalInputTokens', 0) if 'cost' in output else 0,
+            'output_tokens': output.get('cost', {}).get('totalOutputTokens', 0) if 'cost' in output else 0,
+            'model': config.get("model", "claude-opus-4-20250514") if config else "claude-opus-4-20250514"
+        }
+        
+        # Add metadata fields
+        for key, value in item.items():
+            if key.startswith('meta_'):
+                export_row[key] = value
+        
+        # Add individual forecasts if available
+        if 'individualForecasts' in output:
+            export_row['num_forecasts'] = len(output['individualForecasts'])
+            for i, forecast in enumerate(output['individualForecasts'][:3]):  # Limit to first 3
+                export_row[f'forecast_{i+1}_probability'] = forecast.get('probability')
+                export_row[f'forecast_{i+1}_reasoning'] = forecast.get('reasoning', '')[:200]  # Truncate long reasoning
+        
+        all_results.append(export_row)
+        
         return result
     
     # Prepare experiment configuration for Opik
@@ -385,6 +422,77 @@ def run_evaluation(
     print(f"\n🔗 View results at: https://www.comet.com/opik/oagr/experiments")
     print(f"   Experiment: {experiment_id}")
     print(f"   Dataset: {dataset_id}")
+    
+    # Export results locally if requested
+    if export_dir and all_results:
+        export_path = Path(export_dir)
+        export_path.mkdir(parents=True, exist_ok=True)
+        
+        # Create filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        base_filename = f"{experiment_id}_{timestamp}"
+        
+        # Export as CSV
+        csv_path = export_path / f"{base_filename}.csv"
+        if all_results:
+            # Get all unique keys across all results
+            all_keys = set()
+            for row in all_results:
+                all_keys.update(row.keys())
+            fieldnames = sorted(all_keys)
+            
+            with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(all_results)
+            print(f"\n📊 Exported CSV: {csv_path}")
+        
+        # Export as JSON with full details
+        json_path = export_path / f"{base_filename}.json"
+        export_data = {
+            'experiment_id': experiment_id,
+            'dataset_id': dataset_id,
+            'dataset_name': dataset_name,
+            'timestamp': datetime.now().isoformat(),
+            'config': config,
+            'description': description,
+            'experiment_config': experiment_config,
+            'summary': {
+                'total_questions': len(all_results),
+                'successful_forecasts': sum(1 for r in all_results if not r.get('error')),
+                'failed_forecasts': sum(1 for r in all_results if r.get('error')),
+                'total_cost': sum(r.get('cost_usd', 0) for r in all_results),
+                'avg_forecast': sum(r.get('forecast_probability', 0) for r in all_results if r.get('forecast_probability')) / max(1, sum(1 for r in all_results if r.get('forecast_probability'))),
+                'avg_market': sum(r.get('market_probability', 0) for r in all_results) / max(1, len(all_results))
+            },
+            'results': all_results,
+            'opik_result': {
+                'metrics': getattr(result, 'metrics', None) if result else None
+            }
+        }
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(export_data, f, indent=2, ensure_ascii=False)
+        print(f"📄 Exported JSON: {json_path}")
+        
+        # Create a summary report
+        summary_path = export_path / f"{base_filename}_summary.txt"
+        with open(summary_path, 'w', encoding='utf-8') as f:
+            f.write(f"Evaluation Summary\n")
+            f.write(f"==================\n\n")
+            f.write(f"Experiment: {experiment_id}\n")
+            f.write(f"Dataset: {dataset_name}\n")
+            f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            if description:
+                f.write(f"Description: {description}\n")
+            f.write(f"\nResults:\n")
+            f.write(f"- Total questions: {export_data['summary']['total_questions']}\n")
+            f.write(f"- Successful: {export_data['summary']['successful_forecasts']}\n")
+            f.write(f"- Failed: {export_data['summary']['failed_forecasts']}\n")
+            f.write(f"- Total cost: ${export_data['summary']['total_cost']:.4f}\n")
+            f.write(f"- Avg forecast: {export_data['summary']['avg_forecast']:.1f}%\n")
+            f.write(f"- Avg market: {export_data['summary']['avg_market']:.1f}%\n")
+        print(f"📝 Exported summary: {summary_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate forecaster tool")
@@ -410,6 +518,10 @@ def main():
     parser.add_argument(
         "--description",
         help="Description of what this experiment is testing"
+    )
+    parser.add_argument(
+        "--export",
+        help="Directory to export results (CSV, JSON, and summary)"
     )
     
     args = parser.parse_args()
@@ -441,7 +553,8 @@ def main():
         experiment_name=args.experiment,
         limit=args.limit,
         config=config,
-        description=args.description
+        description=args.description,
+        export_dir=args.export
     )
 
 if __name__ == "__main__":
