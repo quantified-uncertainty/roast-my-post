@@ -1,0 +1,3366 @@
+{
+  "metadata": {
+    "created_at": "2025-07-18T22:32:52.277Z",
+    "total_markets": 200,
+    "unique_questions": 43,
+    "source": "Kalshi API",
+    "selection_criteria": {
+      "status": "active",
+      "days_until_close": "30-730",
+      "excluded_terms": [
+        "yesterday",
+        "today",
+        "tomorrow",
+        "this week",
+        "next week"
+      ],
+      "multi_outcome_handling": "max 3 options per question",
+      "prioritized_data_quality": true
+    },
+    "category_distribution": {
+      "POLITICS": 3,
+      "ECONOMICS": 10,
+      "TECHNOLOGY": 21,
+      "SPORTS": 148,
+      "SOCIETY": 7,
+      "BUSINESS": 3,
+      "INTERNATIONAL": 3,
+      "HEALTH": 1,
+      "OTHER": 4
+    },
+    "data_quality": {
+      "with_price_data": 200,
+      "with_volume": 21
+    }
+  },
+  "markets": [
+    {
+      "ticker": "KXJPHOCSECOND-25-SDP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "full_question": "Who will be second in the Japan House of Councillors election? [SDP]",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "SDP",
+      "rules": "If SDP is second in the Japan House of Councillors election in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-SANSEITO",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "full_question": "Who will be second in the Japan House of Councillors election? [Sanseitō]",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Sanseitō",
+      "rules": "If Sanseitō is second in the Japan House of Councillors election in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-REIWA",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "full_question": "Who will be second in the Japan House of Councillors election? [Reiwa]",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Reiwa",
+      "rules": "If Reiwa is second in the Japan House of Councillors election in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-200",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "full_question": "How high revenue will tariffs bring in in 2025? [At least $200 billion]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "quantitative_estimation",
+        "market_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 71,
+      "volume": 462,
+      "yes_option": "At least $200 billion",
+      "rules": "If tariff revenue is at least $200 billion in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-500",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "full_question": "How high revenue will tariffs bring in in 2025? [At least $500 billion]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "quantitative_estimation",
+        "market_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 18,
+      "volume": 124,
+      "yes_option": "At least $500 billion",
+      "rules": "If tariff revenue is at least $500 billion in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-300",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "full_question": "How high revenue will tariffs bring in in 2025? [At least $300 billion]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "quantitative_estimation",
+        "market_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least $300 billion",
+      "rules": "If tariff revenue is at least $300 billion in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXCRYPTOSTRUCTURE-26JAN",
+      "title": "Will crypto market structure become law before Jan 1, 2026?",
+      "full_question": "Will crypto market structure become law before Jan 1, 2026?",
+      "category": "ECONOMICS",
+      "subcategory": "crypto",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning",
+        "policy_analysis"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 62,
+      "volume": 435,
+      "yes_option": "crypto market structure",
+      "rules": "If crypto market structure become law before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-9",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "full_question": "What will the average tariff rate be in Q3 2025? [At least 9%]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least 9%",
+      "rules": "If the average tariff rate paid in the United States in 2025 is at least 9%, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-8",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "full_question": "What will the average tariff rate be in Q3 2025? [At least 8%]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least 8%",
+      "rules": "If the average tariff rate paid in the United States in 2025 is at least 8%, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-7",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "full_question": "What will the average tariff rate be in Q3 2025? [At least 7%]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least 7%",
+      "rules": "If the average tariff rate paid in the United States in 2025 is at least 7%, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-4",
+      "title": "What will the average tariff rate be in Q2 2025?",
+      "full_question": "What will the average tariff rate be in Q2 2025? [At least 4%]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least 4%",
+      "rules": "If the average tariff rate paid in the United States in Q2 2025 is at least 4%, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXOAIBROWSER-25",
+      "title": "When will OpenAI release a web browser to the public?",
+      "full_question": "When will OpenAI release a web browser to the public? [In 2025]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2025-12-31T04:59:00Z",
+      "current_probability": 78,
+      "volume": 472,
+      "yes_option": "In 2025",
+      "rules": "If OpenAI releases a web browser to the public before Dec 31, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MIN",
+      "title": "When will JUUL release Mint to the public?",
+      "full_question": "When will JUUL release Mint to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 19,
+      "volume": 239,
+      "yes_option": "Mint",
+      "rules": "If JUUL releases Mint to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MEN",
+      "title": "When will JUUL release Menthol Classic to the public?",
+      "full_question": "When will JUUL release Menthol Classic to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 34,
+      "volume": 227,
+      "yes_option": "Menthol Classic",
+      "rules": "If JUUL releases Menthol Classic to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-COO",
+      "title": "When will JUUL release Cool Mint to the public?",
+      "full_question": "When will JUUL release Cool Mint to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 16,
+      "volume": 32,
+      "yes_option": "Cool Mint",
+      "rules": "If JUUL releases Cool Mint to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MAN",
+      "title": "When will JUUL release Mango to the public?",
+      "full_question": "When will JUUL release Mango to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_option": "Mango",
+      "rules": "If JUUL releases Mango to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXMUSKCABLE-26",
+      "title": "When will an Elon Musk owned company release a cable company to the public?",
+      "full_question": "When will an Elon Musk owned company release a cable company to the public? [In 2025]",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_option": "In 2025",
+      "rules": "If an Elon Musk owned company releases a cable company to the public before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CAF",
+      "title": "When will JUUL release Café Latte to the public?",
+      "full_question": "When will JUUL release Café Latte to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Café Latte",
+      "rules": "If JUUL releases Café Latte to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-WAT",
+      "title": "When will JUUL release Watermelon to the public?",
+      "full_question": "When will JUUL release Watermelon to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Watermelon",
+      "rules": "If JUUL releases Watermelon to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-PIN",
+      "title": "When will JUUL release Pineapple Lemonade to the public?",
+      "full_question": "When will JUUL release Pineapple Lemonade to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Pineapple Lemonade",
+      "rules": "If JUUL releases Pineapple Lemonade to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-FRU",
+      "title": "When will JUUL release Fruit Medley to the public?",
+      "full_question": "When will JUUL release Fruit Medley to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Fruit Medley",
+      "rules": "If JUUL releases Fruit Medley to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CUC",
+      "title": "When will JUUL release Cucumber to the public?",
+      "full_question": "When will JUUL release Cucumber to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cucumber",
+      "rules": "If JUUL releases Cucumber to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CRE",
+      "title": "When will JUUL release Crème Brûlée to the public?",
+      "full_question": "When will JUUL release Crème Brûlée to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Crème Brûlée",
+      "rules": "If JUUL releases Crème Brûlée to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CLA",
+      "title": "When will JUUL release Classic Tobacco to the public?",
+      "full_question": "When will JUUL release Classic Tobacco to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Classic Tobacco",
+      "rules": "If JUUL releases Classic Tobacco to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BUB",
+      "title": "When will JUUL release Bubblegum to the public?",
+      "full_question": "When will JUUL release Bubblegum to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bubblegum",
+      "rules": "If JUUL releases Bubblegum to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BAN",
+      "title": "When will JUUL release Banana to the public?",
+      "full_question": "When will JUUL release Banana to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Banana",
+      "rules": "If JUUL releases Banana to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-APP",
+      "title": "When will JUUL release Apple Orchard to the public?",
+      "full_question": "When will JUUL release Apple Orchard to the public?",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Apple Orchard",
+      "rules": "If JUUL releases Apple Orchard to the public before Jan 1, 2027, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXGROKMACOS-SEP25",
+      "title": "When will xAI release a Grok MacOS app to the public?",
+      "full_question": "When will xAI release a Grok MacOS app to the public? [Before Sep 2025]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "temporal_reasoning",
+        "event_prediction"
+      ],
+      "close_time": "2025-09-01T03:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Before Sep 2025",
+      "rules": "If xAI releases a Grok MacOS app to the public before Sep 1, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBADPOY-26-VWEM",
+      "title": "Who will win Defensive Player of the Year?",
+      "full_question": "Who will win Defensive Player of the Year? [Victor Wembanyama]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 50,
+      "volume": 581,
+      "yes_option": "Victor Wembanyama",
+      "rules": "If Victor Wembanyama wins the Pro basketball Defensive Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBADPOY-26-JJAC",
+      "title": "Who will win Defensive Player of the Year?",
+      "full_question": "Who will win Defensive Player of the Year? [Jaren Jackson Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 35,
+      "yes_option": "Jaren Jackson Jr.",
+      "rules": "If Jaren Jackson Jr. wins the Pro basketball Defensive Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBADPOY-26-EMOB",
+      "title": "Who will win Defensive Player of the Year?",
+      "full_question": "Who will win Defensive Player of the Year? [Evan Mobley]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 35,
+      "yes_option": "Evan Mobley",
+      "rules": "If Evan Mobley wins the Pro basketball Defensive Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ANEM",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Andrew Nembhard]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 7,
+      "volume": 138,
+      "yes_option": "Andrew Nembhard",
+      "rules": "If Andrew Nembhard wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MBUZ",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Matas Buzelis]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 1,
+      "yes_option": "Matas Buzelis",
+      "rules": "If Matas Buzelis wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BMAT",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Bennedict Mathurin]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 1,
+      "yes_option": "Bennedict Mathurin",
+      "rules": "If Bennedict Mathurin wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-MMCC",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "full_question": "Who will get hired as a men's pro football coach in 2025? [Mike McCarthy]",
+      "category": "SPORTS",
+      "subcategory": "coach",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 5,
+      "volume": 43,
+      "yes_option": "Mike McCarthy",
+      "rules": "If Mike McCarthy is hired as a coach in men's pro football before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-RRIV",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "full_question": "Who will get hired as a men's pro football coach in 2025? [Ron Rivera]",
+      "category": "SPORTS",
+      "subcategory": "coach",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Ron Rivera",
+      "rules": "If Ron Rivera is hired as a coach in men's pro football before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-BBEL",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "full_question": "Who will get hired as a men's pro football coach in 2025? [Bill Belichick]",
+      "category": "SPORTS",
+      "subcategory": "coach",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bill Belichick",
+      "rules": "If Bill Belichick is hired as a coach in men's pro football before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAROY-26-CFLA",
+      "title": "Who will win Rookie of the Year?",
+      "full_question": "Who will win Rookie of the Year? [Cooper Flagg]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 67,
+      "volume": 1,
+      "yes_option": "Cooper Flagg",
+      "rules": "If Cooper Flagg wins the Pro basketball Rookie of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAROY-26-NTRA",
+      "title": "Who will win Rookie of the Year?",
+      "full_question": "Who will win Rookie of the Year? [Nolan Traore]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nolan Traore",
+      "rules": "If Nolan Traore wins the Pro basketball Rookie of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAROY-26-JBER",
+      "title": "Who will win Rookie of the Year?",
+      "full_question": "Who will win Rookie of the Year? [Joan Beringer]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Joan Beringer",
+      "rules": "If Joan Beringer wins the Pro basketball Rookie of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KTHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Klay Thompson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Klay Thompson",
+      "rules": "If Klay Thompson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JJOH",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jalen Johnson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Johnson",
+      "rules": "If Jalen Johnson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JIVE",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jaden Ivey]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jaden Ivey",
+      "rules": "If Jaden Ivey wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-TSHA",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Terrence Shannon Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Terrence Shannon Jr.",
+      "rules": "If Terrence Shannon Jr. wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-THAR",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Tim Hardaway Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Tim Hardaway Jr.",
+      "rules": "If Tim Hardaway Jr. wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-NJOV",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Nikola Jovic]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nikola Jovic",
+      "rules": "If Nikola Jovic wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T4",
+      "title": "Will New York City rent grow above 4% in December 2025?",
+      "full_question": "Will New York City rent grow above 4% in December 2025? [Above 4%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": 73,
+      "volume": 1,
+      "yes_option": "Above 4%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 4 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T6",
+      "title": "Will New York City rent grow above 6% in December 2025?",
+      "full_question": "Will New York City rent grow above 6% in December 2025? [Above 6%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 6%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 6 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T5",
+      "title": "Will New York City rent grow above 5% in December 2025?",
+      "full_question": "Will New York City rent grow above 5% in December 2025? [Above 5%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 5%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 5 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T3",
+      "title": "Will New York City rent grow above 3% in December 2025?",
+      "full_question": "Will New York City rent grow above 3% in December 2025? [Above 3%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 3%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 3 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T2",
+      "title": "Will New York City rent grow above 2% in December 2025?",
+      "full_question": "Will New York City rent grow above 2% in December 2025? [Above 2%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 2%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 2 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T1",
+      "title": "Will New York City rent grow above 1% in December 2025?",
+      "full_question": "Will New York City rent grow above 1% in December 2025? [Above 1%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 1%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 1 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T0",
+      "title": "Will New York City rent grow above 0% in December 2025?",
+      "full_question": "Will New York City rent grow above 0% in December 2025? [Above 0%]",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 0%",
+      "rules": "If the NYC StreetEasy rental index grows by more than 0 in December 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-PEST",
+      "title": "Who will Manchester United acquire this year?",
+      "full_question": "Who will Manchester United acquire this year? [Pervis Estupiñán]",
+      "category": "BUSINESS",
+      "subcategory": "manchester united",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Pervis Estupiñán",
+      "rules": "If Manchester United acquire Pervis Estupiñán before Sep 2, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-NJAC",
+      "title": "Who will Manchester United acquire this year?",
+      "full_question": "Who will Manchester United acquire this year? [Nicolas Jackson]",
+      "category": "BUSINESS",
+      "subcategory": "manchester united",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nicolas Jackson",
+      "rules": "If Manchester United acquire Nicolas Jackson before Sep 2, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-EMAR",
+      "title": "Who will Manchester United acquire this year?",
+      "full_question": "Who will Manchester United acquire this year? [Emiliano Martínez]",
+      "category": "BUSINESS",
+      "subcategory": "manchester united",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Emiliano Martínez",
+      "rules": "If Manchester United acquire Emiliano Martínez before Sep 2, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXAUKUS-25-0",
+      "title": "Will any country withdraw from the Abraham Accords in Dec 2025?",
+      "full_question": "Will any country withdraw from the Abraham Accords in Dec 2025? [Above 0]",
+      "category": "INTERNATIONAL",
+      "subcategory": "country",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Above 0",
+      "rules": "If above 0 countries withdraw from the AUKUS before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXCANCELTHELINE-25",
+      "title": "Will Saudi Arabia cancel plans for The Line in 2025?",
+      "full_question": "Will Saudi Arabia cancel plans for The Line in 2025? [Before 2026]",
+      "category": "INTERNATIONAL",
+      "subcategory": "saudi",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Before 2026",
+      "rules": "If Saudi Arabia announces they are cancelling development of The Line before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXECOWASBURKINA-25",
+      "title": "Will the US agree to a new Iranian nuclear deal this year?",
+      "full_question": "Will the US agree to a new Iranian nuclear deal this year? [Before 2026]",
+      "category": "INTERNATIONAL",
+      "subcategory": "iran",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Before 2026",
+      "rules": "If Burkina Faso agreed to, signed, or accepted Economic Community of West African States before Jan 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXTPSMYANMAR-25",
+      "title": "Will Temporary Protected Status for Myanmar end in 2025?",
+      "full_question": "Will Temporary Protected Status for Myanmar end in 2025? [In 2025]",
+      "category": "HEALTH",
+      "subcategory": "protected status",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "In 2025",
+      "rules": "If Temporary Protected Status for Myanmar ends before Dec 31, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXMESSIRETIRE-26",
+      "title": "Will Lionel Messi announce their retirement in 2026?",
+      "full_question": "Will Lionel Messi announce their retirement in 2026? [Before the start of the 2026-27 regular season]",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning",
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 56,
+      "volume": 1834,
+      "yes_option": "Before the start of the 2026-27 regular season",
+      "rules": "If Lionel Messi announces their retirement before January 1, 2026, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXFIDECANDIDATES-26-ANI",
+      "title": "Who will qualify for the FIDE Candidates tournament?",
+      "full_question": "Who will qualify for the FIDE Candidates tournament? [Anish Giri]",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-12-31T15:00:00Z",
+      "current_probability": 55,
+      "volume": 10,
+      "yes_option": "Anish Giri",
+      "rules": "If Anish Giri qualifying for the 2026 World Chess Championship Candidates Tournament, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXFIDECANDIDATES-26-MAX",
+      "title": "Who will qualify for the FIDE Candidates tournament?",
+      "full_question": "Who will qualify for the FIDE Candidates tournament? [Maxime Vachier-Lagrave]",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Maxime Vachier-Lagrave",
+      "rules": "If Maxime Vachier-Lagrave qualifying for the 2026 World Chess Championship Candidates Tournament, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXFIDECANDIDATES-26-VLA",
+      "title": "Who will qualify for the FIDE Candidates tournament?",
+      "full_question": "Who will qualify for the FIDE Candidates tournament? [Vladimir Fedoseev]",
+      "category": "ECONOMICS",
+      "subcategory": "fed",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Vladimir Fedoseev",
+      "rules": "If Vladimir Fedoseev qualifying for the 2026 World Chess Championship Candidates Tournament, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXJOINNEYMARMIAMI-25-MIA",
+      "title": "Where will Neymar go next?",
+      "full_question": "Where will Neymar go next? [Inter Miami]",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-08T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Inter Miami",
+      "rules": "If the next club that Neymar joins is Inter Miami before Sep 1, 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBADPOY-26-JSUG",
+      "title": "Who will win Defensive Player of the Year?",
+      "full_question": "Who will win Defensive Player of the Year? [Jalen Suggs]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 20,
+      "yes_option": "Jalen Suggs",
+      "rules": "If Jalen Suggs wins the Pro basketball Defensive Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-150",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "full_question": "How high revenue will tariffs bring in in 2025? [At least $150 billion]",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "quantitative_estimation",
+        "market_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "At least $150 billion",
+      "rules": "If tariff revenue is at least $150 billion in 2025, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JHART",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Josh Hart]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Josh Hart",
+      "rules": "If Josh Hart wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JCOL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [John Collins]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "John Collins",
+      "rules": "If John Collins wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JALL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jarrett Allen]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jarrett Allen",
+      "rules": "If Jarrett Allen wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-IZUB",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Ivica Zubac]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Ivica Zubac",
+      "rules": "If Ivica Zubac wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-IHAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Isaiah Hartenstein]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Isaiah Hartenstein",
+      "rules": "If Isaiah Hartenstein wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-FVAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Fred VanVleet]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Fred VanVleet",
+      "rules": "If Fred VanVleet wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DWHI",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Derrick White]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Derrick White",
+      "rules": "If Derrick White wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DHUN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [De'Andre Hunter]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "De'Andre Hunter",
+      "rules": "If De'Andre Hunter wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DGRE",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Draymond Green]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Draymond Green",
+      "rules": "If Draymond Green wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DDER",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [DeMar DeRozan]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "DeMar DeRozan",
+      "rules": "If DeMar DeRozan wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DAYT",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Deandre Ayton]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Deandre Ayton",
+      "rules": "If Deandre Ayton wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CWHI",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Coby White]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Coby White",
+      "rules": "If Coby White wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CMCC",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [CJ McCollum]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "CJ McCollum",
+      "rules": "If CJ McCollum wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CJOH",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Cam Johnson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cam Johnson",
+      "rules": "If Cam Johnson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CHOL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Chet Holmgren]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Chet Holmgren",
+      "rules": "If Chet Holmgren wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-BMAT",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Bennedict Mathurin]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bennedict Mathurin",
+      "rules": "If Bennedict Mathurin wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ATHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Ausar Thompson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Ausar Thompson",
+      "rules": "If Ausar Thompson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ASIM",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Anfernee Simons]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Anfernee Simons",
+      "rules": "If Anfernee Simons wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AREA",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Austin Reaves]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Austin Reaves",
+      "rules": "If Austin Reaves wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ZLAV",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Zach LaVine]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Zach LaVine",
+      "rules": "If Zach LaVine wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-THER",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Tyler Herro]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Tyler Herro",
+      "rules": "If Tyler Herro wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PSIA",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Pascal Siakam]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Pascal Siakam",
+      "rules": "If Pascal Siakam wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PGEO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Paul George]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Paul George",
+      "rules": "If Paul George wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JMUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jamal Murray]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jamal Murray",
+      "rules": "If Jamal Murray wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JJAC",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jaren Jackson Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jaren Jackson Jr.",
+      "rules": "If Jaren Jackson Jr. wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JHAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [James Harden]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "James Harden",
+      "rules": "If James Harden wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JGRE",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jalen Green]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Green",
+      "rules": "If Jalen Green wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DSAB",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Domantas Sabonis]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Domantas Sabonis",
+      "rules": "If Domantas Sabonis wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DGAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Darius Garland]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Darius Garland",
+      "rules": "If Darius Garland wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DBAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Desmond Bane]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Desmond Bane",
+      "rules": "If Desmond Bane wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CFLA",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Cooper Flagg]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cooper Flagg",
+      "rules": "If Cooper Flagg wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ANEM",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Andrew Nembhard]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Andrew Nembhard",
+      "rules": "If Andrew Nembhard wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ACAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Alex Caruso]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Alex Caruso",
+      "rules": "If Alex Caruso wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ZWIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Zion Williamson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Zion Williamson",
+      "rules": "If Zion Williamson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-TMAX",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Tyrese Maxey]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Tyrese Maxey",
+      "rules": "If Tyrese Maxey wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SBAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Scottie Barnes]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Scottie Barnes",
+      "rules": "If Scottie Barnes wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LBAL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [LaMelo Ball]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "LaMelo Ball",
+      "rules": "If LaMelo Ball wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KTOW",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Karl-Anthony Towns]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Karl-Anthony Towns",
+      "rules": "If Karl-Anthony Towns wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JWIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jalen Williams]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Williams",
+      "rules": "If Jalen Williams wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JRAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Julius Randle]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Julius Randle",
+      "rules": "If Julius Randle wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JMOR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Ja Morant]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Ja Morant",
+      "rules": "If Ja Morant wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBUT",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jimmy Butler]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jimmy Butler",
+      "rules": "If Jimmy Butler wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-FWAG",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Franz Wagner]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Franz Wagner",
+      "rules": "If Franz Wagner wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-EMOB",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Evan Mobley]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Evan Mobley",
+      "rules": "If Evan Mobley wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DFOX",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [De'Aaron Fox]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "De'Aaron Fox",
+      "rules": "If De'Aaron Fox wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-BADE",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Bam Adebayo]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bam Adebayo",
+      "rules": "If Bam Adebayo wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ASEN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Alperen Sengun]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Alperen Sengun",
+      "rules": "If Alperen Sengun wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AMTHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Amen Thompson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Amen Thompson",
+      "rules": "If Amen Thompson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-VWEM",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Victor Wembanyama]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Victor Wembanyama",
+      "rules": "If Victor Wembanyama wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-TYOU",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Trae Young]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Trae Young",
+      "rules": "If Trae Young wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SCUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Stephen Curry]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Stephen Curry",
+      "rules": "If Stephen Curry wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PBAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Paolo Banchero]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Paolo Banchero",
+      "rules": "If Paolo Banchero wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LJAM",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [LeBron James]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "LeBron James",
+      "rules": "If LeBron James wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KLEO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Kawhi Leonard]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kawhi Leonard",
+      "rules": "If Kawhi Leonard wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KDUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Kevin Durant]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kevin Durant",
+      "rules": "If Kevin Durant wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JEMB",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Joel Embiid]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Joel Embiid",
+      "rules": "If Joel Embiid wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBRU",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jalen Brunson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Brunson",
+      "rules": "If Jalen Brunson wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBRO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Jaylen Brown]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jaylen Brown",
+      "rules": "If Jaylen Brown wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DMIT",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Donovan Mitchell]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Donovan Mitchell",
+      "rules": "If Donovan Mitchell wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DBOO",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Devin Booker]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Devin Booker",
+      "rules": "If Devin Booker wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CCUN",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Cade Cunningham]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cade Cunningham",
+      "rules": "If Cade Cunningham wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ADAV",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Anthony Davis]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Anthony Davis",
+      "rules": "If Anthony Davis wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SGIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Shai Gilgeous-Alexander]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Shai Gilgeous-Alexander",
+      "rules": "If Shai Gilgeous-Alexander wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-NJOK",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Nikola Jokic]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nikola Jokic",
+      "rules": "If Nikola Jokic wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LDON",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Luka Doncic]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Luka Doncic",
+      "rules": "If Luka Doncic wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-GANT",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Giannis Antetokounmpo]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Giannis Antetokounmpo",
+      "rules": "If Giannis Antetokounmpo wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AEDW",
+      "title": "Who will win Clutch Player of the Year?",
+      "full_question": "Who will win Clutch Player of the Year? [Anthony Edwards]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Anthony Edwards",
+      "rules": "If Anthony Edwards wins the Pro basketball Clutch Player of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-OTOP",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Obi Toppin]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Obi Toppin",
+      "rules": "If Obi Toppin wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-NALE",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Nickeil Alexander-Walker]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nickeil Alexander-Walker",
+      "rules": "If Nickeil Alexander-Walker wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KWAR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Kel'el Ware]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kel'el Ware",
+      "rules": "If Kel'el Ware wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JSMI",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jabari Smith]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jabari Smith",
+      "rules": "If Jabari Smith wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DLIV",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Dereck Lively]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Dereck Lively",
+      "rules": "If Dereck Lively wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CCAR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Carlton Carrington]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Carlton Carrington",
+      "rules": "If Carlton Carrington wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BPOD",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Brandin Podziemski]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Brandin Podziemski",
+      "rules": "If Brandin Podziemski wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TSHA",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Terrence Shannon Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Terrence Shannon Jr.",
+      "rules": "If Terrence Shannon Jr. wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TCAM",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Toumani Camara]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Toumani Camara",
+      "rules": "If Toumani Camara wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SCAS",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Stephon Castle]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Stephon Castle",
+      "rules": "If Stephon Castle wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SALD",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Santi Aldama]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Santi Aldama",
+      "rules": "If Santi Aldama wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-QGRI",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Quentin Grimes]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Quentin Grimes",
+      "rules": "If Quentin Grimes wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KPOR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Kevin Porter Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kevin Porter Jr.",
+      "rules": "If Kevin Porter Jr. wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KGEO",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Keyonte George]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Keyonte George",
+      "rules": "If Keyonte George wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KFIL",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Kyle Filipowski]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ipo",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kyle Filipowski",
+      "rules": "If Kyle Filipowski wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JMCC",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jared McCain]",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jared McCain",
+      "rules": "If Jared McCain wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JDUR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jalen Duren]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Duren",
+      "rules": "If Jalen Duren wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-HJON",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Herbert Jones]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Herbert Jones",
+      "rules": "If Herbert Jones wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CTHO",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Cam Thomas]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cam Thomas",
+      "rules": "If Cam Thomas wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ASAR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Alexandre Sarr]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Alexandre Sarr",
+      "rules": "If Alexandre Sarr wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-VWEB",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Victor Wembanyama]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Victor Wembanyama",
+      "rules": "If Victor Wembanyama wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SBAR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Scottie Barnes]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Scottie Barnes",
+      "rules": "If Scottie Barnes wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-NJOV",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Nikola Jovic]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Nikola Jovic",
+      "rules": "If Nikola Jovic wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JSUG",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jalen Suggs]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Suggs",
+      "rules": "If Jalen Suggs wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JGRE",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jalen Green]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Green",
+      "rules": "If Jalen Green wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DMIT",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Davion Mitchell]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Davion Mitchell",
+      "rules": "If Davion Mitchell wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CWHIT",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Cam Whitmore]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Cam Whitmore",
+      "rules": "If Cam Whitmore wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CWHI",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Coby White]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Coby White",
+      "rules": "If Coby White wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CHOL",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Chet Holmgren]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Chet Holmgren",
+      "rules": "If Chet Holmgren wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CBRA",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Christian Braun]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Christian Braun",
+      "rules": "If Christian Braun wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BCOU",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Bilal Coulibaly]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bilal Coulibaly",
+      "rules": "If Bilal Coulibaly wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ANES",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Aaron Nesmith]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Aaron Nesmith",
+      "rules": "If Aaron Nesmith wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TMUR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Trey Murphy III]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Trey Murphy III",
+      "rules": "If Trey Murphy III wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MPOR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Michael Porter Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Michael Porter Jr.",
+      "rules": "If Michael Porter Jr. wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MCHR",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Max Christie]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Max Christie",
+      "rules": "If Max Christie wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JWEL",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jaylen Wells]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jaylen Wells",
+      "rules": "If Jaylen Wells wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JJOH",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jalen Johnson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jalen Johnson",
+      "rules": "If Jalen Johnson wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JIVE",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jaden Ivey]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jaden Ivey",
+      "rules": "If Jaden Ivey wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JGID",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Josh Giddey]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Josh Giddey",
+      "rules": "If Josh Giddey wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DWHI",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Derrick White]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Derrick White",
+      "rules": "If Derrick White wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DCLI",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Donovan Clingan]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Donovan Clingan",
+      "rules": "If Donovan Clingan wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ATHO",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Ausar Thompson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Ausar Thompson",
+      "rules": "If Ausar Thompson wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SSHA",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Shaedon Sharpe]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Shaedon Sharpe",
+      "rules": "If Shaedon Sharpe wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SHEN",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Scoot Henderson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Scoot Henderson",
+      "rules": "If Scoot Henderson wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JKUM",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Jonathan Kuminga]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jonathan Kuminga",
+      "rules": "If Jonathan Kuminga wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BMIL",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Brandon Miller]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Brandon Miller",
+      "rules": "If Brandon Miller wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-AMTHO",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Amen Thompson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Amen Thompson",
+      "rules": "If Amen Thompson wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DAVD",
+      "title": "Who will win Most Improved Player?",
+      "full_question": "Who will win Most Improved Player? [Deni Avdija]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Deni Avdija",
+      "rules": "If Deni Avdija wins the Pro basketball Most Improved Player in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-MCHR",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Max Christie]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Max Christie",
+      "rules": "If Max Christie wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-KELL",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Keon Ellis]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Keon Ellis",
+      "rules": "If Keon Ellis wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-JGRA",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Jerami Grant]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jerami Grant",
+      "rules": "If Jerami Grant wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-GYAB",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Guerschon Yabusele]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Guerschon Yabusele",
+      "rules": "If Guerschon Yabusele wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-DGAF",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Daniel Gafford]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Daniel Gafford",
+      "rules": "If Daniel Gafford wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-ZRIS",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Zaccharie Risacher]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Zaccharie Risacher",
+      "rules": "If Zaccharie Risacher wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-TEAS",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Tari Eason]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Tari Eason",
+      "rules": "If Tari Eason wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-SHAU",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Sam Hauser]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Sam Hauser",
+      "rules": "If Sam Hauser wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-RSHE",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Reed Sheppard]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Reed Sheppard",
+      "rules": "If Reed Sheppard wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-OOKO",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Onyeka Okongwu]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Onyeka Okongwu",
+      "rules": "If Onyeka Okongwu wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-MMCB",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Miles McBride]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Miles McBride",
+      "rules": "If Miles McBride wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-LKEN",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Luke Kennard]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Luke Kennard",
+      "rules": "If Luke Kennard wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-KOUB",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Kelly Oubre Jr.]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Kelly Oubre Jr.",
+      "rules": "If Kelly Oubre Jr. wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-JSTR",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Julian Strawther]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Julian Strawther",
+      "rules": "If Julian Strawther wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-JSHE",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Jamal Shead]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Jamal Shead",
+      "rules": "If Jamal Shead wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-DROB",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Duncan Robinson]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Duncan Robinson",
+      "rules": "If Duncan Robinson wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-DHAR",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Dylan Harper]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Dylan Harper",
+      "rules": "If Dylan Harper wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-BBRO",
+      "title": "Who will win Sixth Man of the Year?",
+      "full_question": "Who will win Sixth Man of the Year? [Bruce Brown]",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_option": "Bruce Brown",
+      "rules": "If Bruce Brown wins the Pro basketball Sixth Man of the Year in the 2025-26 season, then the market resolves to Yes."
+    }
+  ]
+}

@@ -18,7 +18,7 @@ POST /api/tools/forecaster
 {
   question: string;         // The question to forecast (1-500 chars)
   context?: string;         // Additional context (max 1000 chars)
-  numForecasts?: number;    // Number of forecasts to generate (3-20, default: 6)
+  numForecasts?: number;    // Number of forecasts to generate (1-20, default: 1)
   usePerplexity?: boolean;  // Whether to use Perplexity for research (default: false)
 }
 ```
@@ -54,7 +54,7 @@ const response = await fetch('/api/tools/forecaster', {
   body: JSON.stringify({
     question: "Will AGI be achieved by 2030?",
     context: "Recent advances in LLMs have accelerated AI progress",
-    numForecasts: 6
+    numForecasts: 1
   })
 });
 
@@ -64,7 +64,7 @@ const result = await response.json();
 //   toolId: 'forecaster',
 //   result: {
 //     probability: 35,
-//     description: "Based on 6 independent analyses...",
+//     description: "Based on 1 independent analysis...",
 //     confidence: 'medium',
 //     individualForecasts: [...],
 //     statistics: {...}
@@ -74,7 +74,7 @@ const result = await response.json();
 
 ## Cost
 
-Approximately $0.05 per forecast (6 Claude calls).
+Approximately $0.008 per forecast (1 Claude call by default).
 
 ## Implementation Details
 

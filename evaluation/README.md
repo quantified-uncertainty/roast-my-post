@@ -97,3 +97,23 @@ The current forecaster scores:
 - Log: 0.393 (poor)
 
 This indicates the forecaster clusters predictions too narrowly around 10-25% regardless of market probabilities.
+
+## Exporting Data from Opik
+
+To export experiment results for further analysis:
+
+```bash
+# List available data
+python evaluation/scripts/export_opik_data.py list
+
+# Export experiment results to CSV
+python evaluation/scripts/export_opik_data.py experiments --output results.csv
+
+# Export detailed trace data
+python evaluation/scripts/export_opik_data.py traces --limit 1000
+
+# Export a specific dataset
+python evaluation/scripts/export_opik_data.py dataset "dataset-name"
+```
+
+See `docs/export-opik-data.md` for detailed export instructions and analysis examples.

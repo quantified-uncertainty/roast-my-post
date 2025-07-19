@@ -1,0 +1,3147 @@
+{
+  "metadata": {
+    "created_at": "2025-07-18T22:12:52.490Z",
+    "total_markets": 200,
+    "source": "Kalshi API",
+    "selection_criteria": {
+      "status": "active",
+      "days_until_close": "30-730",
+      "excluded_terms": [
+        "yesterday",
+        "today",
+        "tomorrow",
+        "this week",
+        "next week"
+      ],
+      "title_validation": "excluded incomplete titles with missing names"
+    },
+    "category_distribution": {
+      "POLITICS": 9,
+      "ECONOMICS": 1,
+      "TECHNOLOGY": 17,
+      "INTERNATIONAL": 1,
+      "BUSINESS": 4,
+      "OTHER": 29,
+      "SPORTS": 139
+    }
+  },
+  "markets": [
+    {
+      "ticker": "KXJPHOCSECOND-25-SDP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "SDP",
+      "no_subtitle": "SDP"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-SANSEITO",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Sanseitō",
+      "no_subtitle": "Sanseitō"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-REIWA",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Reiwa",
+      "no_subtitle": "Reiwa"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-JCP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "JCP",
+      "no_subtitle": "JCP"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-DPP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "DPP",
+      "no_subtitle": "DPP"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-LDP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "LDP",
+      "no_subtitle": "LDP"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-KOMEITO",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Komeito",
+      "no_subtitle": "Komeito"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-ISHIN",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ishin",
+      "no_subtitle": "Ishin"
+    },
+    {
+      "ticker": "KXJPHOCSECOND-25-CDP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "CDP",
+      "no_subtitle": "CDP"
+    },
+    {
+      "ticker": "KXCRYPTOSTRUCTURE-26JAN",
+      "title": "Will crypto market structure become law before Jan 1, 2026?",
+      "subtitle": "",
+      "category": "ECONOMICS",
+      "subcategory": "crypto",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning",
+        "policy_analysis"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 62,
+      "volume": 435,
+      "yes_subtitle": "crypto market structure",
+      "no_subtitle": "crypto market structure"
+    },
+    {
+      "ticker": "KXOAIBROWSER-25",
+      "title": "When will OpenAI release a web browser to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2025-12-31T04:59:00Z",
+      "current_probability": 70,
+      "volume": 459,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MIN",
+      "title": "When will JUUL release Mint to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 19,
+      "volume": 239,
+      "yes_subtitle": "Mint",
+      "no_subtitle": "Mint"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MEN",
+      "title": "When will JUUL release Menthol Classic to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 34,
+      "volume": 227,
+      "yes_subtitle": "Menthol Classic",
+      "no_subtitle": "Menthol Classic"
+    },
+    {
+      "ticker": "KXMUSKCABLE-26",
+      "title": "When will an Elon Musk owned company release a cable company to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MAN",
+      "title": "When will JUUL release Mango to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_subtitle": "Mango",
+      "no_subtitle": "Mango"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CAF",
+      "title": "When will JUUL release Café Latte to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Café Latte",
+      "no_subtitle": "Café Latte"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-WAT",
+      "title": "When will JUUL release Watermelon to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Watermelon",
+      "no_subtitle": "Watermelon"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-PIN",
+      "title": "When will JUUL release Pineapple Lemonade to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Pineapple Lemonade",
+      "no_subtitle": "Pineapple Lemonade"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-FRU",
+      "title": "When will JUUL release Fruit Medley to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Fruit Medley",
+      "no_subtitle": "Fruit Medley"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CUC",
+      "title": "When will JUUL release Cucumber to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cucumber",
+      "no_subtitle": "Cucumber"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CRE",
+      "title": "When will JUUL release Crème Brûlée to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Crème Brûlée",
+      "no_subtitle": "Crème Brûlée"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-COO",
+      "title": "When will JUUL release Cool Mint to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cool Mint",
+      "no_subtitle": "Cool Mint"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CLA",
+      "title": "When will JUUL release Classic Tobacco to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Classic Tobacco",
+      "no_subtitle": "Classic Tobacco"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BUB",
+      "title": "When will JUUL release Bubblegum to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bubblegum",
+      "no_subtitle": "Bubblegum"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BAN",
+      "title": "When will JUUL release Banana to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Banana",
+      "no_subtitle": "Banana"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-APP",
+      "title": "When will JUUL release Apple Orchard to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Apple Orchard",
+      "no_subtitle": "Apple Orchard"
+    },
+    {
+      "ticker": "KXGROKMACOS-SEP25",
+      "title": "When will xAI release a Grok MacOS app to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2025-09-01T03:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before Sep 2025",
+      "no_subtitle": "Before Sep 2025"
+    },
+    {
+      "ticker": "KXAUKUS-25-0",
+      "title": "Will any country withdraw from the Abraham Accords in Dec 2025?",
+      "subtitle": "",
+      "category": "INTERNATIONAL",
+      "subcategory": "country",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 0",
+      "no_subtitle": "Above 0"
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-200",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "subtitle": "",
+      "category": "BUSINESS",
+      "subcategory": "revenue",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 73,
+      "volume": 399,
+      "yes_subtitle": "At least $200 billion",
+      "no_subtitle": "At least $200 billion"
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-500",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "subtitle": "",
+      "category": "BUSINESS",
+      "subcategory": "revenue",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 18,
+      "volume": 92,
+      "yes_subtitle": "At least $500 billion",
+      "no_subtitle": "At least $500 billion"
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-300",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "subtitle": "",
+      "category": "BUSINESS",
+      "subcategory": "revenue",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least $300 billion",
+      "no_subtitle": "At least $300 billion"
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-150",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "subtitle": "",
+      "category": "BUSINESS",
+      "subcategory": "revenue",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least $150 billion",
+      "no_subtitle": "At least $150 billion"
+    },
+    {
+      "ticker": "KXMESSIRETIRE-26",
+      "title": "Will Lionel Messi announce their retirement in 2026?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 56,
+      "volume": 1834,
+      "yes_subtitle": "Before the start of the 2026-27 regular season",
+      "no_subtitle": "Before the start of the 2026-27 regular season"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-MMCC",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 5,
+      "volume": 43,
+      "yes_subtitle": "Mike McCarthy",
+      "no_subtitle": "Mike McCarthy"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T4",
+      "title": "Will New York City rent grow above 4% in December 2025?",
+      "subtitle": "4%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": 73,
+      "volume": 1,
+      "yes_subtitle": "Above 4%",
+      "no_subtitle": "Above 4%"
+    },
+    {
+      "ticker": "KXTPSMYANMAR-25",
+      "title": "Will Temporary Protected Status for Myanmar end in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-RRIV",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ron Rivera",
+      "no_subtitle": "Ron Rivera"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-BBEL",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bill Belichick",
+      "no_subtitle": "Bill Belichick"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-JMAY",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jerod Mayo",
+      "no_subtitle": "Jerod Mayo"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-DPED",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Doug Pederson",
+      "no_subtitle": "Doug Pederson"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-APIE",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Antonio Pierce",
+      "no_subtitle": "Antonio Pierce"
+    },
+    {
+      "ticker": "KXCANCELTHELINE-25",
+      "title": "Will Saudi Arabia cancel plans for The Line in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before 2026",
+      "no_subtitle": "Before 2026"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T6",
+      "title": "Will New York City rent grow above 6% in December 2025?",
+      "subtitle": "6%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 6%",
+      "no_subtitle": "Above 6%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T5",
+      "title": "Will New York City rent grow above 5% in December 2025?",
+      "subtitle": "5%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 5%",
+      "no_subtitle": "Above 5%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T3",
+      "title": "Will New York City rent grow above 3% in December 2025?",
+      "subtitle": "3%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 3%",
+      "no_subtitle": "Above 3%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T2",
+      "title": "Will New York City rent grow above 2% in December 2025?",
+      "subtitle": "2%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 2%",
+      "no_subtitle": "Above 2%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T1",
+      "title": "Will New York City rent grow above 1% in December 2025?",
+      "subtitle": "1%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 1%",
+      "no_subtitle": "Above 1%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T0",
+      "title": "Will New York City rent grow above 0% in December 2025?",
+      "subtitle": "0%",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 0%",
+      "no_subtitle": "Above 0%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-9",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 9%",
+      "no_subtitle": "At least 9%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-8",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 8%",
+      "no_subtitle": "At least 8%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-7",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 7%",
+      "no_subtitle": "At least 7%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-6",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 6%",
+      "no_subtitle": "At least 6%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-5",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 5%",
+      "no_subtitle": "At least 5%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-4",
+      "title": "What will the average tariff rate be in Q2 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 4%",
+      "no_subtitle": "At least 4%"
+    },
+    {
+      "ticker": "KXECOWASBURKINA-25",
+      "title": "Will the US agree to a new Iranian nuclear deal this year?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before 2026",
+      "no_subtitle": "Before 2026"
+    },
+    {
+      "ticker": "KXFIDECANDIDATES-26-ANI",
+      "title": "Who will qualify for the FIDE Candidates tournament?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "long",
+      "reasoning_types": [],
+      "close_time": "2026-12-31T15:00:00Z",
+      "current_probability": 55,
+      "volume": 10,
+      "yes_subtitle": "Anish Giri",
+      "no_subtitle": "Anish Giri"
+    },
+    {
+      "ticker": "KXJOINNEYMARMIAMI-25-MIA",
+      "title": "Where will Neymar go next?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-08T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Inter Miami",
+      "no_subtitle": "Inter Miami"
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-PEST",
+      "title": "Who will Manchester United acquire this year?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Pervis Estupiñán",
+      "no_subtitle": "Pervis Estupiñán"
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-NJAC",
+      "title": "Who will Manchester United acquire this year?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Nicolas Jackson",
+      "no_subtitle": "Nicolas Jackson"
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-EMAR",
+      "title": "Who will Manchester United acquire this year?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Emiliano Martínez",
+      "no_subtitle": "Emiliano Martínez"
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-CTOL",
+      "title": "Who will Manchester United acquire this year?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Corentin Tolisso",
+      "no_subtitle": "Corentin Tolisso"
+    },
+    {
+      "ticker": "KXNBADPOY-26-VWEM",
+      "title": "Who will win Defensive Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 50,
+      "volume": 581,
+      "yes_subtitle": "Victor Wembanyama",
+      "no_subtitle": "Victor Wembanyama"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ANEM",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 7,
+      "volume": 138,
+      "yes_subtitle": "Andrew Nembhard",
+      "no_subtitle": "Andrew Nembhard"
+    },
+    {
+      "ticker": "KXNBADPOY-26-JJAC",
+      "title": "Who will win Defensive Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 35,
+      "yes_subtitle": "Jaren Jackson Jr.",
+      "no_subtitle": "Jaren Jackson Jr."
+    },
+    {
+      "ticker": "KXNBADPOY-26-EMOB",
+      "title": "Who will win Defensive Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 35,
+      "yes_subtitle": "Evan Mobley",
+      "no_subtitle": "Evan Mobley"
+    },
+    {
+      "ticker": "KXNBADPOY-26-JSUG",
+      "title": "Who will win Defensive Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 20,
+      "yes_subtitle": "Jalen Suggs",
+      "no_subtitle": "Jalen Suggs"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MBUZ",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 1,
+      "yes_subtitle": "Matas Buzelis",
+      "no_subtitle": "Matas Buzelis"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BMAT",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 5,
+      "volume": 1,
+      "yes_subtitle": "Bennedict Mathurin",
+      "no_subtitle": "Bennedict Mathurin"
+    },
+    {
+      "ticker": "KXNBAROY-26-CFLA",
+      "title": "Who will win Rookie of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 67,
+      "volume": 1,
+      "yes_subtitle": "Cooper Flagg",
+      "no_subtitle": "Cooper Flagg"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KTHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Klay Thompson",
+      "no_subtitle": "Klay Thompson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JJOH",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Johnson",
+      "no_subtitle": "Jalen Johnson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JIVE",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jaden Ivey",
+      "no_subtitle": "Jaden Ivey"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JHART",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Josh Hart",
+      "no_subtitle": "Josh Hart"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JCOL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "John Collins",
+      "no_subtitle": "John Collins"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JALL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jarrett Allen",
+      "no_subtitle": "Jarrett Allen"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-IZUB",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ivica Zubac",
+      "no_subtitle": "Ivica Zubac"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-IHAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Isaiah Hartenstein",
+      "no_subtitle": "Isaiah Hartenstein"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-FVAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Fred VanVleet",
+      "no_subtitle": "Fred VanVleet"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DWHI",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Derrick White",
+      "no_subtitle": "Derrick White"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DHUN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "De'Andre Hunter",
+      "no_subtitle": "De'Andre Hunter"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DGRE",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Draymond Green",
+      "no_subtitle": "Draymond Green"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DDER",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "DeMar DeRozan",
+      "no_subtitle": "DeMar DeRozan"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DAYT",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Deandre Ayton",
+      "no_subtitle": "Deandre Ayton"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CWHI",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Coby White",
+      "no_subtitle": "Coby White"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CMCC",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "CJ McCollum",
+      "no_subtitle": "CJ McCollum"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CJOH",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cam Johnson",
+      "no_subtitle": "Cam Johnson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CHOL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Chet Holmgren",
+      "no_subtitle": "Chet Holmgren"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-BMAT",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bennedict Mathurin",
+      "no_subtitle": "Bennedict Mathurin"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ATHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ausar Thompson",
+      "no_subtitle": "Ausar Thompson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ASIM",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Anfernee Simons",
+      "no_subtitle": "Anfernee Simons"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AREA",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Austin Reaves",
+      "no_subtitle": "Austin Reaves"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ZLAV",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Zach LaVine",
+      "no_subtitle": "Zach LaVine"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-THER",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Tyler Herro",
+      "no_subtitle": "Tyler Herro"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PSIA",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Pascal Siakam",
+      "no_subtitle": "Pascal Siakam"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PGEO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Paul George",
+      "no_subtitle": "Paul George"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JMUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jamal Murray",
+      "no_subtitle": "Jamal Murray"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JJAC",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jaren Jackson Jr.",
+      "no_subtitle": "Jaren Jackson Jr."
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JHAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "James Harden",
+      "no_subtitle": "James Harden"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JGRE",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Green",
+      "no_subtitle": "Jalen Green"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DSAB",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Domantas Sabonis",
+      "no_subtitle": "Domantas Sabonis"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DGAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Darius Garland",
+      "no_subtitle": "Darius Garland"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DBAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Desmond Bane",
+      "no_subtitle": "Desmond Bane"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CFLA",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cooper Flagg",
+      "no_subtitle": "Cooper Flagg"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ANEM",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Andrew Nembhard",
+      "no_subtitle": "Andrew Nembhard"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ACAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Alex Caruso",
+      "no_subtitle": "Alex Caruso"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ZWIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Zion Williamson",
+      "no_subtitle": "Zion Williamson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-TMAX",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Tyrese Maxey",
+      "no_subtitle": "Tyrese Maxey"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SBAR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Scottie Barnes",
+      "no_subtitle": "Scottie Barnes"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LBAL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "LaMelo Ball",
+      "no_subtitle": "LaMelo Ball"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KTOW",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Karl-Anthony Towns",
+      "no_subtitle": "Karl-Anthony Towns"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JWIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Williams",
+      "no_subtitle": "Jalen Williams"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JRAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Julius Randle",
+      "no_subtitle": "Julius Randle"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JMOR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ja Morant",
+      "no_subtitle": "Ja Morant"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBUT",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jimmy Butler",
+      "no_subtitle": "Jimmy Butler"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-FWAG",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Franz Wagner",
+      "no_subtitle": "Franz Wagner"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-EMOB",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Evan Mobley",
+      "no_subtitle": "Evan Mobley"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DFOX",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "De'Aaron Fox",
+      "no_subtitle": "De'Aaron Fox"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-BADE",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bam Adebayo",
+      "no_subtitle": "Bam Adebayo"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ASEN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Alperen Sengun",
+      "no_subtitle": "Alperen Sengun"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AMTHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Amen Thompson",
+      "no_subtitle": "Amen Thompson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-VWEM",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Victor Wembanyama",
+      "no_subtitle": "Victor Wembanyama"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-TYOU",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Trae Young",
+      "no_subtitle": "Trae Young"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SCUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Stephen Curry",
+      "no_subtitle": "Stephen Curry"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-PBAN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Paolo Banchero",
+      "no_subtitle": "Paolo Banchero"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LJAM",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "LeBron James",
+      "no_subtitle": "LeBron James"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KLEO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Kawhi Leonard",
+      "no_subtitle": "Kawhi Leonard"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KDUR",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Kevin Durant",
+      "no_subtitle": "Kevin Durant"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JEMB",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Joel Embiid",
+      "no_subtitle": "Joel Embiid"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBRU",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Brunson",
+      "no_subtitle": "Jalen Brunson"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-JBRO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jaylen Brown",
+      "no_subtitle": "Jaylen Brown"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DMIT",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Donovan Mitchell",
+      "no_subtitle": "Donovan Mitchell"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-DBOO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Devin Booker",
+      "no_subtitle": "Devin Booker"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-CCUN",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cade Cunningham",
+      "no_subtitle": "Cade Cunningham"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-ADAV",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Anthony Davis",
+      "no_subtitle": "Anthony Davis"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-SGIL",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Shai Gilgeous-Alexander",
+      "no_subtitle": "Shai Gilgeous-Alexander"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-NJOK",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Nikola Jokic",
+      "no_subtitle": "Nikola Jokic"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-LDON",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Luka Doncic",
+      "no_subtitle": "Luka Doncic"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-GANT",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Giannis Antetokounmpo",
+      "no_subtitle": "Giannis Antetokounmpo"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-AEDW",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Anthony Edwards",
+      "no_subtitle": "Anthony Edwards"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-OTOP",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Obi Toppin",
+      "no_subtitle": "Obi Toppin"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-NALE",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Nickeil Alexander-Walker",
+      "no_subtitle": "Nickeil Alexander-Walker"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KWAR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Kel'el Ware",
+      "no_subtitle": "Kel'el Ware"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JSMI",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jabari Smith",
+      "no_subtitle": "Jabari Smith"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DLIV",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Dereck Lively",
+      "no_subtitle": "Dereck Lively"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CCAR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Carlton Carrington",
+      "no_subtitle": "Carlton Carrington"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BPOD",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Brandin Podziemski",
+      "no_subtitle": "Brandin Podziemski"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TSHA",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Terrence Shannon Jr.",
+      "no_subtitle": "Terrence Shannon Jr."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TCAM",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Toumani Camara",
+      "no_subtitle": "Toumani Camara"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SCAS",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Stephon Castle",
+      "no_subtitle": "Stephon Castle"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SALD",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Santi Aldama",
+      "no_subtitle": "Santi Aldama"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-QGRI",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Quentin Grimes",
+      "no_subtitle": "Quentin Grimes"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KPOR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Kevin Porter Jr.",
+      "no_subtitle": "Kevin Porter Jr."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KGEO",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Keyonte George",
+      "no_subtitle": "Keyonte George"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-KFIL",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Kyle Filipowski",
+      "no_subtitle": "Kyle Filipowski"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JMCC",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jared McCain",
+      "no_subtitle": "Jared McCain"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JDUR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Duren",
+      "no_subtitle": "Jalen Duren"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-HJON",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Herbert Jones",
+      "no_subtitle": "Herbert Jones"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CTHO",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cam Thomas",
+      "no_subtitle": "Cam Thomas"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ASAR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Alexandre Sarr",
+      "no_subtitle": "Alexandre Sarr"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-VWEB",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Victor Wembanyama",
+      "no_subtitle": "Victor Wembanyama"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SBAR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Scottie Barnes",
+      "no_subtitle": "Scottie Barnes"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-NJOV",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Nikola Jovic",
+      "no_subtitle": "Nikola Jovic"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JSUG",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Suggs",
+      "no_subtitle": "Jalen Suggs"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JGRE",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Green",
+      "no_subtitle": "Jalen Green"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DMIT",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Davion Mitchell",
+      "no_subtitle": "Davion Mitchell"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CWHIT",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cam Whitmore",
+      "no_subtitle": "Cam Whitmore"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CWHI",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Coby White",
+      "no_subtitle": "Coby White"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CHOL",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Chet Holmgren",
+      "no_subtitle": "Chet Holmgren"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-CBRA",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Christian Braun",
+      "no_subtitle": "Christian Braun"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BCOU",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bilal Coulibaly",
+      "no_subtitle": "Bilal Coulibaly"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ANES",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Aaron Nesmith",
+      "no_subtitle": "Aaron Nesmith"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-TMUR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Trey Murphy III",
+      "no_subtitle": "Trey Murphy III"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MPOR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Michael Porter Jr.",
+      "no_subtitle": "Michael Porter Jr."
+    },
+    {
+      "ticker": "KXNBAMIMP-26-MCHR",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Max Christie",
+      "no_subtitle": "Max Christie"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JWEL",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jaylen Wells",
+      "no_subtitle": "Jaylen Wells"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JJOH",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jalen Johnson",
+      "no_subtitle": "Jalen Johnson"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JIVE",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jaden Ivey",
+      "no_subtitle": "Jaden Ivey"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JGID",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Josh Giddey",
+      "no_subtitle": "Josh Giddey"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DWHI",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Derrick White",
+      "no_subtitle": "Derrick White"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DCLI",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Donovan Clingan",
+      "no_subtitle": "Donovan Clingan"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ATHO",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Ausar Thompson",
+      "no_subtitle": "Ausar Thompson"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SSHA",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Shaedon Sharpe",
+      "no_subtitle": "Shaedon Sharpe"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-SHEN",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Scoot Henderson",
+      "no_subtitle": "Scoot Henderson"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-JKUM",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jonathan Kuminga",
+      "no_subtitle": "Jonathan Kuminga"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-BMIL",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Brandon Miller",
+      "no_subtitle": "Brandon Miller"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-AMTHO",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Amen Thompson",
+      "no_subtitle": "Amen Thompson"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-DAVD",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Deni Avdija",
+      "no_subtitle": "Deni Avdija"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-TSHA",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Terrence Shannon Jr.",
+      "no_subtitle": "Terrence Shannon Jr."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-THAR",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Tim Hardaway Jr.",
+      "no_subtitle": "Tim Hardaway Jr."
+    },
+    {
+      "ticker": "KXNBASIXTH-26-NJOV",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Nikola Jovic",
+      "no_subtitle": "Nikola Jovic"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-MCHR",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Max Christie",
+      "no_subtitle": "Max Christie"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-KELL",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Keon Ellis",
+      "no_subtitle": "Keon Ellis"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-JGRA",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Jerami Grant",
+      "no_subtitle": "Jerami Grant"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-GYAB",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Guerschon Yabusele",
+      "no_subtitle": "Guerschon Yabusele"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-DGAF",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Daniel Gafford",
+      "no_subtitle": "Daniel Gafford"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-ZRIS",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Zaccharie Risacher",
+      "no_subtitle": "Zaccharie Risacher"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-TEAS",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Tari Eason",
+      "no_subtitle": "Tari Eason"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-SHAU",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Sam Hauser",
+      "no_subtitle": "Sam Hauser"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-RSHE",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Reed Sheppard",
+      "no_subtitle": "Reed Sheppard"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-OOKO",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Onyeka Okongwu",
+      "no_subtitle": "Onyeka Okongwu"
+    }
+  ]
+}

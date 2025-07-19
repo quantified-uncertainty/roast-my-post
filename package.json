@@ -29,6 +29,7 @@
     "eval:categorized": "./evaluation/run_eval_meta.sh",
     "eval:fetch": "source venv/bin/activate && python evaluation/scripts/fetch_current_data.py",
     "eval:fetch-all": "source venv/bin/activate && python evaluation/scripts/fetch_data.py",
+    "opik:export": "tsx evaluation/scripts/export-opik-data.ts",
     "db:push": "./scripts/safe-prisma.sh db push",
     "db:migrate": "./scripts/safe-prisma.sh migrate dev",
     "db:migrate:reset": "./scripts/safe-prisma.sh migrate reset",
@@ -138,13 +139,15 @@
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20",
+    "@types/node": "^20.19.8",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/testing-library__jest-dom": "^5.14.5",
     "@types/turndown": "^5.0.2",
     "autoprefixer": "^10.4.21",
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.3.0",
     "ignore-loader": "^0.1.2",
@@ -156,7 +159,7 @@
     "prisma": "^6.10.1",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.3.2",
-    "tsx": "^4.7.1",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }

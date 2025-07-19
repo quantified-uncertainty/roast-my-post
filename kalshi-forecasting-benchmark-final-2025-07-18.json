@@ -1,0 +1,702 @@
+{
+  "metadata": {
+    "created_at": "2025-07-18T22:21:20.449Z",
+    "total_markets": 43,
+    "unique_questions": 43,
+    "source": "Kalshi API",
+    "selection_criteria": {
+      "status": "active",
+      "days_until_close": "30-730",
+      "excluded_terms": [
+        "yesterday",
+        "today",
+        "tomorrow",
+        "this week",
+        "next week"
+      ],
+      "title_validation": "excluded incomplete titles with missing names",
+      "deduplication": "one market per unique question title"
+    },
+    "category_distribution": {
+      "POLITICS": 1,
+      "ECONOMICS": 4,
+      "TECHNOLOGY": 17,
+      "SPORTS": 5,
+      "SOCIETY": 7,
+      "BUSINESS": 1,
+      "INTERNATIONAL": 3,
+      "HEALTH": 1,
+      "OTHER": 4
+    },
+    "probability_coverage": "0/43"
+  },
+  "markets": [
+    {
+      "ticker": "KXJPHOCSECOND-25-SDP",
+      "title": "Who will be second in the Japan House of Councillors election?",
+      "subtitle": "",
+      "category": "POLITICS",
+      "subcategory": "election",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-07-20T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "SDP",
+      "no_subtitle": "SDP"
+    },
+    {
+      "ticker": "KXTARIFFREVENUE-25-200",
+      "title": "How high revenue will tariffs bring in in 2025?",
+      "subtitle": "",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "quantitative_estimation",
+        "market_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 71,
+      "volume": 462,
+      "yes_subtitle": "At least $200 billion",
+      "no_subtitle": "At least $200 billion"
+    },
+    {
+      "ticker": "KXCRYPTOSTRUCTURE-26JAN",
+      "title": "Will crypto market structure become law before Jan 1, 2026?",
+      "subtitle": "",
+      "category": "ECONOMICS",
+      "subcategory": "crypto",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "temporal_reasoning",
+        "policy_analysis"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 62,
+      "volume": 435,
+      "yes_subtitle": "crypto market structure",
+      "no_subtitle": "crypto market structure"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-9",
+      "title": "What will the average tariff rate be in Q3 2025?",
+      "subtitle": "",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 9%",
+      "no_subtitle": "At least 9%"
+    },
+    {
+      "ticker": "KXAVGTARIFF-25-4",
+      "title": "What will the average tariff rate be in Q2 2025?",
+      "subtitle": "",
+      "category": "ECONOMICS",
+      "subcategory": "tariff",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-29T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "At least 4%",
+      "no_subtitle": "At least 4%"
+    },
+    {
+      "ticker": "KXOAIBROWSER-25",
+      "title": "When will OpenAI release a web browser to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2025-12-31T04:59:00Z",
+      "current_probability": 78,
+      "volume": 472,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXMUSKCABLE-26",
+      "title": "When will an Elon Musk owned company release a cable company to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MIN",
+      "title": "When will JUUL release Mint to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 19,
+      "volume": 239,
+      "yes_subtitle": "Mint",
+      "no_subtitle": "Mint"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MEN",
+      "title": "When will JUUL release Menthol Classic to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 34,
+      "volume": 227,
+      "yes_subtitle": "Menthol Classic",
+      "no_subtitle": "Menthol Classic"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-MAN",
+      "title": "When will JUUL release Mango to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": 9,
+      "volume": 10,
+      "yes_subtitle": "Mango",
+      "no_subtitle": "Mango"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CAF",
+      "title": "When will JUUL release Café Latte to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Café Latte",
+      "no_subtitle": "Café Latte"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-WAT",
+      "title": "When will JUUL release Watermelon to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Watermelon",
+      "no_subtitle": "Watermelon"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-PIN",
+      "title": "When will JUUL release Pineapple Lemonade to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Pineapple Lemonade",
+      "no_subtitle": "Pineapple Lemonade"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-FRU",
+      "title": "When will JUUL release Fruit Medley to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Fruit Medley",
+      "no_subtitle": "Fruit Medley"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CUC",
+      "title": "When will JUUL release Cucumber to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cucumber",
+      "no_subtitle": "Cucumber"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CRE",
+      "title": "When will JUUL release Crème Brûlée to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Crème Brûlée",
+      "no_subtitle": "Crème Brûlée"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-COO",
+      "title": "When will JUUL release Cool Mint to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Cool Mint",
+      "no_subtitle": "Cool Mint"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-CLA",
+      "title": "When will JUUL release Classic Tobacco to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Classic Tobacco",
+      "no_subtitle": "Classic Tobacco"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BUB",
+      "title": "When will JUUL release Bubblegum to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Bubblegum",
+      "no_subtitle": "Bubblegum"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-BAN",
+      "title": "When will JUUL release Banana to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Banana",
+      "no_subtitle": "Banana"
+    },
+    {
+      "ticker": "KXJUULFLAVOR-27-APP",
+      "title": "When will JUUL release Apple Orchard to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "release",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2027-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Apple Orchard",
+      "no_subtitle": "Apple Orchard"
+    },
+    {
+      "ticker": "KXGROKMACOS-SEP25",
+      "title": "When will xAI release a Grok MacOS app to the public?",
+      "subtitle": "",
+      "category": "TECHNOLOGY",
+      "subcategory": "ai",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2025-09-01T03:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before Sep 2025",
+      "no_subtitle": "Before Sep 2025"
+    },
+    {
+      "ticker": "KXNBADPOY-26-VWEM",
+      "title": "Who will win Defensive Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 50,
+      "volume": 581,
+      "yes_subtitle": "Victor Wembanyama",
+      "no_subtitle": "Victor Wembanyama"
+    },
+    {
+      "ticker": "KXNBAMIMP-26-ANEM",
+      "title": "Who will win Most Improved Player?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 7,
+      "volume": 138,
+      "yes_subtitle": "Andrew Nembhard",
+      "no_subtitle": "Andrew Nembhard"
+    },
+    {
+      "ticker": "KXNBAROY-26-CFLA",
+      "title": "Who will win Rookie of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": 67,
+      "volume": 1,
+      "yes_subtitle": "Cooper Flagg",
+      "no_subtitle": "Cooper Flagg"
+    },
+    {
+      "ticker": "KXNBACLUTCH-26-KTHO",
+      "title": "Who will win Clutch Player of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Klay Thompson",
+      "no_subtitle": "Klay Thompson"
+    },
+    {
+      "ticker": "KXNBASIXTH-26-TSHA",
+      "title": "Who will win Sixth Man of the Year?",
+      "subtitle": "",
+      "category": "SPORTS",
+      "subcategory": "win",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "competitive_outcome",
+        "selection_prediction"
+      ],
+      "close_time": "2027-04-12T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Terrence Shannon Jr.",
+      "no_subtitle": "Terrence Shannon Jr."
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T4",
+      "title": "Will New York City rent grow above 4% in December 2025?",
+      "subtitle": "4%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": 73,
+      "volume": 1,
+      "yes_subtitle": "Above 4%",
+      "no_subtitle": "Above 4%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T6",
+      "title": "Will New York City rent grow above 6% in December 2025?",
+      "subtitle": "6%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 6%",
+      "no_subtitle": "Above 6%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T5",
+      "title": "Will New York City rent grow above 5% in December 2025?",
+      "subtitle": "5%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 5%",
+      "no_subtitle": "Above 5%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T3",
+      "title": "Will New York City rent grow above 3% in December 2025?",
+      "subtitle": "3%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 3%",
+      "no_subtitle": "Above 3%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T2",
+      "title": "Will New York City rent grow above 2% in December 2025?",
+      "subtitle": "2%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 2%",
+      "no_subtitle": "Above 2%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T1",
+      "title": "Will New York City rent grow above 1% in December 2025?",
+      "subtitle": "1%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 1%",
+      "no_subtitle": "Above 1%"
+    },
+    {
+      "ticker": "KXNYCRENTSY-25-T0",
+      "title": "Will New York City rent grow above 0% in December 2025?",
+      "subtitle": "0%",
+      "category": "SOCIETY",
+      "subcategory": "rent",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-22T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 0%",
+      "no_subtitle": "Above 0%"
+    },
+    {
+      "ticker": "KXACQUIREMANU-25-PEST",
+      "title": "Who will Manchester United acquire this year?",
+      "subtitle": "",
+      "category": "BUSINESS",
+      "subcategory": "manchester united",
+      "time_horizon": "short",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2025-09-09T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Pervis Estupiñán",
+      "no_subtitle": "Pervis Estupiñán"
+    },
+    {
+      "ticker": "KXAUKUS-25-0",
+      "title": "Will any country withdraw from the Abraham Accords in Dec 2025?",
+      "subtitle": "",
+      "category": "INTERNATIONAL",
+      "subcategory": "country",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Above 0",
+      "no_subtitle": "Above 0"
+    },
+    {
+      "ticker": "KXCANCELTHELINE-25",
+      "title": "Will Saudi Arabia cancel plans for The Line in 2025?",
+      "subtitle": "",
+      "category": "INTERNATIONAL",
+      "subcategory": "saudi",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before 2026",
+      "no_subtitle": "Before 2026"
+    },
+    {
+      "ticker": "KXECOWASBURKINA-25",
+      "title": "Will the US agree to a new Iranian nuclear deal this year?",
+      "subtitle": "",
+      "category": "INTERNATIONAL",
+      "subcategory": "iran",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Before 2026",
+      "no_subtitle": "Before 2026"
+    },
+    {
+      "ticker": "KXTPSMYANMAR-25",
+      "title": "Will Temporary Protected Status for Myanmar end in 2025?",
+      "subtitle": "",
+      "category": "HEALTH",
+      "subcategory": "protected status",
+      "time_horizon": "medium",
+      "reasoning_types": [],
+      "close_time": "2025-12-31T15:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "In 2025",
+      "no_subtitle": "In 2025"
+    },
+    {
+      "ticker": "KXMESSIRETIRE-26",
+      "title": "Will Lionel Messi announce their retirement in 2026?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "event_prediction"
+      ],
+      "close_time": "2026-01-01T15:00:00Z",
+      "current_probability": 56,
+      "volume": 1834,
+      "yes_subtitle": "Before the start of the 2026-27 regular season",
+      "no_subtitle": "Before the start of the 2026-27 regular season"
+    },
+    {
+      "ticker": "KXNFLHIRECOACH-26-MMCC",
+      "title": "Who will get hired as a men's pro football coach in 2025?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "medium",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-01-01T04:59:00Z",
+      "current_probability": 5,
+      "volume": 43,
+      "yes_subtitle": "Mike McCarthy",
+      "no_subtitle": "Mike McCarthy"
+    },
+    {
+      "ticker": "KXFIDECANDIDATES-26-ANI",
+      "title": "Who will qualify for the FIDE Candidates tournament?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "long",
+      "reasoning_types": [
+        "selection_prediction"
+      ],
+      "close_time": "2026-12-31T15:00:00Z",
+      "current_probability": 55,
+      "volume": 10,
+      "yes_subtitle": "Anish Giri",
+      "no_subtitle": "Anish Giri"
+    },
+    {
+      "ticker": "KXJOINNEYMARMIAMI-25-MIA",
+      "title": "Where will Neymar go next?",
+      "subtitle": "",
+      "category": "OTHER",
+      "subcategory": "",
+      "time_horizon": "short",
+      "reasoning_types": [],
+      "close_time": "2025-09-08T14:00:00Z",
+      "current_probability": null,
+      "volume": 0,
+      "yes_subtitle": "Inter Miami",
+      "no_subtitle": "Inter Miami"
+    }
+  ]
+}

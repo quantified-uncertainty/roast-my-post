@@ -69,3 +69,6 @@ backups/
 *.bak
 .env.backup
 .env.bak
+
+# Evaluation exports
+evaluation/exports/
