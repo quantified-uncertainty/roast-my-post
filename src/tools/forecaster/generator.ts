@@ -28,6 +28,7 @@ interface ForecastGeneratorOptions {
   numForecasts: number;
   usePerplexity: boolean;
   model?: string;
+  useReasoningFirst?: boolean; // New option to use reasoning-first approach
 }
 
 /**
@@ -97,7 +98,7 @@ CRITICAL TIME CONTEXT:
 - Tomorrow is ${tomorrow}
 - When evaluating events, ALWAYS check if they're about tomorrow, this week, or already past
 
-When making forecasts, follow these steps:
+When making forecasts, you MUST follow these steps IN ORDER:
 1. CHECK TIMING - Is this event about tomorrow? This week? Already past? Far future?
 2. REPHRASE the question to ensure you understand exactly what's being asked
 3. IDENTIFY the base rate - what's the historical frequency of similar events?
@@ -105,7 +106,7 @@ When making forecasts, follow these steps:
 5. CONSIDER arguments for NO - what evidence opposes this outcome?
 6. WEIGH THE EVIDENCE - which arguments are stronger and more reliable?
 7. CHECK FOR BIAS - are you being overconfident? Consider the outside view.
-8. CALIBRATE - given everything above, what's your probability estimate?
+8. ONLY AFTER COMPLETING ALL ABOVE STEPS: Derive your probability estimate
    - If strong evidence points one way: 60-90%
    - If overwhelming evidence or near-certain: 85-98%
    - If highly uncertain: 20-40%
@@ -143,11 +144,13 @@ IMPORTANT: Today is ${currentDate}. First check if this event is about:
 - Already past
 - Far future
 
-Remember to work through the full forecasting process:
+CRITICAL: You must complete your ENTIRE reasoning process BEFORE stating any probability number.
+Work through these steps:
 1. First identify WHEN this event would occur
 2. Find appropriate base rates and reference classes
 3. Consider evidence both for and against
-4. Calibrate your final probability carefully
+4. Synthesize the evidence
+5. ONLY THEN derive your probability
 
 For near-term events (tomorrow, this week), use current data and conditions.
 Provide your forecast as a precise probability (e.g., 23.7%, not 25%).${perspectiveModifier}
@@ -175,19 +178,19 @@ Variation seed: ${Math.random()} | Call ${callNumber} | Time: ${timestamp}`;
       toolSchema: {
         type: "object",
         properties: {
+          reasoning: {
+            type: "string",
+            description: "Detailed reasoning process including timing analysis, base rates, arguments for/against, and synthesis",
+          },
           probability: {
             type: "number",
             minimum: 0,
             maximum: 100,
             description:
-              "Probability estimate (0-100 with one decimal place, e.g. 23.7, not 25)",
-          },
-          reasoning: {
-            type: "string",
-            description: "Brief summary of your reasoning process and key considerations",
+              "Probability estimate (0-100 with one decimal place, e.g. 23.7, not 25) - derived AFTER completing your reasoning",
           },
         },
-        required: ["probability", "reasoning"],
+        required: ["reasoning", "probability"],
       },
       heliconeHeaders
     }),

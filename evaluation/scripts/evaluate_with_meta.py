@@ -15,13 +15,13 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 # Add parent directory to path for imports
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import requests
-from metrics import BrierScoreMetric, LogScoreMetric
 import opik
-from categorize import categorize_question, analyze_distribution
-from cost_utils import calculate_cost, format_cost
+from lib.metrics import BrierScoreMetric, LogScoreMetric
+from lib.categorize import categorize_question, analyze_distribution
+from lib.cost_utils import calculate_cost, format_cost
 from opik import track, Dataset
 from opik.evaluation import evaluate
 
@@ -197,6 +197,39 @@ def load_dataset(dataset_name: str, limit: int = None) -> List[Dict[str, Any]]:
                 while prob > 100:
                     prob = prob / 100
                 q["market_probability"] = min(100, max(0, prob))
+            return questions[:limit] if limit else questions
+    
+    elif dataset_name == "kalshi":
+        # Load Kalshi converted dataset
+        kalshi_file = data_dir / "kalshi_questions_full.json" if (data_dir / "kalshi_questions_full.json").exists() else data_dir / "kalshi_questions.json"
+        with open(kalshi_file, 'r') as f:
+            data = json.load(f)
+            questions = data["questions"]
+            # Clean up question formatting
+            for q in questions:
+                # Fix double question marks
+                q["question"] = q["question"].replace("??", "?")
+                # Ensure question ends with single question mark
+                if not q["question"].endswith("?"):
+                    q["question"] += "?"
+                # Ensure market_probability is properly formatted
+                q["market_probability"] = float(q.get("market_probability", 50))
+            print(f"📊 Loaded {len(questions)} Kalshi questions from {kalshi_file.name}")
+            return questions[:limit] if limit else questions
+    
+    elif dataset_name == "combined":
+        # Load combined dataset from all sources
+        with open(data_dir / "combined_forecasting_dataset.json", 'r') as f:
+            data = json.load(f)
+            questions = data["questions"]
+            # Ensure proper formatting
+            for q in questions:
+                q["market_probability"] = float(q.get("market_probability", 50))
+                # Clean up question formatting
+                q["question"] = q["question"].replace("??", "?")
+                if not q["question"].endswith("?"):
+                    q["question"] += "?"
+            print(f"📊 Loaded {len(questions)} combined questions from all sources")
             return questions[:limit] if limit else questions
     
     else:
@@ -498,7 +531,7 @@ def main():
     parser = argparse.ArgumentParser(description="Evaluate forecaster tool")
     parser.add_argument(
         "--dataset", 
-        choices=["current", "curated", "metaforecast", "ai-curated", "balanced"],
+        choices=["current", "curated", "metaforecast", "ai-curated", "balanced", "kalshi", "combined"],
         default="current",
         help="Dataset to use for evaluation"
     )

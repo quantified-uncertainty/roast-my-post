@@ -1,103 +1,55 @@
 # Evaluation Scripts
 
-This directory contains scripts for managing and exporting evaluation data from Opik.
+This directory contains the main evaluation script for testing the forecaster tool.
 
-## TypeScript Export Script (Recommended)
+## Main Script
 
-The TypeScript export script (`export-opik-data.ts`) is the recommended way to export Opik data to CSV format. It's consistent with the Next.js codebase and doesn't require Python setup.
+### `evaluate_with_meta.py`
 
-### Setup
-
-1. Ensure you have the required environment variables in your `.env` file:
-   ```
-   OPIK_API_KEY=your-api-key
-   OPIK_WORKSPACE=oagr  # or your workspace name
-   ```
-
-2. The script uses the installed `opik` npm package and CSV utilities.
+The primary evaluation script that:
+- Loads forecast questions from JSON datasets
+- Calls the forecaster API to generate predictions
+- Tracks experiments using Opik/Comet ML
+- Calculates Brier scores and log scores
+- Exports results to JSON and CSV formats
 
 ### Usage
 
-Use the npm script for easy access:
-
 ```bash
-# List available data
-npm run opik:export list
+# Basic usage with a dataset
+python evaluation/scripts/evaluate_with_meta.py --dataset kalshi --num-forecasts 5
 
-# Export experiments to CSV
-npm run opik:export experiments
-npm run opik:export experiments -- -o my-experiments.csv -l 50
+# Use test mode for quick testing
+python evaluation/scripts/evaluate_with_meta.py --dataset test --num-forecasts 3
 
-# Export traces to CSV
-npm run opik:export traces
-npm run opik:export traces -- -o my-traces.csv -l 1000
+# Export results with custom prefix
+python evaluation/scripts/evaluate_with_meta.py --dataset combined --export-prefix my-experiment
 
-# Export a specific dataset to CSV
-npm run opik:export dataset "dataset-name"
-npm run opik:export dataset "dataset-name" -- -o my-dataset.csv
-
-# Show help
-npm run opik:export -- --help
+# Skip Opik tracking (local testing)
+python evaluation/scripts/evaluate_with_meta.py --dataset kalshi --skip-opik
 ```
 
-### Direct Script Usage
+### Options
 
-You can also run the script directly with tsx:
+- `--dataset`: Dataset to use (kalshi, polymarket, manifold, metaculus, combined, test)
+- `--num-forecasts`: Number of forecasts per question (default: 5)
+- `--export-prefix`: Prefix for export files (default: dataset name)
+- `--skip-opik`: Skip Opik experiment tracking
+- `--opik-name`: Custom name for Opik experiment
+- `--use-perplexity`: Use Perplexity for research before forecasting
 
+## Supporting Modules
+
+The script uses modules from `evaluation/lib/`:
+- `metrics.py`: Brier score and log score calculations
+- `cost_utils.py`: API cost tracking utilities
+- `categorize.py`: Question categorization logic
+
+## Environment Setup
+
+Ensure you have the required environment variables:
 ```bash
-npx tsx evaluation/scripts/export-opik-data.ts list
-npx tsx evaluation/scripts/export-opik-data.ts experiments -o experiments.csv -l 100
+OPIK_API_KEY=your-api-key
+OPIK_WORKSPACE=your-workspace
+NEXT_PUBLIC_API_URL=http://localhost:3000  # or your API URL
 ```
-
-### Output Format
-
-The script exports data to CSV format with:
-- Nested objects flattened with underscore prefixes (e.g., `metadata_key`)
-- Arrays and complex objects stringified as JSON
-- All available fields from the API responses
-- Sorted column headers for consistency
-
-### Features
-
-- **Experiments Export**: Includes experiment metadata, feedback scores, and metrics
-- **Traces Export**: Includes input/output data, metadata, tags, and feedback scores
-- **Dataset Export**: Includes all dataset items with nested field expansion
-- **List Command**: Shows available experiments and datasets with summary information
-
-## Python Scripts (Legacy)
-
-The Python scripts in this directory are kept for backwards compatibility but the TypeScript version is recommended for consistency with the codebase.
-
-### Python Setup (if needed)
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r evaluation/requirements.txt
-```
-
-### Python Usage
-
-```bash
-# List available data
-python evaluation/scripts/export_opik_data.py list
-
-# Export experiments
-python evaluation/scripts/export_opik_data.py experiments -o experiments.csv
-
-# Export traces
-python evaluation/scripts/export_opik_data.py traces -o traces.csv
-
-# Export dataset
-python evaluation/scripts/export_opik_data.py dataset "dataset-name" -o dataset.csv
-```
-
-## Notes
-
-- The TypeScript version uses the same Opik npm package that's already installed in the project
-- Both scripts connect to the Opik Cloud API at `https://www.comet.com/opik/api/v1`
-- CSV files are created in the current working directory unless a full path is specified
-- Large exports may take some time depending on the amount of data
