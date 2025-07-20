@@ -44,8 +44,62 @@ export interface Finding {
   metadata?: Record<string, any>;
 }
 
+// Finding with guaranteed location information
+export interface LocatedFinding extends Omit<Finding, 'locationHint'> {
+  locationHint: {
+    lineNumber: number;        // Always required
+    lineText: string;          // Always required
+    matchText: string;         // Always required
+    startLineNumber?: number;  // For multi-line findings
+    endLineNumber?: number;    // For multi-line findings
+  };
+}
+
+// Legacy alias for backwards compatibility (will be removed)
+export type ChunkFinding = LocatedFinding;
+
+// New finding system types
+export interface HighlightHint {
+  searchText: string;      // The text to search for
+  lineNumber?: number;     // Optional line number hint
+  chunkId: string;         // Which chunk this came from
+}
+
+export interface PotentialFinding {
+  id: string;
+  type: string;
+  data: any;  // Plugin knows what this is
+  highlightHint: HighlightHint;
+}
+
+export interface InvestigatedFinding {
+  id: string;
+  type: string;
+  data: any;
+  severity: 'low' | 'medium' | 'high' | 'info';
+  message: string;
+  highlightHint: HighlightHint;
+}
+
+export interface GlobalFinding {
+  id: string;
+  type: string;
+  data: any;
+  severity: 'low' | 'medium' | 'high' | 'info';
+  message: string;
+  reason: string;  // Why this is global (e.g., "Cross-document pattern")
+}
+
+export interface PluginError {
+  timestamp: Date;
+  phase: 'processChunk' | 'synthesize' | 'generateComments';
+  error: string;
+  context?: any;
+}
+
 // Re-export from shared types to avoid duplication
 import type { RichLLMInteraction } from '@/types/llm';
+import type { Comment } from '@/types/documentSchema';
 export type LLMInteraction = RichLLMInteraction;
 
 export interface ChunkResult {
@@ -60,7 +114,7 @@ export interface ChunkResult {
 
 export interface SynthesisResult {
   summary: string;
-  findings: Finding[];
+  analysisSummary: string;  // Markdown summary of patterns and insights
   recommendations?: string[];
   llmCalls: LLMInteraction[];
   visualizations?: any[];
@@ -70,6 +124,19 @@ export interface RoutingExample {
   chunkText: string;
   shouldProcess: boolean;
   reason?: string;
+}
+
+export interface GenerateCommentsContext {
+  documentText: string;
+  maxComments?: number;
+  minImportance?: number;
+}
+
+export interface PluginResult {
+  summary: string;
+  comments: Comment[];
+  analysisSummary: string;
+  llmCalls: LLMInteraction[];
 }
 
 export interface AnalysisPlugin<TState = any> {
@@ -85,6 +152,9 @@ export interface AnalysisPlugin<TState = any> {
   // Processing methods
   processChunk(chunk: TextChunk): Promise<ChunkResult>;
   synthesize(): Promise<SynthesisResult>;
+  
+  // Comment generation (new)
+  generateComments?(context: GenerateCommentsContext): Comment[];
   
   // State management
   getState(): TState;

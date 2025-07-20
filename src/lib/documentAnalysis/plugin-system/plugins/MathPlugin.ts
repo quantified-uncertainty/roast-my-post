@@ -1,45 +1,79 @@
 /**
- * Math verification plugin
+ * Math Verification Plugin
+ * 
+ * PIPELINE FLOW:
+ * ==============
+ * 
+ * 1. EXTRACT (01_extract/)
+ *    └─> Find all math expressions in text chunks
+ *    └─> Output: PotentialFinding[] with math expressions
+ * 
+ * 2. INVESTIGATE (02_investigate/)
+ *    └─> Validate each math expression
+ *    └─> Add severity levels and error messages
+ *    └─> Output: InvestigatedFinding[] with validation results
+ * 
+ * 3. LOCATE (03_locate/)
+ *    └─> Find exact character positions in document
+ *    └─> Use fuzzy matching for math expressions
+ *    └─> Output: LocatedFinding[] with precise locations
+ * 
+ * 4. ANALYZE (04_analyze/)
+ *    └─> Generate insights and patterns
+ *    └─> Calculate error rates and summaries
+ *    └─> Output: Analysis summary and statistics
+ * 
+ * 5. GENERATE (05_generate/)
+ *    └─> Convert to UI comments with highlights
+ *    └─> Output: Comment[] for display
  */
 
-import { BasePlugin } from '../BasePlugin';
-import { ChunkResult, SynthesisResult, Finding, RoutingExample } from '../types';
-import { TextChunk } from '../TextChunk';
-import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
-import { LocationUtils } from '../../utils/LocationUtils';
-import { sessionContext } from '@/lib/helicone/sessionContext';
-import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import type { Comment } from "@/types/documentSchema";
 
-interface MathState {
-  equations: Array<{
-    id: string;
-    text: string;
-    chunkId: string;
-    context: string;
-    verified?: boolean;
-    error?: string;
-    lineNumber?: number;
-    lineText?: string;
-    location?: { start: number; end: number };
-  }>;
-  errors: Array<{
-    equation: string;
-    error: string;
-    chunkId: string;
-    lineNumber?: number;
-    lineText?: string;
-    location?: { start: number; end: number };
-  }>;
-}
+import { logger } from "../../../logger";
+import { PromptBuilder } from "../builders/PromptBuilder";
+import { SchemaBuilder } from "../builders/SchemaBuilder";
+import { BasePlugin } from "../core/BasePlugin";
+import { TextChunk } from "../TextChunk";
+import {
+  ChunkResult,
+  GenerateCommentsContext,
+  RoutingExample,
+  SynthesisResult,
+} from "../types";
+import { createPluginError } from "../utils/findingHelpers";
+// Stage-based imports - clear pipeline flow
+import {
+  convertToFindings,
+  type MathExtractionResult,
+} from "./math/01_extract";
+import { investigateMathFindings } from "./math/02_investigate";
+import { locateMathFindings } from "./math/03_locate";
+import { analyzeMathFindings } from "./math/04_analyze";
+import { generateMathCommentsWithOffsets } from "./math/05_generate";
+import type { FindingStorage } from "./MathPlugin.types";
 
-export class MathPlugin extends BasePlugin<MathState> {
+export class MathPlugin extends BasePlugin<{}> {
+  // ============================================
+  // PLUGIN STATE
+  // ============================================
+  private findings: FindingStorage = {
+    potential: [],
+    investigated: [],
+    located: [],
+    errors: [],
+    summary: undefined,
+    analysisSummary: undefined,
+    recommendations: [],
+  };
+
   constructor() {
-    super({
-      equations: [],
-      errors: []
-    });
+    super({});
   }
 
+  // ============================================
+  // PLUGIN METADATA
+  // ============================================
   name(): string {
     return "MATH";
   }
@@ -58,305 +92,233 @@ export class MathPlugin extends BasePlugin<MathState> {
   override routingExamples(): RoutingExample[] {
     return [
       {
-        chunkText: "The population grew by 15% over the last decade, from 1.2M to 1.38M",
+        chunkText:
+          "The population grew by 15% over the last decade, from 1.2M to 1.38M",
         shouldProcess: true,
-        reason: "Contains percentage calculation that should be verified"
+        reason: "Contains percentage calculation that should be verified",
       },
       {
         chunkText: "Mathematics has been called the language of the universe",
         shouldProcess: false,
-        reason: "Discusses math conceptually but contains no actual math"
+        reason: "Discusses math conceptually but contains no actual math",
       },
       {
-        chunkText: "If we assume a 7% annual return, $10,000 invested today would be worth $19,672 in 10 years",
+        chunkText:
+          "If we assume a 7% annual return, $10,000 invested today would be worth $19,672 in 10 years",
         shouldProcess: true,
-        reason: "Contains compound interest calculation"
-      }
+        reason: "Contains compound interest calculation",
+      },
     ];
   }
 
-  async processChunk(chunk: TextChunk): Promise<ChunkResult> {
-    const { result, interaction } = await this.trackLLMCall(
-      MODEL_CONFIG.analysis,
-      this.buildExtractionPrompt(chunk),
-      () => this.extractAndVerifyMath(chunk)
+  // ============================================
+  // STAGE 1: EXTRACT - Find math expressions
+  // ============================================
+  async extractPotentialFindings(chunk: TextChunk): Promise<void> {
+    const promptBuilder = PromptBuilder.forMath();
+    const { result } = await this.extractWithTool<{
+      items: MathExtractionResult[];
+    }>(
+      chunk,
+      "report_math_content",
+      "Report mathematical content found in the text",
+      SchemaBuilder.extraction("equation", {
+        equation: {
+          type: "string",
+          description:
+            "The mathematical expression EXACTLY as it appears in the text (preserve all spacing and formatting)",
+        },
+        isCorrect: {
+          type: "boolean",
+          description: "Whether the math is correct",
+        },
+        error: {
+          type: "string",
+          description: "Error description if incorrect",
+        },
+        surroundingText: {
+          type: "string",
+          description:
+            "10-20 words of text surrounding the equation for context",
+        },
+      }),
+      promptBuilder.buildExtractionPrompt(
+        chunk,
+        "For each mathematical expression found, verify if it's mathematically correct. If incorrect, explain the error."
+      )
     );
 
-    const findings: Finding[] = [];
-    
-    // Create location utils for this chunk
-    const chunkLocationUtils = new LocationUtils(chunk.text);
+    // Convert to potential findings using utility function
+    const newFindings = convertToFindings(
+      result.items || [],
+      chunk.id,
+      this.name()
+    );
 
-    // Process extracted equations
-    result.equations.forEach(eq => {
-      // Calculate line information for the equation
-      let lineNumber: number | undefined;
-      let lineText: string | undefined;
-      
-      if (eq.location) {
-        const locationInfo = chunkLocationUtils.getLocationInfo(
-          eq.location.start,
-          eq.location.end
-        );
-        
-        if (locationInfo) {
-          if (chunk.metadata?.lineInfo) {
-            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
-          } else {
-            lineNumber = locationInfo.start.lineNumber;
-          }
-          lineText = locationInfo.start.lineText;
-        }
-      }
+    // Add to our storage
+    this.findings.potential.push(...newFindings);
+  }
 
-      this.state.equations.push({
-        id: `${chunk.id}-${this.state.equations.length}`,
-        text: eq.equation,
-        chunkId: chunk.id,
-        context: eq.context,
-        verified: eq.isCorrect,
-        error: eq.error,
-        lineNumber,
-        lineText,
-        location: eq.location
-      });
+  // ============================================
+  // STAGE 2: INVESTIGATE - Validate correctness
+  // ============================================
+  async investigateFindings(): Promise<void> {
+    // Use utility function to investigate
+    const investigated = investigateMathFindings(this.findings.potential);
 
-      if (!eq.isCorrect && eq.error) {
-        this.state.errors.push({
-          equation: eq.equation,
-          error: eq.error,
-          chunkId: chunk.id,
-          lineNumber,
-          lineText,
-          location: eq.location
-        });
+    // Store results
+    this.findings.investigated = investigated;
+  }
 
-        const finding: Finding = {
-          type: 'math_error',
-          severity: 'medium',
-          message: `Math error: ${eq.equation}`,
-          location: eq.location
-        };
-        
-        // Add location hint if available
-        if (lineNumber && lineText) {
-          finding.locationHint = {
-            lineNumber,
-            lineText,
-            matchText: eq.equation,
-          };
-        }
-        
-        findings.push(finding);
-      }
-    });
+  // ============================================
+  // STAGE 3: LOCATE - Find exact positions
+  // ============================================
+  async locateFindings(documentText: string): Promise<void> {
+    // Use utility function to locate
+    const { located, dropped } = locateMathFindings(
+      this.findings.investigated,
+      documentText
+    );
+
+    // Store results
+    this.findings.located = located;
+
+    // Log if any were dropped
+    if (dropped > 0) {
+      logger.info(`MathPlugin: ${dropped} findings couldn't be located`);
+    }
+  }
+
+  // ============================================
+  // STAGE 4: ANALYZE - Generate insights
+  // ============================================
+  async analyzeFindingPatterns(): Promise<void> {
+    // Use utility function to analyze
+    const analysis = analyzeMathFindings(
+      this.findings.potential,
+      this.findings.located
+    );
+
+    // Store results
+    this.findings.summary = analysis.summary;
+    this.findings.analysisSummary = analysis.analysisSummary;
+    this.findings.recommendations = analysis.recommendations;
+  }
+
+  // ============================================
+  // STAGE 5: GENERATE - Create UI comments
+  // ============================================
+  getComments(documentText: string): Comment[] {
+    return generateMathCommentsWithOffsets(this.findings.located, documentText);
+  }
+
+  // ============================================
+  // LEGACY METHODS (for BasePlugin compatibility)
+  // ============================================
+
+  /**
+   * Legacy processChunk method
+   */
+  async processChunk(chunk: TextChunk): Promise<ChunkResult> {
+    await this.extractPotentialFindings(chunk);
 
     return {
-      findings,
-      llmCalls: [interaction],
+      findings: [], // Deprecated
+      llmCalls: this.getLLMInteractions().slice(-1),
       metadata: {
-        tokensUsed: interaction.tokensUsed.total,
-        processingTime: interaction.duration
-      }
-    };
-  }
-
-  async synthesize(): Promise<SynthesisResult> {
-    const totalEquations = this.state.equations.length;
-    const errorCount = this.state.errors.length;
-    const errorRate = totalEquations > 0 ? (errorCount / totalEquations) * 100 : 0;
-
-    // Analyze patterns in errors
-    const errorPatterns = this.analyzeErrorPatterns();
-
-    const summary = `Found ${totalEquations} mathematical expressions with ${errorCount} errors (${errorRate.toFixed(1)}% error rate). ${errorPatterns.summary}`;
-
-    const findings: Finding[] = [
-      // Add individual error findings with location hints
-      ...this.state.errors.map(error => {
-        const finding: Finding = {
-          type: 'math_error',
-          severity: 'medium' as const,
-          message: `Math error: ${error.equation}`,
-          metadata: {
-            equation: error.equation,
-            error: error.error,
-            chunkId: error.chunkId,
-          }
-        };
-        
-        // Add location hint if available
-        if (error.lineNumber && error.lineText) {
-          finding.locationHint = {
-            lineNumber: error.lineNumber,
-            lineText: error.lineText,
-            matchText: error.equation,
-          };
-        }
-        
-        return finding;
-      }),
-      ...errorPatterns.findings
-    ];
-
-    const recommendations = this.generateRecommendations(errorPatterns);
-
-    return {
-      summary,
-      findings,
-      recommendations,
-      llmCalls: [] // No additional LLM calls in synthesis for this plugin
-    };
-  }
-
-  protected createInitialState(): MathState {
-    return {
-      equations: [],
-      errors: []
-    };
-  }
-
-  private buildExtractionPrompt(chunk: TextChunk): string {
-    return `Analyze this text for mathematical content. Extract all equations, calculations, and mathematical statements. For each one, verify if it's mathematically correct.
-
-Text to analyze:
-${chunk.text}
-
-For each mathematical expression found:
-1. Extract the exact equation or calculation
-2. Verify if it's mathematically correct
-3. If incorrect, explain the error
-4. Note the context around it`;
-  }
-
-  private async extractAndVerifyMath(chunk: TextChunk): Promise<{
-    equations: Array<{
-      equation: string;
-      context: string;
-      isCorrect: boolean;
-      error?: string;
-      location?: { start: number; end: number };
-    }>;
-  }> {
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/extract') : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
-    
-    const { toolResult } = await callClaudeWithTool<{
-      equations: Array<{
-        equation: string;
-        context: string;
-        isCorrect: boolean;
-        error?: string;
-        location?: { start: number; end: number };
-      }>;
-    }>({
-      model: MODEL_CONFIG.analysis,
-      max_tokens: 1500,
-      temperature: 0,
-      system: "You are a mathematical verification system. Extract and verify all mathematical content.",
-      messages: [{
-        role: "user",
-        content: this.buildExtractionPrompt(chunk)
-      }],
-      toolName: "report_math_content",
-      toolDescription: "Report mathematical content found in the text",
-      toolSchema: {
-        type: "object",
-        properties: {
-          equations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                equation: { type: "string", description: "The mathematical expression" },
-                context: { type: "string", description: "Surrounding context" },
-                isCorrect: { type: "boolean", description: "Whether the math is correct" },
-                error: { type: "string", description: "Error description if incorrect" },
-                location: {
-                  type: "object",
-                  properties: {
-                    start: { type: "number" },
-                    end: { type: "number" }
-                  }
-                }
-              },
-              required: ["equation", "context", "isCorrect"]
-            }
-          }
-        },
-        required: ["equations"]
+        tokensUsed: this.getTotalCost(),
+        processingTime: 0,
       },
-      heliconeHeaders,
-      enablePromptCaching: true // Enable caching for math plugin system prompt and tools
-    });
-
-    return toolResult || { equations: [] };
+    };
   }
 
-  private analyzeErrorPatterns(): {
-    summary: string;
-    findings: Finding[];
-    patterns: Map<string, number>;
-  } {
-    const patterns = new Map<string, number>();
-    
-    // Categorize errors
-    this.state.errors.forEach(error => {
-      if (error.error.toLowerCase().includes('arithmetic')) {
-        patterns.set('arithmetic', (patterns.get('arithmetic') || 0) + 1);
-      } else if (error.error.toLowerCase().includes('unit')) {
-        patterns.set('unit_conversion', (patterns.get('unit_conversion') || 0) + 1);
-      } else if (error.error.toLowerCase().includes('percentage')) {
-        patterns.set('percentage', (patterns.get('percentage') || 0) + 1);
-      } else {
-        patterns.set('other', (patterns.get('other') || 0) + 1);
-      }
-    });
+  /**
+   * Legacy synthesize method
+   */
+  async synthesize(): Promise<SynthesisResult> {
+    // Run all stages if not already done
+    await this.investigateFindings();
+    await this.analyzeFindingPatterns();
 
-    const findings: Finding[] = [];
-    let summary = '';
-
-    if (patterns.size > 0) {
-      const mostCommon = Array.from(patterns.entries())
-        .sort((a, b) => b[1] - a[1])[0];
-      
-      summary = `Most common error type: ${mostCommon[0]} (${mostCommon[1]} instances).`;
-      
-      if (mostCommon[1] > 2) {
-        findings.push({
-          type: 'pattern',
-          severity: 'high',
-          message: `Systematic ${mostCommon[0]} errors detected (${mostCommon[1]} instances)`
-        });
-      }
-    }
-
-    return { summary, findings, patterns };
+    return {
+      summary: this.findings.summary || "",
+      analysisSummary: this.findings.analysisSummary || "",
+      recommendations: this.findings.recommendations || [],
+      llmCalls: [],
+    };
   }
 
-  private generateRecommendations(errorPatterns: { patterns: Map<string, number> }): string[] {
-    const recommendations: string[] = [];
+  protected createInitialState(): {} {
+    return {};
+  }
 
-    if (errorPatterns.patterns.get('arithmetic')! > 0) {
-      recommendations.push('Double-check arithmetic calculations');
-    }
-    if (errorPatterns.patterns.get('unit_conversion')! > 0) {
-      recommendations.push('Verify unit conversions and dimensional consistency');
-    }
-    if (errorPatterns.patterns.get('percentage')! > 0) {
-      recommendations.push('Review percentage calculations and ensure proper base values');
-    }
+  // ============================================
+  // ORCHESTRATION METHODS
+  // ============================================
 
-    if (this.state.errors.length > 5) {
-      recommendations.push('Consider having calculations reviewed by a subject matter expert');
-    }
+  /**
+   * Main entry point for comment generation
+   * Ensures all stages have been run in sequence
+   */
+  override generateComments(context: GenerateCommentsContext): Comment[] {
+    try {
+      // Note: The stages should already have been run by the time this is called
+      // This is just a safety check
+      if (this.findings.located.length === 0 && this.findings.investigated.length > 0) {
+        logger.warn("MathPlugin: generateComments called but findings not located yet");
+      }
 
-    return recommendations;
+      // Return comments using the utility function
+      return this.getComments(context.documentText);
+    } catch (error) {
+      const pluginError = createPluginError("generateComments", error, {
+        potentialCount: this.findings.potential.length,
+      });
+      this.findings.errors.push(pluginError);
+      logger.error("MathPlugin: Error generating comments", error);
+      return [];
+    }
+  }
+
+  // ============================================
+  // DEBUG & UTILITY METHODS
+  // ============================================
+
+  /**
+   * Get detailed debug information about all stages
+   */
+  debugJson(): any {
+    return {
+      pluginName: this.name(),
+      findings: this.findings,
+      stats: {
+        potentialCount: this.findings.potential.length,
+        investigatedCount: this.findings.investigated.length,
+        locatedCount: this.findings.located.length,
+        errorCount: this.findings.errors.length,
+        correctEquations: this.findings.potential.filter(
+          (f) => f.type === "math_correct"
+        ).length,
+        mathErrors: this.findings.potential.filter(
+          (f) => f.type === "math_error"
+        ).length,
+      },
+    };
+  }
+
+  /**
+   * Override clearState to also clear findings
+   */
+  override clearState(): void {
+    super.clearState();
+    this.findings = {
+      potential: [],
+      investigated: [],
+      located: [],
+      errors: [],
+      summary: undefined,
+      analysisSummary: undefined,
+      recommendations: [],
+    };
   }
 }

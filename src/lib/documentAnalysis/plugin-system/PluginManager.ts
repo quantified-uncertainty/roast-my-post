@@ -5,16 +5,18 @@
 import { PromptBasedRouter, RouterConfig } from './PromptBasedRouter';
 import { AnalysisPlugin, DocumentProfile, SynthesisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
+import type { Comment } from '@/types/documentSchema';
 import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { sessionContext } from '../../helicone/sessionContext';
 
 export interface DocumentAnalysisResult {
   summary: string;
   pluginResults: Map<string, SynthesisResult>;
+  pluginComments: Map<string, Comment[]>;
   statistics: {
     totalChunks: number;
-    totalFindings: number;
-    findingsByType: Map<string, number>;
+    totalComments: number;
+    commentsByPlugin: Map<string, number>;
     tokensUsed: number;
     processingTime: number;
   };
@@ -80,10 +82,10 @@ export class PluginManager {
 
     // Phase 4: Synthesize results
     console.log('\n📊 Synthesizing results...');
-    const pluginResults = await this.synthesizeResults();
+    const { results: pluginResults, comments: pluginComments } = await this.synthesizeResults(text);
 
     // Phase 5: Create final analysis
-    const analysis = this.createFinalAnalysis(pluginResults, chunks.length);
+    const analysis = this.createFinalAnalysis(pluginResults, pluginComments, chunks.length);
 
     console.log('\n✅ Analysis complete!');
     return analysis;
@@ -151,13 +153,31 @@ export class PluginManager {
     }
   }
 
-  private async synthesizeResults(): Promise<Map<string, SynthesisResult>> {
+  private async synthesizeResults(documentText: string): Promise<{ 
+    results: Map<string, SynthesisResult>;
+    comments: Map<string, Comment[]>;
+  }> {
     const results = new Map<string, SynthesisResult>();
+    const comments = new Map<string, Comment[]>();
     const plugins = this.router.getAllPlugins();
 
     for (const plugin of plugins) {
       try {
         console.log(`   Synthesizing ${plugin.name()} results...`);
+        
+        // Generate comments if the plugin supports it
+        if (plugin.generateComments) {
+          console.log(`     Generating comments for ${plugin.name()}...`);
+          const pluginComments = plugin.generateComments({
+            documentText,
+            maxComments: 50  // Could be configurable
+          });
+          console.log(`     Generated ${pluginComments.length} comments`);
+          comments.set(plugin.name(), pluginComments);
+        } else {
+          comments.set(plugin.name(), []);
+        }
+        
         const result = await plugin.synthesize();
         results.set(plugin.name(), result);
       } catch (error) {
@@ -165,28 +185,29 @@ export class PluginManager {
       }
     }
 
-    return results;
+    return { results, comments };
   }
 
   private createFinalAnalysis(
     pluginResults: Map<string, SynthesisResult>,
+    pluginComments: Map<string, Comment[]>,
     totalChunks: number
   ): DocumentAnalysisResult {
     // Aggregate statistics
-    let totalFindings = 0;
+    let totalComments = 0;
     let totalTokens = 0;
-    const findingsByType = new Map<string, number>();
+    const commentsByPlugin = new Map<string, number>();
     const allRecommendations: string[] = [];
 
-    // Collect all findings and stats
-    for (const [pluginName, result] of Array.from(pluginResults.entries())) {
-      totalFindings += result.findings.length;
-      
-      result.findings.forEach(finding => {
-        const count = findingsByType.get(finding.type) || 0;
-        findingsByType.set(finding.type, count + 1);
-      });
+    // Collect comment counts
+    for (const [pluginName, comments] of Array.from(pluginComments.entries())) {
+      const count = comments.length;
+      totalComments += count;
+      commentsByPlugin.set(pluginName, count);
+    }
 
+    // Collect recommendations and tokens
+    for (const [pluginName, result] of Array.from(pluginResults.entries())) {
       if (result.recommendations) {
         allRecommendations.push(...result.recommendations);
       }
@@ -222,10 +243,11 @@ export class PluginManager {
     return {
       summary,
       pluginResults,
+      pluginComments,
       statistics: {
         totalChunks,
-        totalFindings,
-        findingsByType,
+        totalComments,
+        commentsByPlugin,
         tokensUsed: totalTokens,
         processingTime
       },

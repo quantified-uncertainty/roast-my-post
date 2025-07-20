@@ -2,18 +2,23 @@
  * Spelling and grammar checking plugin
  */
 
+import type { Comment } from "@/types/documentSchema";
+
 import { logger } from "../../../../lib/logger";
 import checkSpellingGrammarTool
   from "../../../../tools/check-spelling-grammar/index";
-import { BasePlugin } from "../BasePlugin";
+import { ErrorPatternAnalyzer } from "../analyzers/ErrorPatternAnalyzer";
+import { FindingBuilder } from "../builders/FindingBuilder";
+import { BasePlugin } from "../core/BasePlugin";
 import { TextChunk } from "../TextChunk";
 import {
   ChunkResult,
   Finding,
+  GenerateCommentsContext,
+  LocatedFinding,
   RoutingExample,
   SynthesisResult,
 } from "../types";
-import { LocationUtils } from "../../utils/LocationUtils";
 
 interface SpellingState {
   errors: Array<{
@@ -24,6 +29,10 @@ interface SpellingState {
     context: string;
     lineNumber?: number;
     lineText?: string;
+    startLine?: number;
+    endLine?: number;
+    matchText?: string;
+    location?: { start: number; end: number };
   }>;
   commonPatterns: Map<string, number>;
 }
@@ -74,81 +83,76 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       }
     );
 
-    logger.debug(`SpellingPlugin: Found ${result.errors.length} errors in chunk ${chunk.id}`);
+    logger.debug(
+      `SpellingPlugin: Found ${result.errors.length} errors in chunk ${chunk.id}`
+    );
 
     const findings: Finding[] = [];
-    
-    // Create location utils for this chunk
-    const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Process errors
     result.errors.forEach((error) => {
-      // Try to find the error text in the chunk
-      const errorPosition = chunk.text.indexOf(error.text);
-      let locationHint: Finding['locationHint'] = undefined;
-      let lineNumber: number | undefined;
-      let lineText: string | undefined;
-      
-      if (errorPosition !== -1) {
-        // Get line info within the chunk
-        const locationInfo = chunkLocationUtils.getLocationInfo(
-          errorPosition, 
-          errorPosition + error.text.length
-        );
-        
-        if (locationInfo) {
-          // If chunk has global line info, adjust the line numbers
-          if (chunk.metadata?.lineInfo) {
-            lineNumber = chunk.metadata.lineInfo.startLine + locationInfo.start.lineNumber - 1;
-            locationHint = {
-              lineNumber,
-              lineText: locationInfo.start.lineText,
-              matchText: error.text,
-            };
-          } else {
-            // Use chunk-relative line numbers
-            lineNumber = locationInfo.start.lineNumber;
-            locationHint = {
-              lineNumber,
-              lineText: locationInfo.start.lineText,
-              matchText: error.text,
-            };
-          }
-          lineText = locationInfo.start.lineText;
-        }
+      // Create finding with automatic location tracking first
+      const finding = FindingBuilder.forError(
+        error.type,
+        error.text,
+        `${error.type} error: "${error.text}" → "${error.correction}"`,
+        "low"
+      )
+        .inChunk(chunk)
+        .withMetadata({
+          original: error.text,
+          suggestion: error.correction,
+          errorType: error.type,
+        })
+        .build();
+
+      // Only add as LocatedFinding if we have location info
+      if (
+        finding.locationHint?.lineNumber &&
+        finding.locationHint?.lineText &&
+        finding.locationHint?.matchText
+      ) {
+        const locatedFinding: LocatedFinding = {
+          ...finding,
+          locationHint: {
+            lineNumber: finding.locationHint.lineNumber,
+            lineText: finding.locationHint.lineText,
+            matchText: finding.locationHint.matchText,
+            startLineNumber: finding.locationHint.startLineNumber,
+            endLineNumber: finding.locationHint.endLineNumber,
+          },
+        };
+        this.addChunkFindings([locatedFinding]);
       }
 
-      this.state.errors.push({
-        ...error,
-        chunkId: chunk.id,
-        context: error.context || chunk.getContext(0, 50),
-        lineNumber,
-        lineText,
-      });
+      // Store error in state for pattern analysis
+      this.addToStateArray("errors", [
+        {
+          ...error,
+          chunkId: chunk.id,
+          context: error.context || chunk.getContext(0, 50),
+        },
+      ]);
 
       // Track patterns
       const count = this.state.commonPatterns.get(error.type) || 0;
       this.state.commonPatterns.set(error.type, count + 1);
 
-      findings.push({
-        type: `${error.type}_error`,
-        severity: "low",
-        message: `${error.type} error: "${error.text}" → "${error.correction}"`,
-        locationHint,
-        metadata: {
-          original: error.text,
-          suggestion: error.correction,
-          errorType: error.type,
-        },
-      });
+      findings.push(finding);
     });
 
     return {
       findings,
       llmCalls: result.llmInteractions,
       metadata: {
-        tokensUsed: result.llmInteractions.reduce((total, interaction) => total + interaction.tokensUsed.total, 0),
-        processingTime: result.llmInteractions.reduce((total, interaction) => total + interaction.duration, 0)
+        tokensUsed: result.llmInteractions.reduce(
+          (total, interaction) => total + interaction.tokensUsed.total,
+          0
+        ),
+        processingTime: result.llmInteractions.reduce(
+          (total, interaction) => total + interaction.duration,
+          0
+        ),
       },
     };
   }
@@ -156,81 +160,66 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
   async synthesize(): Promise<SynthesisResult> {
     const totalErrors = this.state.errors.length;
 
-    // Group errors by type
-    const errorsByType = new Map<string, number>();
-    this.state.errors.forEach((error) => {
-      errorsByType.set(error.type, (errorsByType.get(error.type) || 0) + 1);
-    });
+    // Use ErrorPatternAnalyzer for systematic analysis
+    const analyzer = ErrorPatternAnalyzer.forSpelling();
+    const analysis = analyzer.analyze(
+      this.state.errors.map((e) => ({
+        ...e,
+        description: `${e.type} error: ${e.text} → ${e.correction}`,
+      }))
+    );
 
     // Find most common errors
     const commonErrors = this.findCommonErrors();
 
-    let summary = `Found ${totalErrors} spelling/grammar issues`;
-    if (errorsByType.size > 0) {
-      const types = Array.from(errorsByType.entries())
-        .map(([type, count]) => `${count} ${type}`)
-        .join(", ");
-      summary += ` (${types})`;
-    }
-
+    // Build summary
+    let summary = analysis.summary;
     if (commonErrors.length > 0) {
-      summary += `. Most frequent: ${commonErrors
+      summary += ` Most frequent: ${commonErrors
         .slice(0, 3)
         .map((e) => `"${e.text}"`)
         .join(", ")}.`;
     }
 
-    const findings: Finding[] = [];
+    // Build analysis summary markdown
+    let analysisSummary = `## Spelling & Grammar Analysis\n\n`;
 
-    // First, add individual error findings with location hints
-    this.state.errors.forEach((error) => {
-      const finding: Finding = {
-        type: `${error.type}_error`,
-        severity: "low",
-        message: `${error.type} error: "${error.text}" → "${error.correction}"`,
-        metadata: {
-          original: error.text,
-          suggestion: error.correction,
-          errorType: error.type,
-          chunkId: error.chunkId,
-        }
-      };
-      
-      // Add location hint if available
-      if (error.lineNumber && error.lineText) {
-        finding.locationHint = {
-          lineNumber: error.lineNumber,
-          lineText: error.lineText,
-          matchText: error.text,
-        };
+    if (totalErrors === 0) {
+      analysisSummary += `No spelling or grammar errors found.\n`;
+    } else {
+      analysisSummary += `### Error Summary\n`;
+      analysisSummary += `- Total errors: ${totalErrors}\n`;
+      analysisSummary += `- Error types: ${Array.from(
+        this.state.commonPatterns.entries()
+      )
+        .map(([type, count]) => `${type} (${count})`)
+        .join(", ")}\n\n`;
+
+      if (commonErrors.length > 0) {
+        analysisSummary += `### Most Common Errors\n`;
+        commonErrors.slice(0, 5).forEach((error) => {
+          if (error.count > 1) {
+            analysisSummary += `- "${error.text}" → "${error.correction}" (${error.count} occurrences)\n`;
+          }
+        });
+        analysisSummary += `\n`;
       }
-      
-      findings.push(finding);
-    });
 
-    // Add finding for systematic issues
-    if (totalErrors > 20) {
-      findings.push({
-        type: "systematic_issue",
-        severity: "medium",
-        message: `Document has numerous spelling/grammar issues (${totalErrors} total). Consider comprehensive proofreading.`,
-      });
-    }
-
-    // Add findings for repeated errors (but not as individual highlights)
-    commonErrors.forEach((error) => {
-      if (error.count > 2) {
-        findings.push({
-          type: "repeated_error",
-          severity: "low",
-          message: `"${error.text}" appears ${error.count} times (suggest: "${error.correction}")`,
+      // Add pattern insights
+      if (analysis.patterns.size > 0) {
+        analysisSummary += `### Patterns Detected\n`;
+        analysis.patterns.forEach((pattern, type) => {
+          if (pattern.count >= 3) {
+            analysisSummary += `- **${type} errors**: ${pattern.count} instances\n`;
+          }
         });
       }
-    });
+    }
 
     return {
       summary,
-      findings,
+      analysisSummary,
+      recommendations: [],
       llmCalls: [],
     };
   }
@@ -240,6 +229,65 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
       errors: [],
       commonPatterns: new Map(),
     };
+  }
+
+  /**
+   * Custom comment generation that can filter out repetitive errors
+   */
+  override generateComments(context: GenerateCommentsContext): Comment[] {
+    const { maxComments = 30 } = context;
+
+    // Get base comments from parent implementation
+    const comments = super.generateComments(context);
+
+    // Group comments by error text to identify repetitive issues
+    const errorGroups = new Map<string, Comment[]>();
+
+    comments.forEach((comment) => {
+      // Extract original error text from metadata if available
+      const errorText =
+        (comment as any).metadata?.original ||
+        comment.highlight?.quotedText ||
+        "";
+      const key = errorText.toLowerCase();
+
+      if (!errorGroups.has(key)) {
+        errorGroups.set(key, []);
+      }
+      errorGroups.get(key)!.push(comment);
+    });
+
+    // If an error appears many times, only keep first few instances
+    const filteredComments: Comment[] = [];
+    const maxInstancesPerError = 3;
+
+    errorGroups.forEach((group, errorText) => {
+      if (group.length > maxInstancesPerError) {
+        // Keep first few instances and create a summary comment
+        filteredComments.push(...group.slice(0, maxInstancesPerError));
+
+        // Log that we're filtering repetitive errors
+        logger.debug(
+          `SpellingPlugin: Filtered ${group.length - maxInstancesPerError} additional instances of "${errorText}"`
+        );
+      } else {
+        filteredComments.push(...group);
+      }
+    });
+
+    // Sort by importance and location
+    filteredComments.sort((a, b) => {
+      // First by importance
+      const importanceDiff = (b.importance || 0) - (a.importance || 0);
+      if (importanceDiff !== 0) return importanceDiff;
+
+      // Then by line number if available
+      const aLine = (a.highlight as any)?.lineNumber || 0;
+      const bLine = (b.highlight as any)?.lineNumber || 0;
+      return aLine - bLine;
+    });
+
+    return filteredComments.slice(0, maxComments);
   }
 
   private findCommonErrors(): Array<{
