@@ -37,7 +37,7 @@ export class ForecastAnalyzer {
         probability: result.probability,
         consensus: result.consensus,
         description: result.description,
-        llmInteractions: result.llmInteractions || []
+        llmInteractions: (result.llmInteractions || []) as any
       };
     } catch (error) {
       logger.error(`Failed to generate forecast for prediction`, { 

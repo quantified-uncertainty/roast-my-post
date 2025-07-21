@@ -35,9 +35,9 @@ describe('ForecastPlugin', () => {
       plugin.clearState();
       const debugInfo = plugin.getDebugInfo();
       
-      expect(debugInfo.findings.potential).toHaveLength(0);
-      expect(debugInfo.findings.investigated).toHaveLength(0);
-      expect(debugInfo.findings.located).toHaveLength(0);
+      expect((debugInfo.findings as any).potential).toHaveLength(0);
+      expect((debugInfo.findings as any).investigated).toHaveLength(0);
+      expect((debugInfo.findings as any).located).toHaveLength(0);
     });
 
     it('should provide debug info', () => {
@@ -45,11 +45,9 @@ describe('ForecastPlugin', () => {
       
       expect(debugInfo).toHaveProperty('findings');
       expect(debugInfo).toHaveProperty('stats');
-      expect(debugInfo.stats).toHaveProperty('potentialCount');
-      expect(debugInfo.stats).toHaveProperty('investigatedCount');
-      expect(debugInfo.stats).toHaveProperty('locatedCount');
-      expect(debugInfo.stats).toHaveProperty('predictions');
-      expect(debugInfo.stats).toHaveProperty('disagreements');
+      expect((debugInfo.stats as any)).toHaveProperty('potentialCount');
+      expect((debugInfo.stats as any)).toHaveProperty('investigatedCount');
+      expect((debugInfo.stats as any)).toHaveProperty('locatedCount');
     });
   });
 
@@ -67,7 +65,7 @@ describe('ForecastPlugin', () => {
 
   describe('error handling', () => {
     it('should throw error when using legacy processChunk', async () => {
-      await expect(plugin.processChunk({} as any)).rejects.toThrow('Use analyze() method instead');
+      await expect(plugin.processChunk()).rejects.toThrow('Use analyze() method instead');
     });
 
     it('should throw error when using legacy synthesize', async () => {

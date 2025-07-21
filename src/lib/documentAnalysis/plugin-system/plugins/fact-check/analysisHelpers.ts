@@ -77,7 +77,7 @@ export function investigateFactFindings(
   );
 
   return findings.map(finding => {
-    const verification = verificationMap.get(finding.data.text);
+    const verification = verificationMap.get(finding.data.text as string);
     
     if (verification && !verification.verified) {
       // False claim - high severity
@@ -131,7 +131,7 @@ export function analyzeFactFindings(
   
   located.forEach(finding => {
     if (finding.type === 'fact_claim' && finding.data.topic) {
-      const topic = finding.data.topic;
+      const topic = finding.data.topic as string;
       const current = topicAccuracy.get(topic) || { verified: 0, false: 0 };
       
       if (finding.severity === 'high') {
@@ -140,7 +140,7 @@ export function analyzeFactFindings(
         current.verified++;
       }
       
-      topicAccuracy.set(topic, current);
+      topicAccuracy.set(topic as string, current);
     }
   });
 

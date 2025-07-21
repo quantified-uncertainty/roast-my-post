@@ -98,7 +98,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     );
 
     // Add to our storage
-    this.findings.potential.push(...newFindings);
+    this.findings.potential.push(...(newFindings as any));
   }
 
   /**
@@ -141,7 +141,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
       ...finding,
       severity: this.determineSeverity(finding.data),
       message: this.createErrorMessage(finding.data)
-    }));
+    })) as any;
   }
 
   /**
@@ -149,8 +149,8 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
    */
   private determineSeverity(data: { severity?: string; type?: string; [key: string]: unknown }): 'low' | 'medium' | 'high' {
     // Use severity from data if provided
-    if (data.severity) {
-      return data.severity;
+    if (data.severity && (data.severity === 'low' || data.severity === 'medium' || data.severity === 'high')) {
+      return data.severity as 'low' | 'medium' | 'high';
     }
     
     // Grammar errors are typically more important
@@ -168,7 +168,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
   private createErrorMessage(data: { text?: string; correction?: string; type?: string; rule?: string; [key: string]: unknown }): string {
     const { text, correction, type, rule } = data;
     
-    let message = `${this.capitalizeFirst(type)} error: "${text}" should be "${correction}"`;
+    let message = `${this.capitalizeFirst(type || 'spelling')} error: "${text || 'unknown'}" should be "${correction || 'unknown'}"`;
     
     if (rule) {
       message += ` (${rule})`;
@@ -182,7 +182,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
    */
   protected locateFindings(documentText: string): void {
     const { located, dropped } = locateFindings(
-      this.findings.investigated,
+      this.findings.investigated as GenericInvestigatedFinding[],
       documentText,
       { 
         mathSpecific: false,
@@ -191,7 +191,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
       }
     );
 
-    this.findings.located = located;
+    this.findings.located = located as any;
 
     if (dropped > 0) {
       logger.info(`SpellingPlugin: ${dropped} findings couldn't be located`);
@@ -258,7 +258,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
    * Generate UI comments from located findings
    */
   protected generateCommentsFromFindings(documentText: string): Comment[] {
-    const comments = generateCommentsFromFindings(this.findings.located, documentText);
+    const comments = generateCommentsFromFindings(this.findings.located as unknown as GenericLocatedFinding[], documentText);
     logger.info(`SpellingPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
   }
@@ -275,7 +275,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     return counts;
   }
 
-  private capitalizeFirst(str: string): string {
+  protected override capitalizeFirst(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 

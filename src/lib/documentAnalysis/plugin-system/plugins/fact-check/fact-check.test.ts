@@ -67,7 +67,7 @@ describe('FactCheckPlugin', () => {
       expect(debugInfo).toHaveProperty('findings');
       expect(debugInfo).toHaveProperty('stats');
       expect(debugInfo).toHaveProperty('stageResults');
-      expect(debugInfo.stats.potentialClaims).toBe(0);
+      expect((debugInfo.stats as any).potentialCount).toBe(0);
     });
   });
 

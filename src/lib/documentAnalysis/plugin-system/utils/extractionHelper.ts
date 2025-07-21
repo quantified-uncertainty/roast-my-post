@@ -65,7 +65,7 @@ export async function extractWithTool<T>(
       }],
       toolName: config.toolName,
       toolDescription: config.toolDescription,
-      toolSchema: config.toolSchema,
+      toolSchema: { type: 'object', ...config.toolSchema },
       heliconeHeaders
     });
     

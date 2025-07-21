@@ -140,12 +140,12 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     const claimsByTopic = new Map<string, Array<{ text: string; topic: string }>>();
     
     this.findings.potential.forEach(finding => {
-      const topic = finding.data.topic || 'general';
+      const topic = (finding.data.topic as string) || 'general';
       if (!claimsByTopic.has(topic)) {
         claimsByTopic.set(topic, []);
       }
       claimsByTopic.get(topic)!.push({
-        text: finding.data.text,
+        text: finding.data.text as string,
         topic: topic
       });
     });
@@ -212,8 +212,8 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
 
     // Prepare claims for batch verification
     const claimsData = claimsToVerify.map(f => ({
-      text: f.data.text,
-      topic: f.data.topic
+      text: f.data.text as string,
+      topic: f.data.topic as string
     }));
 
     const config = getFactVerificationConfig(this.name());

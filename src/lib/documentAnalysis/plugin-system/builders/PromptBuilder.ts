@@ -100,10 +100,10 @@ For each item, determine if it's valid/correct and explain your reasoning.`;
     
     // Extract the most relevant fields for display
     const { text, id, context, ...rest } = item;
-    let formatted = text || JSON.stringify(item);
+    let formatted = (text as string) || JSON.stringify(item);
     
     // Add context if available and not too long
-    if (context && context.length < 100) {
+    if (context && typeof context === 'string' && context.length < 100) {
       formatted += ` (context: ${context})`;
     }
     

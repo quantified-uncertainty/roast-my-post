@@ -401,7 +401,7 @@ export class PluginManager {
     if (!error) return false;
     
     // Check for common retryable error patterns
-    const errorMessage = error.message || String(error);
+    const errorMessage = (error as any)?.message || String(error);
     
     // Network/timeout errors are retryable
     if (errorMessage.includes('timeout') || 
@@ -439,7 +439,7 @@ export class PluginManager {
    * Determine the appropriate recovery action for a failed plugin
    */
   private determineRecoveryAction(pluginName: string, error: unknown): string {
-    const errorMessage = error?.message || String(error);
+    const errorMessage = (error as any)?.message || String(error);
     
     // Specific recovery actions based on error type
     if (errorMessage.includes('timeout')) {

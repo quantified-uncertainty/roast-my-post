@@ -312,7 +312,7 @@ export const MathHelpers = {
     errorFindings.forEach((finding) => {
       investigated.push({
         ...finding,
-        severity: this.determineSeverity(finding.data.error),
+        severity: this.determineSeverity(finding.data.error as string),
         message: `Mathematical error in "${finding.data.equation}": ${finding.data.error}`,
       });
     });
@@ -482,7 +482,7 @@ export const ForecastHelpers = {
       const byTimeframe = new Map<string, number>();
       predictions.forEach(p => {
         if (p.type === 'forecast' && p.data.timeframe) {
-          const category = categorizeTimeframe(p.data.timeframe);
+          const category = categorizeTimeframe(p.data.timeframe as string);
           byTimeframe.set(category, (byTimeframe.get(category) || 0) + 1);
         }
       });
