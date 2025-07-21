@@ -132,12 +132,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       }
 
       const post = response.data.data.post.result;
-      console.log("📝 Post metadata:", {
-        title: post.title,
-        author: post.user.displayName,
-        date: post.postedAt,
-        hasMarkdown: !!post.contents.markdown,
-      });
 
       return {
         html: post.contents.html,
@@ -155,7 +149,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         throw new Error("Could not extract post ID from EA Forum URL");
       }
 
-      console.log(`📥 Fetching post ${postId} from EA Forum API...`);
 
       const query = `
         query GetPost {
@@ -196,12 +189,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       }
 
       const post = response.data.data.post.result;
-      console.log("📝 Post metadata:", {
-        title: post.title,
-        author: post.user.displayName,
-        date: post.postedAt,
-        hasMarkdown: !!post.contents.markdown,
-      });
 
       return {
         html: post.contents.html,
@@ -383,9 +370,6 @@ export function extractContent(dom: JSDOM): string {
 
   unwantedSelectors.forEach((selector) => {
     const elements = contentElement?.querySelectorAll(selector);
-    if (elements && elements.length > 0) {
-      console.log(`Removing ${elements.length} elements matching: ${selector}`);
-    }
     elements?.forEach((el) => el.remove());
   });
 
@@ -856,7 +840,6 @@ async function processArticleWithDiffbot(url: string): Promise<ProcessedArticle>
 
 // Fallback to original extraction method for special cases
 async function processArticleFallback(url: string): Promise<ProcessedArticle> {
-  console.log(`📥 Fallback: Fetching article from ${url}...`);
   const { html, markdown, title, author, date } = await fetchArticle(url);
 
   let finalContent: string;

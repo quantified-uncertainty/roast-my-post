@@ -45,21 +45,6 @@ export function usePlainTextOffsets(
           const pathKey = path.join(".");
 
           // Add debugging for the problematic range
-          if (
-            (start <= 70 && end >= 60) || // Range overlaps with 60-70
-            (offset >= 50 && offset <= 80) // Nearby offsets for context
-          ) {
-            console.log(
-              `Node with offset ${start}-${end} at path ${pathKey}:`,
-              {
-                text,
-                offset,
-                plainText: plainText.substring(
-                  Math.max(0, plainText.length - 10)
-                ),
-              }
-            );
-          }
 
           index.set(pathKey, { path, start, end, text });
           plainText += text;
@@ -80,12 +65,6 @@ export function usePlainTextOffsets(
               plainText += "\n\n";
               offset += 2; // Account for the added newlines
 
-              // Log if this affects our problematic range
-              if (oldOffset <= 70 && offset >= 60) {
-                console.log(
-                  `Added newlines at offset ${oldOffset}, new offset: ${offset}`
-                );
-              }
             }
           }
 

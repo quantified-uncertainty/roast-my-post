@@ -258,13 +258,11 @@ export class JobModel {
         },
       });
 
-      console.log(`🔄 Created retry job ${retryJob.id} (attempt ${job.attempts + 2}/${MAX_RETRY_ATTEMPTS + 1}) for original job ${job.originalJobId || jobId}`);
       return retryJob;
     } else {
       const reason = !isRetryableError 
         ? "non-retryable error" 
         : `max attempts (${MAX_RETRY_ATTEMPTS + 1}) reached`;
-      console.log(`❌ Job ${jobId} permanently failed - ${reason}`);
     }
 
     return prisma.job.findUnique({ where: { id: jobId } });
@@ -391,7 +389,6 @@ export class JobModel {
             job.evaluation.agent.submittedBy?.id
           );
           
-          console.log(`🔍 Starting job ${job.id} with Helicone session ${sessionConfig.sessionId}`);
         }
       } catch (error) {
         console.warn('⚠️ Failed to create Helicone session config:', error);
@@ -439,7 +436,6 @@ export class JobModel {
       };
 
       // Analyze document
-      console.log(`🧠 Analyzing document with agent ${agent.name}...`);
       
       // Update session path for analysis phase
       const analysisSessionConfig = sessionConfig ? {
@@ -612,7 +608,6 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
 
       // Log successful completion to session
       if (sessionConfig) {
-        console.log(`✅ Job ${job.id} completed successfully with session ${sessionConfig.sessionId}`);
       }
 
       return {
@@ -623,7 +618,6 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
     } catch (error) {
       // Log failure to session
       if (sessionConfig) {
-        console.log(`❌ Job ${job.id} failed with session ${sessionConfig.sessionId}: ${error instanceof Error ? error.message : String(error)}`);
       }
       
       await this.markJobAsFailed(job.id, error);
@@ -644,9 +638,6 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         return false;
       }
 
-      console.log(
-        `📋 Processing job ${job.id} for document ${job.evaluation.document.id} with agent ${job.evaluation.agent.id}`
-      );
 
       await this.processJob(job);
       return true;

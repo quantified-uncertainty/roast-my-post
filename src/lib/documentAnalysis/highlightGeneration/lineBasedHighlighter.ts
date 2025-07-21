@@ -298,7 +298,6 @@ export class LineBasedHighlighter {
           if (tryLineIndex >= 0 && tryLineIndex < this.lines.length) {
             startPosInLine = this.findSnippetInLine(tryLineIndex, startCharacters);
             if (startPosInLine !== null) {
-              console.log(`Found start snippet in line ${tryLineIndex} (offset ${lineOffset} from original)`);
               actualStartLineIndex = tryLineIndex;
               break;
             }
@@ -329,7 +328,6 @@ export class LineBasedHighlighter {
         if (tryLineIndex !== endLineIndex) {
           endPosInLine = this.findSnippetInLine(tryLineIndex, endCharacters);
           if (endPosInLine !== null) {
-            console.log(`Found end snippet in line ${tryLineIndex} (offset ${tryLineIndex - endLineIndex} from original)`);
             actualEndLineIndex = tryLineIndex;
             break;
           }
