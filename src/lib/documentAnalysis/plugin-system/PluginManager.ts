@@ -61,24 +61,44 @@ export class PluginManager {
       });
       console.log(`   Created ${chunks.length} chunks`);
 
-      // Process with each plugin
+      // Process with each plugin in parallel
       const pluginResults = new Map<string, AnalysisResult>();
       const allComments: Comment[] = [];
       let totalCost = 0;
 
-      for (const plugin of plugins) {
+      console.log(`🔍 Running ${plugins.length} plugins in parallel...`);
+      
+      // Create promises for all plugin analyses
+      const pluginPromises = plugins.map(async (plugin) => {
         try {
-          console.log(`🔍 Running ${plugin.name()} analysis...`);
+          console.log(`   Starting ${plugin.name()} analysis...`);
+          const startTime = Date.now();
           const result = await plugin.analyze(chunks, text);
+          const duration = Date.now() - startTime;
           
-          pluginResults.set(plugin.name(), result);
-          allComments.push(...result.comments);
-          totalCost += result.cost;
-          
-          console.log(`   ${plugin.name()}: Found ${result.comments.length} issues`);
+          console.log(`   ${plugin.name()}: Found ${result.comments.length} issues (${duration}ms)`);
+          return { plugin: plugin.name(), result, success: true };
         } catch (error) {
           console.error(`   ${plugin.name()} failed:`, error);
-          // Continue with other plugins
+          return { 
+            plugin: plugin.name(), 
+            error: error instanceof Error ? error.message : String(error),
+            success: false 
+          };
+        }
+      });
+
+      // Wait for all plugins to complete
+      const results = await Promise.all(pluginPromises);
+
+      // Process results
+      for (const { plugin, result, success, error } of results) {
+        if (success && result) {
+          pluginResults.set(plugin, result);
+          allComments.push(...result.comments);
+          totalCost += result.cost;
+        } else {
+          console.warn(`Plugin ${plugin} failed: ${error}`);
         }
       }
 
@@ -130,14 +150,30 @@ export class PluginManager {
   ): Promise<Map<string, any>> {
     const results = new Map<string, any>();
     
-    for (const plugin of plugins) {
+    // Run all plugins in parallel
+    const pluginPromises = plugins.map(async (plugin) => {
       try {
-        // Run plugin on single chunk
         const result = await plugin.analyze([chunk], chunk.text);
-        results.set(plugin.name(), result);
+        return { plugin: plugin.name(), result, success: true };
       } catch (error) {
         console.error(`Plugin ${plugin.name()} failed:`, error);
-        results.set(plugin.name(), { error: error instanceof Error ? error.message : String(error) });
+        return { 
+          plugin: plugin.name(), 
+          error: error instanceof Error ? error.message : String(error),
+          success: false 
+        };
+      }
+    });
+    
+    // Wait for all to complete
+    const pluginResults = await Promise.all(pluginPromises);
+    
+    // Process results
+    for (const { plugin, result, success, error } of pluginResults) {
+      if (success) {
+        results.set(plugin, result);
+      } else {
+        results.set(plugin, { error });
       }
     }
     
