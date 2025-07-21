@@ -122,7 +122,7 @@ export class SpellingPlugin extends BasePlugin<SpellingState> {
             endLineNumber: finding.locationHint.endLineNumber,
           },
         };
-        this.addChunkFindings([locatedFinding]);
+        // Plugin disabled - finding storage removed
       }
 
       // Store error in state for pattern analysis

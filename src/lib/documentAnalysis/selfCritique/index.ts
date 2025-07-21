@@ -120,7 +120,7 @@ ${evaluationText}`;
     .replace(/\\\\/g, "\\")
     .trim();
 
-  // Convert RichLLMInteraction to LLMInteraction format for backwards compatibility
+  // Convert RichLLMInteraction to LLMInteraction format
   const llmInteraction: LLMInteraction = {
     messages: [
       { role: "system", content: systemMessage },

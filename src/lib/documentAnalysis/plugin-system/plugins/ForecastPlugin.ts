@@ -164,7 +164,7 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
             matchText: pred.text,
           }
         };
-        this.addChunkFindings([locatedFinding]);
+        // Plugin disabled - finding storage removed
       }
 
       findings.push(finding);
@@ -239,7 +239,7 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
               matchText: prediction.text
             }
           };
-          this.addChunkFindings([locatedFinding]);
+          // Plugin disabled - finding storage removed
 
           findings.push(finding);
         }

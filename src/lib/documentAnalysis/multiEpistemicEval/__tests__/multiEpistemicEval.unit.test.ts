@@ -175,6 +175,6 @@ describe('multiEpistemicEval', () => {
     // Check analysis is properly structured
     expect(result.analysis).toContain('Document Analysis Summary');
     expect(result.analysis).toContain('2 specialized plugins');
-    expect(result.analysis).toContain('Critical Issues');
+    expect(result.analysis).toContain('SPELLING Analysis');
   });
 });

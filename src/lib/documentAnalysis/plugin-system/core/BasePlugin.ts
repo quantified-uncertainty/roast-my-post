@@ -1,21 +1,45 @@
 /**
  * Unified base class for all analysis plugins
- * Combines the best features from both legacy base classes
+ * 
+ * MIGRATION NOTES:
+ * ================
+ * This class is transitioning to a more functional approach. New plugins should:
+ * 
+ * 1. Use extractWithTool from utils/extractionHelper instead of this.extractWithTool()
+ * 2. Manage their own finding storage (see MathPlugin.findings for example)
+ * 3. Implement custom generateComments() logic instead of relying on oldGenerateComments()
+ * 4. Avoid using deprecated methods marked with @deprecated
+ * 
+ * RECOMMENDED PATTERN (see MathPlugin for full example):
+ * =====================================================
+ * 
+ * class MyPlugin extends BasePlugin<{}> {
+ *   private findings: MyFindingStorage = { ... };
+ *   
+ *   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
+ *     // Use functional extraction helper
+ *     const extraction = await extractWithTool<MyResult>(chunk, config);
+ *     this.llmInteractions.push(extraction.interaction);
+ *     this.totalCost += extraction.cost;
+ *     // Store in plugin-specific state
+ *     this.findings.potential.push(...conversion(extraction.result));
+ *     return { ... };
+ *   }
+ *   
+ *   generateComments(context: GenerateCommentsContext): Comment[] {
+ *     // Custom pipeline logic
+ *     return myCommentGeneration(this.findings, context);
+ *   }
+ * }
  */
 
 import { 
   AnalysisPlugin, 
   ChunkResult, 
-  LocatedFinding,
   SynthesisResult, 
   RoutingExample, 
   LLMInteraction,
-  GenerateCommentsContext,
-  PotentialFinding,
-  InvestigatedFinding,
-  GlobalFinding,
-  PluginError,
-  HighlightHint
+  GenerateCommentsContext
 } from '../types';
 import { TextChunk } from '../TextChunk';
 import type { Comment } from '@/types/documentSchema';
@@ -24,14 +48,11 @@ import { callClaudeWithTool, MODEL_CONFIG } from '../../../claude/wrapper';
 import { logger } from '../../../logger';
 import { sessionContext } from '../../../helicone/sessionContext';
 import { createHeliconeHeaders } from '../../../helicone/sessions';
-import { convertFindingToHighlight } from '../utils/findingToHighlight';
 
 export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState> {
   protected state: TState;
   protected totalCost: number = 0;
   protected llmInteractions: LLMInteraction[] = [];
-  protected chunks: Map<string, TextChunk> = new Map();
-  protected locatedFindings: LocatedFinding[] = [];  // Old system (deprecated)
   protected generatedComments: Comment[] = [];
 
   constructor(initialState: TState) {
@@ -57,24 +78,9 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
     this.state = this.createInitialState();
     this.totalCost = 0;
     this.llmInteractions = [];
-    this.chunks.clear();
-    this.locatedFindings = [];
     this.generatedComments = [];
   }
   
-  /**
-   * Store a chunk for later reference during synthesis
-   */
-  protected storeChunk(chunk: TextChunk): void {
-    this.chunks.set(chunk.id, chunk);
-  }
-  
-  /**
-   * Get a stored chunk by ID
-   */
-  protected getChunk(chunkId: string): TextChunk | undefined {
-    return this.chunks.get(chunkId);
-  }
 
   protected abstract createInitialState(): TState;
 
@@ -133,94 +139,6 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
     }
   }
 
-  /**
-   * Perform extraction using Claude with tool use
-   */
-  protected async extractWithTool<T>(
-    chunk: TextChunk,
-    toolName: string,
-    toolDescription: string,
-    toolSchema: any,
-    extractionPrompt?: string
-  ): Promise<{ result: T; cost: number }> {
-    const prompt = extractionPrompt || this.buildDefaultExtractionPrompt(chunk);
-    
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath(`/plugins/${this.name()}/extract`) : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
-
-    try {
-      const { response, toolResult } = await callClaudeWithTool<T>({
-        model: MODEL_CONFIG.analysis,
-        max_tokens: 1500,
-        temperature: 0,
-        system: prompt,
-        messages: [
-          {
-            role: "user",
-            content: "Please analyze the provided text using the extraction tool."
-          }
-        ],
-        toolName,
-        toolDescription,
-        toolSchema,
-        heliconeHeaders,
-        enablePromptCaching: true
-      });
-
-      const cost = this.calculateCostFromUsage(response.usage);
-      this.totalCost += cost;
-      
-      logger.info(`Plugin extraction completed`, {
-        plugin: this.name(),
-        toolName,
-        chunkId: chunk.id,
-        tokensUsed: response.usage,
-        cost
-      });
-
-      // Track the interaction
-      this.llmInteractions.push({
-        model: MODEL_CONFIG.analysis,
-        prompt,
-        response: JSON.stringify(toolResult),
-        tokensUsed: {
-          prompt: response.usage?.input_tokens || 0,
-          completion: response.usage?.output_tokens || 0,
-          total: (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0)
-        },
-        timestamp: new Date(),
-        duration: 0 // Not tracked in this method
-      });
-
-      return { result: toolResult, cost };
-    } catch (error) {
-      logger.error(`Plugin extraction failed`, {
-        plugin: this.name(),
-        toolName,
-        chunkId: chunk.id,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Build default extraction prompt
-   */
-  protected buildDefaultExtractionPrompt(chunk: TextChunk): string {
-    return `Extract relevant content from this text chunk.
-
-TEXT TO ANALYZE:
-${chunk.text}
-
-CRITICAL: You MUST use the extraction tool to report your findings. Do not respond with plain text.`;
-  }
 
   /**
    * Calculate cost based on token usage
@@ -276,28 +194,6 @@ CRITICAL: You MUST use the extraction tool to report your findings. Do not respo
     return 0;
   }
 
-  /**
-   * Store findings with location information
-   */
-  protected addLocatedFindings(findings: LocatedFinding[]): void {
-    this.locatedFindings.push(...findings);
-  }
-
-  /**
-   * Get all located findings
-   */
-  protected getLocatedFindings(): LocatedFinding[] {
-    return this.locatedFindings;
-  }
-  
-  // Legacy methods for backwards compatibility
-  protected addChunkFindings(findings: LocatedFinding[]): void {
-    this.addLocatedFindings(findings);
-  }
-  
-  protected getChunkFindings(): LocatedFinding[] {
-    return this.getLocatedFindings();
-  }
 
   /**
    * Get generated comments
@@ -308,60 +204,10 @@ CRITICAL: You MUST use the extraction tool to report your findings. Do not respo
 
   /**
    * Default implementation of generateComments
-   * Plugins should override this to implement their own comment generation
+   * Plugins MUST override this to implement their own comment generation
    */
   generateComments(context: GenerateCommentsContext): Comment[] {
-    // Default to old system for backwards compatibility
-    return this.oldGenerateComments(context);
-  }
-  
-  /**
-   * Old generate comments implementation (for backwards compatibility)
-   */
-  protected oldGenerateComments(context: GenerateCommentsContext): Comment[] {
-    const { documentText, maxComments = 50, minImportance = 2 } = context;
-    
-    logger.debug(`${this.name()}: Generating comments from ${this.locatedFindings.length} located findings`);
-    
-    // Convert located findings to comments
-    const comments: Comment[] = [];
-    
-    for (const finding of this.locatedFindings) {
-      const comment = convertFindingToHighlight(finding, {
-        documentText,
-        defaultImportance: this.severityToImportance(finding.severity)
-      });
-      
-      if (comment && (comment.importance || 0) >= minImportance) {
-        comments.push(comment);
-      }
-    }
-    
-    logger.debug(`${this.name()}: Converted ${comments.length} findings to comments`);
-    
-    // Sort by importance (descending) and take top N
-    comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
-    
-    const selectedComments = comments.slice(0, maxComments);
-    
-    // Store the generated comments
-    this.generatedComments = selectedComments;
-    
-    return selectedComments;
+    throw new Error(`Plugin ${this.name()} must implement generateComments() method`);
   }
 
-  /**
-   * Convert severity to importance score (1-10)
-   */
-  protected severityToImportance(severity: string): number {
-    switch (severity) {
-      case 'high': return 8;
-      case 'medium': return 5;
-      case 'low': return 3;
-      case 'info': return 2;
-      default: return 3;
-    }
-  }
-  
-  
 }

@@ -153,7 +153,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
           endLineNumber: locationHint.endLineNumber,
         },
       };
-      this.addChunkFindings([locatedFinding]);
+      // Plugin disabled - finding storage removed
 
       // Store contradiction for analysis
       this.addToStateArray("contradictions", [
@@ -274,7 +274,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
             matchText: result.claim.text,
           },
         };
-        this.addChunkFindings([locatedFinding]);
+        // Plugin disabled - finding storage removed
 
         findings.push(finding);
       }

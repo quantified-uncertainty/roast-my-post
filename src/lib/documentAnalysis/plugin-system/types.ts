@@ -55,7 +55,6 @@ export interface LocatedFinding extends Omit<Finding, 'locationHint'> {
   };
 }
 
-// Legacy alias for backwards compatibility (will be removed)
 export type ChunkFinding = LocatedFinding;
 
 // New finding system types

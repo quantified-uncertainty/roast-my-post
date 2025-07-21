@@ -118,10 +118,11 @@ describe('MathPlugin Integration Test', () => {
     console.log(`  Investigated: ${state.stats.investigatedCount}`);
     console.log(`  Errors found: ${state.stats.errorCount}`);
     
-    // All potential findings should be investigated
-    expect(state.stats.investigatedCount).toBe(state.stats.potentialCount);
+    // Only error findings should be investigated (correct equations are not investigated)
+    expect(state.stats.investigatedCount).toBe(state.stats.mathErrors);
     // Should find several errors
-    expect(state.stats.errorCount).toBeGreaterThan(3);
+    expect(state.stats.mathErrors).toBeGreaterThan(3);
+    expect(state.stats.investigatedCount).toBeGreaterThan(3);
     
     // Log some findings
     state.findings.investigated.slice(0, 3).forEach((finding: any) => {

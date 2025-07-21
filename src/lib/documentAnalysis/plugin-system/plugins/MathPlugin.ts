@@ -42,6 +42,7 @@ import {
   SynthesisResult,
 } from "../types";
 import { createPluginError } from "../utils/findingHelpers";
+import { extractWithTool } from "../utils/extractionHelper";
 // Stage-based imports - clear pipeline flow
 import {
   convertToFindings,
@@ -115,13 +116,13 @@ export class MathPlugin extends BasePlugin<{}> {
   // ============================================
   async extractPotentialFindings(chunk: TextChunk): Promise<void> {
     const promptBuilder = PromptBuilder.forMath();
-    const { result } = await this.extractWithTool<{
+    
+    const extraction = await extractWithTool<{
       items: MathExtractionResult[];
-    }>(
-      chunk,
-      "report_math_content",
-      "Report mathematical content found in the text",
-      SchemaBuilder.extraction("equation", {
+    }>(chunk, {
+      toolName: "report_math_content",
+      toolDescription: "Report mathematical content found in the text",
+      toolSchema: SchemaBuilder.extraction("equation", {
         equation: {
           type: "string",
           description:
@@ -141,15 +142,19 @@ export class MathPlugin extends BasePlugin<{}> {
             "10-20 words of text surrounding the equation for context",
         },
       }),
-      promptBuilder.buildExtractionPrompt(
+      extractionPrompt: promptBuilder.buildExtractionPrompt(
         chunk,
         "For each mathematical expression found, verify if it's mathematically correct. If incorrect, explain the error."
-      )
-    );
+      ),
+      pluginName: this.name()
+    });
+    
+    // Track the interaction and cost
+    this.llmInteractions.push(extraction.interaction);
+    this.totalCost += extraction.cost;
 
-    // Convert to potential findings using utility function
     const newFindings = convertToFindings(
-      result.items || [],
+      extraction.result.items || [],
       chunk.id,
       this.name()
     );
@@ -162,7 +167,6 @@ export class MathPlugin extends BasePlugin<{}> {
   // STAGE 2: INVESTIGATE - Validate correctness
   // ============================================
   async investigateFindings(): Promise<void> {
-    // Use utility function to investigate
     const investigated = investigateMathFindings(this.findings.potential);
 
     // Store results
@@ -173,7 +177,6 @@ export class MathPlugin extends BasePlugin<{}> {
   // STAGE 3: LOCATE - Find exact positions
   // ============================================
   async locateFindings(documentText: string): Promise<void> {
-    // Use utility function to locate
     const { located, dropped } = locateMathFindings(
       this.findings.investigated,
       documentText
@@ -192,7 +195,6 @@ export class MathPlugin extends BasePlugin<{}> {
   // STAGE 4: ANALYZE - Generate insights
   // ============================================
   async analyzeFindingPatterns(): Promise<void> {
-    // Use utility function to analyze
     const analysis = analyzeMathFindings(
       this.findings.potential,
       this.findings.located
@@ -274,7 +276,6 @@ export class MathPlugin extends BasePlugin<{}> {
         logger.info(`MathPlugin: generateComments called with ${this.findings.located.length} located, ${this.findings.investigated.length} investigated findings`);
       }
 
-      // Return comments using the utility function
       return this.getComments(context.documentText);
     } catch (error) {
       const pluginError = createPluginError("generateComments", error, {
