@@ -4,11 +4,9 @@
  */
 
 import { logger } from "../../../../logger";
-import { BasePlugin } from "../../core/BasePlugin";
+import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
-  SimpleAnalysisPlugin,
-  AnalysisResult,
   RoutingExample,
   LLMInteraction,
 } from "../../types";
@@ -40,27 +38,18 @@ import {
   prioritizeClaimsForVerification,
 } from "./analysisHelpers";
 
-export class FactCheckPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
-  private findings: FactCheckFindingStorage = {
-    potential: [],
-    investigated: [],
-    located: [],
-    contradictions: [],
-    verifications: [],
-  };
+export class FactCheckPlugin extends PipelinePlugin<FactCheckFindingStorage> {
   private promptBuilder = new FactCheckPromptBuilder();
-  private cost = 0;
-  private analysisInteractions: LLMInteraction[] = [];
 
   constructor() {
-    super({});
+    super();
   }
 
-  override name(): string {
+  name(): string {
     return "FACT_CHECK";
   }
 
-  override promptForWhenToUse(): string {
+  promptForWhenToUse(): string {
     return `Call this when there are factual claims that could be verified. This includes:
 - Specific statistics or data points (GDP was $21T in 2023)
 - Historical facts (The Berlin Wall fell in 1989)
@@ -91,82 +80,55 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     ];
   }
 
+  protected createInitialFindingStorage(): FactCheckFindingStorage {
+    return {
+      potential: [],
+      investigated: [],
+      located: [],
+      contradictions: [],
+      verifications: [],
+    };
+  }
+
   /**
-   * Main analysis method - implements 5-stage pipeline
+   * Extract factual claims from a single chunk
    */
-  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
-    logger.info(`[FactCheckPlugin] Starting analysis of ${chunks.length} chunks`);
-    
+  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
+    const config = getFactExtractionConfig(this.name());
+    const prompt = this.promptBuilder.buildExtractionPrompt(chunk);
+
     try {
-      // Stage 1: Extract factual claims from all chunks
-      await this.extractFactualClaims(chunks);
-      logger.info(`[FactCheckPlugin] Stage 1: Extracted ${this.findings.potential.length} claims`);
-
-      // Stage 2: Detect contradictions between claims
-      await this.detectContradictions();
-      logger.info(`[FactCheckPlugin] Stage 2: Found ${this.findings.contradictions.length} contradictions`);
-
-      // Stage 3: Verify high-priority claims
-      await this.verifyFactualClaims();
-      logger.info(`[FactCheckPlugin] Stage 3: Verified ${this.findings.verifications.length} claims`);
-
-      // Stage 4: Locate findings in document
-      this.locateFactsInDocument(documentText);
-      logger.info(`[FactCheckPlugin] Stage 4: Located ${this.findings.located.length} findings`);
-
-      // Stage 5: Generate analysis and comments
-      const { summary, analysisSummary } = analyzeFactFindings(
-        this.findings.located,
-        this.findings.contradictions,
-        this.findings.verifications
+      const extraction = await extractWithTool<{ claims: FactExtractionResult[] }>(
+        chunk,
+        { ...config, extractionPrompt: prompt }
       );
-      this.findings.summary = summary;
-      this.findings.analysisSummary = analysisSummary;
 
-      const comments = generateCommentsFromFindings(this.findings.located, documentText);
-      logger.info(`[FactCheckPlugin] Stage 5: Generated ${comments.length} comments`);
+      // Track LLM call using parent method
+      await this.trackLLMCall(async () => extraction);
 
-      return {
-        summary,
-        analysis: analysisSummary,
-        comments,
-        llmInteractions: this.analysisInteractions,
-        cost: this.cost,
-      };
+      if (extraction.result.claims && extraction.result.claims.length > 0) {
+        const findings = convertFactResults(extraction.result.claims, chunk.id, this.name());
+        this.findings.potential.push(...findings);
+      }
     } catch (error) {
-      logger.error(`[FactCheckPlugin] Analysis failed:`, error);
-      throw error;
+      logger.error(`[FactCheckPlugin] Failed to extract claims from chunk ${chunk.id}:`, error);
     }
   }
 
   /**
-   * Stage 1: Extract factual claims from chunks
+   * Investigate findings - includes contradiction detection and verification
    */
-  private async extractFactualClaims(chunks: TextChunk[]): Promise<void> {
-    const extractionPromises = chunks.map(async (chunk) => {
-      const config = getFactExtractionConfig(this.name());
-      const prompt = this.promptBuilder.buildExtractionPrompt(chunk);
-
-      try {
-        const { result, cost, interaction } = await extractWithTool<{ claims: FactExtractionResult[] }>(
-          chunk,
-          { ...config, extractionPrompt: prompt }
-        );
-
-        this.cost += cost;
-        this.analysisInteractions.push(interaction);
-
-        if (result.claims && result.claims.length > 0) {
-          const findings = convertFactResults(result.claims, chunk.id, this.name());
-          this.findings.potential.push(...findings);
-        }
-      } catch (error) {
-        logger.error(`[FactCheckPlugin] Failed to extract claims from chunk ${chunk.id}:`, error);
-      }
-    });
-
-    await Promise.all(extractionPromises);
+  protected async investigateFindings(): Promise<void> {
+    // First detect contradictions
+    await this.detectContradictions();
+    
+    // Then verify high-priority claims
+    await this.verifyFactualClaims();
+    
+    // Finally convert potential findings to investigated findings
+    this.findings.investigated = investigateFactFindings(this.findings.potential, this.findings.verifications || []);
   }
+
 
   /**
    * Stage 2: Detect contradictions between claims
@@ -205,13 +167,14 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
             }
           );
 
-          const { result, cost, interaction } = await extractWithTool<{ contradictions: ContradictionResult[] }>(
+          const extraction = await extractWithTool<{ contradictions: ContradictionResult[] }>(
             dummyChunk,
             { ...config, extractionPrompt: prompt }
           );
 
-          this.cost += cost;
-          this.analysisInteractions.push(interaction);
+          // Track LLM call using parent method
+          await this.trackLLMCall(async () => extraction);
+          const { result } = extraction;
 
           if (result.contradictions && result.contradictions.length > 0) {
             this.findings.contradictions.push(...result.contradictions);
@@ -265,13 +228,14 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         }
       );
 
-      const { result, cost, interaction } = await extractWithTool<{ verifications: VerificationResult[] }>(
+      const extraction = await extractWithTool<{ verifications: VerificationResult[] }>(
         dummyChunk,
         { ...config, extractionPrompt: prompt }
       );
 
-      this.cost += cost;
-      this.analysisInteractions.push(interaction);
+      // Track LLM call using parent method
+      await this.trackLLMCall(async () => extraction);
+      const { result } = extraction;
 
       if (result.verifications) {
         this.findings.verifications = result.verifications;
@@ -292,9 +256,9 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
   /**
-   * Stage 4: Locate facts in the document
+   * Locate findings in document text
    */
-  private locateFactsInDocument(documentText: string): void {
+  protected locateFindings(documentText: string): void {
     const { located, dropped } = locateFindings(
       this.findings.investigated,
       documentText,
@@ -312,61 +276,25 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
   /**
-   * Get cost of all LLM operations
+   * Analyze findings and generate summary
    */
-  getCost(): number {
-    return this.cost;
+  protected analyzeFindingPatterns(): void {
+    const { summary, analysisSummary } = analyzeFactFindings(
+      this.findings.located,
+      this.findings.contradictions,
+      this.findings.verifications
+    );
+    this.findings.summary = summary;
+    this.findings.analysisSummary = analysisSummary;
   }
 
   /**
-   * Get all LLM interactions for monitoring
+   * Generate UI comments from located findings
    */
-  override getLLMInteractions(): LLMInteraction[] {
-    return this.analysisInteractions;
+  protected generateCommentsFromFindings(documentText: string): Comment[] {
+    const comments = generateCommentsFromFindings(this.findings.located, documentText);
+    logger.info(`[FactCheckPlugin] Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
+    return comments;
   }
 
-  /**
-   * Get debug information about the plugin's state
-   */
-  getDebugInfo(): Record<string, unknown> {
-    return {
-      findings: this.findings,
-      stats: {
-        potentialClaims: this.findings.potential.length,
-        investigatedClaims: this.findings.investigated.length,
-        locatedFindings: this.findings.located.length,
-        contradictions: this.findings.contradictions.length,
-        verifications: this.findings.verifications.length,
-        cost: this.cost,
-        llmCalls: this.analysisInteractions.length,
-      },
-      stageResults: {
-        extraction: this.findings.potential.map(f => ({
-          text: f.data.text,
-          topic: f.data.topic,
-          importance: f.data.importance
-        })),
-        contradictions: this.findings.contradictions,
-        verifications: this.findings.verifications,
-        located: this.findings.located.map(f => ({
-          text: f.highlightHint.searchText,
-          message: f.message,
-          location: f.locationHint
-        }))
-      }
-    };
-  }
-
-  // Legacy methods for backwards compatibility
-  protected override createInitialState(): Record<string, unknown> {
-    return {};
-  }
-
-  override async processChunk(chunk: TextChunk): Promise<any> {
-    throw new Error("processChunk is not supported in SimpleAnalysisPlugin - use analyze() instead");
-  }
-
-  override async synthesize(): Promise<any> {
-    throw new Error("synthesize is not supported in SimpleAnalysisPlugin - use analyze() instead");
-  }
 }

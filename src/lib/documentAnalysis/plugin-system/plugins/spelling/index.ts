@@ -40,7 +40,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     return `Call this for ALL text chunks to check spelling, grammar, and style. This is a basic check that should run on every chunk unless it's pure code, data, or references.`;
   }
 
-  routingExamples(): RoutingExample[] {
+  override routingExamples(): RoutingExample[] {
     return [
       {
         chunkText: "The quick brown fox jumps over the lazy dog.",
@@ -257,7 +257,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
   /**
    * Generate UI comments from located findings
    */
-  protected generateComments(documentText: string): Comment[] {
+  protected generateCommentsFromFindings(documentText: string): Comment[] {
     const comments = generateCommentsFromFindings(this.findings.located, documentText);
     logger.info(`SpellingPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
@@ -279,26 +279,4 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  protected createInitialState(): {} {
-    return {};
-  }
-
-  // Required by BasePlugin but not used in new API - kept for backwards compatibility
-  async processChunk(): Promise<any> {
-    throw new Error("Use analyze() method instead of processChunk()");
-  }
-
-  async synthesize(): Promise<any> {
-    throw new Error("Use analyze() method instead of synthesize()");
-  }
-
-  override clearState(): void {
-    super.clearState();
-    this.findings = {
-      potential: [],
-      investigated: [],
-      located: [],
-    };
-    this.analysisInteractions = [];
-  }
 }

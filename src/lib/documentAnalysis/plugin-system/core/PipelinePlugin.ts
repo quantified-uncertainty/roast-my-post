@@ -35,7 +35,7 @@
  */
 
 import type { Comment } from '@/types/documentSchema';
-import { logger } from '../../../../logger';
+import { logger } from '../../../logger';
 import { BasePlugin } from './BasePlugin';
 import { TextChunk } from '../TextChunk';
 import {
@@ -87,8 +87,8 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
   }
 
   // Abstract methods that plugins must implement
-  abstract name(): string;
-  abstract promptForWhenToUse(): string;
+  abstract override name(): string;
+  abstract override promptForWhenToUse(): string;
   
   /**
    * Create the initial finding storage structure
@@ -121,11 +121,12 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
 
   /**
    * Generate UI comments from located findings
+   * Note: This has a different signature than BasePlugin.generateComments()
    */
-  protected abstract generateComments(documentText: string): Comment[];
+  protected abstract generateCommentsFromFindings(documentText: string): Comment[];
 
   // Optional methods with sensible defaults
-  routingExamples?(): RoutingExample[] {
+  override routingExamples?(): RoutingExample[] {
     return [];
   }
 
@@ -162,7 +163,7 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
     
     // Stage 5: Generate comments
     logger.debug(`${this.name()}: Stage 5 - Generating comments`);
-    const comments = this.generateComments(documentText);
+    const comments = this.generateCommentsFromFindings(documentText);
     logger.debug(`${this.name()}: Stage 5 complete - ${comments.length} comments generated`);
     
     logger.info(`${this.name()}: Pipeline analysis complete - ${comments.length} total comments`);

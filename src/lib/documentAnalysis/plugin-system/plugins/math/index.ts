@@ -8,12 +8,10 @@
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../../logger";
-import { BasePlugin } from "../../core/BasePlugin";
+import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
-  SimpleAnalysisPlugin,
-  AnalysisResult,
   LLMInteraction,
 } from "../../types";
 import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
@@ -29,16 +27,9 @@ import { generateFindingId } from "../../utils/findingHelpers";
 import { getMathExtractionConfig, type MathExtractionResult, type MathFindingStorage } from "./types";
 import { MathPromptBuilder } from "./promptBuilder";
 
-export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
-  private findings: MathFindingStorage = {
-    potential: [],
-    investigated: [],
-    located: [],
-  };
-  private analysisInteractions: LLMInteraction[] = [];
-
+export class MathPlugin extends PipelinePlugin<MathFindingStorage> {
   constructor() {
-    super({});
+    super();
   }
 
   name(): string {
@@ -78,76 +69,18 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
     ];
   }
 
-  /**
-   * Main analysis method - processes all chunks and returns complete results
-   */
-  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
-    // Clear any previous state
-    this.clearState();
-    
-    // Stage 1: Extract from all chunks
-    for (const chunk of chunks) {
-      await this.extractPotentialFindings(chunk);
-    }
-    
-    // Stage 2: Investigate findings
-    this.investigateFindings();
-    
-    // Stage 3: Locate findings in document
-    this.locateFindings(documentText);
-    
-    // Stage 4: Analyze patterns
-    this.analyzeFindingPatterns();
-    
-    // Stage 5: Generate comments
-    const comments = this.getComments(documentText);
-    
+  protected createInitialFindingStorage(): MathFindingStorage {
     return {
-      summary: this.findings.summary || "",
-      analysis: this.findings.analysisSummary || "",
-      comments,
-      llmInteractions: this.analysisInteractions,
-      cost: this.getTotalCost()
-    };
-  }
-
-  getCost(): number {
-    return this.getTotalCost();
-  }
-
-  /**
-   * Get debug information for testing and introspection
-   */
-  getDebugInfo() {
-    return {
-      findings: this.findings,
-      stats: {
-        potentialCount: this.findings.potential.length,
-        investigatedCount: this.findings.investigated.length,
-        locatedCount: this.findings.located.length,
-        correctEquations: this.findings.potential.filter(
-          (f) => f.type === "math_correct"
-        ).length,
-        mathErrors: this.findings.potential.filter(
-          (f) => f.type === "math_error"
-        ).length,
-      },
-      stageResults: {
-        extracted: this.findings.potential,
-        investigated: this.findings.investigated,
-        located: this.findings.located,
-        analysis: {
-          summary: this.findings.summary,
-          analysisSummary: this.findings.analysisSummary
-        }
-      }
+      potential: [],
+      investigated: [],
+      located: [],
     };
   }
 
   /**
    * Extract math findings from a text chunk
    */
-  private async extractPotentialFindings(chunk: TextChunk): Promise<void> {
+  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
     const promptBuilder = new MathPromptBuilder();
     
     const extraction = await extractWithTool<{
@@ -160,9 +93,8 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
       )
     });
     
-    // Track the interaction and cost
-    this.analysisInteractions.push(extraction.interaction);
-    this.totalCost += extraction.cost;
+    // Track the interaction and cost using parent method
+    await this.trackLLMCall(async () => extraction);
 
     const newFindings = MathHelpers.convertMathResults(
       extraction.result.items || [],
@@ -177,14 +109,14 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
   /**
    * Investigate findings and add severity/messages
    */
-  private investigateFindings(): void {
+  protected investigateFindings(): void {
     this.findings.investigated = MathHelpers.investigateMathFindings(this.findings.potential);
   }
 
   /**
    * Locate findings in document text
    */
-  private locateFindings(documentText: string): void {
+  protected locateFindings(documentText: string): void {
     const { located, dropped } = locateFindings(
       this.findings.investigated,
       documentText,
@@ -201,7 +133,7 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
   /**
    * Analyze findings and generate summary
    */
-  private analyzeFindingPatterns(): void {
+  protected analyzeFindingPatterns(): void {
     const analysis = MathHelpers.analyzeMathFindings(
       this.findings.potential,
       this.findings.located
@@ -214,36 +146,10 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
   /**
    * Generate UI comments from located findings
    */
-  private getComments(documentText: string): Comment[] {
+  protected generateCommentsFromFindings(documentText: string): Comment[] {
     const comments = generateCommentsFromFindings(this.findings.located, documentText);
     logger.info(`MathPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
   }
 
-
-
-  protected createInitialState(): {} {
-    return {};
-  }
-
-  // Required by BasePlugin but not used in new API - kept for backwards compatibility
-  async processChunk(): Promise<any> {
-    throw new Error("Use analyze() method instead of processChunk()");
-  }
-
-  async synthesize(): Promise<any> {
-    throw new Error("Use analyze() method instead of synthesize()");
-  }
-
-
-
-  override clearState(): void {
-    super.clearState();
-    this.findings = {
-      potential: [],
-      investigated: [],
-      located: [],
-    };
-    this.analysisInteractions = [];
-  }
 }

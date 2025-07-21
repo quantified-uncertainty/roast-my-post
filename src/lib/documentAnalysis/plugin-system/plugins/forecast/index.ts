@@ -8,12 +8,10 @@
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../../logger";
-import { BasePlugin } from "../../core/BasePlugin";
+import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
-  SimpleAnalysisPlugin,
-  AnalysisResult,
   LLMInteraction,
 } from "../../types";
 import { extractWithTool } from "../../utils/extractionHelper";
@@ -35,18 +33,12 @@ import {
   type ForecastLocatedFinding,
 } from "./types";
 
-export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
-  private findings: ForecastFindingStorage = {
-    potential: [],
-    investigated: [],
-    located: [],
-  };
-  private analysisInteractions: LLMInteraction[] = [];
+export class ForecastPlugin extends PipelinePlugin<ForecastFindingStorage> {
   private promptBuilder = new ForecastPromptBuilder();
   private analyzer = new ForecastAnalyzer();
 
   constructor() {
-    super({});
+    super();
   }
 
   name(): string {
@@ -85,66 +77,18 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
     ];
   }
 
-  /**
-   * Main analysis method - processes all chunks and returns complete results
-   */
-  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
-    // Clear any previous state
-    this.clearState();
-    
-    // Stage 1: Extract predictions from all chunks
-    for (const chunk of chunks) {
-      await this.extractPredictions(chunk);
-    }
-    
-    // Stage 2: Investigate findings (add severity/messages)
-    this.investigateFindings();
-    
-    // Stage 3: Locate findings in document
-    this.locateFindings(documentText);
-    
-    // Stage 4: Generate our own forecasts for key predictions
-    await this.generateForecasts();
-    
-    // Stage 5: Analyze patterns
-    this.analyzeFindingPatterns();
-    
-    // Stage 6: Generate comments
-    const comments = this.getComments(documentText);
-    
+  protected createInitialFindingStorage(): ForecastFindingStorage {
     return {
-      summary: this.findings.summary || "",
-      analysis: this.findings.analysisSummary || "",
-      comments,
-      llmInteractions: this.analysisInteractions,
-      cost: this.getTotalCost()
-    };
-  }
-
-  getCost(): number {
-    return this.getTotalCost();
-  }
-
-  /**
-   * Get debug information for testing and introspection
-   */
-  getDebugInfo() {
-    return {
-      findings: this.findings,
-      stats: {
-        potentialCount: this.findings.potential.length,
-        investigatedCount: this.findings.investigated.length,
-        locatedCount: this.findings.located.length,
-        predictions: this.findings.potential.filter(f => f.type === "forecast").length,
-        disagreements: this.findings.potential.filter(f => f.type === "forecast_disagreement").length,
-      }
+      potential: [],
+      investigated: [],
+      located: [],
     };
   }
 
   /**
    * Extract predictions from a text chunk
    */
-  private async extractPredictions(chunk: TextChunk): Promise<void> {
+  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
     const extraction = await extractWithTool<{
       items: ForecastExtractionResult[];
     }>(chunk, {
@@ -152,9 +96,8 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
       extractionPrompt: this.promptBuilder.buildExtractionPrompt(chunk)
     });
     
-    // Track the interaction and cost
-    this.analysisInteractions.push(extraction.interaction);
-    this.totalCost += extraction.cost;
+    // Track the interaction and cost using parent method
+    await this.trackLLMCall(async () => extraction);
 
     // Convert to findings
     const newFindings = ForecastHelpers.convertForecastResults(
@@ -170,17 +113,22 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
 
   /**
    * Investigate findings and add severity/messages
+   * Note: Forecast plugin has a custom investigate stage that includes forecast generation
    */
-  private investigateFindings(): void {
+  protected async investigateFindings(): Promise<void> {
+    // First, basic investigation
     this.findings.investigated = ForecastHelpers.investigateForecastFindings(
       this.findings.potential
     ) as ForecastInvestigatedFinding[];
+    
+    // Then generate our own forecasts for key predictions
+    await this.generateForecasts();
   }
 
   /**
    * Locate findings in document text
    */
-  private locateFindings(documentText: string): void {
+  protected locateFindings(documentText: string): void {
     // Use custom location function for forecasts
     const located: GenericLocatedFinding[] = [];
     let dropped = 0;
@@ -241,7 +189,9 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
 
       if (forecast) {
         // Track LLM interactions from the forecaster tool
-        this.analysisInteractions.push(...forecast.llmInteractions);
+        forecast.llmInteractions.forEach(interaction => {
+          this.analysisInteractions.push(interaction);
+        });
 
         // Create comparison finding
         const comparisonData = this.analyzer.createComparisonData(prediction, forecast);
@@ -282,7 +232,7 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Analyze findings and generate summary
    */
-  private analyzeFindingPatterns(): void {
+  protected analyzeFindingPatterns(): void {
     const analysis = ForecastHelpers.analyzeForecastFindings(
       this.findings.potential,
       this.findings.potential.filter(f => f.type === "forecast_disagreement")
@@ -295,45 +245,10 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Generate UI comments from located findings
    */
-  private getComments(documentText: string): Comment[] {
+  protected generateCommentsFromFindings(documentText: string): Comment[] {
     const comments = generateCommentsFromFindings(this.findings.located, documentText);
     logger.info(`ForecastPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
   }
 
-  /**
-   * Helper methods
-   */
-  private getLineNumberAtPosition(text: string, position: number): number {
-    return text.slice(0, position).split('\n').length;
-  }
-
-  private getLineAtPosition(text: string, position: number): string {
-    const lines = text.split('\n');
-    const lineNumber = this.getLineNumberAtPosition(text, position);
-    return lines[lineNumber - 1] || '';
-  }
-
-  protected createInitialState(): {} {
-    return {};
-  }
-
-  // Required by BasePlugin but not used in new API
-  async processChunk(_chunk: TextChunk): Promise<{ findings?: never[]; llmCalls: never[] }> {
-    throw new Error("Use analyze() method instead of processChunk()");
-  }
-
-  async synthesize(): Promise<{ summary: string; analysisSummary: string; llmCalls: never[] }> {
-    throw new Error("Use analyze() method instead of synthesize()");
-  }
-
-  override clearState(): void {
-    super.clearState();
-    this.findings = {
-      potential: [],
-      investigated: [],
-      located: [],
-    };
-    this.analysisInteractions = [];
-  }
 }
