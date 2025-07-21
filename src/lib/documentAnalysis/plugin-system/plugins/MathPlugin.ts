@@ -209,7 +209,9 @@ export class MathPlugin extends BasePlugin<{}> {
   // STAGE 5: GENERATE - Create UI comments
   // ============================================
   getComments(documentText: string): Comment[] {
-    return generateMathCommentsWithOffsets(this.findings.located, documentText);
+    const comments = generateMathCommentsWithOffsets(this.findings.located, documentText);
+    logger.info(`MathPlugin: getComments returning ${comments.length} comments from ${this.findings.located.length} located findings`);
+    return comments;
   }
 
   // ============================================
@@ -275,13 +277,16 @@ export class MathPlugin extends BasePlugin<{}> {
       // Stage 3: Locate findings if not already done
       if (this.findings.located.length === 0 && this.findings.investigated.length > 0) {
         logger.info("MathPlugin: Running locate stage in generateComments");
+        logger.info(`MathPlugin: Have ${this.findings.investigated.length} investigated findings to locate`);
         // Run locate findings synchronously since we're already in the comment generation phase
         const locationResult = locateMathFindings(
           this.findings.investigated,
           context.documentText
         );
         this.findings.located = locationResult.located;
-        logger.info(`MathPlugin: Located ${this.findings.located.length} findings`);
+        logger.info(`MathPlugin: Located ${this.findings.located.length} findings (dropped ${locationResult.dropped})`);
+      } else {
+        logger.info(`MathPlugin: generateComments called with ${this.findings.located.length} located, ${this.findings.investigated.length} investigated findings`);
       }
 
       // Return comments using the utility function
