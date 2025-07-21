@@ -75,13 +75,10 @@ Some text without math to test routing.`,
   const mockAgent: Agent = {
     id: 'test-agent',
     name: 'Test Agent',
-    isActive: true,
-    purpose: 'ASSESSOR',
+    version: '1',
     description: 'Test agent for E2E testing',
     primaryInstructions: 'Analyze the document',
-    providesGrades: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    providesGrades: false
   };
 
   it('should handle full document analysis workflow with real plugin processing', async () => {
@@ -222,7 +219,7 @@ describe('Plugin Integration Tests', () => {
     
     // Mock LLM response for math plugin
     const { callClaude } = require('../../../lib/claude/wrapper');
-    callClaude.mockImplementation(async (messages) => {
+    callClaude.mockImplementation(async (messages: any[]) => {
       const content = messages[messages.length - 1].content;
       if (content.includes('No math here')) {
         return {
@@ -257,7 +254,7 @@ describe('Plugin Integration Tests', () => {
       }
     });
     
-    const result = await plugin.analyze(chunks, chunks.map(c => c.text).join('\n'));
+    const result = await plugin.analyze(chunks as any[], chunks.map(c => c.text).join('\n'));
     
     expect(result).toBeDefined();
     expect(result.summary).toBeDefined();
