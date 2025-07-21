@@ -238,6 +238,15 @@ export class MathPlugin extends BasePlugin<{}> {
   async synthesize(): Promise<SynthesisResult> {
     // Run all stages if not already done
     await this.investigateFindings();
+    
+    // IMPORTANT: Must locate findings before generating comments!
+    // This was missing and causing 0 comments to be generated
+    if (this.findings.located.length === 0 && this.findings.investigated.length > 0) {
+      // We need the document text to locate findings
+      // For now, we'll skip location in synthesize and rely on generateComments
+      logger.warn("MathPlugin: synthesize called but cannot locate findings without document text");
+    }
+    
     await this.analyzeFindingPatterns();
 
     return {
@@ -262,10 +271,17 @@ export class MathPlugin extends BasePlugin<{}> {
    */
   override generateComments(context: GenerateCommentsContext): Comment[] {
     try {
-      // Note: The stages should already have been run by the time this is called
-      // This is just a safety check
+      // Ensure all stages have been run
+      // Stage 3: Locate findings if not already done
       if (this.findings.located.length === 0 && this.findings.investigated.length > 0) {
-        logger.warn("MathPlugin: generateComments called but findings not located yet");
+        logger.info("MathPlugin: Running locate stage in generateComments");
+        // Run locate findings synchronously since we're already in the comment generation phase
+        const locationResult = locateMathFindings(
+          this.findings.investigated,
+          context.documentText
+        );
+        this.findings.located = locationResult.located;
+        logger.info(`MathPlugin: Located ${this.findings.located.length} findings`);
       }
 
       // Return comments using the utility function
