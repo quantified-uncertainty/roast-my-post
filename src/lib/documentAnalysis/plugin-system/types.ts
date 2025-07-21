@@ -97,9 +97,9 @@ export interface PluginError {
 }
 
 // Re-export from shared types to avoid duplication
-import type { RichLLMInteraction } from '@/types/llm';
+import type { LLMInteraction as BaseLLMInteraction } from '@/types/llm';
 import type { Comment } from '@/types/documentSchema';
-export type LLMInteraction = RichLLMInteraction;
+export type LLMInteraction = BaseLLMInteraction;
 
 export interface ChunkResult {
   findings?: Finding[];

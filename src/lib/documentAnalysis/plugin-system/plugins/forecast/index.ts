@@ -19,10 +19,7 @@ import {
 import { extractWithTool } from "../../utils/extractionHelper";
 import {
   ForecastHelpers,
-  locateFindings,
   generateCommentsFromFindings,
-  type GenericPotentialFinding,
-  type GenericInvestigatedFinding,
   type GenericLocatedFinding,
 } from "../../utils/pluginHelpers";
 import { generateFindingId } from "../../utils/findingHelpers";
@@ -322,7 +319,7 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   }
 
   // Required by BasePlugin but not used in new API
-  async processChunk(): Promise<any> {
+  async processChunk(_chunk: TextChunk): Promise<any> {
     throw new Error("Use analyze() method instead of processChunk()");
   }
 

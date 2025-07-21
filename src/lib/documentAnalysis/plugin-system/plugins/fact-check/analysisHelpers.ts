@@ -24,7 +24,7 @@ export function convertFactResults(
   pluginName: string
 ): GenericPotentialFinding[] {
   return results.map(result => ({
-    id: generateFindingId(),
+    id: generateFindingId(pluginName, 'fact_claim'),
     type: 'fact_claim',
     data: {
       text: result.text,
@@ -49,7 +49,7 @@ export function convertContradictions(
   pluginName: string
 ): GenericInvestigatedFinding[] {
   return contradictions.map(contradiction => ({
-    id: generateFindingId(),
+    id: generateFindingId(pluginName, 'contradiction'),
     type: 'contradiction',
     data: {
       claim1: contradiction.claim1,

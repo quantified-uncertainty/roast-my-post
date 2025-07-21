@@ -66,7 +66,8 @@ Do NOT include:
    * Build context for the forecaster tool
    */
   buildForecastContext(prediction: {
-    text: string;
+    predictionText?: string;
+    text?: string;
     context?: string;
     topic: string;
   }): string {

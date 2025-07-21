@@ -3,7 +3,7 @@
  */
 
 import { logger } from "../../../../logger";
-import forecasterTool from "../../../../tools/forecaster/index";
+import forecasterTool from "../../../../../tools/forecaster/index";
 import type { 
   ForecastFindingData, 
   ForecastComparisonData,

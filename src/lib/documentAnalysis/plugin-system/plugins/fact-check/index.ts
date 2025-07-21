@@ -10,9 +10,9 @@ import {
   SimpleAnalysisPlugin,
   AnalysisResult,
   RoutingExample,
-  Comment,
   LLMInteraction,
 } from "../../types";
+import type { Comment } from "@/types/documentSchema";
 import { extractWithTool } from "../../utils/extractionHelper";
 import { 
   locateFindings, 
@@ -40,7 +40,7 @@ import {
   prioritizeClaimsForVerification,
 } from "./analysisHelpers";
 
-export class FactCheckPlugin extends BasePlugin implements SimpleAnalysisPlugin {
+export class FactCheckPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
   private findings: FactCheckFindingStorage = {
     potential: [],
     investigated: [],
@@ -50,13 +50,17 @@ export class FactCheckPlugin extends BasePlugin implements SimpleAnalysisPlugin 
   };
   private promptBuilder = new FactCheckPromptBuilder();
   private cost = 0;
-  private llmInteractions: LLMInteraction[] = [];
+  private analysisInteractions: LLMInteraction[] = [];
 
-  name(): string {
+  constructor() {
+    super({});
+  }
+
+  override name(): string {
     return "FACT_CHECK";
   }
 
-  promptForWhenToUse(): string {
+  override promptForWhenToUse(): string {
     return `Call this when there are factual claims that could be verified. This includes:
 - Specific statistics or data points (GDP was $21T in 2023)
 - Historical facts (The Berlin Wall fell in 1989)
@@ -67,7 +71,7 @@ export class FactCheckPlugin extends BasePlugin implements SimpleAnalysisPlugin 
 Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
-  routingExamples(): RoutingExample[] {
+  override routingExamples(): RoutingExample[] {
     return [
       {
         chunkText: "The unemployment rate in the US was 3.7% in December 2023",
@@ -126,7 +130,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         summary,
         analysis: analysisSummary,
         comments,
-        llmInteractions: this.llmInteractions,
+        llmInteractions: this.analysisInteractions,
         cost: this.cost,
       };
     } catch (error) {
@@ -150,7 +154,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         );
 
         this.cost += cost;
-        this.llmInteractions.push(interaction);
+        this.analysisInteractions.push(interaction);
 
         if (result.claims && result.claims.length > 0) {
           const findings = convertFactResults(result.claims, chunk.id, this.name());
@@ -193,13 +197,13 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         const prompt = this.promptBuilder.buildContradictionDetectionPrompt(claims);
 
         try {
-          const dummyChunk = new TextChunk({
-            id: `contradiction-check-${topic}`,
-            text: claims.map(c => c.text).join('\n'),
-            startPosition: 0,
-            endPosition: 0,
-            metadata: {}
-          });
+          const dummyChunk = new TextChunk(
+            `contradiction-check-${topic}`,
+            claims.map(c => c.text).join('\n'),
+            {
+              position: { start: 0, end: 0 }
+            }
+          );
 
           const { result, cost, interaction } = await extractWithTool<{ contradictions: ContradictionResult[] }>(
             dummyChunk,
@@ -207,7 +211,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
           );
 
           this.cost += cost;
-          this.llmInteractions.push(interaction);
+          this.analysisInteractions.push(interaction);
 
           if (result.contradictions && result.contradictions.length > 0) {
             this.findings.contradictions.push(...result.contradictions);
@@ -253,13 +257,13 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
     const prompt = this.promptBuilder.buildVerificationPrompt(claimsData);
 
     try {
-      const dummyChunk = new TextChunk({
-        id: 'verification-batch',
-        text: claimsData.map(c => c.text).join('\n'),
-        startPosition: 0,
-        endPosition: 0,
-        metadata: {}
-      });
+      const dummyChunk = new TextChunk(
+        'verification-batch',
+        claimsData.map(c => c.text).join('\n'),
+        {
+          position: { start: 0, end: 0 }
+        }
+      );
 
       const { result, cost, interaction } = await extractWithTool<{ verifications: VerificationResult[] }>(
         dummyChunk,
@@ -267,7 +271,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       );
 
       this.cost += cost;
-      this.llmInteractions.push(interaction);
+      this.analysisInteractions.push(interaction);
 
       if (result.verifications) {
         this.findings.verifications = result.verifications;
@@ -317,8 +321,8 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   /**
    * Get all LLM interactions for monitoring
    */
-  getLLMInteractions(): LLMInteraction[] {
-    return this.llmInteractions;
+  override getLLMInteractions(): LLMInteraction[] {
+    return this.analysisInteractions;
   }
 
   /**
@@ -334,7 +338,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
         contradictions: this.findings.contradictions.length,
         verifications: this.findings.verifications.length,
         cost: this.cost,
-        llmCalls: this.llmInteractions.length,
+        llmCalls: this.analysisInteractions.length,
       },
       stageResults: {
         extraction: this.findings.potential.map(f => ({
@@ -354,15 +358,15 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
   // Legacy methods for backwards compatibility
-  protected createInitialState(): any {
+  protected override createInitialState(): any {
     return {};
   }
 
-  async processChunk(chunk: TextChunk): Promise<any> {
+  override async processChunk(chunk: TextChunk): Promise<any> {
     throw new Error("processChunk is not supported in SimpleAnalysisPlugin - use analyze() instead");
   }
 
-  async synthesize(): Promise<any> {
+  override async synthesize(): Promise<any> {
     throw new Error("synthesize is not supported in SimpleAnalysisPlugin - use analyze() instead");
   }
 }

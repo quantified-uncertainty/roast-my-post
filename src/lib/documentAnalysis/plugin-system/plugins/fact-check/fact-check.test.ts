@@ -21,7 +21,7 @@ describe('FactCheckPlugin', () => {
       const prompt = plugin.promptForWhenToUse();
       expect(prompt).toContain('factual claims');
       expect(prompt).toContain('statistics');
-      expect(prompt).toContain('historical facts');
+      expect(prompt).toContain('Historical facts');
     });
 
     it('should provide routing examples', () => {
@@ -43,13 +43,13 @@ describe('FactCheckPlugin', () => {
 
     it('should handle chunks without factual claims', async () => {
       const chunks = [
-        new TextChunk({
-          id: 'chunk1',
-          text: 'I think the weather will be nice tomorrow.',
-          startPosition: 0,
-          endPosition: 40,
-          metadata: {}
-        })
+        new TextChunk(
+          'chunk1',
+          'I think the weather will be nice tomorrow.',
+          {
+            position: { start: 0, end: 40 }
+          }
+        )
       ];
 
       // This would make a real API call in production
