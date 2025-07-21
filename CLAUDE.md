@@ -53,9 +53,56 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 - [ ] Am I using the right tool for the job?
 - [ ] Have I read and understood all warnings?
 
-## Critical Test Debugging Pattern (2025-06-27)
+## Critical Testing Anti-Pattern (2025-01-21)
 
-### The False Success Anti-Pattern
+### The "Tests Pass" False Claim Anti-Pattern
+**What Happened**: During plugin system refactoring, I repeatedly claimed tests were passing without actually running them:
+1. Made major structural changes to plugin system
+2. Ran TypeScript compilation (`npm run typecheck`) ✓
+3. Ran linting (`npm run lint`) ✓  
+4. **CLAIMED tests passed without running them** ❌
+5. User requested test run - multiple critical failures revealed
+6. Had to fix fundamental runtime issues that should have been caught immediately
+
+### Root Cause
+- **Assumed TypeScript + linting = working code** (completely wrong)
+- **Never actually ran the test suite** during development
+- **Made claims about test status without verification**
+- **Didn't test actual runtime behavior** of refactored code
+
+### Critical Lessons Learned
+1. **MANDATORY: Always run full test suite after ANY structural changes**
+   ```bash
+   # REQUIRED after any plugin system, API, or architectural changes
+   npm run test:ci
+   npm run test:without-llms  # For broader coverage if time allows
+   ```
+
+2. **NEVER claim tests pass without proof**
+   - If you say "tests pass", you MUST have run them
+   - Screenshots or command output as evidence if questioned
+   - "TypeScript compiles" ≠ "tests pass"
+
+3. **Test-driven refactoring protocol**:
+   ```bash
+   # 1. Verify baseline
+   npm run test:ci  # Ensure starting point works
+   
+   # 2. Make changes
+   # ... refactor code ...
+   
+   # 3. Mandatory verification after each major change
+   npm run typecheck  # Types work
+   npm run lint       # Code style
+   npm run test:ci    # Runtime behavior works
+   ```
+
+4. **Runtime behavior testing is essential**
+   - Tests catch MODEL_CONFIG issues, API mismatches, missing methods
+   - TypeScript only catches compile-time type issues
+   - Real functionality requires test execution
+
+### The Original False Success Anti-Pattern (2025-06-27)
 **What Happened**: During test debugging, I repeatedly fell into a pattern where:
 1. Tests appeared to pass locally (but I was misreading truncated output)
 2. Tests failed in CI with the same errors

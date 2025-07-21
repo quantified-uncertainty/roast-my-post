@@ -5,7 +5,7 @@ export function countTokensFromInteractions(
   tokenType: "input_tokens" | "output_tokens"
 ): number {
   return interactions.reduce(
-    (sum, interaction) => sum + interaction.usage[tokenType],
+    (sum, interaction) => sum + (interaction.usage?.[tokenType] || 0),
     0
   );
 }

@@ -257,8 +257,8 @@ export async function extractHighlightsFromAnalysis(
     throw error;
   }
 
-  // Convert RichLLMInteraction to legacy LLMInteraction format for backwards compatibility
-  const legacyInteraction: LLMInteraction = {
+  // Convert RichLLMInteraction to LLMInteraction format
+  const llmInteraction: LLMInteraction = {
     messages: [...messages, { role: "assistant", content: JSON.stringify({ highlights }) }],
     usage: {
       input_tokens: richInteractions[0]?.tokensUsed.prompt || 0,
@@ -269,7 +269,7 @@ export async function extractHighlightsFromAnalysis(
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(MODEL_CONFIG.analysis, legacyInteraction.usage);
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, llmInteraction.usage);
 
   const logDetails = createLogDetails(
     "extractHighlightsFromAnalysis",
@@ -277,8 +277,8 @@ export async function extractHighlightsFromAnalysis(
     startTime,
     endTime,
     cost,
-    legacyInteraction.usage.input_tokens,
-    legacyInteraction.usage.output_tokens,
+    llmInteraction.usage.input_tokens,
+    llmInteraction.usage.output_tokens,
     {
       targetHighlights,
       agentName: agentInfo.name,
@@ -296,7 +296,7 @@ export async function extractHighlightsFromAnalysis(
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [legacyInteraction],
+      llmInteractions: [llmInteraction],
     },
     outputs: {
       highlights,

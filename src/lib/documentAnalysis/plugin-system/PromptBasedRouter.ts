@@ -2,7 +2,8 @@
  * Prompt-based router that uses LLM to decide which plugins process which chunks
  */
 
-import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
+import { RoutingDecision, TextChunk } from './types';
+import { AnalysisPlugin } from './deprecated-types';
 import { RoutingPlan } from './RoutingPlan';
 import { RichLLMInteraction } from '@/types/llm';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
@@ -230,7 +231,7 @@ Do not include any explanation or other text, just the JSON array.`;
     const content = response.content[0].text.trim();
 
     try {
-      // Try to parse as JSON array
+      // First try to parse as a proper JSON array
       const parsed = JSON.parse(content);
       if (!Array.isArray(parsed)) {
         throw new Error('Response is not an array');
@@ -247,6 +248,25 @@ Do not include any explanation or other text, just the JSON array.`;
         );
       });
     } catch (e) {
+      // If direct JSON parsing fails, try to wrap the response
+      // Handle cases like ["SPELLING"],["MATH"] by wrapping in outer array
+      try {
+        const wrappedContent = `[${content}]`;
+        const parsed = JSON.parse(wrappedContent);
+        if (Array.isArray(parsed)) {
+          return parsed.map(pluginList => {
+            if (!Array.isArray(pluginList)) {
+              return [];
+            }
+            return pluginList.filter(name => 
+              typeof name === 'string' && this.availablePlugins.has(name)
+            );
+          });
+        }
+      } catch (wrapError) {
+        // Continue to fallback
+      }
+
       console.error('Failed to parse routing response:', e);
       console.error('Response was:', content);
       

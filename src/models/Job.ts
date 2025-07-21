@@ -588,7 +588,7 @@ ${task.llmInteractions
     (interaction) => `
 #### Interaction
 \`\`\`
-${interaction.messages.map((m) => `${m.role}: ${m.content}`).join("\n")}
+${interaction.messages?.map((m) => `${m.role}: ${m.content}`).join("\n") || "No messages"}
 \`\`\`
 `
   )

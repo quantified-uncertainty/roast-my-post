@@ -44,27 +44,63 @@ export interface Finding {
   metadata?: Record<string, any>;
 }
 
-// Re-export from shared types to avoid duplication
-import type { RichLLMInteraction } from '@/types/llm';
-export type LLMInteraction = RichLLMInteraction;
-
-export interface ChunkResult {
-  findings?: Finding[];
-  llmCalls: LLMInteraction[];
-  metadata?: {
-    tokensUsed: number;
-    processingTime: number;
-    confidence?: number;
+// Finding with guaranteed location information
+export interface LocatedFinding extends Omit<Finding, 'locationHint'> {
+  locationHint: {
+    lineNumber: number;        // Always required
+    lineText: string;          // Always required
+    matchText: string;         // Always required
+    startLineNumber?: number;  // For multi-line findings
+    endLineNumber?: number;    // For multi-line findings
   };
 }
 
-export interface SynthesisResult {
-  summary: string;
-  findings: Finding[];
-  recommendations?: string[];
-  llmCalls: LLMInteraction[];
-  visualizations?: any[];
+export type ChunkFinding = LocatedFinding;
+
+// New finding system types
+export interface HighlightHint {
+  searchText: string;      // The text to search for
+  lineNumber?: number;     // Optional line number hint
+  chunkId: string;         // Which chunk this came from
 }
+
+// Base interface for finding data
+export interface FindingData {
+  [key: string]: unknown;
+}
+
+export interface PotentialFinding {
+  id: string;
+  type: string;
+  data: FindingData;
+  highlightHint: HighlightHint;
+}
+
+export interface InvestigatedFinding {
+  id: string;
+  type: string;
+  data: FindingData;
+  severity: 'low' | 'medium' | 'high' | 'info';
+  message: string;
+  highlightHint: HighlightHint;
+}
+
+export interface GlobalFinding {
+  id: string;
+  type: string;
+  data: FindingData;
+  severity: 'low' | 'medium' | 'high' | 'info';
+  message: string;
+  reason: string;  // Why this is global (e.g., "Cross-document pattern")
+}
+
+// Note: PluginError with legacy phase types has been moved to deprecated-types.ts
+// For new error tracking, use the modern phase types: 'scanChunk' | 'investigate' | 'synthesize' | 'comment'
+
+// Re-export from shared types to avoid duplication
+import type { LLMInteraction as BaseLLMInteraction } from '@/types/llm';
+import type { Comment } from '@/types/documentSchema';
+export type LLMInteraction = BaseLLMInteraction;
 
 export interface RoutingExample {
   chunkText: string;
@@ -72,23 +108,35 @@ export interface RoutingExample {
   reason?: string;
 }
 
-export interface AnalysisPlugin<TState = any> {
-  // Identity
+// Note: ChunkResult, SynthesisResult, GenerateCommentsContext, and PluginResult
+// have been moved to deprecated-types.ts as they are part of the legacy plugin system
+
+// Note: The legacy AnalysisPlugin interface has been moved to deprecated-types.ts
+// Please use SimpleAnalysisPlugin below for all new plugin implementations.
+// The new interface uses a single analyze() method instead of the three-phase approach.
+
+// New simplified Plugin API
+export interface AnalysisResult {
+  summary: string;
+  analysis: string;
+  comments: Comment[];
+  llmInteractions: LLMInteraction[];
+  cost: number;
+}
+
+export interface SimpleAnalysisPlugin {
+  // Metadata
   name(): string;
-  
-  // Natural language description for routing
   promptForWhenToUse(): string;
-  
-  // Optional: examples to improve routing accuracy
   routingExamples?(): RoutingExample[];
   
-  // Processing methods
-  processChunk(chunk: TextChunk): Promise<ChunkResult>;
-  synthesize(): Promise<SynthesisResult>;
+  // Core workflow - single method that handles everything
+  analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
   
-  // State management
-  getState(): TState;
-  clearState(): void;
+  // For testing/debugging - expose internal state
+  getDebugInfo?(): Record<string, unknown>;
+  getCost(): number;
+  getLLMInteractions(): LLMInteraction[];
 }
 
 export interface RoutingDecision {
