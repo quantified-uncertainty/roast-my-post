@@ -46,7 +46,6 @@ export async function analyzeDocument(
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
     return await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
-      enableForecasting: false, // Disabled by default due to cost
       sessionConfig
     });
   }

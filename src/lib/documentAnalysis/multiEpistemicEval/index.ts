@@ -9,17 +9,11 @@ import type { TaskResult } from "../shared/types";
 import { logger } from "@/lib/logger";
 import { 
   PluginManager,
-  MathPlugin,
-  SpellingPlugin,
-  FactCheckPlugin,
-  ForecastPlugin
+  MathPlugin
 } from '../plugin-system';
-import { extractHighlightsFromAnalysis } from "../highlightExtraction";
-import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { generateSelfCritique } from "../selfCritique";
 import type { SelfCritiqueInput } from "../selfCritique";
 import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
-import { convertFindingsToHighlights, filterFindingsWithLocationHints } from '../plugin-system/utils/findingToHighlight';
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
 
@@ -45,7 +39,6 @@ export async function analyzeWithMultiEpistemicEval(
   agentInfo: Agent,
   options: {
     targetHighlights?: number;
-    enableForecasting?: boolean;
     sessionConfig?: HeliconeSessionConfig;
   } = {}
 ): Promise<{
@@ -77,11 +70,6 @@ export async function analyzeWithMultiEpistemicEval(
       // new FactCheckPlugin()  // Disabled - needs refactor
     ];
     
-    // Only add ForecastPlugin if explicitly enabled (it's expensive)
-    // if (options.enableForecasting) {
-    //   plugins.push(new ForecastPlugin());  // Disabled - needs refactor
-    // }
-    
     manager.registerPlugins(plugins);
     
     // Get full document content with prepend (same as comprehensive analysis)
@@ -109,105 +97,36 @@ export async function analyzeWithMultiEpistemicEval(
       llmInteractions: routerInteractions.map(convertRichLLMInteraction)
     });
     
-    // Step 2: Extract plugin-generated highlights
-    logger.info(`Converting plugin findings to highlights...`);
-    const pluginHighlights: Comment[] = [];
+    // Step 2: Plugin results are ready
+    logger.info(`Plugin analysis completed: ${pluginResults.statistics.totalComments} comments generated`);
     
-    // Collect all findings from all plugins
-    const allFindings: any[] = [];
+    // Step 3: Generate summary and analysis from plugin results
+    const { summary, analysis } = generatePluginSummary(pluginResults);
     
-    // Collect comments from all plugins instead of findings
-    // Since the new plugin system generates comments directly
+    // Step 4: Convert plugin comments directly to highlights
+    logger.info(`Converting plugin comments to highlights...`);
+    const highlights: Comment[] = [];
+    
+    // Collect all comments from plugins
     if (pluginResults.pluginComments instanceof Map) {
       for (const [pluginName, comments] of pluginResults.pluginComments.entries()) {
         logger.info(`${pluginName} plugin generated ${comments.length} comments`);
-        // Convert comments to findings format for backwards compatibility
-        // with the highlight extraction logic below
-        comments.forEach(comment => {
-          if (comment.highlight && comment.highlight.startOffset >= 0) {
-            allFindings.push({
-              type: pluginName.toLowerCase(),
-              severity: comment.importance >= 7 ? 'high' : comment.importance >= 4 ? 'medium' : 'low',
-              message: comment.description,
-              locationHint: {
-                lineNumber: comment.highlight.startLine || 0,
-                lineText: comment.highlight.quotedText,
-                matchText: comment.highlight.quotedText
-              }
-            });
-          }
-        });
+        highlights.push(...comments);
       }
     }
     
-    logger.info(`Total findings from all plugins: ${allFindings.length}`);
+    logger.info(`Total highlights from plugins: ${highlights.length}`);
     
-    // Filter findings with location hints and convert to highlights
-    const findingsWithLocation = filterFindingsWithLocationHints(allFindings);
-    logger.info(`Findings with location hints: ${findingsWithLocation.length}`);
-    
-    const convertedHighlights = convertFindingsToHighlights(
-      findingsWithLocation,
-      fullContent
-    );
-    pluginHighlights.push(...convertedHighlights);
-    logger.info(`Converted ${pluginHighlights.length} plugin findings to highlights`);
-    
-    // Step 3: Format results into structured findings
-    const structuredFindings = formatPluginFindings(pluginResults);
-    
-    // Step 4: Create enhanced agent with plugin findings
-    const enhancedAgent = {
-      ...agentInfo,
-      primaryInstructions: `${agentInfo.primaryInstructions}\n\nPlugin Analysis Results:\n${structuredFindings}`
-    };
-    
-    // Step 5: Generate comprehensive analysis using the findings
-    logger.info(`Generating comprehensive analysis from plugin findings...`);
-    
-    // Create session config for comprehensive analysis phase
-    const analysisSessionConfig = options.sessionConfig ? {
-      ...options.sessionConfig,
-      sessionPath: `${options.sessionConfig.sessionPath}/comprehensive-analysis`
-    } : undefined;
-    
-    const analysisResult = await generateComprehensiveAnalysis(
-      document,
-      enhancedAgent,
-      500, // targetWordCount
-      targetHighlights,
-      analysisSessionConfig
-    );
-    
-    logger.info(
-      `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}`
-    );
-    tasks.push(analysisResult.task);
-    
-    // Step 5: Extract highlights from the analysis
-    logger.info(`Extracting highlights...`);
-    const highlightResult = await extractHighlightsFromAnalysis(
-      document,
-      agentInfo,
-      analysisResult.outputs,
-      targetHighlights
-    );
-    
-    logger.info(
-      `Extracted ${highlightResult.outputs.highlights.length} highlights`
-    );
-    tasks.push(highlightResult.task);
-    
-    // Step 6: Generate self-critique if enabled
+    // Step 5: Generate self-critique if enabled
     let selfCritique: string | undefined;
     if (agentInfo.selfCritiqueInstructions) {
       logger.info(`Generating self-critique...`);
       try {
         const critiqueInput: SelfCritiqueInput = {
-          summary: analysisResult.outputs.summary,
-          analysis: analysisResult.outputs.analysis,
-          grade: analysisResult.outputs.grade,
-          highlights: highlightResult.outputs.highlights.map((h) => ({
+          summary: summary,
+          analysis: analysis,
+          grade: undefined, // Plugins don't provide grades yet
+          highlights: highlights.map((h) => ({
             title: h.description || "Highlight",
             text: h.highlight.quotedText
           }))
@@ -228,22 +147,18 @@ export async function analyzeWithMultiEpistemicEval(
       }
     }
     
-    // Merge plugin highlights with LLM-generated highlights
-    // Plugin highlights come first as they are more precise
-    const allHighlights = [...pluginHighlights, ...highlightResult.outputs.highlights];
-    
     // Deduplicate highlights that might overlap
-    const uniqueHighlights = deduplicateHighlights(allHighlights);
+    const uniqueHighlights = deduplicateHighlights(highlights);
     
     logger.info(
-      `Final highlights: ${uniqueHighlights.length} (${pluginHighlights.length} from plugins, ${highlightResult.outputs.highlights.length} from LLM)`
+      `Final highlights: ${uniqueHighlights.length}`
     );
     
     return {
-      thinking: "", // Comprehensive analysis doesn't provide thinking
-      analysis: analysisResult.outputs.analysis,
-      summary: analysisResult.outputs.summary,
-      grade: analysisResult.outputs.grade,
+      thinking: "", // Plugin analysis doesn't provide thinking
+      analysis: analysis,
+      summary: summary,
+      grade: undefined, // Plugins don't provide grades yet
       selfCritique,
       highlights: uniqueHighlights,
       tasks
@@ -256,51 +171,65 @@ export async function analyzeWithMultiEpistemicEval(
 }
 
 /**
- * Format plugin findings into a structured summary
+ * Generate summary and analysis from plugin results
  */
-function formatPluginFindings(results: any): string {
+function generatePluginSummary(results: any): { summary: string; analysis: string } {
   const sections: string[] = [];
   
   // Overall statistics
-  sections.push(`OVERALL STATISTICS:
-- Total chunks analyzed: ${results.statistics.totalChunks}
-- Total comments generated: ${results.statistics.totalComments}
-- Processing time: ${(results.statistics.processingTime / 1000).toFixed(1)}s`);
+  sections.push(`**Document Analysis Summary**`);
+  const pluginCount = results.statistics.commentsByPlugin?.size || 0;
+  sections.push(`This document was analyzed by ${pluginCount} specialized plugins that examined ${results.statistics.totalChunks} sections.`);
   
-  // Comments by plugin
-  const commentsByPlugin: string[] = [];
-  if (results.statistics.commentsByPlugin instanceof Map) {
-    for (const [plugin, count] of results.statistics.commentsByPlugin.entries()) {
-      if (count > 0) {
-        commentsByPlugin.push(`  - ${plugin}: ${count} comments`);
-      }
-    }
-  }
-  if (commentsByPlugin.length > 0) {
-    sections.push(`\nCOMMENTS BY PLUGIN:\n${commentsByPlugin.join('\n')}`);
-  }
-  
-  // Plugin summaries
+  // Plugin-specific summaries and key findings
   if (results.pluginResults instanceof Map) {
     for (const [pluginName, pluginResult] of results.pluginResults.entries()) {
-      let pluginSection = `\n${pluginName.toUpperCase()} ANALYSIS:\n${pluginResult.summary}`;
-      
-      // Add analysis summary if available
-      if (pluginResult.analysisSummary) {
-        pluginSection += `\n\nDetailed Analysis:\n${pluginResult.analysisSummary}`;
+      if (pluginResult.summary) {
+        sections.push(`\n**${pluginName} Analysis:**`);
+        sections.push(pluginResult.summary);
+        
+        if (pluginResult.analysisSummary) {
+          sections.push(`\n${pluginResult.analysisSummary}`);
+        }
       }
-      
-      sections.push(pluginSection);
     }
   }
   
-  // Recommendations
-  if (results.recommendations.length > 0) {
-    sections.push(`\nRECOMMENDATIONS:\n${results.recommendations.map((r: string) => `- ${r}`).join('\n')}`);
+  // Summary based on comment importance
+  const highImportanceCount = countHighImportanceComments(results);
+  const mediumImportanceCount = countMediumImportanceComments(results);
+  
+  if (highImportanceCount > 0) {
+    sections.push(`\n**Critical Issues:** ${highImportanceCount} high-importance issues were identified that require immediate attention.`);
   }
   
-  return sections.join('\n\n');
+  if (mediumImportanceCount > 0) {
+    sections.push(`**Notable Concerns:** ${mediumImportanceCount} medium-importance issues were found that should be addressed.`);
+  }
+  
+  const analysis = sections.join('\n');
+  
+  // Generate concise summary
+  const summary = `Analysis identified ${results.statistics.totalComments} issues across ${results.statistics.totalChunks} sections. ` +
+    (highImportanceCount > 0 ? `${highImportanceCount} critical issues require immediate attention. ` : '') +
+    (mediumImportanceCount > 0 ? `${mediumImportanceCount} notable concerns should be addressed.` : '');
+  
+  return { summary: summary.trim(), analysis };
 }
+
+/**
+ * Count medium importance comments
+ */
+function countMediumImportanceComments(results: any): number {
+  let count = 0;
+  if (results.pluginComments instanceof Map) {
+    for (const [_, comments] of results.pluginComments.entries()) {
+      count += comments.filter((c: Comment) => c.importance !== undefined && c.importance >= 4 && c.importance < 7).length;
+    }
+  }
+  return count;
+}
+
 
 /**
  * Count high importance comments
@@ -309,7 +238,7 @@ function countHighImportanceComments(results: any): number {
   let count = 0;
   if (results.pluginComments instanceof Map) {
     for (const [_, comments] of results.pluginComments.entries()) {
-      count += comments.filter((c: Comment) => c.importance >= 7).length;
+      count += comments.filter((c: Comment) => c.importance !== undefined && c.importance >= 7).length;
     }
   }
   return count;
