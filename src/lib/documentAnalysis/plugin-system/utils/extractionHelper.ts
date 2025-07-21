@@ -9,6 +9,7 @@ import { createHeliconeHeaders } from '../../../helicone/sessions';
 import { TextChunk } from '../TextChunk';
 import { logger } from '../../../logger';
 import { estimateTokens } from '../../../tokenUtils';
+import { calculateCost as utilsCalculateCost, mapModelToCostModel } from '@/utils/costCalculator';
 import type { LLMInteraction } from '@/types/llm';
 
 export interface ExtractionConfig {
@@ -33,6 +34,14 @@ export async function extractWithTool<T>(
   chunk: TextChunk,
   config: ExtractionConfig
 ): Promise<ExtractionResult<T>> {
+  // Input validation
+  if (!chunk || !chunk.text) {
+    throw new Error('Valid text chunk is required for extraction');
+  }
+  if (!config || !config.toolName || !config.toolSchema) {
+    throw new Error('Valid extraction config with toolName and toolSchema is required');
+  }
+  
   const prompt = config.extractionPrompt || buildDefaultExtractionPrompt(chunk);
   
   // Get session context if available
@@ -67,7 +76,9 @@ export async function extractWithTool<T>(
     const responseText = JSON.stringify(toolResult);
     const completionTokens = estimateTokens(responseText);
     
-    const cost = calculateCost(MODEL_CONFIG.analysis, promptTokens, completionTokens);
+    const modelForCost = mapModelToCostModel(MODEL_CONFIG.analysis);
+    const costCalculation = utilsCalculateCost(modelForCost, promptTokens, completionTokens);
+    const cost = costCalculation.totalCost;
     
     // Create interaction record in standard LLMInteraction format
     const interaction: LLMInteraction = {
@@ -114,13 +125,3 @@ Chunk metadata:
 - Position: lines ${chunk.metadata?.lineInfo?.startLine || 0} to ${chunk.metadata?.lineInfo?.endLine || 0}`;
 }
 
-/**
- * Calculate cost based on token usage
- */
-function calculateCost(model: string, promptTokens: number, completionTokens: number): number {
-  // Claude 3 Haiku pricing (as of 2024)
-  const HAIKU_INPUT_COST = 0.25 / 1_000_000; // $0.25 per 1M input tokens
-  const HAIKU_OUTPUT_COST = 1.25 / 1_000_000; // $1.25 per 1M output tokens
-  
-  return (promptTokens * HAIKU_INPUT_COST) + (completionTokens * HAIKU_OUTPUT_COST);
-}

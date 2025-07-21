@@ -246,8 +246,16 @@ export class PluginManager {
       targetHighlights?: number;
     } = {}
   ): Promise<FullDocumentAnalysisResult> {
+    // Input validation
+    if (!document) {
+      throw new Error('Document is required for analysis');
+    }
+    if (!document.content || document.content.trim().length === 0) {
+      throw new Error('Document content is required and cannot be empty');
+    }
+    
     const tasks: FullDocumentAnalysisResult['tasks'] = [];
-    const targetHighlights = options.targetHighlights || 5;
+    const targetHighlights = Math.max(1, options.targetHighlights || 5);
 
     try {
       // Step 1: Run plugin-based analysis
