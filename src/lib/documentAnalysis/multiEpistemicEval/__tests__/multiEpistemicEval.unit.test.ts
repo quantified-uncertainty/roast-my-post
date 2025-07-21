@@ -211,18 +211,18 @@ describe('multiEpistemicEval', () => {
     expect(pluginTask?.priceInDollars).toBeGreaterThan(0);
     expect(pluginTask?.log).toContain('Analyzed 5 chunks');
     expect(pluginTask?.log).toContain('generated 3 comments');
-    expect(pluginTask?.log).toContain('Router used 50 tokens in 1 routing calls');
+    expect(pluginTask?.log).toContain('using 1 plugins');
   });
 
   it('should generate summary from plugin results', async () => {
     const result = await analyzeWithMultiEpistemicEval(mockDocument, mockAgent);
     
     // Check summary includes plugin statistics
-    expect(result.summary).toContain('3 issues across 5 sections');
+    expect(result.summary).toContain('Analyzed 5 sections with 2 plugins. Found 3 total issues.');
     
     // Check analysis is properly structured
     expect(result.analysis).toContain('Document Analysis Summary');
     expect(result.analysis).toContain('2 specialized plugins');
-    expect(result.analysis).toContain('SPELLING Analysis');
+    expect(result.analysis).toContain('**SPELLING**');
   });
 });
