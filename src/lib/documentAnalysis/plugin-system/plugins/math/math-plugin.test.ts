@@ -58,12 +58,21 @@ describe('MathPlugin Step-by-Step Integration Test', () => {
     for (let i = 0; i < lines.length; i += 3) {
       const chunkLines = lines.slice(i, Math.min(i + 3, lines.length));
       if (chunkLines.some(line => line.trim())) {
-        chunks.push(new TextChunk({
-          id: `chunk-${chunks.length + 1}`,
-          text: chunkLines.join('\n'),
-          startLine: i + 1,
-          endLine: Math.min(i + 3, lines.length)
-        }));
+        chunks.push(new TextChunk(
+          `chunk-${chunks.length + 1}`,
+          chunkLines.join('\n'),
+          {
+            position: {
+              start: 0, // Not tracking exact positions in this test
+              end: chunkLines.join('\n').length
+            },
+            lineInfo: {
+              startLine: i + 1,
+              endLine: Math.min(i + 3, lines.length),
+              totalLines: lines.length
+            }
+          }
+        ));
       }
     }
     
@@ -238,24 +247,42 @@ describe('MathPlugin Step-by-Step Integration Test', () => {
     console.log('\n=== Testing edge cases ===\n');
     
     // Test with no math
-    const noMathChunk = new TextChunk({
-      id: 'no-math',
-      text: 'This is just regular text without any mathematics.',
-      startLine: 1,
-      endLine: 1
-    });
+    const noMathChunk = new TextChunk(
+      'no-math',
+      'This is just regular text without any mathematics.',
+      {
+        position: {
+          start: 0,
+          end: 51
+        },
+        lineInfo: {
+          startLine: 1,
+          endLine: 1,
+          totalLines: 1
+        }
+      }
+    );
     
     await plugin.extractPotentialFindings(noMathChunk);
     let state = plugin.debugJson();
     console.log(`No math chunk - findings: ${state.stats.potentialCount}`);
     
     // Test with complex math
-    const complexChunk = new TextChunk({
-      id: 'complex',
-      text: 'The integral ∫(x²+1)dx from 0 to 1 equals 4/3.',
-      startLine: 1,
-      endLine: 1
-    });
+    const complexChunk = new TextChunk(
+      'complex',
+      'The integral ∫(x²+1)dx from 0 to 1 equals 4/3.',
+      {
+        position: {
+          start: 0,
+          end: 47
+        },
+        lineInfo: {
+          startLine: 1,
+          endLine: 1,
+          totalLines: 1
+        }
+      }
+    );
     
     await plugin.extractPotentialFindings(complexChunk);
     state = plugin.debugJson();

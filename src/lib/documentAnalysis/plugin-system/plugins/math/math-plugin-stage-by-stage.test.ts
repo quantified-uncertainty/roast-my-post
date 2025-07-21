@@ -193,7 +193,7 @@ async function testStageByStage() {
   // Check comment structure
   comments.forEach((comment, i) => {
     assert(comment.description, `Comment ${i} should have description`);
-    assert(comment.importance >= 1 && comment.importance <= 10, 
+    assert(comment.importance !== undefined && comment.importance >= 1 && comment.importance <= 10, 
       `Comment ${i} importance should be 1-10`);
     assert(comment.highlight, `Comment ${i} should have highlight`);
     assert(comment.isValid === true, `Comment ${i} should be valid`);
