@@ -3,6 +3,6 @@
  */
 
 export { MathPlugin } from './math';
-export { SpellingPlugin } from './SpellingPlugin';
-export { FactCheckPlugin } from './FactCheckPlugin';
-export { ForecastPlugin } from './ForecastPlugin';
+export { SpellingPlugin } from './spelling';
+export { FactCheckPlugin } from './fact-check';
+export { ForecastPlugin } from './forecast';

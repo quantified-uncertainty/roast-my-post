@@ -35,6 +35,7 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
     investigated: [],
     located: [],
   };
+  private analysisInteractions: LLMInteraction[] = [];
 
   constructor() {
     super({});
@@ -105,7 +106,7 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
       summary: this.findings.summary || "",
       analysis: this.findings.analysisSummary || "",
       comments,
-      llmInteractions: this.getLLMInteractions(),
+      llmInteractions: this.analysisInteractions,
       cost: this.getTotalCost()
     };
   }
@@ -160,7 +161,7 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
     });
     
     // Track the interaction and cost
-    this.llmInteractions.push(extraction.interaction);
+    this.analysisInteractions.push(extraction.interaction);
     this.totalCost += extraction.cost;
 
     const newFindings = MathHelpers.convertMathResults(
@@ -243,5 +244,6 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
       investigated: [],
       located: [],
     };
+    this.analysisInteractions = [];
   }
 }

@@ -382,3 +382,141 @@ export const MathHelpers = {
     return { summary, analysisSummary };
   }
 };
+
+/**
+ * Forecast-specific utilities
+ */
+export const ForecastHelpers = {
+  /**
+   * Convert forecast extraction results to findings
+   */
+  convertForecastResults(
+    results: Array<{
+      text: string;
+      timeframe?: string;
+      probability?: number;
+      topic: string;
+      context?: string;
+    }>,
+    chunkId: string,
+    pluginName: string,
+    assessConfidence: (text: string, prob?: number, ctx?: string) => "low" | "medium" | "high"
+  ): GenericPotentialFinding[] {
+    return results.map((result) => ({
+      id: generateFindingId(pluginName, "forecast"),
+      type: "forecast",
+      data: {
+        predictionText: result.text,
+        timeframe: result.timeframe,
+        probability: result.probability,
+        topic: result.topic,
+        context: result.context,
+        authorConfidence: assessConfidence(result.text, result.probability, result.context)
+      },
+      highlightHint: {
+        searchText: result.text,
+        chunkId: chunkId,
+        lineNumber: undefined
+      }
+    }));
+  },
+
+  /**
+   * Investigate forecast findings
+   */
+  investigateForecastFindings(
+    potentialFindings: GenericPotentialFinding[]
+  ): GenericInvestigatedFinding[] {
+    return potentialFindings.map(finding => {
+      let severity: 'low' | 'medium' | 'high' = 'info' as any;
+      let message = '';
+
+      if (finding.type === 'forecast') {
+        const data = finding.data;
+        severity = 'low'; // Most forecasts are informational
+        message = `Prediction: ${data.predictionText}`;
+        
+        if (data.timeframe) {
+          message += ` (${data.timeframe})`;
+        }
+        if (data.probability !== undefined) {
+          message += ` - ${data.probability}% probability`;
+        }
+      } else if (finding.type === 'forecast_disagreement') {
+        const data = finding.data;
+        severity = 'medium'; // Disagreements are more noteworthy
+        message = `Forecast disagreement: Author says ${data.probability}%, our analysis suggests ${data.ourProbability}%`;
+      }
+
+      return {
+        ...finding,
+        severity,
+        message
+      };
+    });
+  },
+
+  /**
+   * Analyze forecast patterns
+   */
+  analyzeForecastFindings(
+    predictions: GenericPotentialFinding[],
+    comparisons: GenericPotentialFinding[]
+  ): { summary: string; analysisSummary: string } {
+    const totalPredictions = predictions.filter(f => f.type === 'forecast').length;
+    const totalComparisons = comparisons.filter(f => f.type === 'forecast_disagreement').length;
+    const disagreements = comparisons.filter(f => 
+      f.type === 'forecast_disagreement' && !f.data.agreesWithAuthor
+    ).length;
+
+    const summary = `Found ${totalPredictions} predictions. Generated ${totalComparisons} forecasts with ${disagreements} disagreements.`;
+
+    let analysisSummary = `## Forecast Analysis\n\n`;
+    analysisSummary += `### Predictions Summary\n`;
+    analysisSummary += `- Total predictions found: ${totalPredictions}\n`;
+    analysisSummary += `- Forecasts generated: ${totalComparisons}\n`;
+    analysisSummary += `- Disagreements: ${disagreements}\n\n`;
+
+    if (totalPredictions > 0) {
+      // Group by timeframe
+      const byTimeframe = new Map<string, number>();
+      predictions.forEach(p => {
+        if (p.type === 'forecast' && p.data.timeframe) {
+          const category = categorizeTimeframe(p.data.timeframe);
+          byTimeframe.set(category, (byTimeframe.get(category) || 0) + 1);
+        }
+      });
+      
+      if (byTimeframe.size > 0) {
+        analysisSummary += `### Timeframe Distribution\n`;
+        byTimeframe.forEach((count, timeframe) => {
+          analysisSummary += `- ${timeframe}: ${count} predictions\n`;
+        });
+        analysisSummary += '\n';
+      }
+    }
+
+    if (comparisons.length > 0) {
+      analysisSummary += `### Key Forecast Comparisons\n`;
+      comparisons.slice(0, 5).forEach(comp => {
+        if (comp.type === 'forecast_disagreement') {
+          const data = comp.data;
+          analysisSummary += `- **"${data.predictionText}"**\n`;
+          analysisSummary += `  - Author: ${data.probability || 'N/A'}%\n`;
+          analysisSummary += `  - Our forecast: ${data.ourProbability}%\n`;
+          analysisSummary += `  - ${data.agreesWithAuthor ? '✓ Agreement' : '✗ Disagreement'}\n`;
+        }
+      });
+    }
+
+    return { summary, analysisSummary };
+  }
+};
+
+function categorizeTimeframe(timeframe: string): string {
+  const lower = timeframe.toLowerCase();
+  if (lower.includes("week") || lower.includes("month")) return "short-term";
+  if (lower.includes("year") && !lower.includes("years")) return "medium-term";
+  if (lower.includes("decade") || lower.includes("years")) return "long-term";
+  return "unspecified";
+}
