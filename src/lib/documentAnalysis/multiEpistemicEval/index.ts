@@ -11,8 +11,6 @@ import {
   PluginManager,
   MathPlugin
 } from '../plugin-system';
-import { generateSelfCritique } from "../selfCritique";
-import type { SelfCritiqueInput } from "../selfCritique";
 import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
@@ -46,7 +44,6 @@ export async function analyzeWithMultiEpistemicEval(
   analysis: string;
   summary: string;
   grade?: number;
-  selfCritique?: string;
   highlights: Comment[];
   tasks: TaskResult[];
 }> {
@@ -117,35 +114,6 @@ export async function analyzeWithMultiEpistemicEval(
     
     logger.info(`Total highlights from plugins: ${highlights.length}`);
     
-    // Step 5: Generate self-critique if enabled
-    let selfCritique: string | undefined;
-    if (agentInfo.selfCritiqueInstructions) {
-      logger.info(`Generating self-critique...`);
-      try {
-        const critiqueInput: SelfCritiqueInput = {
-          summary: summary,
-          analysis: analysis,
-          grade: undefined, // Plugins don't provide grades yet
-          highlights: highlights.map((h) => ({
-            title: h.description || "Highlight",
-            text: h.highlight.quotedText
-          }))
-        };
-        const critiqueResult = await generateSelfCritique(critiqueInput, agentInfo);
-        selfCritique = critiqueResult.outputs.selfCritique;
-        tasks.push(critiqueResult.task);
-      } catch (error) {
-        logger.error("Self-critique generation failed:", error);
-        tasks.push({
-          name: 'Self-Critique',
-          modelName: 'claude-3-sonnet-20241022',
-          priceInDollars: 0.005,
-          timeInSeconds: 5,
-          log: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          llmInteractions: []
-        });
-      }
-    }
     
     // Deduplicate highlights that might overlap
     const uniqueHighlights = deduplicateHighlights(highlights);
@@ -159,7 +127,6 @@ export async function analyzeWithMultiEpistemicEval(
       analysis: analysis,
       summary: summary,
       grade: undefined, // Plugins don't provide grades yet
-      selfCritique,
       highlights: uniqueHighlights,
       tasks
     };

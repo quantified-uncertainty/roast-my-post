@@ -11,11 +11,7 @@ jest.mock('../../plugin-system', () => ({
       pluginResults: new Map([
         ['SPELLING', {
           summary: 'Found 3 spelling errors',
-          findings: [
-            { type: 'spelling_error', severity: 'low', message: 'Test error 1' },
-            { type: 'spelling_error', severity: 'low', message: 'Test error 2' },
-            { type: 'spelling_error', severity: 'low', message: 'Test error 3' }
-          ],
+          analysisSummary: 'Three spelling errors were detected in the document.',
           recommendations: ['Use spell checker'],
           llmCalls: [{
             tokensUsed: { total: 100, prompt: 80, completion: 20 },
@@ -26,15 +22,59 @@ jest.mock('../../plugin-system', () => ({
         }],
         ['MATH', {
           summary: 'No math errors found',
-          findings: [],
+          analysisSummary: '',
           recommendations: [],
           llmCalls: []
         }]
       ]),
+      pluginComments: new Map([
+        ['SPELLING', [
+          { 
+            description: 'Test error 1',
+            importance: 3,
+            highlight: { 
+              startOffset: 0, 
+              endOffset: 10, 
+              quotedText: 'Test error',
+              startLine: 1,
+              endLine: 1,
+              isValid: true
+            },
+            isValid: true
+          },
+          { 
+            description: 'Test error 2',
+            importance: 3,
+            highlight: { 
+              startOffset: 11, 
+              endOffset: 21, 
+              quotedText: 'Test error',
+              startLine: 1,
+              endLine: 1,
+              isValid: true
+            },
+            isValid: true
+          },
+          { 
+            description: 'Test error 3',
+            importance: 3,
+            highlight: { 
+              startOffset: 22, 
+              endOffset: 32, 
+              quotedText: 'Test error',
+              startLine: 1,
+              endLine: 1,
+              isValid: true
+            },
+            isValid: true
+          }
+        ]],
+        ['MATH', []]
+      ]),
       statistics: {
         totalChunks: 5,
-        totalFindings: 3,
-        findingsByType: new Map([['spelling_error', 3]]),
+        totalComments: 3,
+        commentsByPlugin: new Map([['SPELLING', 3], ['MATH', 0]]),
         tokensUsed: 100,
         processingTime: 2000
       },
@@ -53,29 +93,13 @@ jest.mock('../../plugin-system', () => ({
   ForecastPlugin: jest.fn()
 }));
 
-// Mock the synthesis analysis
-jest.mock('../../pluginSynthesisAnalysis', () => ({
-  generatePluginSynthesisAnalysis: jest.fn().mockResolvedValue({
-    task: {
-      name: 'generatePluginSynthesisAnalysis',
-      modelName: 'claude-3-opus-20240229',
-      priceInDollars: 0.05,
-      timeInSeconds: 3,
-      log: 'Synthesis completed',
-      llmInteractions: []
-    },
-    outputs: {
-      summary: 'Test synthesis summary',
-      analysis: 'This is a synthesized analysis of the plugin findings.',
-      grade: 85
-    }
-  })
-}));
 
-// Mock utilities
-jest.mock('../../plugin-system/utils/findingToHighlight', () => ({
-  filterFindingsWithLocationHints: jest.fn(findings => findings),
-  convertFindingsToHighlights: jest.fn(() => [])
+// Mock document content helpers
+jest.mock('../../../../utils/documentContentHelpers', () => ({
+  getDocumentFullContent: jest.fn(doc => ({
+    content: doc.content,
+    prependLineCount: 0
+  }))
 }));
 
 describe('multiEpistemicEval', () => {
@@ -100,7 +124,7 @@ describe('multiEpistemicEval', () => {
     version: '1'
   };
 
-  it('should analyze document and append metadata', async () => {
+  it('should analyze document with plugin system', async () => {
     const result = await analyzeWithMultiEpistemicEval(mockDocument, mockAgent);
 
     // Check basic structure
@@ -110,22 +134,23 @@ describe('multiEpistemicEval', () => {
     expect(result).toHaveProperty('highlights');
     expect(result).toHaveProperty('tasks');
 
-    // Check that metadata is appended
-    expect(result.analysis).toContain('## Plugin Metadata');
-    expect(result.analysis).toContain('```json');
-    expect(result.analysis).toContain('"SPELLING"');
-    expect(result.analysis).toContain('"findingsCount": 3');
-    expect(result.analysis).toContain('"Found 3 spelling errors"');
+    // Check analysis contains plugin summaries
+    expect(result.analysis).toContain('Document Analysis Summary');
+    expect(result.analysis).toContain('SPELLING Analysis');
+    expect(result.analysis).toContain('Found 3 spelling errors');
+    expect(result.analysis).toContain('MATH Analysis');
+    expect(result.analysis).toContain('No math errors found');
 
+    // Check highlights were collected from plugins
+    expect(result.highlights).toHaveLength(3);
+    expect(result.highlights[0].description).toBe('Test error 1');
+    
     // Check tasks are properly recorded
-    expect(result.tasks).toHaveLength(2); // Plugin analysis + synthesis
+    expect(result.tasks).toHaveLength(1); // Just Plugin analysis now
     
     const pluginTask = result.tasks.find(t => t.name === 'Plugin Analysis');
     expect(pluginTask).toBeDefined();
     expect(pluginTask?.llmInteractions).toHaveLength(1); // Router interaction
-    
-    const synthesisTask = result.tasks.find(t => t.name === 'generatePluginSynthesisAnalysis');
-    expect(synthesisTask).toBeDefined();
   });
 
   it('should calculate costs correctly', async () => {
@@ -134,43 +159,22 @@ describe('multiEpistemicEval', () => {
     const pluginTask = result.tasks.find(t => t.name === 'Plugin Analysis');
     expect(pluginTask).toBeDefined();
     
-    // Should calculate cost based on Haiku pricing
-    // Router: 50 tokens, Plugin: 100 tokens = 150 total
-    // Cost calculation should be present
+    // Should calculate cost based on token usage
     expect(pluginTask?.priceInDollars).toBeGreaterThan(0);
-    expect(pluginTask?.log).toContain('Router: 1 calls (50 tokens)');
-    expect(pluginTask?.log).toContain('Plugins: 1 calls (100 tokens)');
-    expect(pluginTask?.log).toContain('Total: 150 tokens');
+    expect(pluginTask?.log).toContain('Analyzed 5 chunks');
+    expect(pluginTask?.log).toContain('generated 3 comments');
+    expect(pluginTask?.log).toContain('Router used 50 tokens in 1 routing calls');
   });
 
-  it('should include raw plugin findings in metadata', async () => {
+  it('should generate summary from plugin results', async () => {
     const result = await analyzeWithMultiEpistemicEval(mockDocument, mockAgent);
     
-    // Parse the metadata from the analysis
-    const metadataMatch = result.analysis.match(/```json\n([\s\S]+?)\n```/);
-    expect(metadataMatch).toBeTruthy();
+    // Check summary includes plugin statistics
+    expect(result.summary).toContain('3 issues across 5 sections');
     
-    if (metadataMatch) {
-      const metadata = JSON.parse(metadataMatch[1]);
-      
-      expect(metadata.statistics).toEqual({
-        totalChunks: 5,
-        totalFindings: 3,
-        findingsByType: { spelling_error: 3 },
-        tokensUsed: 100,
-        processingTime: 2000
-      });
-      
-      expect(metadata.plugins.SPELLING).toEqual({
-        summary: 'Found 3 spelling errors',
-        findingsCount: 3,
-        findings: expect.arrayContaining([
-          expect.objectContaining({ message: 'Test error 1' })
-        ]),
-        recommendations: ['Use spell checker'],
-        llmCallsCount: 1,
-        tokensUsed: 100
-      });
-    }
+    // Check analysis is properly structured
+    expect(result.analysis).toContain('Document Analysis Summary');
+    expect(result.analysis).toContain('2 specialized plugins');
+    expect(result.analysis).toContain('Critical Issues');
   });
 });
