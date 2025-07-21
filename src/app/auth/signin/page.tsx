@@ -18,14 +18,6 @@ function SignInForm() {
   const [emailInput, setEmailInput] = useState(email);
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
-  useEffect(() => {
-    // Auto-submit if coming from signup
-    if (autoSubmit && email && !hasAutoSubmitted) {
-      setHasAutoSubmitted(true);
-      handleSubmit();
-    }
-  }, [autoSubmit, email, hasAutoSubmitted, handleSubmit]);
-
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!emailInput) return;
@@ -44,6 +36,14 @@ function SignInForm() {
       setIsLoading(false);
     }
   }, [emailInput, callbackUrl]);
+
+  useEffect(() => {
+    // Auto-submit if coming from signup
+    if (autoSubmit && email && !hasAutoSubmitted) {
+      setHasAutoSubmitted(true);
+      handleSubmit();
+    }
+  }, [autoSubmit, email, hasAutoSubmitted, handleSubmit]);
 
   // Show loading state when auto-submitting from signup
   if (autoSubmit && (isLoading || hasAutoSubmitted)) {

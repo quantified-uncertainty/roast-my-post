@@ -77,7 +77,6 @@ export function transformEAForumUrl(url: string): string {
     const forumUrl = new URL(url);
     const path = forumUrl.pathname;
     const botsUrl = `https://forum-bots.effectivealtruism.org${path}`;
-    console.log(`🔄 Using forum-bots URL: ${botsUrl}`);
     return botsUrl;
   }
   return url;
@@ -93,7 +92,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         throw new Error("Could not extract post ID from LessWrong URL");
       }
 
-      console.log(`📥 Fetching post ${postId} from LessWrong API...`);
 
       const query = `
         query GetPost {

@@ -196,7 +196,7 @@ All phases have been successfully implemented:
 1. **Database Schema Changes**:
    - Added `isStale` boolean field to `EvaluationVersion` model
    - Added index on `isStale` for query performance
-   - Created migration `20250107053739_add_is_stale_to_evaluation_version`
+   - Created migration `20240107053739_add_is_stale_to_evaluation_version`
 
 2. **Key Components Created**:
    - `WarningDialog.tsx` - Reusable warning dialog component

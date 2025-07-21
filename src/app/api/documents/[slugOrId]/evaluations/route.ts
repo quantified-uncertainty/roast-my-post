@@ -323,7 +323,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       // Create evaluation
       try {
-        const result = await createEvaluation(documentId, agentId, userId);
+        const result = await createEvaluation(documentId, agentId);
 
         return NextResponse.json({
           evaluationId: result.evaluation.id,

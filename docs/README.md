@@ -53,14 +53,14 @@ Security documentation and procedures
 ### For Operations
 - **Health Monitoring**: [operations/health-checks.md](operations/health-checks.md)
 - **Security Procedures**: [security/pre-commit.md](security/pre-commit.md)
-- **Database Safety**: [development/agents.md#database-storage](development/agents.md#database-storage)
+- **Database Safety**: [development/agents.md](development/agents.md#database-storage)
 - **Docker Deployment**: [deployment/docker/](deployment/docker/)
 - **Production Launch**: [deployment/production-launch.md](deployment/production-launch.md)
 
 ### For Security Reviews
 - **Authentication Guide**: [security/authentication.md](security/authentication.md)
 - **Pre-commit Checklist**: [security/pre-commit.md](security/pre-commit.md)
-- **Security Sections in Health Checks**: [operations/health-checks.md#security-audit-checklist](operations/health-checks.md#security-audit-checklist)
+- **Security Sections in Health Checks**: [operations/health-checks.md](operations/health-checks.md#4-security-audit-checklist)
 
 ## Claude Code Operations
 
