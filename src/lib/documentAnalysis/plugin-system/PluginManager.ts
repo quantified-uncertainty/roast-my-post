@@ -47,6 +47,11 @@ export interface FullDocumentAnalysisResult {
     log: string;
     llmInteractions: LLMInteraction[];
   }>;
+  errors?: Array<{
+    plugin: string;
+    error: string;
+    recoveryAction: string;
+  }>;
 }
 
 export class PluginManager {
@@ -81,44 +86,75 @@ export class PluginManager {
       });
       console.log(`   Created ${chunks.length} chunks`);
 
-      // Process with each plugin in parallel
+      // Process with each plugin in parallel with improved error recovery
       const pluginResults = new Map<string, AnalysisResult>();
       const allComments: Comment[] = [];
       let totalCost = 0;
 
       console.log(`🔍 Running ${plugins.length} plugins in parallel...`);
       
-      // Create promises for all plugin analyses
+      // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
-        try {
-          console.log(`   Starting ${plugin.name()} analysis...`);
-          const startTime = Date.now();
-          const result = await plugin.analyze(chunks, text);
-          const duration = Date.now() - startTime;
-          
-          console.log(`   ${plugin.name()}: Found ${result.comments.length} issues (${duration}ms)`);
-          return { plugin: plugin.name(), result, success: true };
-        } catch (error) {
-          console.error(`   ${plugin.name()} failed:`, error);
-          return { 
-            plugin: plugin.name(), 
-            error: error instanceof Error ? error.message : String(error),
-            success: false 
-          };
+        const maxRetries = 2;
+        let lastError: any = null;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const isRetry = attempt > 1;
+            if (isRetry) {
+              logger.info(`   Retrying ${plugin.name()} analysis (attempt ${attempt}/${maxRetries})...`);
+              // Add small delay between retries
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            } else {
+              console.log(`   Starting ${plugin.name()} analysis...`);
+            }
+            
+            const startTime = Date.now();
+            const result = await plugin.analyze(chunks, text);
+            const duration = Date.now() - startTime;
+            
+            console.log(`   ${plugin.name()}: Found ${result.comments.length} issues (${duration}ms)${isRetry ? ' [RECOVERED]' : ''}`);
+            return { plugin: plugin.name(), result, success: true };
+          } catch (error) {
+            lastError = error;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            
+            // Check if this is a retryable error
+            const isRetryable = this.isRetryableError(error);
+            
+            if (isRetryable && attempt < maxRetries) {
+              logger.warn(`   ${plugin.name()} failed (attempt ${attempt}/${maxRetries}): ${errorMessage} - Will retry`);
+              continue;
+            } else {
+              logger.error(`   ${plugin.name()} failed permanently: ${errorMessage}`);
+              break;
+            }
+          }
         }
+        
+        // All retries failed, return error with recovery strategy
+        const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
+        const recoveryAction = this.determineRecoveryAction(plugin.name(), lastError);
+        
+        return { 
+          plugin: plugin.name(), 
+          error: errorMessage,
+          recoveryAction,
+          success: false 
+        };
       });
 
       // Wait for all plugins to complete
       const results = await Promise.all(pluginPromises);
 
-      // Process results
-      for (const { plugin, result, success, error } of results) {
+      // Process results with error tracking
+      for (const { plugin, result, success, error, recoveryAction } of results) {
         if (success && result) {
           pluginResults.set(plugin, result);
           allComments.push(...result.comments);
           totalCost += result.cost;
         } else {
-          console.warn(`Plugin ${plugin} failed: ${error}`);
+          logger.warn(`Plugin ${plugin} failed: ${error}`);
         }
       }
 
@@ -282,10 +318,34 @@ export class PluginManager {
         grade: undefined, // Plugins don't provide grades yet
         highlights: uniqueHighlights,
         tasks,
+        errors: undefined, // TODO: Add better error tracking
       };
     } catch (error) {
       logger.error("Document analysis failed:", error);
-      throw error;
+      
+      // Return a graceful fallback result instead of throwing
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      return {
+        thinking: "",
+        analysis: "⚠️ **Analysis Error**\n\nDocument analysis could not be completed due to a system error. Please try again later.",
+        summary: "Analysis failed due to system error",
+        grade: undefined,
+        highlights: [],
+        tasks: [{
+          name: "Plugin Analysis",
+          modelName: "N/A",
+          priceInDollars: 0,
+          timeInSeconds: 0,
+          log: `Analysis failed: ${errorMessage}`,
+          llmInteractions: []
+        }],
+        errors: [{
+          plugin: "SYSTEM",
+          error: errorMessage,
+          recoveryAction: "Check system logs and retry the analysis"
+        }]
+      };
     }
   }
 
@@ -324,5 +384,92 @@ export class PluginManager {
     }
 
     return unique;
+  }
+
+  /**
+   * Determine if an error is retryable
+   */
+  private isRetryableError(error: any): boolean {
+    if (!error) return false;
+    
+    // Check for common retryable error patterns
+    const errorMessage = error.message || String(error);
+    
+    // Network/timeout errors are retryable
+    if (errorMessage.includes('timeout') || 
+        errorMessage.includes('ECONNRESET') || 
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('network') ||
+        errorMessage.includes('connection')) {
+      return true;
+    }
+    
+    // Rate limiting errors are retryable
+    if (errorMessage.includes('rate limit') || 
+        errorMessage.includes('429') ||
+        errorMessage.includes('too many requests')) {
+      return true;
+    }
+    
+    // Server errors (5xx) are retryable
+    if (errorMessage.includes('server error') || 
+        errorMessage.includes('internal error') ||
+        /5\d\d/.test(errorMessage)) {
+      return true;
+    }
+    
+    // Temporary service unavailable
+    if (errorMessage.includes('service unavailable') || 
+        errorMessage.includes('temporarily unavailable')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Determine the appropriate recovery action for a failed plugin
+   */
+  private determineRecoveryAction(pluginName: string, error: any): string {
+    const errorMessage = error?.message || String(error);
+    
+    // Specific recovery actions based on error type
+    if (errorMessage.includes('timeout')) {
+      return 'Consider increasing timeout settings or reducing chunk size';
+    }
+    
+    if (errorMessage.includes('rate limit')) {
+      return 'Implement request throttling or use different API keys';
+    }
+    
+    if (errorMessage.includes('authentication') || errorMessage.includes('unauthorized')) {
+      return 'Check API key configuration and permissions';
+    }
+    
+    if (errorMessage.includes('quota') || errorMessage.includes('limit exceeded')) {
+      return 'Check API usage limits and billing status';
+    }
+    
+    if (errorMessage.includes('model') || errorMessage.includes('not found')) {
+      return 'Verify model configuration and availability';
+    }
+    
+    if (errorMessage.includes('malformed') || errorMessage.includes('invalid')) {
+      return 'Review plugin input validation and data formatting';
+    }
+    
+    // Plugin-specific recovery actions
+    switch (pluginName) {
+      case 'MATH':
+        return 'Math plugin failed - analysis will continue without math checking';
+      case 'SPELLING':
+        return 'Spelling plugin failed - analysis will continue without spell checking';
+      case 'FACT_CHECK':
+        return 'Fact checking plugin failed - analysis will continue without fact verification';
+      case 'FORECAST':
+        return 'Forecast plugin failed - analysis will continue without prediction analysis';
+      default:
+        return `${pluginName} plugin failed - analysis will continue with remaining plugins`;
+    }
   }
 }
