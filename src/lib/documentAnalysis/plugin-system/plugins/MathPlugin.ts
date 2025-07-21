@@ -64,7 +64,6 @@ export class MathPlugin extends BasePlugin<{}> {
     errors: [],
     summary: undefined,
     analysisSummary: undefined,
-    recommendations: [],
   };
 
   constructor() {
@@ -202,7 +201,6 @@ export class MathPlugin extends BasePlugin<{}> {
     // Store results
     this.findings.summary = analysis.summary;
     this.findings.analysisSummary = analysis.analysisSummary;
-    this.findings.recommendations = analysis.recommendations;
   }
 
   // ============================================
@@ -224,7 +222,6 @@ export class MathPlugin extends BasePlugin<{}> {
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
     await this.extractPotentialFindings(chunk);
     return {
-      findings: [], // Not used in new architecture
       llmCalls: this.getLLMInteractions().slice(-1),
       metadata: {
         tokensUsed: this.getTotalCost(),
@@ -243,7 +240,6 @@ export class MathPlugin extends BasePlugin<{}> {
     return {
       summary: this.findings.summary || "",
       analysisSummary: this.findings.analysisSummary || "",
-      recommendations: this.findings.recommendations || [],
       llmCalls: [],
     };
   }
@@ -328,7 +324,6 @@ export class MathPlugin extends BasePlugin<{}> {
       errors: [],
       summary: undefined,
       analysisSummary: undefined,
-      recommendations: [],
     };
   }
 }

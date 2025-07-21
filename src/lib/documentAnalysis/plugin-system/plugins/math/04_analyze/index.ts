@@ -11,7 +11,6 @@ import type {
 export interface MathAnalysisResult {
   summary: string;
   analysisSummary: string;
-  recommendations: string[]; // TODO: Remove when no longer needed
 }
 
 /**
@@ -63,7 +62,7 @@ export function analyzeMathFindings(
     investigatedCount: errorCount, // We only investigate errors
   });
 
-  return { summary, analysisSummary, recommendations: [] };
+  return { summary, analysisSummary };
 }
 
 /**

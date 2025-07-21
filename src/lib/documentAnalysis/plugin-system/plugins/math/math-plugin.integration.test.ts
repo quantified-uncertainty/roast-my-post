@@ -161,7 +161,6 @@ describe('MathPlugin Integration Test', () => {
     // Should have analysis results
     expect(state.findings.summary).toBeTruthy();
     expect(state.findings.analysisSummary).toBeTruthy();
-    expect(state.findings.recommendations?.length).toBeGreaterThan(0);
     
     console.log('✓ Stage 4 complete\n');
 

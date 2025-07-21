@@ -64,5 +64,4 @@ export interface FindingStorage {
   errors: PluginError[];
   summary?: string;
   analysisSummary?: string;
-  recommendations?: string[];
 }
