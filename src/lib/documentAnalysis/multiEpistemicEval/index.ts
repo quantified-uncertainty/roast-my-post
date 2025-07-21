@@ -9,28 +9,13 @@ import type { TaskResult } from "../shared/types";
 import { logger } from "@/lib/logger";
 import { 
   PluginManager,
-  MathPlugin
+  MathPlugin,
+  SimpleAnalysisPlugin
 } from '../plugin-system';
-import type { RichLLMInteraction, LLMInteraction } from "../../../types/llm";
+import type { LLMInteraction } from "../../../types/llm";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
 
-/**
- * Convert RichLLMInteraction to LLMInteraction format for TaskResult
- */
-function convertRichLLMInteraction(richInteraction: RichLLMInteraction): LLMInteraction {
-  return {
-    messages: [
-      { role: "system", content: richInteraction.prompt.split('\n\nUSER: ')[0].replace('SYSTEM: ', '') },
-      { role: "user", content: richInteraction.prompt.split('\n\nUSER: ')[1] || richInteraction.prompt },
-      { role: "assistant", content: richInteraction.response }
-    ],
-    usage: {
-      input_tokens: richInteraction.tokensUsed.prompt,
-      output_tokens: richInteraction.tokensUsed.completion
-    }
-  };
-}
 
 export async function analyzeWithMultiEpistemicEval(
   document: Document,
@@ -59,62 +44,53 @@ export async function analyzeWithMultiEpistemicEval(
       sessionConfig: options.sessionConfig
     });
     
-    // Register plugins
     // TODO: Re-enable other plugins after they're updated to new architecture
-    const plugins: any[] = [
+    const plugins: SimpleAnalysisPlugin[] = [
       new MathPlugin(),
       // new SpellingPlugin(),  // Disabled - needs refactor
       // new FactCheckPlugin()  // Disabled - needs refactor
     ];
     
-    manager.registerPlugins(plugins);
-    
     // Get full document content with prepend (same as comprehensive analysis)
     const { content: fullContent, prependLineCount } = getDocumentFullContent(document);
     
-    // Run analysis on full content
-    const pluginResults = await manager.analyzeDocument(fullContent, {
-      chunkSize: 1000,
-      chunkByParagraphs: true
-    });
+    // Run analysis on full content using new API
+    const pluginResults = await manager.analyzeDocumentSimple(fullContent, plugins);
     
     const pluginDuration = Date.now() - pluginStartTime;
     logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
     
-    // Get router LLM interactions for accurate tracking
-    const routerInteractions = manager.getRouterLLMInteractions();
-    const routerTokens = routerInteractions.reduce((sum, interaction) => sum + interaction.tokensUsed.total, 0);
+    // Collect LLM interactions from all plugins
+    const allLLMInteractions: LLMInteraction[] = [];
+    for (const [pluginName, result] of pluginResults.pluginResults) {
+      allLLMInteractions.push(...result.llmInteractions);
+    }
     
     tasks.push({
       name: 'Plugin Analysis',
-      modelName: 'claude-3-haiku-20240307',
-      priceInDollars: pluginResults.statistics.tokensUsed * 0.00000025, // Approximate cost based on total tokens
+      modelName: 'claude-3-5-sonnet-20241022', // Update to current model
+      priceInDollars: pluginResults.statistics.totalCost,
       timeInSeconds: pluginDuration / 1000,
-      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments. Router used ${routerTokens} tokens in ${routerInteractions.length} routing calls.`,
-      llmInteractions: routerInteractions.map(convertRichLLMInteraction)
+      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments using ${plugins.length} plugins.`,
+      llmInteractions: allLLMInteractions
     });
     
     // Step 2: Plugin results are ready
     logger.info(`Plugin analysis completed: ${pluginResults.statistics.totalComments} comments generated`);
     
-    // Step 3: Generate summary and analysis from plugin results
-    const { summary, analysis } = generatePluginSummary(pluginResults);
+    // Step 3: Use summary and analysis from plugin results
+    const { summary, analysis } = pluginResults;
     
-    // Step 4: Convert plugin comments directly to highlights
+    // Step 4: Get highlights from plugin results
     logger.info(`Converting plugin comments to highlights...`);
-    const highlights: Comment[] = [];
+    const highlights: Comment[] = pluginResults.allComments;
     
-    // Collect all comments from plugins
-    if (pluginResults.pluginComments instanceof Map) {
-      for (const [pluginName, comments] of pluginResults.pluginComments.entries()) {
-        logger.info(`${pluginName} plugin generated ${comments.length} comments`);
-        highlights.push(...comments);
-      }
+    // Log comment counts by plugin
+    for (const [pluginName, count] of pluginResults.statistics.commentsByPlugin.entries()) {
+      logger.info(`${pluginName} plugin generated ${count} comments`);
     }
     
     logger.info(`Total highlights from plugins: ${highlights.length}`);
-    
-    
     // Deduplicate highlights that might overlap
     const uniqueHighlights = deduplicateHighlights(highlights);
     
@@ -137,79 +113,6 @@ export async function analyzeWithMultiEpistemicEval(
   }
 }
 
-/**
- * Generate summary and analysis from plugin results
- */
-function generatePluginSummary(results: any): { summary: string; analysis: string } {
-  const sections: string[] = [];
-  
-  // Overall statistics
-  sections.push(`**Document Analysis Summary**`);
-  const pluginCount = results.statistics.commentsByPlugin?.size || 0;
-  sections.push(`This document was analyzed by ${pluginCount} specialized plugins that examined ${results.statistics.totalChunks} sections.`);
-  
-  // Plugin-specific summaries and key findings
-  if (results.pluginResults instanceof Map) {
-    for (const [pluginName, pluginResult] of results.pluginResults.entries()) {
-      if (pluginResult.summary) {
-        sections.push(`\n**${pluginName} Analysis:**`);
-        sections.push(pluginResult.summary);
-        
-        if (pluginResult.analysisSummary) {
-          sections.push(`\n${pluginResult.analysisSummary}`);
-        }
-      }
-    }
-  }
-  
-  // Summary based on comment importance
-  const highImportanceCount = countHighImportanceComments(results);
-  const mediumImportanceCount = countMediumImportanceComments(results);
-  
-  if (highImportanceCount > 0) {
-    sections.push(`\n**Critical Issues:** ${highImportanceCount} high-importance issues were identified that require immediate attention.`);
-  }
-  
-  if (mediumImportanceCount > 0) {
-    sections.push(`**Notable Concerns:** ${mediumImportanceCount} medium-importance issues were found that should be addressed.`);
-  }
-  
-  const analysis = sections.join('\n');
-  
-  // Generate concise summary
-  const summary = `Analysis identified ${results.statistics.totalComments} issues across ${results.statistics.totalChunks} sections. ` +
-    (highImportanceCount > 0 ? `${highImportanceCount} critical issues require immediate attention. ` : '') +
-    (mediumImportanceCount > 0 ? `${mediumImportanceCount} notable concerns should be addressed.` : '');
-  
-  return { summary: summary.trim(), analysis };
-}
-
-/**
- * Count medium importance comments
- */
-function countMediumImportanceComments(results: any): number {
-  let count = 0;
-  if (results.pluginComments instanceof Map) {
-    for (const [_, comments] of results.pluginComments.entries()) {
-      count += comments.filter((c: Comment) => c.importance !== undefined && c.importance >= 4 && c.importance < 7).length;
-    }
-  }
-  return count;
-}
-
-
-/**
- * Count high importance comments
- */
-function countHighImportanceComments(results: any): number {
-  let count = 0;
-  if (results.pluginComments instanceof Map) {
-    for (const [_, comments] of results.pluginComments.entries()) {
-      count += comments.filter((c: Comment) => c.importance !== undefined && c.importance >= 7).length;
-    }
-  }
-  return count;
-}
 
 /**
  * Deduplicate highlights based on overlapping positions

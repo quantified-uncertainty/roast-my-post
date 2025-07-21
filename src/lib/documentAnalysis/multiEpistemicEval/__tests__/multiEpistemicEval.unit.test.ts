@@ -5,49 +5,33 @@ import type { Document } from '../../../../types/documents';
 // Mock the plugin system
 jest.mock('../../plugin-system', () => ({
   PluginManager: jest.fn().mockImplementation(() => ({
-    registerPlugins: jest.fn(),
-    analyzeDocument: jest.fn().mockResolvedValue({
-      summary: 'Test summary',
+    analyzeDocumentSimple: jest.fn().mockResolvedValue({
+      summary: 'Analyzed 5 sections with 2 plugins. Found 3 total issues.',
+      analysis: '**Document Analysis Summary**\n\nThis document was analyzed by 2 specialized plugins that examined 5 sections.\n\n**SPELLING**: Found 3 spelling errors\n**MATH**: No math errors found',
       pluginResults: new Map([
         ['SPELLING', {
           summary: 'Found 3 spelling errors',
-          analysisSummary: 'Three spelling errors were detected in the document.',
-          recommendations: ['Use spell checker'],
-          llmCalls: [{
-            tokensUsed: { total: 100, prompt: 80, completion: 20 },
-            duration: 1000,
-            prompt: 'test prompt',
-            response: 'test response'
-          }]
-        }],
-        ['MATH', {
-          summary: 'No math errors found',
-          analysisSummary: '',
-          recommendations: [],
-          llmCalls: []
-        }]
-      ]),
-      pluginComments: new Map([
-        ['SPELLING', [
-          { 
-            description: 'Test error 1',
-            importance: 3,
-            highlight: { 
-              startOffset: 0, 
-              endOffset: 10, 
-              quotedText: 'Test error',
-              startLine: 1,
-              endLine: 1,
+          analysis: 'Three spelling errors were detected in the document.',
+          comments: [
+            { 
+              description: 'Test error 1',
+              importance: 3,
+              highlight: { 
+                startOffset: 0, 
+                endOffset: 10, 
+                quotedText: 'Test error',
+                startLine: 1,
+                endLine: 1,
+                isValid: true
+              },
               isValid: true
             },
-            isValid: true
-          },
-          { 
-            description: 'Test error 2',
-            importance: 3,
-            highlight: { 
-              startOffset: 11, 
-              endOffset: 21, 
+            { 
+              description: 'Test error 2',
+              importance: 3,
+              highlight: { 
+                startOffset: 11, 
+                endOffset: 21, 
               quotedText: 'Test error',
               startLine: 1,
               endLine: 1,
@@ -61,36 +45,100 @@ jest.mock('../../plugin-system', () => ({
             highlight: { 
               startOffset: 22, 
               endOffset: 32, 
-              quotedText: 'Test error',
+              quotedText: 'Test error 2',
               startLine: 1,
               endLine: 1,
               isValid: true
             },
             isValid: true
+          },
+          { 
+            description: 'Test error 3',
+            importance: 3,
+            highlight: { 
+              startOffset: 22, 
+              endOffset: 32, 
+              quotedText: 'Test error 3',
+              startLine: 2,
+              endLine: 2,
+              isValid: true
+            },
+            isValid: true
           }
-        ]],
-        ['MATH', []]
-      ]),
-      statistics: {
-        totalChunks: 5,
-        totalComments: 3,
-        commentsByPlugin: new Map([['SPELLING', 3], ['MATH', 0]]),
-        tokensUsed: 100,
-        processingTime: 2000
+        ],
+        llmInteractions: [{
+          messages: [
+            { role: 'system', content: 'test system' },
+            { role: 'user', content: 'test user' },
+            { role: 'assistant', content: 'test response' }
+          ],
+          usage: { input_tokens: 80, output_tokens: 20 }
+        }],
+        cost: 0.0001
+      }],
+      ['MATH', {
+        summary: 'No math errors found',
+        analysis: '',
+        comments: [],
+        llmInteractions: [],
+        cost: 0
+      }]
+    ]),
+    allComments: [
+      { 
+        description: 'Test error 1',
+        importance: 3,
+        highlight: { 
+          startOffset: 0, 
+          endOffset: 10, 
+          quotedText: 'Test error',
+          startLine: 1,
+          endLine: 1,
+          isValid: true
+        },
+        isValid: true
       },
-      recommendations: ['Use spell checker']
-    }),
-    getRouterLLMInteractions: jest.fn().mockReturnValue([{
-      tokensUsed: { total: 50, prompt: 30, completion: 20 },
-      duration: 500,
-      prompt: 'router prompt',
-      response: 'router response'
-    }])
+      { 
+        description: 'Test error 2',
+        importance: 3,
+        highlight: { 
+          startOffset: 11, 
+          endOffset: 21, 
+          quotedText: 'Test error 2',
+          startLine: 1,
+          endLine: 1,
+          isValid: true
+        },
+        isValid: true
+      },
+      { 
+        description: 'Test error 3',
+        importance: 3,
+        highlight: { 
+          startOffset: 22, 
+          endOffset: 32, 
+          quotedText: 'Test error 3',
+          startLine: 2,
+          endLine: 2,
+          isValid: true
+        },
+        isValid: true
+      }
+    ],
+    statistics: {
+      totalChunks: 5,
+      totalComments: 3,
+      commentsByPlugin: new Map([['SPELLING', 3], ['MATH', 0]]),
+      totalCost: 0.0001,
+      processingTime: 2000
+    }
+  })
   })),
   SpellingPlugin: jest.fn(),
   MathPlugin: jest.fn(),
   FactCheckPlugin: jest.fn(),
-  ForecastPlugin: jest.fn()
+  ForecastPlugin: jest.fn(),
+  SimpleAnalysisPlugin: {}
 }));
 
 
@@ -136,9 +184,9 @@ describe('multiEpistemicEval', () => {
 
     // Check analysis contains plugin summaries
     expect(result.analysis).toContain('Document Analysis Summary');
-    expect(result.analysis).toContain('SPELLING Analysis');
+    expect(result.analysis).toContain('**SPELLING**');
     expect(result.analysis).toContain('Found 3 spelling errors');
-    expect(result.analysis).toContain('MATH Analysis');
+    expect(result.analysis).toContain('**MATH**');
     expect(result.analysis).toContain('No math errors found');
 
     // Check highlights were collected from plugins
