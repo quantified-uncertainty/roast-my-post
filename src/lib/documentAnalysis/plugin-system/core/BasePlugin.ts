@@ -1,46 +1,40 @@
 /**
- * Unified base class for all analysis plugins
+ * Base classes for document analysis plugins
  * 
- * MIGRATION NOTES:
- * ================
- * This class is transitioning to a more functional approach. New plugins should:
+ * This file provides two base classes:
  * 
- * 1. Use extractWithTool from utils/extractionHelper instead of this.extractWithTool()
- * 2. Manage their own finding storage (see MathPlugin.findings for example)
- * 3. Implement custom generateComments() logic instead of relying on oldGenerateComments()
- * 4. Avoid using deprecated methods marked with @deprecated
+ * 1. BasePlugin - The original base class for plugins that use the three-phase approach
+ *    (processChunk -> synthesize -> generateComments). Use this for complex plugins
+ *    that need fine control over chunk processing and synthesis.
  * 
- * RECOMMENDED PATTERN (see MathPlugin for full example):
- * =====================================================
+ * 2. SimpleBasePlugin - A simplified base class for plugins that implement the
+ *    SimpleAnalysisPlugin interface. Use this for straightforward plugins that
+ *    process all chunks in one go and don't need separate synthesis phases.
  * 
- * class MyPlugin extends BasePlugin<{}> {
- *   private findings: MyFindingStorage = { ... };
- *   
- *   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
- *     // Use functional extraction helper
- *     const extraction = await extractWithTool<MyResult>(chunk, config);
- *     this.llmInteractions.push(extraction.interaction);
- *     this.totalCost += extraction.cost;
- *     // Store in plugin-specific state
- *     this.findings.potential.push(...conversion(extraction.result));
- *     return { ... };
- *   }
- *   
- *   generateComments(context: GenerateCommentsContext): Comment[] {
- *     // Custom pipeline logic
- *     return myCommentGeneration(this.findings, context);
- *   }
- * }
+ * Choose SimpleBasePlugin when:
+ * - Your plugin processes chunks independently
+ * - You don't need complex state management between chunks
+ * - You want built-in cost tracking and LLM interaction storage
+ * - You prefer a simpler, more linear workflow
+ * 
+ * Choose BasePlugin when:
+ * - You need complex multi-phase processing
+ * - You need to maintain intricate state between chunk processing
+ * - You're maintaining backwards compatibility with existing plugins
  */
 
+import { 
+  RoutingExample, 
+  LLMInteraction,
+  SimpleAnalysisPlugin,
+  AnalysisResult
+} from '../types';
 import { 
   AnalysisPlugin, 
   ChunkResult, 
   SynthesisResult, 
-  RoutingExample, 
-  LLMInteraction,
   GenerateCommentsContext
-} from '../types';
+} from '../deprecated-types';
 import { TextChunk } from '../TextChunk';
 import type { Comment } from '@/types/documentSchema';
 import { estimateTokens } from '../../../tokenUtils';
@@ -156,4 +150,171 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
     throw new Error(`Plugin ${this.name()} must implement generateComments() method`);
   }
 
+}
+
+/**
+ * Simplified base class for plugins using the SimpleAnalysisPlugin interface
+ * 
+ * This class provides:
+ * - Built-in cost tracking
+ * - LLM interaction storage
+ * - Debug information support
+ * - Simplified state management
+ * 
+ * Example usage:
+ * ```typescript
+ * export class MyPlugin extends SimpleBasePlugin {
+ *   name(): string { return "MY_PLUGIN"; }
+ *   
+ *   promptForWhenToUse(): string {
+ *     return "Use this plugin when...";
+ *   }
+ *   
+ *   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
+ *     // Clear any previous state
+ *     this.clearState();
+ *     
+ *     // Process chunks (using this.trackLLMCall for automatic cost/interaction tracking)
+ *     for (const chunk of chunks) {
+ *       const result = await this.trackLLMCall(async () => {
+ *         // Your LLM call here
+ *       });
+ *     }
+ *     
+ *     // Return results
+ *     return {
+ *       summary: "Summary of findings",
+ *       analysis: "Detailed analysis",
+ *       comments: this.generateComments(documentText),
+ *       llmInteractions: this.getLLMInteractions(),
+ *       cost: this.getCost()
+ *     };
+ *   }
+ * }
+ * ```
+ */
+export abstract class SimpleBasePlugin implements SimpleAnalysisPlugin {
+  protected totalCost: number = 0;
+  protected llmInteractions: LLMInteraction[] = [];
+  private debugInfo: Record<string, any> = {};
+
+  // Required abstract methods
+  abstract name(): string;
+  abstract promptForWhenToUse(): string;
+  abstract analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
+
+  // Optional routing examples
+  routingExamples?(): RoutingExample[] {
+    return [];
+  }
+
+  /**
+   * Get total cost incurred by this plugin
+   */
+  getCost(): number {
+    return this.totalCost;
+  }
+
+  /**
+   * Get all LLM interactions
+   */
+  getLLMInteractions(): LLMInteraction[] {
+    return this.llmInteractions;
+  }
+
+  /**
+   * Get debug information (for testing and development)
+   */
+  getDebugInfo?(): any {
+    return this.debugInfo;
+  }
+
+  /**
+   * Clear all state (cost, interactions, debug info)
+   */
+  protected clearState(): void {
+    this.totalCost = 0;
+    this.llmInteractions = [];
+    this.debugInfo = {};
+  }
+
+  /**
+   * Track an LLM call with automatic cost calculation and interaction storage
+   * 
+   * @param llmCall - Async function that makes the LLM call and returns the result
+   * @returns The result from the LLM call
+   * 
+   * Example:
+   * ```typescript
+   * const extraction = await this.trackLLMCall(async () => {
+   *   return await extractWithTool(chunk, config);
+   * });
+   * ```
+   */
+  protected async trackLLMCall<T extends { interaction: LLMInteraction; cost: number }>(
+    llmCall: () => Promise<T>
+  ): Promise<T> {
+    const result = await llmCall();
+    
+    if (result.interaction) {
+      this.llmInteractions.push(result.interaction);
+    }
+    
+    if (typeof result.cost === 'number') {
+      this.totalCost += result.cost;
+    }
+    
+    return result;
+  }
+
+  /**
+   * Add or update debug information
+   * 
+   * @param key - Debug info key
+   * @param value - Debug info value
+   */
+  protected setDebugInfo(key: string, value: any): void {
+    this.debugInfo[key] = value;
+  }
+
+  /**
+   * Merge debug information
+   * 
+   * @param info - Object to merge into debug info
+   */
+  protected mergeDebugInfo(info: Record<string, any>): void {
+    this.debugInfo = { ...this.debugInfo, ...info };
+  }
+
+  /**
+   * Helper method to generate comments from findings
+   * Subclasses should implement their own comment generation logic
+   * 
+   * @param documentText - The full document text
+   * @returns Array of comments
+   */
+  protected abstract generateComments(documentText: string): Comment[];
+
+  /**
+   * Calculate cost based on token usage
+   * (Same as BasePlugin for consistency)
+   */
+  protected calculateCost(tokensUsed: { prompt: number; completion: number }): number {
+    // Claude 3 Sonnet pricing as of 2024
+    const inputCost = tokensUsed.prompt * 0.000003;  // $3 per 1M input tokens
+    const outputCost = tokensUsed.completion * 0.000015; // $15 per 1M output tokens
+    return inputCost + outputCost;
+  }
+
+  /**
+   * Calculate cost from API usage response
+   * (Same as BasePlugin for consistency)
+   */
+  protected calculateCostFromUsage(usage: any): number {
+    if (!usage) return 0;
+    return this.calculateCost({
+      prompt: usage.input_tokens || 0,
+      completion: usage.output_tokens || 0
+    });
+  }
 }

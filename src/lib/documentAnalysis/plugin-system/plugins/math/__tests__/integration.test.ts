@@ -2,8 +2,8 @@
  * Integration test for MathPlugin to verify end-to-end functionality
  */
 
-import { MathPlugin } from './index';
-import { TextChunk } from '../../TextChunk';
+import { MathPlugin } from '../index';
+import { TextChunk } from '../../../TextChunk';
 
 async function testMathPlugin() {
   console.log("Testing MathPlugin end-to-end...\n");

@@ -89,35 +89,13 @@ export interface GlobalFinding {
   reason: string;  // Why this is global (e.g., "Cross-document pattern")
 }
 
-export interface PluginError {
-  timestamp: Date;
-  phase: 'processChunk' | 'synthesize' | 'generateComments';
-  error: string;
-  context?: any;
-}
+// Note: PluginError with legacy phase types has been moved to deprecated-types.ts
+// For new error tracking, use the modern phase types: 'scanChunk' | 'investigate' | 'synthesize' | 'comment'
 
 // Re-export from shared types to avoid duplication
 import type { LLMInteraction as BaseLLMInteraction } from '@/types/llm';
 import type { Comment } from '@/types/documentSchema';
 export type LLMInteraction = BaseLLMInteraction;
-
-export interface ChunkResult {
-  findings?: Finding[];
-  llmCalls: LLMInteraction[];
-  metadata?: {
-    tokensUsed: number;
-    processingTime: number;
-    confidence?: number;
-  };
-}
-
-export interface SynthesisResult {
-  summary: string;
-  analysisSummary: string;  // Markdown summary of patterns and insights
-  recommendations?: string[];
-  llmCalls: LLMInteraction[];
-  visualizations?: any[];
-}
 
 export interface RoutingExample {
   chunkText: string;
@@ -125,41 +103,12 @@ export interface RoutingExample {
   reason?: string;
 }
 
-export interface GenerateCommentsContext {
-  documentText: string;
-  maxComments?: number;
-  minImportance?: number;
-}
+// Note: ChunkResult, SynthesisResult, GenerateCommentsContext, and PluginResult
+// have been moved to deprecated-types.ts as they are part of the legacy plugin system
 
-export interface PluginResult {
-  summary: string;
-  comments: Comment[];
-  analysisSummary: string;
-  llmCalls: LLMInteraction[];
-}
-
-// Legacy plugin interface - use SimpleAnalysisPlugin for new plugins
-export interface AnalysisPlugin<TState = any> {
-  // Identity
-  name(): string;
-  
-  // Natural language description for routing
-  promptForWhenToUse(): string;
-  
-  // Optional: examples to improve routing accuracy
-  routingExamples?(): RoutingExample[];
-  
-  // Processing methods (legacy)
-  processChunk(chunk: TextChunk): Promise<ChunkResult>;
-  synthesize(): Promise<SynthesisResult>;
-  
-  // Comment generation (legacy)
-  generateComments?(context: GenerateCommentsContext): Comment[];
-  
-  // State management
-  getState(): TState;
-  clearState(): void;
-}
+// Note: The legacy AnalysisPlugin interface has been moved to deprecated-types.ts
+// Please use SimpleAnalysisPlugin below for all new plugin implementations.
+// The new interface uses a single analyze() method instead of the three-phase approach.
 
 // New simplified Plugin API
 export interface AnalysisResult {

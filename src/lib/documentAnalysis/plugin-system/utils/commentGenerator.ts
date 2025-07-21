@@ -3,7 +3,8 @@
  */
 
 import type { Comment } from '@/types/documentSchema';
-import type { InvestigatedFinding, LocatedFinding, GenerateCommentsContext } from '../types';
+import type { InvestigatedFinding, LocatedFinding } from '../types';
+import type { GenerateCommentsContext } from '../deprecated-types';
 import { findTextLocation, locateFinding } from './locationFinder';
 import { severityToImportance, sortByImportance } from './findingHelpers';
 import { logger } from '../../../logger';

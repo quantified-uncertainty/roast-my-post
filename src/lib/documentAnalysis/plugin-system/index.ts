@@ -5,6 +5,9 @@
 // Core types
 export * from "./types";
 
+// Deprecated types (for backward compatibility)
+export * from "./deprecated-types";
+
 // Core classes
 export { createChunks, TextChunk } from "./TextChunk";
 export { RoutingPlan } from "./RoutingPlan";

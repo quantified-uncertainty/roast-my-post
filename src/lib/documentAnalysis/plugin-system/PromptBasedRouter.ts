@@ -2,7 +2,8 @@
  * Prompt-based router that uses LLM to decide which plugins process which chunks
  */
 
-import { AnalysisPlugin, RoutingDecision, TextChunk } from './types';
+import { RoutingDecision, TextChunk } from './types';
+import { AnalysisPlugin } from './deprecated-types';
 import { RoutingPlan } from './RoutingPlan';
 import { RichLLMInteraction } from '@/types/llm';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';

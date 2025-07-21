@@ -1,5 +1,9 @@
 # Plugin Location Tracking Design
 
+> **Note**: This document describes the legacy location tracking system and is kept for historical reference. 
+> For the current implementation of the plugin system, please see the [README.md](./README.md).
+> This document shows the evolution of our thinking about location tracking in the plugin system.
+
 ## Overview
 
 This document outlines the staged approach for consistent location tracking across all plugins in the document analysis system.

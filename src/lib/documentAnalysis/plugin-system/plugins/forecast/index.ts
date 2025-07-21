@@ -319,11 +319,11 @@ export class ForecastPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   }
 
   // Required by BasePlugin but not used in new API
-  async processChunk(_chunk: TextChunk): Promise<any> {
+  async processChunk(_chunk: TextChunk): Promise<{ findings?: never[]; llmCalls: never[] }> {
     throw new Error("Use analyze() method instead of processChunk()");
   }
 
-  async synthesize(): Promise<any> {
+  async synthesize(): Promise<{ summary: string; analysisSummary: string; llmCalls: never[] }> {
     throw new Error("Use analyze() method instead of synthesize()");
   }
 

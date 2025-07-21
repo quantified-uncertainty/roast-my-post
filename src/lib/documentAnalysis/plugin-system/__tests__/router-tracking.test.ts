@@ -3,9 +3,9 @@
  * Simple test script to verify PromptBasedRouter LLM tracking works
  */
 
-import { PromptBasedRouter } from './PromptBasedRouter';
-import { SpellingPlugin, MathPlugin } from '.';
-import { createChunks } from './TextChunk';
+import { PromptBasedRouter } from '../PromptBasedRouter';
+import { SpellingPlugin, MathPlugin } from '..';
+import { createChunks } from '../TextChunk';
 
 async function testRouterTracking() {
   console.log('🧪 Testing PromptBasedRouter LLM tracking...\n');

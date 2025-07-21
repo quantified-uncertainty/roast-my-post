@@ -4,24 +4,23 @@ A modular document analysis system that uses LLM-based routing to direct text ch
 
 ## Recent Refactoring (2025)
 
-The plugin system has been significantly refactored to eliminate code duplication and improve maintainability:
+The plugin system has been significantly refactored to simplify the API and improve maintainability:
 
 ### Key Improvements
+- **Simplified API**: New `SimpleAnalysisPlugin` interface with single `analyze()` method
+- **Modular structure**: Each plugin in its own directory with clear separation of concerns
 - **50-70% code reduction** through elimination of duplicate patterns
-- **Unified base class** combining best features from previous implementations  
 - **Automatic location tracking** for all findings
 - **Standardized error analysis** and recommendation generation
-- **Fluent builders** for consistent object creation
 - **Type-safe state management** with helper methods
 
 ## Overview
 
-The system works in several phases:
+The system works as follows:
 1. **Chunking**: Documents are split into manageable chunks
 2. **Routing**: An LLM (Claude Haiku) reads plugin descriptions and decides which plugins should process each chunk
-3. **Processing**: Plugins process their assigned chunks, storing LocatedFindings with location info
-4. **Comment Generation**: Plugins convert located findings to UI comments with exact character offsets
-5. **Synthesis**: Plugins synthesize patterns into analysis summaries (Markdown)
+3. **Analysis**: Each plugin's `analyze()` method processes all assigned chunks and returns complete results
+4. **Results**: Plugins return summary, analysis markdown, comments with exact locations, LLM interactions, and costs
 
 ## Architecture
 
@@ -29,81 +28,135 @@ The system works in several phases:
 ```
 plugin-system/
 ├── core/
-│   └── BasePlugin.ts          # Unified base class with all features
-├── mixins/
-│   └── LocationTracking.ts    # Automatic location tracking
-├── builders/
-│   ├── FindingBuilder.ts      # Fluent finding creation
-│   ├── SchemaBuilder.ts       # Tool schema generation
-│   └── PromptBuilder.ts       # Domain-specific prompts
-├── analyzers/
-│   └── ErrorPatternAnalyzer.ts # Generic pattern analysis
-├── engines/
-│   └── RecommendationEngine.ts # Rule-based recommendations
+│   └── BasePlugin.ts           # Base class for backwards compatibility
+├── utils/
+│   ├── extractionHelper.ts     # LLM extraction utilities
+│   ├── pluginHelpers.ts        # Comment generation, location tracking
+│   └── findingHelpers.ts       # Finding ID generation, utilities
+├── types.ts                    # Core types including SimpleAnalysisPlugin
 └── plugins/
-    ├── SpellingPlugin.ts      # Refactored plugins
-    ├── FactCheckPlugin.ts
-    ├── MathPlugin.ts
-    └── ForecastPlugin.ts
+    ├── math/                   # Mathematics verification plugin
+    │   ├── index.ts           # Main plugin implementation
+    │   ├── types.ts           # Plugin-specific types
+    │   ├── promptBuilder.ts   # Math-specific prompts
+    │   └── errorAnalyzer.ts   # Pattern analysis
+    ├── spelling/              # Spelling & grammar plugin
+    │   ├── index.ts
+    │   ├── types.ts
+    │   ├── promptBuilder.ts
+    │   └── errorAnalyzer.ts
+    ├── factCheck/             # Fact checking plugin
+    │   └── index.ts           # Single file for simpler plugins
+    └── forecast/              # Prediction extraction plugin
+        └── index.ts
 ```
 
 ## Key Components
 
-### BasePlugin (Unified)
+### Migration from Legacy to SimpleAnalysisPlugin
 
-The new `BasePlugin` class provides:
-- Built-in LLM interaction tracking
-- Automatic cost calculation
-- Tool-based extraction utilities
-- State management helpers
-- Session context support
+The plugin system has evolved from a multi-stage process to a simplified single-method approach:
+
+**Legacy API (deprecated)**:
+- `processChunk()` - Process each chunk individually
+- `synthesize()` - Synthesize findings after all chunks
+- `generateComments()` - Generate UI comments
+
+**New SimpleAnalysisPlugin API**:
+- `analyze()` - Single method that handles everything internally
+
+The new API encapsulates all the stages internally, making plugins easier to write and understand.
+
+### SimpleAnalysisPlugin Interface
+
+The new simplified plugin interface requires only essential methods:
 
 ```typescript
-// Example of new simplified plugin
-class MyPlugin extends BasePlugin<MyState> {
-  async processChunk(chunk: TextChunk): Promise<ChunkResult> {
-    // Use built-in extraction with automatic tracking
-    const { result, cost } = await this.extractWithTool(
-      chunk,
-      "extract_items",
-      "Extract relevant items",
-      SchemaBuilder.extraction("item", { /* properties */ })
-    );
-    
-    // Create LocatedFindings with automatic location tracking
-    const findings = result.items.map(item => {
-      const finding = FindingBuilder
-        .forError('type', item.text, 'Description')
-        .inChunk(chunk)
-        .build();
-      
-      // Store as LocatedFinding if location found
-      if (finding.locationHint) {
-        this.addLocatedFindings([{
-          ...finding,
-          locationHint: finding.locationHint
-        }]);
-      }
-      return finding;
-    });
-    
-    return { findings, llmCalls: this.getLLMInteractions() };
-  }
+interface SimpleAnalysisPlugin {
+  // Metadata
+  name(): string;                    // e.g., "MATH", "SPELLING"
+  promptForWhenToUse(): string;      // Natural language description for routing
+  routingExamples?(): RoutingExample[]; // Optional examples to improve routing
   
-  // Convert stored LocatedFindings to UI comments
-  generateComments(context: GenerateCommentsContext): Comment[] {
-    return super.generateComments(context);
-  }
+  // Core workflow - single method that handles everything
+  analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
   
-  // Synthesize patterns into analysis summary
-  async synthesize(): Promise<SynthesisResult> {
+  // For testing/debugging
+  getDebugInfo?(): any;
+  getCost(): number;
+  getLLMInteractions(): LLMInteraction[];
+}
+
+// The analyze method returns everything needed
+interface AnalysisResult {
+  summary: string;                   // Brief summary
+  analysis: string;                  // Markdown analysis
+  comments: Comment[];               // UI comments with locations
+  llmInteractions: LLMInteraction[]; // All LLM calls made
+  cost: number;                      // Total cost
+}
+```
+
+### Plugin Implementation Pattern
+
+Here's how modern plugins are implemented using the new API:
+
+```typescript
+import { BasePlugin } from "../../core/BasePlugin";
+import { SimpleAnalysisPlugin, AnalysisResult, TextChunk } from "../../types";
+import { extractWithTool } from "../../utils/extractionHelper";
+import { locateFindings, generateCommentsFromFindings } from "../../utils/pluginHelpers";
+
+export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
+  private findings: {
+    potential: PotentialFinding[];
+    investigated: InvestigatedFinding[];
+    located: LocatedFinding[];
+    summary?: string;
+    analysisSummary?: string;
+  } = { potential: [], investigated: [], located: [] };
+  
+  private analysisInteractions: LLMInteraction[] = [];
+
+  name(): string {
+    return "SPELLING";
+  }
+
+  promptForWhenToUse(): string {
+    return `Call this for ALL text chunks to check spelling, grammar, and style...`;
+  }
+
+  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
+    // Clear any previous state
+    this.clearState();
+    
+    // Stage 1: Extract findings from all chunks
+    for (const chunk of chunks) {
+      await this.extractPotentialFindings(chunk);
+    }
+    
+    // Stage 2: Investigate findings (add severity/messages)
+    this.investigateFindings();
+    
+    // Stage 3: Locate findings in document
+    this.locateFindings(documentText);
+    
+    // Stage 4: Analyze patterns
+    this.analyzeFindingPatterns();
+    
+    // Stage 5: Generate comments
+    const comments = this.getComments(documentText);
+    
     return {
-      summary: "Brief summary",
-      analysisSummary: "## Analysis\n\nMarkdown analysis...",
-      recommendations: [],
-      llmCalls: []
+      summary: this.findings.summary || "",
+      analysis: this.findings.analysisSummary || "",
+      comments,
+      llmInteractions: this.analysisInteractions,
+      cost: this.getTotalCost()
     };
   }
+  
+  // ... internal methods for each stage ...
 }
 ```
 
@@ -114,25 +167,6 @@ class MyPlugin extends BasePlugin<MyState> {
 - **LLM Interaction Tracking**: All router LLM calls are tracked with tokens, timing, and costs
 - Each plugin provides `name()` and `promptForWhenToUse()`
 
-### Plugin Interface
-```typescript
-interface AnalysisPlugin<TState = any> {
-  // Identity
-  name(): string;  // e.g., "MATH", "FACT_CHECK"
-  
-  // Natural language description for routing
-  promptForWhenToUse(): string;
-  
-  // Processing methods
-  processChunk(chunk: TextChunk): Promise<ChunkResult>;
-  generateComments(context: GenerateCommentsContext): Comment[];
-  synthesize(): Promise<SynthesisResult>;
-  
-  // State management
-  getState(): TState;
-  clearState(): void;
-}
-```
 
 ### Built-in Plugins
 
@@ -144,7 +178,11 @@ interface AnalysisPlugin<TState = any> {
 ## Usage
 
 ```typescript
-import { PluginManager, MathPlugin, SpellingPlugin } from './plugin-system';
+import { PluginManager } from './plugin-system';
+import { MathPlugin } from './plugins/math';
+import { SpellingPlugin } from './plugins/spelling';
+import { FactCheckPlugin } from './plugins/factCheck';
+import { ForecastPlugin } from './plugins/forecast';
 
 // Create manager and register plugins
 const manager = new PluginManager();
@@ -166,9 +204,12 @@ console.log(results.summary);
 console.log(results.statistics);
 console.log(results.recommendations);
 
-// Access plugin comments
-results.pluginComments.forEach((comments, pluginName) => {
-  console.log(`${pluginName} generated ${comments.length} comments`);
+// Access plugin results
+results.pluginResults.forEach((result, pluginName) => {
+  console.log(`${pluginName}:`);
+  console.log(`  - Summary: ${result.summary}`);
+  console.log(`  - Comments: ${result.comments.length}`);
+  console.log(`  - Cost: $${result.cost.toFixed(4)}`);
 });
 
 // Access router LLM interactions for monitoring
@@ -181,108 +222,159 @@ routerInteractions.forEach(interaction => {
 
 ## Creating Custom Plugins
 
-### Using the New Architecture
+### Directory Structure for New Plugins
+
+Each plugin should be organized in its own directory:
+
+```
+plugins/
+└── myPlugin/
+    ├── index.ts           # Main plugin implementation
+    ├── types.ts           # Plugin-specific types and schemas
+    ├── promptBuilder.ts   # Prompt generation logic
+    └── analyzer.ts        # Pattern analysis (if needed)
+```
+
+### Implementing a Custom Plugin
 
 ```typescript
-import { BasePlugin } from './core/BasePlugin';
-import { FindingBuilder } from './builders/FindingBuilder';
-import { SchemaBuilder } from './builders/SchemaBuilder';
-import { PromptBuilder } from './builders/PromptBuilder';
-import { ErrorPatternAnalyzer } from './analyzers/ErrorPatternAnalyzer';
-import { RecommendationEngine } from './engines/RecommendationEngine';
+// plugins/myPlugin/index.ts
+import { BasePlugin } from '../../core/BasePlugin';
+import { SimpleAnalysisPlugin, AnalysisResult, TextChunk } from '../../types';
+import { extractWithTool } from '../../utils/extractionHelper';
+import { locateFindings, generateCommentsFromFindings } from '../../utils/pluginHelpers';
+import { MyPromptBuilder } from './promptBuilder';
+import { getMyExtractionConfig } from './types';
 
-class CustomPlugin extends BasePlugin<MyState> {
+export class MyPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
+  private findings = {
+    potential: [],
+    investigated: [],
+    located: [],
+    summary: '',
+    analysisSummary: ''
+  };
+  private analysisInteractions: LLMInteraction[] = [];
+
   name(): string {
-    return "CUSTOM";
+    return "MY_PLUGIN";
   }
 
   promptForWhenToUse(): string {
-    return `Call this when you see X, Y, or Z. This includes:
-    - Specific pattern 1
-    - Specific pattern 2`;
+    return `Call this plugin when you see specific patterns that need analysis.
+    This includes:
+    - Pattern type 1
+    - Pattern type 2`;
   }
 
-  async processChunk(chunk: TextChunk): Promise<ChunkResult> {
-    // Use built-in extraction
-    const { result, cost } = await this.extractWithTool(
-      chunk,
-      "extract_custom",
-      "Extract custom content",
-      SchemaBuilder.extraction("item", {
-        value: { type: "string" },
-        isValid: { type: "boolean" }
-      })
+  routingExamples() {
+    return [
+      {
+        chunkText: "Example text that should be processed",
+        shouldProcess: true,
+        reason: "Contains pattern type 1"
+      },
+      {
+        chunkText: "Example text to skip",
+        shouldProcess: false,
+        reason: "No relevant patterns"
+      }
+    ];
+  }
+
+  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
+    // Clear state
+    this.clearState();
+    
+    // Stage 1: Extract findings from chunks
+    for (const chunk of chunks) {
+      const extraction = await extractWithTool(chunk, {
+        ...getMyExtractionConfig(),
+        extractionPrompt: new MyPromptBuilder().buildExtractionPrompt(chunk)
+      });
+      
+      this.analysisInteractions.push(extraction.interaction);
+      this.totalCost += extraction.cost;
+      
+      // Convert to findings
+      const findings = this.convertToFindings(extraction.result, chunk.id);
+      this.findings.potential.push(...findings);
+    }
+    
+    // Stage 2: Investigate (add severity and messages)
+    this.findings.investigated = this.findings.potential.map(f => ({
+      ...f,
+      severity: this.determineSeverity(f),
+      message: this.createMessage(f)
+    }));
+    
+    // Stage 3: Locate in document
+    const { located, dropped } = locateFindings(
+      this.findings.investigated,
+      documentText
+    );
+    this.findings.located = located;
+    
+    // Stage 4: Analyze patterns
+    this.analyzePatterns();
+    
+    // Stage 5: Generate comments
+    const comments = generateCommentsFromFindings(
+      this.findings.located,
+      documentText
     );
     
-    // Create findings with automatic location tracking
-    const findings = result.items
-      .filter(item => !item.isValid)
-      .map(item => 
-        FindingBuilder
-          .error(`Invalid item: ${item.value}`, item.text)
-          .inChunk(chunk)
-          .withSeverity('medium')
-          .build()
-      );
-    
-    // Update state using helpers
-    this.addToStateArray('items', result.items);
-    
-    return { 
-      findings, 
-      llmCalls: this.getLLMInteractions().slice(-1),
-      metadata: { tokensUsed: cost }
-    };
-  }
-
-  async synthesize(): Promise<SynthesisResult> {
-    // Use analyzers for pattern detection
-    const analyzer = new ErrorPatternAnalyzer({
-      categories: {
-        type1: ['keyword1', 'keyword2'],
-        type2: ['keyword3', 'keyword4']
-      }
-    });
-    
-    const analysis = analyzer.analyze(this.state.errors);
-    
-    // Generate recommendations
-    const engine = new RecommendationEngine()
-      .addRule({
-        condition: ctx => ctx.errorCount > 5,
-        recommendation: 'Review all items carefully'
-      });
-    
-    const recommendations = engine.generateRecommendations({
-      errorCount: this.state.errors.length,
-      patterns: analysis.patterns
-    });
-    
     return {
-      summary: analysis.summary,
-      analysisSummary: `## Analysis\n\n${analysis.details}`,
-      recommendations,
-      llmCalls: []
+      summary: this.findings.summary,
+      analysis: this.findings.analysisSummary,
+      comments,
+      llmInteractions: this.analysisInteractions,
+      cost: this.getTotalCost()
     };
   }
+  
+  getCost(): number {
+    return this.getTotalCost();
+  }
+  
+  getDebugInfo() {
+    return {
+      findings: this.findings,
+      stats: {
+        potential: this.findings.potential.length,
+        located: this.findings.located.length
+      }
+    };
+  }
+  
+  // ... private helper methods ...
 }
 ```
 
-## Architecture Benefits
+### Internal Processing Stages
 
-### Original Benefits (Maintained)
-1. **Flexibility**: Easy to add new plugins without changing core code
-2. **Efficiency**: Smart routing avoids unnecessary processing
-3. **Transparency**: All LLM interactions are tracked
-4. **Stateful**: Plugins can accumulate data across chunks
-5. **Natural Language**: Plugin capabilities described in plain English
+While the public API is simple, plugins typically follow these internal stages:
 
-### New Benefits (After Refactoring)
-6. **No Duplication**: Shared utilities eliminate repeated code
-7. **Automatic Location Tracking**: All findings get line numbers automatically
-8. **Consistent Patterns**: Same approach for error analysis across all plugins
-9. **Type Safety**: Better TypeScript support with generics
-10. **Fluent APIs**: Intuitive builder patterns for common tasks
+1. **Extract**: Use LLM to extract potential findings from chunks
+2. **Investigate**: Add severity levels and user-friendly messages
+3. **Locate**: Find exact character positions in the document
+4. **Analyze**: Identify patterns and generate summaries
+5. **Generate**: Create UI comments with precise locations
+
+Each stage uses shared utilities from `/utils` to ensure consistency across all plugins.
+
+## Key Benefits of the New Architecture
+
+1. **Simplified API**: Single `analyze()` method handles all processing stages
+2. **Modular Organization**: Each plugin in its own directory with clear separation of concerns
+3. **Efficiency**: Smart routing avoids unnecessary processing
+4. **Transparency**: All LLM interactions and costs are tracked
+5. **Natural Language Routing**: Plugin capabilities described in plain English
+6. **Automatic Location Tracking**: All findings get line numbers automatically
+7. **Consistent Patterns**: Same approach for all plugins using shared utilities
+8. **Type Safety**: Strong TypeScript support throughout
+9. **No Code Duplication**: Shared utilities in `/utils` folder
+10. **Easy Testing**: Built-in `getDebugInfo()` for introspection
 
 ## Performance Optimizations
 

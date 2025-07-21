@@ -6,9 +6,9 @@ import type {
   PotentialFinding, 
   InvestigatedFinding, 
   LocatedFinding, 
-  GlobalFinding,
-  PluginError 
+  GlobalFinding
 } from '../types';
+import type { PluginError } from '../deprecated-types';
 
 /**
  * Generate a unique ID for findings

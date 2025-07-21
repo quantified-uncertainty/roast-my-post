@@ -5,9 +5,11 @@
 
 import type { 
   PotentialFinding, 
-  InvestigatedFinding, 
-  GenerateCommentsContext 
+  InvestigatedFinding
 } from '../types';
+import type { 
+  GenerateCommentsContext 
+} from '../deprecated-types';
 import type { Comment } from '@/types/documentSchema';
 
 import { 

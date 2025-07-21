@@ -3,7 +3,8 @@
  */
 
 import { PromptBasedRouter, RouterConfig } from './PromptBasedRouter';
-import { AnalysisPlugin, DocumentProfile, SynthesisResult, SimpleAnalysisPlugin, AnalysisResult } from './types';
+import { DocumentProfile, SimpleAnalysisPlugin, AnalysisResult } from './types';
+import { AnalysisPlugin, SynthesisResult } from './deprecated-types';
 import { TextChunk, createChunks } from './TextChunk';
 import type { Comment } from '@/types/documentSchema';
 import type { HeliconeSessionConfig } from '../../helicone/sessions';
