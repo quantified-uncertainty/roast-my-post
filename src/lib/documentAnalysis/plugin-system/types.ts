@@ -64,17 +64,22 @@ export interface HighlightHint {
   chunkId: string;         // Which chunk this came from
 }
 
+// Base interface for finding data
+export interface FindingData {
+  [key: string]: unknown;
+}
+
 export interface PotentialFinding {
   id: string;
   type: string;
-  data: any;  // Plugin knows what this is
+  data: FindingData;
   highlightHint: HighlightHint;
 }
 
 export interface InvestigatedFinding {
   id: string;
   type: string;
-  data: any;
+  data: FindingData;
   severity: 'low' | 'medium' | 'high' | 'info';
   message: string;
   highlightHint: HighlightHint;
@@ -83,7 +88,7 @@ export interface InvestigatedFinding {
 export interface GlobalFinding {
   id: string;
   type: string;
-  data: any;
+  data: FindingData;
   severity: 'low' | 'medium' | 'high' | 'info';
   message: string;
   reason: string;  // Why this is global (e.g., "Cross-document pattern")
@@ -129,7 +134,7 @@ export interface SimpleAnalysisPlugin {
   analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
   
   // For testing/debugging - expose internal state
-  getDebugInfo?(): any;
+  getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
   getLLMInteractions(): LLMInteraction[];
 }

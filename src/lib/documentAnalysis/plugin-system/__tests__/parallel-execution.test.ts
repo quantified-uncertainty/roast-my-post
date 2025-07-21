@@ -1,5 +1,5 @@
 import { PluginManager } from '../PluginManager';
-import { SimpleAnalysisPlugin, AnalysisResult } from '../types';
+import { SimpleAnalysisPlugin, AnalysisResult, type LLMInteraction } from '../types';
 import { TextChunk } from '../TextChunk';
 
 // Mock plugin that simulates delay
@@ -36,7 +36,7 @@ class DelayedPlugin implements SimpleAnalysisPlugin {
     return 0.001;
   }
   
-  getLLMInteractions(): any[] {
+  getLLMInteractions(): LLMInteraction[] {
     return [];
   }
 }

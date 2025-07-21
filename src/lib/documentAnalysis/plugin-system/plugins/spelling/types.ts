@@ -23,11 +23,25 @@ export const SpellingExtractionResultSchema = z.object({
 
 export type SpellingExtractionResult = z.infer<typeof SpellingExtractionResultSchema>;
 
+// Finding types for the spelling plugin
+export interface SpellingFinding {
+  id: string;
+  type: string;
+  data: SpellingError;
+  highlightHint?: {
+    searchText: string;
+    chunkId: string;
+    lineNumber?: number;
+  };
+  severity?: 'low' | 'medium' | 'high' | 'info';
+  message?: string;
+}
+
 // Internal storage for findings
 export interface SpellingFindingStorage {
-  potential: any[];
-  investigated: any[];
-  located: any[];
+  potential: SpellingFinding[];
+  investigated: SpellingFinding[];
+  located: SpellingFinding[];
   summary?: string;
   analysisSummary?: string;
 }

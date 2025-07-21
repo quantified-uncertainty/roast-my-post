@@ -5,10 +5,16 @@
 import { Finding } from '../types';
 import { FindingBuilder } from '../builders/FindingBuilder';
 
+export interface ErrorExample {
+  text: string;
+  description: string;
+  [key: string]: unknown;
+}
+
 export interface ErrorPattern {
   type: string;
   count: number;
-  examples: any[];
+  examples: ErrorExample[];
   severity?: 'low' | 'medium' | 'high';
 }
 
@@ -39,7 +45,7 @@ export class ErrorPatternAnalyzer {
   /**
    * Analyze errors and identify patterns
    */
-  analyze(errors: Array<{ text: string; description: string; [key: string]: any }>): ErrorAnalysisResult {
+  analyze(errors: ErrorExample[]): ErrorAnalysisResult {
     const patterns = new Map<string, ErrorPattern>();
 
     // Categorize each error

@@ -51,7 +51,7 @@ CRITICAL: You MUST use the extraction tool to report your findings. Do not respo
    * Build a synthesis prompt
    */
   buildSynthesisPrompt(
-    items: any[],
+    items: Record<string, unknown>[],
     analysisType: string,
     additionalContext?: string
   ): string {
@@ -79,7 +79,7 @@ CRITICAL: You MUST use the synthesis tool to report your analysis. Provide insig
   /**
    * Build a verification prompt
    */
-  buildVerificationPrompt(items: any[], verificationTask: string): string {
+  buildVerificationPrompt(items: Record<string, unknown>[], verificationTask: string): string {
     return `Verify the following ${this.domain} items.
 
 TASK: ${verificationTask}
@@ -93,7 +93,7 @@ For each item, determine if it's valid/correct and explain your reasoning.`;
   /**
    * Format an item for display in prompts
    */
-  private formatItem(item: any): string {
+  private formatItem(item: Record<string, unknown>): string {
     if (typeof item === 'string') {
       return item;
     }

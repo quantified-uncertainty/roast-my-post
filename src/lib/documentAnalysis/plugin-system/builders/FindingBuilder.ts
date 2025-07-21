@@ -214,7 +214,7 @@ export class FindingBuilder {
    * Create a finding for a verification result
    */
   static forVerification(
-    item: any,
+    item: Record<string, unknown>,
     isValid: boolean,
     reasoning: string
   ): FindingBuilder {

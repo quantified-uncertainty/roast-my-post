@@ -96,7 +96,7 @@ export class PluginManager {
       // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
         const maxRetries = 2;
-        let lastError: any = null;
+        let lastError: Error | unknown = null;
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
@@ -397,7 +397,7 @@ export class PluginManager {
   /**
    * Determine if an error is retryable
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     if (!error) return false;
     
     // Check for common retryable error patterns
@@ -438,7 +438,7 @@ export class PluginManager {
   /**
    * Determine the appropriate recovery action for a failed plugin
    */
-  private determineRecoveryAction(pluginName: string, error: any): string {
+  private determineRecoveryAction(pluginName: string, error: unknown): string {
     const errorMessage = error?.message || String(error);
     
     // Specific recovery actions based on error type

@@ -8,12 +8,10 @@
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../../logger";
-import { BasePlugin } from "../../core/BasePlugin";
+import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
-  SimpleAnalysisPlugin,
-  AnalysisResult,
   LLMInteraction,
 } from "../../types";
 import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
@@ -29,16 +27,9 @@ import { getSpellingExtractionConfig, type SpellingExtractionResult, type Spelli
 import { SpellingPromptBuilder } from "./promptBuilder";
 import { SpellingErrorAnalyzer } from "./errorAnalyzer";
 
-export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
-  private findings: SpellingFindingStorage = {
-    potential: [],
-    investigated: [],
-    located: [],
-  };
-  private analysisInteractions: LLMInteraction[] = [];
-
+export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
   constructor() {
-    super({});
+    super();
   }
 
   name(): string {
@@ -49,7 +40,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
     return `Call this for ALL text chunks to check spelling, grammar, and style. This is a basic check that should run on every chunk unless it's pure code, data, or references.`;
   }
 
-  override routingExamples(): RoutingExample[] {
+  routingExamples(): RoutingExample[] {
     return [
       {
         chunkText: "The quick brown fox jumps over the lazy dog.",
@@ -74,71 +65,18 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
     ];
   }
 
-  /**
-   * Main analysis method - processes all chunks and returns complete results
-   */
-  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
-    // Clear any previous state
-    this.clearState();
-    
-    // Stage 1: Extract from all chunks
-    for (const chunk of chunks) {
-      await this.extractPotentialFindings(chunk);
-    }
-    
-    // Stage 2: Investigate findings
-    this.investigateFindings();
-    
-    // Stage 3: Locate findings in document
-    this.locateFindings(documentText);
-    
-    // Stage 4: Analyze patterns
-    this.analyzeFindingPatterns();
-    
-    // Stage 5: Generate comments
-    const comments = this.getComments(documentText);
-    
+  protected createInitialFindingStorage(): SpellingFindingStorage {
     return {
-      summary: this.findings.summary || "",
-      analysis: this.findings.analysisSummary || "",
-      comments,
-      llmInteractions: this.analysisInteractions,
-      cost: this.getTotalCost()
-    };
-  }
-
-  getCost(): number {
-    return this.getTotalCost();
-  }
-
-  /**
-   * Get debug information for testing and introspection
-   */
-  getDebugInfo() {
-    return {
-      findings: this.findings,
-      stats: {
-        potentialCount: this.findings.potential.length,
-        investigatedCount: this.findings.investigated.length,
-        locatedCount: this.findings.located.length,
-        errorsByType: this.getErrorCountsByType(),
-      },
-      stageResults: {
-        extracted: this.findings.potential,
-        investigated: this.findings.investigated,
-        located: this.findings.located,
-        analysis: {
-          summary: this.findings.summary,
-          analysisSummary: this.findings.analysisSummary
-        }
-      }
+      potential: [],
+      investigated: [],
+      located: [],
     };
   }
 
   /**
    * Extract spelling/grammar findings from a text chunk
    */
-  private async extractPotentialFindings(chunk: TextChunk): Promise<void> {
+  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
     const promptBuilder = new SpellingPromptBuilder();
     
     const extraction = await extractWithTool<{
@@ -151,9 +89,8 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
       )
     });
     
-    // Track the interaction and cost
-    this.analysisInteractions.push(extraction.interaction);
-    this.totalCost += extraction.cost;
+    // Track the interaction and cost using parent method
+    await this.trackLLMCall(async () => extraction);
 
     const newFindings = this.convertToFindings(
       extraction.result.errors || [],
@@ -199,7 +136,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Investigate findings and add severity/messages
    */
-  private investigateFindings(): void {
+  protected investigateFindings(): void {
     this.findings.investigated = this.findings.potential.map(finding => ({
       ...finding,
       severity: this.determineSeverity(finding.data),
@@ -210,7 +147,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Determine severity based on error type and context
    */
-  private determineSeverity(data: any): 'low' | 'medium' | 'high' {
+  private determineSeverity(data: { severity?: string; type?: string; [key: string]: unknown }): 'low' | 'medium' | 'high' {
     // Use severity from data if provided
     if (data.severity) {
       return data.severity;
@@ -228,7 +165,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Create a user-friendly error message
    */
-  private createErrorMessage(data: any): string {
+  private createErrorMessage(data: { text?: string; correction?: string; type?: string; rule?: string; [key: string]: unknown }): string {
     const { text, correction, type, rule } = data;
     
     let message = `${this.capitalizeFirst(type)} error: "${text}" should be "${correction}"`;
@@ -243,7 +180,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Locate findings in document text
    */
-  private locateFindings(documentText: string): void {
+  protected locateFindings(documentText: string): void {
     const { located, dropped } = locateFindings(
       this.findings.investigated,
       documentText,
@@ -264,7 +201,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Analyze findings and generate summary
    */
-  private analyzeFindingPatterns(): void {
+  protected analyzeFindingPatterns(): void {
     const errorAnalyzer = new SpellingErrorAnalyzer();
     
     // Convert findings to error format for analysis
@@ -320,7 +257,7 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
   /**
    * Generate UI comments from located findings
    */
-  private getComments(documentText: string): Comment[] {
+  protected generateComments(documentText: string): Comment[] {
     const comments = generateCommentsFromFindings(this.findings.located, documentText);
     logger.info(`SpellingPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;

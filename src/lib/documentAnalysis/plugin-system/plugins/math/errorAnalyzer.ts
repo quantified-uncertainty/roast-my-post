@@ -2,10 +2,16 @@
  * Math-specific error pattern analyzer
  */
 
+export interface MathErrorExample {
+  text: string;
+  description: string;
+  [key: string]: unknown;
+}
+
 export interface MathErrorPattern {
   type: string;
   count: number;
-  examples: any[];
+  examples: MathErrorExample[];
   severity?: 'low' | 'medium' | 'high';
 }
 
@@ -35,7 +41,7 @@ export class MathErrorAnalyzer {
   /**
    * Analyze math errors and identify patterns
    */
-  analyze(errors: Array<{ text: string; description: string; [key: string]: any }>): MathErrorAnalysisResult {
+  analyze(errors: MathErrorExample[]): MathErrorAnalysisResult {
     const patterns = new Map<string, MathErrorPattern>();
 
     // Categorize each error

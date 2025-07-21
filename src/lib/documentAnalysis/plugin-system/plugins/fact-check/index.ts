@@ -328,7 +328,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   /**
    * Get debug information about the plugin's state
    */
-  getDebugInfo(): any {
+  getDebugInfo(): Record<string, unknown> {
     return {
       findings: this.findings,
       stats: {
@@ -358,7 +358,7 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
   }
 
   // Legacy methods for backwards compatibility
-  protected override createInitialState(): any {
+  protected override createInitialState(): Record<string, unknown> {
     return {};
   }
 

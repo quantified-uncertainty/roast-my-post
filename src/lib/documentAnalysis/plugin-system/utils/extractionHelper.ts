@@ -15,7 +15,7 @@ import type { LLMInteraction } from '@/types/llm';
 export interface ExtractionConfig {
   toolName: string;
   toolDescription: string;
-  toolSchema: any;
+  toolSchema: Record<string, unknown>;
   extractionPrompt?: string;
   pluginName: string;
 }

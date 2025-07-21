@@ -2,15 +2,34 @@
  * Simplified schema builder for consistent tool schemas
  */
 
+// JSON Schema types
+export interface JsonSchemaProperty {
+  type: string;
+  description?: string;
+  items?: JsonSchemaProperty;
+  properties?: Record<string, JsonSchemaProperty>;
+  required?: string[];
+  enum?: string[];
+  [key: string]: unknown;
+}
+
+export interface JsonSchema {
+  type: string;
+  properties: Record<string, JsonSchemaProperty>;
+  required?: string[];
+  description?: string;
+  [key: string]: unknown;
+}
+
 export class SchemaBuilder {
   /**
    * Build a standard extraction schema
    */
   static extraction(
     itemName: string,
-    itemProperties: Record<string, any>,
-    additionalProperties?: Record<string, any>
-  ): any {
+    itemProperties: Record<string, JsonSchemaProperty>,
+    additionalProperties?: Record<string, JsonSchemaProperty>
+  ): JsonSchema {
     return {
       type: "object",
       properties: {
@@ -56,7 +75,7 @@ export class SchemaBuilder {
   static synthesis(
     includeVisualizations: boolean = false
   ): any {
-    const schema: any = {
+    const schema: JsonSchema = {
       type: "object",
       properties: {
         summary: {
@@ -109,7 +128,7 @@ export class SchemaBuilder {
   /**
    * Build a custom schema
    */
-  static custom(properties: Record<string, any>, required?: string[]): any {
+  static custom(properties: Record<string, JsonSchemaProperty>, required?: string[]): JsonSchema {
     return {
       type: "object",
       properties,
@@ -142,7 +161,7 @@ export class SchemaBuilder {
       description
     }),
     
-    array: (itemType: any, description: string = "Array of items") => ({
+    array: (itemType: JsonSchemaProperty, description: string = "Array of items") => ({
       type: "array",
       items: itemType,
       description

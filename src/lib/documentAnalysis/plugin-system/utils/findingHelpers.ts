@@ -37,8 +37,8 @@ export function severityToImportance(severity: string): number {
  */
 export function createPluginError(
   phase: PluginError['phase'],
-  error: any,
-  context?: any
+  error: unknown,
+  context?: Record<string, unknown>
 ): PluginError {
   return {
     timestamp: new Date(),
@@ -125,7 +125,7 @@ export function createFindingsSummary(state: {
   located: LocatedFinding[];
   global: GlobalFinding[];
   errors: PluginError[];
-}): any {
+}): Record<string, unknown> {
   return {
     counts: {
       potential: state.potential.length,

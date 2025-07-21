@@ -3,6 +3,7 @@
  */
 
 import type { ExtractionConfig } from "../../utils/extractionHelper";
+import type { LLMInteraction } from "../../types";
 import type { 
   GenericPotentialFinding, 
   GenericInvestigatedFinding, 
@@ -19,7 +20,7 @@ export interface ForecastExtractionResult {
 }
 
 // Finding data structures
-export interface ForecastFindingData {
+export interface ForecastFindingData extends Record<string, unknown> {
   predictionText: string;
   timeframe?: string;
   probability?: number;
@@ -65,7 +66,7 @@ export interface ForecastToolResult {
   probability: number;
   consensus: "low" | "medium" | "high";
   description: string;
-  llmInteractions: any[];
+  llmInteractions: LLMInteraction[];
 }
 
 // Configuration for extraction

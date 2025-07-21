@@ -13,7 +13,7 @@ import { logger } from "../../../logger";
 export interface GenericPotentialFinding {
   id: string;
   type: string;
-  data: any;
+  data: Record<string, unknown>;
   highlightHint: {
     searchText: string;
     chunkId: string;
@@ -48,7 +48,7 @@ export interface LocationResult<T = GenericLocatedFinding> {
  * Convert extraction results to potential findings
  * Generic pattern that works for any plugin
  */
-export function convertToFindings<TResult extends { [key: string]: any }>(
+export function convertToFindings<TResult extends Record<string, unknown>>(
   results: TResult[],
   chunkId: string,
   pluginName: string,

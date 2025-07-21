@@ -93,7 +93,7 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
   /**
    * Calculate cost from API usage response
    */
-  protected calculateCostFromUsage(usage: any): number {
+  protected calculateCostFromUsage(usage: { input_tokens?: number; output_tokens?: number } | undefined): number {
     if (!usage) return 0;
     return this.calculateCost({
       prompt: usage.input_tokens || 0,
@@ -225,7 +225,7 @@ export abstract class SimpleBasePlugin implements SimpleAnalysisPlugin {
   /**
    * Get debug information (for testing and development)
    */
-  getDebugInfo?(): any {
+  getDebugInfo?(): Record<string, unknown> {
     return this.debugInfo;
   }
 
@@ -273,7 +273,7 @@ export abstract class SimpleBasePlugin implements SimpleAnalysisPlugin {
    * @param key - Debug info key
    * @param value - Debug info value
    */
-  protected setDebugInfo(key: string, value: any): void {
+  protected setDebugInfo(key: string, value: unknown): void {
     this.debugInfo[key] = value;
   }
 
@@ -310,7 +310,7 @@ export abstract class SimpleBasePlugin implements SimpleAnalysisPlugin {
    * Calculate cost from API usage response
    * (Same as BasePlugin for consistency)
    */
-  protected calculateCostFromUsage(usage: any): number {
+  protected calculateCostFromUsage(usage: { input_tokens?: number; output_tokens?: number } | undefined): number {
     if (!usage) return 0;
     return this.calculateCost({
       prompt: usage.input_tokens || 0,
