@@ -10,11 +10,11 @@ export * from "./deprecated-types";
 
 // Core classes
 export { createChunks, TextChunk } from "./TextChunk";
-export { RoutingPlan } from "./RoutingPlan";
+// RoutingPlan removed - part of deprecated routing system
 export { BasePlugin } from "./core/BasePlugin";
-export { PromptBasedRouter } from "./PromptBasedRouter";
+// PromptBasedRouter removed - use PluginManager with SimpleAnalysisPlugin instead
 export { PluginManager } from "./PluginManager";
-export type { DocumentAnalysisResult, SimpleDocumentAnalysisResult } from "./PluginManager";
+export type { SimpleDocumentAnalysisResult } from "./PluginManager";
 
 // Mixins
 export * from "./mixins/LocationTracking";

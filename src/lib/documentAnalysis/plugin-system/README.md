@@ -181,30 +181,30 @@ export class SpellingPlugin extends BasePlugin<{}> implements SimpleAnalysisPlug
 import { PluginManager } from './plugin-system';
 import { MathPlugin } from './plugins/math';
 import { SpellingPlugin } from './plugins/spelling';
-import { FactCheckPlugin } from './plugins/factCheck';
+import { FactCheckPlugin } from './plugins/fact-check';
 import { ForecastPlugin } from './plugins/forecast';
 
-// Create manager and register plugins
+// Create manager
 const manager = new PluginManager();
-manager.registerPlugins([
+
+// Create plugin instances
+const plugins = [
   new MathPlugin(),
   new SpellingPlugin(),
   new FactCheckPlugin(),
   new ForecastPlugin()
-]);
+];
 
 // Analyze document
-const results = await manager.analyzeDocument(documentText, {
-  chunkSize: 1000,
-  chunkByParagraphs: true
-});
+const results = await manager.analyzeDocumentSimple(documentText, plugins);
 
 // Access results
 console.log(results.summary);
+console.log(results.analysis);
 console.log(results.statistics);
-console.log(results.recommendations);
+console.log(results.allComments);
 
-// Access plugin results
+// Access individual plugin results
 results.pluginResults.forEach((result, pluginName) => {
   console.log(`${pluginName}:`);
   console.log(`  - Summary: ${result.summary}`);
