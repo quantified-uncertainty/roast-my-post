@@ -11,7 +11,7 @@ export { RoutingPlan } from "./RoutingPlan";
 export { BasePlugin } from "./core/BasePlugin";
 export { PromptBasedRouter } from "./PromptBasedRouter";
 export { PluginManager } from "./PluginManager";
-export type { DocumentAnalysisResult } from "./PluginManager";
+export type { DocumentAnalysisResult, SimpleDocumentAnalysisResult } from "./PluginManager";
 
 // Mixins
 export * from "./mixins/LocationTracking";

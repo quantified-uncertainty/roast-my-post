@@ -86,11 +86,14 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
   }
 
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
-    const { result, interaction } = await this.trackLLMCall(
-      MODEL_CONFIG.analysis,
-      this.buildExtractionPrompt(chunk),
-      () => this.extractPredictions(chunk)
-    );
+    // TODO: Update to use extractWithTool from utils/extractionHelper
+    // const { result, interaction } = await this.trackLLMCall(
+    //   MODEL_CONFIG.analysis,
+    //   this.buildExtractionPrompt(chunk),
+    //   () => this.extractPredictions(chunk)
+    // );
+    const result: any[] = []; // Disabled plugin
+    const interaction = { model: "", prompt: "", response: "", tokensUsed: { prompt: 0, completion: 0, total: 0 }, timestamp: new Date(), duration: 0 };
 
     const findings: Finding[] = [];
 
@@ -98,7 +101,7 @@ export class ForecastPlugin extends BasePlugin<ForecastState> {
     const chunkLocationUtils = new LocationUtils(chunk.text);
 
     // Store predictions
-    result.predictions.forEach((pred) => {
+    result.forEach((pred: any) => {
       const predId = `${chunk.id}-${this.state.predictions.length}`;
 
       // Try to find the prediction text in the chunk to get line information

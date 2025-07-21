@@ -3,7 +3,7 @@
  */
 
 import { PromptBasedRouter, RouterConfig } from './PromptBasedRouter';
-import { AnalysisPlugin, DocumentProfile, SynthesisResult } from './types';
+import { AnalysisPlugin, DocumentProfile, SynthesisResult, SimpleAnalysisPlugin, AnalysisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
 import type { Comment } from '@/types/documentSchema';
 import type { HeliconeSessionConfig } from '../../helicone/sessions';
@@ -26,6 +26,20 @@ export interface DocumentAnalysisResult {
 export interface PluginManagerConfig {
   routerConfig?: RouterConfig;
   sessionConfig?: HeliconeSessionConfig;
+}
+
+export interface SimpleDocumentAnalysisResult {
+  summary: string;
+  analysis: string;
+  pluginResults: Map<string, AnalysisResult>;
+  allComments: Comment[];
+  statistics: {
+    totalChunks: number;
+    totalComments: number;
+    commentsByPlugin: Map<string, number>;
+    totalCost: number;
+    processingTime: number;
+  };
 }
 
 export class PluginManager {
@@ -301,6 +315,87 @@ export class PluginManager {
 
   clearRoutingCache(): void {
     this.router.clearCache();
+  }
+
+  /**
+   * Simplified document analysis using new plugin API
+   * Each plugin gets all chunks and handles its own workflow
+   */
+  async analyzeDocumentSimple(
+    text: string,
+    plugins: SimpleAnalysisPlugin[]
+  ): Promise<SimpleDocumentAnalysisResult> {
+    this.startTime = Date.now();
+
+    // Set session context if available
+    if (this.sessionConfig) {
+      sessionContext.setSession(this.sessionConfig);
+    }
+
+    // Create chunks for plugins to use
+    const chunks = createChunks(text);
+    
+    // Run all plugins in parallel
+    const pluginResults = new Map<string, AnalysisResult>();
+    const allComments: Comment[] = [];
+    let totalCost = 0;
+    
+    await Promise.all(
+      plugins.map(async (plugin) => {
+        try {
+          console.log(`🔍 Running ${plugin.name()} analysis...`);
+          const result = await plugin.analyze(chunks, text);
+          
+          pluginResults.set(plugin.name(), result);
+          allComments.push(...result.comments);
+          totalCost += result.cost;
+          
+          console.log(`✅ ${plugin.name()}: ${result.comments.length} comments, $${result.cost.toFixed(4)}`);
+        } catch (error) {
+          console.error(`❌ ${plugin.name()} failed:`, error);
+          // Store empty result for failed plugins
+          pluginResults.set(plugin.name(), {
+            summary: "",
+            analysis: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            comments: [],
+            llmInteractions: [],
+            cost: 0
+          });
+        }
+      })
+    );
+
+    // Generate overall summary
+    const pluginSummaries = Array.from(pluginResults.entries())
+      .filter(([_, result]) => result.summary)
+      .map(([name, result]) => `**${name}**: ${result.summary}`)
+      .join('\n');
+
+    const summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
+    
+    const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}`;
+
+    // Calculate statistics
+    const commentsByPlugin = new Map<string, number>();
+    for (const [name, result] of pluginResults) {
+      commentsByPlugin.set(name, result.comments.length);
+    }
+
+    const processingTime = Date.now() - this.startTime;
+
+    return {
+      summary,
+      analysis,
+      pluginResults,
+      allComments,
+      statistics: {
+        totalChunks: chunks.length,
+        totalComments: allComments.length,
+        commentsByPlugin,
+        totalCost,
+        processingTime
+      }
+    };
   }
 
   // Router LLM interaction methods for monitoring

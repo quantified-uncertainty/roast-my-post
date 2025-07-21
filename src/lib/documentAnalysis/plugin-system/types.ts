@@ -138,6 +138,7 @@ export interface PluginResult {
   llmCalls: LLMInteraction[];
 }
 
+// Legacy plugin interface - use SimpleAnalysisPlugin for new plugins
 export interface AnalysisPlugin<TState = any> {
   // Identity
   name(): string;
@@ -148,16 +149,40 @@ export interface AnalysisPlugin<TState = any> {
   // Optional: examples to improve routing accuracy
   routingExamples?(): RoutingExample[];
   
-  // Processing methods
+  // Processing methods (legacy)
   processChunk(chunk: TextChunk): Promise<ChunkResult>;
   synthesize(): Promise<SynthesisResult>;
   
-  // Comment generation (new)
+  // Comment generation (legacy)
   generateComments?(context: GenerateCommentsContext): Comment[];
   
   // State management
   getState(): TState;
   clearState(): void;
+}
+
+// New simplified Plugin API
+export interface AnalysisResult {
+  summary: string;
+  analysis: string;
+  comments: Comment[];
+  llmInteractions: LLMInteraction[];
+  cost: number;
+}
+
+export interface SimpleAnalysisPlugin {
+  // Metadata
+  name(): string;
+  promptForWhenToUse(): string;
+  routingExamples?(): RoutingExample[];
+  
+  // Core workflow - single method that handles everything
+  analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult>;
+  
+  // For testing/debugging - expose internal state
+  getDebugInfo?(): any;
+  getCost(): number;
+  getLLMInteractions(): LLMInteraction[];
 }
 
 export interface RoutingDecision {

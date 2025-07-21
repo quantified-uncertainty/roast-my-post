@@ -84,60 +84,6 @@ export abstract class BasePlugin<TState = any> implements AnalysisPlugin<TState>
 
   protected abstract createInitialState(): TState;
 
-  /**
-   * Track LLM interactions with automatic cost calculation
-   */
-  protected async trackLLMCall<T>(
-    model: string,
-    prompt: string,
-    llmCall: () => Promise<T>
-  ): Promise<{ result: T; interaction: LLMInteraction }> {
-    const startTime = Date.now();
-
-    try {
-      const result = await llmCall();
-      const duration = Date.now() - startTime;
-
-      const promptTokens = estimateTokens(prompt);
-      const responseText = JSON.stringify(result);
-      const completionTokens = estimateTokens(responseText);
-      
-      const interaction: LLMInteraction = {
-        model,
-        prompt,
-        response: responseText,
-        tokensUsed: {
-          prompt: promptTokens,
-          completion: completionTokens,
-          total: promptTokens + completionTokens
-        },
-        timestamp: new Date(),
-        duration
-      };
-
-      this.llmInteractions.push(interaction);
-      this.totalCost += this.calculateCost(interaction.tokensUsed);
-
-      return { result, interaction };
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      const interaction: LLMInteraction = {
-        model,
-        prompt,
-        response: `Error: ${error}`,
-        tokensUsed: {
-          prompt: estimateTokens(prompt),
-          completion: 0,
-          total: estimateTokens(prompt)
-        },
-        timestamp: new Date(),
-        duration
-      };
-
-      this.llmInteractions.push(interaction);
-      throw error;
-    }
-  }
 
 
   /**
