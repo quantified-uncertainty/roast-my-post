@@ -70,16 +70,17 @@ export async function analyzeWithMultiEpistemicEval(
     });
     
     // Register plugins
+    // TODO: Re-enable other plugins after they're updated to new architecture
     const plugins: any[] = [
       new MathPlugin(),
-      new SpellingPlugin(),
-      new FactCheckPlugin()
+      // new SpellingPlugin(),  // Disabled - needs refactor
+      // new FactCheckPlugin()  // Disabled - needs refactor
     ];
     
     // Only add ForecastPlugin if explicitly enabled (it's expensive)
-    if (options.enableForecasting) {
-      plugins.push(new ForecastPlugin());
-    }
+    // if (options.enableForecasting) {
+    //   plugins.push(new ForecastPlugin());  // Disabled - needs refactor
+    // }
     
     manager.registerPlugins(plugins);
     
@@ -104,7 +105,7 @@ export async function analyzeWithMultiEpistemicEval(
       modelName: 'claude-3-haiku-20240307',
       priceInDollars: pluginResults.statistics.tokensUsed * 0.00000025, // Approximate cost based on total tokens
       timeInSeconds: pluginDuration / 1000,
-      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, found ${pluginResults.statistics.totalFindings} findings. Router used ${routerTokens} tokens in ${routerInteractions.length} routing calls.`,
+      log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments. Router used ${routerTokens} tokens in ${routerInteractions.length} routing calls.`,
       llmInteractions: routerInteractions.map(convertRichLLMInteraction)
     });
     
@@ -115,23 +116,27 @@ export async function analyzeWithMultiEpistemicEval(
     // Collect all findings from all plugins
     const allFindings: any[] = [];
     
-    // First check if we have SPELLING plugin results
-    if (pluginResults.pluginResults instanceof Map) {
-      const spellingResult = pluginResults.pluginResults.get('SPELLING');
-      if (spellingResult) {
-        logger.info(`SPELLING plugin has ${spellingResult.findings.length} findings`);
-        
-        // The SpellingPlugin stores detailed error info in its state
-        // but only returns high-level findings in synthesize()
-        // For now, we'll need to use what's available in the synthesis
-        allFindings.push(...spellingResult.findings);
-      }
-      
-      // Also collect from other plugins
-      for (const [pluginName, pluginResult] of pluginResults.pluginResults.entries()) {
-        if (pluginName !== 'SPELLING') {
-          allFindings.push(...pluginResult.findings);
-        }
+    // Collect comments from all plugins instead of findings
+    // Since the new plugin system generates comments directly
+    if (pluginResults.pluginComments instanceof Map) {
+      for (const [pluginName, comments] of pluginResults.pluginComments.entries()) {
+        logger.info(`${pluginName} plugin generated ${comments.length} comments`);
+        // Convert comments to findings format for backwards compatibility
+        // with the highlight extraction logic below
+        comments.forEach(comment => {
+          if (comment.highlight && comment.highlight.startOffset >= 0) {
+            allFindings.push({
+              type: pluginName.toLowerCase(),
+              severity: comment.importance >= 7 ? 'high' : comment.importance >= 4 ? 'medium' : 'low',
+              message: comment.description,
+              locationHint: {
+                lineNumber: comment.highlight.startLine || 0,
+                lineText: comment.highlight.quotedText,
+                matchText: comment.highlight.quotedText
+              }
+            });
+          }
+        });
       }
     }
     
@@ -259,34 +264,30 @@ function formatPluginFindings(results: any): string {
   // Overall statistics
   sections.push(`OVERALL STATISTICS:
 - Total chunks analyzed: ${results.statistics.totalChunks}
-- Total findings: ${results.statistics.totalFindings}
-- Critical findings: ${countCriticalFindings(results)}`);
+- Total comments generated: ${results.statistics.totalComments}
+- Processing time: ${(results.statistics.processingTime / 1000).toFixed(1)}s`);
   
-  // Findings by type
-  const findingsByType: string[] = [];
-  if (results.statistics.findingsByType instanceof Map) {
-    for (const [type, count] of results.statistics.findingsByType.entries()) {
-      findingsByType.push(`  - ${type}: ${count}`);
+  // Comments by plugin
+  const commentsByPlugin: string[] = [];
+  if (results.statistics.commentsByPlugin instanceof Map) {
+    for (const [plugin, count] of results.statistics.commentsByPlugin.entries()) {
+      if (count > 0) {
+        commentsByPlugin.push(`  - ${plugin}: ${count} comments`);
+      }
     }
   }
-  if (findingsByType.length > 0) {
-    sections.push(`\nFINDINGS BY TYPE:\n${findingsByType.join('\n')}`);
+  if (commentsByPlugin.length > 0) {
+    sections.push(`\nCOMMENTS BY PLUGIN:\n${commentsByPlugin.join('\n')}`);
   }
   
   // Plugin summaries
   if (results.pluginResults instanceof Map) {
     for (const [pluginName, pluginResult] of results.pluginResults.entries()) {
-      const criticalFindings = pluginResult.findings
-        .filter((f: any) => f.severity === 'high' || f.severity === 'medium')
-        .slice(0, 5);
-      
       let pluginSection = `\n${pluginName.toUpperCase()} ANALYSIS:\n${pluginResult.summary}`;
       
-      if (criticalFindings.length > 0) {
-        pluginSection += '\nKey findings:';
-        criticalFindings.forEach((f: any) => {
-          pluginSection += `\n  - [${f.severity}] ${f.message}`;
-        });
+      // Add analysis summary if available
+      if (pluginResult.analysisSummary) {
+        pluginSection += `\n\nDetailed Analysis:\n${pluginResult.analysisSummary}`;
       }
       
       sections.push(pluginSection);
@@ -302,15 +303,13 @@ function formatPluginFindings(results: any): string {
 }
 
 /**
- * Count critical (high/medium severity) findings
+ * Count high importance comments
  */
-function countCriticalFindings(results: any): number {
+function countHighImportanceComments(results: any): number {
   let count = 0;
-  if (results.pluginResults instanceof Map) {
-    for (const [_, pluginResult] of results.pluginResults.entries()) {
-      count += pluginResult.findings.filter((f: any) => 
-        f.severity === 'high' || f.severity === 'medium'
-      ).length;
+  if (results.pluginComments instanceof Map) {
+    for (const [_, comments] of results.pluginComments.entries()) {
+      count += comments.filter((c: Comment) => c.importance >= 7).length;
     }
   }
   return count;
