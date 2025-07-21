@@ -8,7 +8,6 @@
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../../logger";
-import { PromptBuilder } from "../../builders/PromptBuilder";
 import { BasePlugin } from "../../core/BasePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
@@ -28,6 +27,7 @@ import {
 } from "../../utils/pluginHelpers";
 import { generateFindingId } from "../../utils/findingHelpers";
 import { getMathExtractionConfig, type MathExtractionResult, type MathFindingStorage } from "./types";
+import { MathPromptBuilder } from "./promptBuilder";
 
 export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
   private findings: MathFindingStorage = {
@@ -147,7 +147,7 @@ export class MathPlugin extends BasePlugin<{}> implements SimpleAnalysisPlugin {
    * Extract math findings from a text chunk
    */
   private async extractPotentialFindings(chunk: TextChunk): Promise<void> {
-    const promptBuilder = PromptBuilder.forMath();
+    const promptBuilder = new MathPromptBuilder();
     
     const extraction = await extractWithTool<{
       items: MathExtractionResult[];

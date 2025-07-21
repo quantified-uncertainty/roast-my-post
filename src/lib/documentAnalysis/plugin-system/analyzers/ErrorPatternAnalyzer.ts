@@ -185,24 +185,6 @@ export class ErrorPatternAnalyzer {
   /**
    * Static factory methods for common error categorizations
    */
-  static forMath(): ErrorPatternAnalyzer {
-    return new ErrorPatternAnalyzer({
-      categories: {
-        arithmetic: ['arithmetic', 'calculation', 'addition', 'subtraction', 'multiplication', 'division'],
-        unit_conversion: ['unit', 'conversion', 'dimensional', 'measurement'],
-        percentage: ['percentage', 'percent', '%', 'proportion', 'ratio'],
-        formula: ['formula', 'equation', 'expression'],
-        logic: ['logic', 'reasoning', 'proof', 'derivation']
-      },
-      severityMap: {
-        arithmetic: 'high',
-        unit_conversion: 'high',
-        percentage: 'medium',
-        formula: 'high',
-        logic: 'medium'
-      }
-    });
-  }
 
   static forSpelling(): ErrorPatternAnalyzer {
     return new ErrorPatternAnalyzer({

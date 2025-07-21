@@ -1,22 +1,21 @@
 /**
- * Simplified prompt builder for consistent prompt generation
+ * Math-specific prompt builder
  */
 
-import { TextChunk } from '../TextChunk';
+import { TextChunk } from '../../TextChunk';
 
-export class PromptBuilder {
-  private domain: string;
-  private taskDescription: string;
-  private examples: string[];
-
-  constructor(domain: string, taskDescription: string, examples: string[] = []) {
-    this.domain = domain;
-    this.taskDescription = taskDescription;
-    this.examples = examples;
-  }
+export class MathPromptBuilder {
+  private domain = "mathematical expressions and calculations";
+  private taskDescription = "Extract all equations, calculations, and mathematical statements, then verify their correctness";
+  private examples = [
+    "Equations and formulas (2+2=4, E=mc²)",
+    "Statistical calculations or percentages",
+    "Numerical comparisons (X is 3x larger than Y)",
+    "Unit conversions"
+  ];
 
   /**
-   * Build an extraction prompt
+   * Build an extraction prompt for math content
    */
   buildExtractionPrompt(chunk: TextChunk, additionalInstructions?: string): string {
     let prompt = `Extract all ${this.domain} content from this text chunk.
@@ -48,7 +47,7 @@ CRITICAL: You MUST use the extraction tool to report your findings. Do not respo
   }
 
   /**
-   * Build a synthesis prompt
+   * Build a synthesis prompt for math analysis
    */
   buildSynthesisPrompt(
     items: any[],
@@ -77,7 +76,7 @@ CRITICAL: You MUST use the synthesis tool to report your analysis. Provide insig
   }
 
   /**
-   * Build a verification prompt
+   * Build a verification prompt for math content
    */
   buildVerificationPrompt(items: any[], verificationTask: string): string {
     return `Verify the following ${this.domain} items.
@@ -108,43 +107,5 @@ For each item, determine if it's valid/correct and explain your reasoning.`;
     }
     
     return formatted;
-  }
-
-  /**
-   * Factory methods for common domains
-   */
-  static forDomain(
-    domain: string,
-    taskDescription: string,
-    examples?: string[]
-  ): PromptBuilder {
-    return new PromptBuilder(domain, taskDescription, examples || []);
-  }
-
-
-  static forSpelling(): PromptBuilder {
-    return new PromptBuilder(
-      "spelling, grammar, and style issues",
-      "Identify spelling errors, grammatical mistakes, and style improvements",
-      [
-        "Misspelled words",
-        "Grammar errors",
-        "Punctuation issues",
-        "Style and clarity improvements"
-      ]
-    );
-  }
-
-  static forFactChecking(): PromptBuilder {
-    return new PromptBuilder(
-      "factual claims",
-      "Extract factual claims that can be verified, including statistics, dates, and statements about real entities",
-      [
-        "Statistical claims (GDP was $21T in 2023)",
-        "Historical facts (The Berlin Wall fell in 1989)",
-        "Scientific claims (Water boils at 100°C)",
-        "Statements about organizations, people, or places"
-      ]
-    );
   }
 }

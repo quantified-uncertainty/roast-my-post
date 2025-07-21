@@ -2,7 +2,7 @@
  * Test the math location finding
  */
 
-import { findMathLocation, normalizeMathExpression } from './mathLocationFinder';
+import { findMathLocation, normalizeMathExpression } from './locationFinder';
 
 // Test cases
 const testCases = [
