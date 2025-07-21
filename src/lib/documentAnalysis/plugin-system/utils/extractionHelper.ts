@@ -9,7 +9,7 @@ import { createHeliconeHeaders } from '../../../helicone/sessions';
 import { TextChunk } from '../TextChunk';
 import { logger } from '../../../logger';
 import { estimateTokens } from '../../../tokenUtils';
-import type { LLMInteraction } from '../types';
+import type { LLMInteraction } from '@/types/llm';
 
 export interface ExtractionConfig {
   toolName: string;
@@ -69,25 +69,24 @@ export async function extractWithTool<T>(
     
     const cost = calculateCost(MODEL_CONFIG.analysis, promptTokens, completionTokens);
     
-    // Create interaction record
+    // Create interaction record in standard LLMInteraction format
     const interaction: LLMInteraction = {
-      model: MODEL_CONFIG.analysis,
-      prompt,
-      response: responseText,
-      tokensUsed: {
-        prompt: promptTokens,
-        completion: completionTokens,
-        total: promptTokens + completionTokens
-      },
-      timestamp: new Date(),
-      duration
+      messages: [
+        { role: 'system' as const, content: 'You are a document analysis assistant.' },
+        { role: 'user' as const, content: prompt },
+        { role: 'assistant' as const, content: responseText }
+      ],
+      usage: {
+        input_tokens: promptTokens,
+        output_tokens: completionTokens
+      }
     };
     
     logger.info(`Plugin extraction completed`, {
       plugin: config.pluginName,
       toolName: config.toolName,
       chunkId: chunk.id,
-      tokensUsed: interaction.tokensUsed,
+      tokensUsed: { prompt: promptTokens, completion: completionTokens, total: promptTokens + completionTokens },
       cost
     });
     
