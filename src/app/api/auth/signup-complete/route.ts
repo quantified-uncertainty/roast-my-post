@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { signIn } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const cookieStore = await cookies();
     const signupCookie = cookieStore.get('signup-pending');

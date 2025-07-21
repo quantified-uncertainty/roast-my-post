@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { toolRegistry } from '@/tools/registry';
-import { BeakerIcon, ChartBarIcon, MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {
   analysis: MagnifyingGlassIcon,

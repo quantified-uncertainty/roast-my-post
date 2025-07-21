@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DocumentsClient from "@/app/docs/DocumentsClient";
 import { DocumentModel } from "@/models/Document";
-import type { Document } from "@/types/documentSchema";
 import { USER_DISPLAY } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +12,6 @@ export default async function UserDocumentsPage({
   params: Promise<{ userId: string }>;
 }) {
   const { userId } = await params;
-  const session = await auth();
-  const currentUserId = session?.user?.id;
 
   // Get the user to display their name
   const user = await prisma.user.findUnique({
@@ -53,7 +49,6 @@ export default async function UserDocumentsPage({
           
           <DocumentsClient 
             documents={userDocuments} 
-            currentUserId={currentUserId || ''} 
             showNewButton={false}
           />
         </div>

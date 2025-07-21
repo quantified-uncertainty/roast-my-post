@@ -29,9 +29,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Search with ILIKE
-    const searchPattern = `%${query}%`;
-    
     // Build search conditions
     const searchConditions: any[] = [
       // Always search in metadata (searchableText)

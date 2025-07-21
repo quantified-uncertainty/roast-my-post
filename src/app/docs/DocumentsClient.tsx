@@ -24,12 +24,10 @@ import {
 
 export default function DocumentsClient({
   documents,
-  currentUserId,
   showNewButton = true,
   initialLoad = false,
 }: {
   documents: Document[];
-  currentUserId?: string;
   showNewButton?: boolean;
   initialLoad?: boolean;
 }) {
