@@ -6,8 +6,8 @@ import type { Document } from '../../../../types/documents';
 jest.mock('../../plugin-system', () => ({
   PluginManager: jest.fn().mockImplementation(() => ({
     analyzeDocumentSimple: jest.fn().mockResolvedValue({
-      summary: 'Analyzed 5 sections with 2 plugins. Found 3 total issues.',
-      analysis: '**Document Analysis Summary**\n\nThis document was analyzed by 2 specialized plugins that examined 5 sections.\n\n**SPELLING**: Found 3 spelling errors\n**MATH**: No math errors found',
+      summary: 'Analyzed 5 sections with 4 plugins. Found 3 total issues.',
+      analysis: '**Document Analysis Summary**\n\nThis document was analyzed by 4 specialized plugins that examined 5 sections.\n\n**SPELLING**: Found 3 spelling errors\n**MATH**: No math errors found',
       pluginResults: new Map([
         ['SPELLING', {
           summary: 'Found 3 spelling errors',
@@ -211,18 +211,18 @@ describe('multiEpistemicEval', () => {
     expect(pluginTask?.priceInDollars).toBeGreaterThan(0);
     expect(pluginTask?.log).toContain('Analyzed 5 chunks');
     expect(pluginTask?.log).toContain('generated 3 comments');
-    expect(pluginTask?.log).toContain('using 1 plugins');
+    expect(pluginTask?.log).toContain('using 4 plugins');
   });
 
   it('should generate summary from plugin results', async () => {
     const result = await analyzeWithMultiEpistemicEval(mockDocument, mockAgent);
     
     // Check summary includes plugin statistics
-    expect(result.summary).toContain('Analyzed 5 sections with 2 plugins. Found 3 total issues.');
+    expect(result.summary).toContain('Analyzed 5 sections with 4 plugins. Found 3 total issues.');
     
     // Check analysis is properly structured
     expect(result.analysis).toContain('Document Analysis Summary');
-    expect(result.analysis).toContain('2 specialized plugins');
+    expect(result.analysis).toContain('4 specialized plugins');
     expect(result.analysis).toContain('**SPELLING**');
   });
 });
