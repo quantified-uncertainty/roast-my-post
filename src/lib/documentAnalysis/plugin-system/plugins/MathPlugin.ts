@@ -215,17 +215,16 @@ export class MathPlugin extends BasePlugin<{}> {
   }
 
   // ============================================
-  // LEGACY METHODS (for BasePlugin compatibility)
+  // REQUIRED ABSTRACT METHOD IMPLEMENTATIONS
   // ============================================
 
   /**
-   * Legacy processChunk method
+   * Process a chunk - delegates to extractPotentialFindings
    */
   async processChunk(chunk: TextChunk): Promise<ChunkResult> {
     await this.extractPotentialFindings(chunk);
-
     return {
-      findings: [], // Deprecated
+      findings: [], // Not used in new architecture
       llmCalls: this.getLLMInteractions().slice(-1),
       metadata: {
         tokensUsed: this.getTotalCost(),
@@ -235,20 +234,10 @@ export class MathPlugin extends BasePlugin<{}> {
   }
 
   /**
-   * Legacy synthesize method
+   * Synthesize results - runs investigation and analysis stages
    */
   async synthesize(): Promise<SynthesisResult> {
-    // Run all stages if not already done
     await this.investigateFindings();
-    
-    // IMPORTANT: Must locate findings before generating comments!
-    // This was missing and causing 0 comments to be generated
-    if (this.findings.located.length === 0 && this.findings.investigated.length > 0) {
-      // We need the document text to locate findings
-      // For now, we'll skip location in synthesize and rely on generateComments
-      logger.warn("MathPlugin: synthesize called but cannot locate findings without document text");
-    }
-    
     await this.analyzeFindingPatterns();
 
     return {
@@ -264,7 +253,7 @@ export class MathPlugin extends BasePlugin<{}> {
   }
 
   // ============================================
-  // ORCHESTRATION METHODS
+  // PLUGIN INTERFACE IMPLEMENTATION
   // ============================================
 
   /**
