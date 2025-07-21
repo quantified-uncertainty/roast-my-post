@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { successResponse, commonErrors } from "@/lib/api-response-helpers";
 
 export async function GET(
   request: NextRequest,
@@ -113,7 +113,7 @@ export async function GET(
     }));
 
     return successResponse({ jobs: transformedJobs });
-  } catch (error) {
+  } catch {
     // Error is handled by returning error response
     return commonErrors.serverError("Failed to fetch jobs");
   }

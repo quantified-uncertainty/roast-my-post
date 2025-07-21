@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         name: user.name,
       },
     });
-  } catch (error) {
+  } catch {
     // Error validating API key
     return NextResponse.json(
       { error: "Failed to validate API key" },

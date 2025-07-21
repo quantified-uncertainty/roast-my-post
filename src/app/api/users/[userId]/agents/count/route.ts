@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { UserModel } from "@/models/User";
 
-export async function GET(req: NextRequest, context: any) {
+export async function GET(req: NextRequest, context: { params: Promise<{ userId: string }> }) {
   const params = await context.params;
   try {
     const userId = params.userId;

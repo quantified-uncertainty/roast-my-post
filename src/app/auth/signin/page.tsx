@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Suspense } from "react";
 
 // Common form input styles
@@ -24,9 +24,9 @@ function SignInForm() {
       setHasAutoSubmitted(true);
       handleSubmit();
     }
-  }, [autoSubmit, email, hasAutoSubmitted]);
+  }, [autoSubmit, email, hasAutoSubmitted, handleSubmit]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!emailInput) return;
 
@@ -43,7 +43,7 @@ function SignInForm() {
       console.error("Sign in error:", error);
       setIsLoading(false);
     }
-  };
+  }, [emailInput, callbackUrl]);
 
   // Show loading state when auto-submitting from signup
   if (autoSubmit && (isLoading || hasAutoSubmitted)) {

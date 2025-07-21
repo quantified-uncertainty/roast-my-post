@@ -4,7 +4,7 @@ import { authenticateRequest } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 import { logger } from "@/lib/logger";
 
-export async function GET(request: NextRequest, context: any) {
+export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
   try {
     const agentId = params.agentId;

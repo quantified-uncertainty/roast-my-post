@@ -13,7 +13,7 @@ const queryEvaluationsSchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 });
 
-async function createEvaluation(documentId: string, agentId: string, userId: string) {
+async function createEvaluation(documentId: string, agentId: string) {
   return await prisma.$transaction(async (tx) => {
     // Check if evaluation already exists
     const existing = await tx.evaluation.findFirst({
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: "Invalid JSON in request body" },
         { status: 400 }
@@ -266,7 +266,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const results = [];
       for (const agentId of agentIds) {
         try {
-          const result = await createEvaluation(documentId, agentId, userId);
+          const result = await createEvaluation(documentId, agentId);
           results.push({
             agentId,
             evaluationId: result.evaluation.id,
@@ -274,8 +274,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             status: result.job.status.toLowerCase(),
             created: result.created,
           });
-        } catch (error) {
-          console.error(`Failed to create evaluation for agent ${agentId}:`, error);
+        } catch {
+          console.error(`Failed to create evaluation for agent ${agentId}`);
           results.push({
             agentId,
             error: 'Failed to create evaluation',
@@ -331,8 +331,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           status: result.job.status.toLowerCase(),
           created: result.created,
         });
-      } catch (error) {
-        logger.error('Failed to create evaluation:', error);
+      } catch {
+        logger.error('Failed to create evaluation');
         return NextResponse.json(
           { error: "Failed to create evaluation" },
           { status: 500 }

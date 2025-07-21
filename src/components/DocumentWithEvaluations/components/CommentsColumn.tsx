@@ -73,7 +73,7 @@ export function CommentsColumn({
 
       setCommentPositions(positions);
     },
-    [sortedComments]
+    [sortedComments, contentRef]
   );
 
   // Check if highlights are ready using MutationObserver

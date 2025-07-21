@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { DocumentModel } from "@/models/Document";
 import yaml from "js-yaml";
+import type { Document, Evaluation, Comment } from "@/types/documentSchema";
 
-function documentToMarkdown(doc: any): string {
+function documentToMarkdown(doc: Document): string {
   const metadata = [
     `# ${doc.title}`,
     "",
@@ -28,7 +29,7 @@ function documentToMarkdown(doc: any): string {
       "",
     ];
 
-    doc.reviews.forEach((review: any) => {
+    doc.reviews.forEach((review: Evaluation) => {
       evalSection.push(`### ${review.agent.name}`);
       evalSection.push("");
       evalSection.push(`**Description**: ${review.agent.description}`);
@@ -53,7 +54,7 @@ function documentToMarkdown(doc: any): string {
 
       if (review.comments && review.comments.length > 0) {
         evalSection.push("**Comments**:");
-        review.comments.forEach((comment: any, idx: number) => {
+        review.comments.forEach((comment: Comment, idx: number) => {
           evalSection.push(`${idx + 1}. ${comment.description}`);
           if (comment.highlight?.quotedText) {
             evalSection.push(`   > "${comment.highlight.quotedText}"`);
@@ -72,8 +73,8 @@ function documentToMarkdown(doc: any): string {
   return metadata;
 }
 
-function documentToYAML(doc: any): string {
-  const exportData: any = {
+function documentToYAML(doc: Document): string {
+  const exportData: Record<string, any> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
@@ -88,7 +89,7 @@ function documentToYAML(doc: any): string {
   };
 
   if (doc.reviews && doc.reviews.length > 0) {
-    exportData.evaluations = doc.reviews.map((review: any) => ({
+    exportData.evaluations = doc.reviews.map((review: Evaluation) => ({
       agent: {
         id: review.agent.id,
         name: review.agent.name,
@@ -98,7 +99,7 @@ function documentToYAML(doc: any): string {
         summary: review.summary,
         analysis: review.analysis,
         grade: review.grade,
-        comments: review.comments?.map((comment: any) => ({
+        comments: review.comments?.map((comment: Comment) => ({
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,
@@ -119,8 +120,8 @@ function documentToYAML(doc: any): string {
   });
 }
 
-function documentToJSON(doc: any): any {
-  const exportData: any = {
+function documentToJSON(doc: Document): Record<string, any> {
+  const exportData: Record<string, any> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
@@ -136,7 +137,7 @@ function documentToJSON(doc: any): any {
   };
 
   if (doc.reviews && doc.reviews.length > 0) {
-    exportData.evaluations = doc.reviews.map((review: any) => ({
+    exportData.evaluations = doc.reviews.map((review: Evaluation) => ({
       agent: {
         id: review.agent.id,
         name: review.agent.name,
@@ -147,7 +148,7 @@ function documentToJSON(doc: any): any {
         analysis: review.analysis,
         grade: review.grade,
         selfCritique: review.selfCritique,
-        comments: review.comments?.map((comment: any) => ({
+        comments: review.comments?.map((comment: Comment) => ({
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,
@@ -165,7 +166,7 @@ function documentToJSON(doc: any): any {
   return exportData;
 }
 
-export async function GET(req: NextRequest, context: any) {
+export async function GET(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
   const params = await context.params;
   const { slugOrId: id } = params;
   const searchParams = req.nextUrl.searchParams;
