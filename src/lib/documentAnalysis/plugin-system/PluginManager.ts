@@ -8,8 +8,12 @@
 import { SimpleAnalysisPlugin, AnalysisResult } from './types';
 import { TextChunk, createChunks } from './TextChunk';
 import type { Comment } from '@/types/documentSchema';
+import type { Document } from '@/types/documents';
+import type { LLMInteraction } from '@/types/llm';
 import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { sessionContext } from '../../helicone/sessionContext';
+import { getDocumentFullContent } from '../../../utils/documentContentHelpers';
+import { logger } from '../../logger';
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
@@ -27,6 +31,22 @@ export interface SimpleDocumentAnalysisResult {
     totalCost: number;
     processingTime: number;
   };
+}
+
+export interface FullDocumentAnalysisResult {
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade?: number;
+  highlights: Comment[];
+  tasks: Array<{
+    name: string;
+    modelName: string;
+    priceInDollars: number;
+    timeInSeconds: number;
+    log: string;
+    llmInteractions: LLMInteraction[];
+  }>;
 }
 
 export class PluginManager {
@@ -178,5 +198,131 @@ export class PluginManager {
     }
     
     return results;
+  }
+
+  /**
+   * High-level document analysis using all available plugins
+   * This is the main entry point for full document analysis
+   */
+  async analyzeDocument(
+    document: Document,
+    options: {
+      targetHighlights?: number;
+    } = {}
+  ): Promise<FullDocumentAnalysisResult> {
+    const tasks: FullDocumentAnalysisResult['tasks'] = [];
+    const targetHighlights = options.targetHighlights || 5;
+
+    try {
+      // Step 1: Run plugin-based analysis
+      logger.info(`Starting document analysis with plugin system...`);
+      const pluginStartTime = Date.now();
+
+      // TODO: Make plugin selection configurable
+      const plugins: SimpleAnalysisPlugin[] = [
+        // Import here to avoid circular dependencies
+        new (await import('./plugins/math')).MathPlugin(),
+        new (await import('./plugins/spelling')).SpellingPlugin(),
+        new (await import('./plugins/fact-check')).FactCheckPlugin(),
+        new (await import('./plugins/forecast')).ForecastPlugin(),
+      ];
+
+      // Get full document content with prepend
+      const { content: fullContent, prependLineCount } = getDocumentFullContent(document);
+
+      // Run analysis on full content using new API
+      const pluginResults = await this.analyzeDocumentSimple(fullContent, plugins);
+
+      const pluginDuration = Date.now() - pluginStartTime;
+      logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
+
+      // Collect LLM interactions from all plugins
+      const allLLMInteractions: LLMInteraction[] = [];
+      for (const [pluginName, result] of pluginResults.pluginResults) {
+        allLLMInteractions.push(...result.llmInteractions);
+      }
+
+      tasks.push({
+        name: "Plugin Analysis",
+        modelName: "claude-3-5-sonnet-20241022", // Update to current model
+        priceInDollars: pluginResults.statistics.totalCost,
+        timeInSeconds: pluginDuration / 1000,
+        log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments using ${plugins.length} plugins.`,
+        llmInteractions: allLLMInteractions,
+      });
+
+      // Step 2: Plugin results are ready
+      logger.info(
+        `Plugin analysis completed: ${pluginResults.statistics.totalComments} comments generated`
+      );
+
+      // Step 3: Use summary and analysis from plugin results
+      const { summary, analysis } = pluginResults;
+
+      // Step 4: Get highlights from plugin results
+      logger.info(`Converting plugin comments to highlights...`);
+      const highlights: Comment[] = pluginResults.allComments;
+
+      // Log comment counts by plugin
+      for (const [pluginName, count] of pluginResults.statistics.commentsByPlugin.entries()) {
+        logger.info(`${pluginName} plugin generated ${count} comments`);
+      }
+
+      logger.info(`Total highlights from plugins: ${highlights.length}`);
+      
+      // Deduplicate highlights that might overlap
+      const uniqueHighlights = this.deduplicateHighlights(highlights);
+
+      logger.info(`Final highlights: ${uniqueHighlights.length}`);
+
+      return {
+        thinking: "", // Plugin analysis doesn't provide thinking
+        analysis: analysis,
+        summary: summary,
+        grade: undefined, // Plugins don't provide grades yet
+        highlights: uniqueHighlights,
+        tasks,
+      };
+    } catch (error) {
+      logger.error("Document analysis failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deduplicate highlights based on overlapping positions
+   */
+  private deduplicateHighlights(highlights: Comment[]): Comment[] {
+    if (highlights.length <= 1) return highlights;
+
+    // Sort by start offset
+    const sorted = [...highlights].sort(
+      (a, b) => a.highlight.startOffset - b.highlight.startOffset
+    );
+
+    const unique: Comment[] = [];
+
+    for (const highlight of sorted) {
+      // Check if this highlight overlaps with any existing unique highlight
+      const overlaps = unique.some((existing) => {
+        const existingStart = existing.highlight.startOffset;
+        const existingEnd = existing.highlight.endOffset;
+        const currentStart = highlight.highlight.startOffset;
+        const currentEnd = highlight.highlight.endOffset;
+
+        // Check for overlap (fixed off-by-one error)
+        return (
+          (currentStart >= existingStart && currentStart < existingEnd) ||
+          (currentEnd > existingStart && currentEnd <= existingEnd) ||
+          (currentStart < existingStart && currentEnd > existingEnd)
+        );
+      });
+
+      if (!overlaps) {
+        unique.push(highlight);
+      }
+    }
+
+    return unique;
   }
 }

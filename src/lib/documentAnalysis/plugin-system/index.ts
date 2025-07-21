@@ -14,7 +14,7 @@ export { createChunks, TextChunk } from "./TextChunk";
 export { BasePlugin } from "./core/BasePlugin";
 // PromptBasedRouter removed - use PluginManager with SimpleAnalysisPlugin instead
 export { PluginManager } from "./PluginManager";
-export type { SimpleDocumentAnalysisResult } from "./PluginManager";
+export type { SimpleDocumentAnalysisResult, FullDocumentAnalysisResult } from "./PluginManager";
 
 // Mixins
 export * from "./mixins/LocationTracking";

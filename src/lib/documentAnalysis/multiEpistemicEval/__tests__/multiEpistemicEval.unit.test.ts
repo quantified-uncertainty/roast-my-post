@@ -132,7 +132,68 @@ jest.mock('../../plugin-system', () => ({
       totalCost: 0.0001,
       processingTime: 2000
     }
-  })
+  }),
+  analyzeDocument: jest.fn().mockResolvedValue({
+      thinking: "",
+      analysis: '**Document Analysis Summary**\n\nThis document was analyzed by 4 specialized plugins that examined 5 sections.\n\n**SPELLING**: Found 3 spelling errors\n**MATH**: No math errors found',
+      summary: 'Analyzed 5 sections with 4 plugins. Found 3 total issues.',
+      grade: undefined,
+      highlights: [
+        { 
+          description: 'Test error 1',
+          importance: 3,
+          highlight: { 
+            startOffset: 0, 
+            endOffset: 10, 
+            quotedText: 'Test error',
+            startLine: 1,
+            endLine: 1,
+            isValid: true
+          },
+          isValid: true
+        },
+        { 
+          description: 'Test error 2',
+          importance: 3,
+          highlight: { 
+            startOffset: 11, 
+            endOffset: 21, 
+            quotedText: 'Test error 2',
+            startLine: 1,
+            endLine: 1,
+            isValid: true
+          },
+          isValid: true
+        },
+        { 
+          description: 'Test error 3',
+          importance: 3,
+          highlight: { 
+            startOffset: 22, 
+            endOffset: 32, 
+            quotedText: 'Test error 3',
+            startLine: 2,
+            endLine: 2,
+            isValid: true
+          },
+          isValid: true
+        }
+      ],
+      tasks: [{
+        name: "Plugin Analysis",
+        modelName: "claude-3-5-sonnet-20241022",
+        priceInDollars: 0.0001,
+        timeInSeconds: 2,
+        log: "Analyzed 5 chunks, generated 3 comments using 4 plugins.",
+        llmInteractions: [{
+          messages: [
+            { role: 'user', content: 'test prompt' },
+            { role: 'assistant', content: 'test response' }
+          ],
+          usage: { input_tokens: 50, output_tokens: 20 }
+        }]
+      }]
+    })
   })),
   SpellingPlugin: jest.fn(),
   MathPlugin: jest.fn(),
