@@ -190,45 +190,6 @@ export class PluginManager {
     }
   }
 
-  /**
-   * Helper method to analyze a single chunk with specific plugins
-   * Useful for testing or targeted analysis
-   */
-  async analyzeChunk(
-    chunk: TextChunk,
-    plugins: SimpleAnalysisPlugin[]
-  ): Promise<Map<string, any>> {
-    const results = new Map<string, any>();
-    
-    // Run all plugins in parallel
-    const pluginPromises = plugins.map(async (plugin) => {
-      try {
-        const result = await plugin.analyze([chunk], chunk.text);
-        return { plugin: plugin.name(), result, success: true };
-      } catch (error) {
-        console.error(`Plugin ${plugin.name()} failed:`, error);
-        return { 
-          plugin: plugin.name(), 
-          error: error instanceof Error ? error.message : String(error),
-          success: false 
-        };
-      }
-    });
-    
-    // Wait for all to complete
-    const pluginResults = await Promise.all(pluginPromises);
-    
-    // Process results
-    for (const { plugin, result, success, error } of pluginResults) {
-      if (success) {
-        results.set(plugin, result);
-      } else {
-        results.set(plugin, { error });
-      }
-    }
-    
-    return results;
-  }
 
   /**
    * High-level document analysis using all available plugins

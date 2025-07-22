@@ -113,34 +113,6 @@ export function generateCommentsFromFindings(
   return { comments, located, dropped };
 }
 
-/**
- * Convert already-located findings to comments
- */
-export function convertLocatedToComments(
-  findings: LocatedFinding[],
-  options?: {
-    maxComments?: number;
-    minImportance?: number;
-  }
-): Comment[] {
-  const { maxComments = 50, minImportance = 2 } = options || {};
-  
-  return findings
-    .filter(f => severityToImportance(f.severity) >= minImportance)
-    .sort((a, b) => severityToImportance(b.severity) - severityToImportance(a.severity))
-    .slice(0, maxComments)
-    .map(finding => ({
-      description: finding.message,
-      importance: severityToImportance(finding.severity),
-      highlight: {
-        startOffset: finding.locationHint.lineNumber, // This would need proper conversion
-        endOffset: finding.locationHint.lineNumber + finding.locationHint.matchText.length,
-        quotedText: finding.locationHint.matchText,
-        isValid: true
-      },
-      isValid: true
-    }));
-}
 
 /**
  * Get line number at a character position

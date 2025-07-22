@@ -5,19 +5,8 @@
 import type { 
   PotentialFinding, 
   InvestigatedFinding, 
-  LocatedFinding, 
-  GlobalFinding
+  LocatedFinding
 } from '../types';
-
-// Previously imported from deprecated-types
-type LegacyPhase = 'processChunk' | 'synthesize' | 'generateComments';
-
-interface PluginError {
-  timestamp: Date;
-  phase: LegacyPhase;
-  error: string;
-  context?: any;
-}
 
 /**
  * Generate a unique ID for findings
@@ -41,21 +30,6 @@ export function severityToImportance(severity: string): number {
   }
 }
 
-/**
- * Create a plugin error object
- */
-export function createPluginError(
-  phase: PluginError['phase'],
-  error: unknown,
-  context?: Record<string, unknown>
-): PluginError {
-  return {
-    timestamp: new Date(),
-    phase,
-    error: error instanceof Error ? error.message : String(error),
-    context
-  };
-}
 
 /**
  * Convert potential findings to investigated findings
@@ -125,38 +99,3 @@ export function sortByImportance(
   });
 }
 
-/**
- * Create a debug summary of findings
- */
-export function createFindingsSummary(state: {
-  potential: PotentialFinding[];
-  investigated: InvestigatedFinding[];
-  located: LocatedFinding[];
-  global: GlobalFinding[];
-  errors: PluginError[];
-}): Record<string, unknown> {
-  return {
-    counts: {
-      potential: state.potential.length,
-      investigated: state.investigated.length,
-      located: state.located.length,
-      global: state.global.length,
-      errors: state.errors.length
-    },
-    byType: {
-      potential: Array.from(groupByType(state.potential).entries()).map(([type, items]) => ({
-        type,
-        count: items.length
-      })),
-      investigated: Array.from(groupByType(state.investigated).entries()).map(([type, items]) => ({
-        type,
-        count: items.length
-      }))
-    },
-    errorSummary: state.errors.map(e => ({
-      phase: e.phase,
-      error: e.error,
-      timestamp: e.timestamp
-    }))
-  };
-}

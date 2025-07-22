@@ -7,12 +7,10 @@ export * from "./types";
 
 // Core classes
 export { createChunks, TextChunk } from "./TextChunk";
-export { BasePlugin } from "./core/BasePlugin";
+export { SimpleBasePlugin } from "./core/SimpleBasePlugin";
+export { PipelinePlugin } from "./core/PipelinePlugin";
 export { PluginManager } from "./PluginManager";
 export type { SimpleDocumentAnalysisResult, FullDocumentAnalysisResult } from "./PluginManager";
-
-// Mixins
-export * from "./mixins/LocationTracking";
 
 // Builders
 export * from "./builders/FindingBuilder";

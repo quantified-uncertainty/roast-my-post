@@ -104,7 +104,12 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       );
 
       // Track LLM call using parent method
-      await this.trackLLMCall(async () => extraction);
+      if (extraction.interaction) {
+        this.analysisInteractions.push(extraction.interaction);
+      }
+      if (extraction.cost) {
+        this.totalCost += extraction.cost;
+      }
 
       if (extraction.result.claims && extraction.result.claims.length > 0) {
         const findings = convertFactResults(extraction.result.claims, chunk.id, this.name());
@@ -234,7 +239,12 @@ Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
       );
 
       // Track LLM call using parent method
-      await this.trackLLMCall(async () => extraction);
+      if (extraction.interaction) {
+        this.analysisInteractions.push(extraction.interaction);
+      }
+      if (extraction.cost) {
+        this.totalCost += extraction.cost;
+      }
       const { result } = extraction;
 
       if (result.verifications) {

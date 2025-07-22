@@ -36,7 +36,6 @@
 
 import type { Comment } from '@/types/documentSchema';
 import { logger } from '../../../logger';
-import { BasePlugin } from './BasePlugin';
 import { TextChunk } from '../TextChunk';
 import {
   RoutingExample,
@@ -75,20 +74,20 @@ export interface LocationOptions {
  * Abstract base class implementing the common 5-stage pipeline pattern
  */
 export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStorage>
-  extends BasePlugin<{}>
   implements SimpleAnalysisPlugin
 {
   protected findings: TFindingStorage;
   protected analysisInteractions: LLMInteraction[] = [];
+  protected totalCost: number = 0;
+  protected llmInteractions: LLMInteraction[] = [];
 
   constructor() {
-    super({});
     this.findings = this.createInitialFindingStorage();
   }
 
   // Abstract methods that plugins must implement
-  abstract override name(): string;
-  abstract override promptForWhenToUse(): string;
+  abstract name(): string;
+  abstract promptForWhenToUse(): string;
   
   /**
    * Create the initial finding storage structure
@@ -126,7 +125,7 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
   protected abstract generateCommentsFromFindings(documentText: string): Comment[];
 
   // Optional methods with sensible defaults
-  override routingExamples?(): RoutingExample[] {
+  routingExamples?(): RoutingExample[] {
     return [];
   }
 
@@ -173,7 +172,7 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
       analysis: this.findings.analysisSummary || "",
       comments,
       llmInteractions: this.analysisInteractions,
-      cost: this.getTotalCost()
+      cost: this.totalCost
     };
   }
 
@@ -181,7 +180,14 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
    * Get total cost incurred by this plugin
    */
   getCost(): number {
-    return this.getTotalCost();
+    return this.totalCost;
+  }
+
+  /**
+   * Get LLM interactions accumulated during analysis
+   */
+  getLLMInteractions(): LLMInteraction[] {
+    return this.analysisInteractions;
   }
 
   /**
@@ -205,28 +211,10 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
         }
       },
       interactions: this.analysisInteractions,
-      cost: this.getTotalCost()
+      cost: this.totalCost
     };
   }
 
-  /**
-   * Helper method to track LLM calls with automatic cost and interaction storage
-   */
-  protected async trackLLMCall<T extends { interaction: LLMInteraction; cost: number }>(
-    llmCall: () => Promise<T>
-  ): Promise<T> {
-    const result = await llmCall();
-    
-    if (result.interaction) {
-      this.analysisInteractions.push(result.interaction);
-    }
-    
-    if (typeof result.cost === 'number') {
-      this.totalCost += result.cost;
-    }
-    
-    return result;
-  }
 
   /**
    * Helper method to get line number at a specific position in text
@@ -262,18 +250,31 @@ export abstract class PipelinePlugin<TFindingStorage extends PipelineFindingStor
   /**
    * Clear all state including findings and interactions
    */
-  override clearState(): void {
-    super.clearState();
+  clearState(): void {
+    this.totalCost = 0;
+    this.llmInteractions = [];
     this.findings = this.createInitialFindingStorage();
     this.analysisInteractions = [];
   }
 
-  // Legacy methods - throw errors to prevent accidental use
-  async processChunk(): Promise<any> {
-    throw new Error(`${this.name()}: Use analyze() method instead of processChunk()`);
-  }
-
-  async synthesize(): Promise<any> {
-    throw new Error(`${this.name()}: Use analyze() method instead of synthesize()`);
+  /**
+   * Track an LLM call and accumulate cost/interactions
+   * Helper method for plugins to use during extraction
+   */
+  protected async trackLLMCall<T extends { cost?: number; llmInteractions?: LLMInteraction[] }>(
+    operation: () => Promise<T>
+  ): Promise<T> {
+    const result = await operation();
+    
+    if (result.llmInteractions) {
+      this.llmInteractions.push(...result.llmInteractions);
+      this.analysisInteractions.push(...result.llmInteractions);
+    }
+    
+    if (typeof result.cost === 'number') {
+      this.totalCost += result.cost;
+    }
+    
+    return result;
   }
 }
