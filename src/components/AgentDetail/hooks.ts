@@ -77,8 +77,6 @@ export function useAgentDetail(agent: Agent) {
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {
-    if (documents.length > 0) return; // Already loaded
-
     setDocumentsLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/documents`);
@@ -91,7 +89,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setDocumentsLoading(false);
     }
-  }, [agent.id, documents.length]);
+  }, [agent.id]);
 
   // Fetch evaluations
   const fetchEvaluations = useCallback(async (batchId?: string) => {
@@ -114,8 +112,6 @@ export function useAgentDetail(agent: Agent) {
 
   // Fetch batches
   const fetchBatches = useCallback(async () => {
-    if (batches.length > 0) return; // Already loaded
-
     setBatchesLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/batches`);
@@ -128,7 +124,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setBatchesLoading(false);
     }
-  }, [agent.id, batches.length]);
+  }, [agent.id]);
 
   // Fetch jobs
   const fetchJobs = useCallback(async (batchId?: string) => {
@@ -151,8 +147,6 @@ export function useAgentDetail(agent: Agent) {
 
   // Fetch overview stats
   const fetchOverviewStats = useCallback(async () => {
-    if (overviewStats) return; // Already loaded
-
     setOverviewLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/overview`);
@@ -165,7 +159,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setOverviewLoading(false);
     }
-  }, [agent.id, overviewStats]);
+  }, [agent.id]);
 
   // Auto-fetch data based on active tab
   useEffect(() => {
