@@ -9,14 +9,16 @@ import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";
 
 // Helper function to safely convert Decimal to number
-function convertPriceToNumber(price: any): number {
+function convertPriceToNumber(price: unknown): number {
   if (price === null || price === undefined) return 0;
   if (typeof price === 'number') return price;
   if (typeof price === 'string') {
     const parsed = parseFloat(price);
     return isNaN(parsed) ? 0 : parsed;
   }
-  if (typeof price === 'object' && price.toNumber) return price.toNumber();
+  if (typeof price === 'object' && price && 'toNumber' in price && typeof (price as any).toNumber === 'function') {
+    return (price as any).toNumber();
+  }
   const converted = Number(price);
   return isNaN(converted) ? 0 : converted;
 }

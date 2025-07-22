@@ -11,7 +11,7 @@ interface MarkdownRendererProps {
   children: string;
   className?: string;
   inline?: boolean;
-  components?: Record<string, React.ComponentType<any>>;
+  components?: Record<string, React.ComponentType<Record<string, unknown>>>;
 }
 
 function MarkdownRenderer({

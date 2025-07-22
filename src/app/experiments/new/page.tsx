@@ -59,7 +59,7 @@ export default function NewExperimentPage() {
     
     try {
       // Build request body
-      const body: any = {
+      const body: Record<string, unknown> = {
         isEphemeral: true,
         trackingId: experimentSettings.trackingId || undefined,
         description: experimentSettings.description || undefined,

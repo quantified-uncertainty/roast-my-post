@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Metadata } from "next";
 
 interface MonitorLayoutProps {
   children: React.ReactNode;

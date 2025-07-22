@@ -11,7 +11,6 @@ import type { Agent } from "@/types/agentSchema";
 import {
   ChevronDownIcon,
   PlayIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 interface AgentSelectorProps {

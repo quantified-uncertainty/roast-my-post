@@ -220,7 +220,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
               log: task.log ? (() => {
                 try {
                   return JSON.parse(task.log);
-                } catch (e) {
+                } catch (_e) {
                   // If JSON parsing fails, return the raw string
                   return task.log;
                 }

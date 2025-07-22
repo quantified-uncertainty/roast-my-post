@@ -2,9 +2,7 @@
  * Clean input/output test cases for math error checking
  */
 
-import type { TestCase, TestSuite } from '../base/testRunner';
-// Use the tool's own type definitions
-import type { MathError } from './index';
+import type { TestSuite } from '../base/testRunner';
 
 export interface MathTestInput {
   text: string;

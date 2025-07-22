@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Check, Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Document {
   id: string;
