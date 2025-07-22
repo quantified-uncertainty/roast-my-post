@@ -8,7 +8,6 @@ import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentActions } from "@/components/DocumentActions";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import SlateEditor from "@/components/SlateEditor";
-import { GradeBadge } from "@/components/GradeBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { auth } from "@/lib/auth";
@@ -17,9 +16,7 @@ import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,
   BookOpenIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { EvaluationManagement } from "./components/EvaluationManagement";
 
 async function getAvailableAgents(docId: string) {

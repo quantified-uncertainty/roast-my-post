@@ -126,54 +126,6 @@ await callClaude({
 });
 ```
 
-## Migration Guide
-
-### Before (Direct Anthropic Client)
-
-```typescript
-import { createAnthropicClient } from '@/types/openai';
-
-const anthropic = createAnthropicClient();
-const startTime = Date.now();
-
-const response = await anthropic.messages.create({
-  model: 'claude-3-5-sonnet-20241022',
-  max_tokens: 1000,
-  temperature: 0,
-  system: systemPrompt,
-  messages: [{ role: "user", content: userPrompt }]
-});
-
-// Manual interaction tracking
-const interaction: RichLLMInteraction = {
-  model: 'claude-3-5-sonnet-20241022',
-  prompt: `SYSTEM: ${systemPrompt}\n\nUSER: ${userPrompt}`,
-  response: JSON.stringify(response.content),
-  tokensUsed: {
-    prompt: response.usage.input_tokens,
-    completion: response.usage.output_tokens,
-    total: response.usage.input_tokens + response.usage.output_tokens
-  },
-  timestamp: new Date(),
-  duration: Date.now() - startTime
-};
-```
-
-### After (Using Claude Wrapper)
-
-```typescript
-import { callClaude } from '@/lib/claude/wrapper';
-
-const { response, interaction } = await callClaude({
-  system: systemPrompt,
-  messages: [{ role: "user", content: userPrompt }],
-  max_tokens: 1000,
-  temperature: 0
-});
-
-// That's it! Interaction tracking is automatic
-```
-
 ## Best Practices
 
 ### 1. Always Use the Wrapper

@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Suspense } from "react";
 
 // Common form input styles
@@ -18,15 +18,7 @@ function SignInForm() {
   const [emailInput, setEmailInput] = useState(email);
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
-  useEffect(() => {
-    // Auto-submit if coming from signup
-    if (autoSubmit && email && !hasAutoSubmitted) {
-      setHasAutoSubmitted(true);
-      handleSubmit();
-    }
-  }, [autoSubmit, email, hasAutoSubmitted]);
-
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!emailInput) return;
 
@@ -43,7 +35,15 @@ function SignInForm() {
       console.error("Sign in error:", error);
       setIsLoading(false);
     }
-  };
+  }, [emailInput, callbackUrl]);
+
+  useEffect(() => {
+    // Auto-submit if coming from signup
+    if (autoSubmit && email && !hasAutoSubmitted) {
+      setHasAutoSubmitted(true);
+      handleSubmit();
+    }
+  }, [autoSubmit, email, hasAutoSubmitted, handleSubmit]);
 
   // Show loading state when auto-submitting from signup
   if (autoSubmit && (isLoading || hasAutoSubmitted)) {

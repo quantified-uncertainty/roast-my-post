@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   BeakerIcon, 
@@ -48,11 +48,7 @@ export default function ExperimentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [includeExpired, setIncludeExpired] = useState(false);
 
-  useEffect(() => {
-    fetchExperiments();
-  }, [includeExpired]);
-
-  const fetchExperiments = async () => {
+  const fetchExperiments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -65,12 +61,16 @@ export default function ExperimentsPage() {
       
       const data: ExperimentsResponse = await response.json();
       setExperiments(data.batches);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch {
+      setError('An error occurred');
     } finally {
       setLoading(false);
     }
-  };
+  }, [includeExpired]);
+
+  useEffect(() => {
+    fetchExperiments();
+  }, [fetchExperiments]);
 
   const handleDelete = async (experiment: ExperimentBatch) => {
     if (!experiment.trackingId) return;
@@ -106,7 +106,7 @@ export default function ExperimentsPage() {
 
       // Refresh the list
       await fetchExperiments();
-    } catch (err) {
+    } catch {
       alert('Failed to delete experiment');
     }
   };

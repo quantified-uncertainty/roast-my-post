@@ -49,11 +49,6 @@ export default function ImportPage() {
     );
   };
 
-  const toggleAllAgents = () => {
-    setSelectedAgentIds(prev => 
-      prev.length === agents.length ? [] : agents.map(a => a.id)
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -47,9 +47,6 @@ export function HighlightedMarkdown({
   // Update the key when content or analysis changes to force complete re-render
   useEffect(() => {
     if (analysisId) {
-      console.log(
-        `[HighlightedMarkdown] Setting new content key for analysisId: ${analysisId}`
-      );
       setContentKey(`content-${analysisId}-${Date.now()}`);
       setRendered(false);
       setAppliedHighlights(false);
@@ -59,59 +56,21 @@ export function HighlightedMarkdown({
   // Apply highlights after content is rendered - only once per set of highlights
   useEffect(() => {
     if (!containerRef.current || !rendered || appliedHighlights) {
-      console.log(
-        `[HighlightedMarkdown] Skipping highlight application, container ready: ${!!containerRef.current}, rendered: ${rendered}, already applied: ${appliedHighlights}`
-      );
       return;
     }
 
-    console.log(
-      `[HighlightedMarkdown] Applying highlights, count: ${
-        highlights?.length || 0
-      }`
-    );
 
     try {
       if (highlights && highlights.length > 0) {
         // Enhanced debugging for highlights
         highlights.forEach((highlight, index) => {
           const { startOffset, endOffset, quotedText } = highlight.highlight;
-          console.log(`[HighlightedMarkdown] Highlight ${index}:`, {
-            description: highlight.description,
-            startOffset,
-            endOffset,
-            quotedTextPreview: quotedText
-              ? `${quotedText.substring(0, 50)}${
-                  quotedText.length > 50 ? "..." : ""
-                }`
-              : "none",
-          });
 
-          // Debug: Test text finding for problematic highlight
-          if (process.env.NODE_ENV === "development" && containerRef.current) {
-            console.log(
-              `[HighlightedMarkdown] Testing text match for highlight ${index}:`
-            );
-            const found = testFindTextInContainer(
-              containerRef.current,
-              quotedText
-            );
-            console.log(`[HighlightedMarkdown] Match found: ${found}`);
-          }
         });
 
         // Try to find the content text in the container for a reliable check
         if (containerRef.current && containerRef.current.textContent) {
           const contentTextInContainer = containerRef.current.textContent;
-          console.log(
-            `[HighlightedMarkdown] Content length in container: ${contentTextInContainer.length}`
-          );
-          console.log(
-            `[HighlightedMarkdown] DOM content sample: ${contentTextInContainer.substring(
-              0,
-              100
-            )}...`
-          );
         }
 
         applyHighlightsToContainer(
@@ -120,12 +79,8 @@ export function HighlightedMarkdown({
           highlightColors,
           false
         );
-        console.log(`[HighlightedMarkdown] Highlights applied successfully`);
         setAppliedHighlights(true);
       } else {
-        console.log(
-          `[HighlightedMarkdown] No highlights to apply, resetting container`
-        );
         resetContainer(containerRef.current);
         setAppliedHighlights(true);
       }
@@ -169,21 +124,11 @@ export function HighlightedMarkdown({
         }
       });
 
-      console.log(
-        `[HighlightedMarkdown] Updated active state for tag: ${
-          activeTag || "none"
-        }`
-      );
     } catch (err) {
       console.error(`[HighlightedMarkdown] Error updating active state:`, err);
     }
   }, [activeTag, appliedHighlights]);
 
-  console.log(
-    `[HighlightedMarkdown] Rendering with key: ${contentKey}, activeTag: ${
-      activeTag || "none"
-    }, appliedHighlights: ${appliedHighlights}`
-  );
 
   return (
     <div
@@ -193,23 +138,16 @@ export function HighlightedMarkdown({
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset["tag"]) {
-          console.log(
-            `[HighlightedMarkdown] Click on highlight with tag: ${target.dataset["tag"]}`
-          );
           onHighlightClick(target.dataset["tag"]);
         }
       }}
       onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
         if (target.dataset["tag"]) {
-          console.log(
-            `[HighlightedMarkdown] Hover on highlight with tag: ${target.dataset["tag"]}`
-          );
           onHighlightHover(target.dataset["tag"]);
         }
       }}
       onMouseOut={() => {
-        console.log(`[HighlightedMarkdown] Mouse out, clearing hover`);
         onHighlightHover(null);
       }}
     >
@@ -219,9 +157,6 @@ export function HighlightedMarkdown({
       <div
         style={{ display: "none" }}
         ref={() => {
-          console.log(
-            `[HighlightedMarkdown] Setting rendered=true via ref callback`
-          );
           setRendered(true);
         }}
       />

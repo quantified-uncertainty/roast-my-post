@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
-import { useRouter } from "next/navigation";
 import { 
-  EllipsisVerticalIcon, 
   PlusIcon,
   MagnifyingGlassIcon,
   InformationCircleIcon,
@@ -22,7 +20,6 @@ interface ApiKey {
 }
 
 export default function ApiKeysPage() {
-  const router = useRouter();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

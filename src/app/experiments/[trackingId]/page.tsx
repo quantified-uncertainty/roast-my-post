@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { 
   BeakerIcon,
   DocumentIcon,
-  ChartBarIcon,
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -86,11 +85,7 @@ export default function ExperimentDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'results' | 'config'>('results');
 
-  useEffect(() => {
-    fetchExperiment();
-  }, [trackingId]);
-
-  const fetchExperiment = async () => {
+  const fetchExperiment = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/experiments/${trackingId}`);
@@ -106,7 +101,11 @@ export default function ExperimentDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [trackingId]);
+
+  useEffect(() => {
+    fetchExperiment();
+  }, [fetchExperiment]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

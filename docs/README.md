@@ -9,7 +9,6 @@ Development guides and technical documentation
 
 - **[agents.md](development/agents.md)** - Agent system architecture, configuration, and management
 - **[claude-wrapper-pattern.md](development/claude-wrapper-pattern.md)** - Claude API wrapper pattern for consistent LLM interactions
-- **[claude-wrapper-migration-guide.md](development/claude-wrapper-migration-guide.md)** - Step-by-step guide for migrating to the Claude wrapper
 - **[database.md](development/database.md)** - Database operations, safety procedures, and best practices *(coming soon)*
 - **[architecture.md](development/architecture.md)** - System architecture overview *(coming soon)*
 
@@ -21,8 +20,6 @@ Feature documentation and user guides
 ### 📁 [`deployment/`](deployment/)
 Deployment guides and production configuration
 
-- **[checklist.md](deployment/checklist.md)** - Production deployment checklist
-- **[index-migration-summary.md](deployment/index-migration-summary.md)** - Database index migration guide
 - **[production-launch.md](deployment/production-launch.md)** - Production launch procedures
 - **[docker/](deployment/docker/)** - Docker containerization documentation
   - **[README.md](deployment/docker/README.md)** - Docker Compose guide and quick start
@@ -56,14 +53,14 @@ Security documentation and procedures
 ### For Operations
 - **Health Monitoring**: [operations/health-checks.md](operations/health-checks.md)
 - **Security Procedures**: [security/pre-commit.md](security/pre-commit.md)
-- **Database Safety**: [development/agents.md#database-storage](development/agents.md#database-storage)
+- **Database Safety**: [development/agents.md](development/agents.md#database-storage)
 - **Docker Deployment**: [deployment/docker/](deployment/docker/)
-- **Production Checklist**: [deployment/checklist.md](deployment/checklist.md)
+- **Production Launch**: [deployment/production-launch.md](deployment/production-launch.md)
 
 ### For Security Reviews
 - **Authentication Guide**: [security/authentication.md](security/authentication.md)
 - **Pre-commit Checklist**: [security/pre-commit.md](security/pre-commit.md)
-- **Security Sections in Health Checks**: [operations/health-checks.md#security-audit-checklist](operations/health-checks.md#security-audit-checklist)
+- **Security Sections in Health Checks**: [operations/health-checks.md](operations/health-checks.md#4-security-audit-checklist)
 
 ## Claude Code Operations
 
