@@ -109,43 +109,6 @@ curl -H "Authorization: Bearer rmp_your_key_here" http://localhost:3000/api/docu
 curl -b cookies.txt http://localhost:3000/api/documents/search?q=test
 ```
 
-## Migration Guide
-
-If you find an endpoint using `auth()` directly:
-
-1. **Replace imports**:
-   ```typescript
-   // Old
-   import { auth } from "@/lib/auth";
-   
-   // New
-   import { authenticateRequest } from "@/lib/auth-helpers";
-   ```
-
-2. **Update handler signature**:
-   ```typescript
-   // Old
-   export async function GET(request: Request) {
-   
-   // New
-   export async function GET(request: NextRequest) {
-   ```
-
-3. **Replace auth logic**:
-   ```typescript
-   // Old
-   const session = await auth();
-   if (!session?.user?.id) {
-     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-   }
-   
-   // New
-   const userId = await authenticateRequest(request);
-   if (!userId) {
-     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-   }
-   ```
-
 ## Enforcement
 
 - **ESLint Rule**: `local/auth-consistency` catches violations

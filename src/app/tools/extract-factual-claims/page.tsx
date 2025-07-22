@@ -122,7 +122,7 @@ The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module
                     <ul className="space-y-2">
                       {typedResult.claimsByPriority.high.map((claim: any, i: number) => (
                         <li key={i} className="text-sm">
-                          • {claim.claim}
+                          • {claim.text}
                           {claim.reason && (
                             <span className="text-xs text-gray-600 ml-2">({claim.reason})</span>
                           )}
@@ -140,7 +140,7 @@ The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module
                     <ul className="space-y-2">
                       {typedResult.claimsByPriority.medium.map((claim: any, i: number) => (
                         <li key={i} className="text-sm">
-                          • {claim.claim}
+                          • {claim.text}
                           {claim.reason && (
                             <span className="text-xs text-gray-600 ml-2">({claim.reason})</span>
                           )}
@@ -158,7 +158,7 @@ The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module
                     <ul className="space-y-2">
                       {typedResult.claimsByPriority.low.map((claim: any, i: number) => (
                         <li key={i} className="text-sm">
-                          • {claim.claim}
+                          • {claim.text}
                           {claim.reason && (
                             <span className="text-xs text-gray-600 ml-2">({claim.reason})</span>
                           )}
@@ -175,7 +175,7 @@ The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module
                 <ul className="space-y-2">
                   {typedResult.claims.map((claim: any, i: number) => (
                     <li key={i} className="text-sm">
-                      • {typeof claim === 'string' ? claim : claim.claim}
+                      • {typeof claim === 'string' ? claim : claim.text}
                     </li>
                   ))}
                 </ul>

@@ -103,12 +103,5 @@ const exampleMetadata = {
   }
 };
 
-console.log("Example Plugin Metadata Structure:");
-console.log(JSON.stringify(exampleMetadata, null, 2));
-
-console.log("\n\nThis metadata is automatically appended to the analysis as:");
-console.log("## Plugin Metadata\n\n```json");
-console.log(JSON.stringify(exampleMetadata, null, 2));
-console.log("```");
 
 export { exampleMetadata };

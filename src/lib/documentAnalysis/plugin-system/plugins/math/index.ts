@@ -12,18 +12,13 @@ import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
-  LLMInteraction,
 } from "../../types";
-import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
+import { extractWithTool } from "../../utils/extractionHelper";
 import {
   MathHelpers,
   locateFindings,
   generateCommentsFromFindings,
-  type GenericPotentialFinding,
-  type GenericInvestigatedFinding,
-  type GenericLocatedFinding,
 } from "../../utils/pluginHelpers";
-import { generateFindingId } from "../../utils/findingHelpers";
 import { getMathExtractionConfig, type MathExtractionResult, type MathFindingStorage } from "./types";
 import { MathPromptBuilder } from "./promptBuilder";
 

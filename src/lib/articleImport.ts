@@ -77,7 +77,6 @@ export function transformEAForumUrl(url: string): string {
     const forumUrl = new URL(url);
     const path = forumUrl.pathname;
     const botsUrl = `https://forum-bots.effectivealtruism.org${path}`;
-    console.log(`🔄 Using forum-bots URL: ${botsUrl}`);
     return botsUrl;
   }
   return url;
@@ -93,7 +92,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         throw new Error("Could not extract post ID from LessWrong URL");
       }
 
-      console.log(`📥 Fetching post ${postId} from LessWrong API...`);
 
       const query = `
         query GetPost {
@@ -134,12 +132,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       }
 
       const post = response.data.data.post.result;
-      console.log("📝 Post metadata:", {
-        title: post.title,
-        author: post.user.displayName,
-        date: post.postedAt,
-        hasMarkdown: !!post.contents.markdown,
-      });
 
       return {
         html: post.contents.html,
@@ -157,7 +149,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
         throw new Error("Could not extract post ID from EA Forum URL");
       }
 
-      console.log(`📥 Fetching post ${postId} from EA Forum API...`);
 
       const query = `
         query GetPost {
@@ -198,12 +189,6 @@ export async function fetchArticle(url: string): Promise<ArticleData> {
       }
 
       const post = response.data.data.post.result;
-      console.log("📝 Post metadata:", {
-        title: post.title,
-        author: post.user.displayName,
-        date: post.postedAt,
-        hasMarkdown: !!post.contents.markdown,
-      });
 
       return {
         html: post.contents.html,
@@ -684,7 +669,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
   if (DIFFBOT_KEY) {
     try {
       return await processArticleWithDiffbot(url);
-    } catch (error) {
+    } catch (_error) {
       logger.warn('⚠️ Diffbot failed, trying Firecrawl...');
     }
   }
@@ -700,7 +685,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     try {
       logger.info(`📚 Trying LessWrong/EA Forum direct API first...`);
       return await processArticleFallback(url);
-    } catch (error) {
+    } catch (_error) {
       logger.warn('⚠️ Direct API failed, will try Firecrawl');
       // Continue to Firecrawl below
     }
@@ -858,7 +843,6 @@ async function processArticleWithDiffbot(url: string): Promise<ProcessedArticle>
 
 // Fallback to original extraction method for special cases
 async function processArticleFallback(url: string): Promise<ProcessedArticle> {
-  console.log(`📥 Fallback: Fetching article from ${url}...`);
   const { html, markdown, title, author, date } = await fetchArticle(url);
 
   let finalContent: string;

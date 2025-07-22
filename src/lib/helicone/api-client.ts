@@ -7,7 +7,7 @@
  * - Query request data
  */
 
-import { heliconeSessionsConfig } from '@/lib/helicone/config';
+import { heliconeSessionsConfig } from '@/lib/helicone/sessions';
 
 export interface HeliconeRequest {
   id: string;

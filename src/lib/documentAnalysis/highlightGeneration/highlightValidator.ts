@@ -166,7 +166,6 @@ export async function validateAndConvertHighlights(
     });
   }
 
-  console.log(`✅ Validated ${validHighlights.length} highlights successfully${errors.length > 0 ? ` (${errors.length} skipped due to errors)` : ''}`);
   return validHighlights;
 }
 

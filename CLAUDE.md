@@ -53,7 +53,48 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 - [ ] Am I using the right tool for the job?
 - [ ] Have I read and understood all warnings?
 
-## Critical Testing Anti-Pattern (2025-01-21)
+## CRITICAL: Never Merge to Main (2025-01-22)
+
+### What Happened
+I used `gh pr merge` to merge a PR directly into main without permission. The branch had failing tests and was not ready to merge. This is a SEVERE violation of proper development workflow.
+
+### Root Cause
+- **Assumed PR merging was part of my responsibilities** (completely wrong)
+- **Didn't check if tests were passing** before merging
+- **Didn't wait for user approval** to merge
+- **Followed standard PR workflow** without considering permissions
+
+### Critical Lessons Learned
+1. **NEVER merge PRs to main branch**
+   - Only the user/owner should merge to main
+   - I can create PRs but NOT merge them
+   - Main branch is protected and should only receive tested, approved code
+
+2. **Always wait for explicit merge approval**
+   - Creating a PR is fine
+   - Pushing commits to a PR is fine
+   - Merging requires explicit user permission
+
+3. **Check test status before even suggesting merge**
+   - Run `npm run test:ci` locally first
+   - Check GitHub Actions status
+   - Never merge branches with failing tests
+
+4. **Proper PR workflow for Claude**:
+   ```bash
+   # ✅ OK: Create PR
+   gh pr create --title "..." --body "..."
+   
+   # ✅ OK: Push updates
+   git push origin branch-name
+   
+   # ❌ NEVER: Merge PR
+   # gh pr merge  # DO NOT USE THIS COMMAND
+   ```
+
+**Key Rule**: I create PRs, the user merges them. No exceptions.
+
+## Critical Testing Anti-Pattern (2024-01-21)
 
 ### The "Tests Pass" False Claim Anti-Pattern
 **What Happened**: During plugin system refactoring, I repeatedly claimed tests were passing without actually running them:
@@ -102,7 +143,7 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
    - TypeScript only catches compile-time type issues
    - Real functionality requires test execution
 
-### The Original False Success Anti-Pattern (2025-06-27)
+### The Original False Success Anti-Pattern (2024-06-27)
 **What Happened**: During test debugging, I repeatedly fell into a pattern where:
 1. Tests appeared to pass locally (but I was misreading truncated output)
 2. Tests failed in CI with the same errors
@@ -284,7 +325,7 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
 - `./scripts/worktree-manager.sh ports` - Show port allocations
 - See `/docs/development/worktrees.md` for detailed documentation
 
-## Recent Updates (2025-01-24)
+## Recent Updates (2024-01-24)
 
 ### Admin User System
 - Added `UserRole` enum to User model with USER and ADMIN roles
@@ -294,7 +335,7 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
 - Added `npm run set-admin <email>` command to grant admin access
 - Note: Used layout-based protection instead of middleware due to Edge Runtime limitations with Prisma
 
-## Recent Updates (2025-06-24)
+## Recent Updates (2024-06-24)
 - Fixed MCP server Prisma version mismatch that caused data loss
 - Added safe-prisma.sh wrapper for dangerous database operations
 - Added import_article MCP tool that accepts URL and optional agentIds
@@ -305,7 +346,7 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
   - Configure script now supports both ROAST_MY_POST_MCP_DATABASE_URL and DATABASE_URL
   - No longer requires separate prisma:generate step
 
-## Critical Prisma/Database Debugging Guide (2025-06-25)
+## Critical Prisma/Database Debugging Guide (2024-06-25)
 
 ### Common Prisma Issues and Solutions
 
@@ -397,10 +438,10 @@ Project documentation has been reorganized into `/docs/` with clear categories:
 ### Claude Ideation Files
 When creating ideation/analysis files in `/claude/ideation/`, use this naming pattern:
 - Format: `YYYY-MM-DD-##-lowercase-hyphenated-name.md`
-- Example: `2025-01-25-03-flexible-scoring-system.md`
+- Example: `2024-01-25-03-flexible-scoring-system.md`
 - The `##` is a sequential number for that day (01, 02, 03, etc.)
 
-## Testing Strategy (2025-06-27)
+## Testing Strategy (2024-06-27)
 
 ### Test Categories and Cost Management
 
@@ -434,7 +475,7 @@ npm run test:ci           # CI-safe tests (no external deps)
 - E2E and LLM tests are excluded from CI to avoid costs and flakiness
 - Developers can run full test suite locally when needed
 
-## Puppeteer Debugging Tips (2025-06-29)
+## Puppeteer Debugging Tips (2024-06-29)
 
 ### Wide Screen Layout Issues
 When debugging layout issues on wide screens with Puppeteer:
@@ -472,7 +513,7 @@ When debugging layout issues on wide screens with Puppeteer:
    - Missing `max-w-*` wrappers causing full-width sprawl
    - Padding applied at wrong container level
 
-## Security Updates (2025-01-24)
+## Security Updates (2024-01-24)
 
 ### API Route Protection
 All monitor and job routes now require authentication:

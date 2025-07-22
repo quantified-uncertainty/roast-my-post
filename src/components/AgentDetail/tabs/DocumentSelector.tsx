@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Check, Search, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search } from "lucide-react";
 
 interface Document {
   id: string;
@@ -26,11 +26,7 @@ export function DocumentSelector({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [agentId]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -48,7 +44,11 @@ export function DocumentSelector({
     } finally {
       setLoading(false);
     }
-  };
+  }, [agentId]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const filteredDocuments = documents.filter(doc => {
     const query = searchQuery.toLowerCase();

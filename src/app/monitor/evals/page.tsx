@@ -55,7 +55,7 @@ interface Evaluation {
         timeInSeconds: number | null;
         log: string | null;
         createdAt: Date;
-        llmInteractions: any;
+        llmInteractions: Record<string, unknown>;
       }>;
       costInCents: number;
       llmThinking: string | null;

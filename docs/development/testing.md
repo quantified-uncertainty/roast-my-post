@@ -249,15 +249,4 @@ These all generate console errors that are expected and tested for, but would ot
 9. **Keep test output clean** - use console suppression by default
 10. **Use `SHOW_TEST_LOGS=true`** when debugging test failures
 
-## Migration Guide
-
-If you have existing tests that don't follow this convention:
-
-1. **Identify dependencies**: What does the test require?
-2. **Rename file**: Add appropriate suffix
-3. **Add environment guards**: For external dependencies
-4. **Update imports**: If file moved
-5. **Test locally**: Run the specific test category
-6. **Verify CI**: Ensure CI still passes
-
 This strategy ensures we maintain fast, reliable CI while enabling comprehensive testing when needed.

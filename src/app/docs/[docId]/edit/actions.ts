@@ -7,8 +7,19 @@ import { auth } from "@/lib/auth";
 import { DocumentModel } from "@/models/Document";
 
 // This is a raw server action without the client wrapper
+type DocumentUpdateData = {
+  docId: string;
+  title?: string;
+  authors?: string;
+  content: string;
+  urls?: string;
+  platforms?: string;
+  intendedAgents?: string;
+  importUrl?: string;
+};
+
 export async function updateDocument(
-  formData: FormData | any
+  formData: FormData | DocumentUpdateData
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Handle both FormData and direct object submission

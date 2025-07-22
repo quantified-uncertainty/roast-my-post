@@ -79,19 +79,16 @@ export class PluginManager {
 
     try {
       // Create chunks
-      console.log('📄 Creating document chunks...');
       const chunks = createChunks(text, {
         chunkSize: 1000,
         chunkByParagraphs: false
       });
-      console.log(`   Created ${chunks.length} chunks`);
 
       // Process with each plugin in parallel with improved error recovery
       const pluginResults = new Map<string, AnalysisResult>();
       const allComments: Comment[] = [];
       let totalCost = 0;
 
-      console.log(`🔍 Running ${plugins.length} plugins in parallel...`);
       
       // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
@@ -105,15 +102,12 @@ export class PluginManager {
               logger.info(`   Retrying ${plugin.name()} analysis (attempt ${attempt}/${maxRetries})...`);
               // Add small delay between retries
               await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            } else {
-              console.log(`   Starting ${plugin.name()} analysis...`);
             }
             
             const startTime = Date.now();
             const result = await plugin.analyze(chunks, text);
             const duration = Date.now() - startTime;
             
-            console.log(`   ${plugin.name()}: Found ${result.comments.length} issues (${duration}ms)${isRetry ? ' [RECOVERED]' : ''}`);
             return { plugin: plugin.name(), result, success: true };
           } catch (error) {
             lastError = error;

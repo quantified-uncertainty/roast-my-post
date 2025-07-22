@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -63,7 +62,6 @@ interface Agent {
 }
 
 export default function NewDocumentPage() {
-  const router = useRouter();
   const [mode, setMode] = useState<"import" | "manual">("import");
   const [importUrl, setImportUrl] = useState("");
   const [isImporting, setIsImporting] = useState(false);

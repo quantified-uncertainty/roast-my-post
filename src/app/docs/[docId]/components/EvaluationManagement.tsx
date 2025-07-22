@@ -7,14 +7,11 @@ import {
   BeakerIcon,
   ArrowPathIcon,
   PlusIcon,
-  ChatBubbleLeftIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { ChatBubbleLeftIcon as ChatBubbleLeftIconSolid } from "@heroicons/react/20/solid";
 import { GradeBadge } from "@/components/GradeBadge";
-import { JobStatusIndicator } from "@/components/JobStatusIndicator";
 import { StaleBadge } from "@/components/StaleBadge";
-import { Button } from "@/components/Button";
 import { formatDistanceToNow } from "date-fns";
 import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
 

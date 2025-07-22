@@ -164,7 +164,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
             "Warning: Some data may not have been saved due to size limitations. Consider reducing the size of your instructions."
           );
         }
-      } catch (e) {
+      } catch (_e) {
         alert(
           "Failed to store import data. The content may be too large. Please try reducing the size of your instructions."
         );
@@ -172,7 +172,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       }
 
       router.push(`/agents/${agentId}/edit?import=true`);
-    } catch (error) {
+    } catch (_error) {
       // Error is already handled by setError in the validation process
     } finally {
       setLoading(false);

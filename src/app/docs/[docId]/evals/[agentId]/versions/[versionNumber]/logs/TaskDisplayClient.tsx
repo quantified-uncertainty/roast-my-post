@@ -51,7 +51,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
         try {
           logData = task.log ? JSON.parse(task.log) : {};
           summary = logData.summary || summary;
-        } catch (e) {
+        } catch {
           // If log is not JSON, use it as summary
           summary = task.log || summary;
         }
@@ -156,7 +156,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
                                     try {
                                       parsedContent = JSON.parse(msg.content);
                                       isJson = true;
-                                    } catch (e) {
+                                    } catch {
                                       // Not valid JSON
                                     }
                                   }

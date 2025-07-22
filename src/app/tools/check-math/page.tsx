@@ -37,7 +37,7 @@ export default function MathCheckerPage() {
       }
 
       const data = await response.json();
-      setErrors(data.errors);
+      setErrors(data.result?.errors || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -112,7 +112,7 @@ $2 million to $5.25 million.`;
         </div>
       )}
 
-      {errors !== null && (
+      {errors !== null && Array.isArray(errors) && (
         <div className="mt-8 space-y-6">
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <p className="text-green-900">

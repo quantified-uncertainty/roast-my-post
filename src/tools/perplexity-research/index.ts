@@ -205,7 +205,7 @@ Format your response as JSON with this structure:
           usage: response.usage
         };
       }
-    } catch (e) {
+    } catch (_e) {
       // Fallback to text parsing if JSON parsing fails
       console.warn('Failed to parse JSON response, using fallback parsing');
     }

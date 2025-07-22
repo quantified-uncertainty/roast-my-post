@@ -3,7 +3,7 @@ import { toolRegistry } from '@/tools/registry';
 import { withSecurity } from '@/lib/security-middleware';
 
 export const GET = withSecurity(
-  async (request) => {
+  async () => {
     const tools = toolRegistry.getMetadata();
     
     return NextResponse.json({

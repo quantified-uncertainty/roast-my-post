@@ -94,15 +94,15 @@ export default function FactCheckAutoPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <span className="text-sm font-medium text-gray-600">Claim {i + 1}</span>
-                      {claim.priority && (
+                      {claim.importance && (
                         <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                          claim.priority === 'high' 
+                          claim.importance === 'high' 
                             ? 'bg-red-100 text-red-800'
-                            : claim.priority === 'medium'
+                            : claim.importance === 'medium'
                             ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {claim.priority} priority
+                          {claim.importance} importance
                         </span>
                       )}
                     </div>
@@ -113,19 +113,24 @@ export default function FactCheckAutoPage() {
                     )}
                   </div>
                   
-                  <p className="font-medium mb-2">{claim.claim}</p>
+                  <p className="font-medium mb-2">{claim.text || claim.claim}</p>
                   
-                  {claim.source && (
+                  {claim.topic && (
                     <p className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Source:</span> "{claim.source}"
+                      <span className="font-medium">Topic:</span> {claim.topic}
                     </p>
                   )}
                   
-                  {claim.reasoning && (
+                  {claim.context && (
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Context:</span> {claim.reasoning}
+                      <span className="font-medium">Context:</span> {claim.context}
                     </p>
                   )}
+                  
+                  <div className="text-xs text-gray-500 mt-2">
+                    <span className="mr-3">Importance: {claim.importance}</span>
+                    <span>Specificity: {claim.specificity}</span>
+                  </div>
                   
                   {/* Verification result if available */}
                   {typedResult.verificationResults?.find((v: any) => v.claimIndex === i) && (() => {

@@ -36,15 +36,19 @@ export function DocumentSearch({
   // Initialize selected documents from search results if available
   useEffect(() => {
     if (documents.length > 0) {
-      const newMap = new Map(selectedDocuments);
-      documents.forEach(doc => {
-        if (selectedIds.includes(doc.id) && !newMap.has(doc.id)) {
-          newMap.set(doc.id, doc);
-        }
+      setSelectedDocuments(prevMap => {
+        const newMap = new Map(prevMap);
+        let hasChanges = false;
+        
+        documents.forEach(doc => {
+          if (selectedIds.includes(doc.id) && !newMap.has(doc.id)) {
+            newMap.set(doc.id, doc);
+            hasChanges = true;
+          }
+        });
+        
+        return hasChanges ? newMap : prevMap;
       });
-      if (newMap.size !== selectedDocuments.size) {
-        setSelectedDocuments(newMap);
-      }
     }
   }, [documents, selectedIds]);
 

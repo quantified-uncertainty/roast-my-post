@@ -53,7 +53,7 @@ After initial deployment, apply search optimization indexes:
 pg_dump -U postgres roast_my_post_prod > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 2. Apply indexes (during low traffic)
-psql -U postgres -d roast_my_post_prod < prisma/migrations/20250125_add_search_indexes/migration.sql
+psql -U postgres -d roast_my_post_prod < prisma/migrations/20240125_add_search_indexes/migration.sql
 
 # Monitor progress
 watch -n 5 "psql -U postgres -d roast_my_post_prod -c \"SELECT query_start, state, query FROM pg_stat_activity WHERE query LIKE 'CREATE INDEX%';\""

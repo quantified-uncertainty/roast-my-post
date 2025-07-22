@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import * as yaml from "js-yaml";
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
+type YamlValue = string | number | boolean | null | YamlObject | YamlArray;
+type YamlObject = { [key: string]: YamlValue };
+type YamlArray = YamlValue[];
+
 interface YamlEditorProps {
   value: string;
   onChange: (value: string) => void;
-  onValidationChange?: (isValid: boolean, parsed?: any) => void;
+  onValidationChange?: (isValid: boolean, parsed?: YamlObject) => void;
   placeholder?: string;
   height?: string;
   disabled?: boolean;
@@ -21,7 +25,7 @@ interface ValidationResult {
   hasRequiredFields: boolean;
   missingFields: string[];
   extraFields: string[];
-  parsedData?: any;
+  parsedData?: YamlObject;
   warnings: string[];
 }
 
@@ -62,7 +66,7 @@ export function YamlEditor({
         return;
       }
 
-      const parsedObj = parsed as Record<string, any>;
+      const parsedObj = parsed as YamlObject;
       const allSupportedFields = [...requiredFields, ...optionalFields];
       const missingFields = requiredFields.filter(
         (field) => !parsedObj[field]
