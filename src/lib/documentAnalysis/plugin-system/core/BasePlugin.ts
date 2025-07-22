@@ -27,14 +27,47 @@ import {
   RoutingExample, 
   LLMInteraction,
   SimpleAnalysisPlugin,
-  AnalysisResult
+  AnalysisResult,
+  Finding
 } from '../types';
-import { 
-  AnalysisPlugin, 
-  ChunkResult, 
-  SynthesisResult, 
-  GenerateCommentsContext
-} from '../deprecated-types';
+// Types previously imported from deprecated-types
+// These are maintained here for backward compatibility with the legacy three-phase system
+type LegacyPhase = 'processChunk' | 'synthesize' | 'generateComments';
+
+interface ChunkResult {
+  findings?: Finding[];
+  llmCalls: LLMInteraction[];
+  metadata?: {
+    tokensUsed: number;
+    processingTime: number;
+    confidence?: number;
+  };
+}
+
+interface SynthesisResult {
+  summary: string;
+  analysisSummary: string;
+  recommendations?: string[];
+  llmCalls: LLMInteraction[];
+  visualizations?: any[];
+}
+
+interface GenerateCommentsContext {
+  documentText: string;
+  maxComments?: number;
+  minImportance?: number;
+}
+
+interface AnalysisPlugin<TState = any> {
+  name(): string;
+  promptForWhenToUse(): string;
+  routingExamples?(): RoutingExample[];
+  processChunk(chunk: TextChunk): Promise<ChunkResult>;
+  synthesize(): Promise<SynthesisResult>;
+  generateComments?(context: GenerateCommentsContext): Comment[];
+  getState(): TState;
+  clearState(): void;
+}
 import { TextChunk } from '../TextChunk';
 import type { Comment } from '@/types/documentSchema';
 import { estimateTokens } from '../../../tokenUtils';

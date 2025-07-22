@@ -94,7 +94,7 @@ export interface GlobalFinding {
   reason: string;  // Why this is global (e.g., "Cross-document pattern")
 }
 
-// Note: PluginError with legacy phase types has been moved to deprecated-types.ts
+// Note: PluginError with legacy phase types has been removed (see BasePlugin.ts for legacy support)
 // For new error tracking, use the modern phase types: 'scanChunk' | 'investigate' | 'synthesize' | 'comment'
 
 // Re-export from shared types to avoid duplication
@@ -109,7 +109,7 @@ export interface RoutingExample {
 }
 
 // Note: ChunkResult, SynthesisResult, GenerateCommentsContext, and PluginResult
-// have been moved to deprecated-types.ts as they are part of the legacy plugin system
+// have been removed as they are part of the legacy plugin system
 
 // Note: The legacy AnalysisPlugin interface has been moved to deprecated-types.ts
 // Please use SimpleAnalysisPlugin below for all new plugin implementations.
@@ -137,24 +137,6 @@ export interface SimpleAnalysisPlugin {
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
   getLLMInteractions(): LLMInteraction[];
-}
-
-export interface RoutingDecision {
-  chunkId: string;
-  plugins: string[];
-}
-
-export interface RoutingPlan {
-  decisions: Map<string, string[]>;
-  
-  addRouting(chunkId: string, plugins: string[]): void;
-  getPluginsForChunk(chunkId: string): string[];
-  getAllChunks(): string[];
-  getStats(): {
-    totalChunks: number;
-    totalRoutings: number;
-    pluginUsage: Map<string, number>;
-  };
 }
 
 export interface DocumentProfile {
