@@ -226,7 +226,7 @@ export async function extractHighlightsFromAnalysis(
       required: ["highlights"],
     };
 
-    const { toolResult } = await withTimeout(
+    const { response, interaction, toolResult } = await withTimeout(
       callClaudeWithTool<{ highlights: LineBasedHighlight[] }>({
         model: MODEL_CONFIG.analysis,
         system: systemMessage,
@@ -252,7 +252,7 @@ export async function extractHighlightsFromAnalysis(
     const { content: fullContent } = getDocumentFullContent(document);
     highlights = await validateAndConvertHighlights(toolResult.highlights, fullContent);
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in highlight extraction:', error);
     throw error;
   }

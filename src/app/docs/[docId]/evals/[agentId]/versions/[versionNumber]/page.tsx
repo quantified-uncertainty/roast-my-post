@@ -48,7 +48,7 @@ function extractHeadings(markdown: string, minLevel: number = 1): { id: string; 
 function createMarkdownComponents(sectionPrefix: string) {
   return {
     // Style headings with IDs
-    h1: ({ children }: { children: React.ReactNode }) => {
+    h1: ({ children }: any) => {
       const text = String(children);
       const id = `${sectionPrefix}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
       return (
@@ -57,7 +57,7 @@ function createMarkdownComponents(sectionPrefix: string) {
         </h1>
       );
     },
-    h2: ({ children }: { children: React.ReactNode }) => {
+    h2: ({ children }: any) => {
       const text = String(children);
       const id = `${sectionPrefix}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
       return (
@@ -66,47 +66,47 @@ function createMarkdownComponents(sectionPrefix: string) {
         </h2>
       );
     },
-    h3: ({ children }: { children: React.ReactNode }) => (
+    h3: ({ children }: any) => (
       <h3 className="text-lg font-medium text-gray-800 mt-4 mb-2">
         {children}
       </h3>
     ),
     // Style paragraphs
-    p: ({ children }: { children: React.ReactNode }) => (
+    p: ({ children }: any) => (
       <p className="text-gray-700 leading-relaxed mb-4">
         {children}
       </p>
     ),
     // Style lists
-    ul: ({ children }: { children: React.ReactNode }) => (
+    ul: ({ children }: any) => (
       <ul className="list-disc list-inside space-y-2 mb-4 text-gray-700">
         {children}
       </ul>
     ),
-    ol: ({ children }: { children: React.ReactNode }) => (
+    ol: ({ children }: any) => (
       <ol className="list-decimal list-inside space-y-2 mb-4 text-gray-700">
         {children}
       </ol>
     ),
     // Style blockquotes
-    blockquote: ({ children }: { children: React.ReactNode }) => (
+    blockquote: ({ children }: any) => (
       <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 text-gray-600 italic">
         {children}
       </blockquote>
     ),
     // Style code blocks
-    pre: ({ children }: { children: React.ReactNode }) => (
+    pre: ({ children }: any) => (
       <pre className="bg-gray-100 rounded-md p-4 overflow-x-auto mb-4">
         {children}
       </pre>
     ),
-    code: ({ children }: { children: React.ReactNode }) => (
+    code: ({ children }: any) => (
       <code className="bg-gray-100 rounded px-1 py-0.5 text-sm">
         {children}
       </code>
     ),
     // Style links
-    a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
+    a: ({ href, children }: any) => (
       <a href={href} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">
         {children}
       </a>

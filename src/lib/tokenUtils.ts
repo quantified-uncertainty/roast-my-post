@@ -21,7 +21,7 @@ export class TokenCounter {
       // Check if the SDK has the beta.messages.countTokens method
       if (this.anthropic.beta?.messages?.countTokens) {
         const result = await this.anthropic.beta.messages.countTokens({
-          model: model,
+          model: model as any,
           messages: [{ role: 'user', content: text }]
         });
         return result.input_tokens;

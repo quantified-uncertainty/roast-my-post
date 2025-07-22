@@ -3,9 +3,9 @@ import * as yaml from 'js-yaml';
 
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { commonErrors } from "@/lib/api-response-helpers";
+import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
 import { estimateTokens } from "@/lib/tokenUtils";
-import { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
     }
 
     // Build the query conditions
-    const whereConditions: Prisma.EvaluationVersionWhereInput = {
+    const whereConditions: any = {
       evaluation: {
         agentId: agentId,
       }
@@ -210,9 +210,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
               model: string | null;
               price_in_dollars: number | null;
               time_in_seconds: number | null;
-              log: unknown;
-              llm_interactions?: unknown;
-              llm_interactions_note?: string;
+              log: any;
+              llm_interactions?: any;
             } = {
               name: task.name,
               model: task.modelName,
@@ -221,7 +220,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
               log: task.log ? (() => {
                 try {
                   return JSON.parse(task.log);
-                } catch (_e) {
+                } catch (e) {
                   // If JSON parsing fails, return the raw string
                   return task.log;
                 }
@@ -235,7 +234,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
                 taskData.llm_interactions = task.llmInteractions || null;
               } else if (index === Math.max(1, Math.ceil(evaluations.length * 0.1))) {
                 // Add a note on the first evaluation without LLM interactions
-                taskData.llm_interactions_note = "LLM interactions omitted for remaining evaluations to reduce export size";
+                (taskData as any).llm_interactions_note = "LLM interactions omitted for remaining evaluations to reduce export size";
               }
             }
             

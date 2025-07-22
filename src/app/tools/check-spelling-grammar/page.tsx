@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
-import { checkSpellingGrammarTool, CheckSpellingGrammarOutput, SpellingGrammarError } from '@/tools/check-spelling-grammar';
+import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
 
 export default function CheckSpellingGrammarAutoPage() {
   return (
@@ -82,7 +82,7 @@ Previous research have shown similar results, although the methodologies varied 
         ]
       }}
       renderResults={(result) => {
-        const typedResult = result as CheckSpellingGrammarOutput;
+        const typedResult = result as any;
         
         const errorTypeColors = {
           spelling: 'bg-red-100 border-red-300 text-red-900',
@@ -132,7 +132,7 @@ Previous research have shown similar results, although the methodologies varied 
             ) : (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Issues Found</h3>
-                {typedResult.errors.map((error: SpellingGrammarError, i: number) => (
+                {typedResult.errors.map((error: any, i: number) => (
                   <div
                     key={i}
                     className={`p-4 rounded-lg border ${
@@ -173,7 +173,7 @@ Previous research have shown similar results, although the methodologies varied 
               <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
                 <h3 className="text-lg font-semibold mb-3">Common Patterns</h3>
                 <ul className="space-y-2">
-                  {typedResult.commonPatterns.map((pattern, i) => (
+                  {typedResult.commonPatterns.map((pattern: any, i: number) => (
                     <li key={i} className="text-sm">
                       • <strong>{pattern.type}:</strong> {pattern.description} 
                       <span className="text-gray-600"> (found {pattern.count} times)</span>

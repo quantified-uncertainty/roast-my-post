@@ -67,7 +67,7 @@ CRITICAL: Use the provided tool to report your findings. Be thorough and specifi
  * Standard schema builders for common tool patterns
  */
 export class ToolSchemaBuilder {
-  static analysisSchema(itemType: string, properties: Record<string, unknown>): unknown {
+  static analysisSchema(itemType: string, properties: Record<string, any>): any {
     return {
       type: "object",
       properties: {
@@ -118,7 +118,7 @@ export class ToolSchemaBuilder {
     };
   }
 
-  static verificationSchema(): unknown {
+  static verificationSchema(): any {
     return {
       type: "object", 
       properties: {
@@ -161,7 +161,7 @@ export class ToolSchemaBuilder {
     };
   }
 
-  static extractionSchema(itemType: string, extractionProperties: Record<string, unknown>): unknown {
+  static extractionSchema(itemType: string, extractionProperties: Record<string, any>): any {
     return {
       type: "object",
       properties: {
@@ -205,7 +205,7 @@ export class ToolLLMUtils {
     content: string,
     config: ToolConfig,
     toolName: string,
-    toolSchema: unknown,
+    toolSchema: any,
     variables?: Record<string, string>
   ): Promise<T> {
     const systemPrompt = PromptTemplateEngine.buildSystemPrompt(
@@ -353,7 +353,7 @@ export const ToolValidation = {
  * Standard response formatters
  */
 export class ToolResponseFormatter {
-  static formatAnalysisResult(result: { items?: unknown[]; summary?: string; recommendations?: unknown[] }, toolId: string): unknown {
+  static formatAnalysisResult(result: any, toolId: string): any {
     return {
       success: true,
       toolId,
@@ -369,7 +369,7 @@ export class ToolResponseFormatter {
     };
   }
 
-  static formatError(error: Error, toolId: string): unknown {
+  static formatError(error: Error, toolId: string): any {
     return {
       success: false,
       toolId,
@@ -378,7 +378,7 @@ export class ToolResponseFormatter {
     };
   }
 
-  static formatVerificationResult(result: { verifications?: unknown[]; overallAssessment?: string }, toolId: string): unknown {
+  static formatVerificationResult(result: any, toolId: string): any {
     return {
       success: true,
       toolId, 

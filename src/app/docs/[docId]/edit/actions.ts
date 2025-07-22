@@ -8,7 +8,7 @@ import { DocumentModel } from "@/models/Document";
 
 // This is a raw server action without the client wrapper
 export async function updateDocument(
-  formData: FormData | { docId: string; title: string; content: string; author?: string; publishedDate?: string }
+  formData: FormData | any
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Handle both FormData and direct object submission

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
-import { forecasterTool, ForecasterOutput } from '@/tools/forecaster';
+import { forecasterTool } from '@/tools/forecaster';
 
 export default function ForecasterAutoPage() {
   return (
@@ -68,7 +68,7 @@ export default function ForecasterAutoPage() {
         ]
       }}
       renderResults={(result) => {
-        const typedResult = result as ForecasterOutput;
+        const typedResult = result as any;
         
         return (
           <div className="space-y-6">
@@ -87,7 +87,7 @@ export default function ForecasterAutoPage() {
             <div className="bg-white p-6 rounded-lg border border-gray-200">
               <h3 className="text-lg font-semibold mb-4">Individual Forecasts</h3>
               <div className="space-y-3">
-                {typedResult.individualForecasts.map((forecast, i) => (
+                {typedResult.individualForecasts.map((forecast: any, i: number) => (
                   <div key={i} className="border-l-4 border-gray-300 pl-4">
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-medium">Forecast {i + 1}</span>
@@ -99,32 +99,11 @@ export default function ForecasterAutoPage() {
               </div>
             </div>
 
-            {/* Forecast description */}
-            {typedResult.description && (
+            {/* Analysis summary */}
+            {typedResult.analysis && (
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold mb-2">Forecast Summary</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{typedResult.description}</p>
-              </div>
-            )}
-
-            {/* Statistics */}
-            {typedResult.statistics && (
-              <div className="bg-white p-4 rounded-lg border border-gray-200">
-                <h3 className="text-md font-semibold mb-2">Statistics</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Mean:</span>
-                    <span className="ml-2 font-medium">{typedResult.statistics.mean.toFixed(1)}%</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Std Dev:</span>
-                    <span className="ml-2 font-medium">{typedResult.statistics.stdDev.toFixed(1)}%</span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-gray-600">Consensus:</span>
-                    <span className="ml-2 font-medium capitalize">{typedResult.consensus}</span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold mb-2">Analysis Summary</h3>
+                <p className="text-gray-700 whitespace-pre-wrap">{typedResult.analysis}</p>
               </div>
             )}
 

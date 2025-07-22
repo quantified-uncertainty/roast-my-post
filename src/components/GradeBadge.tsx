@@ -163,7 +163,7 @@ function getGradeColorLight(grade: number): {
   };
 }
 
-function getGradeColorGrayscale(): {
+function getGradeColorGrayscale(grade: number): {
   style: { backgroundColor: string; color: string };
   className: string;
 } {

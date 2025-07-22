@@ -4,22 +4,22 @@ import { z } from 'zod';
 export const toolResponseSchema = z.object({
   success: z.boolean(),
   toolId: z.string(),
-  result: z.unknown().optional(),
+  result: z.any().optional(),
   error: z.string().optional(),
-  details: z.unknown().optional()
+  details: z.any().optional()
 });
 
-export type ToolResponse<T = unknown> = {
+export type ToolResponse<T = any> = {
   success: boolean;
   toolId: string;
   result?: T;
   error?: string;
-  details?: unknown;
+  details?: any;
 };
 
 // Common error types
 export class ToolExecutionError extends Error {
-  constructor(message: string, public details?: unknown) {
+  constructor(message: string, public details?: any) {
     super(message);
     this.name = 'ToolExecutionError';
   }

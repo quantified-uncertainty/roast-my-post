@@ -77,7 +77,7 @@ export function generateMathComments(
   context: GenerateCommentsContext
 ): Comment[] {
   try {
-    const { comments, dropped } = generateCommentsFromFindings(
+    const { comments, located, dropped } = generateCommentsFromFindings(
       investigated,
       context,
       {

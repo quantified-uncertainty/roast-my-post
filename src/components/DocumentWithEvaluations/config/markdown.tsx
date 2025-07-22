@@ -9,16 +9,13 @@ export const MARKDOWN_PLUGINS = {
 };
 
 interface MarkdownComponentProps {
-  node?: Element;
+  node?: any;
   children?: React.ReactNode;
-  className?: string;
-  href?: string;
-  target?: string;
-  rel?: string;
+  [key: string]: any;
 }
 
 export const MARKDOWN_COMPONENTS = {
-  a: ({ ...props }: MarkdownComponentProps) => (
+  a: ({ node, ...props }: MarkdownComponentProps) => (
     <a
       {...props}
       className="text-blue-600 hover:text-blue-800 hover:underline"

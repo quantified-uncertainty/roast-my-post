@@ -73,50 +73,8 @@ function documentToMarkdown(doc: Document): string {
   return metadata;
 }
 
-interface ExportData {
-  id: string;
-  title: string;
-  publishedDate: string;
-  metadata: {
-    author?: string;
-    platforms?: string[];
-    url?: string;
-    importUrl?: string;
-    intendedAgents?: string[];
-    submittedBy?: {
-      name?: string | null;
-      email?: string | null;
-    };
-  };
-  content: string;
-  evaluations?: Array<{
-    agent: {
-      id: string;
-      name: string;
-      description: string;
-    };
-    evaluation: {
-      summary?: string;
-      analysis?: string;
-      grade?: number;
-      selfCritique?: string;
-      comments?: Array<{
-        description: string;
-        importance?: number | null;
-        grade?: number | null;
-        highlight?: {
-          quotedText: string;
-          startOffset: number;
-          endOffset: number;
-          isValid?: boolean;
-        } | null;
-      }>;
-    };
-  }>;
-}
-
 function documentToYAML(doc: Document): string {
-  const exportData: ExportData = {
+  const exportData: Record<string, any> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
@@ -162,8 +120,8 @@ function documentToYAML(doc: Document): string {
   });
 }
 
-function documentToJSON(doc: Document): ExportData {
-  const exportData: ExportData = {
+function documentToJSON(doc: Document): Record<string, any> {
+  const exportData: Record<string, any> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,

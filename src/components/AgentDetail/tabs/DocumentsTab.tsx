@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import type { Agent } from "@/types/agentSchema";
 
 import { StatusBadge } from "../components";
 import type { AgentDocument } from "../types";
@@ -9,11 +10,13 @@ import {
 } from "../utils";
 
 interface DocumentsTabProps {
+  agent: Agent;
   documents: AgentDocument[];
   documentsLoading: boolean;
 }
 
 export function DocumentsTab({
+  agent,
   documents,
   documentsLoading,
 }: DocumentsTabProps) {

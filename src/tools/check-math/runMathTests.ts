@@ -8,17 +8,16 @@ import checkMathTool from './index';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';
 import { basicMathTestSuite, advancedMathTestSuite, edgeCaseTestSuite } from './mathTestCases';
 import type { MathTestInput, MathTestExpected } from './mathTestCases';
-import type { CheckMathOutput } from './index';
 
 /**
  * Test function that runs the actual math tool
  */
-async function runMathAnalysis(input: MathTestInput): Promise<Pick<CheckMathOutput, 'errors'> & { errorCount: number }> {
+async function runMathAnalysis(input: MathTestInput): Promise<any> {
   const result = await checkMathTool.run({ 
     text: input.text 
   }, {
     userId: 'test-user',
-    logger: console
+    logger: console as any
   });
   
   return {

@@ -37,7 +37,7 @@ interface EvaluationDetailsPanelProps {
         timeInSeconds?: number | null;
         log?: string | null;
         createdAt: Date;
-        llmInteractions?: unknown;
+        llmInteractions?: any;
       }>;
     } | null;
     testBatchId?: string | null;

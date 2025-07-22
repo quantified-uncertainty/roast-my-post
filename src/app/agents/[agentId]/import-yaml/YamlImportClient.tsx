@@ -29,7 +29,7 @@ interface ValidationResult {
   hasRequiredFields: boolean;
   missingFields: string[];
   extraFields: string[];
-  parsedData?: Record<string, unknown>;
+  parsedData?: any;
   warnings: string[];
 }
 
@@ -81,7 +81,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
         return;
       }
 
-      const parsedObj = parsed as Record<string, unknown>;
+      const parsedObj = parsed as Record<string, any>;
       const missingFields = REQUIRED_FIELDS.filter(
         (field) => !parsedObj[field]
       );
@@ -146,7 +146,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
       // Add optional fields if they exist
       OPTIONAL_FIELDS.forEach((field) => {
         if (validation.parsedData[field] !== undefined) {
-          (agentData as Record<string, unknown>)[field] = validation.parsedData[field];
+          (agentData as any)[field] = validation.parsedData[field];
         }
       });
 
@@ -164,7 +164,7 @@ export function YamlImportClient({ agentId }: YamlImportClientProps) {
             "Warning: Some data may not have been saved due to size limitations. Consider reducing the size of your instructions."
           );
         }
-      } catch (_e) {
+      } catch (e) {
         alert(
           "Failed to store import data. The content may be too large. Please try reducing the size of your instructions."
         );

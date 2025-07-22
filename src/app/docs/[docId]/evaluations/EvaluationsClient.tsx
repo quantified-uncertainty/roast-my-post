@@ -36,7 +36,7 @@ export default function EvaluationsClient({
   isOwner,
 }: EvaluationsClientProps) {
   const { reviews } = document;
-  // const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [agentsWithEvaluations, setAgentsWithEvaluations] = useState<
     AgentWithEvaluation[]
   >([]);
@@ -46,7 +46,7 @@ export default function EvaluationsClient({
     number | null
   >(null);
   const [selectedJobIndex, setSelectedJobIndex] = useState<number | null>(null);
-  const [selectedJob, setSelectedJob] = useState<{ id: string; status: string; errorLog?: string | null; createdAt: Date; attempts: number; batchId?: string | null } | null>(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
   const [middleTab, setMiddleTab] = useState<"versions" | "jobs">("versions");
   const [activeTab, setActiveTab] = useState<
     "analysis" | "comments" | "thinking" | "selfCritique" | "logs"

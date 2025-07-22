@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth";
-import { UserModel } from "@/models/User";
+import { UserModel, UserUpdateSchema } from "@/models/User";
 
 // Setup next-safe-action
 const actionClient = createSafeActionClient();

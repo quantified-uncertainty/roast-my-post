@@ -3,13 +3,11 @@
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 
 import { GradeBadge } from "../../GradeBadge";
-import type { Document } from "@/types/documentSchema";
-import type { EvaluationState } from "../types";
 
 interface AgentPillsHeaderProps {
-  document: Document;
-  evaluationState: EvaluationState;
-  onEvaluationStateChange?: (newState: EvaluationState) => void;
+  document: any;
+  evaluationState: any;
+  onEvaluationStateChange?: (newState: any) => void;
 }
 
 export function AgentPillsHeader({
@@ -24,7 +22,7 @@ export function AgentPillsHeader({
   return (
     <div>
       <div className="flex flex-wrap gap-2">
-        {document.reviews.map((review) => {
+        {document.reviews.map((review: any) => {
           const isActive = evaluationState.selectedAgentIds.has(review.agentId);
           return (
             <button

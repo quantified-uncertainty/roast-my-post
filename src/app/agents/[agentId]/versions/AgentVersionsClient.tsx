@@ -21,6 +21,7 @@ interface AgentVersionsClientProps {
 export default function AgentVersionsClient({
   agent,
   versions,
+  isOwner,
 }: AgentVersionsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -30,12 +30,7 @@ import { render, screen } from "@testing-library/react";
 import SlateEditor from "./SlateEditor";
 
 // Mock the Slate editor implementation
-type DecorateFunction = (path: number[]) => Array<{
-  anchor: { path: number[]; offset: number };
-  focus: { path: number[]; offset: number };
-  highlight?: { tag: string; color: string };
-  [key: string]: unknown;
-}>;
+type DecorateFunction = (path: any) => any[];
 let capturedDecorateFn: DecorateFunction | null = null;
 jest.mock("slate-react", () => ({
   Slate: ({ children }: { children: React.ReactNode }) => (
@@ -49,8 +44,8 @@ jest.mock("slate-react", () => ({
   }: {
     children: React.ReactNode;
     decorate: DecorateFunction;
-    renderElement: (props: Record<string, unknown>) => JSX.Element;
-    renderLeaf: (props: Record<string, unknown>) => JSX.Element;
+    renderElement: (props: any) => JSX.Element;
+    renderLeaf: (props: any) => JSX.Element;
   }) => {
     // Capture the decorate function for testing
     capturedDecorateFn = decorate;
@@ -61,17 +56,17 @@ jest.mock("slate-react", () => ({
     findPath: jest.fn(),
     toDOMNode: jest.fn(),
   },
-  withReact: (editor: unknown) => editor,
+  withReact: (editor: any) => editor,
 }));
 
 jest.mock("slate-history", () => ({
-  withHistory: (editor: unknown) => editor,
+  withHistory: (editor: any) => editor,
 }));
 
 jest.mock("slate", () => {
   const original = jest.requireActual("slate");
   const mockEditor = {
-    children: [] as Array<{ type: string; children: Array<{ text: string }> }>,
+    children: [] as any[],
     operations: [],
     selection: null,
     marks: null,
@@ -100,7 +95,7 @@ jest.mock("slate", () => {
           return node.text;
         } else if (original.Element.isElement(node) && node.children) {
           return node.children
-            .map((n: { text?: string; children?: Array<unknown> }) => original.Node.string(n))
+            .map((n: any) => original.Node.string(n))
             .join("");
         }
         return "";
@@ -116,19 +111,19 @@ jest.mock("slate", () => {
         return current;
       }),
       nodes: jest.fn((editor, options) => {
-        const nodes: [unknown, number[]][] = [];
-        const traverse = (node: { type?: string; children?: Array<unknown> }, path: number[]) => {
+        const nodes: [any, number[]][] = [];
+        const traverse = (node: any, path: number[]) => {
           if (options?.match?.(node, path) ?? true) {
             nodes.push([node, path]);
           }
           if (original.Element.isElement(node) && node.children) {
-            node.children.forEach((child: { type?: string; children?: Array<unknown> }, index: number) => {
+            node.children.forEach((child: any, index: number) => {
               traverse(child, path.concat(index));
             });
           }
         };
         if (editor.children) {
-          editor.children.forEach((child: { type?: string; children?: Array<unknown> }, index: number) => {
+          editor.children.forEach((child: any, index: number) => {
             traverse(child, [index]);
           });
         }
@@ -156,7 +151,7 @@ jest.mock("unified", () => {
   type MockProcessor = {
     use: jest.Mock<MockProcessor>;
     processSync: jest.Mock<{
-      result: Array<{ type: string; children: Array<{ text: string }> }>
+      result: any[];
     }>;
   };
 
