@@ -5,6 +5,7 @@
 
 // Test the actual tool instead of legacy functions  
 import forecasterTool from './index';
+import type { ForecasterOutput } from './index';
 // import { generateForecastWithAggregation } from './generator';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';
 import { 
@@ -18,11 +19,21 @@ import {
 } from './forecastingTestCases';
 import { logger } from '@/lib/logger';
 
+interface ForecastExtractionOutput {
+  forecastsFound: number;
+  forecasts: Array<{
+    text: string;
+    topic: string;
+    probability: number | null;
+    timeframe: string | null;
+  }>;
+}
+
 /**
  * Run forecast extraction analysis
  * NOTE: This is a simulation for testing since the current tool doesn't include extraction
  */
-async function runForecastExtraction(input: ForecastExtractionInput): Promise<any> {
+async function runForecastExtraction(input: ForecastExtractionInput): Promise<ForecastExtractionOutput> {
   // This is a mock/simulation function for testing purposes
   // In a real implementation, this would analyze text and extract forecast-like statements
   console.log('⚠️  Forecast extraction is simulated for testing - no actual extraction implemented');
@@ -53,7 +64,7 @@ async function runForecastExtraction(input: ForecastExtractionInput): Promise<an
 /**
  * Run forecast generation analysis using the actual forecaster tool
  */
-async function runForecastGeneration(input: ForecastGenerationInput): Promise<any> {
+async function runForecastGeneration(input: ForecastGenerationInput): Promise<ForecasterOutput & { outliersRemoved: number }> {
   // Use the actual forecaster tool through its execute method
   const toolContext = {
     userId: 'test-user',

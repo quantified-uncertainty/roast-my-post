@@ -1,6 +1,8 @@
 import { ExtractFactualClaimsTool } from './index';
 import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
+import type { Logger } from '@/lib/logger';
+import { Anthropic } from '@anthropic-ai/sdk';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper', () => ({
@@ -17,8 +19,17 @@ describe.skip('ExtractFactualClaimsTool (legacy tests - needs mock update for ca
       info: jest.fn(), 
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
-    } as any
+      debug: jest.fn(),
+      logRequest: jest.fn(),
+      child: jest.fn(() => ({ 
+        info: jest.fn(), 
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        logRequest: jest.fn(),
+        child: jest.fn()
+      }))
+    } as unknown as Logger
   };
   
   const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
@@ -67,7 +78,7 @@ describe.skip('ExtractFactualClaimsTool (legacy tests - needs mock update for ca
             }
           }],
           usage: { input_tokens: 100, output_tokens: 50 }
-        } as any,
+        } as Anthropic.Message,
         interaction: {
           model: 'claude-3-5-sonnet-20241022',
           prompt: 'test prompt',

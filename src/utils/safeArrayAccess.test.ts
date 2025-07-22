@@ -9,8 +9,8 @@ describe('safeArrayAccess utilities', () => {
     });
     
     it('should return default value for null/undefined array', () => {
-      expect(getRandomElement(null as any, 'default')).toBe('default');
-      expect(getRandomElement(undefined as any, 'default')).toBe('default');
+      expect(getRandomElement(null, 'default')).toBe('default');
+      expect(getRandomElement(undefined, 'default')).toBe('default');
     });
     
     it('should return the only element for single-element array', () => {
@@ -37,8 +37,8 @@ describe('safeArrayAccess utilities', () => {
   
   describe('safeArrayAccess', () => {
     it('should return default for null/undefined array', () => {
-      expect(safeArrayAccess(null as any, 0, 'default')).toBe('default');
-      expect(safeArrayAccess(undefined as any, 0, 'default')).toBe('default');
+      expect(safeArrayAccess(null, 0, 'default')).toBe('default');
+      expect(safeArrayAccess(undefined, 0, 'default')).toBe('default');
     });
     
     it('should return default for negative index', () => {
@@ -70,8 +70,8 @@ describe('safeArrayAccess utilities', () => {
     });
     
     it('should return NaN for null/undefined array', () => {
-      expect(getPercentile(null as any, 0.5)).toBeNaN();
-      expect(getPercentile(undefined as any, 0.5)).toBeNaN();
+      expect(getPercentile(null, 0.5)).toBeNaN();
+      expect(getPercentile(undefined, 0.5)).toBeNaN();
     });
     
     it('should return the only value for single-element array', () => {

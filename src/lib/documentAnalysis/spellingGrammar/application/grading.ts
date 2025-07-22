@@ -3,7 +3,6 @@
  */
 
 import { ProcessedErrorResults } from '../domain';
-import { ErrorSeverity } from '../../shared/errorCategorization';
 import { GRADE_THRESHOLDS, ERROR_DENSITY_WORD_BASE } from '../constants';
 
 /**
@@ -14,7 +13,7 @@ export function calculateSmartGrade(
   wordCount: number
 ): number {
   // Base calculation on unique errors per 100 words
-  const errorDensity = results.uniqueErrorCount / (wordCount / ERROR_DENSITY_WORD_BASE);
+  // const errorDensity = results.uniqueErrorCount / (wordCount / ERROR_DENSITY_WORD_BASE);
   
   // Count errors by severity
   const severityCounts = { high: 0, medium: 0, low: 0 };

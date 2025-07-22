@@ -59,7 +59,13 @@ export default function NewExperimentPage() {
     
     try {
       // Build request body
-      const body: any = {
+      const body: {
+        isEphemeral: boolean;
+        trackingId?: string;
+        description?: string;
+        expiresInDays: number;
+        ephemeralAgent: typeof agentConfig;
+      } = {
         isEphemeral: true,
         trackingId: experimentSettings.trackingId || undefined,
         description: experimentSettings.description || undefined,

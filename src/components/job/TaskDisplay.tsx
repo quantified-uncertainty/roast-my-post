@@ -185,7 +185,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                                     try {
                                       parsedContent = JSON.parse(msg.content);
                                       isJson = true;
-                                    } catch (e) {
+                                    } catch (_e) {
                                       // Not valid JSON
                                     }
                                   }

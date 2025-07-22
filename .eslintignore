@@ -7,4 +7,5 @@ coverage/
 **/*.test.ts
 **/*.test.tsx
 **/jest.d.ts
-**/*.js 
+**/*.js
+claude/ideation/ 

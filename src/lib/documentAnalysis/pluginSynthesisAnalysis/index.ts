@@ -72,7 +72,7 @@ Create a synthesized analysis that:
 Target length: approximately ${targetWordCount} words.`;
 
   // Build properties dynamically
-  const analysisProperties: any = {
+  const analysisProperties: Record<string, { type: string; description: string }> = {
     summary: {
       type: "string",
       description: "Brief executive summary of the plugin findings and their implications",
@@ -120,10 +120,9 @@ Target length: approximately ${targetWordCount} words.`;
       `Synthesis analysis timed out after 1 minute`
     );
 
-    response = result.response;
     interaction = result.interaction;
     validationResult = result.toolResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(
       "❌ Anthropic API error in plugin synthesis analysis:",
       error

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 
-import type { Comment, Document } from "@/types/documentSchema";
+import type { Comment } from "@/types/documentSchema";
 import {
   calculateCommentPositions,
   checkHighlightsReady,

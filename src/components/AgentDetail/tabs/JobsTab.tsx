@@ -1,6 +1,5 @@
 import { JobCard } from "@/components/job";
 import type {
-  BatchSummary,
   Job,
 } from "../types";
 

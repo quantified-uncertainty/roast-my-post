@@ -68,7 +68,18 @@ The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module
         ]
       }}
       renderResults={(result) => {
-        const typedResult = result as any;
+        const typedResult = result as {
+          claims: Array<{
+            text: string;
+            topic: string;
+            importance: string;
+            specificity: string;
+            type: string;
+            temporalStatus?: string;
+          }>;
+          contradictions?: Array<{ claim1Index: number; claim2Index: number; explanation: string }>;
+          summary?: { totalClaims: number; highImportance: number; contradictionsFound: number };
+        };
         
         return (
           <div className="space-y-6">
