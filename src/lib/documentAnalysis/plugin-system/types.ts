@@ -111,7 +111,7 @@ export interface RoutingExample {
 // Note: ChunkResult, SynthesisResult, GenerateCommentsContext, and PluginResult
 // have been removed as they are part of the legacy plugin system
 
-// Note: The legacy AnalysisPlugin interface has been moved to deprecated-types.ts
+// Note: The legacy AnalysisPlugin interface has been removed (see BasePlugin.ts for legacy support)
 // Please use SimpleAnalysisPlugin below for all new plugin implementations.
 // The new interface uses a single analyze() method instead of the three-phase approach.
 

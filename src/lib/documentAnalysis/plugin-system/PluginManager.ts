@@ -2,7 +2,7 @@
  * Plugin Manager - Coordinates document analysis with the new plugin API
  * 
  * This is a simplified version that only supports the new SimpleAnalysisPlugin interface.
- * For legacy plugin support, see the git history or deprecated-types.ts.
+ * For legacy plugin support, see BasePlugin.ts which maintains backward compatibility.
  */
 
 import { SimpleAnalysisPlugin, AnalysisResult } from './types';
