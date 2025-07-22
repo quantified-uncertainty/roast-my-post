@@ -252,7 +252,7 @@ export async function extractHighlightsFromAnalysis(
     const { content: fullContent } = getDocumentFullContent(document);
     highlights = await validateAndConvertHighlights(toolResult.highlights, fullContent);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Error in highlight extraction:', error);
     throw error;
   }

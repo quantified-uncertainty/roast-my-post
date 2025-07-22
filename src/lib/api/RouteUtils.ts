@@ -58,7 +58,7 @@ export const StandardErrors = {
     { status: 500 }
   ),
   
-  validationError: (errors: any) => NextResponse.json(
+  validationError: (errors: unknown) => NextResponse.json(
     { error: "Validation failed", details: errors },
     { status: 400 }
   )
@@ -150,7 +150,7 @@ class ParamUtils {
     return query;
   }
 
-  static extractParams(context: any): Record<string, string> {
+  static extractParams(context: { params?: Record<string, string> }): Record<string, string> {
     return context.params || {};
   }
 }
