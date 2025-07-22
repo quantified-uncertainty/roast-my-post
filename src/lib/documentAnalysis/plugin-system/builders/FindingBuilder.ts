@@ -4,7 +4,7 @@
 
 import { Finding } from '../types';
 import { TextChunk } from '../TextChunk';
-import { LocationTracker } from '../mixins/LocationTracking';
+import { LocationUtils } from '../../utils/LocationUtils';
 
 export class FindingBuilder {
   private finding: Partial<Finding> = {};
@@ -107,7 +107,7 @@ export class FindingBuilder {
 
     // Apply location tracking if we have text and chunk
     if (this.matchText && this.chunk) {
-      const location = LocationTracker.findLocation(
+      const location = LocationUtils.findLocation(
         this.matchText,
         this.chunk,
         this.searchFrom

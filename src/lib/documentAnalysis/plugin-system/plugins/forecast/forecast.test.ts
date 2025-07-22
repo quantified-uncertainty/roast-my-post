@@ -58,18 +58,12 @@ describe('ForecastPlugin', () => {
     });
 
     it('should track total cost', () => {
-      const totalCost = plugin.getTotalCost();
+      const totalCost = plugin.getCost();
       expect(totalCost).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe('error handling', () => {
-    it('should throw error when using legacy processChunk', async () => {
-      await expect(plugin.processChunk()).rejects.toThrow('Use analyze() method instead');
-    });
-
-    it('should throw error when using legacy synthesize', async () => {
-      await expect(plugin.synthesize()).rejects.toThrow('Use analyze() method instead');
-    });
+    // Legacy methods have been removed entirely - no need to test them
   });
 });

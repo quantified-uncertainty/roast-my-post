@@ -2,7 +2,7 @@
  * Plugin Manager - Coordinates document analysis with the new plugin API
  * 
  * This is a simplified version that only supports the new SimpleAnalysisPlugin interface.
- * For legacy plugin support, see the git history or deprecated-types.ts.
+ * For legacy plugin support, see BasePlugin.ts which maintains backward compatibility.
  */
 
 import { SimpleAnalysisPlugin, AnalysisResult } from './types';
@@ -190,45 +190,6 @@ export class PluginManager {
     }
   }
 
-  /**
-   * Helper method to analyze a single chunk with specific plugins
-   * Useful for testing or targeted analysis
-   */
-  async analyzeChunk(
-    chunk: TextChunk,
-    plugins: SimpleAnalysisPlugin[]
-  ): Promise<Map<string, any>> {
-    const results = new Map<string, any>();
-    
-    // Run all plugins in parallel
-    const pluginPromises = plugins.map(async (plugin) => {
-      try {
-        const result = await plugin.analyze([chunk], chunk.text);
-        return { plugin: plugin.name(), result, success: true };
-      } catch (error) {
-        console.error(`Plugin ${plugin.name()} failed:`, error);
-        return { 
-          plugin: plugin.name(), 
-          error: error instanceof Error ? error.message : String(error),
-          success: false 
-        };
-      }
-    });
-    
-    // Wait for all to complete
-    const pluginResults = await Promise.all(pluginPromises);
-    
-    // Process results
-    for (const { plugin, result, success, error } of pluginResults) {
-      if (success) {
-        results.set(plugin, result);
-      } else {
-        results.set(plugin, { error });
-      }
-    }
-    
-    return results;
-  }
 
   /**
    * High-level document analysis using all available plugins

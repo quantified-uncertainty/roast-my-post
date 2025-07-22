@@ -34,13 +34,6 @@ export class TextChunk implements ITextChunk {
     return this.text.slice(start, end);
   }
 
-  getTextBefore(length: number): string {
-    return this.text.slice(0, length);
-  }
-
-  getTextAfter(length: number): string {
-    return this.text.slice(-length);
-  }
 
   getExpandedContext(wordsAround: number = 100): string {
     // Get context by words instead of characters

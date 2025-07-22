@@ -97,7 +97,12 @@ export class ForecastPlugin extends PipelinePlugin<ForecastFindingStorage> {
     });
     
     // Track the interaction and cost using parent method
-    await this.trackLLMCall(async () => extraction);
+    if (extraction.interaction) {
+      this.analysisInteractions.push(extraction.interaction);
+    }
+    if (extraction.cost) {
+      this.totalCost += extraction.cost;
+    }
 
     // Convert to findings
     const newFindings = ForecastHelpers.convertForecastResults(

@@ -21,8 +21,6 @@ export interface TextChunk {
   
   // Helper methods
   getContext(position: number, windowSize?: number): string;
-  getTextBefore(length: number): string;
-  getTextAfter(length: number): string;
   getLineNumber(charOffset: number): number | null; // Get line number for a character offset within the chunk
 }
 
@@ -55,8 +53,6 @@ export interface LocatedFinding extends Omit<Finding, 'locationHint'> {
   };
 }
 
-export type ChunkFinding = LocatedFinding;
-
 // New finding system types
 export interface HighlightHint {
   searchText: string;      // The text to search for
@@ -85,16 +81,8 @@ export interface InvestigatedFinding {
   highlightHint: HighlightHint;
 }
 
-export interface GlobalFinding {
-  id: string;
-  type: string;
-  data: FindingData;
-  severity: 'low' | 'medium' | 'high' | 'info';
-  message: string;
-  reason: string;  // Why this is global (e.g., "Cross-document pattern")
-}
 
-// Note: PluginError with legacy phase types has been moved to deprecated-types.ts
+// Note: PluginError with legacy phase types has been removed (see BasePlugin.ts for legacy support)
 // For new error tracking, use the modern phase types: 'scanChunk' | 'investigate' | 'synthesize' | 'comment'
 
 // Re-export from shared types to avoid duplication
@@ -109,9 +97,9 @@ export interface RoutingExample {
 }
 
 // Note: ChunkResult, SynthesisResult, GenerateCommentsContext, and PluginResult
-// have been moved to deprecated-types.ts as they are part of the legacy plugin system
+// have been removed as they are part of the legacy plugin system
 
-// Note: The legacy AnalysisPlugin interface has been moved to deprecated-types.ts
+// Note: The legacy AnalysisPlugin interface has been removed (see BasePlugin.ts for legacy support)
 // Please use SimpleAnalysisPlugin below for all new plugin implementations.
 // The new interface uses a single analyze() method instead of the three-phase approach.
 
@@ -137,32 +125,4 @@ export interface SimpleAnalysisPlugin {
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
   getLLMInteractions(): LLMInteraction[];
-}
-
-export interface RoutingDecision {
-  chunkId: string;
-  plugins: string[];
-}
-
-export interface RoutingPlan {
-  decisions: Map<string, string[]>;
-  
-  addRouting(chunkId: string, plugins: string[]): void;
-  getPluginsForChunk(chunkId: string): string[];
-  getAllChunks(): string[];
-  getStats(): {
-    totalChunks: number;
-    totalRoutings: number;
-    pluginUsage: Map<string, number>;
-  };
-}
-
-export interface DocumentProfile {
-  documentType?: string;
-  topics?: string[];
-  language?: string;
-  sections?: string[];
-  hasFormulas?: boolean;
-  hasCitations?: boolean;
-  estimatedComplexity?: 'low' | 'medium' | 'high';
 }
