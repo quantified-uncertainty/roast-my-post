@@ -7,7 +7,7 @@
 import checkMathTool from './index';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';
 import { basicMathTestSuite, advancedMathTestSuite, edgeCaseTestSuite } from './mathTestCases';
-import type { MathTestInput, MathTestExpected } from './mathTestCases';
+import type { MathTestInput } from './mathTestCases';
 
 /**
  * Test function that runs the actual math tool
