@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
-import { extractForecastingClaimsTool, ExtractForecastingClaimsOutput } from '@/tools/extract-forecasting-claims';
+import { extractForecastingClaimsTool } from '@/tools/extract-forecasting-claims';
 
 export default function ExtractForecastingClaimsAutoPage() {
   return (
@@ -72,8 +72,8 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
         ]
       }}
       renderResults={(result) => {
-        const typedResult = result as ExtractForecastingClaimsOutput;
-        const selectedForecasts = typedResult.forecasts?.filter((f) => f.worthDetailedAnalysis) || [];
+        const typedResult = result as any;
+        const selectedForecasts = typedResult.forecasts?.filter((f: any) => f.worthDetailedAnalysis) || [];
         
         return (
           <div className="space-y-6">
@@ -93,7 +93,7 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
                 <h3 className="text-lg font-semibold">All Extracted Forecasts</h3>
                 <div className="bg-white p-4 rounded-lg border border-gray-200">
                   <ul className="space-y-3">
-                    {typedResult.forecasts.map((forecast, i) => (
+                    {typedResult.forecasts.map((forecast: any, i: number) => (
                       <li key={i} className="border-b border-gray-100 pb-2 last:border-b-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -121,7 +121,7 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
             {selectedForecasts.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Selected for Detailed Analysis</h3>
-                {selectedForecasts.map((forecast, i) => (
+                {selectedForecasts.map((forecast: any, i: number) => (
                   <div key={i} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                     <div className="mb-4">
                       <h4 className="font-semibold text-lg mb-2">Forecast {i + 1}</h4>

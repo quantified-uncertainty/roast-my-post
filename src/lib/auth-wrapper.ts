@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { RouteContext } from "@/lib/types/next";
 
 /**
  * Higher-order function that wraps API route handlers with authentication.
@@ -11,14 +10,14 @@ import { RouteContext } from "@/lib/types/next";
  * @param options - Configuration options
  * @returns Wrapped handler with authentication
  */
-export function withAuth<T = unknown, TParams = Record<string, string>>(
-  handler: (request: NextRequest, context: RouteContext<TParams>, userId: string) => Promise<NextResponse<T>>,
+export function withAuth<T = any>(
+  handler: (request: NextRequest, context: { params: any }, userId: string) => Promise<NextResponse<T>>,
   options: {
     requireAuth?: boolean;
     adminOnly?: boolean;
   } = { requireAuth: true, adminOnly: false }
 ) {
-  return async (request: NextRequest, context: RouteContext<TParams>): Promise<NextResponse<T>> => {
+  return async (request: NextRequest, context: { params: any }): Promise<NextResponse<T>> => {
     try {
       const userId = await authenticateRequest(request);
       
@@ -54,12 +53,12 @@ export function withAuth<T = unknown, TParams = Record<string, string>>(
 /**
  * Type-safe wrapper for GET requests
  */
-export function withAuthGET<T = unknown>(
+export function withAuthGET<T = any>(
   handler: (request: NextRequest, userId: string) => Promise<NextResponse<T>>,
   options?: { requireAuth?: boolean; adminOnly?: boolean }
 ) {
   return withAuth(
-    async (request: NextRequest, _context: RouteContext, userId: string) => {
+    async (request: NextRequest, _context: any, userId: string) => {
       return handler(request, userId);
     },
     options
@@ -69,12 +68,12 @@ export function withAuthGET<T = unknown>(
 /**
  * Type-safe wrapper for POST requests
  */
-export function withAuthPOST<T = unknown>(
+export function withAuthPOST<T = any>(
   handler: (request: NextRequest, userId: string) => Promise<NextResponse<T>>,
   options?: { requireAuth?: boolean; adminOnly?: boolean }
 ) {
   return withAuth(
-    async (request: NextRequest, _context: RouteContext, userId: string) => {
+    async (request: NextRequest, _context: any, userId: string) => {
       return handler(request, userId);
     },
     options
@@ -84,12 +83,12 @@ export function withAuthPOST<T = unknown>(
 /**
  * Wrapper for routes with dynamic parameters
  */
-export function withAuthParams<T = unknown, TParams = Record<string, string>>(
-  handler: (request: NextRequest, params: TParams, userId: string) => Promise<NextResponse<T>>,
+export function withAuthParams<T = any>(
+  handler: (request: NextRequest, params: any, userId: string) => Promise<NextResponse<T>>,
   options?: { requireAuth?: boolean; adminOnly?: boolean }
 ) {
   return withAuth(
-    async (request: NextRequest, context: RouteContext<TParams>, userId: string) => {
+    async (request: NextRequest, context: { params: any }, userId: string) => {
       return handler(request, context.params, userId);
     },
     options

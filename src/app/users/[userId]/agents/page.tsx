@@ -14,7 +14,7 @@ export default async function UserAgentsPage({
 }) {
   const { userId } = await params;
   const session = await auth();
-  // const currentUserId = session?.user?.id;
+  const currentUserId = session?.user?.id;
 
   // Get the user to display their name
   const user = await prisma.user.findUnique({

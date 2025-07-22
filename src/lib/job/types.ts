@@ -51,7 +51,7 @@ export interface JobData {
     priceInDollars: number;
     timeInSeconds: number | null;
     log: string | null;
-    llmInteractions?: unknown;
+    llmInteractions?: any;
     createdAt: Date;
   }>;
 }

@@ -11,14 +11,7 @@ interface MarkdownRendererProps {
   children: string;
   className?: string;
   inline?: boolean;
-  components?: Record<string, React.ComponentType<{
-    children?: React.ReactNode;
-    className?: string;
-    href?: string;
-    target?: string;
-    rel?: string;
-    node?: Element;
-  }>>;
+  components?: Record<string, React.ComponentType<any>>;
 }
 
 function MarkdownRenderer({

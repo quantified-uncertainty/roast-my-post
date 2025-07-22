@@ -16,8 +16,8 @@ export interface TestCase<TInput, TExpected> {
 export interface TestResult {
   testId: string;
   passed: boolean;
-  actualOutput: unknown;
-  expectedOutput: unknown;
+  actualOutput: any;
+  expectedOutput: any;
   score: number; // 0-1 for fuzzy matches
   reasoning: string;
   error?: string;
@@ -33,8 +33,8 @@ export interface TestSuite<TInput, TExpected> {
  * Fuzzy match two outputs using LLM evaluation
  */
 export async function fuzzyMatch(
-  actual: unknown,
-  expected: unknown,
+  actual: any,
+  expected: any,
   context: {
     testDescription: string;
     inputDescription: string;
@@ -127,7 +127,7 @@ Evaluate if the actual output matches the expected output according to the crite
  */
 export async function runTestCase<TInput, TExpected>(
   testCase: TestCase<TInput, TExpected>,
-  testFunction: (input: TInput) => Promise<unknown>,
+  testFunction: (input: TInput) => Promise<any>,
   options: {
     useExactMatch?: boolean;
     matchingCriteria?: string;
@@ -208,7 +208,7 @@ export async function runTestCase<TInput, TExpected>(
  */
 export async function runTestSuite<TInput, TExpected>(
   suite: TestSuite<TInput, TExpected>,
-  testFunction: (input: TInput) => Promise<unknown>,
+  testFunction: (input: TInput) => Promise<any>,
   options: {
     useExactMatch?: boolean;
     matchingCriteria?: string;

@@ -12,13 +12,18 @@ import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
+  LLMInteraction,
 } from "../../types";
-import { extractWithTool } from "../../utils/extractionHelper";
+import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
 import {
   MathHelpers,
   locateFindings,
   generateCommentsFromFindings,
+  type GenericPotentialFinding,
+  type GenericInvestigatedFinding,
+  type GenericLocatedFinding,
 } from "../../utils/pluginHelpers";
+import { generateFindingId } from "../../utils/findingHelpers";
 import { getMathExtractionConfig, type MathExtractionResult, type MathFindingStorage } from "./types";
 import { MathPromptBuilder } from "./promptBuilder";
 
@@ -142,7 +147,7 @@ export class MathPlugin extends PipelinePlugin<MathFindingStorage> {
    * Generate UI comments from located findings
    */
   protected generateCommentsFromFindings(documentText: string): Comment[] {
-    const comments = generateCommentsFromFindings(this.findings.located);
+    const comments = generateCommentsFromFindings(this.findings.located, documentText);
     logger.info(`MathPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
   }

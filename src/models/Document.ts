@@ -9,7 +9,7 @@ import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";
 
 // Helper function to safely convert Decimal to number
-function convertPriceToNumber(price: unknown): number {
+function convertPriceToNumber(price: any): number {
   if (price === null || price === undefined) return 0;
   if (typeof price === 'number') return price;
   if (typeof price === 'string') {
@@ -253,7 +253,7 @@ export class DocumentModel {
                     priceInDollars: convertPriceToNumber(task.priceInDollars),
                     timeInSeconds: task.timeInSeconds,
                     log: task.log,
-                    llmInteractions: (task as { llmInteractions?: unknown }).llmInteractions,
+                    llmInteractions: (task as any).llmInteractions,
                     createdAt: task.createdAt,
                   })),
                 }
@@ -365,65 +365,7 @@ export class DocumentModel {
    * @returns The formatted Document object for frontend use
    * @internal
    */
-  static formatDocumentFromDB(dbDoc: {
-    id: string;
-    versions: Array<{
-      id: string;
-      version: number;
-      content: string;
-      title: string;
-      author: string | null;
-      publishedDate: Date | null;
-    }>;
-    evaluations: Array<{
-      id: string;
-      agentId: string;
-      agent: { id: string; name: string; providesGrades: boolean };
-      versions: Array<{
-        id: string;
-        grade?: number | null;
-        content: string | null;
-        documentVersion: { version: number };
-        job?: {
-          id: string;
-          status: string;
-          errorLog?: string | null;
-          tasks?: Array<{
-            id: string;
-            name: string;
-            modelName: string;
-            priceInDollars: unknown;
-            timeInSeconds: number;
-            log: string | null;
-            llmInteractions?: unknown;
-            createdAt: Date;
-          }>;
-          costInCents?: number | null;
-        } | null;
-        comments: Array<{
-          description: string;
-          importance?: string | null;
-          grade?: number | null;
-          highlight: {
-            startOffset: number;
-            endOffset: number;
-            quotedText: string;
-            isValid: boolean;
-          };
-        }>;
-      }>;
-      jobs?: Array<{
-        id: string;
-        status: string;
-        errorLog?: string | null;
-        batchId?: string | null;
-        createdAt: Date;
-      }>;
-    }>;
-    user: { id: string; name: string | null; email: string | null; image: string | null };
-    createdAt: Date;
-    updatedAt: Date;
-  }): Document {
+  static formatDocumentFromDB(dbDoc: any): Document {
     if (!dbDoc.versions.length) {
       throw new Error(`Document ${dbDoc.id} has no versions`);
     }
@@ -454,9 +396,9 @@ export class DocumentModel {
         : undefined,
       createdAt: dbDoc.createdAt,
       updatedAt: dbDoc.updatedAt,
-      reviews: dbDoc.evaluations.map((evaluation) => {
+      reviews: dbDoc.evaluations.map((evaluation: any) => {
         // Map all evaluation versions
-        const evaluationVersions = evaluation.versions.map((version) => {
+        const evaluationVersions = evaluation.versions.map((version: any) => {
           // Calculate if this version is stale
           const isStale = version.documentVersion.version !== currentDocumentVersion;
           
@@ -471,7 +413,7 @@ export class DocumentModel {
                   tasks: version.job.tasks || [],
                 }
               : undefined,
-            comments: version.comments.map((comment) => ({
+            comments: version.comments.map((comment: any) => ({
               description: comment.description,
               importance: comment.importance || undefined,
               grade: comment.grade || undefined,
@@ -498,7 +440,7 @@ export class DocumentModel {
         });
 
         // Map jobs for this evaluation
-        const jobs = (evaluation.jobs || []).map((job) => ({
+        const jobs = (evaluation.jobs || []).map((job: any) => ({
           id: job.id,
           status: job.status,
           createdAt: job.createdAt,
@@ -527,7 +469,7 @@ export class DocumentModel {
           ),
           costInCents: evaluation.versions[0]?.job?.costInCents || 0,
           comments:
-            evaluation.versions[0]?.comments.map((comment) => ({
+            evaluation.versions[0]?.comments.map((comment: any) => ({
               description: comment.description,
               importance: comment.importance || undefined,
               grade: comment.grade || undefined,

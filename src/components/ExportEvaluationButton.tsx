@@ -39,7 +39,7 @@ interface ExportEvaluationButtonProps {
           timeInSeconds?: number | null;
           log?: string | null;
           createdAt: Date | string;
-          llmInteractions?: unknown;
+          llmInteractions?: any;
         }>;
       } | null;
       testBatchId?: string | null;

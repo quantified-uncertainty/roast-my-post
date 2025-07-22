@@ -77,7 +77,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   };
   
   inputSchema = inputSchema;
-  outputSchema = outputSchema;
+  outputSchema = outputSchema as any;
   
   async execute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<CheckSpellingGrammarOutput> {
     context.logger.info(`[CheckSpellingGrammarTool] Checking text (${input.text.length} chars)`);
@@ -219,7 +219,7 @@ Report any errors found with suggested corrections.`;
     });
     
     const repeatedErrors = Array.from(errorCounts.entries())
-      .filter(([_key, count]) => count > 2)
+      .filter(([_, count]) => count > 2)
       .sort((a, b) => b[1] - a[1]);
     
     if (repeatedErrors.length > 0) {

@@ -15,21 +15,7 @@ interface TestTabProps {
   setTestLoading: (loading: boolean) => void;
   setTestSuccess: (success: string | null) => void;
   setActiveTab: (tab: ActiveTab) => void;
-  setBatches: (batches: Array<{
-    id: string;
-    name: string | null;
-    targetCount: number;
-    createdAt: string;
-    progress: number;
-    completedCount: number;
-    runningCount: number;
-    failedCount: number;
-    pendingCount: number;
-    totalCost: number;
-    avgDuration: number;
-    avgGrade: number | null;
-    isComplete: boolean;
-  }>) => void;
+  setBatches: (batches: any[]) => void;
   fetchBatches: () => void;
 }
 
@@ -78,11 +64,7 @@ export function TestTab({
               const formData = new FormData(e.currentTarget);
               const name = formData.get("name") as string;
 
-              let requestBody: {
-                name?: string;
-                documentIds?: string[];
-                targetCount?: number;
-              } = {
+              let requestBody: any = {
                 name: name || undefined,
               };
 
@@ -117,7 +99,8 @@ export function TestTab({
                 throw new Error(error.error || "Failed to create test batch");
               }
 
-              await response.json();
+              const result = await response.json();
+              const jobCount = result.batch?.jobCount || 0;
               
               // Reset form
               (e.target as HTMLFormElement).reset();

@@ -2,7 +2,7 @@
  * Pure functions for chunk analysis
  */
 
-import type { DocumentChunk, AnalysisContext } from '../domain';
+import type { DocumentChunk, AnalysisContext, SpellingGrammarError } from '../domain';
 import { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
 import { categorizeError as categorizeErrorShared, determineSeverity as determineSeverityShared } from '../../shared/errorCategorization';
 
@@ -137,12 +137,7 @@ ${numberedContent}`;
  * Validate an error returned by the LLM
  */
 export function validateError(
-  error: {
-    lineStart: number;
-    lineEnd: number;
-    highlightedText?: string;
-    description?: string;
-  },
+  error: any,
   chunk: DocumentChunk
 ): { isValid: boolean; reason?: string } {
   // Ensure line numbers are within the chunk
@@ -186,5 +181,5 @@ export function categorizeError(description: string): ErrorType {
  * Determine error severity based on type and description
  */
 export function determineSeverity(errorType: ErrorType, description: string): ErrorSeverity {
-  return determineSeverityShared(errorType, description) as ErrorSeverity;
+  return determineSeverityShared(errorType as any, description) as ErrorSeverity;
 }

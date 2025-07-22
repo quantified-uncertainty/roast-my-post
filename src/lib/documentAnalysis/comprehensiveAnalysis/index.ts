@@ -50,7 +50,7 @@ export async function generateComprehensiveAnalysis(
   let interaction;
 
   // Build properties dynamically
-  const analysisProperties: Record<string, unknown> = {
+  const analysisProperties: any = {
     summary: {
       type: "string",
       description: "Brief summary of your main findings and contributions",
@@ -107,9 +107,10 @@ export async function generateComprehensiveAnalysis(
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
     );
 
+    response = result.response;
     interaction = result.interaction;
     validationResult = result.toolResult;
-  } catch (error) {
+  } catch (error: any) {
     logger.error(
       "❌ Anthropic API error in comprehensive analysis generation:",
       error

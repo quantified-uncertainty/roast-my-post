@@ -8,7 +8,7 @@
  * @param defaultValue - Value to return if array is empty
  * @returns A random element from the array or the default value
  */
-export function getRandomElement<T>(array: T[] | null | undefined, defaultValue: T): T {
+export function getRandomElement<T>(array: T[], defaultValue: T): T {
   if (!array || array.length === 0) {
     return defaultValue;
   }
@@ -23,7 +23,7 @@ export function getRandomElement<T>(array: T[] | null | undefined, defaultValue:
  * @param defaultValue - Value to return if index is out of bounds
  * @returns The element at the index or the default value
  */
-export function safeArrayAccess<T>(array: T[] | null | undefined, index: number, defaultValue: T): T {
+export function safeArrayAccess<T>(array: T[], index: number, defaultValue: T): T {
   if (!array || index < 0 || index >= array.length) {
     return defaultValue;
   }
@@ -36,7 +36,7 @@ export function safeArrayAccess<T>(array: T[] | null | undefined, index: number,
  * @param percentile - The percentile to calculate (0-1)
  * @returns The percentile value or NaN if array is empty
  */
-export function getPercentile(sortedArray: number[] | null | undefined, percentile: number): number {
+export function getPercentile(sortedArray: number[], percentile: number): number {
   if (!sortedArray || sortedArray.length === 0) {
     return NaN;
   }

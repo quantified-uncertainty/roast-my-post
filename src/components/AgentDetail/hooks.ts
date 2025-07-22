@@ -92,7 +92,7 @@ export function useAgentDetail(agent: Agent) {
   }, [agent.id]);
 
   // Fetch evaluations
-  const fetchEvaluations = useCallback(async (batchId?: string) => {
+  const fetchEvaluations = async (batchId?: string) => {
     setEvalsLoading(true);
     try {
       const url = batchId
@@ -108,7 +108,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setEvalsLoading(false);
     }
-  }, [agent.id]);
+  };
 
   // Fetch batches
   const fetchBatches = useCallback(async () => {
@@ -127,7 +127,7 @@ export function useAgentDetail(agent: Agent) {
   }, [agent.id]);
 
   // Fetch jobs
-  const fetchJobs = useCallback(async (batchId?: string) => {
+  const fetchJobs = async (batchId?: string) => {
     setJobsLoading(true);
     try {
       const url = batchId
@@ -143,7 +143,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setJobsLoading(false);
     }
-  }, [agent.id]);
+  };
 
   // Fetch overview stats
   const fetchOverviewStats = useCallback(async () => {
@@ -174,7 +174,7 @@ export function useAgentDetail(agent: Agent) {
     } else if (activeTab === "batches") {
       fetchBatches();
     }
-  }, [activeTab, selectedBatchFilter, evalsBatchFilter, fetchBatches, fetchDocuments, fetchEvaluations, fetchJobs, fetchOverviewStats]);
+  }, [activeTab, selectedBatchFilter, evalsBatchFilter, fetchDocuments, fetchBatches, fetchOverviewStats]);
 
   return {
     // State

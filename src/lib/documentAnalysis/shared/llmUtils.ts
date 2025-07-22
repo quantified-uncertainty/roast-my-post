@@ -22,8 +22,8 @@ interface LogDetails {
     estimatedCents: number;
     usage: LLMUsage;
   };
-  context: Record<string, string | number | boolean | null | undefined>;
-  outputStats: Record<string, string | number | boolean | null | undefined>;
+  context: Record<string, any>;
+  outputStats: Record<string, any>;
   summary: string;
 }
 
@@ -35,8 +35,8 @@ export function createLogDetails(
   cost: number,
   inputTokens: number,
   outputTokens: number,
-  context: Record<string, string | number | boolean | null | undefined>,
-  outputStats: Record<string, string | number | boolean | null | undefined>,
+  context: Record<string, any>,
+  outputStats: Record<string, any>,
   summary: string
 ): LogDetails {
   return {

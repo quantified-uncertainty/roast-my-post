@@ -61,7 +61,7 @@ export function usePlainTextOffsets(
             // Only add breaks if we're not at the beginning
             if (plainText.length > 0 && !plainText.endsWith("\n\n")) {
               // Debug the newline addition
-              // const oldOffset = offset;
+              const oldOffset = offset;
               plainText += "\n\n";
               offset += 2; // Account for the added newlines
 

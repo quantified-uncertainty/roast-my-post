@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Check, X } from "lucide-react";
 import { debounce } from "lodash";
 
@@ -53,7 +53,8 @@ export function DocumentSearch({
   }, [documents, selectedIds]);
 
   // Create stable debounced search function
-  const debouncedSearch = useCallback(async (query: string) => {
+  const debouncedSearch = useCallback(
+    debounce(async (query: string) => {
       if (!query.trim()) {
         setDocuments([]);
         setHasSearched(false);
@@ -84,23 +85,20 @@ export function DocumentSearch({
       } finally {
         setLoading(false);
       }
-  }, []);
-  
-  const debouncedSearchWithDelay = useMemo(
-    () => debounce(debouncedSearch, 300),
-    [debouncedSearch]
+    }, 300),
+    [] // Remove dependencies to make it stable
   );
 
   useEffect(() => {
     if (searchQuery.trim()) {
-      debouncedSearchWithDelay(searchQuery);
+      debouncedSearch(searchQuery);
     } else {
       // Clear immediately when search is empty
       setDocuments([]);
       setHasSearched(false);
       setLoading(false);
     }
-  }, [searchQuery, debouncedSearchWithDelay]);
+  }, [searchQuery, debouncedSearch]);
 
   const toggleDocument = (doc: Document) => {
     if (selectedIds.includes(doc.id)) {

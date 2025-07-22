@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -38,7 +39,7 @@ interface EvaluationDetailsProps {
       timeInSeconds?: number | null;
       log?: string | null;
       createdAt: Date;
-      llmInteractions?: unknown;
+      llmInteractions?: any;
     }>;
   } | null;
   createdAt: string | Date;

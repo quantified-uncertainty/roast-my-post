@@ -14,27 +14,11 @@ import {
   edgeCaseFactsTestSuite 
 } from './factCheckTestCases';
 import type { FactCheckTestInput, FactCheckTestExpected } from './factCheckTestCases';
-import type { FactCheckOutput } from './index';
 
 /**
  * Mock fact checking function using the actual fact check tool
  */
-interface TestFactCheckOutput {
-  claimsCount: number;
-  verificationResults: Array<{
-    claimText: string;
-    verdict: 'TRUE' | 'FALSE' | 'PARTIALLY_TRUE' | 'MISLEADING' | 'UNVERIFIABLE';
-    confidence: 'high' | 'medium' | 'low';
-    explanation: string;
-  }>;
-  contradictions?: Array<{
-    claim1: string;
-    claim2: string;
-    explanation: string;
-  }>;
-}
-
-async function runFactCheckAnalysis(input: FactCheckTestInput): Promise<TestFactCheckOutput> {
+async function runFactCheckAnalysis(input: FactCheckTestInput): Promise<any> {
   // Use the actual fact check tool
   const result = await factCheckTool.execute({
     text: input.text,

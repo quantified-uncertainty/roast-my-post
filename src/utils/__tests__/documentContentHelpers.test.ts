@@ -99,8 +99,8 @@ describe('documentContentHelpers', () => {
     it('handles documents with missing fields gracefully', () => {
       const minimalDoc: Document = {
         ...baseDocument,
-        author: null,
-        publishedDate: null
+        author: null as any,
+        publishedDate: null as any
       };
 
       const result = getDocumentFullContent(minimalDoc);

@@ -9,7 +9,7 @@ interface Task {
   priceInDollars: number;
   timeInSeconds: number | null;
   log: string | null;
-  llmInteractions?: unknown; // JSON field from database
+  llmInteractions?: any; // JSON field from database
   createdAt: Date;
 }
 
@@ -45,7 +45,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
   return (
     <div className="space-y-4">
       {tasks.map((task, index) => {
-        let logData: { summary?: string } = {};
+        let logData: any = {};
         let summary = "No log data";
         
         try {
@@ -134,7 +134,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
                           </svg>
                           LLM Interactions
                         </h4>
-                        {interactions.map((interaction: { usage?: { input_tokens: number; output_tokens: number }; messages?: Array<{ role: string; content: string | unknown }> }, idx: number) => (
+                        {interactions.map((interaction: any, idx: number) => (
                           <details key={idx} className="mb-3 group" open>
                             <summary className="cursor-pointer text-sm font-medium text-indigo-900 hover:text-indigo-700 flex items-center gap-2">
                               <span className="text-lg transition-transform inline-block group-open:rotate-90">▸</span>
@@ -146,7 +146,7 @@ export function TaskDisplayClient({ tasks }: TaskDisplayClientProps) {
                               )}
                             </summary>
                             <div className="mt-3 space-y-3 pl-6">
-                              {interaction.messages?.map((msg: { role: string; content: string | unknown }, msgIdx: number) => {
+                              {interaction.messages?.map((msg: any, msgIdx: number) => {
                                 // Check if content is JSON
                                 let isJson = false;
                                 let parsedContent = null;

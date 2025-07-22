@@ -2,27 +2,7 @@
 
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
-import { factCheckTool, FactCheckOutput, Claim } from '@/tools/fact-check';
-
-// Extended types for UI display
-interface ExtendedClaim extends Claim {
-  claim?: string; // Alternative field name sometimes used
-  type?: string;
-  confidence?: number;
-}
-
-interface PerplexityVerificationResult {
-  claimIndex: number;
-  verdict: string;
-  confidence: number;
-  explanation: string;
-  sources?: string[];
-}
-
-interface ExtendedFactCheckOutput extends Omit<FactCheckOutput, 'claims' | 'verificationResults'> {
-  claims: ExtendedClaim[];
-  verificationResults?: PerplexityVerificationResult[];
-}
+import { factCheckTool } from '@/tools/fact-check';
 
 export default function FactCheckAutoPage() {
   return (
@@ -92,7 +72,7 @@ export default function FactCheckAutoPage() {
         ]
       }}
       renderResults={(result) => {
-        const typedResult = result as ExtendedFactCheckOutput;
+        const typedResult = result as any;
         
         return (
           <div className="space-y-6">
@@ -109,7 +89,7 @@ export default function FactCheckAutoPage() {
             {/* Claims list */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Extracted Claims</h3>
-              {typedResult.claims.map((claim, i) => (
+              {typedResult.claims.map((claim: any, i: number) => (
                 <div key={i} className="bg-white p-4 rounded-lg border border-gray-200">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -153,8 +133,8 @@ export default function FactCheckAutoPage() {
                   </div>
                   
                   {/* Verification result if available */}
-                  {typedResult.verificationResults?.find((v) => v.claimIndex === i) && (() => {
-                    const verification = typedResult.verificationResults.find((v) => v.claimIndex === i);
+                  {typedResult.verificationResults?.find((v: any) => v.claimIndex === i) && (() => {
+                    const verification = typedResult.verificationResults.find((v: any) => v.claimIndex === i);
                     return (
                       <div className={`mt-3 p-3 rounded ${
                         verification.verdict === 'supported' 
