@@ -233,10 +233,21 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
         </CodeBlockErrorBoundary>
       );
     case "image":
+      // Validate image URL before rendering
+      if (!element.url || typeof element.url !== 'string' || element.url.trim() === '') {
+        return (
+          <div {...attributes} contentEditable={false} className="relative">
+            <div className="bg-gray-200 rounded p-4 text-gray-600">
+              [Invalid image URL]
+            </div>
+            {children}
+          </div>
+        );
+      }
       return (
         <div {...attributes} contentEditable={false} className="relative">
           <Image
-            src={element.url || ""}
+            src={element.url}
             alt={element.alt || ""}
             width={800}
             height={600}
