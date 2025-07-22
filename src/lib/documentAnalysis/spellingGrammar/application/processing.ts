@@ -9,7 +9,7 @@ import {
   ConventionIssue,
   DocumentConventions
 } from '../domain';
-import { ErrorType } from '../../shared/errorCategorization';
+import { ErrorType, ErrorSeverity } from '../../shared/errorCategorization';
 
 /**
  * Group similar errors together

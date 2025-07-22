@@ -175,7 +175,7 @@ export const exportAgentAsYaml = async (
   // Remove null/undefined values to clean up the YAML
   const cleanData = Object.fromEntries(
     Object.entries(agentData).filter(
-      ([, value]) => value !== null && value !== undefined
+      ([_, value]) => value !== null && value !== undefined
     )
   );
 

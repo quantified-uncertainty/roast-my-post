@@ -18,8 +18,6 @@ import {
   Element,
   Node,
   Text,
-  BaseElement,
-  Range,
 } from "slate";
 import { withHistory } from "slate-history";
 import {
@@ -38,17 +36,16 @@ import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
 import { UI_LAYOUT, TEXT_PROCESSING, ANIMATION } from "@/components/DocumentWithEvaluations/constants/uiConstants";
 
 // Define custom element types for Slate
-type ElementType = 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
-      'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
-      'list-item' | 'link' | 'code' | 'image';
-
-type CustomElement = BaseElement & {
-  type: ElementType;
-  children: Descendant[];
+type CustomElement = {
+  type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
+        'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
+        'list-item' | 'link' | 'code' | 'image';
+  children?: any[];
   url?: string;
   value?: string;
   lang?: string;
   alt?: string;
+  [key: string]: any;
 };
 
 // Helper function to normalize text by removing markdown formatting
@@ -80,14 +77,7 @@ interface SlateEditorProps {
   hoveredTag?: string | null;
 }
 
-interface RenderElementProps {
-  attributes: Record<string, unknown>;
-  children: React.ReactNode;
-  element: CustomElement;
-  highlights: Highlight[];
-}
-
-const renderElement = ({ attributes, children, element, highlights }: RenderElementProps) => {
+const renderElement = ({ attributes, children, element, highlights }: any) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -179,7 +169,7 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
       
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
-        highlights.forEach((highlight: Highlight) => {
+        highlights.forEach((highlight: any) => {
           if (highlight.quotedText) {
             // Search for the quoted text in the code block
             const quotedText = highlight.quotedText.trim();
@@ -257,25 +247,6 @@ const renderElement = ({ attributes, children, element, highlights }: RenderElem
   }
 };
 
-interface RenderLeafProps {
-  attributes: Record<string, unknown>;
-  children: React.ReactNode;
-  leaf: Text & {
-    bold?: boolean;
-    italic?: boolean;
-    emphasis?: boolean;
-    code?: boolean;
-    highlight?: {
-      tag: string;
-      color: string;
-    };
-  };
-  activeTag?: string | null;
-  hoveredTag?: string | null;
-  onHighlightClick?: (tag: string) => void;
-  onHighlightHover?: (tag: string | null) => void;
-}
-
 const renderLeaf = ({
   attributes,
   children,
@@ -284,7 +255,7 @@ const renderLeaf = ({
   hoveredTag,
   onHighlightClick,
   onHighlightHover,
-}: RenderLeafProps) => {
+}: any) => {
   // Create a new set of attributes to avoid modifying the original
   const leafAttributes = { ...attributes };
 
@@ -389,6 +360,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
   const [initialized, setInitialized] = useState(false);
   const initRef = useRef(false);
   const [slateText, setSlateText] = useState("");
+  const renderedHighlightsRef = useRef(new Set<string>());
 
   // Convert markdown to Slate nodes using remark-slate-transformer
   const value = useMemo(() => {
@@ -421,7 +393,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
 
       // Apply a custom processor for handling markdown formatting
-      const processNode = (node: CustomElement | Text): CustomElement | Text => {
+      const processNode = (node: any): any => {
         // Handle leaf text nodes
         if (typeof node?.text === "string") {
           return node;
@@ -470,7 +442,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             let codeValue = node.value || "";
             if (!codeValue && node.children && node.children.length > 0) {
               // Sometimes the code is in the children as text nodes
-              codeValue = (node as CustomElement).children.map((child: CustomElement | Text) => 
+              codeValue = node.children.map((child: any) => 
                 child.text || child.value || ""
               ).join("");
             }
@@ -500,7 +472,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       nodes = nodes.map(processNode).filter(node => node !== null);
       
       // Validate and fix nodes to ensure they have proper text content
-      const validateNode = (node: CustomElement | Text): CustomElement | Text | null => {
+      const validateNode = (node: any): any => {
         // If it's a text node, ensure it has the correct structure
         if (typeof node === 'string') {
           return { text: node };
@@ -523,7 +495,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
           // Recursively validate children, ensuring they're not empty
           const validatedChildren = node.children
             .map(validateNode)
-            .filter((child: CustomElement | Text | null) => child !== null && child !== undefined) as (CustomElement | Text)[];
+            .filter((child: any) => child !== null && child !== undefined);
           
           // If no valid children remain, add an empty text node
           if (validatedChildren.length === 0) {
@@ -542,7 +514,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       
       nodes = nodes.map(validateNode);
       return nodes as Descendant[];
-    } catch (_error) {
+    } catch (error) {
       // Error parsing markdown - return empty document
       // Return a simple default node if parsing fails
       return [
@@ -632,7 +604,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         }
       }
 
-      const ranges: Range[] = [];
+      const ranges: any[] = [];
       const pathKey = path.join(".");
       const nodeInfo = nodeOffsets.get(pathKey);
 
@@ -804,7 +776,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
 
       return ranges;
     },
-    [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets, editor]
+    [highlights, activeTag, initialized, mdToSlateOffset, nodeOffsets]
   );
 
 

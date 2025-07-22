@@ -198,7 +198,7 @@ Select up to ${maxCount} forecasts.`;
     
     // Mark selected forecasts
     return forecasts.map((forecast, index) => {
-      const selection = selections.find((s: { index: number }) => s.index === index);
+      const selection = selections.find((s: any) => s.index === index);
       return {
         ...forecast,
         worthDetailedAnalysis: !!selection,

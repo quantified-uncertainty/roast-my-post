@@ -208,19 +208,7 @@ export class HeliconeAPIClient {
     });
 
     // Group by session and extract metadata
-    const sessionMap = new Map<string, {
-      sessionId: string;
-      name?: string;
-      path?: string;
-      documentId?: string;
-      agentId?: string;
-      status?: string;
-      totalTokens: number;
-      totalCost: number;
-      created_at: string;
-      lastActivity: string;
-      requestCount: number;
-    }>();
+    const sessionMap = new Map<string, any>();
     
     result.data.forEach(req => {
       const sessionId = req.properties?.['Helicone-Session-Id'];

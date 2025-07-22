@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { llmInteractionSchema } from "./llmSchema";
 
 // Schema for document highlight
 export const HighlightSchema = z.object({
@@ -35,7 +34,7 @@ export const TaskSchema = z.object({
   priceInDollars: z.coerce.number(),
   timeInSeconds: z.number().nullable(),
   log: z.string().nullable(),
-  llmInteractions: z.array(llmInteractionSchema).nullable(), // JSON field storing LLMInteraction[]
+  llmInteractions: z.any().nullable(), // JSON field storing LLMInteraction[]
   createdAt: z.date(),
 });
 

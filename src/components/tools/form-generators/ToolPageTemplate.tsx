@@ -9,7 +9,7 @@ import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { ToolPageTemplateProps } from './types';
 import { AutoToolForm } from './AutoToolForm';
 
-export function ToolPageTemplate<TInput extends Record<string, unknown>, TOutput>({
+export function ToolPageTemplate<TInput extends Record<string, any>, TOutput>({
   tool,
   renderResults,
   formConfig = {}

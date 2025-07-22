@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -76,7 +75,7 @@ export function useAgentDetail(agent: Agent) {
   }, [agent.id]);
 
   // Fetch documents
-  const fetchDocuments = useCallback(async () => {
+  const fetchDocuments = async () => {
     if (documents.length > 0) return; // Already loaded
 
     setDocumentsLoading(true);
@@ -91,10 +90,10 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setDocumentsLoading(false);
     }
-  }, [agent.id, documents.length]);
+  };
 
   // Fetch evaluations
-  const fetchEvaluations = useCallback(async (batchId?: string) => {
+  const fetchEvaluations = async (batchId?: string) => {
     setEvalsLoading(true);
     try {
       const url = batchId
@@ -110,10 +109,10 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setEvalsLoading(false);
     }
-  }, [agent.id]);
+  };
 
   // Fetch batches
-  const fetchBatches = useCallback(async () => {
+  const fetchBatches = async () => {
     if (batches.length > 0) return; // Already loaded
 
     setBatchesLoading(true);
@@ -128,10 +127,10 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setBatchesLoading(false);
     }
-  }, [agent.id, batches.length]);
+  };
 
   // Fetch jobs
-  const fetchJobs = useCallback(async (batchId?: string) => {
+  const fetchJobs = async (batchId?: string) => {
     setJobsLoading(true);
     try {
       const url = batchId
@@ -147,10 +146,10 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setJobsLoading(false);
     }
-  }, [agent.id]);
+  };
 
   // Fetch overview stats
-  const fetchOverviewStats = useCallback(async () => {
+  const fetchOverviewStats = async () => {
     if (overviewStats) return; // Already loaded
 
     setOverviewLoading(true);
@@ -165,7 +164,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setOverviewLoading(false);
     }
-  }, [agent.id, overviewStats]);
+  };
 
   // Auto-fetch data based on active tab
   useEffect(() => {
@@ -180,7 +179,7 @@ export function useAgentDetail(agent: Agent) {
     } else if (activeTab === "batches") {
       fetchBatches();
     }
-  }, [activeTab, selectedBatchFilter, evalsBatchFilter, fetchBatches, fetchDocuments, fetchEvaluations, fetchJobs, fetchOverviewStats]);
+  }, [activeTab, selectedBatchFilter, evalsBatchFilter]);
 
   return {
     // State

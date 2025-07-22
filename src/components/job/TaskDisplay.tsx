@@ -10,16 +10,7 @@ interface Task {
   priceInDollars: number;
   timeInSeconds: number | null;
   log: string | null;
-  llmInteractions?: Array<{
-    messages?: Array<{
-      role: string;
-      content: string;
-    }>;
-    usage?: {
-      input_tokens: number;
-      output_tokens: number;
-    };
-  }> | null;
+  llmInteractions?: any;
   createdAt: Date;
 }
 
@@ -164,7 +155,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                           </svg>
                           LLM Interactions
                         </h4>
-                        {interactions.map((interaction, idx: number) => (
+                        {interactions.map((interaction: any, idx: number) => (
                           <details key={idx} className="mb-3 group" open>
                             <summary className="cursor-pointer text-sm font-medium text-indigo-900 hover:text-indigo-700 flex items-center gap-2">
                               <span className="text-lg transition-transform inline-block group-open:rotate-90">▸</span>
@@ -176,7 +167,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                               )}
                             </summary>
                             <div className="mt-3 space-y-3 pl-6">
-                              {interaction.messages?.map((msg) => {
+                              {interaction.messages?.map((msg: any, msgIdx: number) => {
                                 let isJson = false;
                                 let parsedContent = null;
                                 if (typeof msg.content === 'string') {
@@ -185,7 +176,7 @@ export function TaskDisplay({ tasks, showExpandedDetails = true, compact = false
                                     try {
                                       parsedContent = JSON.parse(msg.content);
                                       isJson = true;
-                                    } catch (_e) {
+                                    } catch (e) {
                                       // Not valid JSON
                                     }
                                   }

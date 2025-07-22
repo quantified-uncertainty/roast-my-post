@@ -5,7 +5,7 @@ import { logger } from "./logger";
  * Middleware helper for API routes to add request logging
  */
 
-export function withLogging<T extends (...args: unknown[]) => Promise<Response>>(
+export function withLogging<T extends (...args: any[]) => Promise<Response>>(
   handler: T,
   routeName?: string
 ): T {

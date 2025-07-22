@@ -18,7 +18,7 @@ export interface ToolContext {
   logger: typeof defaultLogger;
 }
 
-export abstract class Tool<TInput = unknown, TOutput = unknown> {
+export abstract class Tool<TInput = any, TOutput = any> {
   abstract config: ToolConfig;
   abstract inputSchema: z.ZodSchema<TInput>;
   abstract outputSchema: z.ZodSchema<TOutput>;
@@ -31,8 +31,8 @@ export abstract class Tool<TInput = unknown, TOutput = unknown> {
     return true;
   }
   
-  async beforeExecute(_input: TInput, _context: ToolContext): Promise<void> {}
-  async afterExecute(_output: TOutput, _context: ToolContext): Promise<void> {}
+  async beforeExecute(input: TInput, context: ToolContext): Promise<void> {}
+  async afterExecute(output: TOutput, context: ToolContext): Promise<void> {}
   
   // Common functionality
   async run(input: unknown, context: ToolContext): Promise<TOutput> {

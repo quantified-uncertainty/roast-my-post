@@ -5,7 +5,7 @@
 export interface SpellingErrorPattern {
   type: string;
   count: number;
-  examples: Array<{ text: string; correction: string }>;
+  examples: any[];
   severity?: 'low' | 'medium' | 'high';
 }
 

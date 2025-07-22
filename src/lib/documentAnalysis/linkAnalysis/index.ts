@@ -7,7 +7,8 @@ import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 export async function generateLinkAnalysis(
-  document: Document
+  document: Document,
+  agentInfo: Agent
 ): Promise<{ task: TaskResult; outputs: ThinkingOutputs; linkAnalysisResults: LinkAnalysis[] }> {
   const startTime = Date.now();
   

@@ -1,4 +1,5 @@
 import type { Comment } from "../../../types/documentSchema";
+import { logger } from "@/lib/logger";
 import type { LineBasedHighlight } from "./types";
 
 // Line-based highlight interfaces

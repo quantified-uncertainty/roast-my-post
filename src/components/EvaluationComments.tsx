@@ -27,10 +27,12 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface EvaluationCommentsProps {
   comments: DatabaseComment[];
+  documentContent?: string;
 }
 
 export function EvaluationComments({
   comments,
+  documentContent,
 }: EvaluationCommentsProps) {
   const [hoveredCommentIndex, setHoveredCommentIndex] = useState<number | null>(
     null

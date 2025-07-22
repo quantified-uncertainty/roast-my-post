@@ -55,7 +55,7 @@ interface Evaluation {
         timeInSeconds: number | null;
         log: string | null;
         createdAt: Date;
-        llmInteractions: unknown;
+        llmInteractions: any;
       }>;
       costInCents: number;
       llmThinking: string | null;
@@ -264,7 +264,7 @@ export default function EvaluationsMonitorPage() {
                 analysis={selectedVersion.analysis}
                 thinking={selectedVersion.job?.llmThinking ?? undefined}
                 selfCritique={selectedVersion.selfCritique ?? undefined}
-                comments={selectedVersion.comments.map((comment, _index) => ({
+                comments={selectedVersion.comments.map((comment, index) => ({
                   id: comment.id,
                   description: comment.description,
                   importance: comment.importance ?? null,

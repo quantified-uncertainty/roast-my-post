@@ -3,8 +3,6 @@ import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
 import { createMockLLMInteraction } from '@/lib/claude/testUtils';
 import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
-import type { Logger } from '@/lib/logger';
-import { Anthropic } from '@anthropic-ai/sdk';
 
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
@@ -20,17 +18,8 @@ describe('ExtractForecastingClaimsTool (legacy tests - updated)', () => {
       info: jest.fn(), 
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn(),
-      logRequest: jest.fn(),
-      child: jest.fn(() => ({ 
-        info: jest.fn(), 
-        error: jest.fn(),
-        warn: jest.fn(),
-        debug: jest.fn(),
-        logRequest: jest.fn(),
-        child: jest.fn()
-      }))
-    } as unknown as Logger
+      debug: jest.fn()
+    } as any
   };
 
   beforeEach(() => {
@@ -229,17 +218,8 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
       info: jest.fn(), 
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn(),
-      logRequest: jest.fn(),
-      child: jest.fn(() => ({ 
-        info: jest.fn(), 
-        error: jest.fn(),
-        warn: jest.fn(),
-        debug: jest.fn(),
-        logRequest: jest.fn(),
-        child: jest.fn()
-      }))
-    } as unknown as Logger
+      debug: jest.fn()
+    } as any
   };
 
   beforeEach(() => {
@@ -278,7 +258,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction,
             toolResult: {
               forecasts: [
@@ -303,7 +283,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction,
             toolResult: {
               selections: [
@@ -371,7 +351,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction,
             toolResult: {
               forecasts: [
@@ -388,7 +368,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction,
             toolResult: {
               selections: [
@@ -428,7 +408,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction1);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction1,
             toolResult: {
               forecasts: [{
@@ -445,7 +425,7 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interactions.push(mockInteraction2);
           }
           return {
-            response: { content: [], usage: { input_tokens: 0, output_tokens: 0 }, id: 'test', model: 'claude-3', role: 'assistant', type: 'message' } as Anthropic.Message,
+            response: {} as any,
             interaction: mockInteraction2,
             toolResult: {
               selections: [{

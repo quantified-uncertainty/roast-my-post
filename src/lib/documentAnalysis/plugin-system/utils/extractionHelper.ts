@@ -56,7 +56,7 @@ export async function extractWithTool<T>(
   const startTime = Date.now();
   
   try {
-    const { toolResult } = await callClaudeWithTool<T>({
+    const { response, toolResult } = await callClaudeWithTool<T>({
       model: MODEL_CONFIG.analysis,
       system: "You are an AI assistant specialized in analyzing text and extracting specific types of content. Follow the tool schema exactly.",
       messages: [{
@@ -68,6 +68,8 @@ export async function extractWithTool<T>(
       toolSchema: { type: 'object', ...config.toolSchema },
       heliconeHeaders
     });
+    
+    const duration = Date.now() - startTime;
     
     // Calculate cost
     const promptTokens = estimateTokens(prompt);

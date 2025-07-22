@@ -12,8 +12,9 @@ import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
   RoutingExample,
+  LLMInteraction,
 } from "../../types";
-import { extractWithTool } from "../../utils/extractionHelper";
+import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
 import {
   locateFindings,
   generateCommentsFromFindings,
@@ -97,7 +98,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     );
 
     // Add to our storage
-    this.findings.potential.push(...(newFindings as GenericPotentialFinding[]));
+    this.findings.potential.push(...(newFindings as any));
   }
 
   /**
@@ -140,7 +141,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
       ...finding,
       severity: this.determineSeverity(finding.data),
       message: this.createErrorMessage(finding.data)
-    })) as GenericInvestigatedFinding[];
+    })) as any;
   }
 
   /**
@@ -190,7 +191,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
       }
     );
 
-    this.findings.located = located as GenericLocatedFinding[];
+    this.findings.located = located as any;
 
     if (dropped > 0) {
       logger.info(`SpellingPlugin: ${dropped} findings couldn't be located`);
@@ -257,7 +258,7 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
    * Generate UI comments from located findings
    */
   protected generateCommentsFromFindings(documentText: string): Comment[] {
-    const comments = generateCommentsFromFindings(this.findings.located as unknown as GenericLocatedFinding[]);
+    const comments = generateCommentsFromFindings(this.findings.located as unknown as GenericLocatedFinding[], documentText);
     logger.info(`SpellingPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
     return comments;
   }

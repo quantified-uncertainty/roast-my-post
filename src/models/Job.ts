@@ -260,9 +260,9 @@ export class JobModel {
 
       return retryJob;
     } else {
-      // const reason = !isRetryableError 
-      //   ? "non-retryable error" 
-      //   : `max attempts (${MAX_RETRY_ATTEMPTS + 1}) reached`;
+      const reason = !isRetryableError 
+        ? "non-retryable error" 
+        : `max attempts (${MAX_RETRY_ATTEMPTS + 1}) reached`;
     }
 
     return prisma.job.findUnique({ where: { id: jobId } });
@@ -348,12 +348,12 @@ export class JobModel {
     job: PrismaJob & {
       evaluation: {
         document: {
-          versions: Array<{ version: number; content: string; title: string }>;
+          versions: any[];
           id: string;
           publishedDate: Date;
         };
         agent: {
-          versions: Array<{ version: number; primaryInstructions: string; selfCritiqueInstructions?: string | null }>;
+          versions: any[];
           id: string;
           submittedBy?: {
             id: string;
@@ -488,7 +488,7 @@ export class JobModel {
             priceInDollars: task.priceInDollars,
             timeInSeconds: task.timeInSeconds,
             log: task.log,
-            llmInteractions: task.llmInteractions, // Prisma Json type
+            llmInteractions: task.llmInteractions as any, // Cast for Prisma Json type
             jobId: job.id,
           },
         });
