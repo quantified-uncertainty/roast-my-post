@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build search conditions
-    const searchConditions: any[] = [
+    const searchConditions: object[] = [
       // Always search in metadata (searchableText)
       {
         versions: {

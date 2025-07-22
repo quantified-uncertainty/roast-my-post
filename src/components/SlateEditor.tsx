@@ -36,16 +36,17 @@ import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
 import { UI_LAYOUT, TEXT_PROCESSING, ANIMATION } from "@/components/DocumentWithEvaluations/constants/uiConstants";
 
 // Define custom element types for Slate
+type CustomText = { text: string };
 type CustomElement = {
   type: 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 
         'heading-four' | 'heading-five' | 'heading-six' | 'block-quote' | 
-        'list-item' | 'link' | 'code' | 'image';
-  children?: any[];
+        'list-item' | 'link' | 'code' | 'image' | 'list';
+  children?: (CustomElement | CustomText)[];
   url?: string;
   value?: string;
   lang?: string;
   alt?: string;
-  [key: string]: any;
+  ordered?: boolean;
 };
 
 // Helper function to normalize text by removing markdown formatting
@@ -77,7 +78,14 @@ interface SlateEditorProps {
   hoveredTag?: string | null;
 }
 
-const renderElement = ({ attributes, children, element, highlights }: any) => {
+interface RenderElementProps {
+  attributes: React.HTMLAttributes<HTMLElement>;
+  children: React.ReactNode;
+  element: CustomElement;
+  highlights?: Highlight[];
+}
+
+const renderElement = ({ attributes, children, element, highlights }: RenderElementProps) => {
   switch (element.type) {
     case "heading-one":
       return (
@@ -169,7 +177,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
       
       // Check each highlight to see if its quoted text appears in this code block
       if (highlights && Array.isArray(highlights)) {
-        highlights.forEach((highlight: any) => {
+        highlights.forEach((highlight: Highlight) => {
           if (highlight.quotedText) {
             // Search for the quoted text in the code block
             const quotedText = highlight.quotedText.trim();
@@ -228,7 +236,7 @@ const renderElement = ({ attributes, children, element, highlights }: any) => {
       return (
         <div {...attributes} contentEditable={false} className="relative">
           <Image
-            src={element.url}
+            src={element.url || ""}
             alt={element.alt || ""}
             width={800}
             height={600}
@@ -514,7 +522,7 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
       
       nodes = nodes.map(validateNode);
       return nodes as Descendant[];
-    } catch (error) {
+    } catch (_error) {
       // Error parsing markdown - return empty document
       // Return a simple default node if parsing fails
       return [

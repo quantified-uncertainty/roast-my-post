@@ -133,8 +133,8 @@ export default async function CostsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {spendingData.dailySpending
-                      .filter((day: any) => day.evaluationCount > 0)
-                      .map((day: any) => (
+                      .filter((day: { evaluationCount: number }) => day.evaluationCount > 0)
+                      .map((day: { date: string; evaluationCount: number; costInCents: number }) => (
                         <tr key={day.date}>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                             {new Date(day.date).toLocaleDateString('en-US', { 

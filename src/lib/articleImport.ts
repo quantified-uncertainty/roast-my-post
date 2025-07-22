@@ -666,7 +666,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
   if (DIFFBOT_KEY) {
     try {
       return await processArticleWithDiffbot(url);
-    } catch (error) {
+    } catch (_error) {
       logger.warn('⚠️ Diffbot failed, trying Firecrawl...');
     }
   }
@@ -682,7 +682,7 @@ export async function processArticle(url: string): Promise<ProcessedArticle> {
     try {
       logger.info(`📚 Trying LessWrong/EA Forum direct API first...`);
       return await processArticleFallback(url);
-    } catch (error) {
+    } catch (_error) {
       logger.warn('⚠️ Direct API failed, will try Firecrawl');
       // Continue to Firecrawl below
     }

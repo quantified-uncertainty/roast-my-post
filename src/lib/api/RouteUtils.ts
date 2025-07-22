@@ -136,7 +136,7 @@ class ParamUtils {
         return schema.parse(body);
       }
       return body;
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Invalid JSON body');
     }
   }

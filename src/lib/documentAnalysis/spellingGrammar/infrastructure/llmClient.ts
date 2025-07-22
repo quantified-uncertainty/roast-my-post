@@ -259,7 +259,7 @@ export class SpellingGrammarLLMClient {
         if (parsed.errors && Array.isArray(parsed.errors)) {
           return parsed;
         }
-      } catch (e) {
+      } catch (_e) {
         // Not JSON, continue with text parsing
       }
 
