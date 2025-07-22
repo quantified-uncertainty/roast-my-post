@@ -17,10 +17,10 @@ interface SecurityOptions {
  * Use this to wrap API route handlers for consistent security
  */
 export function withSecurity(
-  handler: (request: NextRequest, context: any) => Promise<Response>,
+  handler: (request: NextRequest, context: { params?: Record<string, string> }) => Promise<Response>,
   options: SecurityOptions = {}
 ) {
-  return async (request: NextRequest, context: any) => {
+  return async (request: NextRequest, context: { params?: Record<string, string> }) => {
     try {
       // 1. Rate limiting
       if (options.rateLimit) {
@@ -68,7 +68,7 @@ export function withSecurity(
         }
         
         // Replace request body with validated data
-        (request as any).validatedBody = parsed.data;
+        (request as NextRequest & { validatedBody: unknown }).validatedBody = parsed.data;
       }
       
       // 4. Ownership check

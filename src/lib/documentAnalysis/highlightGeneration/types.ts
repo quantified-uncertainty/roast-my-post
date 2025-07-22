@@ -1,4 +1,3 @@
-import type { Comment } from "../../../types/documentSchema";
 import type { LLMUsage } from "../../../types/llm";
 import type { LineSnippetHighlight } from "./lineBasedHighlighter";
 
@@ -23,7 +22,7 @@ export interface AnthropicResponse {
   content: Array<{
     type: string;
     name?: string;
-    input?: any;
+    input?: unknown;
   }>;
   usage: LLMUsage;
 }

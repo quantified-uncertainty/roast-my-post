@@ -330,7 +330,7 @@ export class AgentModel {
     const batchId = options?.batchId;
     
     try {
-      let whereConditions: any = {
+      let whereConditions: { agentId: string; jobs?: { batchId: string } } = {
         agentId: agentId,
       };
 

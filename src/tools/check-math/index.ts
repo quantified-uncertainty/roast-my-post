@@ -137,7 +137,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    const result = await callClaudeWithTool<{ errors: any[] }>({
+    const result = await callClaudeWithTool<{ errors: unknown[] }>({
       system: systemPrompt,
       messages: [{
         role: "user",
@@ -239,7 +239,7 @@ Report any mathematical errors found with detailed explanations and corrections.
     };
   }
   
-  private parseErrors(errors: any[]): MathError[] {
+  private parseErrors(errors: unknown[]): MathError[] {
     if (!errors || !Array.isArray(errors)) {
       return [];
     }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Comment, Evaluation, Document } from "@/types/documentSchema";
-import { getValidAndSortedComments, getCommentColorByGrade } from "@/utils/ui/commentUtils";
+import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { EvaluationState } from "../types";
 
 export function useCommentColorMap(
@@ -46,7 +46,7 @@ export function useCommentColorMap(
       agentColors[evaluation.agentId] = baseColors[idx % baseColors.length];
     });
 
-    sortedComments.forEach((comment: any, index: number) => {
+    sortedComments.forEach((comment, index: number) => {
       const baseColor = agentColors[comment.agentId] || "#3b82f6";
       colorMap[index] = {
         background: baseColor + "20",

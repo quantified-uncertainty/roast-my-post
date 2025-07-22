@@ -5,7 +5,7 @@
 
 // Test the actual tool instead of legacy functions  
 import forecasterTool from './index';
-import { generateForecastWithAggregation } from './generator';
+// import { generateForecastWithAggregation } from './generator';
 import { runTestSuite, displayDetailedResults } from '../base/testRunner';
 import { 
   forecastExtractionTestSuite,
@@ -13,8 +13,8 @@ import {
   forecastEdgeCasesTestSuite,
   type ForecastExtractionInput,
   type ForecastGenerationInput,
-  type ForecastExtractionExpected,
-  type ForecastGenerationExpected
+  // type ForecastExtractionExpected,
+  // type ForecastGenerationExpected
 } from './forecastingTestCases';
 import { logger } from '@/lib/logger';
 

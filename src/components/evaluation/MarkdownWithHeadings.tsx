@@ -14,7 +14,7 @@ export function MarkdownWithHeadings({
   className = "prose prose-gray max-w-none"
 }: MarkdownWithHeadingsProps) {
   const headingComponents = {
-    h1: ({ children }: any) => {
+    h1: ({ children }: { children?: React.ReactNode }) => {
       const text = String(children);
       const id = `${sectionPrefix}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
       return (
@@ -23,7 +23,7 @@ export function MarkdownWithHeadings({
         </h1>
       );
     },
-    h2: ({ children }: any) => {
+    h2: ({ children }: { children?: React.ReactNode }) => {
       const text = String(children);
       const id = `${sectionPrefix}-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
       return (

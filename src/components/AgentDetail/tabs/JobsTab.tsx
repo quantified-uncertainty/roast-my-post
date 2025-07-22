@@ -7,23 +7,15 @@ import type {
 interface JobsTabProps {
   jobs: Job[];
   jobsLoading: boolean;
-  selectedJob: Job | null;
-  setSelectedJob: (job: Job | null) => void;
   selectedBatchFilter: string | null;
   setSelectedBatchFilter: (filter: string | null) => void;
-  batches: BatchSummary[];
-  fetchJobs: (batchId?: string) => void;
 }
 
 export function JobsTab({
   jobs,
   jobsLoading,
-  selectedJob,
-  setSelectedJob,
   selectedBatchFilter,
   setSelectedBatchFilter,
-  batches,
-  fetchJobs,
 }: JobsTabProps) {
   return (
     <div className="w-full space-y-6">

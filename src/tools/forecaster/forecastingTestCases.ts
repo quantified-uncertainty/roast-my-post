@@ -2,7 +2,7 @@
  * Test cases for forecasting module
  */
 
-import type { TestCase, TestSuite } from '../base/testRunner';
+import type { TestSuite } from '../base/testRunner';
 
 // Test input types
 export interface ForecastExtractionInput {

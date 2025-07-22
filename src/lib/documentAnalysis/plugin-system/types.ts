@@ -41,7 +41,7 @@ export interface Finding {
     startLineNumber?: number; // For multi-line findings
     endLineNumber?: number; // For multi-line findings
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Finding with guaranteed location information

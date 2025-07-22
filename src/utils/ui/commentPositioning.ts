@@ -2,10 +2,10 @@ import type { Comment } from "@/types/documentSchema";
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
 
-interface CommentPosition {
-  id: string;
-  position: number;
-}
+// interface CommentPosition {
+//   id: string;
+//   position: number;
+// }
 
 interface PositionCalculationOptions {
   minGap?: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Bot } from "lucide-react";
+import { Bot } from "lucide-react";
 import Link from "next/link";
 
 import type { Agent } from "@/types/agentSchema";

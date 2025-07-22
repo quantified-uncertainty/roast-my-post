@@ -21,7 +21,6 @@ interface PositionedCommentProps {
   index: number;
   position: number;
   isVisible: boolean;
-  isSelected: boolean;
   isHovered: boolean;
   onHover: (tag: string | null) => void;
   onClick: (tag: string) => void;
@@ -34,7 +33,6 @@ export function PositionedComment({
   index,
   position,
   isVisible,
-  isSelected,
   isHovered,
   onHover,
   onClick,
@@ -42,7 +40,7 @@ export function PositionedComment({
   skipAnimation = false,
 }: PositionedCommentProps) {
   const tag = index.toString();
-  const { text: displayText, isTruncated } = getCommentDisplayText(
+  const { text: displayText } = getCommentDisplayText(
     comment.description || "",
     isHovered
   );

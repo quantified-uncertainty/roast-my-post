@@ -28,10 +28,6 @@ interface CommentsColumnProps {
   hoveredCommentId: string | null;
   onCommentHover: (commentId: string | null) => void;
   onCommentClick: (commentId: string) => void;
-  // Props for agent pills
-  document?: Document;
-  evaluationState?: EvaluationState;
-  onEvaluationStateChange?: (newState: EvaluationState) => void;
 }
 
 export function CommentsColumn({
@@ -41,9 +37,6 @@ export function CommentsColumn({
   hoveredCommentId,
   onCommentHover,
   onCommentClick,
-  document,
-  evaluationState,
-  onEvaluationStateChange,
 }: CommentsColumnProps) {
   const [commentPositions, setCommentPositions] = useState<
     Record<string, number>
@@ -145,8 +138,7 @@ export function CommentsColumn({
         setTimeout(() => setHasInitialized(true), INITIALIZATION_DELAY);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightsReady, sortedComments.length]);
+  }, [highlightsReady, sortedComments.length, calculatePositions, hoveredCommentId, hasInitialized]);
 
   // Handle scroll events to recalculate if needed
   useEffect(() => {

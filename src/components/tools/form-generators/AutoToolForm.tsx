@@ -3,7 +3,7 @@
  */
 import React, { useState } from 'react';
 import { z } from 'zod';
-import { AutoToolFormProps } from './types';
+import { AutoToolFormProps, FieldConfig, FormFieldProps } from './types';
 import {
   TextInputField,
   TextareaField,
@@ -13,11 +13,11 @@ import {
 } from './FormFields';
 
 // Map Zod types to form field components
-function getFieldComponent(schema: z.ZodTypeAny, fieldConfig?: any): React.ComponentType<any> | null {
+function getFieldComponent(schema: z.ZodTypeAny, fieldConfig?: FieldConfig): React.ComponentType<FormFieldProps> | null {
   if (schema instanceof z.ZodString) {
     // Check for multiline strings based on fieldConfig rows, min length, or description
-    const description = (schema as any).description;
-    if (fieldConfig?.rows || description?.includes('multiline') || (schema as any)._def.checks?.some((check: any) => check.kind === 'min' && check.value > 100)) {
+    const description = (schema as z.ZodString & { description?: string }).description;
+    if (fieldConfig?.rows || description?.includes('multiline') || (schema as z.ZodString)._def.checks?.some((check: { kind: string; value: number }) => check.kind === 'min' && check.value > 100)) {
       return TextareaField;
     }
     return TextInputField;
@@ -88,7 +88,7 @@ function isFieldRequired(schema: z.ZodTypeAny): boolean {
   return true;
 }
 
-export function AutoToolForm<T extends Record<string, any>>({
+export function AutoToolForm<T extends Record<string, unknown>>({
   schema,
   onSubmit,
   isLoading = false,
@@ -115,7 +115,7 @@ export function AutoToolForm<T extends Record<string, any>>({
       })
     : fields;
   
-  const handleFieldChange = (fieldName: string, value: any) => {
+  const handleFieldChange = (fieldName: string, value: string | number | boolean | Date | undefined) => {
     setFormData(prev => ({ ...prev, [fieldName]: value }));
     // Clear validation error for this field
     setValidationErrors(prev => {
@@ -220,7 +220,7 @@ export function AutoToolForm<T extends Record<string, any>>({
             key={fieldName}
             name={fieldName}
             value={formData[fieldName]}
-            onChange={(value: any) => handleFieldChange(fieldName, value)}
+            onChange={(value: string | number | boolean | Date | undefined) => handleFieldChange(fieldName, value)}
             error={validationErrors[fieldName]}
             required={required}
             config={fieldConfig}

@@ -3,9 +3,9 @@
  */
 
 import { jest } from '@jest/globals';
-import type { Anthropic } from '@anthropic-ai/sdk';
+// import type { Anthropic } from '@anthropic-ai/sdk';
 import type { RichLLMInteraction } from '@/types/llm';
-import type { NextRequest } from 'next/server';
+// import type { NextRequest } from 'next/server';
 
 /**
  * Mock data factories for consistent test data generation
@@ -155,7 +155,7 @@ export class TestDataFactory {
 export interface MockClaudeResponse {
   response: {
     id: string;
-    content: Array<{ type: string; text?: string; id?: string; name?: string; input?: any }>;
+    content: Array<{ type: string; text?: string; id?: string; name?: string; input?: unknown }>;
     usage: {
       input_tokens: number;
       output_tokens: number;
@@ -226,17 +226,17 @@ export class ClaudeWrapperMocks {
  */
 // Plugin system types
 export interface MockPluginState {
-  items: any[];
-  errors: any[];
-  [key: string]: any;
+  items: unknown[];
+  errors: unknown[];
+  [key: string]: unknown;
 }
 
 export interface MockBasePlugin {
   state: MockPluginState;
   clearState: jest.MockedFunction<() => void>;
-  processChunk: jest.MockedFunction<any>;
-  synthesize: jest.MockedFunction<any>;
-  trackLLMCall: jest.MockedFunction<any>;
+  processChunk: jest.MockedFunction<(chunk: unknown) => unknown>;
+  synthesize: jest.MockedFunction<() => unknown>;
+  trackLLMCall: jest.MockedFunction<(interaction: unknown) => void>;
   name: jest.MockedFunction<() => string>;
   promptForWhenToUse: jest.MockedFunction<() => string>;
 }
@@ -254,7 +254,7 @@ export class PluginTestUtils {
       clearState: jest.fn(() => {
         Object.keys(mockState).forEach(key => {
           if (Array.isArray(mockState[key as keyof MockPluginState])) {
-            (mockState[key as keyof MockPluginState] as any[]).length = 0;
+            (mockState[key as keyof MockPluginState] as unknown[]).length = 0;
           }
         });
       }) as jest.MockedFunction<() => void>,
@@ -296,7 +296,7 @@ export class APITestUtils {
   static createMockRequest(options: {
     method?: string;
     url?: string;
-    body?: any;
+    body?: unknown;
     headers?: Record<string, string>;
     searchParams?: Record<string, string>;
   } = {}) {
@@ -317,14 +317,14 @@ export class APITestUtils {
       method,
       url: mockUrl.toString(),
       headers: new Map(Object.entries(headers)),
-      json: jest.fn<() => Promise<any>>().mockResolvedValue(body),
+      json: jest.fn<() => Promise<unknown>>().mockResolvedValue(body),
       text: jest.fn<() => Promise<string>>().mockResolvedValue(body ? JSON.stringify(body) : ''),
       ip: '127.0.0.1'
-    } as any;
+    } as unknown;
 
     // Add Headers-like methods
-    (mockRequest.headers as any).get = jest.fn((key: string) => headers[key] || null);
-    (mockRequest.headers as any).has = jest.fn((key: string) => key in headers);
+    (mockRequest.headers as Map<string, string> & { get: (key: string) => string | null; has: (key: string) => boolean }).get = jest.fn((key: string) => headers[key] || null);
+    (mockRequest.headers as Map<string, string> & { get: (key: string) => string | null; has: (key: string) => boolean }).has = jest.fn((key: string) => key in headers);
 
     return mockRequest;
   }
@@ -335,12 +335,12 @@ export class APITestUtils {
     };
   }
 
-  static expectJsonResponse(response: any, expectedStatus: number, expectedBody?: any) {
+  static expectJsonResponse(response: { status: number; json?: () => Promise<unknown> }, expectedStatus: number, expectedBody?: unknown) {
     expect(response.status).toBe(expectedStatus);
     if (expectedBody) {
       // For NextResponse objects, we need to call json() to get the body
       if (response.json && typeof response.json === 'function') {
-        return response.json().then((body: any) => {
+        return response.json().then((body: unknown) => {
           expect(body).toEqual(expectedBody);
         });
       }
@@ -353,18 +353,18 @@ export class APITestUtils {
  */
 // Database mock types
 export interface MockPrismaTable {
-  findUnique: jest.MockedFunction<any>;
-  findMany: jest.MockedFunction<any>;
-  create: jest.MockedFunction<any>;
-  update: jest.MockedFunction<any>;
-  delete: jest.MockedFunction<any>;
+  findUnique: jest.MockedFunction<(args?: unknown) => Promise<unknown>>;
+  findMany: jest.MockedFunction<(args?: unknown) => Promise<unknown[]>>;
+  create: jest.MockedFunction<(args?: unknown) => Promise<unknown>>;
+  update: jest.MockedFunction<(args?: unknown) => Promise<unknown>>;
+  delete: jest.MockedFunction<(args?: unknown) => Promise<unknown>>;
 }
 
 export interface MockPrismaClient {
   document: MockPrismaTable;
   agent: MockPrismaTable;
   evaluation: MockPrismaTable;
-  $transaction: jest.MockedFunction<any>;
+  $transaction: jest.MockedFunction<(fn: unknown) => Promise<unknown>>;
 }
 
 export class DatabaseTestUtils {
@@ -395,17 +395,17 @@ export class DatabaseTestUtils {
     };
   }
 
-  static mockPrismaFindUnique(client: MockPrismaClient, table: keyof MockPrismaClient, result: any): void {
+  static mockPrismaFindUnique(client: MockPrismaClient, table: keyof MockPrismaClient, result: unknown): void {
     if (table === '$transaction') return;
     (client[table] as MockPrismaTable).findUnique.mockResolvedValue(result);
   }
 
-  static mockPrismaFindMany(client: MockPrismaClient, table: keyof MockPrismaClient, results: any[]): void {
+  static mockPrismaFindMany(client: MockPrismaClient, table: keyof MockPrismaClient, results: unknown[]): void {
     if (table === '$transaction') return;
     (client[table] as MockPrismaTable).findMany.mockResolvedValue(results);
   }
 
-  static mockPrismaCreate(client: MockPrismaClient, table: keyof MockPrismaClient, result: any): void {
+  static mockPrismaCreate(client: MockPrismaClient, table: keyof MockPrismaClient, result: unknown): void {
     if (table === '$transaction') return;
     (client[table] as MockPrismaTable).create.mockResolvedValue(result);
   }

@@ -16,8 +16,8 @@ export interface FieldConfig {
 
 export interface FormFieldProps {
   name: string;
-  value: any;
-  onChange: (value: any) => void;
+  value: string | number | boolean | Date | undefined;
+  onChange: (value: string | number | boolean | Date | undefined) => void;
   error?: string;
   required?: boolean;
   config?: FieldConfig;

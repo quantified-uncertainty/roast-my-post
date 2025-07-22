@@ -176,7 +176,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
     claims: Claim[];
     interaction: RichLLMInteraction;
   }> {
-    const prompt = this.buildExtractionPrompt(text, context);
+    // const prompt = this.buildExtractionPrompt(text, context);
     
     // Get session context if available
     const currentSession = sessionContext.getSession();
@@ -187,7 +187,7 @@ export class FactCheckTool extends Tool<FactCheckInput, FactCheckOutput> {
       createHeliconeHeaders(sessionConfig) : 
       undefined;
     
-    const result = await callClaudeWithTool<{ claims: any[] }>({
+    const result = await callClaudeWithTool<{ claims: unknown[] }>({
       system: `You are a fact extraction system. Extract verifiable factual claims from text.
 Important: Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Use this as your reference point for any temporal analysis.
 
@@ -241,7 +241,7 @@ Instructions:
     const extractedClaims = result.toolResult.claims || [];
     
     // Convert to our Claim format with IDs
-    const claims: Claim[] = extractedClaims.map((claim: any, index: number) => ({
+    const claims: Claim[] = extractedClaims.map((claim: { text: string; topic: string; importance: 'low' | 'medium' | 'high'; specificity: 'vague' | 'moderate' | 'specific'; type: string; temporal_status?: string }, index: number) => ({
       id: `claim-${index}`,
       text: claim.text,
       topic: claim.topic,

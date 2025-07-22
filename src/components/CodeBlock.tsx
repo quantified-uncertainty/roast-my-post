@@ -10,7 +10,7 @@ import {
 interface CodeBlockProps {
   code: string;
   language?: string;
-  attributes?: any;
+  attributes?: React.HTMLAttributes<HTMLDivElement>;
   highlightLines?: number[]; // Array of line numbers to highlight (1-indexed)
   highlightPositions?: Array<{ tag: string; lineNumber: number }>; // Position markers for comments
 }

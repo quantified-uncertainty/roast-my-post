@@ -8,12 +8,10 @@ import {
 
 interface UseScrollBehaviorProps {
   evaluationsSectionRef: React.RefObject<HTMLDivElement | null>;
-  isLargeMode: boolean;
 }
 
 export function useScrollBehavior({
   evaluationsSectionRef,
-  isLargeMode,
 }: UseScrollBehaviorProps) {
   const [headerVisible, setHeaderVisible] = useState(true);
   const [localIsLargeMode, setLocalIsLargeMode] = useState(true);

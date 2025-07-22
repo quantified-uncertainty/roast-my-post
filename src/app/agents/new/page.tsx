@@ -32,7 +32,7 @@ interface ValidationResult {
   hasRequiredFields: boolean;
   missingFields: string[];
   extraFields: string[];
-  parsedData?: any;
+  parsedData?: Record<string, unknown>;
   warnings: string[];
 }
 
@@ -90,7 +90,7 @@ export default function NewAgentPage() {
         return;
       }
 
-      const parsedObj = parsed as Record<string, any>;
+      const parsedObj = parsed as Record<string, unknown>;
       const missingFields = REQUIRED_FIELDS.filter(
         (field) => !parsedObj[field]
       );
@@ -156,7 +156,7 @@ export default function NewAgentPage() {
       // Add optional fields if they exist
       OPTIONAL_FIELDS.forEach((field) => {
         if (validation.parsedData[field] !== undefined) {
-          (agentData as any)[field] = validation.parsedData[field];
+          (agentData as Record<string, unknown>)[field] = validation.parsedData[field];
         }
       });
 
