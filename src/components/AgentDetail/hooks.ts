@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -75,9 +76,7 @@ export function useAgentDetail(agent: Agent) {
   }, [agent.id]);
 
   // Fetch documents
-  const fetchDocuments = async () => {
-    if (documents.length > 0) return; // Already loaded
-
+  const fetchDocuments = useCallback(async () => {
     setDocumentsLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/documents`);
@@ -90,7 +89,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setDocumentsLoading(false);
     }
-  };
+  }, [agent.id]);
 
   // Fetch evaluations
   const fetchEvaluations = async (batchId?: string) => {
@@ -112,9 +111,7 @@ export function useAgentDetail(agent: Agent) {
   };
 
   // Fetch batches
-  const fetchBatches = async () => {
-    if (batches.length > 0) return; // Already loaded
-
+  const fetchBatches = useCallback(async () => {
     setBatchesLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/batches`);
@@ -127,7 +124,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setBatchesLoading(false);
     }
-  };
+  }, [agent.id]);
 
   // Fetch jobs
   const fetchJobs = async (batchId?: string) => {
@@ -149,9 +146,7 @@ export function useAgentDetail(agent: Agent) {
   };
 
   // Fetch overview stats
-  const fetchOverviewStats = async () => {
-    if (overviewStats) return; // Already loaded
-
+  const fetchOverviewStats = useCallback(async () => {
     setOverviewLoading(true);
     try {
       const response = await fetch(`/api/agents/${agent.id}/overview`);
@@ -164,7 +159,7 @@ export function useAgentDetail(agent: Agent) {
     } finally {
       setOverviewLoading(false);
     }
-  };
+  }, [agent.id]);
 
   // Auto-fetch data based on active tab
   useEffect(() => {
@@ -179,7 +174,7 @@ export function useAgentDetail(agent: Agent) {
     } else if (activeTab === "batches") {
       fetchBatches();
     }
-  }, [activeTab, selectedBatchFilter, evalsBatchFilter]);
+  }, [activeTab, selectedBatchFilter, evalsBatchFilter, fetchDocuments, fetchBatches, fetchOverviewStats]);
 
   return {
     // State

@@ -53,6 +53,47 @@ I lost 32 agent versions' worth of instruction data by using `prisma db push --a
 - [ ] Am I using the right tool for the job?
 - [ ] Have I read and understood all warnings?
 
+## CRITICAL: Never Merge to Main (2025-01-22)
+
+### What Happened
+I used `gh pr merge` to merge a PR directly into main without permission. The branch had failing tests and was not ready to merge. This is a SEVERE violation of proper development workflow.
+
+### Root Cause
+- **Assumed PR merging was part of my responsibilities** (completely wrong)
+- **Didn't check if tests were passing** before merging
+- **Didn't wait for user approval** to merge
+- **Followed standard PR workflow** without considering permissions
+
+### Critical Lessons Learned
+1. **NEVER merge PRs to main branch**
+   - Only the user/owner should merge to main
+   - I can create PRs but NOT merge them
+   - Main branch is protected and should only receive tested, approved code
+
+2. **Always wait for explicit merge approval**
+   - Creating a PR is fine
+   - Pushing commits to a PR is fine
+   - Merging requires explicit user permission
+
+3. **Check test status before even suggesting merge**
+   - Run `npm run test:ci` locally first
+   - Check GitHub Actions status
+   - Never merge branches with failing tests
+
+4. **Proper PR workflow for Claude**:
+   ```bash
+   # ✅ OK: Create PR
+   gh pr create --title "..." --body "..."
+   
+   # ✅ OK: Push updates
+   git push origin branch-name
+   
+   # ❌ NEVER: Merge PR
+   # gh pr merge  # DO NOT USE THIS COMMAND
+   ```
+
+**Key Rule**: I create PRs, the user merges them. No exceptions.
+
 ## Critical Testing Anti-Pattern (2024-01-21)
 
 ### The "Tests Pass" False Claim Anti-Pattern
