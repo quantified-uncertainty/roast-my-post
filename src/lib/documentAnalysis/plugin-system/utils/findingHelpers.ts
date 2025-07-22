@@ -8,7 +8,16 @@ import type {
   LocatedFinding, 
   GlobalFinding
 } from '../types';
-import type { PluginError } from '../deprecated-types';
+
+// Previously imported from deprecated-types
+type LegacyPhase = 'processChunk' | 'synthesize' | 'generateComments';
+
+interface PluginError {
+  timestamp: Date;
+  phase: LegacyPhase;
+  error: string;
+  context?: any;
+}
 
 /**
  * Generate a unique ID for findings

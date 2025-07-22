@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/app/**/*.tsx",
+    "src/app/**/*.ts",
+    "scripts/**/*.ts",
+    "scripts/**/*.js",
+    "mcp-server/src/**/*.ts"
+  ],
+  "project": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "ignore": [
+    "**/*.d.ts",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/coverage/**"
+  ],
+  "ignoreDependencies": [
+    "@types/node",
+    "typescript"
+  ]
+}

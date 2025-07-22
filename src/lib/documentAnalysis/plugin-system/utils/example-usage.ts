@@ -7,9 +7,6 @@ import type {
   PotentialFinding, 
   InvestigatedFinding
 } from '../types';
-import type { 
-  GenerateCommentsContext 
-} from '../deprecated-types';
 import type { Comment } from '@/types/documentSchema';
 
 import { 
@@ -20,7 +17,8 @@ import {
 
 import { 
   generateCommentsFromFindings,
-  filterRepetitiveComments 
+  filterRepetitiveComments,
+  type GenerateCommentsContext
 } from './commentGenerator';
 
 import { logger } from '../../../logger';

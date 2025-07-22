@@ -388,7 +388,7 @@ export function extractContent(dom: JSDOM): string {
     if (elements && elements.length > 0) {
       console.log(`Removing ${elements.length} elements matching: ${selector}`);
     }
-    elements?.forEach((el) => el.remove());
+    elements?.forEach((el: Element) => el.remove());
   });
 
   return contentElement?.innerHTML || "";
