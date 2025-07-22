@@ -4,7 +4,6 @@ import type {
 } from "../types";
 import {
   formatCost,
-  formatDate,
   formatDateWithTime,
   formatRelativeDate,
 } from "../utils";

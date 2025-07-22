@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { logger } from "@/lib/logger";
 
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -11,7 +10,6 @@ import { Comment } from "@/types/documentSchema";
 import {
   applyHighlightsToContainer,
   resetContainer,
-  testFindTextInContainer,
 } from "@/utils/ui/highlightUtils";
 
 interface HighlightedMarkdownProps {
@@ -63,15 +61,7 @@ export function HighlightedMarkdown({
     try {
       if (highlights && highlights.length > 0) {
         // Enhanced debugging for highlights
-        highlights.forEach((highlight, index) => {
-          const { startOffset, endOffset, quotedText } = highlight.highlight;
 
-        });
-
-        // Try to find the content text in the container for a reliable check
-        if (containerRef.current && containerRef.current.textContent) {
-          const contentTextInContainer = containerRef.current.textContent;
-        }
 
         applyHighlightsToContainer(
           containerRef.current,
@@ -91,7 +81,7 @@ export function HighlightedMarkdown({
   }, [highlights, highlightColors, rendered, contentKey, appliedHighlights]);
 
   // Optimize to prevent re-renders on hover state changes
-  const updateHoverStateClass = useEffect(() => {
+  useEffect(() => {
     if (!containerRef.current || !appliedHighlights) return;
 
     try {

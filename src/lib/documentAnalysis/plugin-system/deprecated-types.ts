@@ -29,7 +29,7 @@ export interface PluginError {
    */
   phase: LegacyPhase;
   error: string;
-  context?: any;
+  context?: Record<string, unknown>;
 }
 
 export interface ChunkResult {
@@ -47,7 +47,11 @@ export interface SynthesisResult {
   analysisSummary: string;  // Markdown summary of patterns and insights
   recommendations?: string[];
   llmCalls: LLMInteraction[];
-  visualizations?: any[];
+  visualizations?: Array<{
+    type: string;
+    data: unknown;
+    config?: Record<string, unknown>;
+  }>;
 }
 
 export interface GenerateCommentsContext {
@@ -74,7 +78,7 @@ export interface PluginResult {
  * This has been replaced with a single analyze() method in SimpleAnalysisPlugin
  * which is simpler and more flexible.
  */
-export interface AnalysisPlugin<TState = any> {
+export interface AnalysisPlugin<TState = unknown> {
   // Identity
   name(): string;
   

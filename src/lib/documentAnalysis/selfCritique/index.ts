@@ -95,10 +95,9 @@ ${evaluationText}`;
       `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
     );
 
-    response = result.response;
     interaction = result.interaction;
     validationResult = result.toolResult;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('❌ Anthropic API error in self-critique generation:', error);
     handleAnthropicError(error);
   }

@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { RouteContext } from '@/lib/types/next';
 
 /**
  * Standard API route configuration
@@ -58,7 +59,7 @@ export const StandardErrors = {
     { status: 500 }
   ),
   
-  validationError: (errors: any) => NextResponse.json(
+  validationError: (errors: z.ZodError | Record<string, unknown>) => NextResponse.json(
     { error: "Validation failed", details: errors },
     { status: 400 }
   )
@@ -67,12 +68,12 @@ export const StandardErrors = {
 /**
  * Route handler type for standardized routes
  */
-export type RouteHandler<T = any> = (
+export type RouteHandler<T = unknown> = (
   request: NextRequest,
   context: {
-    params?: any;
-    query?: any;
-    body?: any;
+    params?: Record<string, string>;
+    query?: Record<string, string>;
+    body?: unknown;
     userId?: string;
   }
 ) => Promise<NextResponse<T>>;
@@ -150,7 +151,7 @@ class ParamUtils {
     return query;
   }
 
-  static extractParams(context: any): Record<string, string> {
+  static extractParams(context: RouteContext): Record<string, string> {
     return context.params || {};
   }
 }
@@ -161,8 +162,8 @@ class ParamUtils {
 export function createRoute(
   handler: RouteHandler,
   config: RouteConfig = {}
-): (request: NextRequest, context: any) => Promise<NextResponse> {
-  return async (request: NextRequest, context: any): Promise<NextResponse> => {
+): (request: NextRequest, context: RouteContext) => Promise<NextResponse> {
+  return async (request: NextRequest, context: RouteContext): Promise<NextResponse> => {
     const startTime = Date.now();
     let userId: string | undefined;
 
@@ -191,7 +192,7 @@ export function createRoute(
 
       // 3. Rate limiting
       if (config.rateLimit) {
-        const identifier = userId || (request as any).ip || 'anonymous';
+        const identifier = userId || request.headers.get('x-forwarded-for') || 'anonymous';
         if (RateLimitUtils.isRateLimited(identifier)) {
           return StandardErrors.tooManyRequests();
         }

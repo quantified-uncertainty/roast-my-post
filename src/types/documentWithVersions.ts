@@ -22,7 +22,7 @@ export interface DocumentWithVersions extends Document {
  * Type guard to check if a document has versions
  */
 export function hasVersions(doc: Document): doc is DocumentWithVersions {
-  return 'versions' in doc && Array.isArray((doc as any).versions);
+  return 'versions' in doc && Array.isArray((doc as { versions?: unknown }).versions);
 }
 
 /**

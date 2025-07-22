@@ -33,7 +33,16 @@ interface ExportEvaluationData {
         timeInSeconds?: number | null;
         log?: string | null;
         createdAt: Date | string;
-        llmInteractions?: any;
+        llmInteractions?: {
+          messages: Array<{
+            role: string;
+            content: string;
+          }>;
+          usage?: {
+            input_tokens: number;
+            output_tokens: number;
+          };
+        };
       }>;
     } | null;
     testBatchId?: string | null;

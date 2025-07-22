@@ -2,7 +2,11 @@
  * Development-time validators to catch missing data early
  */
 
-export function validateEvaluationData(evaluations: any[], context: string) {
+interface EvaluationWithVersions {
+  versions?: unknown[];
+}
+
+export function validateEvaluationData(evaluations: EvaluationWithVersions[], context: string) {
   if (process.env.NODE_ENV === 'development') {
     evaluations.forEach((evaluation, index) => {
       if (!evaluation.versions || !Array.isArray(evaluation.versions)) {
@@ -16,7 +20,13 @@ export function validateEvaluationData(evaluations: any[], context: string) {
   }
 }
 
-export function validateSidebarData(data: any, pageName: string) {
+interface SidebarData {
+  document?: {
+    evaluations?: EvaluationWithVersions[];
+  };
+}
+
+export function validateSidebarData(data: SidebarData, pageName: string) {
   if (process.env.NODE_ENV === 'development') {
     if (!data?.document?.evaluations) {
       console.warn(`[${pageName}] Missing document.evaluations data for sidebar`);

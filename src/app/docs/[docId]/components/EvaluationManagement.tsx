@@ -17,8 +17,17 @@ import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/eva
 
 interface EvaluationManagementProps {
   docId: string;
-  evaluations: any[];
-  availableAgents: any[];
+  evaluations: Array<{
+    id: string;
+    agentId: string;
+    agent: { id: string; name: string };
+    currentVersionNumber?: number;
+    latestVersion?: { id: string; grade?: number | null; createdAt: Date };
+    versions?: Array<{ id: string; job?: { costInCents?: number | null; durationInSeconds?: number | null } | null }>;
+    jobs?: Array<{ id: string; status: string }>;
+    isStale?: boolean;
+  }>;
+  availableAgents: Array<{ id: string; name: string; description: string }>;
   isOwner: boolean;
 }
 
@@ -86,15 +95,15 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const isStale = evaluation.isStale || false;
               
               // Calculate stats
-              const totalCost = evaluation.versions?.reduce((sum: number, v: any) => 
+              const totalCost = evaluation.versions?.reduce((sum: number, v) => 
                 sum + (v.job?.costInCents || 0), 0) / 100 || 0;
               const avgDuration = versionCount > 0 
-                ? evaluation.versions.reduce((sum: number, v: any) => 
+                ? evaluation.versions.reduce((sum: number, v) => 
                     sum + (v.job?.durationInSeconds || 0), 0) / versionCount
                 : 0;
               
               // Calculate success rate
-              const completedJobs = evaluation.jobs?.filter((job: any) => job.status === "COMPLETED").length || 0;
+              const completedJobs = evaluation.jobs?.filter((job) => job.status === "COMPLETED").length || 0;
               const totalJobs = evaluation.jobs?.length || 0;
               const successRate = totalJobs > 0 ? (completedJobs / totalJobs) * 100 : 0;
 

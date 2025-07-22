@@ -7,7 +7,6 @@ import type { Agent } from '../../../../types/agentSchema';
 import type { Document } from '../../../../types/documents';
 import type { Comment } from '../../../../types/documentSchema';
 import type { TaskResult } from '../../shared/types';
-import type { LLMInteraction } from '@/types/llm';
 
 import { getDocumentFullContent } from '../../../../utils/documentContentHelpers';
 import { logger } from '@/lib/logger';
@@ -129,8 +128,7 @@ export class SpellingGrammarWorkflow {
         allErrors,
         conventions,
         docProcessor,
-        tasks,
-        startTime
+        tasks
       );
 
       // Generate final output
@@ -196,7 +194,6 @@ export class SpellingGrammarWorkflow {
     sessionConfig?: HeliconeSessionConfig
   ): Promise<SpellingGrammarError[]> {
     const allErrors: SpellingGrammarError[] = [];
-    const chunkStartTime = Date.now();
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -364,8 +361,7 @@ export class SpellingGrammarWorkflow {
     errors: SpellingGrammarError[],
     conventions: DocumentConventions,
     docProcessor: DocumentProcessor,
-    tasks: TaskResult[],
-    startTime: number
+    tasks: TaskResult[]
   ): Promise<ProcessedErrorResults> {
     const postProcessingStartTime = Date.now();
 

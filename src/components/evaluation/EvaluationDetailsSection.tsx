@@ -12,7 +12,6 @@ import {
   ArrowDownTrayIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  DocumentTextIcon,
   BookOpenIcon,
   ChartBarIcon
 } from "@heroicons/react/24/outline";
@@ -30,9 +29,26 @@ interface EvaluationDetailsSectionProps {
   costInCents?: number | null;
   durationInSeconds?: number | null;
   createdAt?: string | Date;
-  evaluationData?: any; // Full evaluation data for export
+  evaluationData?: {
+    evaluation: {
+      documentTitle?: string;
+      agentName?: string;
+      grade?: number | null;
+      createdAt?: string | Date;
+      summary?: string | null;
+      analysis?: string | null;
+      selfCritique?: string | null;
+      comments?: Array<{
+        description?: string;
+        importance?: number | null;
+        grade?: number | null;
+      }>;
+      job?: {
+        llmThinking?: string | null;
+      } | null;
+    };
+  }; // Full evaluation data for export
   documentId?: string;
-  evaluationId?: string;
   isOnEvalPage?: boolean;
 }
 
@@ -50,7 +66,7 @@ export function EvaluationDetailsSection({
   createdAt,
   evaluationData,
   documentId,
-  evaluationId,
+  // evaluationId,
   isOnEvalPage = false
 }: EvaluationDetailsSectionProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -327,7 +343,7 @@ export function EvaluationDetailsSection({
 }
 
 // Simple JSON to YAML converter (basic implementation)
-function jsonToYaml(obj: any, indent = 0): string {
+function jsonToYaml(obj: unknown, indent = 0): string {
   const spaces = '  '.repeat(indent);
   let result = '';
 
@@ -354,7 +370,7 @@ function jsonToYaml(obj: any, indent = 0): string {
   return result;
 }
 
-function yamlValue(value: any): string {
+function yamlValue(value: unknown): string {
   if (typeof value === 'string') {
     // Simple string escaping for YAML
     if (value.includes('\n') || value.includes('"') || value.includes("'")) {
@@ -366,7 +382,25 @@ function yamlValue(value: any): string {
 }
 
 // Convert evaluation to Markdown format
-function evaluationToMarkdown(data: any): string {
+function evaluationToMarkdown(data: {
+  evaluation: {
+    documentTitle?: string;
+    agentName?: string;
+    grade?: number | null;
+    createdAt?: string | Date;
+    summary?: string | null;
+    analysis?: string | null;
+    selfCritique?: string | null;
+    comments?: Array<{
+      description?: string;
+      importance?: number | null;
+      grade?: number | null;
+    }>;
+    job?: {
+      llmThinking?: string | null;
+    } | null;
+  };
+}): string {
   const evaluation = data.evaluation;
   if (!evaluation) return '';
 
@@ -405,7 +439,7 @@ function evaluationToMarkdown(data: any): string {
 
   if (evaluation.comments && evaluation.comments.length > 0) {
     md += `## Comments\n\n`;
-    evaluation.comments.forEach((comment: any, index: number) => {
+    evaluation.comments.forEach((comment, index: number) => {
       md += `### Comment ${index + 1}\n\n`;
       if (comment.description) {
         md += `${comment.description}\n\n`;

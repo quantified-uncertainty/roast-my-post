@@ -24,7 +24,6 @@ export function EvaluationContent({
   createdAt,
   isStale = false,
   showNavigation = true,
-  compact = false,
   maxWidth = '4xl',
   evaluationData,
   isOnEvalPage = false,

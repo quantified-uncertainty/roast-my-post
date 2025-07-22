@@ -1,7 +1,6 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient, ANALYSIS_MODEL } from '@/types/openai';
 import { RichLLMInteraction } from '@/types/llm';
-import { withRetry } from '@/lib/documentAnalysis/shared/retryUtils';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -43,17 +42,17 @@ function buildPromptString(
   return prompt.trim();
 }
 
-function isRetryableError(error: any): boolean {
+function isRetryableError(error: unknown): boolean {
   // Check if this is an Anthropic API error
-  if (error?.status) {
-    const status = error.status;
+  if (error && typeof error === 'object' && 'status' in error) {
+    const status = (error as { status: number }).status;
     // Retry on rate limits (429) and server errors (5xx)
     return status === 429 || (status >= 500 && status < 600);
   }
   
   // Check for network/timeout errors
-  if (error?.code) {
-    const code = error.code;
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code: string }).code;
     return code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND';
   }
   
@@ -80,7 +79,7 @@ export async function callClaude(
   
   // Make API call with manual retry logic for retryable errors only
   let response: Anthropic.Messages.Message;
-  let lastError: any = null;
+  let lastError: unknown = null;
   const maxRetries = 3;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -91,7 +90,7 @@ export async function callClaude(
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      const requestOptions: any = {
+      const requestOptions: Anthropic.Messages.MessageCreateParams = {
         model,
         max_tokens: options.max_tokens || 4000,
         temperature: options.temperature ?? 0,

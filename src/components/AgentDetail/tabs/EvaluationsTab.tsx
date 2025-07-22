@@ -18,8 +18,6 @@ interface EvaluationsTabProps {
   evalsLoading: boolean;
   selectedEvaluation: AgentEvaluation | null;
   setSelectedEvaluation: (evaluation: AgentEvaluation | null) => void;
-  evalDetailsTab: string;
-  setEvalDetailsTab: (tab: string) => void;
   selectedVersion: number | null;
   setSelectedVersion: (version: number | null) => void;
   evalsBatchFilter: string | null;
@@ -34,8 +32,6 @@ export function EvaluationsTab({
   evalsLoading,
   selectedEvaluation,
   setSelectedEvaluation,
-  evalDetailsTab,
-  setEvalDetailsTab,
   selectedVersion,
   setSelectedVersion,
   evalsBatchFilter,

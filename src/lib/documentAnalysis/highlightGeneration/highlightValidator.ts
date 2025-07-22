@@ -1,5 +1,4 @@
 import type { Comment } from "../../../types/documentSchema";
-import { logger } from "@/lib/logger";
 import {
   type LineBasedHighlight,
   LineBasedHighlighter,
@@ -174,7 +173,7 @@ export async function validateAndConvertHighlights(
  */
 export function createValidationErrorFeedback(
   error: unknown,
-  failedHighlights: any[],
+  failedHighlights: unknown[],
   documentContent: string
 ): string {
   const errorMessage = error instanceof Error ? error.message : String(error);

@@ -20,7 +20,6 @@ interface AgentConfigFormProps {
 export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
   const [activeTab, setActiveTab] = useState<"form" | "yaml">("form");
   const [yamlValue, setYamlValue] = useState("");
-  const [yamlValid, setYamlValid] = useState(false);
 
   // Convert config to YAML
   const configToYaml = (cfg: AgentConfig) => {
@@ -36,7 +35,7 @@ export function AgentConfigForm({ config, onChange }: AgentConfigFormProps) {
     setYamlValue(value);
   };
 
-  const handleYamlValidation = (isValid: boolean, parsed?: any) => {
+  const handleYamlValidation = (isValid: boolean, parsed?: Record<string, unknown>) => {
     setYamlValid(isValid);
     if (isValid && parsed) {
       // Update config from parsed YAML

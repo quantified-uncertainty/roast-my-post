@@ -77,7 +77,7 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
           maxSources: input.maxSources
         });
         usage = researchResult.usage;
-      } catch (structuredError) {
+      } catch (_structuredError) {
         // Fallback to basic query if structured research fails
         context.logger.warn('[PerplexityResearch] Structured research failed, using fallback mode');
         
@@ -166,7 +166,7 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
     summary: string;
     sources: Array<{ title: string; url: string; snippet: string }>;
     keyFindings: string[];
-    usage?: any;
+    usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
   }> {
     const { focusArea = 'general', maxSources = 5 } = options;
 
@@ -205,7 +205,7 @@ Format your response as JSON with this structure:
           usage: response.usage
         };
       }
-    } catch (e) {
+    } catch (_e) {
       // Fallback to text parsing if JSON parsing fails
       console.warn('Failed to parse JSON response, using fallback parsing');
     }
@@ -223,7 +223,7 @@ Format your response as JSON with this structure:
     client: PerplexityClient,
     question: string,
     existingContext?: string
-  ): Promise<{ content: string; usage?: any }> {
+  ): Promise<{ content: string; usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number } }> {
     const prompt = `Research current information relevant to this forecasting question: "${question}"
     
 ${existingContext ? `Existing context: ${existingContext}\n` : ''}

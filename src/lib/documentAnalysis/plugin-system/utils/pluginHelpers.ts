@@ -134,8 +134,7 @@ export function locateFindings<TInvestigated extends GenericInvestigatedFinding>
  * Generic pattern that works for any plugin
  */
 export function generateCommentsFromFindings(
-  locatedFindings: GenericLocatedFinding[],
-  documentText: string
+  locatedFindings: GenericLocatedFinding[]
 ): Comment[] {
   return locatedFindings.map(finding => ({
     description: finding.message,
@@ -190,24 +189,27 @@ function tryFuzzyLocation(
 }
 
 function tryContextLocation(
-  data: any,
+  data: Record<string, unknown>,
   documentText: string
 ): { startOffset: number; endOffset: number; quotedText: string } | null {
-  if (!data.surroundingText || !data.equation) return null;
+  const surroundingText = data.surroundingText as string | undefined;
+  const equation = data.equation as string | undefined;
   
-  const contextPos = documentText.indexOf(data.surroundingText);
+  if (!surroundingText || !equation) return null;
+  
+  const contextPos = documentText.indexOf(surroundingText);
   if (contextPos === -1) return null;
   
-  const equationInContext = data.surroundingText.indexOf(data.equation);
+  const equationInContext = surroundingText.indexOf(equation);
   if (equationInContext === -1) return null;
   
   const startOffset = contextPos + equationInContext;
-  const endOffset = startOffset + data.equation.length;
+  const endOffset = startOffset + equation.length;
   
   return {
     startOffset,
     endOffset,
-    quotedText: data.equation
+    quotedText: equation
   };
 }
 
@@ -372,7 +374,11 @@ export const MathHelpers = {
     if (errorCount > 0) {
       analysisSummary += `### Error Breakdown\n`;
       errorEquations.slice(0, 5).forEach((error) => {
-        analysisSummary += `- \`${error.data.equation}\` - ${error.data.error}\n`;
+        const equation = error.data.equation as string | undefined;
+        const errorMsg = error.data.error as string | undefined;
+        if (equation && errorMsg) {
+          analysisSummary += `- \`${equation}\` - ${errorMsg}\n`;
+        }
       });
       if (errorEquations.length > 5) {
         analysisSummary += `- ...and ${errorEquations.length - 5} more\n`;
@@ -433,19 +439,26 @@ export const ForecastHelpers = {
 
       if (finding.type === 'forecast') {
         const data = finding.data;
-        severity = 'low'; // Most forecasts are informational
-        message = `Prediction: ${data.predictionText}`;
+        const predictionText = data.predictionText as string | undefined;
+        const timeframe = data.timeframe as string | undefined;
+        const probability = data.probability as number | undefined;
         
-        if (data.timeframe) {
-          message += ` (${data.timeframe})`;
+        severity = 'low'; // Most forecasts are informational
+        message = `Prediction: ${predictionText || 'unknown'}`;
+        
+        if (timeframe) {
+          message += ` (${timeframe})`;
         }
-        if (data.probability !== undefined) {
-          message += ` - ${data.probability}% probability`;
+        if (probability !== undefined) {
+          message += ` - ${probability}% probability`;
         }
       } else if (finding.type === 'forecast_disagreement') {
         const data = finding.data;
+        const probability = data.probability as number | undefined;
+        const ourProbability = data.ourProbability as number | undefined;
+        
         severity = 'medium'; // Disagreements are more noteworthy
-        message = `Forecast disagreement: Author says ${data.probability}%, our analysis suggests ${data.ourProbability}%`;
+        message = `Forecast disagreement: Author says ${probability || 'N/A'}%, our analysis suggests ${ourProbability || 'N/A'}%`;
       }
 
       return {
@@ -501,10 +514,15 @@ export const ForecastHelpers = {
       comparisons.slice(0, 5).forEach(comp => {
         if (comp.type === 'forecast_disagreement') {
           const data = comp.data;
-          analysisSummary += `- **"${data.predictionText}"**\n`;
-          analysisSummary += `  - Author: ${data.probability || 'N/A'}%\n`;
-          analysisSummary += `  - Our forecast: ${data.ourProbability}%\n`;
-          analysisSummary += `  - ${data.agreesWithAuthor ? '✓ Agreement' : '✗ Disagreement'}\n`;
+          const predictionText = data.predictionText as string | undefined;
+          const probability = data.probability as number | undefined;
+          const ourProbability = data.ourProbability as number | undefined;
+          const agreesWithAuthor = data.agreesWithAuthor as boolean | undefined;
+          
+          analysisSummary += `- **"${predictionText || 'unknown'}"**\n`;
+          analysisSummary += `  - Author: ${probability || 'N/A'}%\n`;
+          analysisSummary += `  - Our forecast: ${ourProbability || 'N/A'}%\n`;
+          analysisSummary += `  - ${agreesWithAuthor ? '✓ Agreement' : '✗ Disagreement'}\n`;
         }
       });
     }

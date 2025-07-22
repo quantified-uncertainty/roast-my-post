@@ -41,7 +41,7 @@ export class SpellingGrammarLLMClient {
     userPrompt: string,
     sessionConfig?: HeliconeSessionConfig
   ): Promise<LLMResponse> {
-    let lastUsage: any = null;
+    let lastUsage: { input_tokens: number; output_tokens: number } | null = null;
     const interactions: RichLLMInteraction[] = [];
 
     const analyzeWithRetry = async (): Promise<LLMResponse> => {
@@ -51,7 +51,12 @@ export class SpellingGrammarLLMClient {
         // Prepare helicone headers if session config is provided
         const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
         
-        const result = await callClaudeWithTool<{ errors: any[] }>({
+        const result = await callClaudeWithTool<{ errors: Array<{
+          lineStart: number;
+          lineEnd: number;
+          highlightedText: string;
+          description: string;
+        }> }>({
           model: this.model,
           system: systemPrompt,
           messages: [
@@ -173,7 +178,12 @@ export class SpellingGrammarLLMClient {
   /**
    * Parse errors from LLM response
    */
-  private parseErrors(result: { errors: any[] }): SpellingGrammarError[] {
+  private parseErrors(result: { errors: Array<{
+    lineStart: number;
+    lineEnd: number;
+    highlightedText: string;
+    description: string;
+  }> }): SpellingGrammarError[] {
     return result.errors.map(error => {
       const errorType = categorizeError(error.description);
       const severity = determineSeverity(errorType, error.description);
@@ -194,7 +204,12 @@ export class SpellingGrammarLLMClient {
    */
   private createInteractionFromRich(
     richInteraction: RichLLMInteraction,
-    result: any
+    result: { errors: Array<{
+      lineStart: number;
+      lineEnd: number;
+      highlightedText: string;
+      description: string;
+    }> }
   ): LLMInteraction {
     // Parse prompt to extract system and user messages
     const promptParts = richInteraction.prompt.split('\n\n');
@@ -224,7 +239,7 @@ export class SpellingGrammarLLMClient {
   /**
    * Create empty response
    */
-  private createEmptyResponse(usage: any, error: string): LLMResponse {
+  private createEmptyResponse(usage: { input_tokens?: number; output_tokens?: number } | null, error: string): LLMResponse {
     return {
       errors: [],
       usage: {
@@ -246,20 +261,25 @@ export class SpellingGrammarLLMClient {
   /**
    * Try to parse text response as fallback when tool use fails
    */
-  private tryParseTextResponse(text: string): { errors: any[] } | null {
+  private tryParseTextResponse(text: string): { errors: Array<{
+    lineStart: number;
+    lineEnd: number;
+    highlightedText: string;
+    description: string;
+  }> } | null {
     try {
       // First try to parse as JSON (the response might be a stringified JSON)
       try {
         const parsed = JSON.parse(text);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type === 'text') {
           // This is the Claude response format
-          const textContent = parsed.map((item: any) => item.text || '').join(' ');
+          const textContent = parsed.map((item: { type?: string; text?: string }) => item.text || '').join(' ');
           return this.tryParseTextResponse(textContent);
         }
         if (parsed.errors && Array.isArray(parsed.errors)) {
           return parsed;
         }
-      } catch (e) {
+      } catch {
         // Not JSON, continue with text parsing
       }
 

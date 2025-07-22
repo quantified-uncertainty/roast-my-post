@@ -46,14 +46,14 @@ export const calculateTotalTokenUsage = (interactions: RichLLMInteraction[]) => 
 
 // Helper to create a mock error response
 export const createMockClaudeError = (message: string, statusCode: number = 500) => {
-  const error = new Error(message);
-  (error as any).status = statusCode;
-  (error as any).headers = {};
+  const error = new Error(message) as Error & { status: number; headers: Record<string, string> };
+  error.status = statusCode;
+  error.headers = {};
   return error;
 };
 
 // Helper to create mock tool results of any type
-export const createMockToolResult = <T extends Record<string, any>>(result: T): T => result;
+export const createMockToolResult = <T extends Record<string, unknown>>(result: T): T => result;
 
 // Helper to create a series of mock LLM interactions for testing
 export const createMockInteractionChain = (count: number): RichLLMInteraction[] => {

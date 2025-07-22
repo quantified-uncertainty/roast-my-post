@@ -58,7 +58,16 @@ export interface AgentEvaluation {
       timeInSeconds?: number | null;
       log?: string | null;
       createdAt: Date;
-      llmInteractions?: any;
+      llmInteractions?: Array<{
+        messages?: Array<{
+          role: string;
+          content: string;
+        }>;
+        usage?: {
+          input_tokens: number;
+          output_tokens: number;
+        };
+      }> | null;
     }>;
   };
 }
