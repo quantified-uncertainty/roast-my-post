@@ -9,13 +9,19 @@ export default function ExtractForecastingClaimsAutoPage() {
     <ToolPageTemplate
       tool={extractForecastingClaimsTool}
       formConfig={{
-        fieldOrder: ['text', 'agentInstructions', 'maxDetailedAnalysis'],
+        fieldOrder: ['text', 'additionalContext', 'agentInstructions', 'maxDetailedAnalysis', 'minQualityThreshold'],
         fieldConfigs: {
           text: {
             label: 'Text to Analyze',
             placeholder: 'Paste text containing predictions, forecasts, or future-oriented claims...',
             helpText: 'The tool will extract and analyze forecasting claims from this text',
             rows: 10
+          },
+          additionalContext: {
+            label: 'Additional Context',
+            placeholder: 'Optional: Provide background about the document, company, or topic (e.g., "This is from Apple\'s Q3 2024 earnings call discussing their Vision Pro product")',
+            helpText: 'Context helps make predictions more specific by replacing pronouns and vague references',
+            rows: 3
           },
           agentInstructions: {
             label: 'Analysis Instructions',
@@ -24,11 +30,19 @@ export default function ExtractForecastingClaimsAutoPage() {
             rows: 3
           },
           maxDetailedAnalysis: {
-            label: 'Number of Detailed Analyses',
-            helpText: 'How many forecasts to analyze in detail (1-10)',
+            label: 'Maximum Number of Detailed Analyses',
+            helpText: 'Maximum forecasts to extract and analyze (1-10). May return fewer if not enough quality predictions found.',
             min: 1,
             max: 10,
             step: 1
+          },
+          minQualityThreshold: {
+            label: 'Minimum Quality Threshold',
+            helpText: 'Only return forecasts with average score (precision, verifiability, importance) above this threshold (0-100). Leave empty to include all forecasts.',
+            placeholder: 'Optional: e.g., 60',
+            min: 0,
+            max: 100,
+            step: 5
           }
         },
         submitButtonText: 'Extract Forecasts',
@@ -43,6 +57,7 @@ export default function ExtractForecastingClaimsAutoPage() {
 Market consolidation is inevitable - we predict that 3-4 major players will control 80% of the market by 2027. AI integration will be table stakes by 2025, and companies without robust AI capabilities will struggle to compete.
 
 Our R&D investments will increase to 25% of revenue by 2025, up from the current 18%. We anticipate launching at least 5 major product innovations in the next 24 months. The enterprise segment will grow faster than SMB, with enterprise contracts expected to reach $500M by fiscal 2026.`,
+              additionalContext: 'This is from Salesforce\'s 2025 strategic planning document. Current revenue is $35B. Main competitors are Microsoft Dynamics, Oracle, and SAP. The "market" refers to the global CRM and enterprise software market.',
               agentInstructions: 'Focus on specific numerical predictions and timeline-based forecasts',
               maxDetailedAnalysis: 5
             }
@@ -56,16 +71,18 @@ Our R&D investments will increase to 25% of revenue by 2025, up from the current
 Autonomous vehicles will achieve Level 5 autonomy in controlled environments by 2026, though widespread adoption won't occur until 2030 due to regulatory challenges. Electric vehicles will constitute 40% of new car sales by 2027.
 
 The metaverse hype will fade by 2025, but AR glasses will see mainstream adoption by 2028. AI will automate 30% of current white-collar tasks by 2030.`,
+              additionalContext: 'This is from McKinsey\'s 2025 Technology Outlook report. "New car sales" refers to global passenger vehicle sales. "White-collar tasks" refers to office and knowledge work as defined by the Bureau of Labor Statistics.',
               agentInstructions: 'Prioritize technology adoption timelines and market penetration forecasts',
               maxDetailedAnalysis: 4
             }
           },
           {
             name: 'Economic Forecast',
+            description: 'Predictions with explicit probabilities',
             data: {
-              text: `The Federal Reserve will likely cut interest rates by 75-100 basis points in 2025. Inflation will stabilize around 2.5% by mid-2025. Unemployment may rise slightly to 4.2% as the economy cools.
+              text: `The Federal Reserve will likely cut interest rates by 75-100 basis points in 2025. There's a 70% chance that inflation will stabilize around 2.5% by mid-2025. Unemployment may rise slightly to 4.2% as the economy cools.
 
-GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market will see a correction of 10-15% in major metropolitan areas by late 2025.`,
+Economists estimate an 85% probability that GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market will see a correction of 10-15% in major metropolitan areas by late 2025.`,
               maxDetailedAnalysis: 3
             }
           }
@@ -73,7 +90,19 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
       }}
       renderResults={(result) => {
         const typedResult = result as any;
-        const selectedForecasts = typedResult.forecasts?.filter((f: any) => f.worthDetailedAnalysis) || [];
+        // Calculate combined scores for display purposes
+        const forecastsWithScores = (typedResult.forecasts || []).map((f: any) => ({
+          ...f,
+          combinedScore: Math.round(f.predictionPrecisionScore * 0.4 + f.verifiabilityScore * 0.4 + f.importanceScore * 0.2)
+        }));
+        // Sort by combined score descending
+        const sortedForecasts = [...forecastsWithScores].sort((a, b) => b.combinedScore - a.combinedScore);
+        const highPriorityForecasts = sortedForecasts.filter((f: any) => f.combinedScore >= 70);
+        
+        // Debug: Log first forecast to see data structure
+        if (sortedForecasts.length > 0) {
+          console.log('First forecast data:', sortedForecasts[0]);
+        }
         
         return (
           <div className="space-y-6">
@@ -81,33 +110,68 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <p className="text-blue-900">
                 Extracted <span className="font-semibold">{typedResult.totalFound || 0}</span> forecasting claims.
-                {selectedForecasts.length > 0 && (
-                  <span> Selected {selectedForecasts.length} for detailed analysis.</span>
+                {highPriorityForecasts.length > 0 && (
+                  <span> Found {highPriorityForecasts.length} high priority forecasts (combined score ≥ 70).</span>
                 )}
               </p>
             </div>
 
             {/* All forecasts list */}
-            {typedResult.forecasts && typedResult.forecasts.length > 0 && (
+            {sortedForecasts && sortedForecasts.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">All Extracted Forecasts</h3>
                 <div className="bg-white p-4 rounded-lg border border-gray-200">
                   <ul className="space-y-3">
-                    {typedResult.forecasts.map((forecast: any, i: number) => (
-                      <li key={i} className="border-b border-gray-100 pb-2 last:border-b-0">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900 font-medium">{forecast.text}</p>
-                            <div className="flex gap-4 mt-1 text-xs text-gray-600">
-                              <span>Topic: {forecast.topic}</span>
-                              {forecast.timeframe && <span>Timeframe: {forecast.timeframe}</span>}
-                              {forecast.probability && <span>Probability: {forecast.probability}%</span>}
+                    {sortedForecasts.map((forecast: any, i: number) => (
+                      <li key={i} className="border-b border-gray-100 pb-3 last:border-b-0">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900 font-medium">{forecast.originalText}</p>
+                              <p className="text-xs text-gray-600 mt-1 italic">→ {forecast.rewrittenPredictionText}</p>
+                              <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-600">
+                                {forecast.resolutionDate && (
+                                  <span className="flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {forecast.resolutionDate}
+                                  </span>
+                                )}
+                                {forecast.statedProbability !== undefined && (
+                                  <span className="flex items-center gap-1">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    {forecast.statedProbability}%
+                                  </span>
+                                )}
+                                <span className={`font-medium ${forecast.isFuture ? 'text-green-600' : 'text-gray-500'}`}>
+                                  {forecast.isFuture ? '🔮 Future' : '⏰ Past'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="ml-2 flex flex-col items-end gap-1">
+                              <div className={`px-3 py-1 text-xs rounded font-medium ${
+                                forecast.combinedScore >= 80 ? 'bg-red-100 text-red-800' :
+                                forecast.combinedScore >= 60 ? 'bg-orange-100 text-orange-800' :
+                                forecast.combinedScore >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-600'
+                              }`}>
+                                Combined: {forecast.combinedScore}
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                <div className="text-gray-500" title="Prediction Precision">P: {forecast.predictionPrecisionScore}</div>
+                                <div className="text-gray-500" title="Verifiability">V: {forecast.verifiabilityScore}</div>
+                                <div className="text-gray-500" title="Importance">I: {forecast.importanceScore}</div>
+                              </div>
                             </div>
                           </div>
-                          {forecast.worthDetailedAnalysis && (
-                            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                              Selected for analysis
-                            </span>
+                          {forecast.thinking && (
+                            <details className="text-xs">
+                              <summary className="cursor-pointer text-gray-500 hover:text-gray-700">Analysis reasoning</summary>
+                              <p className="mt-1 text-gray-600 pl-2 border-l-2 border-gray-200">{forecast.thinking}</p>
+                            </details>
                           )}
                         </div>
                       </li>
@@ -117,43 +181,66 @@ GDP growth will moderate to 2.0-2.5% annually through 2026. The housing market w
               </div>
             )}
 
-            {/* Selected forecasts with reasoning */}
-            {selectedForecasts.length > 0 && (
+            {/* High priority forecasts with full details */}
+            {highPriorityForecasts.length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Selected for Detailed Analysis</h3>
-                {selectedForecasts.map((forecast: any, i: number) => (
+                <h3 className="text-lg font-semibold">High Priority Forecasts (Combined Score ≥ 70)</h3>
+                {highPriorityForecasts.map((forecast: any, i: number) => (
                   <div key={i} className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                     <div className="mb-4">
-                      <h4 className="font-semibold text-lg mb-2">Forecast {i + 1}</h4>
-                      <p className="font-medium text-gray-900">{forecast.text}</p>
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-lg">Forecast {i + 1}</h4>
+                        <div className="flex gap-2 items-center">
+                          <div className={`px-3 py-1 text-sm rounded ${
+                            forecast.combinedScore >= 80 ? 'bg-red-100 text-red-800' :
+                            'bg-orange-100 text-orange-800'
+                          }`}>
+                            Combined: {forecast.combinedScore}
+                          </div>
+                          {forecast.isFuture ? 
+                            <span className="text-green-600 text-sm">🔮 Future</span> : 
+                            <span className="text-gray-500 text-sm">⏰ Past</span>
+                          }
+                        </div>
+                      </div>
+                      <p className="font-medium text-gray-900">{forecast.originalText}</p>
+                      <p className="text-sm text-gray-600 mt-2 italic">→ {forecast.rewrittenPredictionText}</p>
                     </div>
                     
                     <div className="grid gap-4 text-sm">
-                      {forecast.timeframe && (
+                      <div className="grid grid-cols-3 gap-4 p-3 bg-white rounded">
                         <div>
-                          <span className="font-medium text-gray-600">Timeframe:</span>
-                          <span className="ml-2">{forecast.timeframe}</span>
+                          <span className="font-medium text-gray-600 block">Precision Score</span>
+                          <span className="text-lg font-semibold">{forecast.predictionPrecisionScore}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-600 block">Verifiability Score</span>
+                          <span className="text-lg font-semibold">{forecast.verifiabilityScore}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-600 block">Importance Score</span>
+                          <span className="text-lg font-semibold">{forecast.importanceScore}</span>
+                        </div>
+                      </div>
+                      
+                      {forecast.resolutionDate && (
+                        <div>
+                          <span className="font-medium text-gray-600">Resolution Date:</span>
+                          <span className="ml-2">{forecast.resolutionDate}</span>
                         </div>
                       )}
                       
-                      {forecast.probability && (
+                      {forecast.statedProbability !== undefined && (
                         <div>
-                          <span className="font-medium text-gray-600">Probability:</span>
-                          <span className="ml-2">{forecast.probability}%</span>
+                          <span className="font-medium text-gray-600">Stated Probability:</span>
+                          <span className="ml-2">{forecast.statedProbability}%</span>
                         </div>
                       )}
                       
-                      {forecast.topic && (
+                      {forecast.thinking && (
                         <div>
-                          <span className="font-medium text-gray-600">Topic:</span>
-                          <span className="ml-2">{forecast.topic}</span>
-                        </div>
-                      )}
-                      
-                      {forecast.reasoning && (
-                        <div>
-                          <span className="font-medium text-gray-600">Selection Reasoning:</span>
-                          <p className="mt-1">{forecast.reasoning}</p>
+                          <span className="font-medium text-gray-600">Analysis:</span>
+                          <p className="mt-1">{forecast.thinking}</p>
                         </div>
                       )}
                     </div>
