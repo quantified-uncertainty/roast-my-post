@@ -4,6 +4,7 @@
 
 import { SimpleAnalysisPlugin, AnalysisResult, RoutingExample, LLMInteraction } from '../../types';
 import { TextChunk } from '../../TextChunk';
+import { sessionContext } from '../../../../helicone/sessionContext';
 import { ForecastAnalyzerJob } from './index';
 
 export class ForecastPlugin implements SimpleAnalysisPlugin {
@@ -24,7 +25,12 @@ export class ForecastPlugin implements SimpleAnalysisPlugin {
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Create a new analyzer for this analysis
     this.analyzer = new ForecastAnalyzerJob({ documentText, chunks });
-    return this.analyzer.analyze();
+    
+    // Get the current session context to extract userId
+    const currentSession = sessionContext.getSession();
+    const context = currentSession?.userId ? { userId: currentSession.userId } : undefined;
+    
+    return this.analyzer.analyze(context);
   }
   
   getCost(): number {

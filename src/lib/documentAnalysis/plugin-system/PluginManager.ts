@@ -1,19 +1,23 @@
 /**
  * Plugin Manager - Coordinates document analysis with the new plugin API
- * 
+ *
  * This is a simplified version that only supports the new SimpleAnalysisPlugin interface.
  * For legacy plugin support, see BasePlugin.ts which maintains backward compatibility.
  */
 
-import { SimpleAnalysisPlugin, AnalysisResult } from './types';
-import { TextChunk, createChunks } from './TextChunk';
-import type { Comment } from '@/types/documentSchema';
-import type { Document } from '@/types/documents';
-import type { LLMInteraction } from '@/types/llm';
-import type { HeliconeSessionConfig } from '../../helicone/sessions';
-import { sessionContext } from '../../helicone/sessionContext';
-import { getDocumentFullContent } from '../../../utils/documentContentHelpers';
-import { logger } from '../../logger';
+import type { Document } from "@/types/documents";
+import type { Comment } from "@/types/documentSchema";
+import type { LLMInteraction } from "@/types/llm";
+
+import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { sessionContext } from "../../helicone/sessionContext";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import { logger } from "../../logger";
+import { createChunks } from "./TextChunk";
+import {
+  AnalysisResult,
+  SimpleAnalysisPlugin,
+} from "./types";
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
@@ -81,7 +85,7 @@ export class PluginManager {
       // Create chunks
       const chunks = createChunks(text, {
         chunkSize: 1000,
-        chunkByParagraphs: false
+        chunkByParagraphs: false,
       });
 
       // Process with each plugin in parallel with improved error recovery
@@ -89,52 +93,64 @@ export class PluginManager {
       const allComments: Comment[] = [];
       let totalCost = 0;
 
-      
       // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
         const maxRetries = 2;
         let lastError: Error | unknown = null;
-        
+
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             const isRetry = attempt > 1;
             if (isRetry) {
-              logger.info(`   Retrying ${plugin.name()} analysis (attempt ${attempt}/${maxRetries})...`);
+              logger.info(
+                `   Retrying ${plugin.name()} analysis (attempt ${attempt}/${maxRetries})...`
+              );
               // Add small delay between retries
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * attempt)
+              );
             }
-            
+
             const startTime = Date.now();
             const result = await plugin.analyze(chunks, text);
             const duration = Date.now() - startTime;
-            
+
             return { plugin: plugin.name(), result, success: true };
           } catch (error) {
             lastError = error;
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+
             // Check if this is a retryable error
             const isRetryable = this.isRetryableError(error);
-            
+
             if (isRetryable && attempt < maxRetries) {
-              logger.warn(`   ${plugin.name()} failed (attempt ${attempt}/${maxRetries}): ${errorMessage} - Will retry`);
+              logger.warn(
+                `   ${plugin.name()} failed (attempt ${attempt}/${maxRetries}): ${errorMessage} - Will retry`
+              );
               continue;
             } else {
-              logger.error(`   ${plugin.name()} failed permanently: ${errorMessage}`);
+              logger.error(
+                `   ${plugin.name()} failed permanently: ${errorMessage}`
+              );
               break;
             }
           }
         }
-        
+
         // All retries failed, return error with recovery strategy
-        const errorMessage = lastError instanceof Error ? lastError.message : String(lastError);
-        const recoveryAction = this.determineRecoveryAction(plugin.name(), lastError);
-        
-        return { 
-          plugin: plugin.name(), 
+        const errorMessage =
+          lastError instanceof Error ? lastError.message : String(lastError);
+        const recoveryAction = this.determineRecoveryAction(
+          plugin.name(),
+          lastError
+        );
+
+        return {
+          plugin: plugin.name(),
           error: errorMessage,
           recoveryAction,
-          success: false 
+          success: false,
         };
       });
 
@@ -142,7 +158,13 @@ export class PluginManager {
       const results = await Promise.all(pluginPromises);
 
       // Process results with error tracking
-      for (const { plugin, result, success, error, recoveryAction } of results) {
+      for (const {
+        plugin,
+        result,
+        success,
+        error,
+        recoveryAction,
+      } of results) {
         if (success && result) {
           pluginResults.set(plugin, result);
           allComments.push(...result.comments);
@@ -155,11 +177,17 @@ export class PluginManager {
       // Generate summaries
       const pluginSummaries = Array.from(pluginResults.entries())
         .map(([name, result]) => `**${name}**: ${result.summary}`)
-        .join('\n\n');
+        .join("\n\n");
+
+      // Generate detailed analysis sections for plugins that have them
+      const detailedAnalyses = Array.from(pluginResults.entries())
+        .filter(([_, result]) => result.analysis && result.analysis.length > 0)
+        .map(([name, result]) => `## ${name} Analysis\n\n${result.analysis}`)
+        .join("\n\n");
 
       const summary = `Analyzed ${chunks.length} sections with ${plugins.length} plugins. Found ${allComments.length} total issues.`;
-      
-      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}`;
+
+      const analysis = `**Document Analysis Summary**\n\nThis document was analyzed by ${plugins.length} specialized plugins that examined ${chunks.length} sections.\n\n${pluginSummaries}${detailedAnalyses ? "\n\n---\n\n" + detailedAnalyses : ""}`;
 
       // Calculate statistics
       const commentsByPlugin = new Map<string, number>();
@@ -179,8 +207,8 @@ export class PluginManager {
           totalComments: allComments.length,
           commentsByPlugin,
           totalCost,
-          processingTime
-        }
+          processingTime,
+        },
       };
     } finally {
       // Clear session context
@@ -189,7 +217,6 @@ export class PluginManager {
       }
     }
   }
-
 
   /**
    * High-level document analysis using all available plugins
@@ -203,13 +230,13 @@ export class PluginManager {
   ): Promise<FullDocumentAnalysisResult> {
     // Input validation
     if (!document) {
-      throw new Error('Document is required for analysis');
+      throw new Error("Document is required for analysis");
     }
     if (!document.content || document.content.trim().length === 0) {
-      throw new Error('Document content is required and cannot be empty');
+      throw new Error("Document content is required and cannot be empty");
     }
-    
-    const tasks: FullDocumentAnalysisResult['tasks'] = [];
+
+    const tasks: FullDocumentAnalysisResult["tasks"] = [];
     const targetHighlights = Math.max(1, options.targetHighlights || 5);
 
     try {
@@ -220,17 +247,21 @@ export class PluginManager {
       // TODO: Make plugin selection configurable
       const plugins: SimpleAnalysisPlugin[] = [
         // Import here to avoid circular dependencies
-        new (await import('./plugins/math')).MathPlugin(),
-        new (await import('./plugins/spelling')).SpellingPlugin(),
-        new (await import('./plugins/fact-check')).FactCheckPlugin(),
-        new (await import('./plugins/forecast')).ForecastPlugin(),
+        // new (await import('./plugins/math')).MathPlugin()//
+        // new (await import('./plugins/spelling')).SpellingPlugin(),
+        // new (await import('./plugins/fact-check')).FactCheckPlugin(),
+        new (await import("./plugins/forecast")).ForecastPlugin(),
       ];
 
       // Get full document content with prepend
-      const { content: fullContent, prependLineCount } = getDocumentFullContent(document);
+      const { content: fullContent, prependLineCount } =
+        getDocumentFullContent(document);
 
       // Run analysis on full content using new API
-      const pluginResults = await this.analyzeDocumentSimple(fullContent, plugins);
+      const pluginResults = await this.analyzeDocumentSimple(
+        fullContent,
+        plugins
+      );
 
       const pluginDuration = Date.now() - pluginStartTime;
       logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
@@ -263,12 +294,15 @@ export class PluginManager {
       const highlights: Comment[] = pluginResults.allComments;
 
       // Log comment counts by plugin
-      for (const [pluginName, count] of pluginResults.statistics.commentsByPlugin.entries()) {
+      for (const [
+        pluginName,
+        count,
+      ] of pluginResults.statistics.commentsByPlugin.entries()) {
         logger.info(`${pluginName} plugin generated ${count} comments`);
       }
 
       logger.info(`Total highlights from plugins: ${highlights.length}`);
-      
+
       // Deduplicate highlights that might overlap
       const uniqueHighlights = this.deduplicateHighlights(highlights);
 
@@ -285,29 +319,35 @@ export class PluginManager {
       };
     } catch (error) {
       logger.error("Document analysis failed:", error);
-      
+
       // Return a graceful fallback result instead of throwing
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       return {
         thinking: "",
-        analysis: "⚠️ **Analysis Error**\n\nDocument analysis could not be completed due to a system error. Please try again later.",
+        analysis:
+          "⚠️ **Analysis Error**\n\nDocument analysis could not be completed due to a system error. Please try again later.",
         summary: "Analysis failed due to system error",
         grade: undefined,
         highlights: [],
-        tasks: [{
-          name: "Plugin Analysis",
-          modelName: "N/A",
-          priceInDollars: 0,
-          timeInSeconds: 0,
-          log: `Analysis failed: ${errorMessage}`,
-          llmInteractions: []
-        }],
-        errors: [{
-          plugin: "SYSTEM",
-          error: errorMessage,
-          recoveryAction: "Check system logs and retry the analysis"
-        }]
+        tasks: [
+          {
+            name: "Plugin Analysis",
+            modelName: "N/A",
+            priceInDollars: 0,
+            timeInSeconds: 0,
+            log: `Analysis failed: ${errorMessage}`,
+            llmInteractions: [],
+          },
+        ],
+        errors: [
+          {
+            plugin: "SYSTEM",
+            error: errorMessage,
+            recoveryAction: "Check system logs and retry the analysis",
+          },
+        ],
       };
     }
   }
@@ -354,39 +394,47 @@ export class PluginManager {
    */
   private isRetryableError(error: unknown): boolean {
     if (!error) return false;
-    
+
     // Check for common retryable error patterns
     const errorMessage = (error as any)?.message || String(error);
-    
+
     // Network/timeout errors are retryable
-    if (errorMessage.includes('timeout') || 
-        errorMessage.includes('ECONNRESET') || 
-        errorMessage.includes('ETIMEDOUT') ||
-        errorMessage.includes('network') ||
-        errorMessage.includes('connection')) {
+    if (
+      errorMessage.includes("timeout") ||
+      errorMessage.includes("ECONNRESET") ||
+      errorMessage.includes("ETIMEDOUT") ||
+      errorMessage.includes("network") ||
+      errorMessage.includes("connection")
+    ) {
       return true;
     }
-    
+
     // Rate limiting errors are retryable
-    if (errorMessage.includes('rate limit') || 
-        errorMessage.includes('429') ||
-        errorMessage.includes('too many requests')) {
+    if (
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("429") ||
+      errorMessage.includes("too many requests")
+    ) {
       return true;
     }
-    
+
     // Server errors (5xx) are retryable
-    if (errorMessage.includes('server error') || 
-        errorMessage.includes('internal error') ||
-        /5\d\d/.test(errorMessage)) {
+    if (
+      errorMessage.includes("server error") ||
+      errorMessage.includes("internal error") ||
+      /5\d\d/.test(errorMessage)
+    ) {
       return true;
     }
-    
+
     // Temporary service unavailable
-    if (errorMessage.includes('service unavailable') || 
-        errorMessage.includes('temporarily unavailable')) {
+    if (
+      errorMessage.includes("service unavailable") ||
+      errorMessage.includes("temporarily unavailable")
+    ) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -395,42 +443,51 @@ export class PluginManager {
    */
   private determineRecoveryAction(pluginName: string, error: unknown): string {
     const errorMessage = (error as any)?.message || String(error);
-    
+
     // Specific recovery actions based on error type
-    if (errorMessage.includes('timeout')) {
-      return 'Consider increasing timeout settings or reducing chunk size';
+    if (errorMessage.includes("timeout")) {
+      return "Consider increasing timeout settings or reducing chunk size";
     }
-    
-    if (errorMessage.includes('rate limit')) {
-      return 'Implement request throttling or use different API keys';
+
+    if (errorMessage.includes("rate limit")) {
+      return "Implement request throttling or use different API keys";
     }
-    
-    if (errorMessage.includes('authentication') || errorMessage.includes('unauthorized')) {
-      return 'Check API key configuration and permissions';
+
+    if (
+      errorMessage.includes("authentication") ||
+      errorMessage.includes("unauthorized")
+    ) {
+      return "Check API key configuration and permissions";
     }
-    
-    if (errorMessage.includes('quota') || errorMessage.includes('limit exceeded')) {
-      return 'Check API usage limits and billing status';
+
+    if (
+      errorMessage.includes("quota") ||
+      errorMessage.includes("limit exceeded")
+    ) {
+      return "Check API usage limits and billing status";
     }
-    
-    if (errorMessage.includes('model') || errorMessage.includes('not found')) {
-      return 'Verify model configuration and availability';
+
+    if (errorMessage.includes("model") || errorMessage.includes("not found")) {
+      return "Verify model configuration and availability";
     }
-    
-    if (errorMessage.includes('malformed') || errorMessage.includes('invalid')) {
-      return 'Review plugin input validation and data formatting';
+
+    if (
+      errorMessage.includes("malformed") ||
+      errorMessage.includes("invalid")
+    ) {
+      return "Review plugin input validation and data formatting";
     }
-    
+
     // Plugin-specific recovery actions
     switch (pluginName) {
-      case 'MATH':
-        return 'Math plugin failed - analysis will continue without math checking';
-      case 'SPELLING':
-        return 'Spelling plugin failed - analysis will continue without spell checking';
-      case 'FACT_CHECK':
-        return 'Fact checking plugin failed - analysis will continue without fact verification';
-      case 'FORECAST':
-        return 'Forecast plugin failed - analysis will continue without prediction analysis';
+      case "MATH":
+        return "Math plugin failed - analysis will continue without math checking";
+      case "SPELLING":
+        return "Spelling plugin failed - analysis will continue without spell checking";
+      case "FACT_CHECK":
+        return "Fact checking plugin failed - analysis will continue without fact verification";
+      case "FORECAST":
+        return "Forecast plugin failed - analysis will continue without prediction analysis";
       default:
         return `${pluginName} plugin failed - analysis will continue with remaining plugins`;
     }

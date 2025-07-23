@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "@/lib/claude/wrapper";
+import { sessionContext } from "@/lib/helicone/sessionContext";
+import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 import { RichLLMInteraction } from "@/types/llm";
 import { llmInteractionSchema } from "@/types/llmSchema";
 
@@ -110,7 +112,8 @@ export class ExtractForecastingClaimsTool extends Tool<
       input.text,
       input.additionalContext,
       input.maxDetailedAnalysis ?? 3,
-      input.minQualityThreshold
+      input.minQualityThreshold,
+      context
     );
 
     context.logger.info(
@@ -127,7 +130,8 @@ export class ExtractForecastingClaimsTool extends Tool<
     text: string,
     additionalContext: string | undefined,
     maxDetailedAnalysis: number,
-    minQualityThreshold?: number
+    minQualityThreshold?: number,
+    context?: ToolContext
   ): Promise<ExtractForecastingClaimsOutput> {
     const systemPrompt = smallSystemPrompt;
 
@@ -139,6 +143,28 @@ export class ExtractForecastingClaimsTool extends Tool<
     const userPrompt = additionalContext
       ? `Extract and score forecasts from this text:\n\n${text}\n\nAdditional Context:\n${additionalContext}\n\nInstructions:\nExtract up to ${maxDetailedAnalysis} predictions.${qualityInstruction}`
       : `Extract and score forecasts from this text:\n\n${text}\n\nInstructions:\nExtract up to ${maxDetailedAnalysis} predictions.${qualityInstruction}`;
+
+    // Set up Helicone headers if userId is available
+    let heliconeHeaders = undefined;
+    if (context?.userId) {
+      // Get current session or use userId to create session-like config
+      const currentSession = sessionContext.getSession();
+      let sessionConfig;
+      if (currentSession) {
+        sessionConfig = sessionContext.withPath(`/tools/extract-forecasting-claims`);
+      } else {
+        sessionConfig = { 
+          userId: context.userId, 
+          sessionId: `extract-forecasting-claims-${Date.now()}`, 
+          sessionName: `Extract Forecasting Claims`,
+          sessionPath: `/tools/extract-forecasting-claims` 
+        };
+      }
+      
+      if (sessionConfig) {
+        heliconeHeaders = createHeliconeHeaders(sessionConfig);
+      }
+    }
 
     const result = await callClaudeWithTool<{ forecasts: any[] }>(
       {
@@ -155,6 +181,7 @@ export class ExtractForecastingClaimsTool extends Tool<
         toolName: "extract_and_score_forecasts",
         toolDescription:
           "Extract forecast statements and score them for analysis priority",
+        heliconeHeaders,
         toolSchema: {
           type: "object",
           properties: {

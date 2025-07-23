@@ -1,12 +1,28 @@
-import type { ExtractedForecast as ExtractedForecastToolType } from "@/tools/extract-forecasting-claims";
-import { extractForecastingClaimsTool } from "@/tools/extract-forecasting-claims";
+import {
+  type ForecastWithPrediction,
+  generateDocumentSummary,
+  generateForecastComment,
+} from "@/lib/documentAnalysis/plugin-system/plugins/forecast/commentGeneration";
+import type {
+  ExtractedForecast as ExtractedForecastToolType,
+} from "@/tools/extract-forecasting-claims";
+import {
+  extractForecastingClaimsTool,
+} from "@/tools/extract-forecasting-claims";
+import type { ForecasterOutput } from "@/tools/forecaster";
 import forecasterTool from "@/tools/forecaster";
 import type { Comment } from "@/types/documentSchema";
+
 import { logger } from "../../../../logger";
 import { TextChunk } from "../../TextChunk";
-import { AnalysisResult, LLMInteraction, RoutingExample } from "../../types";
+import {
+  AnalysisResult,
+  LLMInteraction,
+  RoutingExample,
+} from "../../types";
 import { findForecastLocation } from "./locationFinder";
 
+// Keep this for backward compatibility
 export interface ForecastToolResult {
   probability: number;
   description: string;
@@ -15,7 +31,7 @@ export interface ForecastToolResult {
 class ExtractedForecast {
   public extractedForecast: ExtractedForecastToolType;
   private chunk: TextChunk;
-  private ourForecast: ForecastToolResult | null = null;
+  private ourForecast: ForecasterOutput | null = null;
 
   constructor(extractedForecast: ExtractedForecastToolType, chunk: TextChunk) {
     this.extractedForecast = extractedForecast;
@@ -50,25 +66,22 @@ class ExtractedForecast {
     );
   }
 
-  public async generateOurForecast(): Promise<void> {
+  public async generateOurForecast(context?: { userId?: string }): Promise<void> {
     try {
       const result = await forecasterTool.execute(
         {
           question: this.extractedForecast.rewrittenPredictionText,
           context: "",
-          numForecasts: 1,
+          numForecasts: 2,
           usePerplexity: false,
         },
         {
-          userId: "forecast-plugin", // TODO: use actual user ID
+          userId: context?.userId || "forecast-plugin",
           logger: logger,
         }
       );
 
-      this.ourForecast = {
-        probability: result.probability,
-        description: result.description,
-      };
+      this.ourForecast = result;
     } catch (error) {
       logger.error(`Failed to generate forecast for prediction`, {
         prediction: this.extractedForecast.originalText,
@@ -77,7 +90,7 @@ class ExtractedForecast {
     }
   }
 
-  public getOurForecast(): ForecastToolResult | null {
+  public getOurForecast(): ForecasterOutput | null {
     return this.ourForecast;
   }
 
@@ -103,7 +116,8 @@ class ExtractedForecast {
     }
 
     return {
-      startOffset: this.chunk.metadata.position.start + chunkLocation.startOffset,
+      startOffset:
+        this.chunk.metadata.position.start + chunkLocation.startOffset,
       endOffset: this.chunk.metadata.position.start + chunkLocation.endOffset,
       quotedText: chunkLocation.quotedText,
     };
@@ -117,7 +131,13 @@ class ExtractedForecast {
     const location = this.findLocationInDocument();
     if (!location) return null;
 
-    const message = this.createForecastMessage();
+    // Use the new comment generation system
+    const forecastWithPrediction: ForecastWithPrediction = {
+      forecast: this.extractedForecast,
+      prediction: this.ourForecast || undefined,
+    };
+
+    const message = generateForecastComment(forecastWithPrediction);
 
     return {
       description: message,
@@ -132,29 +152,7 @@ class ExtractedForecast {
     };
   }
 
-  private createForecastMessage(): string {
-    let message = `Forecast: "${this.extractedForecast.rewrittenPredictionText}"`;
-
-    if (this.extractedForecast.resolutionDate) {
-      message += ` (${this.extractedForecast.resolutionDate})`;
-    }
-
-    if (this.extractedForecast.authorProbability !== undefined) {
-      message += ` - Author: ${this.extractedForecast.authorProbability}%`;
-    }
-
-    const scores = [];
-    if (this.extractedForecast.importanceScore >= 70) scores.push("important");
-    if (this.extractedForecast.verifiabilityScore >= 70) scores.push("verifiable");
-    if (this.extractedForecast.precisionScore >= 70) scores.push("precise");
-    if (this.extractedForecast.robustnessScore >= 70) scores.push("robust");
-
-    if (scores.length > 0) {
-      message += ` [${scores.join(", ")}]`;
-    }
-
-    return message;
-  }
+  // Removed - now using generateForecastComment from commentGeneration.ts
 }
 
 export class ForecastAnalyzerJob {
@@ -215,15 +213,15 @@ export class ForecastAnalyzerJob {
     this.chunks = chunks;
   }
 
-  public async analyze(): Promise<AnalysisResult> {
+  public async analyze(context?: { userId?: string }): Promise<AnalysisResult> {
     if (this.hasRun) {
       return this.getResults();
     }
 
     logger.info("ForecastAnalyzer: Starting analysis");
 
-    await this.extractForecastingClaims();
-    await this.generateOurForecasts();
+    await this.extractForecastingClaims(context);
+    await this.generateOurForecasts(context);
     this.createComments();
     this.generateAnalysis();
 
@@ -249,25 +247,43 @@ export class ForecastAnalyzerJob {
     };
   }
 
-  private async extractForecastingClaims(): Promise<void> {
+  private async extractForecastingClaims(context?: { userId?: string }): Promise<void> {
     logger.debug(
-      `ForecastAnalyzer: Extracting from ${this.chunks.length} chunks`
+      `ForecastAnalyzer: Extracting from ${this.chunks.length} chunks in parallel`
     );
 
-    for (const chunk of this.chunks) {
-      try {
-        const result = await extractForecastingClaimsTool.execute(
-          {
-            text: chunk.text,
-            additionalContext: "",
-            maxDetailedAnalysis: 10,
-            minQualityThreshold: 70,
-          },
-          {
-            logger: logger,
-          }
-        );
+    // Process all chunks in parallel
+    const chunkResults = await Promise.allSettled(
+      this.chunks.map(async (chunk) => {
+        try {
+          const result = await extractForecastingClaimsTool.execute(
+            {
+              text: chunk.text,
+              additionalContext: "",
+              maxDetailedAnalysis: 10,
+              minQualityThreshold: 70,
+            },
+            {
+              userId: context?.userId,
+              logger: logger,
+            }
+          );
 
+          return { chunk, result };
+        } catch (error) {
+          logger.error(
+            `Failed to extract forecasts from chunk ${chunk.id}:`,
+            error
+          );
+          throw error;
+        }
+      })
+    );
+
+    // Process successful results
+    for (const chunkResult of chunkResults) {
+      if (chunkResult.status === 'fulfilled') {
+        const { chunk, result } = chunkResult.value;
         for (const forecastingClaim of result.forecasts) {
           const extractedForecast = new ExtractedForecast(
             forecastingClaim,
@@ -275,11 +291,6 @@ export class ForecastAnalyzerJob {
           );
           this.extractedForecasts.push(extractedForecast);
         }
-      } catch (error) {
-        logger.error(
-          `Failed to extract forecasts from chunk ${chunk.id}:`,
-          error
-        );
       }
     }
 
@@ -288,19 +299,22 @@ export class ForecastAnalyzerJob {
     );
   }
 
-  private async generateOurForecasts(): Promise<void> {
+  private async generateOurForecasts(context?: { userId?: string }): Promise<void> {
     const forecastsToAnalyze = this.extractedForecasts
       .filter((ef) => ef.shouldGetOurForecastScore > 60)
       .sort((a, b) => b.shouldGetOurForecastScore - a.shouldGetOurForecastScore)
       .slice(0, 5);
 
     logger.debug(
-      `ForecastAnalyzer: Generating our probability estimates for ${forecastsToAnalyze.length} claims`
+      `ForecastAnalyzer: Generating our probability estimates for ${forecastsToAnalyze.length} claims in parallel`
     );
 
-    for (const extractedForecast of forecastsToAnalyze) {
-      await extractedForecast.generateOurForecast();
-    }
+    // Run all forecast generations in parallel
+    await Promise.all(
+      forecastsToAnalyze.map(extractedForecast => 
+        extractedForecast.generateOurForecast(context)
+      )
+    );
   }
 
   private createComments(): void {
@@ -315,7 +329,39 @@ export class ForecastAnalyzerJob {
   }
 
   private generateAnalysis(): void {
-    this.analysis = "TODO: Implement analysis";
+    if (this.extractedForecasts.length === 0) {
+      this.summary = "No forecasting claims found.";
+      this.analysis =
+        "No predictions or forecasts were identified in this document.";
+      return;
+    }
+
+    // Convert to ForecastWithPrediction format for the summary generator
+    const forecastsWithPredictions: ForecastWithPrediction[] =
+      this.extractedForecasts.map((ef) => ({
+        forecast: ef.extractedForecast,
+        prediction: ef.getOurForecast() || undefined,
+      }));
+
+    // Use the new document summary generator
+    this.analysis = generateDocumentSummary(forecastsWithPredictions);
+
+    // Generate simple summary for the summary field
+    const totalForecasts = this.extractedForecasts.length;
+    const forecastsWithProbability = this.extractedForecasts.filter(
+      (ef) => ef.extractedForecast.authorProbability !== undefined
+    ).length;
+    const forecastsWithOurEstimate = this.extractedForecasts.filter(
+      (ef) => ef.getOurForecast() !== null
+    ).length;
+
+    this.summary = `Found ${totalForecasts} forecasting claim${totalForecasts !== 1 ? "s" : ""}`;
+    if (forecastsWithProbability > 0) {
+      this.summary += ` (${forecastsWithProbability} with explicit probabilities)`;
+    }
+    if (forecastsWithOurEstimate > 0) {
+      this.summary += `. Generated our own estimates for ${forecastsWithOurEstimate} claims.`;
+    }
   }
 
   public getDebugInfo(): Record<string, unknown> {
