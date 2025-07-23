@@ -7,6 +7,7 @@ import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
 // Mock Claude wrapper
 jest.mock('@/lib/claude/wrapper');
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 

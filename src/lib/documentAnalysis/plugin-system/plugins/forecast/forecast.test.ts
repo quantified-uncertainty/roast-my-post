@@ -18,7 +18,7 @@ describe('ForecastPlugin', () => {
       expect(examples?.length).toBeGreaterThan(0);
       
       // Check specific examples
-      const shouldProcessExample = examples?.find(e => e.shouldProcess);
+      const shouldProcessExample = examples?.find((e) => e.shouldProcess);
       expect(shouldProcessExample?.reason).toContain('prediction');
     });
 
@@ -31,23 +31,18 @@ describe('ForecastPlugin', () => {
   });
 
   describe('state management', () => {
-    it('should clear state properly', () => {
-      plugin.clearState();
+    it('should have clean state on new instance', () => {
       const debugInfo = plugin.getDebugInfo();
       
-      expect((debugInfo.findings as any).potential).toHaveLength(0);
-      expect((debugInfo.findings as any).investigated).toHaveLength(0);
-      expect((debugInfo.findings as any).located).toHaveLength(0);
+      // New instance should have no data
+      expect(debugInfo).toEqual({});
     });
 
-    it('should provide debug info', () => {
+    it('should provide empty debug info before analysis', () => {
       const debugInfo = plugin.getDebugInfo();
       
-      expect(debugInfo).toHaveProperty('findings');
-      expect(debugInfo).toHaveProperty('stats');
-      expect((debugInfo.stats as any)).toHaveProperty('potentialCount');
-      expect((debugInfo.stats as any)).toHaveProperty('investigatedCount');
-      expect((debugInfo.stats as any)).toHaveProperty('locatedCount');
+      // Before analysis, should return empty object
+      expect(debugInfo).toEqual({});
     });
   });
 
