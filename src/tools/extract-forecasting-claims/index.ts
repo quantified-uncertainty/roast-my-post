@@ -14,7 +14,6 @@ import { smallSystemPrompt } from "./prompts";
 
 export interface ExtractForecastingClaimsInput {
   text: string;
-  agentInstructions?: string;
   additionalContext?: string;
   maxDetailedAnalysis?: number;
   minQualityThreshold?: number;
@@ -32,11 +31,6 @@ const inputSchema = z.object({
     .min(1)
     .max(10000)
     .describe("The text to analyze for forecasting claims"),
-  agentInstructions: z
-    .string()
-    .max(1000)
-    .optional()
-    .describe("Instructions for prioritizing which forecasts to analyze"),
   additionalContext: z
     .string()
     .max(2000)
@@ -56,7 +50,7 @@ const inputSchema = z.object({
     .max(100)
     .optional()
     .describe(
-      "Minimum average score (across precision, verifiability, and importance) required for a forecast to be included. Forecasts with average scores below this threshold will be filtered out."
+      "Minimum average score (across precision, verifiability, and importance) required for a forecast to be included. Does not include robustness. Forecasts with average scores below this threshold will be filtered out."
     ),
 }) satisfies z.ZodType<ExtractForecastingClaimsInput>;
 
@@ -64,13 +58,13 @@ const inputSchema = z.object({
 const forecastSchema = z.object({
   originalText: z.string(),
   thinking: z.string(),
-  predictionPrecisionScore: z.number().min(0).max(100),
+  precisionScore: z.number().min(0).max(100),
   verifiabilityScore: z.number().min(0).max(100),
   importanceScore: z.number().min(0).max(100),
   rewrittenPredictionText: z.string(),
-  statedProbability: z.number().min(0).max(100).optional(),
+  authorProbability: z.number().min(0).max(100).optional(),
+  robustnessScore: z.number().min(0).max(100),
   resolutionDate: z.string().optional(),
-  isFuture: z.boolean(),
 });
 
 // Infer the type from the schema
@@ -139,7 +133,7 @@ export class ExtractForecastingClaimsTool extends Tool<
 
     const qualityInstruction =
       minQualityThreshold !== undefined
-        ? `\n\nIMPORTANT: Only return forecasts where the average of (predictionPrecisionScore + verifiabilityScore + importanceScore) / 3 is at least ${minQualityThreshold}. Calculate this average for each forecast and exclude any that don't meet this threshold.`
+        ? `\n\nIMPORTANT: Only return forecasts where the average of (precisionScore + verifiabilityScore + importanceScore) / 3 is at least ${minQualityThreshold}. Calculate this average for each forecast and exclude any that don't meet this threshold.`
         : "";
 
     const userPrompt = additionalContext
@@ -177,9 +171,9 @@ export class ExtractForecastingClaimsTool extends Tool<
                   thinking: {
                     type: "string",
                     description:
-                      "Analyze why this is a prediction and how to make it binary/resolvable. Focus on converting vague claims into YES/NO questions with specific thresholds.",
+                      "Analyze why this is a prediction and how to make it binary/resolvable. Focus on converting vague claims into YES/NO questions with specific thresholds. Ask if the specific prediction is reasonable or not. Think deeply.",
                   },
-                  predictionPrecisionScore: {
+                  precisionScore: {
                     type: "number",
                     description:
                       "Score 0-100 for how binary and precise the prediction is. 80+ for clear YES/NO with specific thresholds and dates. 60-79 for mostly binary. Below 60 for non-binary or vague predictions.",
@@ -194,37 +188,37 @@ export class ExtractForecastingClaimsTool extends Tool<
                     description:
                       "Score 0-100 for how important this prediction is to the document's argument or thesis. Is it central to the author's point or just a passing mention?",
                   },
+                  robustnessScore: {
+                    type: "number",
+                    description:
+                      "Robustness assessment (0-100) - how likely this claim would hold up with comprehensive data. Based on empirical plausibility, not author trust. See system prompt for detailed scoring rubric.",
+                  },
                   rewrittenPredictionText: {
                     type: "string",
                     description:
                       "Rewrite as a clear YES/NO question with specific thresholds and dates. Include measurable criteria. Examples: 'Will X exceed Y by date Z?', 'Will company A achieve metric B by year C?'. For compound predictions, focus on the main claim.",
                   },
-                  statedProbability: {
+                  authorProbability: {
                     type: "number",
                     description:
-                      "Probability percentage (0-100) based on explicit statement or inferred from language according to the probability inference guidelines. Never return null.",
+                      "The author's probability percentage (0-100) based on explicit statement or inferred from their language according to the probability inference guidelines. Never return null.",
                   },
                   resolutionDate: {
                     type: "string",
                     description:
                       "When the prediction can be resolved. Use ISO 8601 format (YYYY-MM-DD) for better parsing, e.g., '2025-12-31', '2024-06-30'. Use null if no timeframe specified.",
                   },
-                  isFuture: {
-                    type: "boolean",
-                    description:
-                      "Is the resolution date in the future (true) or has it already passed (false)?",
-                  },
                 },
                 required: [
                   "originalText",
                   "thinking",
-                  "predictionPrecisionScore",
+                  "precisionScore",
                   "verifiabilityScore",
                   "importanceScore",
                   "rewrittenPredictionText",
-                  "statedProbability",
+                  "authorProbability",
                   "resolutionDate",
-                  "isFuture",
+                  "robustnessScore",
                 ],
               },
             },
@@ -240,13 +234,13 @@ export class ExtractForecastingClaimsTool extends Tool<
       const forecast = {
         originalText: f.originalText,
         thinking: f.thinking,
-        predictionPrecisionScore: f.predictionPrecisionScore,
+        precisionScore: f.precisionScore,
         verifiabilityScore: f.verifiabilityScore,
         importanceScore: f.importanceScore,
         rewrittenPredictionText: f.rewrittenPredictionText,
-        statedProbability: f.statedProbability || undefined,
+        authorProbability: f.authorProbability || undefined,
+        robustnessScore: f.robustnessScore,
         resolutionDate: f.resolutionDate || undefined,
-        isFuture: f.isFuture,
       };
 
       // Validate and return the forecast using the schema

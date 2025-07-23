@@ -323,12 +323,11 @@ Additional context: "This is from Microsoft's annual enterprise technology repor
 Extracted prediction:
 originalText: "We expect enterprise AI adoption will accelerate dramatically over the next two years, with most Fortune 500 companies implementing AI in their core operations."
 thinking: This predicts AI adoption by large companies. "Dramatically" is vague but "most Fortune 500" means >250 companies. "Next two years" means by end of 2026. "Core operations" needs definition but suggests meaningful deployment beyond pilots. Given Microsoft context, this likely includes Azure AI services adoption.
-predictionPrecisionScore: 75
+precisionScore: 75
 verifiabilityScore: 80
 importanceScore: 85
 rewrittenPredictionText: "Will >250 Fortune 500 companies have deployed enterprise AI systems (including Azure AI, AWS AI, or Google Cloud AI) in their core business operations (beyond pilot programs) by December 31, 2026?"
 resolutionDate: "2026-12-31"
-isFuture: true
 
 EXAMPLE 2 - Economic Report with Multiple Predictions:
 Document excerpt: "...Federal Reserve policy remains data-dependent. Historical patterns suggest rate cuts typically follow inflation normalization. Given current trends, there's roughly a 70% chance that inflation will return to the Fed's 2% target by mid-2025. However, geopolitical risks could derail this trajectory. Labor markets show resilience with unemployment holding steady at 3.7%. We anticipate gradual cooling in job growth through 2025..."
@@ -336,13 +335,12 @@ Document excerpt: "...Federal Reserve policy remains data-dependent. Historical 
 Extracted prediction:
 originalText: "Given current trends, there's roughly a 70% chance that inflation will return to the Fed's 2% target by mid-2025."
 thinking: Explicit probability given (70%). Clear metric (inflation reaching 2%). "Mid-2025" typically means end of Q2. This is measured by CPI or PCE, both public data.
-predictionPrecisionScore: 95
+precisionScore: 95
 verifiabilityScore: 100
 importanceScore: 75
 rewrittenPredictionText: "Will the US CPI inflation rate be at or below 2.0% for at least one month by June 30, 2025?"
 statedProbability: 70
 resolutionDate: "2025-06-30"
-isFuture: true
 
 EXAMPLE 3 - Corporate Strategy Document:
 Document excerpt: "...Building on our Q3 momentum, we're positioning for market leadership. Our platform will become the industry leader in user engagement. This ambitious goal reflects our superior technology and growing user base. Marketing spend will increase 40% to support this push. We're also exploring strategic partnerships to expand reach. The board has approved additional hiring in key markets..."
@@ -351,12 +349,11 @@ Additional context: "From Salesforce's 2025 strategic plan, discussing their Cus
 Extracted prediction:
 originalText: "Our platform will become the industry leader in user engagement."
 thinking: "Industry leader" is vague but with context, this means beating HubSpot, Adobe Experience Cloud, and Microsoft Dynamics 365 in user engagement metrics. No specific timeframe given, but strategic plans typically have 1-2 year horizons. User engagement for CRM platforms typically measured by daily active users or monthly active users.
-predictionPrecisionScore: 65
+precisionScore: 65
 verifiabilityScore: 70
 importanceScore: 85
 rewrittenPredictionText: "Will Salesforce Customer 360 have higher monthly active users than HubSpot, Adobe Experience Cloud, and Microsoft Dynamics 365 (based on publicly reported metrics or industry analyst reports) by December 31, 2025?"
 resolutionDate: "2025-12-31"
-isFuture: true
 
 EXAMPLE 4 - Research Paper:
 Document excerpt: "...These experimental results demonstrate consistent improvements in qubit coherence times. Based on current progress, we anticipate that quantum computers will achieve quantum advantage for optimization problems within 18 months. This timeline assumes continued funding and no major technical setbacks. Our methodology follows established protocols from IBM and Google research. Temperature stability remains the primary engineering challenge..."
@@ -364,12 +361,11 @@ Document excerpt: "...These experimental results demonstrate consistent improvem
 Extracted prediction:
 originalText: "Based on current progress, we anticipate that quantum computers will achieve quantum advantage for optimization problems within 18 months."
 thinking: Specific technical milestone (quantum advantage for optimization). Clear timeframe (18 months from now = ~January 2027). Verifiable through published research/benchmarks.
-predictionPrecisionScore: 85
+precisionScore: 85
 verifiabilityScore: 90
 importanceScore: 90
 rewrittenPredictionText: "Will any quantum computer demonstrate quantum advantage on a practical optimization problem (verified by peer review) by January 31, 2027?"
 resolutionDate: "2027-01-31"
-isFuture: true
 
 EXAMPLE 5 - M&A Announcement:
 Document excerpt: "...Today we announce the definitive agreement to acquire TechCorp for $2.3 billion. The merger will close successfully and result in significant cost synergies exceeding $500M annually. Regulatory approval is expected within 6 months. This combination creates the market leader in enterprise software. Integration planning is already underway with dedicated teams from both companies..."
@@ -379,22 +375,20 @@ Extracted predictions:
 First prediction:
 originalText: "The merger will close successfully and result in significant cost synergies exceeding $500M annually."
 thinking: This contains two predictions: merger closing and cost synergies. Should split. First is binary (closes or not). "Within 6 months" from January 2025 means by July 2025. This is Oracle acquiring Cerner for $2.3B.
-predictionPrecisionScore: 90
+precisionScore: 90
 verifiabilityScore: 95
 importanceScore: 95
 rewrittenPredictionText: "Will Oracle's acquisition of Cerner for $2.3 billion close by July 31, 2025?"
 resolutionDate: "2025-07-31"
-isFuture: true
 
 Second prediction:
 originalText: "The merger will close successfully and result in significant cost synergies exceeding $500M annually."
 thinking: Second part about cost synergies has specific $500M annual threshold. "Annually" suggests measuring after full year of combined operations. This would be disclosed in Oracle's earnings reports.
-predictionPrecisionScore: 85
+precisionScore: 85
 verifiabilityScore: 80
 importanceScore: 90
 rewrittenPredictionText: "Will Oracle report >$500M in annual cost synergies from the Cerner acquisition within 2 years of deal closing (in SEC filings or earnings calls)?"
 resolutionDate: "2027-07-31"
-isFuture: true
 
 EXAMPLES OF DOCUMENTS WITH NO VALID PREDICTIONS:
 
@@ -604,6 +598,42 @@ Double hedging ("might possibly") → 40%
 Source adjustments: McKinsey/academic -5%, marketing -10%
 </probability_mapping>
 
+<robustness_scoring>
+ROBUSTNESS SCORE (How likely would this claim hold up with comprehensive data? 0-100)
+100 = Extremely robust - would almost certainly hold up with perfect information
+80-99 = Strong claim - empirically plausible and well-grounded
+60-79 = Moderate robustness - reasonable but with some uncertainties
+40-59 = Weak claim - significant empirical doubts
+20-39 = Very weak - unlikely to survive rigorous testing
+0-19 = Extremely weak - almost certainly overstated
+
+This assesses the CLAIM ITSELF, not trust in the author. Consider:
+- EMPIRICAL PLAUSIBILITY: Does this align with known data and base rates?
+- MECHANISTIC CLARITY: Is there a clear causal mechanism?
+- PRECEDENT: Have similar predictions proven true before?
+- SPECIFICITY VS VAGUENESS: Specific claims can be tested; vague ones hide weakness
+- MAGNITUDE OF CLAIM: Extreme claims (10x improvements) are usually exaggerated
+- SELECTION EFFECTS: Cherry-picked examples suggest weakness
+- SURVIVORSHIP BIAS: Ignoring failures inflates predictions
+
+DEFAULT SCORING BY CLAIM TYPE:
+- Incremental improvements (10-30%): Start at 75
+- Moderate changes (2-3x): Start at 60
+- Large transformations (5-10x): Start at 40
+- Revolutionary breakthroughs: Start at 25
+- "Paradigm shifts": Start at 20
+
+ADJUSTMENTS:
++15: Strong historical precedent for similar claims
++10: Clear causal mechanism explained
++10: Conservative relative to industry trends
++5: Acknowledges limiting factors
+-10: No precedent for claims of this magnitude
+-15: Violates known constraints (physics, economics)
+-20: Classic hype patterns (hockey stick growth, etc)
+-10: Ignores obvious obstacles or competition
+</robustness_scoring>
+
 <output>
 Extract predictions prioritizing:
 - High combined scores
@@ -611,5 +641,5 @@ Extract predictions prioritizing:
 - Central to thesis
 Skip if precision OR verifiability <50 (unless importance >90)
 
-For each: originalText (exact), thinking (2-3 sentences), three scores, binary rewrite, probability, resolution date (ISO 8601: YYYY-MM-DD), isFuture
+For each: originalText (exact), thinking (2-3 sentences), three scores, robustnessScore, binary rewrite, probability, resolution date (ISO 8601: YYYY-MM-DD)
 </output>`;

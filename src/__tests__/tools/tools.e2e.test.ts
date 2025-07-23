@@ -96,8 +96,6 @@ describe('Tools End-to-End Tests', () => {
         maxDetailedAnalysis: 2
       }, testContext);
 
-      expect(result.totalFound).toBeDefined();
-      expect(result.totalFound).toBeGreaterThan(0);
       expect(result.forecasts).toBeDefined();
       expect(result.forecasts.length).toBeGreaterThan(0);
     });
