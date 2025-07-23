@@ -1,46 +1,47 @@
-/**
- * Spelling and Grammar Verification Plugin
- * 
- * Analyzes text for spelling errors, grammatical mistakes, and style issues.
- * All logic is self-contained for easy understanding and maintenance.
- */
-
+import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
+import { checkSpellingGrammarTool } from "@/tools/check-spelling-grammar";
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../../logger";
-import { PipelinePlugin } from "../../core/PipelinePlugin";
 import { TextChunk } from "../../TextChunk";
 import {
-  RoutingExample,
+  AnalysisResult,
   LLMInteraction,
+  RoutingExample,
 } from "../../types";
-import { extractWithTool, type ExtractionConfig } from "../../utils/extractionHelper";
-import {
-  locateFindings,
-  generateCommentsFromFindings,
-  type GenericPotentialFinding,
-  type GenericInvestigatedFinding,
-  type GenericLocatedFinding,
-} from "../../utils/pluginHelpers";
-import { generateFindingId } from "../../utils/findingHelpers";
-import { getSpellingExtractionConfig, type SpellingExtractionResult, type SpellingFindingStorage } from "./types";
-import { SpellingPromptBuilder } from "./promptBuilder";
-import { SpellingErrorAnalyzer } from "./errorAnalyzer";
+import { findSpellingErrorLocation } from "./locationFinder";
+import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
 
-export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
-  constructor() {
-    super();
-  }
+export interface SpellingErrorWithLocation {
+  error: SpellingGrammarError;
+  chunk: TextChunk;
+  location?: {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+  };
+}
 
-  name(): string {
+export class SpellingAnalyzerJob {
+  private documentText: string;
+  private chunks: TextChunk[];
+  private hasRun = false;
+  private comments: Comment[] = [];
+  private summary: string = "";
+  private analysis: string = "";
+  private llmInteractions: LLMInteraction[] = [];
+  private totalCost: number = 0;
+  private errors: SpellingErrorWithLocation[] = [];
+
+  static displayName(): string {
     return "SPELLING";
   }
 
-  promptForWhenToUse(): string {
-    return `Call this for ALL text chunks to check spelling, grammar, and style. This is a basic check that should run on every chunk unless it's pure code, data, or references.`;
+  static promptForWhenToUse(): string {
+    return `Call this for ALL text chunks to check spelling and grammar. This is a basic check that should run on every chunk unless it's pure code, data, or references.`;
   }
 
-  override routingExamples(): RoutingExample[] {
+  static routingExamples(): RoutingExample[] {
     return [
       {
         chunkText: "The quick brown fox jumps over the lazy dog.",
@@ -65,223 +66,237 @@ export class SpellingPlugin extends PipelinePlugin<SpellingFindingStorage> {
     ];
   }
 
-  protected createInitialFindingStorage(): SpellingFindingStorage {
+  constructor({
+    documentText,
+    chunks,
+  }: {
+    documentText: string;
+    chunks: TextChunk[];
+  }) {
+    this.documentText = documentText;
+    this.chunks = chunks;
+  }
+
+  public async analyze(context?: { userId?: string }): Promise<AnalysisResult> {
+    if (this.hasRun) {
+      return this.getResults();
+    }
+
+    logger.info("SpellingAnalyzer: Starting analysis");
+
+    await this.checkSpellingAndGrammar(context);
+    this.findErrorLocations();
+    this.createComments();
+    this.generateAnalysis();
+
+    this.hasRun = true;
+    logger.info(
+      `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+    );
+
+    return this.getResults();
+  }
+
+  public getResults(): AnalysisResult {
+    if (!this.hasRun) {
+      throw new Error("Analysis has not been run yet. Call analyze() first.");
+    }
+
     return {
-      potential: [],
-      investigated: [],
-      located: [],
+      summary: this.summary,
+      analysis: this.analysis,
+      comments: this.comments,
+      llmInteractions: this.llmInteractions,
+      cost: this.totalCost,
     };
   }
 
-  /**
-   * Extract spelling/grammar findings from a text chunk
-   */
-  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
-    const promptBuilder = new SpellingPromptBuilder();
-    
-    const extraction = await extractWithTool<{
-      errors: SpellingExtractionResult['errors'];
-    }>(chunk, {
-      ...getSpellingExtractionConfig(this.name()),
-      extractionPrompt: promptBuilder.buildExtractionPrompt(
-        chunk,
-        "Be thorough but focus on clear errors. Consider the document's context and technical nature when evaluating potential issues."
-      )
-    });
-    
-    // Track the interaction and cost using parent method
-    if (extraction.interaction) {
-      this.analysisInteractions.push(extraction.interaction);
-    }
-    if (extraction.cost) {
-      this.totalCost += extraction.cost;
-    }
-
-    const newFindings = this.convertToFindings(
-      extraction.result.errors || [],
-      chunk.id
+  private async checkSpellingAndGrammar(context?: { userId?: string }): Promise<void> {
+    logger.debug(
+      `SpellingAnalyzer: Checking ${this.chunks.length} chunks in parallel`
     );
 
-    // Add to our storage
-    this.findings.potential.push(...(newFindings as any));
-  }
+    // Process all chunks in parallel
+    const chunkResults = await Promise.allSettled(
+      this.chunks.map(async (chunk) => {
+        try {
+          const result = await checkSpellingGrammarTool.execute(
+            {
+              text: chunk.text,
+              maxErrors: 20, // Limit errors per chunk
+            },
+            {
+              userId: context?.userId,
+              logger: logger,
+            }
+          );
 
-  /**
-   * Convert extraction results to potential findings
-   */
-  private convertToFindings(
-    errors: SpellingExtractionResult['errors'],
-    chunkId: string
-  ): GenericPotentialFinding[] {
-    const findings: GenericPotentialFinding[] = [];
+          return { chunk, result };
+        } catch (error) {
+          logger.error(
+            `Failed to check spelling in chunk ${chunk.id}:`,
+            error
+          );
+          throw error;
+        }
+      })
+    );
 
-    errors.forEach((error) => {
-      findings.push({
-        id: generateFindingId(this.name(), `${error.type}-error`),
-        type: `spelling_${error.type}`,
-        data: {
-          text: error.text,
-          correction: error.correction,
-          type: error.type,
-          rule: error.rule,
-          context: error.context,
-          severity: error.severity || 'low'
-        },
-        highlightHint: {
-          searchText: error.text,
-          chunkId: chunkId,
-          lineNumber: undefined,
-        },
-      });
-    });
+    // Process successful results
+    for (const chunkResult of chunkResults) {
+      if (chunkResult.status === 'fulfilled') {
+        const { chunk, result } = chunkResult.value;
+        
+        // Store errors with their chunks
+        for (const error of result.errors) {
+          this.errors.push({ error, chunk });
+        }
 
-    return findings;
-  }
-
-  /**
-   * Investigate findings and add severity/messages
-   */
-  protected investigateFindings(): void {
-    this.findings.investigated = this.findings.potential.map(finding => ({
-      ...finding,
-      severity: this.determineSeverity(finding.data),
-      message: this.createErrorMessage(finding.data)
-    })) as any;
-  }
-
-  /**
-   * Determine severity based on error type and context
-   */
-  private determineSeverity(data: { severity?: string; type?: string; [key: string]: unknown }): 'low' | 'medium' | 'high' {
-    // Use severity from data if provided
-    if (data.severity && (data.severity === 'low' || data.severity === 'medium' || data.severity === 'high')) {
-      return data.severity as 'low' | 'medium' | 'high';
+        // Skip LLM interaction tracking for now - it's not critical
+        // Just track a simple cost estimate based on text length
+        const estimatedCost = (chunk.text.length / 1000) * 0.001; // Rough estimate
+        this.totalCost += estimatedCost;
+      }
     }
-    
-    // Grammar errors are typically more important
-    if (data.type === 'grammar') {
-      return 'medium';
-    }
-    
-    // Default to low for spelling and style
-    return 'low';
+
+    logger.debug(
+      `SpellingAnalyzer: Found ${this.errors.length} spelling/grammar errors`
+    );
   }
 
-  /**
-   * Create a user-friendly error message
-   */
-  private createErrorMessage(data: { text?: string; correction?: string; type?: string; rule?: string; [key: string]: unknown }): string {
-    const { text, correction, type, rule } = data;
-    
-    let message = `${this.capitalizeFirst(type || 'spelling')} error: "${text || 'unknown'}" should be "${correction || 'unknown'}"`;
-    
-    if (rule) {
-      message += ` (${rule})`;
+  private findErrorLocations(): void {
+    for (const errorWithChunk of this.errors) {
+      const location = this.findLocationInChunk(errorWithChunk);
+      if (location) {
+        errorWithChunk.location = location;
+      }
     }
-    
-    return message;
   }
 
-  /**
-   * Locate findings in document text
-   */
-  protected locateFindings(documentText: string): void {
-    const { located, dropped } = locateFindings(
-      this.findings.investigated as GenericInvestigatedFinding[],
-      documentText,
-      { 
-        mathSpecific: false,
-        allowFuzzy: true,
-        fallbackToContext: true 
+  private findLocationInChunk(errorWithChunk: SpellingErrorWithLocation): {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+  } | null {
+    const { error, chunk } = errorWithChunk;
+    
+    const chunkLocation = findSpellingErrorLocation(
+      error.text,
+      chunk.text,
+      {
+        allowPartialMatch: true,
+        context: error.context,
       }
     );
 
-    this.findings.located = located as any;
-
-    if (dropped > 0) {
-      logger.info(`SpellingPlugin: ${dropped} findings couldn't be located`);
+    if (!chunkLocation || !chunk.metadata?.position) {
+      logger.warn(
+        `Could not find location for spelling error: ${error.text}`
+      );
+      return null;
     }
+
+    return {
+      startOffset: chunk.metadata.position.start + chunkLocation.startOffset,
+      endOffset: chunk.metadata.position.start + chunkLocation.endOffset,
+      quotedText: chunkLocation.quotedText,
+    };
   }
 
-  /**
-   * Analyze findings and generate summary
-   */
-  protected analyzeFindingPatterns(): void {
-    const errorAnalyzer = new SpellingErrorAnalyzer();
+  private createComments(): void {
+    for (const errorWithLocation of this.errors) {
+      if (!errorWithLocation.location) continue;
+
+      const comment = this.createComment(errorWithLocation);
+      if (comment) {
+        this.comments.push(comment);
+      }
+    }
+
+    logger.debug(`SpellingAnalyzer: Created ${this.comments.length} comments`);
+  }
+
+  private createComment(errorWithLocation: SpellingErrorWithLocation): Comment | null {
+    const { error, location } = errorWithLocation;
     
-    // Convert findings to error format for analysis
-    const errors = this.findings.potential.map(f => ({
-      text: f.data.text,
-      correction: f.data.correction,
-      type: f.data.type
-    }));
+    if (!location) return null;
+
+    const message = generateSpellingComment(error);
+    const importance = this.calculateImportance(error);
+
+    return {
+      description: message,
+      isValid: true,
+      highlight: {
+        startOffset: location.startOffset,
+        endOffset: location.endOffset,
+        quotedText: location.quotedText,
+        isValid: true,
+      },
+      importance,
+    };
+  }
+
+  private calculateImportance(error: SpellingGrammarError): number {
+    // Map importance (0-100) to comment importance (1-10)
+    const score = error.importance;
     
-    const analysisResult = errorAnalyzer.analyze(errors);
-    const commonPatterns = errorAnalyzer.identifyCommonPatterns(errors);
-    
-    // Generate summary
-    const totalErrors = this.findings.potential.length;
-    const errorsByType = this.getErrorCountsByType();
-    
-    this.findings.summary = analysisResult.summary;
-    
-    // Generate detailed analysis
-    let analysisSummary = `## Spelling & Grammar Analysis\n\n`;
-    
-    if (totalErrors === 0) {
-      analysisSummary += `No spelling or grammar issues found in the document.\n`;
+    if (score <= 25) {
+      // Minor typos: importance 2-3
+      return 2 + Math.floor(score / 25);
+    } else if (score <= 50) {
+      // Noticeable errors: importance 4-5
+      return 4 + Math.floor((score - 25) / 25);
+    } else if (score <= 75) {
+      // Errors affecting clarity: importance 6-7
+      return 6 + Math.floor((score - 50) / 25);
     } else {
-      analysisSummary += `### Error Summary\n`;
-      analysisSummary += `- Total issues found: ${totalErrors}\n`;
-      
-      if (errorsByType.size > 0) {
-        analysisSummary += `- Breakdown by type:\n`;
-        errorsByType.forEach((count, type) => {
-          analysisSummary += `  - ${this.capitalizeFirst(type)}: ${count}\n`;
-        });
-      }
-      
-      if (commonPatterns.length > 0) {
-        analysisSummary += `\n### Common Patterns\n`;
-        commonPatterns.forEach(pattern => {
-          analysisSummary += `- ${pattern}\n`;
-        });
-      }
-      
-      if (analysisResult.mostCommonPattern && analysisResult.mostCommonPattern.examples.length > 0) {
-        analysisSummary += `\n### Examples of ${this.capitalizeFirst(analysisResult.mostCommonPattern.type)} Errors\n`;
-        analysisResult.mostCommonPattern.examples.slice(0, 3).forEach(example => {
-          analysisSummary += `- "${example.text}" → "${example.correction}"\n`;
-        });
-      }
+      // Critical errors: importance 8-10
+      return 8 + Math.floor((score - 75) / 12.5);
+    }
+  }
+
+  private generateAnalysis(): void {
+    if (this.errors.length === 0) {
+      this.summary = "No spelling or grammar errors found.";
+      this.analysis = "The document appears to be free of spelling and grammar errors.";
+      return;
+    }
+
+    // Use the document summary generator
+    this.analysis = generateDocumentSummary(this.errors);
+
+    // Generate simple summary for the summary field
+    const totalErrors = this.errors.length;
+    const errorsByType = {
+      spelling: this.errors.filter(e => e.error.type === 'spelling').length,
+      grammar: this.errors.filter(e => e.error.type === 'grammar').length,
+    };
+
+    this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
+    
+    const parts = [];
+    if (errorsByType.spelling > 0) {
+      parts.push(`${errorsByType.spelling} spelling`);
+    }
+    if (errorsByType.grammar > 0) {
+      parts.push(`${errorsByType.grammar} grammar`);
     }
     
-    this.findings.analysisSummary = analysisSummary;
+    if (parts.length > 0) {
+      this.summary += ` (${parts.join(", ")})`;
+    }
   }
 
-  /**
-   * Generate UI comments from located findings
-   */
-  protected generateCommentsFromFindings(documentText: string): Comment[] {
-    const comments = generateCommentsFromFindings(this.findings.located as unknown as GenericLocatedFinding[], documentText);
-    logger.info(`SpellingPlugin: Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
-    return comments;
+  public getDebugInfo(): Record<string, unknown> {
+    return {
+      hasRun: this.hasRun,
+      errorsCount: this.errors.length,
+      commentsCount: this.comments.length,
+      totalCost: this.totalCost,
+      llmInteractionsCount: this.llmInteractions.length,
+    };
   }
-
-  /**
-   * Helper methods
-   */
-  private getErrorCountsByType(): Map<string, number> {
-    const counts = new Map<string, number>();
-    this.findings.potential.forEach(finding => {
-      const type = finding.data.type;
-      counts.set(type, (counts.get(type) || 0) + 1);
-    });
-    return counts;
-  }
-
-  protected override capitalizeFirst(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
 }
+
+export { SpellingPlugin } from "./plugin-wrapper";

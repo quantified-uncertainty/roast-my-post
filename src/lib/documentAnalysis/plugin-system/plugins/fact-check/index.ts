@@ -1,310 +1,288 @@
-/**
- * Fact Check Plugin - Refactored version using new plugin architecture
- * Extracts and verifies factual claims, detects contradictions
- */
+import type { 
+  AnalysisResult,
+  TextChunk,
+  LLMInteraction
+} from '../../types';
+import type { Comment } from '@/types/documentSchema';
+import { findFactLocation } from './locationFinder';
+import { generateFactCheckComments } from './commentGeneration';
+import extractFactualClaimsTool from '@/tools/extract-factual-claims';
+import type { ExtractedFactualClaim } from '@/tools/extract-factual-claims';
+import factCheckerTool from '@/tools/fact-checker';
+import type { FactCheckResult } from '@/tools/fact-checker';
+import { logger } from '@/lib/logger';
 
-import { logger } from "../../../../logger";
-import { PipelinePlugin } from "../../core/PipelinePlugin";
-import { TextChunk } from "../../TextChunk";
-import {
-  RoutingExample,
-  LLMInteraction,
-} from "../../types";
-import type { Comment } from "@/types/documentSchema";
-import { extractWithTool } from "../../utils/extractionHelper";
-import { 
-  locateFindings, 
-  generateCommentsFromFindings,
-  GenericPotentialFinding,
-  GenericInvestigatedFinding,
-  GenericLocatedFinding
-} from "../../utils/pluginHelpers";
-import {
-  FactCheckFindingStorage,
-  FactExtractionResult,
-  ContradictionResult,
-  VerificationResult,
-  getFactExtractionConfig,
-  getContradictionDetectionConfig,
-  getFactVerificationConfig,
-} from "./types";
-import { FactCheckPromptBuilder } from "./promptBuilder";
-import { findFactLocation } from "./locationFinder";
-import {
-  convertFactResults,
-  convertContradictions,
-  investigateFactFindings,
-  analyzeFactFindings,
-  prioritizeClaimsForVerification,
-} from "./analysisHelpers";
+// Domain model for fact with verification
+export class VerifiedFact {
+  public claim: ExtractedFactualClaim;
+  private chunk: TextChunk;
+  public verification?: FactCheckResult;
 
-export class FactCheckPlugin extends PipelinePlugin<FactCheckFindingStorage> {
-  private promptBuilder = new FactCheckPromptBuilder();
-
-  constructor() {
-    super();
+  constructor(claim: ExtractedFactualClaim, chunk: TextChunk) {
+    this.claim = claim;
+    this.chunk = chunk;
   }
 
-  name(): string {
-    return "FACT_CHECK";
+  get text(): string {
+    return this.claim.originalText;
   }
 
-  promptForWhenToUse(): string {
-    return `Call this when there are factual claims that could be verified. This includes:
-- Specific statistics or data points (GDP was $21T in 2023)
-- Historical facts (The Berlin Wall fell in 1989)
-- Scientific claims (Water boils at 100°C at sea level)
-- Claims about current events or recent developments
-- Statements about organizations, people, or places
-- Any claim presented as objective fact
-Do NOT call for: opinions, predictions, hypotheticals, or general statements`;
+  get originalText(): string {
+    return this.claim.originalText;
   }
 
-  override routingExamples(): RoutingExample[] {
+  get topic(): string {
+    return this.claim.topic;
+  }
+
+  get averageScore(): number {
+    return (this.claim.importanceScore + this.claim.checkabilityScore) / 2;
+  }
+
+  shouldVerify(): boolean {
+    // Prioritize verifying:
+    // 1. Important claims with low truth probability (likely false)
+    // 2. Important claims that are uncertain (50-70% truth probability)
+    // 3. Very checkable claims with questionable truth
+    
+    const isImportant = this.claim.importanceScore >= 60;
+    const isCheckable = this.claim.checkabilityScore >= 60;
+    const isQuestionable = this.claim.truthProbability <= 70;
+    const isLikelyFalse = this.claim.truthProbability <= 40;
+    
+    return (isImportant && isQuestionable) || 
+           (isCheckable && isLikelyFalse) ||
+           (this.claim.importanceScore >= 80); // Always check critical claims
+  }
+
+  findLocation(documentText: string): ReturnType<typeof findFactLocation> {
+    return findFactLocation(documentText, this.originalText);
+  }
+
+  toComment(documentText: string): Comment | null {
+    const location = this.findLocation(documentText);
+    if (!location) return null;
+
+    return generateFactCheckComments(this, location);
+  }
+}
+
+export class FactCheckAnalyzerJob {
+  private facts: VerifiedFact[] = [];
+  private llmInteractions: LLMInteraction[] = [];
+
+  static displayName(): string {
+    return "Fact Checker";
+  }
+
+  static promptForWhenToUse(): string {
+    return "Use this when the document makes specific factual claims that can be verified or when checking for accuracy of statements.";
+  }
+
+  static routingExamples(): string[] {
     return [
-      {
-        chunkText: "The unemployment rate in the US was 3.7% in December 2023",
-        shouldProcess: true,
-        reason: "Contains specific statistical claim that can be verified",
-      },
-      {
-        chunkText: "I believe the economy will improve next year",
-        shouldProcess: false,
-        reason: "Opinion/prediction, not a verifiable fact",
-      },
-      {
-        chunkText: "Apple Inc. was founded in 1976 by Steve Jobs and Steve Wozniak",
-        shouldProcess: true,
-        reason: "Historical fact that can be verified",
-      },
+      "Check if the facts in this article are accurate",
+      "Verify the claims made in this research",
+      "Fact-check this political statement",
+      "Check the accuracy of statistics in this report"
     ];
   }
 
-  protected createInitialFindingStorage(): FactCheckFindingStorage {
+  async analyze(
+    documentText: string,
+    textChunks: TextChunk[]
+  ): Promise<AnalysisResult> {
+    try {
+      // Phase 1: Extract factual claims from all chunks in parallel
+      const extractionPromises = textChunks.map(chunk => 
+        this.extractFactsFromChunk(chunk)
+      );
+      
+      const extractionResults = await Promise.allSettled(extractionPromises);
+      
+      // Collect all extracted facts
+      const allFacts: VerifiedFact[] = [];
+      for (const result of extractionResults) {
+        if (result.status === 'fulfilled' && result.value) {
+          allFacts.push(...result.value.facts);
+          if (result.value.llmInteraction) {
+            this.llmInteractions.push(this.convertRichToLLMInteraction(result.value.llmInteraction));
+          }
+        }
+      }
+
+      // Deduplicate facts by similar text
+      this.facts = this.deduplicateFacts(allFacts);
+
+      // Phase 2: Verify high-priority facts
+      const factsToVerify = this.facts
+        .filter(fact => fact.shouldVerify())
+        .slice(0, 10); // Limit to top 10 for cost management
+
+      if (factsToVerify.length > 0) {
+        await this.verifyFacts(factsToVerify);
+      }
+
+      // Phase 3: Generate comments for all facts
+      const comments: Comment[] = [];
+      for (const fact of this.facts) {
+        const comment = fact.toComment(documentText);
+        if (comment) {
+          comments.push(comment);
+        }
+      }
+
+      // Sort comments by importance
+      comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
+
+      // Phase 4: Generate analysis summary
+      const { summary, analysisSummary } = this.generateAnalysis();
+
+      return {
+        comments,
+        summary,
+        analysis: analysisSummary,
+        llmInteractions: this.llmInteractions,
+        cost: this.calculateCost()
+      };
+    } catch (error) {
+      logger.error('Error in FactCheckAnalyzerJob:', error);
+      throw error;
+    }
+  }
+
+  private async extractFactsFromChunk(chunk: TextChunk): Promise<{
+    facts: VerifiedFact[];
+    llmInteraction?: any;
+  }> {
+    try {
+      const result = await extractFactualClaimsTool.execute({
+        text: chunk.text,
+        minQualityThreshold: 60,
+        maxClaims: 10
+      }, {
+        logger
+      });
+
+      const facts = result.claims.map(claim => new VerifiedFact(claim, chunk));
+      
+      return {
+        facts,
+        llmInteraction: result.llmInteraction
+      };
+    } catch (error) {
+      logger.error('Error extracting facts from chunk:', error);
+      return { facts: [] };
+    }
+  }
+
+  private deduplicateFacts(facts: VerifiedFact[]): VerifiedFact[] {
+    const seen = new Set<string>();
+    const unique: VerifiedFact[] = [];
+    
+    for (const fact of facts) {
+      const key = fact.text.toLowerCase().replace(/\s+/g, ' ').trim();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(fact);
+      }
+    }
+    
+    // Sort by average score
+    return unique.sort((a, b) => b.averageScore - a.averageScore);
+  }
+
+  private async verifyFacts(facts: VerifiedFact[]): Promise<void> {
+    // Verify facts in parallel for better performance
+    const verificationPromises = facts.map(fact => this.verifySingleFact(fact));
+    await Promise.allSettled(verificationPromises);
+  }
+
+  private async verifySingleFact(fact: VerifiedFact): Promise<void> {
+    try {
+      const result = await factCheckerTool.execute({
+        claim: fact.text,
+        context: `Topic: ${fact.topic}, Importance: ${fact.claim.importanceScore}/100, Initial truth estimate: ${fact.claim.truthProbability}%`,
+        searchForEvidence: false
+      }, {
+        logger
+      });
+
+      fact.verification = result.result;
+      this.llmInteractions.push(this.convertRichToLLMInteraction(result.llmInteraction));
+    } catch (error) {
+      logger.error('Error verifying fact:', error);
+    }
+  }
+
+  private convertRichToLLMInteraction(rich: any): LLMInteraction {
     return {
-      potential: [],
-      investigated: [],
-      located: [],
-      contradictions: [],
-      verifications: [],
+      messages: [
+        { role: 'user' as const, content: rich.prompt },
+        { role: 'assistant' as const, content: rich.response }
+      ],
+      usage: {
+        input_tokens: rich.tokensUsed?.prompt || 0,
+        output_tokens: rich.tokensUsed?.completion || 0
+      }
     };
   }
 
-  /**
-   * Extract factual claims from a single chunk
-   */
-  protected async extractFromChunk(chunk: TextChunk): Promise<void> {
-    const config = getFactExtractionConfig(this.name());
-    const prompt = this.promptBuilder.buildExtractionPrompt(chunk);
-
-    try {
-      const extraction = await extractWithTool<{ claims: FactExtractionResult[] }>(
-        chunk,
-        { ...config, extractionPrompt: prompt }
-      );
-
-      // Track LLM call using parent method
-      if (extraction.interaction) {
-        this.analysisInteractions.push(extraction.interaction);
-      }
-      if (extraction.cost) {
-        this.totalCost += extraction.cost;
-      }
-
-      if (extraction.result.claims && extraction.result.claims.length > 0) {
-        const findings = convertFactResults(extraction.result.claims, chunk.id, this.name());
-        this.findings.potential.push(...findings);
-      }
-    } catch (error) {
-      logger.error(`[FactCheckPlugin] Failed to extract claims from chunk ${chunk.id}:`, error);
-    }
-  }
-
-  /**
-   * Investigate findings - includes contradiction detection and verification
-   */
-  protected async investigateFindings(): Promise<void> {
-    // First detect contradictions
-    await this.detectContradictions();
+  private calculateCost(): number {
+    // Estimate based on token usage
+    const totalTokens = this.llmInteractions.reduce((sum, interaction) => {
+      return sum + (interaction.usage.input_tokens + interaction.usage.output_tokens);
+    }, 0);
     
-    // Then verify high-priority claims
-    await this.verifyFactualClaims();
+    // Rough estimate: $0.01 per 1000 tokens
+    return totalTokens * 0.00001;
+  }
+
+  private generateAnalysis(): { summary: string; analysisSummary: string } {
+    const totalFacts = this.facts.length;
+    const verifiedFacts = this.facts.filter(f => f.verification).length;
+    const trueFacts = this.facts.filter(f => f.verification?.verdict === 'true').length;
+    const falseFacts = this.facts.filter(f => f.verification?.verdict === 'false').length;
+    const partiallyTrueFacts = this.facts.filter(f => f.verification?.verdict === 'partially-true').length;
     
-    // Finally convert potential findings to investigated findings
-    this.findings.investigated = investigateFactFindings(this.findings.potential, this.findings.verifications || []);
+    const highImportanceFacts = this.facts.filter(f => f.claim.importanceScore >= 70).length;
+    const likelyFalseFacts = this.facts.filter(f => f.claim.truthProbability <= 40).length;
+    const uncertainFacts = this.facts.filter(f => f.claim.truthProbability > 40 && f.claim.truthProbability <= 70).length;
+
+    const summary = `Found ${totalFacts} factual claims: ${verifiedFacts} verified (${trueFacts} true, ${falseFacts} false, ${partiallyTrueFacts} partially true)`;
+
+    const topicStats = this.facts.reduce((acc, fact) => {
+      acc[fact.topic] = (acc[fact.topic] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const analysisSummary = `
+## Fact Check Analysis
+
+**Overview**: Extracted and analyzed ${totalFacts} factual claims from the document.
+
+**Verification Results** (${verifiedFacts} claims verified):
+- ✓ True: ${trueFacts} claims
+- ✗ False: ${falseFacts} claims
+- ⚠️ Partially True: ${partiallyTrueFacts} claims
+- ? Unverified: ${totalFacts - verifiedFacts} claims
+
+**Claim Characteristics**:
+- High importance claims: ${highImportanceFacts}
+- Likely false (≤40% truth probability): ${likelyFalseFacts}
+- Uncertain (41-70% truth probability): ${uncertainFacts}
+- Average quality score: ${Math.round(this.facts.reduce((sum, f) => sum + f.averageScore, 0) / totalFacts || 0)}
+
+**Topics Covered**: ${Object.entries(topicStats)
+  .sort((a, b) => b[1] - a[1])
+  .map(([topic, count]) => `${topic} (${count})`)
+  .join(', ')}
+
+${falseFacts > 0 ? `\n**⚠️ Accuracy Concerns**: Found ${falseFacts} false claims that should be corrected.` : ''}
+${likelyFalseFacts > 3 && verifiedFacts === 0 ? `\n**⚠️ Initial Assessment**: Multiple claims appear questionable based on truth probability estimates.` : ''}
+${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document are uncertain and would benefit from citations.` : ''}
+    `.trim();
+
+    return { summary, analysisSummary };
   }
-
-
-  /**
-   * Stage 2: Detect contradictions between claims
-   */
-  private async detectContradictions(): Promise<void> {
-    if (this.findings.potential.length < 2) return;
-
-    // Group claims by topic for more efficient contradiction detection
-    const claimsByTopic = new Map<string, Array<{ text: string; topic: string }>>();
-    
-    this.findings.potential.forEach(finding => {
-      const topic = (finding.data.topic as string) || 'general';
-      if (!claimsByTopic.has(topic)) {
-        claimsByTopic.set(topic, []);
-      }
-      claimsByTopic.get(topic)!.push({
-        text: finding.data.text as string,
-        topic: topic
-      });
-    });
-
-    // Check for contradictions within each topic
-    const contradictionPromises = Array.from(claimsByTopic.entries()).map(
-      async ([topic, claims]) => {
-        if (claims.length < 2) return;
-
-        const config = getContradictionDetectionConfig(this.name());
-        const prompt = this.promptBuilder.buildContradictionDetectionPrompt(claims);
-
-        try {
-          const dummyChunk = new TextChunk(
-            `contradiction-check-${topic}`,
-            claims.map(c => c.text).join('\n'),
-            {
-              position: { start: 0, end: 0 }
-            }
-          );
-
-          const extraction = await extractWithTool<{ contradictions: ContradictionResult[] }>(
-            dummyChunk,
-            { ...config, extractionPrompt: prompt }
-          );
-
-          // Track LLM call using parent method
-          await this.trackLLMCall(async () => extraction);
-          const { result } = extraction;
-
-          if (result.contradictions && result.contradictions.length > 0) {
-            this.findings.contradictions.push(...result.contradictions);
-            
-            // Convert contradictions to investigated findings
-            const contradictionFindings = convertContradictions(
-              result.contradictions,
-              'document-wide',
-              this.name()
-            );
-            this.findings.investigated.push(...contradictionFindings);
-          }
-        } catch (error) {
-          logger.error(`[FactCheckPlugin] Failed to detect contradictions in topic ${topic}:`, error);
-        }
-      }
-    );
-
-    await Promise.all(contradictionPromises);
-  }
-
-  /**
-   * Stage 3: Verify high-priority factual claims
-   */
-  private async verifyFactualClaims(): Promise<void> {
-    // Prioritize claims for verification
-    const claimsToVerify = prioritizeClaimsForVerification(this.findings.potential, 10);
-    
-    if (claimsToVerify.length === 0) {
-      // No high-priority claims, just investigate all findings
-      const investigated = investigateFactFindings(this.findings.potential, []);
-      this.findings.investigated.push(...investigated);
-      return;
-    }
-
-    // Prepare claims for batch verification
-    const claimsData = claimsToVerify.map(f => ({
-      text: f.data.text as string,
-      topic: f.data.topic as string
-    }));
-
-    const config = getFactVerificationConfig(this.name());
-    const prompt = this.promptBuilder.buildVerificationPrompt(claimsData);
-
-    try {
-      const dummyChunk = new TextChunk(
-        'verification-batch',
-        claimsData.map(c => c.text).join('\n'),
-        {
-          position: { start: 0, end: 0 }
-        }
-      );
-
-      const extraction = await extractWithTool<{ verifications: VerificationResult[] }>(
-        dummyChunk,
-        { ...config, extractionPrompt: prompt }
-      );
-
-      // Track LLM call using parent method
-      if (extraction.interaction) {
-        this.analysisInteractions.push(extraction.interaction);
-      }
-      if (extraction.cost) {
-        this.totalCost += extraction.cost;
-      }
-      const { result } = extraction;
-
-      if (result.verifications) {
-        this.findings.verifications = result.verifications;
-      }
-
-      // Investigate all findings with verification results
-      const investigated = investigateFactFindings(
-        this.findings.potential,
-        this.findings.verifications
-      );
-      this.findings.investigated.push(...investigated);
-    } catch (error) {
-      logger.error(`[FactCheckPlugin] Failed to verify claims:`, error);
-      // Still investigate findings without verification
-      const investigated = investigateFactFindings(this.findings.potential, []);
-      this.findings.investigated.push(...investigated);
-    }
-  }
-
-  /**
-   * Locate findings in document text
-   */
-  protected locateFindings(documentText: string): void {
-    const { located, dropped } = locateFindings(
-      this.findings.investigated,
-      documentText,
-      {
-        allowFuzzy: true,
-        fallbackToContext: true
-      }
-    );
-
-    this.findings.located = located;
-    
-    if (dropped > 0) {
-      logger.warn(`[FactCheckPlugin] Dropped ${dropped} findings that couldn't be located`);
-    }
-  }
-
-  /**
-   * Analyze findings and generate summary
-   */
-  protected analyzeFindingPatterns(): void {
-    const { summary, analysisSummary } = analyzeFactFindings(
-      this.findings.located,
-      this.findings.contradictions,
-      this.findings.verifications
-    );
-    this.findings.summary = summary;
-    this.findings.analysisSummary = analysisSummary;
-  }
-
-  /**
-   * Generate UI comments from located findings
-   */
-  protected generateCommentsFromFindings(documentText: string): Comment[] {
-    const comments = generateCommentsFromFindings(this.findings.located, documentText);
-    logger.info(`[FactCheckPlugin] Generated ${comments.length} comments from ${this.findings.located.length} located findings`);
-    return comments;
-  }
-
 }

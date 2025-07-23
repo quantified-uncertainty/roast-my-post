@@ -9,7 +9,7 @@ export default function ExtractFactualClaimsAutoPage() {
     <ToolPageTemplate
       tool={extractFactualClaimsTool}
       formConfig={{
-        fieldOrder: ['text', 'checkContradictions', 'prioritizeVerification'],
+        fieldOrder: ['text', 'instructions', 'minQualityThreshold', 'maxClaims'],
         fieldConfigs: {
           text: {
             label: 'Text to Analyze',
@@ -17,13 +17,24 @@ export default function ExtractFactualClaimsAutoPage() {
             helpText: 'The tool will extract factual claims and check for internal contradictions',
             rows: 10
           },
-          checkContradictions: {
-            label: 'Check for Contradictions',
-            helpText: 'Identify claims that contradict each other within the same text'
+          instructions: {
+            label: 'Additional Instructions',
+            placeholder: 'Any specific guidance for claim extraction...',
+            helpText: 'Optional instructions for focusing on specific types of claims'
           },
-          prioritizeVerification: {
-            label: 'Prioritize Claims for Verification',
-            helpText: 'Categorize claims by importance and verifiability'
+          minQualityThreshold: {
+            label: 'Minimum Quality Threshold',
+            helpText: 'Filter out low-quality claims (0-10)',
+            min: 0,
+            max: 10,
+            step: 0.5
+          },
+          maxClaims: {
+            label: 'Maximum Claims',
+            helpText: 'Limit the number of claims extracted',
+            min: 1,
+            max: 100,
+            step: 1
           }
         },
         submitButtonText: 'Extract Claims',
@@ -38,8 +49,8 @@ export default function ExtractFactualClaimsAutoPage() {
 In our 25-year history (the company was actually founded in 1997), we have expanded to 15 countries and employ over 5,000 people. John Smith, who founded the company alone in his garage, always believed in global expansion.
 
 Our revenue grew from $800 million in 2019 to $1.2 billion in 2020, representing a 50% increase. This growth was driven by our new AI product line, which now accounts for 60% of our total revenue of $1 billion.`,
-              checkContradictions: true,
-              prioritizeVerification: true
+              minQualityThreshold: 5,
+              maxClaims: 20
             }
           },
           {
@@ -51,8 +62,8 @@ Our revenue grew from $800 million in 2019 to $1.2 billion in 2020, representing
 The West Antarctic Ice Sheet accounts for 80% of the total ice loss, with the Antarctic Peninsula contributing 15% and East Antarctica 5%. Sea level rise from Antarctic melting has increased from 0.2mm per year in the 1990s to 0.6mm per year today.
 
 If current trends continue, Antarctic ice loss could contribute up to 58cm to global sea level rise by 2100.`,
-              checkContradictions: true,
-              prioritizeVerification: true
+              minQualityThreshold: 7,
+              maxClaims: 15
             }
           },
           {
@@ -61,8 +72,8 @@ If current trends continue, Antarctic ice loss could contribute up to 58cm to gl
               text: `The Apollo 11 mission launched on July 16, 1969, from Kennedy Space Center. Neil Armstrong became the first human to walk on the moon on July 20, 1969, at 20:17 UTC. His famous words "That's one small step for man, one giant leap for mankind" were broadcast to an estimated 650 million viewers worldwide.
 
 The mission lasted 8 days, 3 hours, 18 minutes, and 35 seconds. The lunar module spent 21 hours and 36 minutes on the moon's surface.`,
-              checkContradictions: false,
-              prioritizeVerification: true
+              minQualityThreshold: 6,
+              maxClaims: 10
             }
           }
         ]

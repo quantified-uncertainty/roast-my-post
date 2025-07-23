@@ -1,191 +1,206 @@
-/**
- * Math-specific location finding utilities
- */
+import { logger } from "@/lib/logger";
 
-import type { Comment } from '@/types/documentSchema';
+interface LocationResult {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+}
 
-/**
- * Normalize mathematical expressions for matching
- * Preserves mathematical operators and structure
- */
-export function normalizeMathExpression(expr: string): string {
-  return expr
-    .trim()
-    // Normalize whitespace around operators but preserve them
-    .replace(/\s*([+\-*/=<>≤≥≠×÷±∓∞∑∏∫∂∇])\s*/g, ' $1 ')
-    // Normalize multiple spaces to single space
-    .replace(/\s+/g, ' ')
-    // Remove spaces inside parentheses at start/end
-    .replace(/\(\s+/g, '(')
-    .replace(/\s+\)/g, ')')
-    // Normalize common math variations
-    .replace(/\*\*/g, '^')  // ** to ^
-    .replace(/\b([0-9]+)\s*x\s*([0-9]+)/g, '$1 × $2')  // Only replace x between numbers
-    .replace(/\s*\^\s*/g, '^')  // Remove spaces around exponents
-    .trim();
+interface FindOptions {
+  allowPartialMatch?: boolean;
+  normalizeWhitespace?: boolean;
 }
 
 /**
- * Find math expression in text with math-aware fuzzy matching
+ * Normalize text for math expression matching
+ */
+function normalizeForMatching(text: string, options: FindOptions): string {
+  let normalized = text;
+  
+  if (options.normalizeWhitespace) {
+    // Normalize various whitespace to single spaces
+    normalized = normalized.replace(/\s+/g, ' ').trim();
+  }
+  
+  return normalized;
+}
+
+/**
+ * Find the location of a math expression in a text chunk
  */
 export function findMathLocation(
-  searchExpr: string,
-  documentText: string,
-  options?: {
-    allowNormalization?: boolean;
-    contextWords?: number;
-  }
-): Comment['highlight'] | null {
-  const { allowNormalization = true, contextWords = 10 } = options || {};
+  mathExpression: string,
+  chunkText: string,
+  options: FindOptions = {}
+): LocationResult | null {
+  const normalizedExpression = normalizeForMatching(mathExpression, options);
+  const normalizedChunk = normalizeForMatching(chunkText, options);
   
-  // Try exact match first
-  let position = documentText.indexOf(searchExpr);
+  // First try exact match in normalized text
+  let startIndex = normalizedChunk.indexOf(normalizedExpression);
   
-  if (position === -1 && allowNormalization) {
-    // Try with normalized math expressions
-    const normalizedSearch = normalizeMathExpression(searchExpr);
-    const normalizedDoc = documentText
-      .split('\n')
-      .map(line => {
-        const normalizedLine = normalizeMathExpression(line);
-        return { original: line, normalized: normalizedLine };
-      });
+  // If not found and partial match is allowed, try fuzzy matching
+  if (startIndex === -1 && options.allowPartialMatch) {
+    // Try to find key parts of the expression
+    const keyParts = extractKeyParts(normalizedExpression);
     
-    // Find in normalized version
-    for (let i = 0; i < normalizedDoc.length; i++) {
-      const linePos = normalizedDoc[i].normalized.indexOf(normalizedSearch);
-      if (linePos !== -1) {
-        // Found it! Now find position in original text
-        const linesBeforeTarget = documentText.split('\n').slice(0, i);
-        const charsBeforeTarget = linesBeforeTarget.join('\n').length + (i > 0 ? 1 : 0);
+    for (const part of keyParts) {
+      const partIndex = normalizedChunk.indexOf(part);
+      if (partIndex !== -1) {
+        // Found a key part, try to expand to full expression
+        const expandedMatch = expandToFullExpression(
+          normalizedChunk,
+          partIndex,
+          part,
+          normalizedExpression
+        );
         
-        // Try to find the exact position in the original line
-        const originalLine = normalizedDoc[i].original;
-        position = findBestMatchInLine(searchExpr, originalLine, linePos);
-        
-        if (position !== -1) {
-          position += charsBeforeTarget;
+        if (expandedMatch) {
+          startIndex = expandedMatch.start;
+          break;
         }
-        break;
       }
     }
   }
   
-  // If still not found, try finding key numbers/variables
-  if (position === -1 && searchExpr.length > 3) {
-    // Extract numbers and variables from the expression
-    const keyParts = extractKeyParts(searchExpr);
-    if (keyParts.length >= 2) {
-      // Try to find a sequence of these key parts
-      position = findKeyPartsSequence(keyParts, documentText, contextWords);
-    }
-  }
-  
-  if (position === -1) {
+  if (startIndex === -1) {
+    logger.debug(`Math expression not found in chunk: "${mathExpression}"`);
     return null;
   }
   
-  // Calculate end position - try to capture the full expression
-  const endPosition = findExpressionEnd(documentText, position, searchExpr.length);
+  // Map back to original text positions
+  const originalPosition = mapToOriginalPosition(
+    chunkText,
+    normalizedChunk,
+    startIndex,
+    normalizedExpression.length
+  );
+  
+  if (!originalPosition) {
+    return null;
+  }
   
   return {
-    startOffset: position,
-    endOffset: endPosition,
-    quotedText: documentText.substring(position, endPosition),
-    isValid: true
+    startOffset: originalPosition.start,
+    endOffset: originalPosition.end,
+    quotedText: chunkText.substring(originalPosition.start, originalPosition.end),
   };
 }
 
 /**
- * Find the best match for an expression within a line
+ * Extract key parts from a math expression for fuzzy matching
  */
-function findBestMatchInLine(
-  searchExpr: string,
-  line: string,
-  normalizedPos: number
-): number {
-  // Try exact match first
-  const exactPos = line.indexOf(searchExpr);
-  if (exactPos !== -1) return exactPos;
-  
-  // Otherwise, use the normalized position as a guide
-  // This is approximate but better than nothing
-  return Math.min(normalizedPos, line.length - 1);
-}
-
-/**
- * Extract key parts (numbers, variables) from a math expression
- */
-function extractKeyParts(expr: string): string[] {
+function extractKeyParts(expression: string): string[] {
   const parts: string[] = [];
   
-  // Extract numbers (including decimals and scientific notation)
-  const numbers = expr.match(/\d+\.?\d*(?:[eE][+-]?\d+)?/g) || [];
-  parts.push(...numbers);
+  // Extract numbers with surrounding operators
+  const numberPattern = /[\d.,]+\s*[+\-*/=<>]\s*[\d.,]+/g;
+  const matches = expression.match(numberPattern);
+  if (matches) {
+    parts.push(...matches);
+  }
   
-  // Extract variables (single letters)
-  const variables = expr.match(/\b[a-zA-Z]\b/g) || [];
-  parts.push(...variables);
+  // Extract variable assignments
+  const assignmentPattern = /\w+\s*=\s*[\d.,]+/g;
+  const assignments = expression.match(assignmentPattern);
+  if (assignments) {
+    parts.push(...assignments);
+  }
   
-  // Extract special constants
-  const constants = expr.match(/\b(?:pi|π|e|∞)\b/gi) || [];
-  parts.push(...constants);
+  // If no specific patterns found, use the whole expression
+  if (parts.length === 0) {
+    parts.push(expression);
+  }
   
-  return parts.filter((p, i, arr) => arr.indexOf(p) === i); // unique
+  return parts;
 }
 
 /**
- * Find a sequence of key parts within context
+ * Try to expand a partial match to the full expression
  */
-function findKeyPartsSequence(
-  keyParts: string[],
+function expandToFullExpression(
   text: string,
-  contextWords: number
-): number {
-  if (keyParts.length < 2) return -1;
+  partStart: number,
+  part: string,
+  fullExpression: string
+): { start: number; end: number } | null {
+  // Look for mathematical boundaries before and after the part
+  const beforeBoundary = /[\s,.()\[\]{};:"']|^/;
+  const afterBoundary = /[\s,.()\[\]{};:"']|$/;
   
-  // Find first key part
-  let pos = text.indexOf(keyParts[0]);
-  while (pos !== -1) {
-    // Check if other key parts are nearby
-    const contextStart = Math.max(0, pos - contextWords * 5);
-    const contextEnd = Math.min(text.length, pos + contextWords * 10);
-    const context = text.substring(contextStart, contextEnd);
-    
-    // Check if at least 60% of key parts are in the context
-    const foundParts = keyParts.filter(part => context.includes(part));
-    if (foundParts.length >= Math.ceil(keyParts.length * 0.6)) {
-      return pos;
+  let start = partStart;
+  let end = partStart + part.length;
+  
+  // Expand backwards
+  while (start > 0 && !beforeBoundary.test(text[start - 1])) {
+    start--;
+  }
+  
+  // Expand forwards
+  while (end < text.length && !afterBoundary.test(text[end])) {
+    end++;
+  }
+  
+  // Check if the expanded text is reasonable
+  const expandedText = text.substring(start, end);
+  if (expandedText.length > fullExpression.length * 1.5) {
+    // Expanded too much, probably not the right match
+    return null;
+  }
+  
+  return { start, end };
+}
+
+/**
+ * Map positions from normalized text back to original text
+ */
+function mapToOriginalPosition(
+  originalText: string,
+  normalizedText: string,
+  normalizedStart: number,
+  normalizedLength: number
+): { start: number; end: number } | null {
+  let originalPos = 0;
+  let normalizedPos = 0;
+  let foundStart = -1;
+  let foundEnd = -1;
+  
+  while (originalPos < originalText.length && normalizedPos <= normalizedStart + normalizedLength) {
+    if (normalizedPos === normalizedStart) {
+      foundStart = originalPos;
     }
     
-    // Try next occurrence
-    pos = text.indexOf(keyParts[0], pos + 1);
+    if (normalizedPos === normalizedStart + normalizedLength) {
+      foundEnd = originalPos;
+      break;
+    }
+    
+    // Skip whitespace in original that was normalized
+    if (/\s/.test(originalText[originalPos])) {
+      // Check if this whitespace exists in normalized
+      if (normalizedPos < normalizedText.length && normalizedText[normalizedPos] === ' ') {
+        normalizedPos++;
+        originalPos++;
+      } else {
+        // This whitespace was removed in normalization
+        originalPos++;
+      }
+    } else {
+      // Non-whitespace character
+      if (normalizedPos < normalizedText.length && 
+          originalText[originalPos] === normalizedText[normalizedPos]) {
+        normalizedPos++;
+        originalPos++;
+      } else {
+        // Mismatch - something went wrong
+        return null;
+      }
+    }
   }
   
-  return -1;
-}
-
-/**
- * Find where a math expression likely ends
- */
-function findExpressionEnd(
-  text: string,
-  startPos: number,
-  minLength: number
-): number {
-  let endPos = startPos + minLength;
-  
-  // Extend to capture the full expression
-  const mathChars = /[0-9a-zA-Z+\-*/=<>≤≥≠×÷±∓∞∑∏∫∂∇^()[\]{}.,\s]/;
-  
-  while (endPos < text.length && mathChars.test(text[endPos])) {
-    endPos++;
+  if (foundStart === -1 || foundEnd === -1) {
+    return null;
   }
   
-  // Trim trailing whitespace
-  while (endPos > startPos && /\s/.test(text[endPos - 1])) {
-    endPos--;
-  }
-  
-  return Math.max(endPos, startPos + minLength);
+  return { start: foundStart, end: foundEnd };
 }

@@ -14,6 +14,7 @@ import { sessionContext } from "../../helicone/sessionContext";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
 import { logger } from "../../logger";
 import { createChunks } from "./TextChunk";
+import { createChunksWithTool } from "./utils/createChunksWithTool";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
@@ -21,6 +22,8 @@ import {
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
+  useIntelligentChunking?: boolean;
+  chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -60,10 +63,14 @@ export interface FullDocumentAnalysisResult {
 
 export class PluginManager {
   private sessionConfig?: HeliconeSessionConfig;
+  private useIntelligentChunking: boolean;
+  private chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   private startTime: number = 0;
 
   constructor(config: PluginManagerConfig = {}) {
     this.sessionConfig = config.sessionConfig;
+    this.useIntelligentChunking = config.useIntelligentChunking ?? false;
+    this.chunkingStrategy = config.chunkingStrategy;
   }
 
   /**
@@ -82,11 +89,23 @@ export class PluginManager {
     }
 
     try {
-      // Create chunks
-      const chunks = createChunks(text, {
-        chunkSize: 1000,
-        chunkByParagraphs: false,
-      });
+      // Create chunks using the appropriate method
+      let chunks;
+      if (this.useIntelligentChunking) {
+        logger.info(`Using intelligent chunking with strategy: ${this.chunkingStrategy || 'hybrid'}`);
+        chunks = await createChunksWithTool(text, {
+          strategy: this.chunkingStrategy || 'hybrid',
+          maxChunkSize: 1500,
+          minChunkSize: 200,
+          overlap: 100,
+          preserveContext: true,
+        });
+      } else {
+        chunks = createChunks(text, {
+          chunkSize: 1000,
+          chunkByParagraphs: false,
+        });
+      }
 
       // Process with each plugin in parallel with improved error recovery
       const pluginResults = new Map<string, AnalysisResult>();

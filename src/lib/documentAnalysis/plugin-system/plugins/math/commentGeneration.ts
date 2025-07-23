@@ -1,7 +1,7 @@
 import type {
   ExtractedMathExpression,
 } from "@/tools/extract-math-expressions";
-import { ExtractedMathExpression as ExtractedMathExpressionClass } from "./index";
+import type { ExtractedMathExpression as ExtractedMathExpressionClass } from "./index";
 
 /**
  * Generate a comment for a single math expression

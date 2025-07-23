@@ -1,91 +1,66 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 
-// Define types for the tool
-export interface ExtractedClaim {
-  text: string;
-  topic: string;
-  importance: 'high' | 'medium' | 'low';
-  specificity: 'high' | 'medium' | 'low';
-  needsVerification?: boolean;
-}
-
-export interface ClaimContradiction {
-  claim1: string;
-  claim2: string;
-  explanation: string;
-}
-
-export interface ExtractFactualClaimsInput {
-  text: string;
-  checkContradictions?: boolean;
-  prioritizeVerification?: boolean;
-}
-
-export interface ExtractFactualClaimsOutput {
-  claims: ExtractedClaim[];
-  contradictions: ClaimContradiction[];
-  verificationPriority: {
-    high: ExtractedClaim[];
-    medium: ExtractedClaim[];
-    low: ExtractedClaim[];
-  };
-  totalClaims: number;
-  llmInteractions: RichLLMInteraction[];
-}
-
 // Claim schema
-const extractedClaimSchema = z.object({
-  text: z.string(),
-  topic: z.string(),
-  importance: z.enum(['high', 'medium', 'low']),
-  specificity: z.enum(['high', 'medium', 'low']),
-  needsVerification: z.boolean().optional()
+const extractedFactualClaimSchema = z.object({
+  originalText: z.string().describe('The exact claim as it appears in the text'),
+  topic: z.string().describe('Topic/category of the claim'),
+  importanceScore: z.number().min(0).max(100).describe('How important/central to the document'),
+  checkabilityScore: z.number().min(0).max(100).describe('How easily this can be fact-checked'),
+  truthProbability: z.number().min(0).max(100).describe('Estimated probability the fact-checker would verify as true')
 });
 
 // Input validation schema
 const inputSchema = z.object({
-  text: z.string().min(1).max(10000).describe('The text to analyze for factual claims'),
-  checkContradictions: z.boolean().default(true)
-    .describe('Whether to check for internal contradictions'),
-  prioritizeVerification: z.boolean().default(true)
-    .describe('Whether to categorize claims by verification priority')
+  text: z.string().min(1).max(50000).describe('The text to analyze for factual claims'),
+  instructions: z.string().optional().describe('Additional instructions for extraction'),
+  minQualityThreshold: z.number().min(0).max(100).default(50)
+    .describe('Minimum average score to include a claim'),
+  maxClaims: z.number().min(1).max(100).default(30)
+    .describe('Maximum number of claims to extract')
 }) satisfies z.ZodType<ExtractFactualClaimsInput>;
 
 // Output validation schema  
 const outputSchema = z.object({
-  claims: z.array(z.object({
-    text: z.string(),
-    topic: z.string(),
-    importance: z.enum(['high', 'medium', 'low']),
-    specificity: z.enum(['high', 'medium', 'low']),
-    needsVerification: z.boolean().optional()
-  })).describe('Extracted factual claims'),
-  contradictions: z.array(z.object({
-    claim1: z.string(),
-    claim2: z.string(),
-    explanation: z.string()
-  })).describe('Detected contradictions between claims'),
-  verificationPriority: z.object({
-    high: z.array(extractedClaimSchema),
-    medium: z.array(extractedClaimSchema),
-    low: z.array(extractedClaimSchema)
-  }).describe('Claims categorized by verification priority'),
-  totalClaims: z.number().describe('Total number of claims found'),
-  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring')
+  claims: z.array(extractedFactualClaimSchema).describe('Extracted factual claims with scores'),
+  summary: z.object({
+    totalFound: z.number(),
+    aboveThreshold: z.number(),
+    averageQuality: z.number()
+  }).describe('Summary statistics'),
+  llmInteraction: z.any().describe('LLM interaction for monitoring')
 }) satisfies z.ZodType<ExtractFactualClaimsOutput>;
+
+// Export types
+export type ExtractedFactualClaim = z.infer<typeof extractedFactualClaimSchema>;
+
+export interface ExtractFactualClaimsInput {
+  text: string;
+  instructions?: string;
+  minQualityThreshold?: number;
+  maxClaims?: number;
+}
+
+export interface ExtractFactualClaimsOutput {
+  claims: ExtractedFactualClaim[];
+  summary: {
+    totalFound: number;
+    aboveThreshold: number;
+    averageQuality: number;
+  };
+  llmInteraction?: any;
+}
 
 export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, ExtractFactualClaimsOutput> {
   config = {
     id: 'extract-factual-claims',
     name: 'Extract Factual Claims',
-    description: 'Extract verifiable factual claims from text and identify contradictions',
-    version: '1.0.0',
+    description: 'Extract and score verifiable factual claims from text',
+    version: '2.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.01-0.02 per analysis (depends on text length and claim count)'
+    costEstimate: '~$0.01-0.03 per analysis (depends on text length)'
   };
   
   inputSchema = inputSchema;
@@ -94,67 +69,56 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
   async execute(input: ExtractFactualClaimsInput, context: ToolContext): Promise<ExtractFactualClaimsOutput> {
     context.logger.info(`[ExtractFactualClaims] Analyzing text for factual claims`);
     
-    const llmInteractions: RichLLMInteraction[] = [];
-    
-    // Extract factual claims from text
-    const extractedClaims = await this.extractClaims(input.text, llmInteractions);
-    
-    // Mark claims that need verification
-    const claimsWithVerification = this.markClaimsForVerification(extractedClaims, input.prioritizeVerification ?? true);
-    
-    // Check for contradictions if requested
-    let contradictions: ClaimContradiction[] = [];
-    if (input.checkContradictions && claimsWithVerification.length > 1) {
-      contradictions = await this.detectContradictions(claimsWithVerification, llmInteractions);
-    }
-    
-    // Categorize by verification priority
-    const verificationPriority = this.categorizeByPriority(claimsWithVerification);
-    
-    context.logger.info(`[ExtractFactualClaims] Found ${extractedClaims.length} claims, ${contradictions.length} contradictions`);
-    
-    return {
-      claims: claimsWithVerification,
-      contradictions,
-      verificationPriority,
-      totalClaims: extractedClaims.length,
-      llmInteractions
-    };
-  }
-  
-  private async extractClaims(text: string, llmInteractions: RichLLMInteraction[]): Promise<ExtractedClaim[]> {
-    const systemPrompt = `You are a fact extraction system. Extract verifiable factual claims from text.
+    const systemPrompt = `You are an expert fact extraction system. Extract verifiable factual claims from text and score them.
 
 Look for:
-- Specific statistics or data points (GDP was $21T in 2023)
-- Historical facts (The Berlin Wall fell in 1989)
-- Scientific claims (Water boils at 100°C at sea level)
+- Specific statistics or data points (e.g., "GDP was $21T in 2023")
+- Historical facts (e.g., "The Berlin Wall fell in 1989")
+- Scientific claims (e.g., "Water boils at 100°C at sea level")
 - Claims about current events or recent developments
 - Statements about organizations, people, or places
-- Any claim presented as objective fact
+- Quantitative comparisons or rankings
+- Any claim presented as objective fact that can be verified
 
 Do NOT extract:
-- Opinions, predictions, or hypotheticals
-- General statements without specific facts
-- Questions or statements of uncertainty
-- Subjective assessments or evaluations
+- Opinions or subjective assessments
+- Predictions or forecasts (those go to the forecast extractor)
+- Hypotheticals or thought experiments
+- Vague generalizations without specifics
 
-For each claim, assess:
-- Importance: How critical is it to verify this claim?
-- Specificity: How specific and verifiable is the claim?`;
+For each claim, provide:
 
-    const userPrompt = `Extract factual claims from this text:\n\n${text}`;
+1. **Importance Score** (0-100): How central is this claim to the document's main argument?
+   - 80-100: Core claim that the entire argument depends on
+   - 60-79: Major supporting claim
+   - 40-59: Relevant but not critical
+   - Below 40: Minor or tangential claim
+
+2. **Checkability Score** (0-100): How easily can this be fact-checked?
+   - 80-100: Can be quickly verified with public sources (Wikipedia, official stats, etc.)
+   - 60-79: Verifiable but may require some research
+   - 40-59: Checkable in principle but challenging
+   - Below 40: Very difficult to verify or requires specialized access
+
+3. **Truth Probability** (0-100): Your best estimate of the probability that a fact-checker would verify this claim as TRUE
+   - 90-100: Almost certainly true (well-established facts, basic science, verified statistics)
+   - 70-89: Likely true (mainstream consensus, reputable sources)
+   - 50-69: Uncertain (conflicting sources, context-dependent, needs investigation)
+   - 30-49: Likely false (contradicts mainstream sources, suspicious claims)
+   - Below 30: Almost certainly false (known myths, clear misinformation)`;
+
+    const userPrompt = `${input.instructions ? input.instructions + '\n\n' : ''}Extract factual claims from this text:\n\n${input.text}`;
     
-    const result = await callClaudeWithTool<{ claims: ExtractedClaim[] }>({
+    const result = await callClaudeWithTool<{ claims: ExtractedFactualClaim[] }>({
       system: systemPrompt,
       messages: [{
         role: "user",
         content: userPrompt
       }],
-      max_tokens: 1500,
+      max_tokens: 2000,
       temperature: 0,
-      toolName: "extract_claims",
-      toolDescription: "Extract factual claims from text",
+      toolName: "extract_factual_claims",
+      toolDescription: "Extract and score factual claims from text",
       toolSchema: {
         type: "object",
         properties: {
@@ -163,118 +127,71 @@ For each claim, assess:
             items: {
               type: "object",
               properties: {
-                text: { type: "string", description: "The exact claim" },
-                topic: { type: "string", description: "Topic/category of the claim" },
-                importance: {
-                  type: "string",
-                  enum: ["high", "medium", "low"],
-                  description: "Importance of verifying this claim"
+                originalText: { 
+                  type: "string", 
+                  description: "The exact claim as it appears in the text" 
                 },
-                specificity: {
-                  type: "string",
-                  enum: ["high", "medium", "low"],
-                  description: "How specific/verifiable the claim is"
+                topic: { 
+                  type: "string", 
+                  description: "Topic/category (e.g., 'economics', 'history', 'science')" 
+                },
+                importanceScore: { 
+                  type: "number", 
+                  description: "0-100: How central to the document's argument" 
+                },
+                checkabilityScore: { 
+                  type: "number", 
+                  description: "0-100: How easily this can be fact-checked" 
+                },
+                truthProbability: {
+                  type: "number",
+                  description: "0-100: Estimated probability the fact-checker would verify as true"
                 }
               },
-              required: ["text", "topic", "importance", "specificity"]
+              required: ["originalText", "topic", "importanceScore", "checkabilityScore", "truthProbability"]
             }
           }
         },
         required: ["claims"]
-      }
-    }, llmInteractions);
+      },
+      enablePromptCaching: true
+    });
 
-    return result.toolResult.claims || [];
-  }
-  
-  private markClaimsForVerification(claims: ExtractedClaim[], prioritize: boolean): ExtractedClaim[] {
-    if (!prioritize) {
-      return claims.map(claim => ({ ...claim, needsVerification: false }));
-    }
+    const allClaims = result.toolResult.claims || [];
     
-    return claims.map(claim => ({
-      ...claim,
-      needsVerification: claim.importance === 'high' || claim.specificity === 'high'
-    }));
-  }
-  
-  private async detectContradictions(
-    claims: ExtractedClaim[], 
-    llmInteractions: RichLLMInteraction[]
-  ): Promise<ClaimContradiction[]> {
-    if (claims.length < 2) return [];
-    
-    const systemPrompt = `You are a contradiction detection system. Analyze a list of factual claims and identify any that contradict each other.
-
-Two claims contradict if:
-- They make opposing statements about the same fact
-- They provide conflicting data or statistics
-- They assert different timeframes for the same event
-- They attribute the same achievement to different entities
-
-Provide specific explanations for why claims contradict.`;
-
-    const userPrompt = `Identify contradictions in these claims:\n\n${claims.map((claim, i) => `${i + 1}. ${claim.text} (Topic: ${claim.topic})`).join('\n')}`;
-    
-    const result = await callClaudeWithTool<{ contradictions: Array<{ claim1Index: number; claim2Index: number; explanation: string }> }>({
-      system: systemPrompt,
-      messages: [{
-        role: "user",
-        content: userPrompt
-      }],
-      max_tokens: 1000,
-      temperature: 0,
-      toolName: "detect_contradictions",
-      toolDescription: "Detect contradictions between factual claims",
-      toolSchema: {
-        type: "object",
-        properties: {
-          contradictions: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                claim1Index: { type: "number", description: "Index of first contradicting claim (1-based)" },
-                claim2Index: { type: "number", description: "Index of second contradicting claim (1-based)" },
-                explanation: { type: "string", description: "Why these claims contradict" }
-              },
-              required: ["claim1Index", "claim2Index", "explanation"]
-            }
-          }
-        },
-        required: ["contradictions"]
-      }
-    }, llmInteractions);
-    
-    if (!result.toolResult.contradictions) return [];
-    
-    return result.toolResult.contradictions.map(contradiction => ({
-      claim1: claims[contradiction.claim1Index - 1]?.text || '',
-      claim2: claims[contradiction.claim2Index - 1]?.text || '',
-      explanation: contradiction.explanation
-    })).filter(c => c.claim1 && c.claim2);
-  }
-  
-  private categorizeByPriority(claims: ExtractedClaim[]): {
-    high: ExtractedClaim[];
-    medium: ExtractedClaim[];
-    low: ExtractedClaim[];
-  } {
-    const high: ExtractedClaim[] = [];
-    const medium: ExtractedClaim[] = [];
-    const low: ExtractedClaim[] = [];
-    
-    claims.forEach(claim => {
-      if (claim.importance === 'high' || claim.specificity === 'high') {
-        high.push(claim);
-      } else if (claim.importance === 'medium' || claim.specificity === 'medium') {
-        medium.push(claim);
-      } else {
-        low.push(claim);
-      }
+    // Filter claims based on quality threshold
+    const qualityClaims = allClaims.filter(claim => {
+      const avgScore = (claim.importanceScore + claim.checkabilityScore) / 2;
+      return avgScore >= (input.minQualityThreshold ?? 50);
     });
     
-    return { high, medium, low };
+    // Sort by priority score (prioritize important claims with low truth probability)
+    const sortedClaims = qualityClaims.sort((a, b) => {
+      // Priority = importance + checkability + (100 - truthProbability)
+      // This prioritizes claims that are important, checkable, and potentially false
+      const priorityA = a.importanceScore + a.checkabilityScore + (100 - a.truthProbability);
+      const priorityB = b.importanceScore + b.checkabilityScore + (100 - b.truthProbability);
+      return priorityB - priorityA;
+    }).slice(0, input.maxClaims);
+    
+    // Calculate summary statistics
+    const avgQuality = sortedClaims.length > 0
+      ? sortedClaims.reduce((sum, claim) => 
+          sum + (claim.importanceScore + claim.checkabilityScore) / 2, 0
+        ) / sortedClaims.length
+      : 0;
+    
+    context.logger.info(`[ExtractFactualClaims] Found ${allClaims.length} claims, ${sortedClaims.length} above threshold`);
+    
+    return {
+      claims: sortedClaims,
+      summary: {
+        totalFound: allClaims.length,
+        aboveThreshold: sortedClaims.length,
+        averageQuality: Math.round(avgQuality)
+      },
+      llmInteraction: result.interaction
+    };
   }
 }
 

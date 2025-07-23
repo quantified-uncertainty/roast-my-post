@@ -1,83 +1,36 @@
-/**
- * Tests for FactCheckPlugin
- */
-
-import { FactCheckPlugin } from './index';
-import { TextChunk } from '../../TextChunk';
+import { describe, it, expect } from '@jest/globals';
+import { FactCheckAnalyzerJob } from './index';
+import { FactCheckPlugin } from './plugin-wrapper';
 
 describe('FactCheckPlugin', () => {
-  let plugin: FactCheckPlugin;
-
-  beforeEach(() => {
-    plugin = new FactCheckPlugin();
+  it('should have correct metadata', () => {
+    expect(FactCheckPlugin.name()).toBe('Fact Checker');
+    expect(FactCheckPlugin.promptForWhenToUse()).toContain('factual claims');
+    const examples = FactCheckPlugin.routingExamples && FactCheckPlugin.routingExamples();
+    expect(examples).toBeDefined();
+    expect(examples?.[0]?.chunkText).toBe('Check if the facts in this article are accurate');
   });
 
-  describe('metadata', () => {
-    it('should have correct name', () => {
-      expect(plugin.name()).toBe('FACT_CHECK');
-    });
-
-    it('should provide usage prompt', () => {
-      const prompt = plugin.promptForWhenToUse();
-      expect(prompt).toContain('factual claims');
-      expect(prompt).toContain('statistics');
-      expect(prompt).toContain('Historical facts');
-    });
-
-    it('should provide routing examples', () => {
-      const examples = plugin.routingExamples();
-      expect(examples).toHaveLength(3);
-      expect(examples[0].shouldProcess).toBe(true);
-      expect(examples[1].shouldProcess).toBe(false);
-    });
+  it('should match static methods between job and plugin', () => {
+    expect(FactCheckAnalyzerJob.displayName()).toBe(FactCheckPlugin.name());
+    expect(FactCheckAnalyzerJob.promptForWhenToUse()).toBe(FactCheckPlugin.promptForWhenToUse());
+    const jobExamples = FactCheckAnalyzerJob.routingExamples();
+    const pluginExamples = FactCheckPlugin.routingExamples && FactCheckPlugin.routingExamples();
+    expect(jobExamples.length).toBe(pluginExamples?.length);
   });
 
-  describe('analyze', () => {
-    it('should return empty results for empty chunks', async () => {
-      const result = await plugin.analyze([], '');
-      
-      expect(result.summary).toContain('0 factual claims');
-      expect(result.comments).toHaveLength(0);
-      expect(result.cost).toBe(0);
-    });
-
-    it('should handle chunks without factual claims', async () => {
-      const chunks = [
-        new TextChunk(
-          'chunk1',
-          'I think the weather will be nice tomorrow.',
-          {
-            position: { start: 0, end: 40 }
-          }
-        )
-      ];
-
-      // This would make a real API call in production
-      // For unit tests, you'd want to mock the extractWithTool function
-      // Here we're just testing the structure
-      expect(plugin.analyze).toBeDefined();
-      expect(typeof plugin.analyze).toBe('function');
-    });
+  it('should be able to instantiate the job', () => {
+    const job = new FactCheckAnalyzerJob();
+    expect(job).toBeDefined();
   });
 
-  describe('getDebugInfo', () => {
-    it('should return debug information', () => {
-      const debugInfo = plugin.getDebugInfo();
-      
-      expect(debugInfo).toHaveProperty('findings');
-      expect(debugInfo).toHaveProperty('stats');
-      expect(debugInfo).toHaveProperty('stageResults');
-      expect((debugInfo.stats as any).potentialCount).toBe(0);
-    });
-  });
-
-  describe('SimpleAnalysisPlugin interface', () => {
-    it('should implement getCost method', () => {
-      expect(plugin.getCost()).toBe(0);
-    });
-
-    it('should implement getLLMInteractions method', () => {
-      expect(plugin.getLLMInteractions()).toEqual([]);
-    });
+  it('should handle empty document', async () => {
+    const job = new FactCheckAnalyzerJob();
+    const result = await job.analyze('', []);
+    
+    expect(result).toBeDefined();
+    expect(result.comments).toEqual([]);
+    expect(result.summary).toBeDefined();
+    expect(result.analysis).toBeDefined();
   });
 });

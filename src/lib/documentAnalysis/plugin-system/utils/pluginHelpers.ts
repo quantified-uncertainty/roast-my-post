@@ -95,7 +95,7 @@ export function locateFindings<TInvestigated extends GenericInvestigatedFinding>
 
     // Strategy 2: Math-specific location (if enabled)
     if (!highlight && options.mathSpecific) {
-      highlight = findMathLocation(searchText, documentText, { allowNormalization: true });
+      highlight = findMathLocation(searchText, documentText, { normalizeWhitespace: true });
     }
 
     // Strategy 3: Fuzzy matching (if enabled)

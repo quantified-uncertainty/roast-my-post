@@ -9,7 +9,7 @@ export default function CheckSpellingGrammarAutoPage() {
     <ToolPageTemplate
       tool={checkSpellingGrammarTool}
       formConfig={{
-        fieldOrder: ['text', 'context', 'includeStyle', 'maxErrors'],
+        fieldOrder: ['text', 'context', 'maxErrors'],
         fieldConfigs: {
           text: {
             label: 'Text to Check',
@@ -22,10 +22,6 @@ export default function CheckSpellingGrammarAutoPage() {
             placeholder: 'E.g., "Technical documentation", "Blog post", "Academic paper"...',
             helpText: 'Optional context helps tailor suggestions to your document type',
             rows: 2
-          },
-          includeStyle: {
-            label: 'Include Style Suggestions',
-            helpText: 'Check for clarity, conciseness, and writing style improvements'
           },
           maxErrors: {
             label: 'Maximum Errors to Return',
@@ -48,7 +44,6 @@ The team have been working hard on this project for the last 6 months. Between y
 
 Going forward, we should try and be more carefull with our planning. Me and my colleague will take the lead on this. Hopefully we wont make the same mistakes again.`,
               context: 'Business communication',
-              includeStyle: true,
               maxErrors: 50
             }
           },
@@ -62,7 +57,6 @@ When the server recieves a request, it first validates the input parameters. If 
 
 The response will include a status code and a body containing the requested data. In case of errors, the body will contain an error message explaining the issue.`,
               context: 'API documentation',
-              includeStyle: true,
               maxErrors: 30
             }
           },
@@ -75,7 +69,6 @@ Our findings suggests that excessive social media use correlates with increased 
 
 Previous research have shown similar results, although the methodologies varied significantly. We believe our approach provides a more comprehensive understanding of the phenomenon.`,
               context: 'Academic research paper',
-              includeStyle: true,
               maxErrors: 50
             }
           }
@@ -86,8 +79,7 @@ Previous research have shown similar results, although the methodologies varied 
         
         const errorTypeColors = {
           spelling: 'bg-red-100 border-red-300 text-red-900',
-          grammar: 'bg-orange-100 border-orange-300 text-orange-900',
-          style: 'bg-blue-100 border-blue-300 text-blue-900'
+          grammar: 'bg-orange-100 border-orange-300 text-orange-900'
         };
         
         return (
@@ -99,35 +91,11 @@ Previous research have shown similar results, although the methodologies varied 
               </p>
             </div>
 
-            {/* Statistics */}
-            {typedResult.summary && (
-              <div className="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">Summary Statistics</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Total issues:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.totalErrors}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Spelling errors:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.spellingErrors}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Grammar errors:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.grammarErrors}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Style suggestions:</span>
-                    <span className="ml-2 font-medium">{typedResult.summary.styleErrors}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Errors list */}
             {typedResult.errors.length === 0 ? (
               <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                <p className="text-blue-900">✓ No spelling, grammar, or style issues detected!</p>
+                <p className="text-blue-900">✓ No spelling or grammar issues detected!</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -145,9 +113,16 @@ Previous research have shown similar results, although the methodologies varied 
                         <span className="text-lg">📝</span>
                         <span className="font-semibold capitalize">{error.type}</span>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
-                        {error.type}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {error.importance && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-70">
+                            Importance: {error.importance}/100
+                          </span>
+                        )}
+                        <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
+                          {error.type}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="mb-2">
@@ -168,32 +143,6 @@ Previous research have shown similar results, although the methodologies varied 
               </div>
             )}
 
-            {/* Common patterns */}
-            {typedResult.commonPatterns && typedResult.commonPatterns.length > 0 && (
-              <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-                <h3 className="text-lg font-semibold mb-3">Common Patterns</h3>
-                <ul className="space-y-2">
-                  {typedResult.commonPatterns.map((pattern: any, i: number) => (
-                    <li key={i} className="text-sm">
-                      • <strong>{pattern.type}:</strong> {pattern.description} 
-                      <span className="text-gray-600"> (found {pattern.count} times)</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Recommendations */}
-            {typedResult.recommendations && typedResult.recommendations.length > 0 && (
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-semibold mb-3">Writing Recommendations</h3>
-                <ul className="space-y-2">
-                  {typedResult.recommendations.map((rec: string, i: number) => (
-                    <li key={i} className="text-sm">• {rec}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         );
       }}
