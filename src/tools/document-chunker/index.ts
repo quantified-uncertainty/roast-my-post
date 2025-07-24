@@ -673,9 +673,37 @@ export class DocumentChunkerTool extends Tool<
 
   // Helper methods
   private splitIntoSentences(text: string): string[] {
-    // Simple sentence splitting - could be enhanced with NLP library
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-    return sentences.map(s => s.trim()).filter(s => s.length > 0);
+    // Improved sentence splitting that handles common edge cases
+    // First, protect common abbreviations and decimal numbers
+    let protectedText = text
+      .replace(/\b(Dr|Mr|Mrs|Ms|Prof|Sr|Jr)\./g, '$1<PERIOD>')
+      .replace(/\b(\d+)\.(\d+)/g, '$1<PERIOD>$2') // Decimal numbers
+      .replace(/\b(i\.e|e\.g|etc|vs|Inc|Ltd|Co)\./gi, '$1<PERIOD>');
+    
+    // Split on sentence boundaries
+    const sentencePattern = /[.!?]+[\s\n]+(?=[A-Z])|[.!?]+$/g;
+    const sentences: string[] = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = sentencePattern.exec(protectedText)) !== null) {
+      const sentence = protectedText.slice(lastIndex, match.index + match[0].length).trim();
+      if (sentence) {
+        // Restore periods
+        sentences.push(sentence.replace(/<PERIOD>/g, '.'));
+      }
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Don't forget the last sentence if there's no ending punctuation
+    if (lastIndex < protectedText.length) {
+      const lastSentence = protectedText.slice(lastIndex).trim();
+      if (lastSentence) {
+        sentences.push(lastSentence.replace(/<PERIOD>/g, '.'));
+      }
+    }
+    
+    return sentences.filter(s => s.length > 0);
   }
 
   private getLineNumbers(text: string, startOffset: number, endOffset: number): { startLine: number; endLine: number } {

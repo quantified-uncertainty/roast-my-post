@@ -188,6 +188,7 @@ export function findSpellingErrorLocation(
     allowPartialMatch: options.allowPartialMatch,
     context: options.context,
     caseInsensitive: true, // Spelling errors might have case differences
+    normalizeQuotes: true, // Handle apostrophe variations
     normalizeWhitespace: false, // Preserve original spacing for spelling
     expandToBoundaries: 'none' // Don't expand spelling errors
   };

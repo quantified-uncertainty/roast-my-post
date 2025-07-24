@@ -113,7 +113,6 @@ export class PluginManager {
           strategy: this.chunkingStrategy || 'hybrid',
           maxChunkSize: 1500,
           minChunkSize: 200,
-          overlap: 100,
           preserveContext: true,
         });
       } else {

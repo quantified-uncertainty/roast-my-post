@@ -395,8 +395,8 @@ function createTextLocation(
 function normalizeQuotes(text: string): string {
   return text
     .replace(/[""]/g, '"')
-    .replace(/['']/g, "'")
-    .replace(/'/g, "'");  // Also normalize apostrophes
+    .replace(/[''ʼ]/g, "'")  // Include more apostrophe variants
+    .replace(/'/g, "'");     // Also normalize regular apostrophes
 }
 
 /**
