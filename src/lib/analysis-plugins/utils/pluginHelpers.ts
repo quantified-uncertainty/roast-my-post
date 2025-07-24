@@ -7,7 +7,7 @@ import type { Comment } from "@/types/documentSchema";
 import { generateFindingId } from "./findingHelpers";
 import { findMathLocation } from "../plugins/math/locationFinder";
 import { getLineNumberAtPosition, getLineAtPosition } from "./textHelpers";
-import { logger } from "../../../logger";
+import { logger } from "../../logger";
 
 // Generic types for plugin findings
 export interface GenericPotentialFinding {

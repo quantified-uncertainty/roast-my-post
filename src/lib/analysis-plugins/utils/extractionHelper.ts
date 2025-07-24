@@ -3,12 +3,12 @@
  * Makes extraction more functional and reusable across plugins
  */
 
-import { callClaudeWithTool, MODEL_CONFIG } from '../../../claude/wrapper';
-import { sessionContext } from '../../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../../helicone/sessions';
+import { callClaudeWithTool, MODEL_CONFIG } from '../../claude/wrapper';
+import { sessionContext } from '../../helicone/sessionContext';
+import { createHeliconeHeaders } from '../../helicone/sessions';
 import { TextChunk } from '../TextChunk';
-import { logger } from '../../../logger';
-import { estimateTokens } from '../../../tokenUtils';
+import { logger } from '../../logger';
+import { estimateTokens } from '../../tokenUtils';
 import { calculateCost as utilsCalculateCost, mapModelToCostModel } from '@/utils/costCalculator';
 import type { LLMInteraction } from '@/types/llm';
 

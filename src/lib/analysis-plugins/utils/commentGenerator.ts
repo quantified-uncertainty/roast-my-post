@@ -6,7 +6,7 @@ import type { Comment } from '@/types/documentSchema';
 import type { InvestigatedFinding, LocatedFinding } from '../types';
 import { findTextLocation, locateFinding } from './locationFinder';
 import { severityToImportance, sortByImportance } from './findingHelpers';
-import { logger } from '../../../logger';
+import { logger } from '../../logger';
 
 // Previously imported from deprecated-types
 // @deprecated - Plugins now generate comments directly
