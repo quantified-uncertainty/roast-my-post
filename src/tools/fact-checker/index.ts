@@ -49,6 +49,7 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: '~$0.01-0.02 per claim',
+    path: '/tools/fact-checker',
     status: 'stable' as const
   };
   

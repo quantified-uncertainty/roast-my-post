@@ -4,19 +4,21 @@ import { FactCheckPlugin } from './plugin-wrapper';
 
 describe('FactCheckPlugin', () => {
   it('should have correct metadata', () => {
-    expect(FactCheckPlugin.name()).toBe('Fact Checker');
-    expect(FactCheckPlugin.promptForWhenToUse()).toContain('factual claims');
-    const examples = FactCheckPlugin.routingExamples && FactCheckPlugin.routingExamples();
+    const plugin = new FactCheckPlugin();
+    expect(plugin.name()).toBe('Fact Checker');
+    expect(plugin.promptForWhenToUse()).toContain('factual claims');
+    const examples = plugin.routingExamples();
     expect(examples).toBeDefined();
-    expect(examples?.[0]?.chunkText).toBe('Check if the facts in this article are accurate');
+    expect(examples[0]?.chunkText).toBe('Check if the facts in this article are accurate');
   });
 
   it('should match static methods between job and plugin', () => {
-    expect(FactCheckAnalyzerJob.displayName()).toBe(FactCheckPlugin.name());
-    expect(FactCheckAnalyzerJob.promptForWhenToUse()).toBe(FactCheckPlugin.promptForWhenToUse());
+    const plugin = new FactCheckPlugin();
+    expect(FactCheckAnalyzerJob.displayName()).toBe(plugin.name());
+    expect(FactCheckAnalyzerJob.promptForWhenToUse()).toBe(plugin.promptForWhenToUse());
     const jobExamples = FactCheckAnalyzerJob.routingExamples();
-    const pluginExamples = FactCheckPlugin.routingExamples && FactCheckPlugin.routingExamples();
-    expect(jobExamples.length).toBe(pluginExamples?.length);
+    const pluginExamples = plugin.routingExamples();
+    expect(jobExamples.length).toBe(pluginExamples.length);
   });
 
   it('should be able to instantiate the job', () => {

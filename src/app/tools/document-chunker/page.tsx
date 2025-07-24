@@ -80,7 +80,7 @@ export default function DocumentChunkerPage() {
   const [selectedExample, setSelectedExample] = useState<keyof typeof sampleDocuments>('markdown');
 
   const formConfig = {
-    fieldOrder: ['text', 'strategy', 'maxChunkSize', 'minChunkSize', 'overlap', 'preserveContext'] as ('text' | 'strategy' | 'maxChunkSize' | 'minChunkSize' | 'overlap' | 'preserveContext')[],
+    fieldOrder: ['text', 'strategy', 'targetWords', 'maxChunkSize', 'minChunkSize', 'overlap', 'preserveContext'] as ('text' | 'strategy' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'overlap' | 'preserveContext')[],
     fieldConfigs: {
       text: {
         label: 'Document Text',
@@ -90,6 +90,10 @@ export default function DocumentChunkerPage() {
       strategy: {
         label: 'Chunking Strategy',
         helpText: 'Choose the chunking strategy based on your document type',
+      },
+      targetWords: {
+        label: 'Target Words (Markdown)',
+        helpText: 'Target word count per chunk for recursive markdown chunking',
       },
       maxChunkSize: {
         label: 'Maximum Chunk Size',
@@ -116,6 +120,7 @@ export default function DocumentChunkerPage() {
         data: {
           text: sampleDocuments.markdown,
           strategy: 'markdown' as const,
+          targetWords: 500,
           maxChunkSize: 1500,
           minChunkSize: 200,
           overlap: 100,
@@ -128,6 +133,7 @@ export default function DocumentChunkerPage() {
         data: {
           text: sampleDocuments.technical,
           strategy: 'semantic' as const,
+          targetWords: 500,
           maxChunkSize: 1000,
           minChunkSize: 300,
           overlap: 150,
@@ -140,6 +146,7 @@ export default function DocumentChunkerPage() {
         data: {
           text: sampleDocuments.mixed,
           strategy: 'hybrid' as const,
+          targetWords: 500,
           maxChunkSize: 1200,
           minChunkSize: 200,
           overlap: 100,

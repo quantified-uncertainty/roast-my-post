@@ -1,11 +1,13 @@
 import type { Comment } from '@/types/documentSchema';
 import type { VerifiedFact } from './index';
+import type { FactLocation } from './locationFinder';
+import { THRESHOLDS, FORMATTING } from './constants';
 
 export function generateFactCheckComments(
   fact: VerifiedFact,
-  location: { startOffset: number; endOffset: number }
+  location: FactLocation
 ): Comment {
-  const content = generateCommentContent(fact);
+  const content = generateCommentContent(fact, location);
   
   const comment: Comment = {
     description: content,
@@ -49,13 +51,13 @@ function getCommentTitle(fact: VerifiedFact): string {
   }
   
   // Unverified claims - show estimated truth probability
-  if (fact.claim.truthProbability <= 30) {
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE) {
     return `🚨 Likely False: ${fact.topic}`;
   }
-  if (fact.claim.truthProbability <= 50) {
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
     return `⚠️ Questionable: ${fact.topic}`;
   }
-  if (fact.claim.importanceScore >= 80) {
+  if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH) {
     return `📌 Key Claim: ${fact.topic}`;
   }
   return `📊 Factual Claim: ${fact.topic}`;
@@ -67,7 +69,7 @@ function getObservation(fact: VerifiedFact): string | undefined {
   }
   
   // For unverified claims, show truth probability estimate
-  if (!fact.verification && fact.claim.truthProbability <= 70) {
+  if (!fact.verification && fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM) {
     return `Estimated ${fact.claim.truthProbability}% probability of being true based on initial assessment.`;
   }
   
@@ -88,10 +90,10 @@ function getSignificance(fact: VerifiedFact): string | undefined {
   }
   
   // For unverified but important claims
-  if (fact.claim.importanceScore >= 80 && !fact.verification) {
+  if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH && !fact.verification) {
     return 'This is a key claim that would benefit from verification or citation.';
   }
-  if (fact.claim.truthProbability <= 30 && !fact.verification) {
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE && !fact.verification) {
     return 'This claim appears questionable and should be carefully reviewed.';
   }
   
@@ -100,7 +102,7 @@ function getSignificance(fact: VerifiedFact): string | undefined {
 
 function getImportanceScore(fact: VerifiedFact): number {
   // Base importance from claim scores
-  let importance = fact.claim.importanceScore / 100;
+  let importance = fact.claim.importanceScore / FORMATTING.MAX_SCORE;
   
   // Boost importance for verified false claims
   if (fact.verification?.verdict === 'false') {
@@ -111,18 +113,24 @@ function getImportanceScore(fact: VerifiedFact): number {
     importance = Math.min(1, importance + 0.2);
   }
   // Boost for likely false unverified claims
-  else if (!fact.verification && fact.claim.truthProbability <= 40) {
+  else if (!fact.verification && fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_VERY_LOW) {
     importance = Math.min(1, importance + 0.2);
   }
   
   return importance;
 }
 
-function generateCommentContent(fact: VerifiedFact): string {
+function generateCommentContent(fact: VerifiedFact, location?: FactLocation): string {
   const parts: string[] = [];
   
+  // Location info if available
+  if (location) {
+    parts.push(`📍 **Line ${location.lineNumber}**`);
+    parts.push(`\n`);
+  }
+  
   // Scores summary
-  parts.push(`**Scores**: Importance ${fact.claim.importanceScore}/100, Checkability ${fact.claim.checkabilityScore}/100`);
+  parts.push(`**Scores**: Importance ${fact.claim.importanceScore}/${FORMATTING.MAX_SCORE}, Checkability ${fact.claim.checkabilityScore}/${FORMATTING.MAX_SCORE}`);
   
   if (!fact.verification) {
     parts.push(`\n**Truth Probability**: ${fact.claim.truthProbability}% (estimated)`);
