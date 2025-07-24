@@ -1,83 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators/ToolPageTemplate';
 import documentChunkerTool from '@/tools/document-chunker';
-import type { DocumentChunkerInput, DocumentChunkerOutput } from '@/tools/document-chunker';
-
-const sampleDocuments = {
-  markdown: `# Introduction to Machine Learning
-
-Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.
-
-## Types of Machine Learning
-
-### Supervised Learning
-In supervised learning, the algorithm learns from labeled training data. Each example in the training set consists of an input object and a desired output value.
-
-Common algorithms include:
-- Linear Regression
-- Decision Trees
-- Neural Networks
-
-### Unsupervised Learning
-Unsupervised learning algorithms work with unlabeled data, discovering hidden patterns or structures within the data.
-
-Examples include:
-- K-means clustering
-- Principal Component Analysis (PCA)
-- Autoencoders
-
-## Applications
-
-Machine learning has numerous applications across various domains:
-
-1. **Healthcare**: Disease diagnosis, drug discovery, personalized treatment
-2. **Finance**: Fraud detection, algorithmic trading, credit scoring
-3. **Transportation**: Autonomous vehicles, route optimization, traffic prediction
-
-## Code Example
-
-\`\`\`python
-from sklearn.linear_model import LinearRegression
-import numpy as np
-
-# Sample data
-X = np.array([[1], [2], [3], [4], [5]])
-y = np.array([2, 4, 6, 8, 10])
-
-# Create and train model
-model = LinearRegression()
-model.fit(X, y)
-
-# Make predictions
-predictions = model.predict([[6], [7]])
-print(f"Predictions: {predictions}")
-\`\`\`
-
-## Conclusion
-
-Machine learning continues to revolutionize how we approach complex problems, enabling computers to learn from data and make intelligent decisions.`,
-
-  technical: `The quantum entanglement phenomenon demonstrates non-local correlations between particles. When two particles become entangled, measuring the state of one particle instantly affects the state of the other, regardless of the distance between them. This "spooky action at a distance," as Einstein called it, has been experimentally verified through Bell inequality violations. The implications for quantum computing are profound: entangled qubits can perform parallel computations exponentially faster than classical bits. Current research focuses on maintaining coherence times and reducing decoherence through error correction codes and topological quantum computing approaches.`,
-
-  mixed: `In today's analysis, we'll examine the market performance of tech stocks. AAPL showed a 3.2% increase, reaching $195.83. This represents a 15% gain over the past quarter.
-
-The calculation for portfolio return is:
-Portfolio Return = (End Value - Start Value) / Start Value × 100
-= ($125,000 - $100,000) / $100,000 × 100
-= 25%
-
-Key factors influencing the market include:
-• Federal Reserve interest rate decisions
-• Q3 earnings reports exceeding expectations
-• Growing AI adoption in enterprise
-
-Looking forward, analysts predict continued volatility with a 60% probability of reaching new highs by year-end.`,
-};
+import type { DocumentChunkerOutput } from '@/tools/document-chunker';
+import {
+  technicalDocumentation,
+  academicPaper,
+  tutorialGuide,
+  policyDocument,
+  researchReport,
+  mixedContent,
+} from './examples';
 
 export default function DocumentChunkerPage() {
-  const [selectedExample, setSelectedExample] = useState<keyof typeof sampleDocuments>('markdown');
 
   const formConfig = {
     fieldOrder: ['text', 'strategy', 'targetWords', 'maxChunkSize', 'minChunkSize', 'overlap', 'preserveContext'] as ('text' | 'strategy' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'overlap' | 'preserveContext')[],
@@ -115,12 +50,12 @@ export default function DocumentChunkerPage() {
     submitButtonText: 'Chunk Document',
     examples: [
       {
-        name: 'Markdown Document',
-        description: 'Technical documentation with headers and code',
+        name: 'API Documentation',
+        description: 'Technical documentation with authentication, endpoints, and code examples',
         data: {
-          text: sampleDocuments.markdown,
+          text: technicalDocumentation,
           strategy: 'markdown' as const,
-          targetWords: 500,
+          targetWords: 400,
           maxChunkSize: 1500,
           minChunkSize: 200,
           overlap: 100,
@@ -128,27 +63,66 @@ export default function DocumentChunkerPage() {
         },
       },
       {
-        name: 'Technical Paper',
-        description: 'Dense technical content',
+        name: 'Academic Paper',
+        description: 'Research paper on climate prediction with methodology and results',
         data: {
-          text: sampleDocuments.technical,
-          strategy: 'semantic' as const,
-          targetWords: 500,
-          maxChunkSize: 1000,
+          text: academicPaper,
+          strategy: 'markdown' as const,
+          targetWords: 450,
+          maxChunkSize: 1800,
           minChunkSize: 300,
           overlap: 150,
           preserveContext: true,
         },
       },
       {
-        name: 'Mixed Content',
-        description: 'Document with various content types',
+        name: 'Tutorial Guide',
+        description: 'Step-by-step web development tutorial with code samples',
         data: {
-          text: sampleDocuments.mixed,
-          strategy: 'hybrid' as const,
+          text: tutorialGuide,
+          strategy: 'markdown' as const,
           targetWords: 500,
-          maxChunkSize: 1200,
+          maxChunkSize: 2000,
+          minChunkSize: 250,
+          overlap: 100,
+          preserveContext: true,
+        },
+      },
+      {
+        name: 'Policy Document',
+        description: 'Formal policy with numbered sections and procedures',
+        data: {
+          text: policyDocument,
+          strategy: 'markdown' as const,
+          targetWords: 350,
+          maxChunkSize: 1500,
           minChunkSize: 200,
+          overlap: 75,
+          preserveContext: true,
+        },
+      },
+      {
+        name: 'Research Report',
+        description: 'Market analysis with data, projections, and technical insights',
+        data: {
+          text: researchReport,
+          strategy: 'hybrid' as const,
+          targetWords: 400,
+          maxChunkSize: 1600,
+          minChunkSize: 300,
+          overlap: 120,
+          preserveContext: true,
+        },
+      },
+      {
+        name: 'Financial Report',
+        description: 'Quarterly earnings with metrics, tables, and code examples',
+        data: {
+          text: mixedContent,
+          strategy: 'semantic' as const,
+          targetWords: 450,
+          maxChunkSize: 1800,
+          minChunkSize: 250,
           overlap: 100,
           preserveContext: true,
         },

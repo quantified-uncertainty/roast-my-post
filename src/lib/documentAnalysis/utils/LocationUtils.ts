@@ -3,8 +3,8 @@
  * Used by both plugins and highlight extraction.
  */
 
-import { TextChunk } from '../plugin-system/TextChunk';
-import { Finding } from '../plugin-system/types';
+import { TextChunk } from '../../analysis-plugins/TextChunk';
+import { Finding } from '../../analysis-plugins/types';
 
 export interface LineInfo {
   lineNumber: number; // 1-based line number for human readability

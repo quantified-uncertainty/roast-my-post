@@ -94,6 +94,8 @@ export class ExtractForecastingClaimsTool extends Tool<
     version: "2.0.0",
     category: "analysis" as const,
     costEstimate: "~$0.01-0.03 per analysis (uses Claude Sonnet)",
+    path: "/tools/extract-forecasting-claims",
+    status: "stable" as const
   };
 
   inputSchema = inputSchema;

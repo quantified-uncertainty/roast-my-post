@@ -3,7 +3,7 @@
  * Combines strategies from forecast, fact-check, and spelling plugins
  */
 
-import { getLineNumberAtPosition, getLineAtPosition } from "../plugin-system/utils/textHelpers";
+import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
 
 export interface TextLocation {
   startOffset: number;

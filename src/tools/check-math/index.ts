@@ -78,7 +78,9 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     description: 'Analyze text for mathematical errors including calculations, logic, units, and notation using Claude',
     version: '1.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.02 per check (1 Claude call with longer analysis)'
+    costEstimate: '~$0.02 per check (1 Claude call with longer analysis)',
+    path: '/tools/check-math',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;

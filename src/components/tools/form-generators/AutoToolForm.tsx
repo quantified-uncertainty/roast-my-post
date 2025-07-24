@@ -9,7 +9,9 @@ import {
   TextareaField,
   NumberInputField,
   CheckboxField,
-  SelectField
+  SelectField,
+  ArrayField,
+  ObjectField
 } from './FormFields';
 
 // Map Zod types to form field components
@@ -35,23 +37,31 @@ function getFieldComponent(schema: z.ZodTypeAny, fieldConfig?: any): React.Compo
     return SelectField;
   }
   
+  if (schema instanceof z.ZodArray) {
+    return ArrayField;
+  }
+  
+  if (schema instanceof z.ZodObject) {
+    return ObjectField;
+  }
+  
   if (schema instanceof z.ZodLiteral) {
     return TextInputField;
   }
   
   // Handle optional types
   if (schema instanceof z.ZodOptional) {
-    return getFieldComponent(schema._def.innerType);
+    return getFieldComponent(schema._def.innerType, fieldConfig);
   }
   
   // Handle default types
   if (schema instanceof z.ZodDefault) {
-    return getFieldComponent(schema._def.innerType);
+    return getFieldComponent(schema._def.innerType, fieldConfig);
   }
   
   // Handle nullable types
   if (schema instanceof z.ZodNullable) {
-    return getFieldComponent(schema._def.innerType);
+    return getFieldComponent(schema._def.innerType, fieldConfig);
   }
   
   return null;
@@ -211,6 +221,22 @@ export function AutoToolForm<T extends Record<string, any>>({
               required={required}
               config={fieldConfig}
               options={enumValues}
+            />
+          );
+        }
+        
+        // For select fields with options in config
+        if (FieldComponent === SelectField && fieldConfig?.options) {
+          return (
+            <SelectField
+              key={fieldName}
+              name={fieldName}
+              value={formData[fieldName]}
+              onChange={(value) => handleFieldChange(fieldName, value)}
+              error={validationErrors[fieldName]}
+              required={required}
+              config={fieldConfig}
+              options={fieldConfig.options}
             />
           );
         }

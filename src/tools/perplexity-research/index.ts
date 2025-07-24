@@ -53,7 +53,9 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
     description: 'Web-enhanced research using Perplexity Sonar models via OpenRouter',
     version: '1.0.0',
     category: 'research' as const,
-    costEstimate: '~$0.001-0.005 per query (via OpenRouter)'
+    costEstimate: '~$0.001-0.005 per query (via OpenRouter)',
+    path: '/tools/perplexity-research',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;

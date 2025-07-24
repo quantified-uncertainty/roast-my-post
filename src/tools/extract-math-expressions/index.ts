@@ -59,7 +59,9 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     description: 'Extract and analyze mathematical expressions from text, including error detection and complexity assessment',
     version: '1.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.02 per extraction (1 Claude call)'
+    costEstimate: '~$0.02 per extraction (1 Claude call)',
+    path: '/tools/extract-math-expressions',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;

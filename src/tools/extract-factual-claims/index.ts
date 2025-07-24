@@ -60,7 +60,9 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
     description: 'Extract and score verifiable factual claims from text',
     version: '2.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.01-0.03 per analysis (depends on text length)'
+    costEstimate: '~$0.01-0.03 per analysis (depends on text length)',
+    path: '/tools/extract-factual-claims',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;

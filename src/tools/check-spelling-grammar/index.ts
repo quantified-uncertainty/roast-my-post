@@ -51,7 +51,9 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
     description: 'Analyze text for spelling and grammar errors using Claude',
     version: '1.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.01 per check (1 Claude call)'
+    costEstimate: '~$0.01 per check (1 Claude call)',
+    path: '/tools/check-spelling-grammar',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;

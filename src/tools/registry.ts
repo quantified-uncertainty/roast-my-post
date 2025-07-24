@@ -8,6 +8,7 @@ import ExtractFactualClaimsTool from './extract-factual-claims';
 import CheckSpellingGrammarTool from './check-spelling-grammar';
 import ExtractMathExpressionsTool from './extract-math-expressions';
 import DocumentChunkerTool from './document-chunker';
+import TextLocationFinderTool from './text-location-finder';
 
 // Tool registry to manage all available tools
 export class ToolRegistry {
@@ -24,6 +25,7 @@ export class ToolRegistry {
     this.register(CheckSpellingGrammarTool);
     this.register(ExtractMathExpressionsTool);
     this.register(DocumentChunkerTool);
+    this.register(TextLocationFinderTool);
   }
   
   register(tool: Tool): void {

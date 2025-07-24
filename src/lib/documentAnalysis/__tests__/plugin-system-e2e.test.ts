@@ -1,5 +1,5 @@
 import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
-import { MathPlugin } from '../plugin-system/plugins/math';
+import { MathPlugin } from '../../analysis-plugins/plugins/math';
 import type { Document } from '../../../types/documents';
 import type { Agent } from '../../../types/agentSchema';
 
