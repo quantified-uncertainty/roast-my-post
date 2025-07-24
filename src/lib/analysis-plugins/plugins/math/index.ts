@@ -58,6 +58,17 @@ export class ExtractedMathExpression {
       }
     );
 
+    if (!chunkLocation) {
+      logger.warn(
+        `Math expression not found in chunk: "${this.expression.originalText}"`,
+        {
+          chunkId: this.chunk.id,
+          chunkTextPreview: this.chunk.text.slice(0, 200) + '...',
+          searchedFor: this.expression.originalText
+        }
+      );
+    }
+    
     if (!chunkLocation || !this.chunk.metadata?.position) {
       logger.warn(
         `Could not find location for math expression: ${this.expression.originalText}`
@@ -169,18 +180,32 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       return this.getResults();
     }
 
-    logger.info("MathAnalyzer: Starting analysis");
+    try {
+      logger.info("MathAnalyzer: Starting analysis");
+      logger.info(`MathAnalyzer: Processing ${chunks.length} chunks`);
 
-    await this.extractMathExpressions();
-    this.createComments();
-    this.generateAnalysis();
+      await this.extractMathExpressions();
+      
+      logger.info(`MathAnalyzer: Extracted ${this.extractedExpressions.length} math expressions from document`);
+      this.createComments();
+      
+      logger.info(`MathAnalyzer: Created ${this.comments.length} comments`);
+      this.generateAnalysis();
 
-    this.hasRun = true;
-    logger.info(
-      `MathAnalyzer: Analysis complete - ${this.comments.length} comments generated`
-    );
+      this.hasRun = true;
+      logger.info(
+        `MathAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+      );
 
-    return this.getResults();
+      return this.getResults();
+    } catch (error) {
+      logger.error("MathAnalyzer: Fatal error during analysis", error);
+      // Return a partial result instead of throwing
+      this.hasRun = true;
+      this.summary = "Analysis failed due to an error";
+      this.analysis = "The mathematical analysis could not be completed due to a technical error.";
+      return this.getResults();
+    }
   }
 
   public getResults(): AnalysisResult {

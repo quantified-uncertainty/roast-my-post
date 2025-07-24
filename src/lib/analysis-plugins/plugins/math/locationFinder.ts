@@ -36,13 +36,26 @@ export function findMathLocation(
   const normalizedExpression = normalizeForMatching(mathExpression, options);
   const normalizedChunk = normalizeForMatching(chunkText, options);
   
+  logger.debug('findMathLocation: Searching for math expression', {
+    expression: mathExpression,
+    normalizedExpression,
+    chunkLength: chunkText.length,
+    options
+  });
+  
   // First try exact match in normalized text
   let startIndex = normalizedChunk.indexOf(normalizedExpression);
+  
+  if (startIndex !== -1) {
+    logger.debug('findMathLocation: Found exact match', { startIndex });
+  }
   
   // If not found and partial match is allowed, try fuzzy matching
   if (startIndex === -1 && options.allowPartialMatch) {
     // Try to find key parts of the expression
     const keyParts = extractKeyParts(normalizedExpression);
+    
+    logger.debug('findMathLocation: Trying partial match with key parts', { keyParts });
     
     for (const part of keyParts) {
       const partIndex = normalizedChunk.indexOf(part);
@@ -57,6 +70,7 @@ export function findMathLocation(
         
         if (expandedMatch) {
           startIndex = expandedMatch.start;
+          logger.debug('findMathLocation: Found via key part expansion', { part, startIndex });
           break;
         }
       }

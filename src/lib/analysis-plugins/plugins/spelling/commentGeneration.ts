@@ -7,8 +7,13 @@ import type { SpellingErrorWithLocation } from "./index";
 export function generateSpellingComment(error: SpellingGrammarError): string {
   const parts: string[] = [];
   
+  // Safety check for required fields
+  if (!error.text || !error.correction) {
+    return "**Error**: Invalid spelling/grammar error data";
+  }
+  
   // Start with error type
-  const typeLabel = error.type.charAt(0).toUpperCase() + error.type.slice(1);
+  const typeLabel = error.type ? error.type.charAt(0).toUpperCase() + error.type.slice(1) : 'Error';
   parts.push(`**${typeLabel}**:`);
   
   // Show the correction
@@ -48,7 +53,9 @@ export function generateDocumentSummary(errors: SpellingErrorWithLocation[]): st
     
     const examples = errorsByType.spelling.slice(0, 5);
     for (const example of examples) {
-      sections.push(`- "${example.error.text}" → "${example.error.correction}"`);
+      if (example.error.text && example.error.correction) {
+        sections.push(`- "${example.error.text}" → "${example.error.correction}"`);
+      }
     }
     
     if (errorsByType.spelling.length > 5) {
@@ -62,9 +69,11 @@ export function generateDocumentSummary(errors: SpellingErrorWithLocation[]): st
     
     const examples = errorsByType.grammar.slice(0, 5);
     for (const example of examples) {
-      sections.push(`- "${example.error.text}" → "${example.error.correction}"`);
-      if (example.error.context) {
-        sections.push(`  - Context: *${example.error.context}*`);
+      if (example.error.text && example.error.correction) {
+        sections.push(`- "${example.error.text}" → "${example.error.correction}"`);
+        if (example.error.context) {
+          sections.push(`  - Context: *${example.error.context}*`);
+        }
       }
     }
     
@@ -130,24 +139,36 @@ function findCommonPatterns(errors: SpellingErrorWithLocation[]): string[] {
   const spellingErrors = errors.filter(e => e.error.type === 'spelling');
   
   // Their/there/they're confusion
-  const homophones = spellingErrors.filter(e => 
-    (e.error.text.toLowerCase().includes('their') || 
-     e.error.text.toLowerCase().includes('there') || 
-     e.error.text.toLowerCase().includes('theyre')) &&
-    (e.error.correction.toLowerCase().includes('their') || 
-     e.error.correction.toLowerCase().includes('there') || 
-     e.error.correction.toLowerCase().includes("they're"))
-  );
+  const homophones = spellingErrors.filter(e => {
+    // Safety check for undefined text/correction
+    if (!e.error.text || !e.error.correction) return false;
+    
+    const text = e.error.text.toLowerCase();
+    const correction = e.error.correction.toLowerCase();
+    
+    return (text.includes('their') || 
+            text.includes('there') || 
+            text.includes('theyre')) &&
+           (correction.includes('their') || 
+            correction.includes('there') || 
+            correction.includes("they're"));
+  });
   
   if (homophones.length > 0) {
     patterns.push(`Confusion with their/there/they're found ${homophones.length} time${homophones.length > 1 ? 's' : ''}`);
   }
   
   // Its/it's confusion
-  const itsConfusion = spellingErrors.filter(e => 
-    (e.error.text.toLowerCase() === 'its' && e.error.correction.toLowerCase() === "it's") ||
-    (e.error.text.toLowerCase() === "it's" && e.error.correction.toLowerCase() === "its")
-  );
+  const itsConfusion = spellingErrors.filter(e => {
+    // Safety check for undefined text/correction
+    if (!e.error.text || !e.error.correction) return false;
+    
+    const text = e.error.text.toLowerCase();
+    const correction = e.error.correction.toLowerCase();
+    
+    return (text === 'its' && correction === "it's") ||
+           (text === "it's" && correction === "its");
+  });
   
   if (itsConfusion.length > 0) {
     patterns.push(`Confusion with its/it's found ${itsConfusion.length} time${itsConfusion.length > 1 ? 's' : ''}`);

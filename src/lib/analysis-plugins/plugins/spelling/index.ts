@@ -81,19 +81,34 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       return this.getResults();
     }
 
-    logger.info("SpellingAnalyzer: Starting analysis");
+    try {
+      logger.info("SpellingAnalyzer: Starting analysis");
 
-    await this.checkSpellingAndGrammar();
-    this.findErrorLocations();
-    this.createComments();
-    this.generateAnalysis();
+      await this.checkSpellingAndGrammar();
+      
+      logger.info(`SpellingAnalyzer: Found ${this.errors.length} errors, finding locations...`);
+      this.findErrorLocations();
+      
+      logger.info(`SpellingAnalyzer: Creating comments from ${this.errors.filter(e => e.location).length} located errors...`);
+      this.createComments();
+      
+      logger.info("SpellingAnalyzer: Generating analysis summary...");
+      this.generateAnalysis();
 
-    this.hasRun = true;
-    logger.info(
-      `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated`
-    );
+      this.hasRun = true;
+      logger.info(
+        `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+      );
 
-    return this.getResults();
+      return this.getResults();
+    } catch (error) {
+      logger.error("SpellingAnalyzer: Fatal error during analysis", error);
+      // Return a partial result instead of throwing
+      this.hasRun = true;
+      this.summary = "Analysis failed due to an error";
+      this.analysis = "The spelling and grammar analysis could not be completed due to a technical error.";
+      return this.getResults();
+    }
   }
 
   public getResults(): AnalysisResult {
@@ -168,9 +183,14 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       if (chunkResult.status === 'fulfilled') {
         const { chunk, result } = chunkResult.value;
         
-        // Store errors with their chunks
+        // Store errors with their chunks, filtering out invalid ones
         for (const error of result.errors) {
-          this.errors.push({ error, chunk });
+          // Validate error has required fields
+          if (error && error.text && typeof error.text === 'string' && error.text.trim()) {
+            this.errors.push({ error, chunk });
+          } else {
+            logger.warn('SpellingAnalyzer: Skipping invalid error from LLM', { error });
+          }
         }
 
         // Skip LLM interaction tracking for now - it's not critical
@@ -200,6 +220,16 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     quotedText: string;
   } | null {
     const { error, chunk } = errorWithChunk;
+    
+    // Safety check for undefined error text
+    if (!error.text || typeof error.text !== 'string') {
+      logger.warn(`SpellingAnalyzer: Invalid error text - skipping`, { 
+        errorText: error.text,
+        correction: error.correction,
+        type: error.type
+      });
+      return null;
+    }
     
     const chunkLocation = findSpellingErrorLocation(
       error.text,

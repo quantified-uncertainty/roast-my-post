@@ -11,7 +11,6 @@ export interface DocumentChunkerInput {
   strategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   maxChunkSize?: number;
   minChunkSize?: number;
-  overlap?: number;
   preserveContext?: boolean;
   targetWords?: number; // Target word count for recursive chunking
 }
@@ -63,13 +62,6 @@ const inputSchema = z.object({
     .optional()
     .default(200)
     .describe("Minimum size of each chunk in characters"),
-  overlap: z
-    .number()
-    .min(0)
-    .max(500)
-    .optional()
-    .default(100)
-    .describe("Number of characters to overlap between chunks"),
   preserveContext: z
     .boolean()
     .optional()
@@ -566,15 +558,8 @@ export class DocumentChunkerTool extends Tool<
             },
           });
           
-          // Add overlap if specified
-          if (options.overlap && options.overlap > 0) {
-            const overlapSentences = this.getOverlapSentences(currentChunk, options.overlap);
-            currentChunk = overlapSentences;
-            chunkStartOffset = currentOffset - overlapSentences.join(' ').length;
-          } else {
-            currentChunk = [];
-            chunkStartOffset = currentOffset + 1;
-          }
+          currentChunk = [];
+          chunkStartOffset = currentOffset + 1;
         }
       }
       
@@ -655,7 +640,6 @@ export class DocumentChunkerTool extends Tool<
   ): DocumentChunk[] {
     const chunks: DocumentChunk[] = [];
     const chunkSize = options.maxChunkSize || 1500;
-    const overlap = options.overlap || 100;
     let position = 0;
     let chunkId = 0;
 
@@ -673,12 +657,12 @@ export class DocumentChunkerTool extends Tool<
         endLine,
         metadata: {
           type: 'mixed',
-          isComplete: position + chunkSize >= text.length || end === text.length,
+          isComplete: end === text.length,
           confidence: 0.7,
         },
       });
 
-      position += chunkSize - overlap;
+      position = end;
     }
 
     return chunks;
@@ -720,18 +704,6 @@ export class DocumentChunkerTool extends Tool<
     return goodChunks / chunks.length > 0.7;
   }
 
-  private getOverlapSentences(sentences: string[], overlapSize: number): string[] {
-    let size = 0;
-    const overlap: string[] = [];
-    
-    for (let i = sentences.length - 1; i >= 0; i--) {
-      overlap.unshift(sentences[i]);
-      size += sentences[i].length;
-      if (size >= overlapSize) break;
-    }
-    
-    return overlap;
-  }
 }
 
 // Type for markdown sections

@@ -12,11 +12,11 @@ export interface ChunkingOptions {
   strategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   maxChunkSize?: number;
   minChunkSize?: number;
-  overlap?: number;
   preserveContext?: boolean;
   // Legacy options for backward compatibility
   chunkSize?: number;
   chunkByParagraphs?: boolean;
+  overlap?: number; // Legacy - no longer used
 }
 
 /**
@@ -33,7 +33,6 @@ export async function createChunksWithTool(
     strategy: options.strategy || (options.chunkByParagraphs ? 'paragraph' : 'hybrid'),
     maxChunkSize: options.maxChunkSize || options.chunkSize || 1500,
     minChunkSize: options.minChunkSize || 200,
-    overlap: options.overlap || 100,
     preserveContext: options.preserveContext ?? true,
   };
 
@@ -75,7 +74,6 @@ export async function createChunksWithTool(
     const { createChunks } = await import('../TextChunk');
     return createChunks(text, {
       chunkSize: options.chunkSize || options.maxChunkSize,
-      overlap: options.overlap,
       chunkByParagraphs: options.chunkByParagraphs,
     });
   }

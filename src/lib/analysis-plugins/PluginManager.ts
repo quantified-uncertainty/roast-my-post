@@ -166,7 +166,17 @@ export class PluginManager {
             pluginLoggerInstance.startPhase('initialization', `Starting ${pluginName} analysis`);
             pluginLoggerInstance.processingChunks(chunks.length);
             
-            const result = await plugin.analyze(chunks, text);
+            // Add timeout to prevent hanging
+            const PLUGIN_TIMEOUT_MS = 60000; // 60 seconds
+            const timeoutPromise = new Promise<never>((_, reject) => {
+              setTimeout(() => reject(new Error(`Plugin ${pluginName} timed out after ${PLUGIN_TIMEOUT_MS}ms`)), PLUGIN_TIMEOUT_MS);
+            });
+            
+            const result = await Promise.race([
+              plugin.analyze(chunks, text),
+              timeoutPromise
+            ]);
+            
             const duration = Date.now() - startTime;
 
             // Log results

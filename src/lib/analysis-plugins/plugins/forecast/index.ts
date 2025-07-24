@@ -217,19 +217,35 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       return this.getResults();
     }
 
-    logger.info("ForecastAnalyzer: Starting analysis");
+    try {
+      logger.info("ForecastAnalyzer: Starting analysis");
+      logger.info(`ForecastAnalyzer: Processing ${chunks.length} chunks`);
 
-    await this.extractForecastingClaims();
-    await this.generateOurForecasts();
-    this.createComments();
-    this.generateAnalysis();
+      await this.extractForecastingClaims();
+      
+      logger.info(`ForecastAnalyzer: Extracted ${this.forecasts.length} forecasting claims from document`);
+      await this.generateOurForecasts();
+      
+      logger.info(`ForecastAnalyzer: Generated our probability estimates for ${this.forecasts.filter(f => f.ourForecast).length} claims`);
+      this.createComments();
+      
+      logger.info(`ForecastAnalyzer: Created ${this.comments.length} comments`);
+      this.generateAnalysis();
 
-    this.hasRun = true;
-    logger.info(
-      `ForecastAnalyzer: Analysis complete - ${this.comments.length} comments generated`
-    );
+      this.hasRun = true;
+      logger.info(
+        `ForecastAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+      );
 
-    return this.getResults();
+      return this.getResults();
+    } catch (error) {
+      logger.error("ForecastAnalyzer: Fatal error during analysis", error);
+      // Return a partial result instead of throwing
+      this.hasRun = true;
+      this.summary = "Analysis failed due to an error";
+      this.analysis = "The forecast analysis could not be completed due to a technical error.";
+      return this.getResults();
+    }
   }
 
   public getResults(): AnalysisResult {

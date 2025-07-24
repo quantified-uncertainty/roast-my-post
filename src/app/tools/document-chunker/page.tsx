@@ -15,7 +15,7 @@ import {
 export default function DocumentChunkerPage() {
 
   const formConfig = {
-    fieldOrder: ['text', 'strategy', 'targetWords', 'maxChunkSize', 'minChunkSize', 'overlap', 'preserveContext'] as ('text' | 'strategy' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'overlap' | 'preserveContext')[],
+    fieldOrder: ['text', 'strategy', 'targetWords', 'maxChunkSize', 'minChunkSize', 'preserveContext'] as ('text' | 'strategy' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'preserveContext')[],
     fieldConfigs: {
       text: {
         label: 'Document Text',
@@ -38,10 +38,6 @@ export default function DocumentChunkerPage() {
         label: 'Minimum Chunk Size',
         helpText: 'Minimum number of characters per chunk',
       },
-      overlap: {
-        label: 'Overlap Size',
-        helpText: 'Number of characters to overlap between chunks',
-      },
       preserveContext: {
         label: 'Preserve Context',
         helpText: 'Try to preserve semantic context when chunking',
@@ -58,7 +54,6 @@ export default function DocumentChunkerPage() {
           targetWords: 400,
           maxChunkSize: 1500,
           minChunkSize: 200,
-          overlap: 100,
           preserveContext: true,
         },
       },
@@ -71,7 +66,6 @@ export default function DocumentChunkerPage() {
           targetWords: 450,
           maxChunkSize: 1800,
           minChunkSize: 300,
-          overlap: 150,
           preserveContext: true,
         },
       },
@@ -84,7 +78,6 @@ export default function DocumentChunkerPage() {
           targetWords: 500,
           maxChunkSize: 2000,
           minChunkSize: 250,
-          overlap: 100,
           preserveContext: true,
         },
       },
@@ -97,7 +90,6 @@ export default function DocumentChunkerPage() {
           targetWords: 350,
           maxChunkSize: 1500,
           minChunkSize: 200,
-          overlap: 75,
           preserveContext: true,
         },
       },
@@ -110,7 +102,6 @@ export default function DocumentChunkerPage() {
           targetWords: 400,
           maxChunkSize: 1600,
           minChunkSize: 300,
-          overlap: 120,
           preserveContext: true,
         },
       },
@@ -123,7 +114,6 @@ export default function DocumentChunkerPage() {
           targetWords: 450,
           maxChunkSize: 1800,
           minChunkSize: 250,
-          overlap: 100,
           preserveContext: true,
         },
       },

@@ -4,6 +4,7 @@
  */
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
+import { logger } from "@/lib/logger";
 
 export interface TextLocation {
   startOffset: number;
@@ -70,6 +71,12 @@ class CaseInsensitiveStrategy implements LocationStrategy {
   
   find(searchText: string, documentText: string, options: TextLocationOptions): TextLocation | null {
     if (!options.caseInsensitive) return null;
+    
+    // Safety check for undefined searchText
+    if (!searchText || typeof searchText !== 'string') {
+      logger.error('CaseInsensitiveStrategy: searchText is undefined or not a string', { searchText });
+      return null;
+    }
     
     const searchLower = searchText.toLowerCase();
     const docLower = documentText.toLowerCase();
@@ -168,19 +175,44 @@ class PartialMatchStrategy implements LocationStrategy {
     if (searchText.length <= minLength) return null;
     
     // Try to match first portion of text
-    const partialSearch = searchText.slice(0, minLength);
-    const startOffset = documentText.indexOf(partialSearch);
+    let partialLength = minLength;
+    let startOffset = -1;
+    
+    // Try progressively shorter lengths if the initial one doesn't match
+    while (partialLength >= 20 && startOffset === -1) {
+      const partialSearch = searchText.slice(0, partialLength);
+      startOffset = documentText.indexOf(partialSearch);
+      
+      if (startOffset === -1) {
+        // Try with normalized whitespace
+        const normalizedSearch = partialSearch.replace(/\s+/g, ' ').trim();
+        const normalizedDoc = documentText.replace(/\s+/g, ' ');
+        const normalizedOffset = normalizedDoc.indexOf(normalizedSearch);
+        
+        if (normalizedOffset !== -1) {
+          // Map back to original position (approximate)
+          startOffset = normalizedOffset; // Simplified mapping
+          logger.debug(`PartialMatchStrategy: Found with normalized whitespace at length ${partialLength}`);
+        }
+      }
+      
+      if (startOffset === -1) {
+        partialLength -= 10;
+      }
+    }
     
     if (startOffset !== -1) {
+      const matchedText = searchText.slice(0, partialLength);
+      
       // If expansion is requested, expand to boundaries
       if (options.expandToBoundaries && options.expandToBoundaries !== 'none') {
-        const expanded = expandToNaturalBoundary(documentText, startOffset, partialSearch.length, options);
+        const expanded = expandToNaturalBoundary(documentText, startOffset, matchedText.length, options);
         if (expanded) {
           return createTextLocation(expanded.start, expanded.text, documentText, this.name, this.confidence);
         }
       }
       // Otherwise, just return the partial match
-      return createTextLocation(startOffset, partialSearch, documentText, this.name, this.confidence);
+      return createTextLocation(startOffset, matchedText, documentText, this.name, this.confidence);
     }
     return null;
   }
@@ -238,6 +270,17 @@ export function findTextLocation(
   documentText: string,
   options: TextLocationOptions = {}
 ): TextLocation | null {
+  // Safety check for undefined inputs
+  if (!searchText || typeof searchText !== 'string') {
+    logger.error('findTextLocation: searchText is undefined or not a string', { searchText });
+    return null;
+  }
+  
+  if (!documentText || typeof documentText !== 'string') {
+    logger.error('findTextLocation: documentText is undefined or not a string');
+    return null;
+  }
+  
   // Set default options
   const opts: TextLocationOptions = {
     allowFuzzy: false,
@@ -251,13 +294,38 @@ export function findTextLocation(
     ...options
   };
   
+  // Log search details for debugging
+  logger.debug('findTextLocation: Starting search', {
+    searchTextLength: searchText.length,
+    searchTextPreview: searchText.slice(0, 50) + (searchText.length > 50 ? '...' : ''),
+    documentLength: documentText.length,
+    enabledStrategies: {
+      fuzzy: opts.allowFuzzy,
+      partial: opts.allowPartialMatch,
+      caseInsensitive: opts.caseInsensitive,
+      normalizeQuotes: opts.normalizeQuotes,
+      normalizeWhitespace: opts.normalizeWhitespace,
+      hasContext: !!opts.context
+    }
+  });
+  
   // Try each strategy in order
   for (const strategy of defaultStrategies) {
     const location = strategy.find(searchText, documentText, opts);
     if (location) {
+      logger.debug('findTextLocation: Found match', {
+        strategy: strategy.name,
+        confidence: location.confidence,
+        matchedText: location.quotedText.slice(0, 50) + (location.quotedText.length > 50 ? '...' : '')
+      });
       return location;
     }
   }
+  
+  logger.warn('findTextLocation: No match found', {
+    searchTextPreview: searchText.slice(0, 100) + (searchText.length > 100 ? '...' : ''),
+    triedStrategies: defaultStrategies.map(s => s.name)
+  });
   
   return null;
 }
