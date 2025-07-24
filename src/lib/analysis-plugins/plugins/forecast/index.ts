@@ -21,7 +21,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findForecastLocation } from "@/lib/documentAnalysis/shared/simplePluginLocationWrappers";
+import { findForecastLocation } from "@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -95,14 +95,18 @@ class ExtractedForecast {
     return this.ourForecast;
   }
 
-  public findLocationInDocument(): {
+  public async findLocationInDocument(): Promise<{
     startOffset: number;
     endOffset: number;
     quotedText: string;
-  } | null {
-    const chunkLocation = findForecastLocation(
+  } | null> {
+    // Pass session config if available from the chunk
+    const sessionConfig = this.chunk.metadata?.sessionConfig;
+    
+    const chunkLocation = await findForecastLocation(
       this.extractedForecast.originalText,
-      this.chunk.text
+      this.chunk.text,
+      sessionConfig
     );
 
     if (!chunkLocation || !this.chunk.metadata?.position) {
@@ -124,8 +128,8 @@ class ExtractedForecast {
     return this.shouldGetOurForecastScore / 10;
   }
 
-  public getComment(): Comment | null {
-    const location = this.findLocationInDocument();
+  public async getComment(): Promise<Comment | null> {
+    const location = await this.findLocationInDocument();
     if (!location) return null;
 
     // Use the new comment generation system
@@ -223,7 +227,7 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       await this.generateOurForecasts();
       
       logger.info(`ForecastAnalyzer: Generated our probability estimates for ${this.extractedForecasts.filter(f => f.getOurForecast() !== null).length} claims`);
-      this.createComments();
+      await this.createComments();
       
       logger.info(`ForecastAnalyzer: Created ${this.comments.length} comments`);
       this.generateAnalysis();
@@ -327,13 +331,14 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
     );
   }
 
-  private createComments(): void {
-    for (const extractedForecast of this.extractedForecasts) {
-      const comment = extractedForecast.getComment();
-      if (comment) {
-        this.comments.push(comment);
-      }
-    }
+  private async createComments(): Promise<void> {
+    // Process comments in parallel for better performance
+    const comments = await Promise.all(
+      this.extractedForecasts.map(extractedForecast => extractedForecast.getComment())
+    );
+    
+    // Filter out null comments and add to array
+    this.comments = comments.filter((comment): comment is Comment => comment !== null);
 
     logger.debug(`ForecastAnalyzer: Created ${this.comments.length} comments`);
   }

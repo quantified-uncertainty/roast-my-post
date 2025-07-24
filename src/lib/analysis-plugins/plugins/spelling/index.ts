@@ -205,20 +205,23 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     );
   }
 
-  private findErrorLocations(): void {
-    for (const errorWithChunk of this.errors) {
-      const location = this.findLocationInChunk(errorWithChunk);
-      if (location) {
-        errorWithChunk.location = location;
-      }
-    }
+  private async findErrorLocations(): Promise<void> {
+    // Process locations in parallel for better performance
+    await Promise.all(
+      this.errors.map(async (errorWithChunk) => {
+        const location = await this.findLocationInChunk(errorWithChunk);
+        if (location) {
+          errorWithChunk.location = location;
+        }
+      })
+    );
   }
 
-  private findLocationInChunk(errorWithChunk: SpellingErrorWithLocation): {
+  private async findLocationInChunk(errorWithChunk: SpellingErrorWithLocation): Promise<{
     startOffset: number;
     endOffset: number;
     quotedText: string;
-  } | null {
+  } | null> {
     const { error, chunk } = errorWithChunk;
     
     // Safety check for undefined error text
@@ -231,10 +234,14 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       return null;
     }
     
-    const chunkLocation = findSpellingErrorLocation(
+    // Pass session config if available from the chunk
+    const sessionConfig = chunk.metadata?.sessionConfig;
+    
+    const chunkLocation = await findSpellingErrorLocation(
       error.text,
       chunk.text,
-      error.context
+      error.context,
+      sessionConfig
     );
 
     if (!chunkLocation || !chunk.metadata?.position) {

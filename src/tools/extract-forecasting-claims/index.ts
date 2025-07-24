@@ -160,13 +160,14 @@ ${text}
   </requirements>
 </task>`;
 
-    // Get session context if available
+    // Get session context if available (should include userId from PluginManager)
     const currentSession = sessionContext.getSession();
     let sessionConfig = currentSession ? 
       sessionContext.withPath('/plugins/forecast/extract-forecasting-claims') : 
       undefined;
     
-    // Fall back to userId-based session if no current session but userId is provided
+    // Create fallback session if no current session exists
+    // In production, sessionConfig should always exist with userId from PluginManager
     if (!sessionConfig && context?.userId) {
       sessionConfig = { 
         userId: context.userId, 
@@ -174,6 +175,11 @@ ${text}
         sessionName: `Extract Forecasting Claims`,
         sessionPath: `/plugins/forecast/extract-forecasting-claims` 
       };
+    }
+    
+    // Log warning if no session config (indicates missing userId in production)
+    if (!sessionConfig) {
+      logger.warn('ExtractForecastingClaims: No session config available - Helicone tracking will be disabled');
     }
     
     const heliconeHeaders = sessionConfig ? 
