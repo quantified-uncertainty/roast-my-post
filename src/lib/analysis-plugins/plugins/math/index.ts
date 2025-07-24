@@ -14,7 +14,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findMathLocation } from "./locationFinder";
+import { findMathLocation } from "./simpleMathLocationFinder";
 import { generateMathComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface MathExpressionWithComment {
@@ -51,11 +51,7 @@ export class ExtractedMathExpression {
   } | null {
     const chunkLocation = findMathLocation(
       this.expression.originalText,
-      this.chunk.text,
-      {
-        allowPartialMatch: true,
-        normalizeWhitespace: true,
-      }
+      this.chunk.text
     );
 
     if (!chunkLocation) {

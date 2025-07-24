@@ -160,27 +160,25 @@ ${text}
   </requirements>
 </task>`;
 
-    // Set up Helicone headers if userId is available
-    let heliconeHeaders = undefined;
-    if (context?.userId) {
-      // Get current session or use userId to create session-like config
-      const currentSession = sessionContext.getSession();
-      let sessionConfig;
-      if (currentSession) {
-        sessionConfig = sessionContext.withPath(`/plugins/forecast/extract-forecasting-claims`);
-      } else {
-        sessionConfig = { 
-          userId: context.userId, 
-          sessionId: `extract-forecasting-claims-${Date.now()}`, 
-          sessionName: `Extract Forecasting Claims`,
-          sessionPath: `/plugins/forecast/extract-forecasting-claims` 
-        };
-      }
-      
-      if (sessionConfig) {
-        heliconeHeaders = createHeliconeHeaders(sessionConfig);
-      }
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    let sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/forecast/extract-forecasting-claims') : 
+      undefined;
+    
+    // Fall back to userId-based session if no current session but userId is provided
+    if (!sessionConfig && context?.userId) {
+      sessionConfig = { 
+        userId: context.userId, 
+        sessionId: `extract-forecasting-claims-${Date.now()}`, 
+        sessionName: `Extract Forecasting Claims`,
+        sessionPath: `/plugins/forecast/extract-forecasting-claims` 
+      };
     }
+    
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
 
     const result = await callClaudeWithTool<{ forecasts: any[] }>(
       {

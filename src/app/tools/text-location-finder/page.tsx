@@ -129,13 +129,13 @@ export default function TextLocationFinderPage() {
             label: 'Search Options',
             helpText: 'Simple options for common search needs',
             fieldConfigs: {
-              caseInsensitive: {
-                label: 'Case Insensitive',
-                helpText: 'Ignore case differences when matching (find "AI" when text has "ai")'
+              normalizeQuotes: {
+                label: 'Normalize Quotes',
+                helpText: 'Handle apostrophe and quote variations (smart quotes, etc.)'
               },
-              allowPartialMatch: {
-                label: 'Allow Partial Matching',
-                helpText: 'Allow matching partial text for long or inexact quotes'
+              partialMatch: {
+                label: 'Partial Match',
+                helpText: 'Match the first part of long text (useful for truncated quotes)'
               },
               useLLMFallback: {
                 label: 'Use LLM Fallback',
@@ -157,32 +157,28 @@ export default function TextLocationFinderPage() {
             data: {
               documentText: 'This is a sample document with some text. It contains multiple sentences and paragraphs.',
               searchText: 'sample document',
+              options: {}
+            }
+          },
+          {
+            name: 'Quote Normalization',
+            description: 'Handle apostrophe and quote variations',
+            data: {
+              documentText: "The company's earnings weren't what analysts expected.",
+              searchText: "The company's earnings weren't what analysts expected.",
               options: {
-                caseInsensitive: false,
-                allowPartialMatch: false
+                normalizeQuotes: true
               }
             }
           },
           {
-            name: 'Partial Match with Context',
-            description: 'Use partial matching and context for inexact quotes',
+            name: 'Partial Match for Long Text',
+            description: 'Find the beginning of truncated quotes',
             data: {
-              documentText: 'The research shows that climate change will impact agriculture by 2030. Scientists predict significant challenges.',
-              searchText: 'climate change will cause problems by 2030',
-              context: 'research about agriculture and climate',
+              documentText: 'The research shows that climate change will impact agriculture significantly by 2030.',
+              searchText: 'The research shows that climate change will impact agriculture and food security in developing nations by 2030',
               options: {
-                allowPartialMatch: true
-              }
-            }
-          },
-          {
-            name: 'Case-Insensitive Search',
-            description: 'Handle case differences when matching',
-            data: {
-              documentText: 'The article mentions "artificial intelligence" and discusses AI development.',
-              searchText: 'ARTIFICIAL INTELLIGENCE',
-              options: {
-                caseInsensitive: true
+                partialMatch: true
               }
             }
           },

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, findMultipleTextLocations, TextLocationOptions, TextLocation } from '@/lib/documentAnalysis/shared/textLocationFinder';
+import { findTextLocation, SimpleLocationOptions, TextLocation } from '@/lib/documentAnalysis/shared/simpleTextLocationFinder';
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 export interface TextLocationFinderInput {
@@ -8,9 +8,9 @@ export interface TextLocationFinderInput {
   searchText: string;
   context?: string;
   options?: {
-    // Essential options only
-    caseInsensitive?: boolean;
-    allowPartialMatch?: boolean;
+    // Simple options based on actual plugin usage
+    normalizeQuotes?: boolean;
+    partialMatch?: boolean;
     useLLMFallback?: boolean;
     includeLLMExplanation?: boolean;
   };
@@ -40,8 +40,8 @@ const inputSchema = z.object({
   searchText: z.string().min(1, "Search text is required").max(1000, "Search text too long"),
   context: z.string().optional(),
   options: z.object({
-    caseInsensitive: z.boolean().optional(),
-    allowPartialMatch: z.boolean().optional(),
+    normalizeQuotes: z.boolean().optional(),
+    partialMatch: z.boolean().optional(),
     useLLMFallback: z.boolean().optional(),
     includeLLMExplanation: z.boolean().optional(),
   }).optional()
@@ -87,10 +87,10 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
     context.logger.debug(`TextLocationFinder: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`);
 
     try {
-      // Convert options to TextLocationOptions format
-      const locationOptions: TextLocationOptions = {
-        caseInsensitive: input.options?.caseInsensitive ?? false,
-        allowPartialMatch: input.options?.allowPartialMatch ?? false,
+      // Convert options to SimpleLocationOptions format
+      const locationOptions: SimpleLocationOptions = {
+        normalizeQuotes: input.options?.normalizeQuotes ?? false,
+        partialMatch: input.options?.partialMatch ?? false,
         context: input.context
       };
 
@@ -285,23 +285,22 @@ Find the best match for the search text in the document. If the exact text isn't
         }
       },
       {
-        description: "Partial match with context",
+        description: "Quote normalization (apostrophes)",
         input: {
-          documentText: "The research shows that climate change will impact agriculture by 2030. Scientists predict significant challenges.",
-          searchText: "climate change will cause problems by 2030",
-          context: "research about agriculture and climate",
+          documentText: "The company's earnings weren't what analysts expected.",
+          searchText: "The company's earnings weren't what analysts expected.",
           options: {
-            allowPartialMatch: true
+            normalizeQuotes: true
           }
         }
       },
       {
-        description: "Case-insensitive search",
+        description: "Partial match for long text",
         input: {
-          documentText: 'The article mentions "artificial intelligence" and discusses AI development.',
-          searchText: "ARTIFICIAL INTELLIGENCE",
+          documentText: "The research shows that climate change will impact agriculture significantly by 2030.",
+          searchText: "The research shows that climate change will impact agriculture and food security in developing nations by 2030",
           options: {
-            caseInsensitive: true
+            partialMatch: true
           }
         }
       },

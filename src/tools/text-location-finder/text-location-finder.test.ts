@@ -34,34 +34,32 @@ describe('TextLocationFinderTool', () => {
       expect(result.error).toBe('Text not found in document');
     });
 
-    it('should handle case insensitive search when enabled', async () => {
+    it('should handle quote normalization', async () => {
       const input: TextLocationFinderInput = {
-        documentText: 'This is a TEST document.',
-        searchText: 'test document',
+        documentText: "This is a document with smart quotes and apostrophes.",
+        searchText: "This is a document with smart quotes and apostrophes.",
         options: {
-          caseInsensitive: true
+          normalizeQuotes: true
         }
       };
 
       const result = await textLocationFinderTool.execute(input, context);
 
       expect(result.found).toBe(true);
-      expect(result.location?.strategy).toBe('caseInsensitive');
-      expect(result.location?.quotedText).toBe('TEST document');
+      expect(result.location?.strategy).toBe('quotes');
     });
 
-    it('should handle case insensitive search when disabled', async () => {
+    it('should handle case insensitive search by default', async () => {
       const input: TextLocationFinderInput = {
         documentText: 'This is a TEST document.',
-        searchText: 'test document',
-        options: {
-          caseInsensitive: false
-        }
+        searchText: 'test document'
       };
 
       const result = await textLocationFinderTool.execute(input, context);
 
-      expect(result.found).toBe(false);
+      expect(result.found).toBe(true);
+      expect(result.location?.strategy).toBe('case');
+      expect(result.location?.quotedText).toBe('TEST document');
     });
 
 
@@ -70,14 +68,14 @@ describe('TextLocationFinderTool', () => {
         documentText: 'This is a very long sentence that contains specific information.',
         searchText: 'very long sentence that contains different text that does not exactly match',
         options: {
-          allowPartialMatch: true
+          partialMatch: true
         }
       };
 
       const result = await textLocationFinderTool.execute(input, context);
 
       expect(result.found).toBe(true);
-      expect(result.location?.strategy).toBe('partialMatch');
+      expect(result.location?.strategy).toBe('partial');
     });
 
     it('should handle context-based searching', async () => {

@@ -10,7 +10,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findSpellingErrorLocation } from "@/lib/documentAnalysis/shared/pluginLocationWrappers";
+import { findSpellingErrorLocation } from "@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface SpellingErrorWithLocation {
@@ -87,7 +87,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       await this.checkSpellingAndGrammar();
       
       logger.info(`SpellingAnalyzer: Found ${this.errors.length} errors, finding locations...`);
-      this.findErrorLocations();
+      await this.findErrorLocations();
       
       logger.info(`SpellingAnalyzer: Creating comments from ${this.errors.filter(e => e.location).length} located errors...`);
       this.createComments();
@@ -234,10 +234,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     const chunkLocation = findSpellingErrorLocation(
       error.text,
       chunk.text,
-      {
-        allowPartialMatch: true,
-        context: error.context,
-      }
+      error.context
     );
 
     if (!chunkLocation || !chunk.metadata?.position) {

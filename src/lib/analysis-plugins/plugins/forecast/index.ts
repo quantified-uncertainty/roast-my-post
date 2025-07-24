@@ -21,7 +21,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findForecastLocation } from "@/lib/documentAnalysis/shared/pluginLocationWrappers";
+import { findForecastLocation } from "@/lib/documentAnalysis/shared/simplePluginLocationWrappers";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -102,11 +102,7 @@ class ExtractedForecast {
   } | null {
     const chunkLocation = findForecastLocation(
       this.extractedForecast.originalText,
-      this.chunk.text,
-      {
-        allowPartialMatch: true,
-        normalizeQuotes: true,
-      }
+      this.chunk.text
     );
 
     if (!chunkLocation || !this.chunk.metadata?.position) {
