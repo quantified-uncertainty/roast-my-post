@@ -3,6 +3,8 @@ import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface ExtractedMathExpression {
   originalText: string;
@@ -90,6 +92,15 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/math/extract') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+
     const result = await callClaudeWithTool<{ expressions: ExtractedMathExpression[] }>({
       system: systemPrompt,
       messages: [{
@@ -100,7 +111,8 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       temperature: 0,
       toolName: "extract_math_expressions",
       toolDescription: "Extract and analyze mathematical expressions from the text",
-      toolSchema: this.getMathExtractionToolSchema()
+      toolSchema: this.getMathExtractionToolSchema(),
+      heliconeHeaders
     });
 
     const expressions = result.toolResult?.expressions || [];

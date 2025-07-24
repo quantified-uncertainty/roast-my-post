@@ -114,6 +114,18 @@ function extractKeyParts(expression: string): string[] {
     parts.push(...matches);
   }
   
+  // Extract individual numbers that might be distinctive
+  const singleNumberPattern = /\b\d+\.?\d*\b/g;
+  const numbers = expression.match(singleNumberPattern);
+  if (numbers) {
+    // Add distinctive numbers (not too common like 1, 2, etc)
+    const distinctiveNumbers = numbers.filter(n => {
+      const num = parseFloat(n);
+      return n.includes('.') || num > 10 || n.length > 2;
+    });
+    parts.push(...distinctiveNumbers);
+  }
+  
   // Extract variable assignments
   const assignmentPattern = /\w+\s*=\s*[\d.,]+/g;
   const assignments = expression.match(assignmentPattern);
@@ -121,12 +133,28 @@ function extractKeyParts(expression: string): string[] {
     parts.push(...assignments);
   }
   
+  // Extract percentage patterns
+  const percentPattern = /\d+\.?\d*\s*%/g;
+  const percents = expression.match(percentPattern);
+  if (percents) {
+    parts.push(...percents);
+  }
+  
+  // If expression seems truncated (ends with hyphen or incomplete word), try without the end
+  if (expression.endsWith('-') || expression.match(/\w+$/)) {
+    const truncated = expression.replace(/[-\w]+$/, '').trim();
+    if (truncated.length > 10) {
+      parts.push(truncated);
+    }
+  }
+  
   // If no specific patterns found, use the whole expression
   if (parts.length === 0) {
     parts.push(expression);
   }
   
-  return parts;
+  // Remove duplicates and sort by length (longer first)
+  return [...new Set(parts)].sort((a, b) => b.length - a.length);
 }
 
 /**
