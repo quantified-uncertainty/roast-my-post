@@ -223,10 +223,10 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
 
       await this.extractForecastingClaims();
       
-      logger.info(`ForecastAnalyzer: Extracted ${this.forecasts.length} forecasting claims from document`);
+      logger.info(`ForecastAnalyzer: Extracted ${this.extractedForecasts.length} forecasting claims from document`);
       await this.generateOurForecasts();
       
-      logger.info(`ForecastAnalyzer: Generated our probability estimates for ${this.forecasts.filter(f => f.ourForecast).length} claims`);
+      logger.info(`ForecastAnalyzer: Generated our probability estimates for ${this.extractedForecasts.filter(f => f.getOurForecast() !== null).length} claims`);
       this.createComments();
       
       logger.info(`ForecastAnalyzer: Created ${this.comments.length} comments`);

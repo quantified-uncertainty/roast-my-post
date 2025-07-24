@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
@@ -111,6 +113,15 @@ For each claim, provide:
 
     const userPrompt = `${input.instructions ? input.instructions + '\n\n' : ''}Extract factual claims from this text:\n\n${input.text}`;
     
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/tools/extract-factual-claims') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+    
     const result = await callClaudeWithTool<{ claims: ExtractedFactualClaim[] }>({
       system: systemPrompt,
       messages: [{
@@ -156,7 +167,8 @@ For each claim, provide:
         },
         required: ["claims"]
       },
-      enablePromptCaching: true
+      enablePromptCaching: true,
+      heliconeHeaders
     });
 
     const allClaims = result.toolResult.claims || [];

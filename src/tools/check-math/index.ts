@@ -4,6 +4,8 @@ import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface MathError {
   lineStart: number;
@@ -139,6 +141,15 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/tools/check-math') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+
     const result = await callClaudeWithTool<{ errors: any[] }>({
       system: systemPrompt,
       messages: [{
@@ -149,7 +160,8 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       temperature: 0,
       toolName: "report_math_errors",
       toolDescription: "Report mathematical errors found in the text",
-      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50)
+      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50),
+      heliconeHeaders
     });
 
     const errors = this.parseErrors(result.toolResult?.errors);
