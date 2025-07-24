@@ -14,7 +14,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findMathLocation } from "./simpleMathLocationFinder";
+import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 import { generateMathComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface MathExpressionWithComment {
@@ -25,10 +25,12 @@ export interface MathExpressionWithComment {
 export class ExtractedMathExpression {
   public expression: ExtractedMathExpressionToolType;
   private chunk: TextChunk;
+  private documentText: string;
 
-  constructor(expression: ExtractedMathExpressionToolType, chunk: TextChunk) {
+  constructor(expression: ExtractedMathExpressionToolType, chunk: TextChunk, documentText: string) {
     this.expression = expression;
     this.chunk = chunk;
+    this.documentText = documentText;
   }
 
   get originalText(): string {
@@ -44,17 +46,24 @@ export class ExtractedMathExpression {
     );
   }
 
-  public findLocationInDocument(): {
+  public async findLocationInDocument(): Promise<{
     startOffset: number;
     endOffset: number;
     quotedText: string;
-  } | null {
-    const chunkLocation = findMathLocation(
+  } | null> {
+    // Use the generic function to find text in chunk and convert to absolute position
+    const location = await findTextInChunkAbsolute(
       this.expression.originalText,
-      this.chunk.text
+      this.chunk,
+      {
+        normalizeQuotes: true,  // Math might have quote variations
+        useLLMFallback: true,   // Enable LLM fallback for complex expressions
+        pluginName: 'math',
+        documentText: this.documentText  // Pass for position verification
+      }
     );
-
-    if (!chunkLocation) {
+    
+    if (!location) {
       logger.warn(
         `Math expression not found in chunk: "${this.expression.originalText}"`,
         {
@@ -65,19 +74,7 @@ export class ExtractedMathExpression {
       );
     }
     
-    if (!chunkLocation || !this.chunk.metadata?.position) {
-      logger.warn(
-        `Could not find location for math expression: ${this.expression.originalText}`
-      );
-      return null;
-    }
-
-    return {
-      startOffset:
-        this.chunk.metadata.position.start + chunkLocation.startOffset,
-      endOffset: this.chunk.metadata.position.start + chunkLocation.endOffset,
-      quotedText: chunkLocation.quotedText,
-    };
+    return location;
   }
 
   private commentImportanceScore(): number {
@@ -88,13 +85,13 @@ export class ExtractedMathExpression {
     return Math.min(10, baseScore + complexityBonus + contextBonus);
   }
 
-  public getComment(): Comment | null {
+  public async getComment(): Promise<Comment | null> {
     // Only generate comments for expressions with errors or high importance
     if (!this.expression.hasError && this.averageScore < 60) {
       return null;
     }
 
-    const location = this.findLocationInDocument();
+    const location = await this.findLocationInDocument();
     if (!location) return null;
 
     const message = generateMathComment(this.expression);
@@ -183,7 +180,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       await this.extractMathExpressions();
       
       logger.info(`MathAnalyzer: Extracted ${this.extractedExpressions.length} math expressions from document`);
-      this.createComments();
+      await this.createComments();
       
       logger.info(`MathAnalyzer: Created ${this.comments.length} comments`);
       this.generateAnalysis();
@@ -278,7 +275,8 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
         for (const expression of result.expressions) {
           const extractedExpression = new ExtractedMathExpression(
             expression,
-            chunk
+            chunk,
+            this.documentText
           );
           this.extractedExpressions.push(extractedExpression);
         }
@@ -290,13 +288,14 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     );
   }
 
-  private createComments(): void {
-    for (const extractedExpression of this.extractedExpressions) {
-      const comment = extractedExpression.getComment();
-      if (comment) {
-        this.comments.push(comment);
-      }
-    }
+  private async createComments(): Promise<void> {
+    // Process comments in parallel for better performance
+    const comments = await Promise.all(
+      this.extractedExpressions.map(extractedExpression => extractedExpression.getComment())
+    );
+    
+    // Filter out null comments and add to array
+    this.comments = comments.filter((comment): comment is Comment => comment !== null);
 
     logger.debug(`MathAnalyzer: Created ${this.comments.length} comments`);
   }

@@ -365,7 +365,7 @@ export const ObjectField: React.FC<FormFieldProps> = ({
             ) : (
               // Checkbox or text field
               <div>
-                {typeof objectValue[fieldName] === 'boolean' || fieldName.startsWith('allow') || fieldName.startsWith('enable') || fieldName.startsWith('normalize') || fieldName.startsWith('use') || fieldName.startsWith('include') ? (
+                {typeof objectValue[fieldName] === 'boolean' || fieldName.startsWith('allow') || fieldName.startsWith('enable') || fieldName.startsWith('normalize') || fieldName.startsWith('use') || fieldName.startsWith('include') || fieldName.endsWith('Match') ? (
                   // Checkbox
                   <label className="flex items-center space-x-2">
                     <input

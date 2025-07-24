@@ -437,10 +437,19 @@ export class JobModel {
 
       // Analyze document
       
-      // Update session path for analysis phase
+      // Update session path for analysis phase based on agent type
+      let analysisPath: string = SESSION_PATHS.ANALYSIS_COMPREHENSIVE;
+      if (agentVersion.extendedCapabilityId === "simple-link-verifier") {
+        analysisPath = SESSION_PATHS.ANALYSIS_LINK_VERIFICATION;
+      } else if (agentVersion.extendedCapabilityId === "spelling-grammar") {
+        analysisPath = SESSION_PATHS.ANALYSIS_SPELLING_GRAMMAR;
+      } else if (agentVersion.extendedCapabilityId === "multi-epistemic-eval") {
+        analysisPath = SESSION_PATHS.ANALYSIS_PLUGINS;
+      }
+      
       const analysisSessionConfig = sessionConfig ? {
         ...sessionConfig,
-        sessionPath: SESSION_PATHS.ANALYSIS_COMPREHENSIVE,
+        sessionPath: analysisPath,
       } : undefined;
       
       const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig, job.id);

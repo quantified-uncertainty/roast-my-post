@@ -1,11 +1,11 @@
 import type { Comment } from '@/types/documentSchema';
 import type { VerifiedFact } from './index';
-import type { FactLocation } from '@/lib/documentAnalysis/shared/pluginLocationWrappers';
+import type { PluginLocation } from '@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers';
 import { THRESHOLDS, FORMATTING } from './constants';
 
 export function generateFactCheckComments(
   fact: VerifiedFact,
-  location: FactLocation
+  location: PluginLocation
 ): Comment {
   const content = generateCommentContent(fact, location);
   
@@ -120,14 +120,11 @@ function getImportanceScore(fact: VerifiedFact): number {
   return importance;
 }
 
-function generateCommentContent(fact: VerifiedFact, location?: FactLocation): string {
+function generateCommentContent(fact: VerifiedFact, location?: PluginLocation): string {
   const parts: string[] = [];
   
-  // Location info if available
-  if (location) {
-    parts.push(`📍 **Line ${location.lineNumber}**`);
-    parts.push(`\n`);
-  }
+  // Location info - removed line number as it's not in PluginLocation
+  // The location is already handled by the highlight offset
   
   // Scores summary
   parts.push(`**Scores**: Importance ${fact.claim.importanceScore}/${FORMATTING.MAX_SCORE}, Checkability ${fact.claim.checkabilityScore}/${FORMATTING.MAX_SCORE}`);

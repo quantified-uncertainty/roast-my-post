@@ -4,7 +4,7 @@ import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
-import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
 
 export interface ExtractedMathExpression {
   originalText: string;
@@ -94,17 +94,24 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
 
     // Get session context if available
     const currentSession = sessionContext.getSession();
-    let sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/extract-math-expressions') : 
-      undefined;
+    let sessionConfig: HeliconeSessionConfig | undefined = undefined;
     
-    // Add properties if we have a session config
-    if (sessionConfig) {
-      sessionConfig = sessionContext.withProperties({
-        plugin: 'math',
-        operation: 'extract-expressions',
-        tool: 'extract-math-expressions'
-      });
+    if (currentSession) {
+      // First create a new config with the updated path
+      sessionConfig = sessionContext.withPath('/plugins/math/extract-math-expressions');
+      
+      // Then add properties to the new config (not the original context)
+      if (sessionConfig) {
+        sessionConfig = {
+          ...sessionConfig,
+          customProperties: {
+            ...sessionConfig.customProperties,
+            plugin: 'math',
+            operation: 'extract-expressions',
+            tool: 'extract-math-expressions'
+          }
+        };
+      }
     }
     
     const heliconeHeaders = sessionConfig ? 

@@ -5,6 +5,7 @@ import { sessionContext } from "@/lib/helicone/sessionContext";
 import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 import { RichLLMInteraction } from "@/types/llm";
 import { llmInteractionSchema } from "@/types/llmSchema";
+import { logger } from "@/lib/logger";
 
 import {
   Tool,

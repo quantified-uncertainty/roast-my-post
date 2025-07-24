@@ -10,7 +10,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findSpellingErrorLocation } from "@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers";
+import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface SpellingErrorWithLocation {
@@ -234,28 +234,28 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       return null;
     }
     
-    // Pass session config if available from the chunk
-    const sessionConfig = chunk.metadata?.sessionConfig;
-    
-    const chunkLocation = await findSpellingErrorLocation(
+    // Use the generic function to find text in chunk and convert to absolute position
+    const location = await findTextInChunkAbsolute(
       error.text,
-      chunk.text,
-      error.context,
-      sessionConfig
+      chunk,
+      {
+        normalizeQuotes: true,  // Handle apostrophe variations
+        partialMatch: true,     // For longer errors
+        context: error.context, // Use context if provided
+        useLLMFallback: true,   // Enable LLM fallback for difficult cases
+        pluginName: 'spelling',
+        documentText: this.documentText  // Pass for position verification
+      }
     );
 
-    if (!chunkLocation || !chunk.metadata?.position) {
+    if (!location) {
       logger.warn(
         `Could not find location for spelling error: ${error.text}`
       );
       return null;
     }
 
-    return {
-      startOffset: chunk.metadata.position.start + chunkLocation.startOffset,
-      endOffset: chunk.metadata.position.start + chunkLocation.endOffset,
-      quotedText: chunkLocation.quotedText,
-    };
+    return location;
   }
 
   private createComments(): void {

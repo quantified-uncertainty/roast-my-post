@@ -82,14 +82,19 @@ async function findWithLLM(
 - Truncation (text cut off mid-word)
 - Quote mark variations
 - Small typos or OCR errors
+- Special characters (£, €, $) or encoding issues
+- Numbers formatted differently (2.2 billion vs £2.2B)
+- Paraphrasing or reordering of words
 
 Search text: "${searchText}"
 ${context ? `Context: ${context}` : ''}
 
+Look for the SEMANTIC MEANING, not just exact text. The document might express the same idea with different words.
+
 Document:
 ${documentText}
 
-Find the best match. Return the actual text from the document, not the search text.`;
+Find the best match based on meaning. Return the actual text from the document that conveys the same information.`;
 
     const { toolResult } = await callClaudeWithTool({
       model: MODEL_CONFIG.routing, // Use fast model for text finding
@@ -110,6 +115,13 @@ Find the best match. Return the actual text from the document, not the search te
       endOffset: number;
       confidence: number;
     };
+
+    logger.debug('LLM fallback result', {
+      found: result.found,
+      matchedText: result.matchedText?.slice(0, 50),
+      confidence: result.confidence,
+      plugin: pluginName
+    });
 
     if (result.found && result.matchedText) {
       // Verify the offsets
@@ -134,6 +146,10 @@ Find the best match. Return the actual text from the document, not the search te
       };
     }
 
+    logger.debug('LLM fallback: text not found', {
+      searchText: searchText.slice(0, 50),
+      plugin: pluginName
+    });
     return null;
   } catch (error) {
     logger.error('LLM fallback failed:', error);

@@ -106,6 +106,45 @@ export class PluginManager {
         minChunkSize: 200,
         preserveContext: true,
       });
+      
+      // Debug: Verify chunk positions
+      logger.info('Verifying chunk positions after creation', {
+        textLength: text.length,
+        textStartsWith: text.slice(0, 100),
+        numberOfChunks: chunks.length
+      });
+      
+      for (const chunk of chunks.slice(0, 3)) { // Check first 3 chunks
+        if (chunk.metadata?.position) {
+          const extractedText = text.substring(
+            chunk.metadata.position.start, 
+            chunk.metadata.position.end
+          );
+          const matches = extractedText === chunk.text;
+          
+          logger.info(`Chunk ${chunk.id} position check`, {
+            declaredStart: chunk.metadata.position.start,
+            declaredEnd: chunk.metadata.position.end,
+            chunkTextStart: chunk.text.slice(0, 50),
+            extractedTextStart: extractedText.slice(0, 50),
+            matches
+          });
+          
+          if (!matches) {
+            // Try to find where the chunk actually is
+            const actualPos = text.indexOf(chunk.text);
+            logger.error('Chunk position mismatch during creation', {
+              chunkId: chunk.id,
+              declaredStart: chunk.metadata.position.start,
+              actualStart: actualPos,
+              difference: actualPos - chunk.metadata.position.start,
+              declaredEnd: chunk.metadata.position.end,
+              expectedText: chunk.text.slice(0, 50),
+              actualText: extractedText.slice(0, 50)
+            });
+          }
+        }
+      }
 
       this.pluginLogger.log({
         level: 'info',

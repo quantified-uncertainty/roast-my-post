@@ -4,7 +4,7 @@ import type {
   LLMInteraction
 } from '../../types';
 import type { Comment } from '@/types/documentSchema';
-import { findFactLocation } from '@/lib/documentAnalysis/shared/pluginLocationWrappers';
+import { findFactLocation } from '@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
 import extractFactualClaimsTool from '@/tools/extract-factual-claims';
@@ -56,12 +56,12 @@ export class VerifiedFact {
            (this.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH); // Always check critical claims
   }
 
-  findLocation(documentText: string): ReturnType<typeof findFactLocation> {
-    return findFactLocation(documentText, this.originalText);
+  async findLocation(documentText: string): Promise<ReturnType<typeof findFactLocation>> {
+    return findFactLocation(this.originalText, documentText);
   }
 
-  toComment(documentText: string): Comment | null {
-    const location = this.findLocation(documentText);
+  async toComment(documentText: string): Promise<Comment | null> {
+    const location = await this.findLocation(documentText);
     if (!location) return null;
 
     return generateFactCheckComments(this, location);

@@ -21,7 +21,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findForecastLocation } from "@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers";
+import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -32,11 +32,13 @@ export interface ForecastToolResult {
 class ExtractedForecast {
   public extractedForecast: ExtractedForecastToolType;
   private chunk: TextChunk;
+  private documentText: string;
   private ourForecast: ForecasterOutput | null = null;
 
-  constructor(extractedForecast: ExtractedForecastToolType, chunk: TextChunk) {
+  constructor(extractedForecast: ExtractedForecastToolType, chunk: TextChunk, documentText: string) {
     this.extractedForecast = extractedForecast;
     this.chunk = chunk;
+    this.documentText = documentText;
   }
 
   get originalText(): string {
@@ -100,28 +102,18 @@ class ExtractedForecast {
     endOffset: number;
     quotedText: string;
   } | null> {
-    // Pass session config if available from the chunk
-    const sessionConfig = this.chunk.metadata?.sessionConfig;
-    
-    const chunkLocation = await findForecastLocation(
+    // Use the generic function to find text in chunk and convert to absolute position
+    return findTextInChunkAbsolute(
       this.extractedForecast.originalText,
-      this.chunk.text,
-      sessionConfig
+      this.chunk,
+      {
+        normalizeQuotes: true,  // Handle quote variations
+        partialMatch: true,     // Forecasts can be long
+        useLLMFallback: true,   // Enable LLM fallback for paraphrased text
+        pluginName: 'forecast',
+        documentText: this.documentText  // Pass for position verification
+      }
     );
-
-    if (!chunkLocation || !this.chunk.metadata?.position) {
-      logger.warn(
-        `Could not find location for forecast: ${this.extractedForecast.originalText}`
-      );
-      return null;
-    }
-
-    return {
-      startOffset:
-        this.chunk.metadata.position.start + chunkLocation.startOffset,
-      endOffset: this.chunk.metadata.position.start + chunkLocation.endOffset,
-      quotedText: chunkLocation.quotedText,
-    };
   }
 
   private commentImportanceScore(): number {
@@ -301,7 +293,8 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
         for (const forecastingClaim of result.forecasts) {
           const extractedForecast = new ExtractedForecast(
             forecastingClaim,
-            chunk
+            chunk,
+            this.documentText
           );
           this.extractedForecasts.push(extractedForecast);
         }
