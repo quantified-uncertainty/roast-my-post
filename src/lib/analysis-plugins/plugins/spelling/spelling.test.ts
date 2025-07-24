@@ -18,15 +18,17 @@ describe('SpellingAnalyzerJob', () => {
     jest.clearAllMocks();
   });
 
-  describe('displayName', () => {
-    it('should return correct display name', () => {
-      expect(SpellingAnalyzerJob.displayName()).toBe('SPELLING');
+  describe('name', () => {
+    it('should return correct name', () => {
+      const analyzer = new SpellingAnalyzerJob();
+      expect(analyzer.name()).toBe('SPELLING');
     });
   });
 
   describe('promptForWhenToUse', () => {
     it('should return appropriate prompt', () => {
-      const prompt = SpellingAnalyzerJob.promptForWhenToUse();
+      const analyzer = new SpellingAnalyzerJob();
+      const prompt = analyzer.promptForWhenToUse();
       expect(prompt).toContain('ALL text chunks');
       expect(prompt).toContain('spelling and grammar');
     });
@@ -34,7 +36,8 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('routingExamples', () => {
     it('should provide appropriate routing examples', () => {
-      const examples = SpellingAnalyzerJob.routingExamples();
+      const analyzer = new SpellingAnalyzerJob();
+      const examples = analyzer.routingExamples();
       expect(examples).toHaveLength(4);
       
       expect(examples[0]).toEqual({
@@ -98,12 +101,9 @@ describe('SpellingAnalyzerJob', () => {
         }),
       ];
 
-      const analyzer = new SpellingAnalyzerJob({
-        documentText: 'This is thier house\nThey dont know',
-        chunks,
-      });
+      const analyzer = new SpellingAnalyzerJob();
 
-      const result = await analyzer.analyze({ userId: 'test-user' });
+      const result = await analyzer.analyze(chunks, 'This is thier house\nThey dont know');
 
       expect(result.summary).toContain('2 issues');
       expect(result.summary).toContain('1 spelling');
@@ -130,12 +130,9 @@ describe('SpellingAnalyzerJob', () => {
         }],
       });
 
-      const analyzer = new SpellingAnalyzerJob({
-        documentText: 'No errors here.',
-        chunks: [new TextChunk('No errors here.', 'chunk1')],
-      });
+      const analyzer = new SpellingAnalyzerJob();
 
-      const result = await analyzer.analyze();
+      const result = await analyzer.analyze([new TextChunk('No errors here.', 'chunk1')], 'No errors here.');
 
       expect(result.summary).toBe('No spelling or grammar errors found.');
       expect(result.analysis).toContain('free of spelling and grammar errors');
@@ -148,13 +145,11 @@ describe('SpellingAnalyzerJob', () => {
         llmInteractions: [],
       });
 
-      const analyzer = new SpellingAnalyzerJob({
-        documentText: 'Test',
-        chunks: [new TextChunk('Test', 'chunk1')],
-      });
+      const analyzer = new SpellingAnalyzerJob();
 
-      const result1 = await analyzer.analyze();
-      const result2 = await analyzer.analyze();
+      const chunks = [new TextChunk('Test', 'chunk1')];
+      const result1 = await analyzer.analyze(chunks, 'Test');
+      const result2 = await analyzer.analyze(chunks, 'Test');
 
       expect(result1).toBe(result2);
       expect(checkSpellingGrammarTool.execute).toHaveBeenCalledTimes(1);
@@ -164,10 +159,7 @@ describe('SpellingAnalyzerJob', () => {
 
   describe('getResults', () => {
     it('should throw error if analysis not run', () => {
-      const analyzer = new SpellingAnalyzerJob({
-        documentText: 'Test',
-        chunks: [],
-      });
+      const analyzer = new SpellingAnalyzerJob();
 
       expect(() => analyzer.getResults()).toThrow(
         'Analysis has not been run yet. Call analyze() first.'
@@ -187,12 +179,10 @@ describe('SpellingAnalyzerJob', () => {
         llmInteractions: [],
       });
 
-      const analyzer = new SpellingAnalyzerJob({
-        documentText: 'teh',
-        chunks: [new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } })],
-      });
+      const analyzer = new SpellingAnalyzerJob();
 
-      await analyzer.analyze();
+      const chunks = [new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } })];
+      await analyzer.analyze(chunks, 'teh');
       const debugInfo = analyzer.getDebugInfo();
 
       expect(debugInfo).toEqual({

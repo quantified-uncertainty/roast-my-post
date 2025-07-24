@@ -54,7 +54,7 @@ In conclusion, always proofread you're work before submitting it.
       ),
     ];
 
-    const analyzer = new SpellingAnalyzerJob({ documentText, chunks });
+    const analyzer = new SpellingAnalyzerJob();
 
     // Skip if no API key
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -62,7 +62,7 @@ In conclusion, always proofread you're work before submitting it.
       return;
     }
 
-    const result = await analyzer.analyze({ userId: 'test-integration' });
+    const result = await analyzer.analyze(chunks, documentText);
 
     // Verify results structure
     expect(result).toHaveProperty('summary');
@@ -132,7 +132,7 @@ Professional writing requires attention to detail and a commitment to quality.
       ),
     ];
 
-    const analyzer = new SpellingAnalyzerJob({ documentText, chunks });
+    const analyzer = new SpellingAnalyzerJob();
 
     // Skip if no API key
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -140,7 +140,7 @@ Professional writing requires attention to detail and a commitment to quality.
       return;
     }
 
-    const result = await analyzer.analyze({ userId: 'test-integration' });
+    const result = await analyzer.analyze(chunks, documentText);
 
     // Should find few or no errors
     expect(result.comments.length).toBeLessThanOrEqual(3);
