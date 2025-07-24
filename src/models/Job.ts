@@ -443,7 +443,7 @@ export class JobModel {
         sessionPath: SESSION_PATHS.ANALYSIS_COMPREHENSIVE,
       } : undefined;
       
-      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig);
+      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig, job.id);
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
@@ -546,6 +546,16 @@ export class JobModel {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const logFilename = `${timestamp}-job-${job.id}.md`;
 
+      // Include plugin logs if available
+      const pluginLogsSection = analysisResult.jobLogString ? `
+
+## Plugin Analysis Logs
+${analysisResult.jobLogString}
+
+---
+
+` : '';
+
       const logContent = `# Job Execution Log ${new Date().toISOString()}
     
 ## Document Information
@@ -564,7 +574,7 @@ export class JobModel {
 - Estimated Cost: $${(costInCents / 100).toFixed(6)}
 - Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
-
+${pluginLogsSection}
 ## LLM Thinking
 \`\`\`
 ${evaluationOutputs.thinking || "No thinking provided"}

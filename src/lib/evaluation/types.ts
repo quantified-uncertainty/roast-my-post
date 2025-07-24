@@ -59,6 +59,7 @@ export interface EvaluationContentProps {
   analysis: string;
   thinking?: string;
   selfCritique?: string;
+  logs?: string;
   comments?: Array<{
     id: string;
     description: string;

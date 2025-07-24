@@ -1,6 +1,7 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
+import { LogsViewer } from "@/components/job";
 import { extractHeadings } from "@/lib/evaluation/headingExtractor";
 import { EvaluationSection } from "./EvaluationSection";
 import { MarkdownWithHeadings } from "./MarkdownWithHeadings";
@@ -14,6 +15,7 @@ export function EvaluationContent({
   analysis,
   thinking,
   selfCritique,
+  logs,
   comments = [],
   agentName,
   agentDescription,
@@ -76,6 +78,12 @@ export function EvaluationContent({
       label: 'Self-Critique', 
       show: !!selfCritique,
       subItems: selfCritiqueHeadings.map(h => ({ ...h, id: `self-critique-${h.id}`, level: h.level || 1 }))
+    },
+    { 
+      id: 'logs', 
+      label: 'Logs', 
+      show: !!logs,
+      subItems: []
     },
   ].filter(item => item.show);
 
@@ -177,6 +185,22 @@ export function EvaluationContent({
             <MarkdownWithHeadings sectionPrefix="self-critique">
               {selfCritique}
             </MarkdownWithHeadings>
+          </EvaluationSection>
+        )}
+
+        {/* Logs Section */}
+        {logs && (
+          <EvaluationSection 
+            id="logs" 
+            title="Job Logs"
+            defaultOpen={false}
+          >
+            <LogsViewer 
+              logs={logs} 
+              defaultExpanded={true}
+              title=""
+              className="mt-0"
+            />
           </EvaluationSection>
         )}
 

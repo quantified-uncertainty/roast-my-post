@@ -16,7 +16,8 @@ export async function analyzeDocument(
   agentInfo: Agent,
   targetWordCount: number = 500,
   targetHighlights: number = 5,
-  sessionConfig?: HeliconeSessionConfig
+  sessionConfig?: HeliconeSessionConfig,
+  jobId?: string
 ): Promise<{
   thinking: string;
   analysis: string;
@@ -25,6 +26,7 @@ export async function analyzeDocument(
   selfCritique?: string;
   highlights: Comment[];
   tasks: TaskResult[];
+  jobLogString?: string; // Include job log string for Job.logs field
 }> {
   // Choose workflow based on agent's extended capability
   if (agentInfo.extendedCapabilityId === "simple-link-verifier") {
@@ -46,7 +48,8 @@ export async function analyzeDocument(
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
     return await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
-      sessionConfig
+      sessionConfig,
+      jobId
     });
   }
 

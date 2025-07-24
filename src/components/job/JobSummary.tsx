@@ -1,16 +1,18 @@
 import { JobStatusBadge } from "./JobStatusBadge";
+import { LogsViewer } from "./LogsViewer";
 import { formatCost, formatDuration, formatDate } from "@/lib/job/formatters";
 import { JobData } from "@/lib/job/types";
 import { getRetryText } from "@/lib/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
 
 interface JobSummaryProps {
-  job: JobData;
+  job: JobData & { logs?: string };
   showError?: boolean;
+  showLogs?: boolean;
   compact?: boolean;
 }
 
-export function JobSummary({ job, showError = true, compact = false }: JobSummaryProps) {
+export function JobSummary({ job, showError = true, showLogs = true, compact = false }: JobSummaryProps) {
   const retryText = getRetryText(job);
   
   return (
@@ -77,6 +79,16 @@ export function JobSummary({ job, showError = true, compact = false }: JobSummar
           <div className="p-3 bg-red-50 rounded-md">
             <p className="text-sm text-red-800">{job.error}</p>
           </div>
+        </div>
+      )}
+
+      {showLogs && job.logs && (
+        <div className="mt-4">
+          <LogsViewer 
+            logs={job.logs} 
+            defaultExpanded={false}
+            title="Job Logs"
+          />
         </div>
       )}
     </div>

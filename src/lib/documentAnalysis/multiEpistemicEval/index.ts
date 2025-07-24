@@ -18,6 +18,7 @@ export async function analyzeWithMultiEpistemicEval(
   options: {
     targetHighlights?: number;
     sessionConfig?: HeliconeSessionConfig;
+    jobId?: string; // For logging integration
   } = {}
 ): Promise<{
   thinking: string;
@@ -26,10 +27,12 @@ export async function analyzeWithMultiEpistemicEval(
   grade?: number;
   highlights: Comment[];
   tasks: TaskResult[];
+  jobLogString?: string; // Include job log string in results
 }> {
-  // Create plugin manager with session config
+  // Create plugin manager with session config and job ID for logging
   const manager = new PluginManager({
     sessionConfig: options.sessionConfig,
+    jobId: options.jobId,
   });
 
   // Delegate to plugin system
@@ -44,6 +47,7 @@ export async function analyzeWithMultiEpistemicEval(
     grade: result.grade,
     highlights: result.highlights,
     tasks: result.tasks, // TaskResult interface is compatible
+    jobLogString: result.jobLogString, // Include centralized plugin logs
   };
 }
 

@@ -15,6 +15,7 @@ import type { HeliconeSessionConfig } from "../helicone/sessions";
 import { logger } from "../logger";
 import { createChunks } from "./TextChunk";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
+import { PluginLogger, type JobLogSummary } from "./PluginLogger";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
@@ -24,6 +25,7 @@ export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
   useIntelligentChunking?: boolean;
   chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
+  jobId?: string; // For logging integration
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -38,6 +40,8 @@ export interface SimpleDocumentAnalysisResult {
     totalCost: number;
     processingTime: number;
   };
+  logSummary: JobLogSummary;
+  jobLogString: string; // Formatted string for Job.logs field
 }
 
 export interface FullDocumentAnalysisResult {
@@ -59,6 +63,8 @@ export interface FullDocumentAnalysisResult {
     error: string;
     recoveryAction: string;
   }>;
+  logSummary: JobLogSummary;
+  jobLogString: string; // Formatted string for Job.logs field
 }
 
 export class PluginManager {
@@ -66,11 +72,13 @@ export class PluginManager {
   private useIntelligentChunking: boolean;
   private chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   private startTime: number = 0;
+  private pluginLogger: PluginLogger;
 
   constructor(config: PluginManagerConfig = {}) {
     this.sessionConfig = config.sessionConfig;
     this.useIntelligentChunking = config.useIntelligentChunking ?? false;
     this.chunkingStrategy = config.chunkingStrategy;
+    this.pluginLogger = new PluginLogger(config.jobId);
   }
 
   /**
@@ -89,6 +97,14 @@ export class PluginManager {
     }
 
     try {
+      // Log chunking phase
+      this.pluginLogger.log({
+        level: 'info',
+        plugin: 'PluginManager',
+        phase: 'chunking',
+        message: `Starting document chunking - strategy: ${this.useIntelligentChunking ? this.chunkingStrategy || 'hybrid' : 'fixed'}`
+      });
+
       // Create chunks using the appropriate method
       let chunks;
       if (this.useIntelligentChunking) {
@@ -107,6 +123,14 @@ export class PluginManager {
         });
       }
 
+      this.pluginLogger.log({
+        level: 'info',
+        plugin: 'PluginManager',
+        phase: 'chunking',
+        message: `Created ${chunks.length} chunks for analysis`,
+        context: { totalChunks: chunks.length }
+      });
+
       // Process with each plugin in parallel with improved error recovery
       const pluginResults = new Map<string, AnalysisResult>();
       const allComments: Comment[] = [];
@@ -114,16 +138,22 @@ export class PluginManager {
 
       // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
+        const pluginName = plugin.name();
         const maxRetries = 2;
         let lastError: Error | unknown = null;
+
+        // Start plugin logging
+        this.pluginLogger.pluginStarted(pluginName);
+
+        // Create a plugin logger instance for this plugin
+        const pluginLoggerInstance = this.pluginLogger.createPluginLogger(pluginName);
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             const isRetry = attempt > 1;
             if (isRetry) {
-              logger.info(
-                `   Retrying ${plugin.name()} analysis (attempt ${attempt}/${maxRetries})...`
-              );
+              this.pluginLogger.pluginRetried(pluginName, attempt, maxRetries, 
+                lastError instanceof Error ? lastError.message : String(lastError));
               // Add small delay between retries
               await new Promise((resolve) =>
                 setTimeout(resolve, 1000 * attempt)
@@ -131,27 +161,49 @@ export class PluginManager {
             }
 
             const startTime = Date.now();
+            
+            // Add basic logging wrapper around plugin execution
+            pluginLoggerInstance.startPhase('initialization', `Starting ${pluginName} analysis`);
+            pluginLoggerInstance.processingChunks(chunks.length);
+            
             const result = await plugin.analyze(chunks, text);
             const duration = Date.now() - startTime;
 
-            return { plugin: plugin.name(), result, success: true };
+            // Log results
+            pluginLoggerInstance.itemsExtracted(result.comments.length);
+            pluginLoggerInstance.commentsGenerated(result.comments.length);
+            pluginLoggerInstance.cost(result.cost);
+            pluginLoggerInstance.endPhase('summary', `Analysis complete - ${result.comments.length} comments generated`, {
+              duration,
+              cost: result.cost
+            });
+
+            // Plugin completed successfully
+            this.pluginLogger.pluginCompleted(pluginName, {
+              itemsFound: result.comments.length,
+              commentsGenerated: result.comments.length,
+              cost: result.cost
+            });
+
+            return { plugin: pluginName, result, success: true };
           } catch (error) {
             lastError = error;
             const errorMessage =
               error instanceof Error ? error.message : String(error);
 
+            pluginLoggerInstance.error(`Plugin execution failed`, error, 'analysis');
+
             // Check if this is a retryable error
             const isRetryable = this.isRetryableError(error);
 
             if (isRetryable && attempt < maxRetries) {
-              logger.warn(
-                `   ${plugin.name()} failed (attempt ${attempt}/${maxRetries}): ${errorMessage} - Will retry`
-              );
+              // Will retry - logged in pluginRetried call above
               continue;
             } else {
-              logger.error(
-                `   ${plugin.name()} failed permanently: ${errorMessage}`
-              );
+              // Plugin failed permanently
+              this.pluginLogger.pluginCompleted(pluginName, {
+                error: errorMessage
+              });
               break;
             }
           }
@@ -216,6 +268,10 @@ export class PluginManager {
 
       const processingTime = Date.now() - this.startTime;
 
+      // Generate log summary and job log string
+      const logSummary = this.pluginLogger.generateSummary();
+      const jobLogString = this.pluginLogger.generateJobLogString();
+
       return {
         summary,
         analysis,
@@ -228,6 +284,8 @@ export class PluginManager {
           totalCost,
           processingTime,
         },
+        logSummary,
+        jobLogString,
       };
     } finally {
       // Clear session context
@@ -335,6 +393,8 @@ export class PluginManager {
         highlights: uniqueHighlights,
         tasks,
         errors: undefined, // TODO: Add better error tracking
+        logSummary: pluginResults.logSummary,
+        jobLogString: pluginResults.jobLogString,
       };
     } catch (error) {
       logger.error("Document analysis failed:", error);
@@ -367,6 +427,8 @@ export class PluginManager {
             recoveryAction: "Check system logs and retry the analysis",
           },
         ],
+        logSummary: this.pluginLogger.generateSummary(),
+        jobLogString: this.pluginLogger.generateJobLogString(),
       };
     }
   }

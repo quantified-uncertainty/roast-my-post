@@ -133,8 +133,10 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
                     costInCents: currentJob.costInCents,
                     attempts: currentJob.attempts,
                     originalJobId: currentJob.originalJobId,
-                    error: currentJob.error
+                    error: currentJob.error,
+                    logs: currentJob.logs
                   }}
+                  showLogs={true}
                 />
 
                 {/* Task Details */}
