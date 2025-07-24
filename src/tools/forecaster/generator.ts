@@ -71,7 +71,7 @@ Think carefully and provide your forecast. Random seed: ${Math.random()}`;
   // Get session context if available
   const currentSession = sessionContext.getSession();
   const sessionConfig = currentSession ? 
-    sessionContext.withPath(`/plugins/forecast/generate-${callNumber}`) : 
+    sessionContext.withPath(`/plugins/forecast/forecaster-generate-${callNumber}`) : 
     undefined;
   const heliconeHeaders = sessionConfig ? 
     createHeliconeHeaders(sessionConfig) : 

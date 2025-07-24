@@ -144,7 +144,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/tools/check-math') : 
+      sessionContext.withPath('/plugins/math/check-math-accuracy') : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 

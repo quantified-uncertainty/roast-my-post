@@ -542,13 +542,15 @@ export class DocumentChunkerTool extends Tool<
         // Flush current chunk
         if (currentChunk.length > 0) {
           const chunkText = currentChunk.join(' ');
-          const { startLine, endLine } = this.getLineNumbers(text, chunkStartOffset, currentOffset);
+          // Make sure we end at a sentence boundary to avoid partial words
+          const actualEndOffset = chunkStartOffset + chunkText.length;
+          const { startLine, endLine } = this.getLineNumbers(text, chunkStartOffset, actualEndOffset);
           
           chunks.push({
             id: `chunk-${chunkId++}`,
             text: chunkText,
             startOffset: chunkStartOffset,
-            endOffset: currentOffset,
+            endOffset: actualEndOffset,
             startLine,
             endLine,
             metadata: {
@@ -559,7 +561,8 @@ export class DocumentChunkerTool extends Tool<
           });
           
           currentChunk = [];
-          chunkStartOffset = currentOffset + 1;
+          // Start the next chunk where this one ended (no gap)
+          chunkStartOffset = actualEndOffset + 1; // +1 for space between sentences
         }
       }
       

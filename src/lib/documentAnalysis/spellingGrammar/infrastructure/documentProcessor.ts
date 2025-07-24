@@ -105,15 +105,34 @@ export class DocumentProcessor {
       
       // If adding this line would exceed chunk size, create a new chunk
       if (currentChunkCharCount + lineLength > maxChunkSize && currentChunk.length > 0) {
-        chunks.push(new DocumentChunk(
-          currentChunk.join('\n'),
-          currentChunkStartLine,
-          [...currentChunk]
-        ));
+        // Check if we should include this line based on word boundaries
+        const currentChunkText = currentChunk.join('\n');
+        const potentialChunkText = currentChunkText + '\n' + line;
         
-        currentChunk = [line];
-        currentChunkStartLine = i + 1; // Line numbers are 1-based
-        currentChunkCharCount = lineLength;
+        // If we're significantly over the limit, don't include the line
+        if (potentialChunkText.length > maxChunkSize * 1.2) {
+          chunks.push(new DocumentChunk(
+            currentChunkText,
+            currentChunkStartLine,
+            [...currentChunk]
+          ));
+          
+          currentChunk = [line];
+          currentChunkStartLine = i + 1; // Line numbers are 1-based
+          currentChunkCharCount = lineLength;
+        } else {
+          // Include the line to avoid splitting words
+          currentChunk.push(line);
+          chunks.push(new DocumentChunk(
+            currentChunk.join('\n'),
+            currentChunkStartLine,
+            [...currentChunk]
+          ));
+          
+          currentChunk = [];
+          currentChunkStartLine = i + 2; // Next line
+          currentChunkCharCount = 0;
+        }
       } else {
         currentChunk.push(line);
         currentChunkCharCount += lineLength;

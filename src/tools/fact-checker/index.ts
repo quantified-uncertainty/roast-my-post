@@ -62,7 +62,7 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/tools/fact-checker') : 
+      sessionContext.withPath('/plugins/fact-check/fact-checker-verify') : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 

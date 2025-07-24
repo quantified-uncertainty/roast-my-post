@@ -153,13 +153,13 @@ export class ExtractForecastingClaimsTool extends Tool<
       const currentSession = sessionContext.getSession();
       let sessionConfig;
       if (currentSession) {
-        sessionConfig = sessionContext.withPath(`/tools/extract-forecasting-claims`);
+        sessionConfig = sessionContext.withPath(`/plugins/forecast/extract-forecasting-claims`);
       } else {
         sessionConfig = { 
           userId: context.userId, 
           sessionId: `extract-forecasting-claims-${Date.now()}`, 
           sessionName: `Extract Forecasting Claims`,
-          sessionPath: `/tools/extract-forecasting-claims` 
+          sessionPath: `/plugins/forecast/extract-forecasting-claims` 
         };
       }
       

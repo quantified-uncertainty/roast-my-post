@@ -116,7 +116,7 @@ For each claim, provide:
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/tools/extract-factual-claims') : 
+      sessionContext.withPath('/plugins/fact-check/extract-factual-claims') : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 

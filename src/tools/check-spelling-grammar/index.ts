@@ -107,7 +107,13 @@ Report any errors found with suggested corrections and importance scores.`;
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/spelling/check') : 
+      sessionContext
+        .withPath('/plugins/spelling/check-spelling-grammar')
+        ?.withProperties({
+          plugin: 'spelling',
+          operation: 'check-errors',
+          tool: 'check-spelling-grammar'
+        }) : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 

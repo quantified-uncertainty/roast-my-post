@@ -95,7 +95,13 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/extract') : 
+      sessionContext
+        .withPath('/plugins/math/extract-math-expressions')
+        ?.withProperties({
+          plugin: 'math',
+          operation: 'extract-expressions',
+          tool: 'extract-math-expressions'
+        }) : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 
