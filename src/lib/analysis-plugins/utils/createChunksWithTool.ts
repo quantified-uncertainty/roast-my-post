@@ -9,7 +9,6 @@ import { LocationUtils } from '../../documentAnalysis/utils/LocationUtils';
 import { logger } from '../../logger';
 
 export interface ChunkingOptions {
-  strategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   maxChunkSize?: number;
   minChunkSize?: number;
   preserveContext?: boolean;
@@ -30,7 +29,6 @@ export async function createChunksWithTool(
   // Map legacy options to new tool options
   const toolInput: DocumentChunkerInput = {
     text,
-    strategy: options.strategy || (options.chunkByParagraphs ? 'paragraph' : 'hybrid'),
     maxChunkSize: options.maxChunkSize || options.chunkSize || 1500,
     minChunkSize: options.minChunkSize || 200,
     preserveContext: options.preserveContext ?? true,

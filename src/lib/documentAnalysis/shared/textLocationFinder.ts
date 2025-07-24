@@ -5,6 +5,7 @@
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
+import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
 
 export interface TextLocation {
   startOffset: number;
@@ -38,6 +39,9 @@ export interface TextLocationOptions {
   // Minimum lengths for partial/fuzzy matching
   minPartialMatchLength?: number;
   minKeyPhraseLength?: number;
+  
+  // Enable LLM fallback for difficult cases
+  enableLLMFallback?: boolean;
 }
 
 interface LocationStrategy {

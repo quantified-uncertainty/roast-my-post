@@ -33,8 +33,6 @@ export async function analyzeWithMultiEpistemicEval(
   const manager = new PluginManager({
     sessionConfig: options.sessionConfig,
     jobId: options.jobId,
-    useIntelligentChunking: true,
-    chunkingStrategy: 'semantic', // Use semantic chunking to avoid splitting words
   });
 
   // Delegate to plugin system

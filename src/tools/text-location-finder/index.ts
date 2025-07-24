@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, findMultipleTextLocations, TextLocationOptions } from '@/lib/documentAnalysis/shared/textLocationFinder';
+import { findTextLocation, findMultipleTextLocations, TextLocationOptions, TextLocation } from '@/lib/documentAnalysis/shared/textLocationFinder';
+import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -10,6 +11,7 @@ export interface TextLocationFinderInput {
     // Essential options only
     caseInsensitive?: boolean;
     allowPartialMatch?: boolean;
+    useLLMFallback?: boolean;
   };
 }
 
@@ -27,6 +29,8 @@ export interface TextLocationFinderOutput {
   };
   error?: string;
   processingTimeMs: number;
+  llmUsed?: boolean;
+  llmSuggestion?: string;
 }
 
 // Input validation schema
@@ -37,6 +41,7 @@ const inputSchema = z.object({
   options: z.object({
     caseInsensitive: z.boolean().optional(),
     allowPartialMatch: z.boolean().optional(),
+    useLLMFallback: z.boolean().optional(),
   }).optional()
 });
 
@@ -54,17 +59,19 @@ const outputSchema = z.object({
     confidence: z.number()
   }).optional(),
   error: z.string().optional(),
-  processingTimeMs: z.number()
+  processingTimeMs: z.number(),
+  llmUsed: z.boolean().optional(),
+  llmSuggestion: z.string().optional()
 });
 
 export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLocationFinderOutput> {
   config: ToolConfig = {
     id: 'text-location-finder',
     name: 'Text Location Finder',
-    description: 'Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, and context-based searching',
-    version: '1.0.0',
+    description: 'Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, context-based searching, and LLM fallback for difficult cases',
+    version: '1.1.0',
     category: 'utility',
-    costEstimate: 'Free - no external API calls',
+    costEstimate: 'Free (or minimal LLM cost if fallback is used)',
     path: '/tools/text-location-finder',
     status: 'stable'
   };
@@ -86,7 +93,21 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
       };
 
       // Use the unified finder for single search
-      const locationResult = findTextLocation(input.searchText, input.documentText, locationOptions);
+      let locationResult = findTextLocation(input.searchText, input.documentText, locationOptions);
+      let llmUsed = false;
+      let llmSuggestion: string | undefined;
+
+      // If not found and LLM fallback is enabled, try LLM
+      if (!locationResult && input.options?.useLLMFallback) {
+        context.logger.debug('TextLocationFinder: Trying LLM fallback...');
+        const llmResult = await this.findWithLLM(input.searchText, input.documentText, input.context, context);
+        
+        if (llmResult) {
+          locationResult = llmResult.location;
+          llmUsed = true;
+          llmSuggestion = llmResult.suggestion;
+        }
+      }
 
       const processingTime = Date.now() - startTime;
       
@@ -103,7 +124,9 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
             strategy: locationResult.strategy,
             confidence: locationResult.confidence
           },
-          processingTimeMs: processingTime
+          processingTimeMs: processingTime,
+          llmUsed,
+          llmSuggestion
         };
 
         context.logger.debug(`TextLocationFinder: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`);
@@ -113,7 +136,9 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
           searchText: input.searchText,
           found: false,
           error: 'Text not found in document',
-          processingTimeMs: processingTime
+          processingTimeMs: processingTime,
+          llmUsed,
+          llmSuggestion
         };
 
         context.logger.debug(`TextLocationFinder: Text not found in ${processingTime}ms`);
@@ -130,6 +155,112 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
   override async validateAccess(context: ToolContext): Promise<boolean> {
     // This tool requires no special permissions - it's a pure utility
     return true;
+  }
+
+  // LLM fallback method
+  private async findWithLLM(
+    searchText: string,
+    documentText: string,
+    context: string | undefined,
+    toolContext: ToolContext
+  ): Promise<{ location: TextLocation; suggestion: string } | null> {
+    try {
+      const schema = {
+        properties: {
+          found: {
+            type: 'boolean',
+            description: 'Whether the text was found in the document'
+          },
+          matchedText: {
+            type: 'string',
+            description: 'The actual text found in the document that matches or is most similar to the search text'
+          },
+          startOffset: {
+            type: 'number',
+            description: 'The character position where the matched text starts'
+          },
+          endOffset: {
+            type: 'number',
+            description: 'The character position where the matched text ends'
+          },
+          confidence: {
+            type: 'number',
+            description: 'Confidence score between 0 and 1'
+          },
+          explanation: {
+            type: 'string',
+            description: 'Brief explanation of how the match was found or why it might be different from the search text'
+          }
+        },
+        required: ['found', 'matchedText', 'startOffset', 'endOffset', 'confidence', 'explanation']
+      };
+
+      const prompt = `You are helping find text in a document. The user is looking for a specific piece of text, but it might not match exactly due to:
+- Minor differences in wording
+- Truncation or partial text
+- OCR errors or typos
+- Different formatting or punctuation
+- Paraphrasing
+
+Search text: "${searchText}"
+${context ? `Additional context: ${context}` : ''}
+
+Document to search in:
+${documentText}
+
+Find the best match for the search text in the document. If the exact text isn't found, look for the closest semantic match or partial match. Return the actual text from the document, not the search text.`;
+
+      const { toolResult } = await callClaudeWithTool({
+        model: MODEL_CONFIG.analysis, // Use analysis model as requested
+        messages: [{ role: 'user', content: prompt }],
+        toolName: 'find_text_location',
+        toolDescription: 'Find the location of text in a document',
+        toolSchema: { type: 'object', ...schema }
+      });
+
+      // Type the result properly
+      const result = toolResult as {
+        found: boolean;
+        matchedText: string;
+        startOffset: number;
+        endOffset: number;
+        confidence: number;
+        explanation: string;
+      };
+
+      if (result.found && result.matchedText) {
+        // Verify the offsets are correct
+        const verifiedText = documentText.substring(result.startOffset, result.endOffset);
+        if (verifiedText !== result.matchedText) {
+          // Try to find the actual position
+          const actualPos = documentText.indexOf(result.matchedText);
+          if (actualPos !== -1) {
+            result.startOffset = actualPos;
+            result.endOffset = actualPos + result.matchedText.length;
+          }
+        }
+
+        const location: TextLocation = {
+          startOffset: result.startOffset,
+          endOffset: result.endOffset,
+          quotedText: result.matchedText,
+          lineNumber: getLineNumberAtPosition(documentText, result.startOffset),
+          lineText: getLineAtPosition(documentText, result.startOffset),
+          strategy: 'llm',
+          confidence: Math.max(0.7, result.confidence * 0.9) // Slightly lower confidence for LLM matches, but keep minimum 70%
+        };
+
+        return {
+          location,
+          suggestion: result.explanation
+        };
+      }
+
+      return null;
+    } catch (error) {
+      toolContext.logger.error('LLM fallback failed:', error);
+      return null;
+    }
   }
 
   // Optional: provide usage examples
@@ -162,9 +293,32 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
             caseInsensitive: true
           }
         }
+      },
+      {
+        description: "LLM fallback for paraphrased text",
+        input: {
+          documentText: "Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.",
+          searchText: "research shows that worldwide temperatures could increase by 2-3°C in the next 50 years",
+          options: {
+            useLLMFallback: true
+          }
+        }
       }
     ];
   }
+}
+
+// Helper function to get line number at position
+function getLineNumberAtPosition(text: string, position: number): number {
+  const lines = text.substring(0, position).split('\n');
+  return lines.length;
+}
+
+// Helper function to get line at position
+function getLineAtPosition(text: string, position: number): string {
+  const lines = text.split('\n');
+  const lineNumber = getLineNumberAtPosition(text, position);
+  return lines[lineNumber - 1] || '';
 }
 
 // Export the tool instance

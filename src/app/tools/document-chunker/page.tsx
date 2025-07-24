@@ -15,20 +15,16 @@ import {
 export default function DocumentChunkerPage() {
 
   const formConfig = {
-    fieldOrder: ['text', 'strategy', 'targetWords', 'maxChunkSize', 'minChunkSize', 'preserveContext'] as ('text' | 'strategy' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'preserveContext')[],
+    fieldOrder: ['text', 'targetWords', 'maxChunkSize', 'minChunkSize', 'preserveContext'] as ('text' | 'targetWords' | 'maxChunkSize' | 'minChunkSize' | 'preserveContext')[],
     fieldConfigs: {
       text: {
         label: 'Document Text',
         placeholder: 'Paste your document here...',
         rows: 10,
       },
-      strategy: {
-        label: 'Chunking Strategy',
-        helpText: 'Choose the chunking strategy based on your document type',
-      },
       targetWords: {
-        label: 'Target Words (Markdown)',
-        helpText: 'Target word count per chunk for recursive markdown chunking',
+        label: 'Target Words per Chunk',
+        helpText: 'Target word count per chunk (documents are split by markdown sections)',
       },
       maxChunkSize: {
         label: 'Maximum Chunk Size',
@@ -50,7 +46,6 @@ export default function DocumentChunkerPage() {
         description: 'Technical documentation with authentication, endpoints, and code examples',
         data: {
           text: technicalDocumentation,
-          strategy: 'markdown' as const,
           targetWords: 400,
           maxChunkSize: 1500,
           minChunkSize: 200,
@@ -62,7 +57,6 @@ export default function DocumentChunkerPage() {
         description: 'Research paper on climate prediction with methodology and results',
         data: {
           text: academicPaper,
-          strategy: 'markdown' as const,
           targetWords: 450,
           maxChunkSize: 1800,
           minChunkSize: 300,
@@ -74,7 +68,6 @@ export default function DocumentChunkerPage() {
         description: 'Step-by-step web development tutorial with code samples',
         data: {
           text: tutorialGuide,
-          strategy: 'markdown' as const,
           targetWords: 500,
           maxChunkSize: 2000,
           minChunkSize: 250,
@@ -86,7 +79,6 @@ export default function DocumentChunkerPage() {
         description: 'Formal policy with numbered sections and procedures',
         data: {
           text: policyDocument,
-          strategy: 'markdown' as const,
           targetWords: 350,
           maxChunkSize: 1500,
           minChunkSize: 200,
@@ -98,7 +90,6 @@ export default function DocumentChunkerPage() {
         description: 'Market analysis with data, projections, and technical insights',
         data: {
           text: researchReport,
-          strategy: 'hybrid' as const,
           targetWords: 400,
           maxChunkSize: 1600,
           minChunkSize: 300,
@@ -110,7 +101,6 @@ export default function DocumentChunkerPage() {
         description: 'Quarterly earnings with metrics, tables, and code examples',
         data: {
           text: mixedContent,
-          strategy: 'semantic' as const,
           targetWords: 450,
           maxChunkSize: 1800,
           minChunkSize: 250,
@@ -136,7 +126,7 @@ export default function DocumentChunkerPage() {
           </div>
           <div>
             <p className="text-sm text-gray-600">Strategy</p>
-            <p className="text-2xl font-bold capitalize">{output.metadata.strategy}</p>
+            <p className="text-2xl font-bold">Markdown</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Warnings</p>

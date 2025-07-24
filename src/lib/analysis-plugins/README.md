@@ -22,41 +22,30 @@ const result = await manager.analyzeDocumentSimple(
 );
 ```
 
-### With Intelligent Chunking
+### Chunking Strategy
 
-The plugin system now supports intelligent document chunking using our advanced chunking tool:
+The plugin system automatically uses intelligent semantic chunking to ensure:
+- Words are never split across chunk boundaries
+- Sentences remain intact when possible  
+- Chunks are sized appropriately for LLM analysis (~1500 characters)
+- Code blocks and important structures are preserved
 
 ```typescript
 import { PluginManager } from './PluginManager';
 import { ForecastPlugin } from './plugins/forecast';
 
-// Create plugin manager with intelligent chunking enabled
+// Create plugin manager - intelligent chunking is always enabled
 const manager = new PluginManager({
-  useIntelligentChunking: true,
-  chunkingStrategy: 'markdown', // 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid'
+  sessionConfig: mySessionConfig,  // Optional Helicone session config
+  jobId: myJobId,                  // Optional job ID for logging
 });
 
-// The plugins will receive intelligently chunked text
+// The plugins will receive properly chunked text
 const result = await manager.analyzeDocumentSimple(
   documentText,
   [new ForecastPlugin()]
 );
 ```
-
-### Chunking Strategies
-
-- **`hybrid`** (default): Automatically selects the best strategy based on document structure
-- **`markdown`**: Preserves markdown structure, ideal for technical documentation
-- **`semantic`**: Splits by sentences while maintaining context
-- **`paragraph`**: Splits by paragraphs, good for essays
-- **`fixed`**: Fixed-size chunks with overlap
-
-### Benefits of Intelligent Chunking
-
-1. **Better Context Preservation**: Chunks maintain semantic boundaries
-2. **Markdown Awareness**: Code blocks and headers stay intact
-3. **Optimal Sizing**: Chunks are sized appropriately for LLM analysis
-4. **Metadata Rich**: Each chunk includes heading context and type information
 
 ## Creating a Plugin
 

@@ -106,15 +106,19 @@ Report any errors found with suggested corrections and importance scores.`;
 
     // Get session context if available
     const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext
-        .withPath('/plugins/spelling/check-spelling-grammar')
-        ?.withProperties({
-          plugin: 'spelling',
-          operation: 'check-errors',
-          tool: 'check-spelling-grammar'
-        }) : 
+    let sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/spelling/check-spelling-grammar') : 
       undefined;
+    
+    // Add properties if we have a session config
+    if (sessionConfig) {
+      sessionConfig = sessionContext.withProperties({
+        plugin: 'spelling',
+        operation: 'check-errors',
+        tool: 'check-spelling-grammar'
+      });
+    }
+    
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 
       undefined;

@@ -8,7 +8,6 @@ import {
 // Define types for the tool
 export interface DocumentChunkerInput {
   text: string;
-  strategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   maxChunkSize?: number;
   minChunkSize?: number;
   preserveContext?: boolean;
@@ -43,11 +42,6 @@ export interface DocumentChunkerOutput {
 // Input validation schema
 const inputSchema = z.object({
   text: z.string().min(1).max(500000).describe("The document text to chunk"),
-  strategy: z
-    .enum(['semantic', 'fixed', 'paragraph', 'markdown', 'hybrid'])
-    .optional()
-    .default('hybrid')
-    .describe("Chunking strategy to use"),
   maxChunkSize: z
     .number()
     .min(100)
@@ -73,7 +67,7 @@ const inputSchema = z.object({
     .max(2000)
     .optional()
     .default(500)
-    .describe("Target word count for recursive chunking (markdown strategy)"),
+    .describe("Target word count for recursive markdown chunking"),
 });
 
 // Output validation schema
@@ -127,29 +121,12 @@ export class DocumentChunkerTool extends Tool<
     input: DocumentChunkerInput,
     context: ToolContext
   ): Promise<DocumentChunkerOutput> {
-    context.logger.info(`[DocumentChunker] Starting chunking with strategy: ${input.strategy}`);
+    context.logger.info(`[DocumentChunker] Starting markdown-aware chunking`);
 
     const warnings: string[] = [];
-    let chunks: DocumentChunk[];
-
-    switch (input.strategy) {
-      case 'markdown':
-        chunks = this.markdownAwareChunking(input.text, input, warnings);
-        break;
-      case 'semantic':
-        chunks = this.semanticChunking(input.text, input, warnings);
-        break;
-      case 'paragraph':
-        chunks = this.paragraphChunking(input.text, input, warnings);
-        break;
-      case 'fixed':
-        chunks = this.fixedSizeChunking(input.text, input, warnings);
-        break;
-      case 'hybrid':
-      default:
-        chunks = this.hybridChunking(input.text, input, warnings);
-        break;
-    }
+    
+    // Always use markdown-aware chunking
+    const chunks = this.markdownAwareChunking(input.text, input, warnings);
 
     const totalSize = chunks.reduce((sum, chunk) => sum + chunk.text.length, 0);
     const avgSize = chunks.length > 0 ? Math.round(totalSize / chunks.length) : 0;
@@ -163,7 +140,7 @@ export class DocumentChunkerTool extends Tool<
       metadata: {
         totalChunks: chunks.length,
         averageChunkSize: avgSize,
-        strategy: input.strategy || 'hybrid',
+        strategy: 'markdown',
         warnings: warnings.length > 0 ? warnings : undefined,
       },
     };
@@ -647,8 +624,22 @@ export class DocumentChunkerTool extends Tool<
     let chunkId = 0;
 
     while (position < text.length) {
-      const end = Math.min(position + chunkSize, text.length);
-      const chunkText = text.slice(position, end);
+      let end = Math.min(position + chunkSize, text.length);
+      
+      // If we're not at the end of the text, try to find a word boundary
+      if (end < text.length) {
+        // Look backwards for a space or newline
+        let wordBoundary = end;
+        while (wordBoundary > position + chunkSize * 0.8 && wordBoundary > position) {
+          if (text[wordBoundary] === ' ' || text[wordBoundary] === '\n') {
+            end = wordBoundary;
+            break;
+          }
+          wordBoundary--;
+        }
+      }
+      
+      const chunkText = text.slice(position, end).trim();
       const { startLine, endLine } = this.getLineNumbers(text, position, end);
 
       chunks.push({
@@ -666,6 +657,10 @@ export class DocumentChunkerTool extends Tool<
       });
 
       position = end;
+      // Skip any spaces at the beginning of the next chunk
+      while (position < text.length && (text[position] === ' ' || text[position] === '\n')) {
+        position++;
+      }
     }
 
     return chunks;

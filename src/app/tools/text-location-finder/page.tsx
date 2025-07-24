@@ -15,7 +15,8 @@ function renderResults(result: TextLocationFinderOutput) {
       normalizedWhitespace: 'bg-indigo-100 text-indigo-800',
       context: 'bg-orange-100 text-orange-800',
       partialMatch: 'bg-yellow-100 text-yellow-800',
-      keyPhrase: 'bg-pink-100 text-pink-800'
+      keyPhrase: 'bg-pink-100 text-pink-800',
+      llm: 'bg-red-100 text-red-800'
     };
     return colors[strategy] || 'bg-gray-100 text-gray-800';
   };
@@ -41,6 +42,11 @@ function renderResults(result: TextLocationFinderOutput) {
                 <span className="text-gray-600">Confidence:</span> {(result.location.confidence * 100).toFixed(0)}%
               </div>
             </>
+          )}
+          {result.llmUsed && (
+            <div className="col-span-2">
+              <span className="text-gray-600">LLM Fallback:</span> <span className="text-orange-600">Used</span>
+            </div>
           )}
         </div>
       </div>
@@ -77,6 +83,11 @@ function renderResults(result: TextLocationFinderOutput) {
             <div className="bg-gray-50 p-2 rounded text-sm">
               <span className="font-medium">Found text:</span> "{result.location.quotedText}"
             </div>
+            {result.llmSuggestion && (
+              <div className="bg-orange-50 p-2 rounded text-sm mt-2">
+                <span className="font-medium text-orange-800">LLM Explanation:</span> {result.llmSuggestion}
+              </div>
+            )}
           </div>
         )}
 
@@ -125,6 +136,10 @@ export default function TextLocationFinderPage() {
               allowPartialMatch: {
                 label: 'Allow Partial Matching',
                 helpText: 'Allow matching partial text for long or inexact quotes'
+              },
+              useLLMFallback: {
+                label: 'Use LLM Fallback',
+                helpText: 'Use AI to find text when other methods fail (for paraphrased, truncated, or similar text)'
               }
             }
           }
@@ -164,6 +179,17 @@ export default function TextLocationFinderPage() {
               searchText: 'ARTIFICIAL INTELLIGENCE',
               options: {
                 caseInsensitive: true
+              }
+            }
+          },
+          {
+            name: 'LLM Fallback for Paraphrased Text',
+            description: 'Find text that is paraphrased or expressed differently',
+            data: {
+              documentText: 'Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.',
+              searchText: 'research shows that worldwide temperatures could increase by 2-3°C in the next 50 years',
+              options: {
+                useLLMFallback: true
               }
             }
           }

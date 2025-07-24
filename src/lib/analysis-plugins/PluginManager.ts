@@ -23,8 +23,6 @@ import {
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
-  useIntelligentChunking?: boolean;
-  chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   jobId?: string; // For logging integration
 }
 
@@ -69,15 +67,11 @@ export interface FullDocumentAnalysisResult {
 
 export class PluginManager {
   private sessionConfig?: HeliconeSessionConfig;
-  private useIntelligentChunking: boolean;
-  private chunkingStrategy?: 'semantic' | 'fixed' | 'paragraph' | 'markdown' | 'hybrid';
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
 
   constructor(config: PluginManagerConfig = {}) {
     this.sessionConfig = config.sessionConfig;
-    this.useIntelligentChunking = config.useIntelligentChunking ?? false;
-    this.chunkingStrategy = config.chunkingStrategy;
     this.pluginLogger = new PluginLogger(config.jobId);
   }
 
@@ -102,25 +96,16 @@ export class PluginManager {
         level: 'info',
         plugin: 'PluginManager',
         phase: 'chunking',
-        message: `Starting document chunking - strategy: ${this.useIntelligentChunking ? this.chunkingStrategy || 'hybrid' : 'fixed'}`
+        message: `Starting document chunking - using intelligent markdown chunking`
       });
 
-      // Create chunks using the appropriate method
-      let chunks;
-      if (this.useIntelligentChunking) {
-        logger.info(`Using intelligent chunking with strategy: ${this.chunkingStrategy || 'hybrid'}`);
-        chunks = await createChunksWithTool(text, {
-          strategy: this.chunkingStrategy || 'hybrid',
-          maxChunkSize: 1500,
-          minChunkSize: 200,
-          preserveContext: true,
-        });
-      } else {
-        chunks = createChunks(text, {
-          chunkSize: 1000,
-          chunkByParagraphs: false,
-        });
-      }
+      // Always use intelligent chunking with markdown strategy for plugins
+      logger.info(`Using intelligent chunking with markdown strategy`);
+      const chunks = await createChunksWithTool(text, {
+        maxChunkSize: 1500,
+        minChunkSize: 200,
+        preserveContext: true,
+      });
 
       this.pluginLogger.log({
         level: 'info',
