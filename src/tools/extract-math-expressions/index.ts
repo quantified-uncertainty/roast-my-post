@@ -166,14 +166,27 @@ Provide simplified explanations for complex expressions when helpful.`;
   }
   
   private buildUserPrompt(input: ExtractMathExpressionsInput): string {
-    return `Extract and analyze all mathematical expressions from this text:
-
+    const requirements = [];
+    if (input.verifyCalculations) requirements.push('Verify all calculations for correctness.');
+    if (input.includeContext) requirements.push('Consider the context when assessing importance.');
+    requirements.push('Extract ALL mathematical content, no matter how simple or complex.');
+    
+    return `<task>
+  <instruction>Extract and analyze all mathematical expressions from this text</instruction>
+  
+  <content>
 ${input.text}
-
-${input.verifyCalculations ? 'Verify all calculations for correctness.' : ''}
-${input.includeContext ? 'Consider the context when assessing importance.' : ''}
-
-Extract ALL mathematical content, no matter how simple or complex.`;
+  </content>
+  
+  <parameters>
+    <verify_calculations>${input.verifyCalculations ?? true}</verify_calculations>
+    <include_context>${input.includeContext ?? true}</include_context>
+  </parameters>
+  
+  <requirements>
+    ${requirements.join('\n    ')}
+  </requirements>
+</task>`;
   }
   
   private getMathExtractionToolSchema() {

@@ -209,13 +209,22 @@ REMINDER: Use the report_math_errors tool to report your findings.`;
       `${index + 1}: ${line}`
     ).join('\n');
 
-    return `Consider this text. Is the math correct? Think through the details and analyze for any mathematical errors:
-
+    return `<task>
+  <instruction>Consider this text. Is the math correct? Think through the details and analyze for any mathematical errors</instruction>
+  
+  <content>
 ${numberedContent}
-
-${input.context ? `\nContext: ${input.context}` : ''}
-
-Report any mathematical errors found with detailed explanations and corrections.`;
+  </content>
+  
+  ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ''}
+  <parameters>
+    <max_errors>${input.maxErrors || 50}</max_errors>
+  </parameters>
+  
+  <requirements>
+    Report any mathematical errors found with detailed explanations and corrections.
+  </requirements>
+</task>`;
   }
   
   private getMathErrorReportingToolSchema(maxErrors: number) {

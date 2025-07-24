@@ -63,10 +63,23 @@ Keep the reasoning very brief - just one clear sentence.
 
 [Session: ${timestamp}-${randomSeed}-${callNumber}]`;
 
-  const userPrompt = `${prefix} ${Math.random() < 0.5 ? "Please forecast: " : "What is the probability that "}${options.question}
-${options.context ? `\nContext: ${options.context}` : ""}
-
-Think carefully and provide your forecast. Random seed: ${Math.random()}`;
+  const userPrompt = `<task>
+  <instruction>${prefix} ${Math.random() < 0.5 ? "Please forecast" : "What is the probability that"}</instruction>
+  
+  <question>
+${options.question}
+  </question>
+  
+  ${options.context ? `<context>\n${options.context}\n  </context>\n  ` : ''}
+  <parameters>
+    <random_seed>${Math.random()}</random_seed>
+    <session_id>${timestamp}-${randomSeed}-${callNumber}</session_id>
+  </parameters>
+  
+  <requirements>
+    Think carefully and provide your forecast with a precise probability and brief reasoning.
+  </requirements>
+</task>`;
 
   // Get session context if available
   const currentSession = sessionContext.getSession();

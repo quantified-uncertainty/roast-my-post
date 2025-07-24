@@ -12,6 +12,7 @@ export interface TextLocationFinderInput {
     caseInsensitive?: boolean;
     allowPartialMatch?: boolean;
     useLLMFallback?: boolean;
+    includeLLMExplanation?: boolean;
   };
 }
 
@@ -42,6 +43,7 @@ const inputSchema = z.object({
     caseInsensitive: z.boolean().optional(),
     allowPartialMatch: z.boolean().optional(),
     useLLMFallback: z.boolean().optional(),
+    includeLLMExplanation: z.boolean().optional(),
   }).optional()
 });
 
@@ -100,7 +102,13 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
       // If not found and LLM fallback is enabled, try LLM
       if (!locationResult && input.options?.useLLMFallback) {
         context.logger.debug('TextLocationFinder: Trying LLM fallback...');
-        const llmResult = await this.findWithLLM(input.searchText, input.documentText, input.context, context);
+        const llmResult = await this.findWithLLM(
+          input.searchText, 
+          input.documentText, 
+          input.context, 
+          input.options.includeLLMExplanation || false,
+          context
+        );
         
         if (llmResult) {
           locationResult = llmResult.location;
@@ -162,8 +170,9 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
     searchText: string,
     documentText: string,
     context: string | undefined,
+    includeExplanation: boolean,
     toolContext: ToolContext
-  ): Promise<{ location: TextLocation; suggestion: string } | null> {
+  ): Promise<{ location: TextLocation; suggestion?: string } | null> {
     try {
       const schema = {
         properties: {
@@ -187,12 +196,14 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
             type: 'number',
             description: 'Confidence score between 0 and 1'
           },
-          explanation: {
-            type: 'string',
-            description: 'Brief explanation of how the match was found or why it might be different from the search text'
-          }
+          ...(includeExplanation ? {
+            explanation: {
+              type: 'string',
+              description: 'Brief explanation of how the match was found or why it might be different from the search text'
+            }
+          } : {})
         },
-        required: ['found', 'matchedText', 'startOffset', 'endOffset', 'confidence', 'explanation']
+        required: ['found', 'matchedText', 'startOffset', 'endOffset', 'confidence', ...(includeExplanation ? ['explanation'] : [])]
       };
 
       const prompt = `You are helping find text in a document. The user is looking for a specific piece of text, but it might not match exactly due to:
@@ -208,7 +219,7 @@ ${context ? `Additional context: ${context}` : ''}
 Document to search in:
 ${documentText}
 
-Find the best match for the search text in the document. If the exact text isn't found, look for the closest semantic match or partial match. Return the actual text from the document, not the search text.`;
+Find the best match for the search text in the document. If the exact text isn't found, look for the closest semantic match or partial match. Return the actual text from the document, not the search text.${includeExplanation ? ' Include a brief explanation of how the match was found.' : ''}`;
 
       const { toolResult } = await callClaudeWithTool({
         model: MODEL_CONFIG.analysis, // Use analysis model as requested
@@ -225,7 +236,7 @@ Find the best match for the search text in the document. If the exact text isn't
         startOffset: number;
         endOffset: number;
         confidence: number;
-        explanation: string;
+        explanation?: string;
       };
 
       if (result.found && result.matchedText) {
@@ -295,12 +306,24 @@ Find the best match for the search text in the document. If the exact text isn't
         }
       },
       {
-        description: "LLM fallback for paraphrased text",
+        description: "LLM fallback for paraphrased text (with explanation)",
         input: {
           documentText: "Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.",
           searchText: "research shows that worldwide temperatures could increase by 2-3°C in the next 50 years",
           options: {
-            useLLMFallback: true
+            useLLMFallback: true,
+            includeLLMExplanation: true
+          }
+        }
+      },
+      {
+        description: "LLM fallback without explanation (saves tokens)",
+        input: {
+          documentText: "The company reported revenues of $5.2 billion in Q3 2023.",
+          searchText: "the firm announced earnings of 5.2B dollars in the third quarter of 2023",
+          options: {
+            useLLMFallback: true,
+            includeLLMExplanation: false
           }
         }
       }

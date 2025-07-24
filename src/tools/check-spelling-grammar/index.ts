@@ -96,13 +96,22 @@ For each error, provide an importance score (0-100):
 
 Limit to ${input.maxErrors} most important errors.`;
 
-    const userPrompt = `Check this text for spelling and grammar issues:
-
+    const userPrompt = `<task>
+  <instruction>Check this text for spelling and grammar issues</instruction>
+  
+  <content>
 ${input.text}
-
-${input.context ? `\nContext: ${input.context}` : ''}
-
-Report any errors found with suggested corrections and importance scores.`;
+  </content>
+  
+  ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ''}
+  <parameters>
+    <max_errors>${input.maxErrors || 50}</max_errors>
+  </parameters>
+  
+  <requirements>
+    Report any errors found with suggested corrections and importance scores.
+  </requirements>
+</task>`;
 
     // Get session context if available
     const currentSession = sessionContext.getSession();

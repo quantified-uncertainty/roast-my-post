@@ -140,6 +140,10 @@ export default function TextLocationFinderPage() {
               useLLMFallback: {
                 label: 'Use LLM Fallback',
                 helpText: 'Use AI to find text when other methods fail (for paraphrased, truncated, or similar text)'
+              },
+              includeLLMExplanation: {
+                label: 'Include LLM Explanation',
+                helpText: 'Get an explanation of how the AI found the match (costs extra tokens)'
               }
             }
           }
@@ -189,7 +193,8 @@ export default function TextLocationFinderPage() {
               documentText: 'Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.',
               searchText: 'research shows that worldwide temperatures could increase by 2-3°C in the next 50 years',
               options: {
-                useLLMFallback: true
+                useLLMFallback: true,
+                includeLLMExplanation: true
               }
             }
           }

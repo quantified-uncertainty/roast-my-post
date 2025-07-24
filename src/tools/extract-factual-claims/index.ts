@@ -111,7 +111,23 @@ For each claim, provide:
    - 30-49: Likely false (contradicts mainstream sources, suspicious claims)
    - Below 30: Almost certainly false (known myths, clear misinformation)`;
 
-    const userPrompt = `${input.instructions ? input.instructions + '\n\n' : ''}Extract factual claims from this text:\n\n${input.text}`;
+    const userPrompt = `<task>
+  <instruction>Extract factual claims from this text</instruction>
+  
+  <content>
+${input.text}
+  </content>
+  
+  ${input.instructions ? `<additional_instructions>\n${input.instructions}\n  </additional_instructions>\n  ` : ''}
+  <parameters>
+    <min_quality_threshold>${input.minQualityThreshold ?? 50}</min_quality_threshold>
+    <max_claims>${input.maxClaims ?? 30}</max_claims>
+  </parameters>
+  
+  <requirements>
+    Extract verifiable factual claims and score them based on importance, checkability, and truth probability.
+  </requirements>
+</task>`;
     
     // Get session context if available
     const currentSession = sessionContext.getSession();

@@ -142,9 +142,23 @@ export class ExtractForecastingClaimsTool extends Tool<
         ? `\n\nIMPORTANT: Only return forecasts where the average of (precisionScore + verifiabilityScore + importanceScore) / 3 is at least ${minQualityThreshold}. Calculate this average for each forecast and exclude any that don't meet this threshold.`
         : "";
 
-    const userPrompt = additionalContext
-      ? `Extract and score forecasts from this text:\n\n${text}\n\nAdditional Context:\n${additionalContext}\n\nInstructions:\nExtract up to ${maxDetailedAnalysis} predictions.${qualityInstruction}`
-      : `Extract and score forecasts from this text:\n\n${text}\n\nInstructions:\nExtract up to ${maxDetailedAnalysis} predictions.${qualityInstruction}`;
+    const userPrompt = `<task>
+  <instruction>Extract and score forecasts from this text</instruction>
+  
+  <content>
+${text}
+  </content>
+  
+  ${additionalContext ? `<additional_context>\n${additionalContext}\n  </additional_context>\n  ` : ''}
+  <parameters>
+    <max_detailed_analysis>${maxDetailedAnalysis}</max_detailed_analysis>
+    <min_quality_threshold>${minQualityThreshold}</min_quality_threshold>
+  </parameters>
+  
+  <requirements>
+    Extract up to ${maxDetailedAnalysis} predictions.${qualityInstruction}
+  </requirements>
+</task>`;
 
     // Set up Helicone headers if userId is available
     let heliconeHeaders = undefined;

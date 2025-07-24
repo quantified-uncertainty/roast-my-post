@@ -97,7 +97,18 @@ Be especially careful with:
 - Scientific facts and consensus
 - Claims about current events (note your knowledge cutoff)`;
 
-    const userPrompt = `Fact-check this claim: "${input.claim}"${input.context ? `\n\nContext: ${input.context}` : ''}`;
+    const userPrompt = `<task>
+  <instruction>Fact-check this claim</instruction>
+  
+  <claim>
+${input.claim}
+  </claim>
+  
+  ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ''}
+  <requirements>
+    Verify the accuracy of this factual claim and provide a verdict with confidence level and evidence.
+  </requirements>
+</task>`;
     
     const result = await callClaudeWithTool<FactCheckResult>({
       system: systemPrompt,
