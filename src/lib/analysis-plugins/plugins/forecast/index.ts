@@ -12,6 +12,7 @@ import {
 import type { ForecasterOutput } from "@/tools/forecaster";
 import forecasterTool from "@/tools/forecaster";
 import type { Comment } from "@/types/documentSchema";
+import { sessionContext } from "@/lib/helicone/sessionContext";
 
 import { logger } from "../../../logger";
 import { TextChunk } from "../../TextChunk";
@@ -21,6 +22,7 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
+import { withErrorBoundary, withErrorBoundaryBatch } from "../../utils/errorBoundary";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -70,6 +72,10 @@ class ExtractedForecast {
 
   public async generateOurForecast(): Promise<void> {
     try {
+      // Get current session context for proper user tracking
+      const currentSession = sessionContext.getSession();
+      const userId = currentSession?.userId || "forecast-plugin";
+      
       const result = await forecasterTool.execute(
         {
           question: this.extractedForecast.rewrittenPredictionText,
@@ -78,7 +84,7 @@ class ExtractedForecast {
           usePerplexity: false,
         },
         {
-          userId: "forecast-plugin",
+          userId: userId,
           logger: logger,
         }
       );
@@ -257,6 +263,10 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       `ForecastAnalyzer: Extracting from ${this.chunks.length} chunks in parallel`
     );
 
+    // Get current session context for proper user tracking
+    const currentSession = sessionContext.getSession();
+    const userId = currentSession?.userId || "forecast-plugin";
+
     // Process all chunks in parallel
     const chunkResults = await Promise.allSettled(
       this.chunks.map(async (chunk) => {
@@ -269,6 +279,7 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
               minQualityThreshold: 70,
             },
             {
+              userId: userId,
               logger: logger,
             }
           );
@@ -314,12 +325,23 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       `ForecastAnalyzer: Generating our probability estimates for ${forecastsToAnalyze.length} claims in parallel`
     );
 
-    // Run all forecast generations in parallel
-    await Promise.all(
-      forecastsToAnalyze.map(extractedForecast => 
-        extractedForecast.generateOurForecast()
-      )
-    );
+    // Run all forecast generations in parallel with error boundaries
+    const operations = forecastsToAnalyze.map((extractedForecast, index) => ({
+      name: `forecast-${index}-${extractedForecast.originalText.slice(0, 30)}`,
+      operation: () => extractedForecast.generateOurForecast(),
+      timeout: 30000 // 30 seconds per forecast
+    }));
+    
+    const results = await withErrorBoundaryBatch(operations);
+    
+    // Log any failures
+    const failures = results.filter(r => !r.result.success);
+    if (failures.length > 0) {
+      logger.warn(
+        `ForecastAnalyzer: ${failures.length} forecasts failed to generate`,
+        failures.map(f => ({ name: f.name, error: f.result.error?.message }))
+      );
+    }
   }
 
   private async createComments(): Promise<void> {
