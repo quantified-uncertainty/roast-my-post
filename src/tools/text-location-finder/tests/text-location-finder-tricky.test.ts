@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import { exactSearch } from './exactSearch';
-import { uFuzzySearch } from './uFuzzySearch';
-import { llmSearch } from './llmSearch';
+import { exactSearch } from '../exactSearch';
+import { uFuzzySearch } from '../uFuzzySearch';
+import { llmSearch } from '../llmSearch';
 
 interface TrickyTestCase {
   name: string;

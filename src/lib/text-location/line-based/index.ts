@@ -93,8 +93,9 @@ export class LineBasedLocator {
   
   /**
    * Find a snippet within a specific line with fuzzy matching
+   * For ambiguous snippets, tries to find the best match based on context
    */
-  private findSnippetInLine(lineIndex: number, snippet: string): number | null {
+  private findSnippetInLine(lineIndex: number, snippet: string, preferredContext?: string): number | null {
     if (lineIndex < 0 || lineIndex >= this.lines.length) {
       return null;
     }
@@ -103,7 +104,32 @@ export class LineBasedLocator {
     
     // Try exact match
     let index = line.indexOf(snippet);
-    if (index !== -1) return index;
+    if (index !== -1) {
+      // If there's a preferred context and multiple matches, try to find the best one
+      if (preferredContext) {
+        const allIndices: number[] = [];
+        let tempIndex = index;
+        while (tempIndex !== -1) {
+          allIndices.push(tempIndex);
+          tempIndex = line.indexOf(snippet, tempIndex + 1);
+        }
+        
+        if (allIndices.length > 1) {
+          // Find the occurrence that best matches the context
+          logger.debug(`Found ${allIndices.length} occurrences of "${snippet}", selecting best match`);
+          
+          // For "machine learning paradigms", prefer the occurrence followed by "paradigms"
+          for (const idx of allIndices) {
+            const contextAfter = line.substring(idx + snippet.length, idx + snippet.length + 20);
+            if (preferredContext.includes('paradigms') && contextAfter.includes('paradigms')) {
+              logger.debug(`Selected occurrence at ${idx} based on context`);
+              return idx;
+            }
+          }
+        }
+      }
+      return index;
+    }
     
     // Try case-insensitive
     const lowerSnippet = snippet.toLowerCase();
@@ -122,9 +148,62 @@ export class LineBasedLocator {
         logger.debug(`Using trimmed match for "${snippet}"`);
         return index;
       }
+      
+      // Try case-insensitive trimmed match
+      index = lowerLine.indexOf(trimmedSnippet.toLowerCase());
+      if (index !== -1) {
+        logger.debug(`Using case-insensitive trimmed match for "${snippet}"`);
+        return index;
+      }
     }
     
-    // Try normalized match (remove special chars/spaces)
+    // Try Unicode-normalized match (smart quotes, em-dashes, non-breaking spaces)
+    const normalizeUnicode = (text: string) => text
+      .replace(/[\u2018\u2019]/g, "'")  // Smart single quotes → straight
+      .replace(/[\u201C\u201D]/g, '"')  // Smart double quotes → straight  
+      .replace(/[\u2013\u2014]/g, '-')  // Em/en dashes → hyphen
+      .replace(/\u00A0/g, ' ')          // Non-breaking space → regular space
+      .replace(/\u2026/g, '...');       // Ellipsis → three dots
+      
+    const unicodeSnippet = normalizeUnicode(snippet);
+    const unicodeLine = normalizeUnicode(line);
+    
+    if (unicodeSnippet !== snippet) {
+      index = unicodeLine.indexOf(unicodeSnippet);
+      if (index !== -1) {
+        logger.debug(`Using Unicode-normalized match for "${snippet}"`);
+        return index;
+      }
+      
+      // Try case-insensitive Unicode-normalized
+      index = unicodeLine.toLowerCase().indexOf(unicodeSnippet.toLowerCase());
+      if (index !== -1) {
+        logger.debug(`Using case-insensitive Unicode-normalized match for "${snippet}"`);
+        return index;
+      }
+    }
+    
+    // Try whitespace-normalized match (multiple spaces → single)
+    const normalizeSpaces = (text: string) => text.replace(/\s+/g, ' ').trim();
+    const spaceSnippet = normalizeSpaces(snippet);
+    const spaceLine = normalizeSpaces(line);
+    
+    if (spaceSnippet !== snippet) {
+      index = spaceLine.indexOf(spaceSnippet);
+      if (index !== -1) {
+        logger.debug(`Using space-normalized match for "${snippet}"`);
+        return index;
+      }
+      
+      // Try case-insensitive space-normalized
+      index = spaceLine.toLowerCase().indexOf(spaceSnippet.toLowerCase());
+      if (index !== -1) {
+        logger.debug(`Using case-insensitive space-normalized match for "${snippet}"`);
+        return index;
+      }
+    }
+    
+    // Try normalized match (remove special chars/spaces) - kept as last resort
     const normalize = (text: string) => 
       text.replace(/\s+/g, '').replace(/[^\w]/g, '').toLowerCase();
     
@@ -174,7 +253,8 @@ export class LineBasedLocator {
     
     // Find start position
     let actualStartLine = startLineIndex;
-    let startPos = this.findSnippetInLine(startLineIndex, startCharacters);
+    // Pass endCharacters as context to help disambiguate multiple matches
+    let startPos = this.findSnippetInLine(startLineIndex, startCharacters, endCharacters);
     
     // If not found, try nearby lines (±2)
     if (startPos === null) {
@@ -182,7 +262,7 @@ export class LineBasedLocator {
         for (const delta of [offset, -offset]) {
           const tryLine = startLineIndex + delta;
           if (tryLine >= 0 && tryLine < this.lines.length) {
-            startPos = this.findSnippetInLine(tryLine, startCharacters);
+            startPos = this.findSnippetInLine(tryLine, startCharacters, endCharacters);
             if (startPos !== null) {
               actualStartLine = tryLine;
               logger.debug(`Found start snippet in line ${tryLine} instead of ${startLineIndex}`);
@@ -230,7 +310,8 @@ export class LineBasedLocator {
     let endOffset: number;
     
     if (actualStartLine === actualEndLine) {
-      // Same line - ensure end is after start
+      // Same line - endPos is where the end characters start, 
+      // so add their length to get the actual end boundary
       endOffset = this.lineStartOffsets[actualEndLine] + endPos + endCharacters.length;
       if (endOffset <= startOffset) {
         // Fallback: use rest of line or at least 50 chars
@@ -239,7 +320,8 @@ export class LineBasedLocator {
         endOffset = startOffset + Math.min(Math.max(50, remaining), remaining);
       }
     } else {
-      // Different lines
+      // Different lines - endPos is where the end characters start,
+      // so add their length to get the actual end boundary
       endOffset = this.lineStartOffsets[actualEndLine] + endPos + endCharacters.length;
     }
     

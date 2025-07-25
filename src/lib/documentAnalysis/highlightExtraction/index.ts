@@ -16,7 +16,7 @@ import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { getHighlightExtractionPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
-import type { LineBasedHighlight } from "../highlightGeneration/lineBasedHighlighter";
+import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { findHighlightLocation } from "../shared/pluginLocationWrappers";
 

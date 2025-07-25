@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import textLocationFinderTool from './index';
-import type { TextLocationFinderInput } from './index';
+import textLocationFinderTool from '../index';
+import type { TextLocationFinderInput } from '../index';
 import { logger } from '@/lib/logger';
 
 describe('TextLocationFinderTool', () => {
@@ -58,7 +58,7 @@ describe('TextLocationFinderTool', () => {
     it('should handle actual quote normalization', async () => {
       const input: TextLocationFinderInput = {
         documentText: "This has 'smart quotes' and apostrophes.",
-        searchText: "This has 'smart quotes' and apostrophes.", // Different quote types
+        searchText: "This has 'smart quotes' and apostrophes.", // Different quote types  
         options: {
           normalizeQuotes: true
         }
@@ -73,7 +73,7 @@ describe('TextLocationFinderTool', () => {
       expect(result.location?.endOffset).toBe(40);
     });
 
-    it('should NOT do case insensitive search by default', async () => {
+    it('should do case insensitive search with uFuzzy', async () => {
       const input: TextLocationFinderInput = {
         documentText: 'This is a TEST document.',
         searchText: 'test document'
@@ -81,7 +81,9 @@ describe('TextLocationFinderTool', () => {
 
       const result = await textLocationFinderTool.execute(input, context);
 
-      expect(result.found).toBe(false);
+      expect(result.found).toBe(true);
+      expect(result.location?.strategy).toBe('ufuzzy');
+      expect(result.location?.quotedText).toBe('TEST document');
     });
 
 

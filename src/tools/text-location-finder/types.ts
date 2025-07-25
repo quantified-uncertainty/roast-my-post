@@ -13,12 +13,12 @@ export interface TextLocation {
 export interface SimpleLocationOptions {
   normalizeQuotes?: boolean;
   partialMatch?: boolean;
+  caseSensitive?: boolean;
   context?: string;
 }
 
 export interface EnhancedLocationOptions extends SimpleLocationOptions {
   maxDistance?: number;
-  caseSensitive?: boolean;
   useLLMFallback?: boolean;
   pluginName?: string;
   documentText?: string;
