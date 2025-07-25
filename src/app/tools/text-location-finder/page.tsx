@@ -75,9 +75,6 @@ function renderResults(result: TextLocationFinderOutput) {
               </span>
             </div>
             <div className="text-gray-600">
-              <span className="font-medium">Line {result.location.lineNumber}:</span> "{result.location.lineText}"
-            </div>
-            <div className="text-gray-600">
               <span className="font-medium">Position:</span> {result.location.startOffset}-{result.location.endOffset}
             </div>
             <div className="bg-gray-50 p-2 rounded text-sm">
@@ -141,10 +138,6 @@ export default function TextLocationFinderPage() {
                 label: 'Use LLM Fallback',
                 helpText: 'Use AI to find text when other methods fail (for paraphrased, truncated, or similar text)'
               },
-              includeLLMExplanation: {
-                label: 'Include LLM Explanation',
-                helpText: 'Get an explanation of how the AI found the match (costs extra tokens)'
-              }
             }
           }
         },

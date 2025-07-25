@@ -1,14 +1,14 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
-import { LineBasedHighlighter } from "../highlightGeneration/lineBasedHighlighter";
+import { LineBasedLocator } from "@/lib/text-location/line-based";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 const documentInformationSection = (document: Document) => {
   // Get the full content with prepend using the centralized helper
   const { content: fullContent } = getDocumentFullContent(document);
   
-  const highlighter = new LineBasedHighlighter(fullContent);
+  const locator = new LineBasedLocator(fullContent);
   return `<document>
   <metadata>
     <title>${document.title}</title>
@@ -16,7 +16,7 @@ const documentInformationSection = (document: Document) => {
     <published>${new Date(document.publishedDate).toLocaleDateString()}</published>
   </metadata>
   <content>
-${highlighter.getNumberedLines()}
+${locator.getNumberedLines()}
   </content>
 </document>`;
 };

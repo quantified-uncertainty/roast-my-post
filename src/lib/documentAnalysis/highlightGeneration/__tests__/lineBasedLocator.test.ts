@@ -1,9 +1,9 @@
 import {
-  LineBasedHighlighter,
-  type LineBasedHighlight,
-} from "../lineBasedHighlighter";
+  LineBasedLocator,
+} from "@/lib/text-location/line-based";
+import type { LineBasedHighlight } from "../types";
 
-describe("LineBasedHighlighter", () => {
+describe("LineBasedLocator (for highlight generation)", () => {
   const sampleContent = `Crossposted from [my blog](https://benthams.substack.com/p/the-importance-of-blasting-good-ideas). 
 
 When I started this blog in high school, I did not imagine that I would cause [_The Daily Show_](https://www.youtube.com/watch?v=VNbIKtGMoaA) to do an episode about shrimp, containing the following dialogue:
@@ -16,9 +16,9 @@ When I started this blog in high school, I did not imagine that I would cause [_
 
 (Would be a crazy rug pull if, in fact, this did not happen and the dialogue was just pulled out of thin air).`;
 
-  test("creates line-based highlighter correctly", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
-    const stats = highlighter.getStats();
+  test("creates line-based locator correctly", () => {
+    const locator = new LineBasedLocator(sampleContent);
+    const stats = locator.getStats();
 
     expect(stats.totalLines).toBeGreaterThan(0);
     expect(stats.totalCharacters).toBe(sampleContent.length);
@@ -27,8 +27,8 @@ When I started this blog in high school, I did not imagine that I would cause [_
   });
 
   test("gets numbered lines correctly", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
-    const numberedLines = highlighter.getNumberedLines();
+    const locator = new LineBasedLocator(sampleContent);
+    const numberedLines = locator.getNumberedLines();
 
     expect(numberedLines).toContain("Line 1:");
     expect(numberedLines).toContain("Line 2:");
@@ -38,9 +38,9 @@ When I started this blog in high school, I did not imagine that I would cause [_
   });
 
   test("creates single-line highlight correctly", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
+    const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = highlighter.createHighlight({
+    const highlight = locator.createHighlight({
       startLineIndex: 0,
       startCharacters: "Cross",
       endLineIndex: 0,
@@ -48,16 +48,16 @@ When I started this blog in high school, I did not imagine that I would cause [_
     });
 
     expect(highlight).not.toBeNull();
-    expect(highlight!.text).toContain("Crossposted");
-    expect(highlight!.text).toContain("blog]");
+    expect(highlight!.quotedText).toContain("Crossposted");
+    expect(highlight!.quotedText).toContain("blog]");
     expect(highlight!.startOffset).toBe(0);
     expect(highlight!.endOffset).toBeGreaterThan(highlight!.startOffset);
   });
 
   test("creates multi-line highlight correctly", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
+    const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = highlighter.createHighlight({
+    const highlight = locator.createHighlight({
       startLineIndex: 4,
       startCharacters: "> Andre",
       endLineIndex: 8,
@@ -65,14 +65,14 @@ When I started this blog in high school, I did not imagine that I would cause [_
     });
 
     expect(highlight).not.toBeNull();
-    expect(highlight!.text).toContain("Andres:");
-    expect(highlight!.text).toContain("shrimp.");
+    expect(highlight!.quotedText).toContain("Andres:");
+    expect(highlight!.quotedText).toContain("shrimp.");
     expect(highlight!.startOffset).toBeGreaterThan(0);
     expect(highlight!.endOffset).toBeGreaterThan(highlight!.startOffset);
   });
 
   test("processes line comments correctly", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
+    const locator = new LineBasedLocator(sampleContent);
 
     const lineComments: LineBasedHighlight[] = [
       {
@@ -88,7 +88,25 @@ When I started this blog in high school, I did not imagine that I would cause [_
       },
     ];
 
-    const processedComments = highlighter.processLineHighlights(lineComments);
+    // Process highlights manually like the validator does
+    const processedComments = [];
+    for (const comment of lineComments) {
+      const result = locator.createHighlight(comment.highlight);
+      if (result) {
+        processedComments.push({
+          description: comment.description,
+          importance: comment.importance,
+          isValid: true,
+          highlight: {
+            startOffset: result.startOffset,
+            endOffset: result.endOffset,
+            quotedText: result.quotedText,
+            isValid: true,
+            prefix: result.prefix,
+          },
+        });
+      }
+    }
 
     expect(processedComments).toHaveLength(1);
     expect(processedComments[0].isValid).toBe(true);
@@ -98,9 +116,9 @@ When I started this blog in high school, I did not imagine that I would cause [_
   });
 
   test("handles invalid line indices gracefully", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
+    const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = highlighter.createHighlight({
+    const highlight = locator.createHighlight({
       startLineIndex: 999,
       startCharacters: "nonexistent",
       endLineIndex: 999,
@@ -111,9 +129,9 @@ When I started this blog in high school, I did not imagine that I would cause [_
   });
 
   test("handles invalid character snippets gracefully", () => {
-    const highlighter = new LineBasedHighlighter(sampleContent);
+    const locator = new LineBasedLocator(sampleContent);
 
-    const highlight = highlighter.createHighlight({
+    const highlight = locator.createHighlight({
       startLineIndex: 0,
       startCharacters: "NONEXISTENT",
       endLineIndex: 0,

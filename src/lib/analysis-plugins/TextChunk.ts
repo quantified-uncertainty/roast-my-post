@@ -103,7 +103,7 @@ export class TextChunk implements ITextChunk {
     }
 
     // Use the text location finder
-    const location = findTextLocation(searchText, this.text, options);
+    const location = await findTextLocation(searchText, this.text, options);
     
     if (!location) {
       logger.debug('Text not found in chunk', {

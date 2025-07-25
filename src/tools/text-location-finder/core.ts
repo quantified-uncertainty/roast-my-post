@@ -1,155 +1,84 @@
 /**
- * Core text location finding logic with uFuzzy
- * Self-contained implementation that doesn't depend on documentAnalysis
+ * Core text location finding logic with fallback strategies
  */
 
-import uFuzzy from '@leeoniya/ufuzzy';
 import { logger } from "@/lib/logger";
+import { TextLocation, SimpleLocationOptions, EnhancedLocationOptions } from './types';
+import { exactSearch } from './exactSearch';
+import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
+import { llmSearch, LLMSearchOptions } from './llmSearch';
 
-export interface TextLocation {
-  startOffset: number;
-  endOffset: number;
-  quotedText: string;
-  lineNumber: number;
-  lineText: string;
-  strategy: string;
-  confidence: number;
-}
-
-export interface SimpleLocationOptions {
-  normalizeQuotes?: boolean;
-  partialMatch?: boolean;
-  context?: string;
-}
-
-export interface EnhancedLocationOptions extends SimpleLocationOptions {
-  maxDistance?: number;
-  caseSensitive?: boolean;
-  useLLMFallback?: boolean;
-  pluginName?: string;
-  documentText?: string;
-}
-
-export interface DocumentLocation {
-  startOffset: number;
-  endOffset: number;
-  quotedText: string;
-}
+// Re-export types for backward compatibility
+export * from './types';
 
 /**
- * Get line number at a given position in text
+ * Find text in document with fallback strategies
+ * 1. Exact match (fastest)
+ * 2. uFuzzy (handles typos and variations)
+ * 3. LLM (handles paraphrasing and complex cases)
  */
-export function getLineNumberAtPosition(
-  text: string,
-  position: number
-): number {
-  const lines = text.substring(0, position).split("\n");
-  return lines.length;
-}
-
-/**
- * Get the full line of text at a given position
- */
-export function getLineAtPosition(text: string, position: number): string {
-  const lines = text.split("\n");
-  const lineNumber = getLineNumberAtPosition(text, position);
-  return lines[lineNumber - 1] || "";
-}
-
-/**
- * Find text in document with uFuzzy
- */
-export function findTextLocation(
+export async function findTextLocation(
   searchText: string,
   documentText: string,
   options: SimpleLocationOptions = {}
-): TextLocation | null {
+): Promise<TextLocation | null> {
   if (!searchText || !documentText) {
     return null;
   }
 
-  // Strategy 1: Try exact match first (fastest)
-  let foundOffset = documentText.indexOf(searchText);
-  
-  if (foundOffset !== -1) {
-    return {
-      startOffset: foundOffset,
-      endOffset: foundOffset + searchText.length,
-      quotedText: searchText,
-      lineNumber: getLineNumberAtPosition(documentText, foundOffset),
-      lineText: getLineAtPosition(documentText, foundOffset),
-      strategy: "exact",
-      confidence: 1.0,
-    };
+  // Strategy 1: Try exact match first
+  const exactResult = exactSearch(searchText, documentText);
+  if (exactResult) {
+    logger.debug('Found with exact search');
+    return exactResult;
   }
 
-  // Strategy 2: Use uFuzzy for fuzzy matching
-  logger.debug(`Text search: exact match failed, trying uFuzzy`, {
-    searchText: searchText.slice(0, 50)
-  });
-
-  // Create a single uFuzzy instance with appropriate settings
-  const uf = new uFuzzy({
-    intraMode: 1,       // Allow single errors
-    interLft: 2,        // Allow extra chars between words
-    interRgt: 2,
-    intraSub: 1,        // Allow substitutions
-    intraTrn: 1,        // Transpositions
-    intraDel: 1,        // Deletions
-    intraIns: 1,        // Insertions
-  });
-
-  // Search in the original document
-  const haystack = [documentText];
-  const idxs = uf.filter(haystack, searchText);
-  
-  if (!idxs || idxs.length === 0) {
-    return null;
-  }
-
-  // Get match details
-  const info = uf.info(idxs, haystack, searchText);
-  
-  if (!info.ranges?.[0] || info.ranges[0].length < 2) {
-    return null;
-  }
-
-  // For multi-word searches, uFuzzy returns multiple ranges
-  // We need to get the full span from the first start to the last end
-  const ranges = info.ranges[0];
-  const startOffset = ranges[0];
-  const endOffset = ranges[ranges.length - 1];
-  const matchedText = documentText.slice(startOffset, endOffset);
-  
-  // Calculate confidence based on match quality
-  let confidence = 0.85;
-  if (matchedText.length === searchText.length) {
-    confidence = 0.9;
-  }
-  if (matchedText.toLowerCase() === searchText.toLowerCase()) {
-    confidence = 0.95;
-  }
-
-  return {
-    startOffset,
-    endOffset,
-    quotedText: matchedText,
-    lineNumber: getLineNumberAtPosition(documentText, startOffset),
-    lineText: getLineAtPosition(documentText, startOffset),
-    strategy: "ufuzzy",
-    confidence,
+  // Strategy 2: Try uFuzzy for fuzzy matching
+  const fuzzyOptions: UFuzzyOptions = {
+    normalizeQuotes: options.normalizeQuotes
   };
+  const fuzzyResult = uFuzzySearch(searchText, documentText, fuzzyOptions);
+  if (fuzzyResult) {
+    logger.debug('Found with uFuzzy search');
+    return fuzzyResult;
+  }
+
+  // Strategy 3: No LLM fallback in simple version
+  logger.debug('Text not found with any strategy');
+  return null;
 }
 
 /**
- * Find text in document with enhanced options (delegates to findTextLocation)
+ * Find text in document with enhanced options including LLM fallback
  */
-export function findTextLocationEnhanced(
+export async function findTextLocationEnhanced(
   searchText: string,
   documentText: string,
   options: EnhancedLocationOptions = {}
-): TextLocation | null {
-  // For now, just delegate to the simple version
-  // The enhanced options like maxDistance and caseSensitive are handled by uFuzzy
-  return findTextLocation(searchText, documentText, options);
+): Promise<TextLocation | null> {
+  if (!searchText || !documentText) {
+    return null;
+  }
+
+  // Try basic strategies first
+  const basicResult = await findTextLocation(searchText, documentText, options);
+  if (basicResult) {
+    return basicResult;
+  }
+
+  // Strategy 3: Try LLM if enabled
+  if (options.useLLMFallback) {
+    const llmOptions: LLMSearchOptions = {
+      context: options.context,
+      pluginName: options.pluginName
+    };
+    
+    const llmResult = await llmSearch(searchText, documentText, llmOptions);
+    if (llmResult) {
+      logger.debug('Found with LLM search');
+      return llmResult;
+    }
+  }
+
+  return null;
 }

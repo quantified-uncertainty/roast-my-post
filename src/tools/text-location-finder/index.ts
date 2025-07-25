@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, SimpleLocationOptions, TextLocation, getLineNumberAtPosition, getLineAtPosition } from './core';
-import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { findTextLocation, SimpleLocationOptions, TextLocation } from './core';
+import { llmSearch, LLMSearchOptions } from './llmSearch';
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -23,8 +23,6 @@ export interface TextLocationFinderOutput {
     startOffset: number;
     endOffset: number;
     quotedText: string;
-    lineNumber: number;
-    lineText: string;
     strategy: string;
     confidence: number;
   };
@@ -55,8 +53,6 @@ const outputSchema = z.object({
     startOffset: z.number(),
     endOffset: z.number(),
     quotedText: z.string(),
-    lineNumber: z.number(),
-    lineText: z.string(),
     strategy: z.string(),
     confidence: z.number()
   }).optional(),
@@ -95,25 +91,23 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
       };
 
       // Use the unified finder for single search
-      let locationResult = findTextLocation(input.searchText, input.documentText, locationOptions);
+      let locationResult = await findTextLocation(input.searchText, input.documentText, locationOptions);
       let llmUsed = false;
       let llmSuggestion: string | undefined;
 
       // If not found and LLM fallback is enabled, try LLM
       if (!locationResult && input.options?.useLLMFallback) {
         context.logger.debug('TextLocationFinder: Trying LLM fallback...');
-        const llmResult = await this.findWithLLM(
-          input.searchText, 
-          input.documentText, 
-          input.context, 
-          input.options.includeLLMExplanation || false,
-          context
-        );
         
-        if (llmResult) {
-          locationResult = llmResult.location;
+        const llmOptions: LLMSearchOptions = {
+          context: input.context,
+          pluginName: 'text-location-finder'
+        };
+        
+        locationResult = await llmSearch(input.searchText, input.documentText, llmOptions);
+        if (locationResult) {
           llmUsed = true;
-          llmSuggestion = llmResult.suggestion;
+          // Note: llmSearch doesn't return explanations anymore since we removed that feature
         }
       }
 
@@ -127,8 +121,6 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
             startOffset: locationResult.startOffset,
             endOffset: locationResult.endOffset,
             quotedText: locationResult.quotedText,
-            lineNumber: locationResult.lineNumber,
-            lineText: locationResult.lineText,
             strategy: locationResult.strategy,
             confidence: locationResult.confidence
           },
@@ -165,114 +157,6 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
     return true;
   }
 
-  // LLM fallback method
-  private async findWithLLM(
-    searchText: string,
-    documentText: string,
-    context: string | undefined,
-    includeExplanation: boolean,
-    toolContext: ToolContext
-  ): Promise<{ location: TextLocation; suggestion?: string } | null> {
-    try {
-      const schema = {
-        properties: {
-          found: {
-            type: 'boolean',
-            description: 'Whether the text was found in the document'
-          },
-          matchedText: {
-            type: 'string',
-            description: 'The actual text found in the document that matches or is most similar to the search text'
-          },
-          startOffset: {
-            type: 'number',
-            description: 'The character position where the matched text starts'
-          },
-          endOffset: {
-            type: 'number',
-            description: 'The character position where the matched text ends'
-          },
-          confidence: {
-            type: 'number',
-            description: 'Confidence score between 0 and 1'
-          },
-          ...(includeExplanation ? {
-            explanation: {
-              type: 'string',
-              description: 'Brief explanation of how the match was found or why it might be different from the search text'
-            }
-          } : {})
-        },
-        required: ['found', 'matchedText', 'startOffset', 'endOffset', 'confidence', ...(includeExplanation ? ['explanation'] : [])]
-      };
-
-      const prompt = `You are helping find text in a document. The user is looking for a specific piece of text, but it might not match exactly due to:
-- Minor differences in wording
-- Truncation or partial text
-- OCR errors or typos
-- Different formatting or punctuation
-- Paraphrasing
-
-Search text: "${searchText}"
-${context ? `Additional context: ${context}` : ''}
-
-Document to search in:
-${documentText}
-
-Find the best match for the search text in the document. If the exact text isn't found, look for the closest semantic match or partial match. Return the actual text from the document, not the search text.${includeExplanation ? ' Include a brief explanation of how the match was found.' : ''}`;
-
-      const { toolResult } = await callClaudeWithTool({
-        model: MODEL_CONFIG.analysis, // Use analysis model as requested
-        messages: [{ role: 'user', content: prompt }],
-        toolName: 'find_text_location',
-        toolDescription: 'Find the location of text in a document',
-        toolSchema: { type: 'object', ...schema }
-      });
-
-      // Type the result properly
-      const result = toolResult as {
-        found: boolean;
-        matchedText: string;
-        startOffset: number;
-        endOffset: number;
-        confidence: number;
-        explanation?: string;
-      };
-
-      if (result.found && result.matchedText) {
-        // Verify the offsets are correct
-        const verifiedText = documentText.substring(result.startOffset, result.endOffset);
-        if (verifiedText !== result.matchedText) {
-          // Try to find the actual position
-          const actualPos = documentText.indexOf(result.matchedText);
-          if (actualPos !== -1) {
-            result.startOffset = actualPos;
-            result.endOffset = actualPos + result.matchedText.length;
-          }
-        }
-
-        const location: TextLocation = {
-          startOffset: result.startOffset,
-          endOffset: result.endOffset,
-          quotedText: result.matchedText,
-          lineNumber: getLineNumberAtPosition(documentText, result.startOffset),
-          lineText: getLineAtPosition(documentText, result.startOffset),
-          strategy: 'llm',
-          confidence: Math.max(0.7, result.confidence * 0.9) // Slightly lower confidence for LLM matches, but keep minimum 70%
-        };
-
-        return {
-          location,
-          suggestion: result.explanation
-        };
-      }
-
-      return null;
-    } catch (error) {
-      toolContext.logger.error('LLM fallback failed:', error);
-      return null;
-    }
-  }
 
   // Optional: provide usage examples
   getExamples(): Array<{ input: TextLocationFinderInput; description: string }> {
@@ -336,8 +220,6 @@ export default new TextLocationFinderTool();
 // Re-export core functions and types for use by other tools/plugins
 export {
   findTextLocation,
-  getLineNumberAtPosition,
-  getLineAtPosition,
   type TextLocation,
   type SimpleLocationOptions,
   type EnhancedLocationOptions,

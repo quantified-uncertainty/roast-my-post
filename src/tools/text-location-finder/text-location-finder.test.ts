@@ -124,18 +124,6 @@ describe('TextLocationFinderTool', () => {
       expect(typeof result.processingTimeMs).toBe('number');
     });
 
-    it('should provide line information', async () => {
-      const input: TextLocationFinderInput = {
-        documentText: 'First line\nSecond line with target text\nThird line',
-        searchText: 'target text'
-      };
-
-      const result = await textLocationFinderTool.execute(input, context);
-
-      expect(result.found).toBe(true);
-      expect(result.location?.lineNumber).toBe(2);
-      expect(result.location?.lineText).toBe('Second line with target text');
-    });
 
     it('should validate input schema', () => {
       const validInput: TextLocationFinderInput = {
