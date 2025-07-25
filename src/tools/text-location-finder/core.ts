@@ -57,22 +57,6 @@ export function getLineAtPosition(text: string, position: number): string {
 }
 
 /**
- * Normalize quotes for comparison (apostrophes, smart quotes, etc)
- */
-function normalizeQuotes(text: string): string {
-  return text.replace(/[""]/g, '"').replace(/[''ʼ]/g, "'").replace(/'/g, "'");
-}
-
-/**
- * Check if two strings match after normalization
- * This is used instead of normalizing entire documents to preserve offsets
- */
-function matchesWithNormalization(text1: string, text2: string): boolean {
-  if (text1.length !== text2.length) return false;
-  return normalizeQuotes(text1) === normalizeQuotes(text2);
-}
-
-/**
  * Find text in document with uFuzzy
  */
 export function findTextLocation(
@@ -80,178 +64,79 @@ export function findTextLocation(
   documentText: string,
   options: SimpleLocationOptions = {}
 ): TextLocation | null {
-  // Safety checks
   if (!searchText || !documentText) {
     return null;
   }
 
-  let foundOffset = -1;
-  let matchedText = searchText;
-  let strategy = "exact";
-  let confidence = 1.0;
-
   // Strategy 1: Try exact match first (fastest)
-  foundOffset = documentText.indexOf(searchText);
-
-  // Strategy 2: If exact match fails, try uFuzzy
-  if (foundOffset === -1) {
-    logger.debug(`Text search: exact match failed, trying uFuzzy`, {
-      searchText: searchText.slice(0, 50)
-    });
-    
-    // Configure uFuzzy for fuzzy matching
-    const uf = new uFuzzy({
-      intraMode: 1,      // Enable single-error tolerance
-      interLft: 2,       // Allow up to 2 extra chars between terms  
-      interRgt: 2,       // Allow up to 2 extra chars between terms
-      intraSub: 1,       // Allow character substitutions
-      intraTrn: 1,       // Allow character transpositions  
-      intraDel: 1,       // Allow character deletions
-      intraIns: 1,       // Allow character insertions
-    });
-    
-    // Try different text preparations
-    const searchVariants: Array<{text: string, doc: string, strategy: string, confidence: number}> = [];
-    
-    // Always try original text with fuzzy matching
-    searchVariants.push({
-      text: searchText,
-      doc: documentText,
-      strategy: 'ufuzzy',
-      confidence: 0.85
-    });
-    
-    // Try normalized quotes if enabled and applicable
-    if (options.normalizeQuotes) {
-      const normalizedSearch = normalizeQuotes(searchText);
-      if (normalizedSearch !== searchText) {
-        searchVariants.push({
-          text: normalizedSearch,
-          doc: normalizeQuotes(documentText),
-          strategy: 'ufuzzy-quotes',
-          confidence: 0.8
-        });
-      }
-    }
-    
-    // Try case-insensitive
-    searchVariants.push({
-      text: searchText.toLowerCase(),
-      doc: documentText.toLowerCase(),
-      strategy: 'ufuzzy-case',
-      confidence: 0.75
-    });
-    
-    // Try partial match for long text
-    if (options.partialMatch && searchText.length > 50) {
-      searchVariants.push({
-        text: searchText.slice(0, 50),
-        doc: documentText,
-        strategy: 'ufuzzy-partial',
-        confidence: 0.7
-      });
-    }
-    
-    // Try each variant
-    for (const variant of searchVariants) {
-      const uf = new uFuzzy({
-        intraMode: 1,
-        interLft: 2,
-        interRgt: 2,
-        intraSub: 1,
-        intraTrn: 1,
-        intraDel: 1,
-        intraIns: 1,
-      });
-      
-      // For single document search, haystack is an array with one item
-      const haystack = [variant.doc];
-      const needle = variant.text;
-      
-      // Filter to find matches
-      const idxs = uf.filter(haystack, needle);
-      
-      if (idxs && idxs.length > 0) {
-        // Get detailed match info
-        const info = uf.info(idxs, haystack, needle);
-        
-        // Get the ranges for the first (and only) match
-        if (info.ranges && info.ranges.length > 0) {
-          const ranges = info.ranges[0];
-          if (Array.isArray(ranges) && ranges.length >= 2) {
-            // uFuzzy returns ranges as pairs of [start, end] offsets
-            foundOffset = ranges[0];
-            const endOffset = ranges[1];
-            
-            // If we were searching in transformed text (lowercase, normalized),
-            // we need to find the actual text in the original document
-            if (variant.doc !== documentText) {
-              // Get the matched text from the transformed document
-              const transformedMatch = variant.doc.slice(foundOffset, endOffset);
-              
-              // Try to find this text in the original document
-              // This is approximate - the positions might not align perfectly
-              const originalMatch = documentText.slice(foundOffset, Math.min(endOffset, documentText.length));
-              matchedText = originalMatch;
-            } else {
-              matchedText = documentText.slice(foundOffset, endOffset);
-            }
-            
-            strategy = variant.strategy;
-            confidence = variant.confidence;
-            
-            logger.debug(`uFuzzy found match with ${strategy}`, {
-              searchText: searchText.slice(0, 50),
-              matchedText: matchedText.slice(0, 50),
-              startOffset: foundOffset,
-              endOffset: endOffset
-            });
-            
-            break; // Found a match, stop trying variants
-          }
-        }
-      }
-    }
+  let foundOffset = documentText.indexOf(searchText);
+  
+  if (foundOffset !== -1) {
+    return {
+      startOffset: foundOffset,
+      endOffset: foundOffset + searchText.length,
+      quotedText: searchText,
+      lineNumber: getLineNumberAtPosition(documentText, foundOffset),
+      lineText: getLineAtPosition(documentText, foundOffset),
+      strategy: "exact",
+      confidence: 1.0,
+    };
   }
 
-  // If still not found, try the old quote normalization method
-  if (foundOffset === -1 && options.normalizeQuotes) {
-    const normalizedSearch = normalizeQuotes(searchText);
-    if (normalizedSearch !== searchText) {
-      // Search through the document looking for normalized matches
-      // This preserves correct offsets by working with the original text
-      for (let i = 0; i <= documentText.length - searchText.length; i++) {
-        const candidate = documentText.substring(i, i + searchText.length);
-        
-        if (matchesWithNormalization(candidate, searchText)) {
-          foundOffset = i;
-          matchedText = candidate; // Use the actual text from the document
-          strategy = "quotes-normalized";
-          confidence = 0.95;
-          break;
-        }
-      }
-    }
-  }
+  // Strategy 2: Use uFuzzy for fuzzy matching
+  logger.debug(`Text search: exact match failed, trying uFuzzy`, {
+    searchText: searchText.slice(0, 50)
+  });
 
-  // If still not found, return null
-  if (foundOffset === -1) {
-    logger.debug('Text not found with any strategy', { 
-      searchText: searchText.slice(0, 50),
-      strategies: ['exact', 'ufuzzy', 'quotes-normalized']
-    });
+  // Create a single uFuzzy instance with appropriate settings
+  const uf = new uFuzzy({
+    intraMode: 1,       // Allow single errors
+    interLft: 2,        // Allow extra chars between words
+    interRgt: 2,
+    intraSub: 1,        // Allow substitutions
+    intraTrn: 1,        // Transpositions
+    intraDel: 1,        // Deletions
+    intraIns: 1,        // Insertions
+  });
+
+  // Search in the original document
+  const haystack = [documentText];
+  const idxs = uf.filter(haystack, searchText);
+  
+  if (!idxs || idxs.length === 0) {
     return null;
   }
 
-  const endOffset = foundOffset + matchedText.length;
+  // Get match details
+  const info = uf.info(idxs, haystack, searchText);
+  
+  if (!info.ranges?.[0] || info.ranges[0].length < 2) {
+    return null;
+  }
+
+  // For multi-word searches, uFuzzy returns multiple ranges
+  // We need to get the full span from the first start to the last end
+  const ranges = info.ranges[0];
+  const startOffset = ranges[0];
+  const endOffset = ranges[ranges.length - 1];
+  const matchedText = documentText.slice(startOffset, endOffset);
+  
+  // Calculate confidence based on match quality
+  let confidence = 0.85;
+  if (matchedText.length === searchText.length) {
+    confidence = 0.9;
+  }
+  if (matchedText.toLowerCase() === searchText.toLowerCase()) {
+    confidence = 0.95;
+  }
 
   return {
-    startOffset: foundOffset,
-    endOffset: endOffset,
+    startOffset,
+    endOffset,
     quotedText: matchedText,
-    lineNumber: getLineNumberAtPosition(documentText, foundOffset),
-    lineText: getLineAtPosition(documentText, foundOffset),
-    strategy,
+    lineNumber: getLineNumberAtPosition(documentText, startOffset),
+    lineText: getLineAtPosition(documentText, startOffset),
+    strategy: "ufuzzy",
     confidence,
   };
 }
