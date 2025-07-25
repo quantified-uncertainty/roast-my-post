@@ -77,7 +77,45 @@ export async function findTextInChunkAbsolute(
   if (options.documentText) {
     const extractedText = options.documentText.substring(absoluteStart, absoluteEnd);
     if (extractedText !== chunkLocation.quotedText) {
-      logger.error('Position verification failed - chunk offsets may be incorrect', {
+      // Try to find where the chunk actually is in the document
+      const actualChunkPos = options.documentText.indexOf(chunk.text);
+      if (actualChunkPos !== -1 && actualChunkPos !== chunk.metadata.position.start) {
+        const difference = actualChunkPos - chunk.metadata.position.start;
+        
+        logger.warn('Chunk position mismatch detected - attempting to correct', {
+          chunkId: chunk.id,
+          declaredStart: chunk.metadata.position.start,
+          actualStart: actualChunkPos,
+          difference,
+          plugin: options.pluginName
+        });
+        
+        // Calculate corrected absolute position using actual chunk position
+        const correctedAbsoluteStart = actualChunkPos + chunkLocation.startOffset;
+        const correctedAbsoluteEnd = actualChunkPos + chunkLocation.endOffset;
+        
+        // Verify the corrected position
+        const correctedExtractedText = options.documentText.substring(correctedAbsoluteStart, correctedAbsoluteEnd);
+        if (correctedExtractedText === chunkLocation.quotedText) {
+          logger.info('Position successfully corrected using actual chunk position', {
+            chunkId: chunk.id,
+            originalAbsoluteStart: absoluteStart,
+            correctedAbsoluteStart,
+            difference,
+            plugin: options.pluginName
+          });
+          
+          // Return the corrected position
+          return {
+            startOffset: correctedAbsoluteStart,
+            endOffset: correctedAbsoluteEnd,
+            quotedText: chunkLocation.quotedText
+          };
+        }
+      }
+      
+      // If we couldn't correct it, log the error
+      logger.error('Position verification failed - unable to find correct position', {
         chunkId: chunk.id,
         chunkStart: chunk.metadata.position.start,
         chunkEnd: chunk.metadata.position.end,
@@ -89,18 +127,6 @@ export async function findTextInChunkAbsolute(
         actualText: extractedText.slice(0, 50),
         plugin: options.pluginName
       });
-      
-      // Try to find where the chunk actually is in the document
-      const actualChunkPos = options.documentText.indexOf(chunk.text);
-      if (actualChunkPos !== -1 && actualChunkPos !== chunk.metadata.position.start) {
-        logger.error('Chunk position mismatch detected', {
-          chunkId: chunk.id,
-          declaredStart: chunk.metadata.position.start,
-          actualStart: actualChunkPos,
-          difference: actualChunkPos - chunk.metadata.position.start,
-          plugin: options.pluginName
-        });
-      }
       
       // Return null to prevent incorrect highlighting
       return null;

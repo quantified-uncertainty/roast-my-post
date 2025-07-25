@@ -21,7 +21,6 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -102,10 +101,9 @@ class ExtractedForecast {
     endOffset: number;
     quotedText: string;
   } | null> {
-    // Use the generic function to find text in chunk and convert to absolute position
-    return findTextInChunkAbsolute(
+    // Use the chunk's method to find text and convert to absolute position
+    return this.chunk.findTextAbsolute(
       this.extractedForecast.originalText,
-      this.chunk,
       {
         normalizeQuotes: true,  // Handle quote variations
         partialMatch: true,     // Forecasts can be long

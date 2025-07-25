@@ -171,10 +171,10 @@ export class DocumentChunkerTool extends Tool<
   ): DocumentChunk[] {
     const targetWords = options.targetWords || 500;
     const sections = this.parseMarkdownHierarchy(text);
-    const chunks = this.recursivelyChunkSections(sections, targetWords, options);
+    const chunks = this.recursivelyChunkSections(sections, targetWords, options, [], text);
     
     // Add metadata and convert to final chunk format
-    return chunks.map((chunk, index) => ({
+    const finalChunks = chunks.map((chunk, index) => ({
       id: `chunk-${index}`,
       ...chunk,
       metadata: {
@@ -182,6 +182,9 @@ export class DocumentChunkerTool extends Tool<
         confidence: 0.95,
       },
     }));
+    
+    
+    return finalChunks;
   }
 
   // Parse markdown into hierarchical sections
@@ -192,6 +195,7 @@ export class DocumentChunkerTool extends Tool<
     let currentOffset = 0;
     let currentLineNum = 0;
     let insideCodeBlock = false;
+
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -214,6 +218,7 @@ export class DocumentChunkerTool extends Tool<
           currentSection.endOffset = currentOffset - 1;
           currentSection.endLine = i;
           sections.push(currentSection);
+          
         }
 
         // Start new section
@@ -227,6 +232,7 @@ export class DocumentChunkerTool extends Tool<
           endLine: lines.length,
           subsections: [],
         };
+        
       } else if (currentSection) {
         currentSection.content.push(line);
       } else {
@@ -242,6 +248,7 @@ export class DocumentChunkerTool extends Tool<
             endLine: lines.length,
             subsections: [],
           };
+          
         }
       }
 
@@ -288,18 +295,24 @@ export class DocumentChunkerTool extends Tool<
     sections: MarkdownSection[],
     targetWords: number,
     options: DocumentChunkerInput,
-    parentContext: string[] = []
+    parentContext: string[] = [],
+    documentText?: string
   ): Omit<DocumentChunk, 'id'>[] {
     const chunks: Omit<DocumentChunk, 'id'>[] = [];
+
 
     for (const section of sections) {
       const sectionText = this.getSectionFullText(section);
       const wordCount = this.countWords(sectionText);
       const currentContext = section.title ? [...parentContext, section.title] : parentContext;
 
+
       if (wordCount <= targetWords) {
         // Section is small enough, create a single chunk
-        chunks.push(this.createChunkFromSection(section, currentContext, sectionText));
+        // Don't pass sectionText as it includes subsections
+        const chunk = this.createChunkFromSection(section, currentContext, documentText);
+        chunks.push(chunk);
+        
       } else if (section.subsections.length > 0) {
         // Section is too large but has subsections, recurse into them
         const headerText = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
@@ -322,12 +335,13 @@ export class DocumentChunkerTool extends Tool<
           section.subsections,
           targetWords,
           options,
-          currentContext
+          currentContext,
+          documentText
         );
         chunks.push(...subChunks);
       } else {
         // Section is too large with no subsections, split by content
-        const sectionChunks = this.splitLargeSection(section, targetWords, currentContext, options);
+        const sectionChunks = this.splitLargeSection(section, targetWords, currentContext, options, documentText);
         chunks.push(...sectionChunks);
       }
     }
@@ -340,7 +354,8 @@ export class DocumentChunkerTool extends Tool<
     section: MarkdownSection,
     targetWords: number,
     context: string[],
-    options: DocumentChunkerInput
+    options: DocumentChunkerInput,
+    documentText?: string
   ): Omit<DocumentChunk, 'id'>[] {
     const chunks: Omit<DocumentChunk, 'id'>[] = [];
     const headerText = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
@@ -444,11 +459,21 @@ export class DocumentChunkerTool extends Tool<
   private createChunkFromSection(
     section: MarkdownSection,
     context: string[],
-    text?: string
+    documentText?: string
   ): Omit<DocumentChunk, 'id'> {
-    const chunkText = text || this.getSectionFullText(section);
+    // If we have the document text, extract the exact text from boundaries
+    let chunkText: string;
+    if (documentText) {
+      chunkText = documentText.substring(section.startOffset, section.endOffset);
+    } else {
+      // Fallback: reconstruct just this section's text
+      const header = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
+      const content = section.content.join('\n');
+      chunkText = header + content;
+    }
+    
     return {
-      text: chunkText.trim(),
+      text: chunkText,  // Don't trim - preserve exact text
       startOffset: section.startOffset,
       endOffset: section.endOffset,
       startLine: section.startLine,
@@ -474,7 +499,7 @@ export class DocumentChunkerTool extends Tool<
     const endLine = startLine + lines.length - 1;
     
     return {
-      text: text.trim(),
+      text: text,  // Don't trim - preserve exact text
       startOffset,
       endOffset,
       startLine,

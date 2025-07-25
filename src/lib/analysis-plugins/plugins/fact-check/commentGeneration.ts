@@ -1,11 +1,11 @@
 import type { Comment } from '@/types/documentSchema';
 import type { VerifiedFact } from './index';
-import type { PluginLocation } from '@/lib/documentAnalysis/shared/enhancedPluginLocationWrappers';
+import type { DocumentLocation } from '@/tools/text-location-finder';
 import { THRESHOLDS, FORMATTING } from './constants';
 
 export function generateFactCheckComments(
   fact: VerifiedFact,
-  location: PluginLocation
+  location: DocumentLocation
 ): Comment {
   const content = generateCommentContent(fact, location);
   
@@ -120,7 +120,7 @@ function getImportanceScore(fact: VerifiedFact): number {
   return importance;
 }
 
-function generateCommentContent(fact: VerifiedFact, location?: PluginLocation): string {
+function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation): string {
   const parts: string[] = [];
   
   // Location info - removed line number as it's not in PluginLocation

@@ -18,6 +18,8 @@ describe('TextLocationFinderTool', () => {
       expect(result.found).toBe(true);
       expect(result.location?.strategy).toBe('exact');
       expect(result.location?.quotedText).toBe('test document');
+      expect(result.location?.startOffset).toBe(10);
+      expect(result.location?.endOffset).toBe(23);
       expect(result.searchText).toBe('test document');
     });
 
@@ -34,10 +36,10 @@ describe('TextLocationFinderTool', () => {
       expect(result.error).toBe('Text not found in document');
     });
 
-    it('should handle quote normalization', async () => {
+    it('should handle quote normalization with correct offsets', async () => {
       const input: TextLocationFinderInput = {
-        documentText: "This is a document with smart quotes and apostrophes.",
-        searchText: "This is a document with smart quotes and apostrophes.",
+        documentText: "This has 'smart quotes' and apostrophes.",
+        searchText: "This has 'smart quotes' and apostrophes.",
         options: {
           normalizeQuotes: true
         }
@@ -46,10 +48,32 @@ describe('TextLocationFinderTool', () => {
       const result = await textLocationFinderTool.execute(input, context);
 
       expect(result.found).toBe(true);
-      expect(result.location?.strategy).toBe('quotes');
+      // When the text matches exactly, it uses 'exact' strategy even with normalizeQuotes enabled
+      expect(['exact', 'quotes-normalized'].includes(result.location?.strategy || '')).toBe(true);
+      expect(result.location?.quotedText).toBe("This has 'smart quotes' and apostrophes.");
+      expect(result.location?.startOffset).toBe(0);
+      expect(result.location?.endOffset).toBe(40);
     });
 
-    it('should handle case insensitive search by default', async () => {
+    it('should handle actual quote normalization', async () => {
+      const input: TextLocationFinderInput = {
+        documentText: "This has 'smart quotes' and apostrophes.",
+        searchText: "This has 'smart quotes' and apostrophes.", // Different quote types
+        options: {
+          normalizeQuotes: true
+        }
+      };
+
+      const result = await textLocationFinderTool.execute(input, context);
+
+      expect(result.found).toBe(true);
+      expect(result.location?.strategy).toBe('quotes-normalized');
+      expect(result.location?.quotedText).toBe("This has 'smart quotes' and apostrophes.");
+      expect(result.location?.startOffset).toBe(0);
+      expect(result.location?.endOffset).toBe(40);
+    });
+
+    it('should NOT do case insensitive search by default', async () => {
       const input: TextLocationFinderInput = {
         documentText: 'This is a TEST document.',
         searchText: 'test document'
@@ -57,9 +81,7 @@ describe('TextLocationFinderTool', () => {
 
       const result = await textLocationFinderTool.execute(input, context);
 
-      expect(result.found).toBe(true);
-      expect(result.location?.strategy).toBe('case');
-      expect(result.location?.quotedText).toBe('TEST document');
+      expect(result.found).toBe(false);
     });
 
 
@@ -186,10 +208,10 @@ describe('TextLocationFinderTool', () => {
     it('should provide examples', () => {
       const examples = textLocationFinderTool.getExamples();
 
-      expect(examples).toHaveLength(3);
+      expect(examples).toHaveLength(5);
       expect(examples[0].description).toBe('Basic exact text search');
-      expect(examples[1].description).toBe('Partial match with context');
-      expect(examples[2].description).toBe('Case-insensitive search');
+      expect(examples[1].description).toBe('Quote normalization (apostrophes)');
+      expect(examples[2].description).toBe('Partial match for long text');
     });
 
     it('should validate access', async () => {

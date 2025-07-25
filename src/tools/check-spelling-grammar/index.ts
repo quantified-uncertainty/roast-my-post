@@ -84,6 +84,12 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   }> {
     const systemPrompt = `You are a proofreading assistant. Identify spelling and grammar errors in text.
 
+CRITICAL REQUIREMENTS:
+1. The "text" field MUST contain EXACT text from the input, character-for-character
+2. DO NOT paraphrase, summarize, or modify the error text in any way
+3. If an error spans multiple words, include the complete exact phrase
+4. DO NOT include errors that don't exist in the provided text
+
 Focus on:
 - Clear spelling errors
 - Grammar mistakes that affect clarity
@@ -181,7 +187,24 @@ ${input.text}
       heliconeHeaders
     });
 
-    const errors = result.toolResult.errors || [];
+    const rawErrors = result.toolResult.errors || [];
+    
+    // Validate that each error text actually exists in the input
+    const errors = rawErrors.filter(error => {
+      if (!error.text || typeof error.text !== 'string') {
+        return false;
+      }
+      
+      // Check if the error text exists in the input
+      const exists = input.text.includes(error.text);
+      
+      if (!exists) {
+        // Log this as a warning - LLM hallucinated an error
+        console.warn(`[CheckSpellingGrammarTool] LLM returned error text that doesn't exist in input: "${error.text.slice(0, 50)}..."`);
+      }
+      
+      return exists;
+    });
 
     return { errors, interaction: result.interaction };
   }

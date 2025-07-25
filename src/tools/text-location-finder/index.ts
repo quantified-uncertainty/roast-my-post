@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, SimpleLocationOptions, TextLocation } from '@/lib/documentAnalysis/shared/simpleTextLocationFinder';
+import { findTextLocation, SimpleLocationOptions, TextLocation, getLineNumberAtPosition, getLineAtPosition } from './core';
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 
 export interface TextLocationFinderInput {
@@ -330,18 +330,16 @@ Find the best match for the search text in the document. If the exact text isn't
   }
 }
 
-// Helper function to get line number at position
-function getLineNumberAtPosition(text: string, position: number): number {
-  const lines = text.substring(0, position).split('\n');
-  return lines.length;
-}
-
-// Helper function to get line at position
-function getLineAtPosition(text: string, position: number): string {
-  const lines = text.split('\n');
-  const lineNumber = getLineNumberAtPosition(text, position);
-  return lines[lineNumber - 1] || '';
-}
-
 // Export the tool instance
 export default new TextLocationFinderTool();
+
+// Re-export core functions and types for use by other tools/plugins
+export {
+  findTextLocation,
+  getLineNumberAtPosition,
+  getLineAtPosition,
+  type TextLocation,
+  type SimpleLocationOptions,
+  type EnhancedLocationOptions,
+  type DocumentLocation
+} from './core';

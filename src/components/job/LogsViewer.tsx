@@ -39,7 +39,7 @@ export function LogsViewer({
           )}
         </button>
         {isExpanded && (
-          <CopyButton text={logs} size="sm" />
+          <CopyButton text={logs} />
         )}
       </div>
 

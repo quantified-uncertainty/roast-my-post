@@ -10,7 +10,6 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface SpellingErrorWithLocation {
@@ -20,7 +19,7 @@ export interface SpellingErrorWithLocation {
     startOffset: number;
     endOffset: number;
     quotedText: string;
-  };
+  } | null;
 }
 
 export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
@@ -84,13 +83,8 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     try {
       logger.info("SpellingAnalyzer: Starting analysis");
 
-      await this.checkSpellingAndGrammar();
-      
-      logger.info(`SpellingAnalyzer: Found ${this.errors.length} errors, finding locations...`);
-      await this.findErrorLocations();
-      
-      logger.info(`SpellingAnalyzer: Creating comments from ${this.errors.filter(e => e.location).length} located errors...`);
-      this.createComments();
+      // Process chunks and create comments in one pass
+      await this.processChunksAndCreateComments();
       
       logger.info("SpellingAnalyzer: Generating analysis summary...");
       this.generateAnalysis();
@@ -125,97 +119,88 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     };
   }
 
-  private async checkSpellingAndGrammar(): Promise<void> {
+  private async processChunksAndCreateComments(): Promise<void> {
     logger.debug(
-      `SpellingAnalyzer: Checking ${this.chunks.length} chunks in parallel`
+      `SpellingAnalyzer: Processing ${this.chunks.length} chunks`
     );
 
-    // Process all chunks in parallel
-    const chunkResults = await Promise.allSettled(
-      this.chunks.map(async (chunk) => {
-        try {
-          const result = await checkSpellingGrammarTool.execute(
-            {
-              text: chunk.text,
-              maxErrors: 20, // Limit errors per chunk
-            },
-            {
-              logger: logger,
-            }
-          );
-
-          // Track LLM interactions - convert from RichLLMInteraction to LLMInteraction
-          if (result.llmInteractions) {
-            for (const richInteraction of result.llmInteractions) {
-              const llmInteraction: LLMInteraction = {
-                messages: [
-                  { role: "user", content: richInteraction.prompt },
-                  { role: "assistant", content: richInteraction.response }
-                ],
-                usage: {
-                  input_tokens: richInteraction.tokensUsed.prompt,
-                  output_tokens: richInteraction.tokensUsed.completion
-                }
-              };
-              this.llmInteractions.push(llmInteraction);
-              // Calculate cost based on token usage (using rough estimate)
-              const costPerInputToken = 0.003 / 1000; // $3 per 1M input tokens
-              const costPerOutputToken = 0.015 / 1000; // $15 per 1M output tokens
-              const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
-                          (richInteraction.tokensUsed.completion * costPerOutputToken);
-              this.totalCost += cost;
-            }
-          }
-
-          return { chunk, result };
-        } catch (error) {
-          logger.error(
-            `Failed to check spelling in chunk ${chunk.id}:`,
-            error
-          );
-          throw error;
-        }
-      })
-    );
-
-    // Process successful results
-    for (const chunkResult of chunkResults) {
-      if (chunkResult.status === 'fulfilled') {
-        const { chunk, result } = chunkResult.value;
+    // Process chunks sequentially to maintain order and process errors immediately
+    for (const chunk of this.chunks) {
+      try {
+        logger.debug(`SpellingAnalyzer: Checking chunk ${chunk.id}`);
         
-        // Store errors with their chunks, filtering out invalid ones
+        const result = await checkSpellingGrammarTool.execute(
+          {
+            text: chunk.text,
+            maxErrors: 20, // Limit errors per chunk
+          },
+          {
+            logger: logger,
+          }
+        );
+
+        // Track LLM interactions
+        if (result.llmInteractions) {
+          for (const richInteraction of result.llmInteractions) {
+            const llmInteraction: LLMInteraction = {
+              messages: [
+                { role: "user", content: richInteraction.prompt },
+                { role: "assistant", content: richInteraction.response }
+              ],
+              usage: {
+                input_tokens: richInteraction.tokensUsed.prompt,
+                output_tokens: richInteraction.tokensUsed.completion
+              }
+            };
+            this.llmInteractions.push(llmInteraction);
+            // Calculate cost based on token usage
+            const costPerInputToken = 0.003 / 1000; // $3 per 1M input tokens
+            const costPerOutputToken = 0.015 / 1000; // $15 per 1M output tokens
+            const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
+                        (richInteraction.tokensUsed.completion * costPerOutputToken);
+            this.totalCost += cost;
+          }
+        }
+
+        logger.info(`SpellingAnalyzer: Chunk ${chunk.id} returned ${result.errors.length} errors`);
+
+        // Process each error immediately
         for (const error of result.errors) {
           // Validate error has required fields
-          if (error && error.text && typeof error.text === 'string' && error.text.trim()) {
-            this.errors.push({ error, chunk });
-          } else {
+          if (!error || !error.text || typeof error.text !== 'string' || !error.text.trim()) {
             logger.warn('SpellingAnalyzer: Skipping invalid error from LLM', { error });
+            continue;
           }
+
+          // Find location in this specific chunk immediately
+          const location = await this.findLocationInChunk({ error, chunk });
+          
+          if (location) {
+            // Create comment immediately
+            const comment = this.createComment({ error, chunk, location });
+            if (comment) {
+              this.comments.push(comment);
+              logger.debug(`SpellingAnalyzer: Created comment for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`);
+            }
+          } else {
+            logger.warn(`SpellingAnalyzer: Could not find location for error "${error.text.slice(0, 30)}..." in chunk ${chunk.id}`);
+          }
+          
+          // Still track the error for analysis summary
+          this.errors.push({ error, chunk, location });
         }
 
-        // Skip LLM interaction tracking for now - it's not critical
-        // Just track a simple cost estimate based on text length
-        const estimatedCost = (chunk.text.length / 1000) * 0.001; // Rough estimate
-        this.totalCost += estimatedCost;
+      } catch (error) {
+        logger.error(`Failed to process chunk ${chunk.id}:`, error);
+        // Continue with next chunk instead of failing entirely
       }
     }
 
-    logger.debug(
-      `SpellingAnalyzer: Found ${this.errors.length} spelling/grammar errors`
+    logger.info(
+      `SpellingAnalyzer: Processed ${this.chunks.length} chunks, created ${this.comments.length} comments`
     );
   }
 
-  private async findErrorLocations(): Promise<void> {
-    // Process locations in parallel for better performance
-    await Promise.all(
-      this.errors.map(async (errorWithChunk) => {
-        const location = await this.findLocationInChunk(errorWithChunk);
-        if (location) {
-          errorWithChunk.location = location;
-        }
-      })
-    );
-  }
 
   private async findLocationInChunk(errorWithChunk: SpellingErrorWithLocation): Promise<{
     startOffset: number;
@@ -234,10 +219,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       return null;
     }
     
-    // Use the generic function to find text in chunk and convert to absolute position
-    const location = await findTextInChunkAbsolute(
+    // Since we're now processing errors immediately after extraction from the same chunk,
+    // we can trust that the error exists in this chunk. No need for extensive debugging.
+    
+    // Use the chunk's method to find text and convert to absolute position
+    const location = await chunk.findTextAbsolute(
       error.text,
-      chunk,
       {
         normalizeQuotes: true,  // Handle apostrophe variations
         partialMatch: true,     // For longer errors
@@ -258,18 +245,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     return location;
   }
 
-  private createComments(): void {
-    for (const errorWithLocation of this.errors) {
-      if (!errorWithLocation.location) continue;
-
-      const comment = this.createComment(errorWithLocation);
-      if (comment) {
-        this.comments.push(comment);
-      }
-    }
-
-    logger.debug(`SpellingAnalyzer: Created ${this.comments.length} comments`);
-  }
 
   private createComment(errorWithLocation: SpellingErrorWithLocation): Comment | null {
     const { error, location } = errorWithLocation;

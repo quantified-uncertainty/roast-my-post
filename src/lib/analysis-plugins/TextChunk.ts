@@ -4,6 +4,14 @@
 
 import { TextChunk as ITextChunk } from './types';
 import { LocationUtils } from '../documentAnalysis/utils/LocationUtils';
+import { findTextLocation, type SimpleLocationOptions, type EnhancedLocationOptions } from '@/tools/text-location-finder';
+import { logger } from '@/lib/logger';
+
+export interface DocumentLocation {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+}
 
 export class TextChunk implements ITextChunk {
   private locationUtils: LocationUtils;
@@ -68,6 +76,134 @@ export class TextChunk implements ITextChunk {
     
     // Otherwise return the line number within the chunk
     return lineInfo.lineNumber;
+  }
+
+  /**
+   * Find text within this chunk and return chunk-relative position
+   */
+  async findText(
+    searchText: string,
+    options: SimpleLocationOptions = {}
+  ): Promise<DocumentLocation | null> {
+    logger.debug('🔍 Text search in chunk', {
+      searchTextLength: searchText.length,
+      chunkId: this.id,
+      chunkTextLength: this.text.length,
+      plugin: (options as any).pluginName
+    });
+
+    // Validate inputs
+    if (!searchText || !this.text) {
+      logger.warn('Invalid input for text search', {
+        hasSearchText: !!searchText,
+        hasChunkText: !!this.text,
+        plugin: (options as any).pluginName
+      });
+      return null;
+    }
+
+    // Use the text location finder
+    const location = findTextLocation(searchText, this.text, options);
+    
+    if (!location) {
+      logger.debug('Text not found in chunk', {
+        searchText: searchText.slice(0, 50),
+        chunkId: this.id,
+        plugin: (options as any).pluginName
+      });
+      return null;
+    }
+
+    logger.info('🔍 Text found', {
+      strategy: location.strategy,
+      confidence: location.confidence,
+      preview: location.quotedText.slice(0, 50),
+      plugin: (options as any).pluginName
+    });
+
+    return {
+      startOffset: location.startOffset,
+      endOffset: location.endOffset,
+      quotedText: location.quotedText
+    };
+  }
+
+  /**
+   * Find text within this chunk and convert to absolute document position
+   */
+  async findTextAbsolute(
+    searchText: string,
+    options: EnhancedLocationOptions & { documentText?: string } = {}
+  ): Promise<DocumentLocation | null> {
+    // Find within chunk
+    const chunkLocation = await this.findText(searchText, options);
+    
+    if (!chunkLocation) {
+      logger.debug('Text not found in chunk', {
+        searchText: searchText.slice(0, 50),
+        chunkId: this.id,
+        plugin: options.pluginName
+      });
+      return null;
+    }
+    
+    // Validate chunk has position metadata
+    if (!this.metadata?.position) {
+      logger.error('Chunk missing position metadata', { 
+        chunkId: this.id,
+        plugin: options.pluginName 
+      });
+      return null;
+    }
+    
+    // Convert to absolute position
+    const absoluteStart = this.metadata.position.start + chunkLocation.startOffset;
+    const absoluteEnd = this.metadata.position.start + chunkLocation.endOffset;
+    
+    // Verify the position if document text is provided
+    if (options.documentText) {
+      const extractedText = options.documentText.substring(absoluteStart, absoluteEnd);
+      if (extractedText !== chunkLocation.quotedText) {
+        // Try to find where the chunk actually is in the document
+        const actualChunkPos = options.documentText.indexOf(this.text);
+        if (actualChunkPos !== -1 && actualChunkPos !== this.metadata.position.start) {
+          const difference = actualChunkPos - this.metadata.position.start;
+          
+          logger.warn('Chunk position mismatch detected - attempting to correct', {
+            chunkId: this.id,
+            declaredStart: this.metadata.position.start,
+            actualStart: actualChunkPos,
+            difference,
+            plugin: options.pluginName
+          });
+          
+          // Calculate corrected absolute position using actual chunk position
+          const correctedAbsoluteStart = actualChunkPos + chunkLocation.startOffset;
+          const correctedAbsoluteEnd = actualChunkPos + chunkLocation.endOffset;
+          
+          // Return the corrected position
+          return {
+            startOffset: correctedAbsoluteStart,
+            endOffset: correctedAbsoluteEnd,
+            quotedText: chunkLocation.quotedText
+          };
+        }
+      }
+    }
+    
+    logger.info('🔍 Text found in chunk, converted to absolute position', {
+      chunkId: this.id,
+      chunkStart: this.metadata.position.start,
+      relativeStart: chunkLocation.startOffset,
+      absoluteStart,
+      plugin: options.pluginName
+    });
+    
+    return {
+      startOffset: absoluteStart,
+      endOffset: absoluteEnd,
+      quotedText: chunkLocation.quotedText
+    };
   }
 }
 

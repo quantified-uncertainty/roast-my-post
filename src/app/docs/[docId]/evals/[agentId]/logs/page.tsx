@@ -134,7 +134,7 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
                     attempts: currentJob.attempts,
                     originalJobId: currentJob.originalJobId,
                     error: currentJob.error,
-                    logs: currentJob.logs
+                    logs: currentJob.logs || undefined
                   }}
                   showLogs={true}
                 />

@@ -14,7 +14,6 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { findTextInChunkAbsolute } from "@/lib/analysis-plugins/utils/findTextInChunk";
 import { generateMathComment, generateDocumentSummary } from "./commentGeneration";
 
 export interface MathExpressionWithComment {
@@ -51,10 +50,9 @@ export class ExtractedMathExpression {
     endOffset: number;
     quotedText: string;
   } | null> {
-    // Use the generic function to find text in chunk and convert to absolute position
-    const location = await findTextInChunkAbsolute(
+    // Use the chunk's method to find text and convert to absolute position
+    const location = await this.chunk.findTextAbsolute(
       this.expression.originalText,
-      this.chunk,
       {
         normalizeQuotes: true,  // Math might have quote variations
         useLLMFallback: true,   // Enable LLM fallback for complex expressions

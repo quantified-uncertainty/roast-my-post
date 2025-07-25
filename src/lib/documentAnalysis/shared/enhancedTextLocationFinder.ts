@@ -124,6 +124,27 @@ Find the best match based on meaning. Return the actual text from the document t
     });
 
     if (result.found && result.matchedText) {
+      // Validate the result isn't truncated or partial
+      const searchWords = searchText.trim().split(/\s+/);
+      const matchWords = result.matchedText.trim().split(/\s+/);
+      
+      // Check if the match is suspiciously truncated
+      if (matchWords.length > 0) {
+        const lastMatchWord = matchWords[matchWords.length - 1];
+        const lastSearchWord = searchWords[searchWords.length - 1];
+        
+        // If the last word is truncated (unless search text is also truncated)
+        if (lastMatchWord.length < 3 && lastSearchWord.length >= 3 && 
+            !lastSearchWord.startsWith(lastMatchWord)) {
+          logger.debug('LLM returned truncated match, rejecting', {
+            searchText: searchText.slice(0, 50),
+            matchedText: result.matchedText.slice(0, 50),
+            plugin: pluginName
+          });
+          return null;
+        }
+      }
+      
       // Verify the offsets
       const verifiedText = documentText.substring(result.startOffset, result.endOffset);
       if (verifiedText !== result.matchedText) {
@@ -132,6 +153,13 @@ Find the best match based on meaning. Return the actual text from the document t
         if (actualPos !== -1) {
           result.startOffset = actualPos;
           result.endOffset = actualPos + result.matchedText.length;
+        } else {
+          // Match text not found in document at all
+          logger.debug('LLM match not found in document', {
+            matchedText: result.matchedText.slice(0, 50),
+            plugin: pluginName
+          });
+          return null;
         }
       }
 
@@ -183,6 +211,16 @@ export async function findTextLocation(
 
     // Strategy 1: Exact match
     foundOffset = documentText.indexOf(searchText);
+    
+    // DEBUG: Log exact match attempt
+    if (foundOffset === -1) {
+      logger.info(`❌ Text search: EXACT MATCH FAILED`, {
+        searchText: searchText.slice(0, 50),
+        documentLength: documentText.length,
+        documentPreview: documentText.slice(0, 100),
+        plugin: options.pluginName
+      });
+    }
     
     // Strategy 2: Normalized quotes (for spelling errors with apostrophes)
     if (foundOffset === -1 && options.normalizeQuotes) {
