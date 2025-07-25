@@ -228,10 +228,9 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       {
         normalizeQuotes: true,  // Handle apostrophe variations
         partialMatch: true,     // For longer errors
-        context: error.context, // Use context if provided
+        llmContext: error.context, // Use context if provided
         useLLMFallback: true,   // Enable LLM fallback for difficult cases
-        pluginName: 'spelling',
-        documentText: this.documentText  // Pass for position verification
+        pluginName: 'spelling'
       }
     );
 

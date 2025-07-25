@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolConfig, ToolContext } from '../base/Tool';
-import { findTextLocation, SimpleLocationOptions, TextLocation } from './core';
-import { llmSearch, LLMSearchOptions } from './llmSearch';
+import { findTextLocation, TextLocationOptions, TextLocation } from './core';
 
 export interface TextLocationFinderInput {
   documentText: string;
@@ -62,15 +61,15 @@ const outputSchema = z.object({
   llmSuggestion: z.string().optional()
 });
 
-export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLocationFinderOutput> {
+export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLocationFinderOutput> {
   config: ToolConfig = {
-    id: 'text-location-finder',
-    name: 'Text Location Finder',
-    description: 'Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, context-based searching, and LLM fallback for difficult cases',
+    id: 'fuzzy-text-locator',
+    name: 'Fuzzy Text Locator',
+    description: 'Find the location of text within documents using multiple search strategies including exact matching, fuzzy matching, quote normalization, partial matching, and LLM fallback for paraphrased or difficult-to-find text',
     version: '1.1.0',
     category: 'utility',
     costEstimate: 'Free (or minimal LLM cost if fallback is used)',
-    path: '/tools/text-location-finder',
+    path: '/tools/fuzzy-text-locator',
     status: 'stable'
   };
 
@@ -80,36 +79,24 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
   async execute(input: TextLocationFinderInput, context: ToolContext): Promise<TextLocationFinderOutput> {
     const startTime = Date.now();
     
-    context.logger.debug(`TextLocationFinder: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`);
+    context.logger.debug(`FuzzyTextLocator: Searching for "${input.searchText}" in document of ${input.documentText.length} characters`);
 
     try {
-      // Convert options to SimpleLocationOptions format
-      const locationOptions: SimpleLocationOptions = {
+      // Convert options to unified TextLocationOptions format
+      const locationOptions: TextLocationOptions = {
         normalizeQuotes: input.options?.normalizeQuotes ?? false,
         partialMatch: input.options?.partialMatch ?? false,
-        context: input.context
+        useLLMFallback: input.options?.useLLMFallback ?? false,
+        llmContext: input.context,
+        pluginName: 'fuzzy-text-locator'
       };
 
-      // Use the unified finder for single search
-      let locationResult = await findTextLocation(input.searchText, input.documentText, locationOptions);
-      let llmUsed = false;
-      let llmSuggestion: string | undefined;
-
-      // If not found and LLM fallback is enabled, try LLM
-      if (!locationResult && input.options?.useLLMFallback) {
-        context.logger.debug('TextLocationFinder: Trying LLM fallback...');
-        
-        const llmOptions: LLMSearchOptions = {
-          context: input.context,
-          pluginName: 'text-location-finder'
-        };
-        
-        locationResult = await llmSearch(input.searchText, input.documentText, llmOptions);
-        if (locationResult) {
-          llmUsed = true;
-          // Note: llmSearch doesn't return explanations anymore since we removed that feature
-        }
-      }
+      // Use the unified finder with all strategies
+      const locationResult = await findTextLocation(input.searchText, input.documentText, locationOptions);
+      
+      // Check if LLM was used based on the strategy
+      const llmUsed = locationResult?.strategy === 'llm';
+      const llmSuggestion: string | undefined = undefined; // LLM explanations removed for efficiency
 
       const processingTime = Date.now() - startTime;
       
@@ -129,7 +116,7 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
           llmSuggestion
         };
 
-        context.logger.debug(`TextLocationFinder: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`);
+        context.logger.debug(`FuzzyTextLocator: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`);
         return output;
       } else {
         const output: TextLocationFinderOutput = {
@@ -141,13 +128,13 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
           llmSuggestion
         };
 
-        context.logger.debug(`TextLocationFinder: Text not found in ${processingTime}ms`);
+        context.logger.debug(`FuzzyTextLocator: Text not found in ${processingTime}ms`);
         return output;
       }
 
     } catch (error) {
-      context.logger.error('TextLocationFinder execution failed:', error);
-      throw new Error(`Text location finder failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      context.logger.error('FuzzyTextLocator execution failed:', error);
+      throw new Error(`Fuzzy text locator failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -215,13 +202,14 @@ export class TextLocationFinderTool extends Tool<TextLocationFinderInput, TextLo
 }
 
 // Export the tool instance
-export default new TextLocationFinderTool();
+export default new FuzzyTextLocatorTool();
 
 // Re-export core functions and types for use by other tools/plugins
 export {
   findTextLocation,
   type TextLocation,
-  type SimpleLocationOptions,
-  type EnhancedLocationOptions,
+  type TextLocationOptions,
+  type SimpleLocationOptions, // Backward compatibility alias
+  type EnhancedLocationOptions, // Backward compatibility alias
   type DocumentLocation
 } from './core';

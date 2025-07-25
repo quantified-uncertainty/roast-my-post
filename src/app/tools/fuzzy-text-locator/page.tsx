@@ -2,20 +2,21 @@
 
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
-import textLocationFinderTool from '@/tools/text-location-finder';
-import type { TextLocationFinderOutput } from '@/tools/text-location-finder';
+import fuzzyTextLocatorTool from '@/tools/fuzzy-text-locator';
+import type { TextLocationFinderOutput } from '@/tools/fuzzy-text-locator';
 
-// Custom results renderer for the Text Location Finder
+// Custom results renderer for the Fuzzy Text Locator
 function renderResults(result: TextLocationFinderOutput) {
   const getStrategyColor = (strategy: string) => {
     const colors: Record<string, string> = {
       exact: 'bg-green-100 text-green-800',
-      caseInsensitive: 'bg-blue-100 text-blue-800',
-      normalizedQuotes: 'bg-purple-100 text-purple-800',
-      normalizedWhitespace: 'bg-indigo-100 text-indigo-800',
-      context: 'bg-orange-100 text-orange-800',
-      partialMatch: 'bg-yellow-100 text-yellow-800',
-      keyPhrase: 'bg-pink-100 text-pink-800',
+      'exact-short': 'bg-green-100 text-green-800',
+      'case-insensitive-short': 'bg-blue-100 text-blue-800',
+      'punctuation-exact': 'bg-green-100 text-green-800',
+      'quotes-normalized': 'bg-purple-100 text-purple-800',
+      partial: 'bg-yellow-100 text-yellow-800',
+      ufuzzy: 'bg-indigo-100 text-indigo-800',
+      'sliding-window': 'bg-orange-100 text-orange-800',
       llm: 'bg-red-100 text-red-800'
     };
     return colors[strategy] || 'bg-gray-100 text-gray-800';
@@ -98,10 +99,10 @@ function renderResults(result: TextLocationFinderOutput) {
   );
 }
 
-export default function TextLocationFinderPage() {
+export default function FuzzyTextLocatorPage() {
   return (
     <ToolPageTemplate
-      tool={textLocationFinderTool}
+      tool={fuzzyTextLocatorTool}
       renderResults={renderResults}
       formConfig={{
         fieldOrder: ['documentText', 'searchText', 'context', 'options'],
@@ -138,6 +139,10 @@ export default function TextLocationFinderPage() {
                 label: 'Use LLM Fallback',
                 helpText: 'Use AI to find text when other methods fail (for paraphrased, truncated, or similar text)'
               },
+              includeLLMExplanation: {
+                label: 'Include LLM Explanation',
+                helpText: 'Get an explanation of why the LLM chose a particular match (uses more tokens)'
+              }
             }
           }
         },

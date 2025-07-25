@@ -4,7 +4,7 @@ import type {
   LLMInteraction
 } from '../../types';
 import type { Comment } from '@/types/documentSchema';
-import { findTextLocation, type DocumentLocation } from '@/tools/text-location-finder';
+import { findTextLocation, type DocumentLocation } from '@/tools/fuzzy-text-locator';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
 import extractFactualClaimsTool from '@/tools/extract-factual-claims';

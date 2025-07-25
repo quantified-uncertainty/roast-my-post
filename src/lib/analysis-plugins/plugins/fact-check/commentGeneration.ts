@@ -1,6 +1,6 @@
 import type { Comment } from '@/types/documentSchema';
 import type { VerifiedFact } from './index';
-import type { DocumentLocation } from '@/tools/text-location-finder';
+import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
 import { THRESHOLDS, FORMATTING } from './constants';
 
 export function generateFactCheckComments(

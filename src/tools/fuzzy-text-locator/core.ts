@@ -3,7 +3,7 @@
  */
 
 import { logger } from "@/lib/logger";
-import { TextLocation, SimpleLocationOptions, EnhancedLocationOptions } from './types';
+import { TextLocation, TextLocationOptions } from './types';
 import { exactSearch } from './exactSearch';
 import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
 import { llmSearch, LLMSearchOptions } from './llmSearch';
@@ -83,7 +83,7 @@ function normalizeQuotes(text: string): string {
 export async function findTextLocation(
   searchText: string,
   documentText: string,
-  options: SimpleLocationOptions = {}
+  options: TextLocationOptions = {}
 ): Promise<TextLocation | null> {
   if (!searchText || !documentText) {
     return null;
@@ -128,7 +128,8 @@ export async function findTextLocation(
   // Strategy 4: Try uFuzzy for fuzzy matching
   const fuzzyOptions: UFuzzyOptions = {
     normalizeQuotes: options.normalizeQuotes,
-    caseSensitive: options.caseSensitive ?? true,  // Default to case-sensitive
+    caseSensitive: options.caseSensitive ?? false, // Default to case-insensitive for better matching
+    maxErrors: options.maxTypos,
   };
   const fuzzyResult = uFuzzySearch(searchText, documentText, fuzzyOptions);
   if (fuzzyResult) {
@@ -136,55 +137,10 @@ export async function findTextLocation(
     return fuzzyResult;
   }
 
-  // Strategy 5: No LLM fallback in simple version
-  logger.debug('Text not found with any strategy');
-  return null;
-}
-
-/**
- * Find text in document with enhanced options including LLM fallback
- */
-export async function findTextLocationEnhanced(
-  searchText: string,
-  documentText: string,
-  options: EnhancedLocationOptions = {}
-): Promise<TextLocation | null> {
-  if (!searchText || !documentText) {
-    return null;
-  }
-
-  // Strategy 1: Try exact match first
-  const exactResult = exactSearch(searchText, documentText);
-  if (exactResult) {
-    logger.debug('Found with exact search');
-    return exactResult;
-  }
-
-  // Strategy 2: Try partial match if enabled
-  if (options.partialMatch) {
-    const partialResult = partialMatch(searchText, documentText);
-    if (partialResult) {
-      logger.debug('Found with partial match');
-      return partialResult;
-    }
-  }
-
-  // Strategy 3: Try uFuzzy with enhanced options
-  const fuzzyOptions: UFuzzyOptions = {
-    normalizeQuotes: options.normalizeQuotes,
-    caseSensitive: options.caseSensitive ?? false,
-    maxErrors: options.maxDistance,
-  };
-  const fuzzyResult = uFuzzySearch(searchText, documentText, fuzzyOptions);
-  if (fuzzyResult) {
-    logger.debug('Found with uFuzzy search');
-    return fuzzyResult;
-  }
-
-  // Strategy 4: Try LLM if enabled
+  // Strategy 5: Try LLM if enabled
   if (options.useLLMFallback) {
     const llmOptions: LLMSearchOptions = {
-      context: options.context,
+      context: options.llmContext,
       pluginName: options.pluginName
     };
     
@@ -195,5 +151,9 @@ export async function findTextLocationEnhanced(
     }
   }
 
+  logger.debug('Text not found with any strategy');
   return null;
 }
+
+// Keep the enhanced function as an alias for backward compatibility
+export const findTextLocationEnhanced = findTextLocation;
