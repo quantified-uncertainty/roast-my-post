@@ -1,8 +1,9 @@
 /**
- * Core text location finding logic
+ * Core text location finding logic with uFuzzy
  * Self-contained implementation that doesn't depend on documentAnalysis
  */
 
+import uFuzzy from '@leeoniya/ufuzzy';
 import { logger } from "@/lib/logger";
 
 export interface TextLocation {
@@ -72,7 +73,7 @@ function matchesWithNormalization(text1: string, text2: string): boolean {
 }
 
 /**
- * Find text in document - simple and fast
+ * Find text in document with uFuzzy
  */
 export function findTextLocation(
   searchText: string,
@@ -89,15 +90,134 @@ export function findTextLocation(
   let strategy = "exact";
   let confidence = 1.0;
 
-  // Try exact match first
+  // Strategy 1: Try exact match first (fastest)
   foundOffset = documentText.indexOf(searchText);
 
-  // Try with quote normalization if enabled
+  // Strategy 2: If exact match fails, try uFuzzy
+  if (foundOffset === -1) {
+    logger.debug(`Text search: exact match failed, trying uFuzzy`, {
+      searchText: searchText.slice(0, 50)
+    });
+    
+    // Configure uFuzzy for fuzzy matching
+    const uf = new uFuzzy({
+      intraMode: 1,      // Enable single-error tolerance
+      interLft: 2,       // Allow up to 2 extra chars between terms  
+      interRgt: 2,       // Allow up to 2 extra chars between terms
+      intraSub: 1,       // Allow character substitutions
+      intraTrn: 1,       // Allow character transpositions  
+      intraDel: 1,       // Allow character deletions
+      intraIns: 1,       // Allow character insertions
+    });
+    
+    // Try different text preparations
+    const searchVariants: Array<{text: string, doc: string, strategy: string, confidence: number}> = [];
+    
+    // Always try original text with fuzzy matching
+    searchVariants.push({
+      text: searchText,
+      doc: documentText,
+      strategy: 'ufuzzy',
+      confidence: 0.85
+    });
+    
+    // Try normalized quotes if enabled and applicable
+    if (options.normalizeQuotes) {
+      const normalizedSearch = normalizeQuotes(searchText);
+      if (normalizedSearch !== searchText) {
+        searchVariants.push({
+          text: normalizedSearch,
+          doc: normalizeQuotes(documentText),
+          strategy: 'ufuzzy-quotes',
+          confidence: 0.8
+        });
+      }
+    }
+    
+    // Try case-insensitive
+    searchVariants.push({
+      text: searchText.toLowerCase(),
+      doc: documentText.toLowerCase(),
+      strategy: 'ufuzzy-case',
+      confidence: 0.75
+    });
+    
+    // Try partial match for long text
+    if (options.partialMatch && searchText.length > 50) {
+      searchVariants.push({
+        text: searchText.slice(0, 50),
+        doc: documentText,
+        strategy: 'ufuzzy-partial',
+        confidence: 0.7
+      });
+    }
+    
+    // Try each variant
+    for (const variant of searchVariants) {
+      const uf = new uFuzzy({
+        intraMode: 1,
+        interLft: 2,
+        interRgt: 2,
+        intraSub: 1,
+        intraTrn: 1,
+        intraDel: 1,
+        intraIns: 1,
+      });
+      
+      // For single document search, haystack is an array with one item
+      const haystack = [variant.doc];
+      const needle = variant.text;
+      
+      // Filter to find matches
+      const idxs = uf.filter(haystack, needle);
+      
+      if (idxs && idxs.length > 0) {
+        // Get detailed match info
+        const info = uf.info(idxs, haystack, needle);
+        
+        // Get the ranges for the first (and only) match
+        if (info.ranges && info.ranges.length > 0) {
+          const ranges = info.ranges[0];
+          if (Array.isArray(ranges) && ranges.length >= 2) {
+            // uFuzzy returns ranges as pairs of [start, end] offsets
+            foundOffset = ranges[0];
+            const endOffset = ranges[1];
+            
+            // If we were searching in transformed text (lowercase, normalized),
+            // we need to find the actual text in the original document
+            if (variant.doc !== documentText) {
+              // Get the matched text from the transformed document
+              const transformedMatch = variant.doc.slice(foundOffset, endOffset);
+              
+              // Try to find this text in the original document
+              // This is approximate - the positions might not align perfectly
+              const originalMatch = documentText.slice(foundOffset, Math.min(endOffset, documentText.length));
+              matchedText = originalMatch;
+            } else {
+              matchedText = documentText.slice(foundOffset, endOffset);
+            }
+            
+            strategy = variant.strategy;
+            confidence = variant.confidence;
+            
+            logger.debug(`uFuzzy found match with ${strategy}`, {
+              searchText: searchText.slice(0, 50),
+              matchedText: matchedText.slice(0, 50),
+              startOffset: foundOffset,
+              endOffset: endOffset
+            });
+            
+            break; // Found a match, stop trying variants
+          }
+        }
+      }
+    }
+  }
+
+  // If still not found, try the old quote normalization method
   if (foundOffset === -1 && options.normalizeQuotes) {
-    // First, check if the search text even contains normalizable quotes
     const normalizedSearch = normalizeQuotes(searchText);
     if (normalizedSearch !== searchText) {
-      // Only do the expensive search if normalization actually changes something
       // Search through the document looking for normalized matches
       // This preserves correct offsets by working with the original text
       for (let i = 0; i <= documentText.length - searchText.length; i++) {
@@ -114,39 +234,12 @@ export function findTextLocation(
     }
   }
 
-  // Try partial match if enabled
-  if (foundOffset === -1 && options.partialMatch && searchText.length > 50) {
-    // Try beginning of search text
-    const partialLength = Math.min(50, Math.floor(searchText.length * 0.7));
-    const partialSearch = searchText.substring(0, partialLength);
-    foundOffset = documentText.indexOf(partialSearch);
-
-    if (foundOffset !== -1) {
-      // Look for a reasonable end point
-      const endSearchStart = foundOffset + partialLength;
-      const remainingSearch = searchText.substring(partialLength);
-
-      // Try to find where the text naturally ends
-      let endOffset = endSearchStart + remainingSearch.length;
-
-      // Adjust to sentence/paragraph boundary if possible
-      const punctuation = [".", "!", "?", "\n"];
-      for (const punct of punctuation) {
-        const punctIndex = documentText.indexOf(punct, endSearchStart);
-        if (punctIndex !== -1 && punctIndex < endOffset + 20) {
-          endOffset = punctIndex + 1;
-          break;
-        }
-      }
-
-      matchedText = documentText.substring(foundOffset, endOffset);
-      strategy = "partial";
-      confidence = 0.7;
-    }
-  }
-
   // If still not found, return null
   if (foundOffset === -1) {
+    logger.debug('Text not found with any strategy', { 
+      searchText: searchText.slice(0, 50),
+      strategies: ['exact', 'ufuzzy', 'quotes-normalized']
+    });
     return null;
   }
 
@@ -161,4 +254,17 @@ export function findTextLocation(
     strategy,
     confidence,
   };
+}
+
+/**
+ * Find text in document with enhanced options (delegates to findTextLocation)
+ */
+export function findTextLocationEnhanced(
+  searchText: string,
+  documentText: string,
+  options: EnhancedLocationOptions = {}
+): TextLocation | null {
+  // For now, just delegate to the simple version
+  // The enhanced options like maxDistance and caseSensitive are handled by uFuzzy
+  return findTextLocation(searchText, documentText, options);
 }
