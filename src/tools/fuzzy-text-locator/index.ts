@@ -11,7 +11,6 @@ export interface TextLocationFinderInput {
     normalizeQuotes?: boolean;
     partialMatch?: boolean;
     useLLMFallback?: boolean;
-    includeLLMExplanation?: boolean;
   };
 }
 
@@ -28,7 +27,6 @@ export interface TextLocationFinderOutput {
   error?: string;
   processingTimeMs: number;
   llmUsed?: boolean;
-  llmSuggestion?: string;
 }
 
 // Input validation schema
@@ -39,8 +37,7 @@ const inputSchema = z.object({
   options: z.object({
     normalizeQuotes: z.boolean().optional(),
     partialMatch: z.boolean().optional(),
-    useLLMFallback: z.boolean().optional(),
-    includeLLMExplanation: z.boolean().optional(),
+    useLLMFallback: z.boolean().optional()
   }).optional()
 });
 
@@ -57,8 +54,7 @@ const outputSchema = z.object({
   }).optional(),
   error: z.string().optional(),
   processingTimeMs: z.number(),
-  llmUsed: z.boolean().optional(),
-  llmSuggestion: z.string().optional()
+  llmUsed: z.boolean().optional()
 });
 
 export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLocationFinderOutput> {
@@ -96,7 +92,6 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
       
       // Check if LLM was used based on the strategy
       const llmUsed = locationResult?.strategy === 'llm';
-      const llmSuggestion: string | undefined = undefined; // LLM explanations removed for efficiency
 
       const processingTime = Date.now() - startTime;
       
@@ -112,8 +107,7 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
             confidence: locationResult.confidence
           },
           processingTimeMs: processingTime,
-          llmUsed,
-          llmSuggestion
+          llmUsed
         };
 
         context.logger.debug(`FuzzyTextLocator: Found text using ${locationResult.strategy} strategy in ${processingTime}ms`);
@@ -124,8 +118,7 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
           found: false,
           error: 'Text not found in document',
           processingTimeMs: processingTime,
-          llmUsed,
-          llmSuggestion
+          llmUsed
         };
 
         context.logger.debug(`FuzzyTextLocator: Text not found in ${processingTime}ms`);
@@ -176,25 +169,21 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
         }
       },
       {
-        description: "LLM fallback for paraphrased text (with explanation)",
+        description: "LLM fallback for paraphrased text",
         input: {
           documentText: "Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.",
           searchText: "research shows that worldwide temperatures could increase by 2-3°C in the next 50 years",
           options: {
-            useLLMFallback: true,
-            includeLLMExplanation: true
+            useLLMFallback: true
           }
         }
       },
       {
-        description: "LLM fallback without explanation (saves tokens)",
+        description: "Context-aware search",
         input: {
           documentText: "The company reported revenues of $5.2 billion in Q3 2023.",
-          searchText: "the firm announced earnings of 5.2B dollars in the third quarter of 2023",
-          options: {
-            useLLMFallback: true,
-            includeLLMExplanation: false
-          }
+          searchText: "5.2 billion",
+          context: "financial earnings report"
         }
       }
     ];
@@ -215,7 +204,9 @@ export interface DocumentLocation {
 export {
   findTextLocation,
   type TextLocation,
-  type TextLocationOptions,
-  type SimpleLocationOptions, // Backward compatibility alias
-  type EnhancedLocationOptions // Backward compatibility alias
+  type TextLocationOptions
 } from './core';
+
+// Backward compatibility aliases for plugins
+export type SimpleLocationOptions = TextLocationOptions;
+export type EnhancedLocationOptions = TextLocationOptions;

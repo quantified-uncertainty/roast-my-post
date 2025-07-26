@@ -81,11 +81,6 @@ function renderResults(result: TextLocationFinderOutput) {
             <div className="bg-gray-50 p-2 rounded text-sm">
               <span className="font-medium">Found text:</span> "{result.location.quotedText}"
             </div>
-            {result.llmSuggestion && (
-              <div className="bg-orange-50 p-2 rounded text-sm mt-2">
-                <span className="font-medium text-orange-800">LLM Explanation:</span> {result.llmSuggestion}
-              </div>
-            )}
           </div>
         )}
 
@@ -138,10 +133,6 @@ export default function FuzzyTextLocatorPage() {
               useLLMFallback: {
                 label: 'Use LLM Fallback',
                 helpText: 'Use AI to find text when other methods fail (for paraphrased, truncated, or similar text)'
-              },
-              includeLLMExplanation: {
-                label: 'Include LLM Explanation',
-                helpText: 'Get an explanation of why the LLM chose a particular match (uses more tokens)'
               }
             }
           }
@@ -187,8 +178,7 @@ export default function FuzzyTextLocatorPage() {
               documentText: 'Studies indicate that global temperatures may rise by 2-3 degrees Celsius over the next five decades.',
               searchText: 'research shows that worldwide temperatures could increase by 2-3°C in the next 50 years',
               options: {
-                useLLMFallback: true,
-                includeLLMExplanation: true
+                useLLMFallback: true
               }
             }
           }
