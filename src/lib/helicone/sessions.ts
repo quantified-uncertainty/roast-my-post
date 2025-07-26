@@ -24,12 +24,19 @@ export function createHeliconeHeaders(config: HeliconeSessionConfig): Record<str
     throw new Error(`Invalid session ID format: "${config.sessionId}". Must contain only alphanumeric characters, hyphens, and underscores.`);
   }
   
+  // Sanitize session name to ASCII only (replace Unicode quotes and other non-ASCII characters)
+  const sanitizedSessionName = config.sessionName
+    .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
+    .replace(/[\u2013\u2014]/g, '-') // Replace en/em dashes
+    .replace(/[^\x00-\x7F]/g, ''); // Remove any remaining non-ASCII characters
+  
   // Validate session name (no newlines, reasonable length)
-  if (config.sessionName.includes('\n') || config.sessionName.includes('\r')) {
+  if (sanitizedSessionName.includes('\n') || sanitizedSessionName.includes('\r')) {
     throw new Error('Session name cannot contain newline characters');
   }
-  if (config.sessionName.length > 200) {
-    throw new Error(`Session name too long (${config.sessionName.length} chars). Maximum 200 characters allowed.`);
+  if (sanitizedSessionName.length > 200) {
+    throw new Error(`Session name too long (${sanitizedSessionName.length} chars). Maximum 200 characters allowed.`);
   }
   
   // Validate session path format
@@ -39,7 +46,7 @@ export function createHeliconeHeaders(config: HeliconeSessionConfig): Record<str
   
   const headers: Record<string, string> = {
     "Helicone-Session-Id": config.sessionId,
-    "Helicone-Session-Name": config.sessionName,
+    "Helicone-Session-Name": sanitizedSessionName,
     "Helicone-Session-Path": config.sessionPath,
   };
   
@@ -71,7 +78,14 @@ export function createHeliconeHeaders(config: HeliconeSessionConfig): Record<str
         throw new Error(`Property value for "${key}" too long (${value.length} chars). Maximum 500 characters allowed.`);
       }
       
-      headers[`Helicone-Property-${key}`] = value;
+      // Sanitize value to ASCII only
+      const sanitizedValue = value
+        .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
+        .replace(/[\u201C\u201D]/g, '"') // Replace smart double quotes
+        .replace(/[\u2013\u2014]/g, '-') // Replace en/em dashes
+        .replace(/[^\x00-\x7F]/g, ''); // Remove any remaining non-ASCII characters
+      
+      headers[`Helicone-Property-${key}`] = sanitizedValue;
     });
   }
   

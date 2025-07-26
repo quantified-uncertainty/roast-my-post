@@ -1,10 +1,12 @@
 import type { 
   AnalysisResult,
-  TextChunk,
-  LLMInteraction
+  LLMInteraction,
+  RoutingExample,
+  SimpleAnalysisPlugin
 } from '../../types';
+import { TextChunk } from '../../TextChunk';
 import type { Comment } from '@/types/documentSchema';
-import { findTextLocation, type DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
 import extractFactualClaimsTool from '@/tools/extract-factual-claims';
@@ -57,20 +59,19 @@ export class VerifiedFact {
   }
 
   async findLocation(documentText: string): Promise<DocumentLocation | null> {
-    const result = await findTextLocation(this.originalText, documentText, {
-      partialMatch: true,
-      normalizeQuotes: true
-    });
+    // Use the chunk's method to find text and convert to absolute position
+    const result = await this.chunk.findTextAbsolute(
+      this.originalText,
+      {
+        normalizeQuotes: true,  // Handle quote variations
+        partialMatch: true,     // Facts can be partial matches
+        useLLMFallback: true,   // Enable LLM fallback for paraphrased text
+        pluginName: 'fact-check',
+        documentText: documentText  // Pass for position verification
+      }
+    );
     
-    if (result) {
-      return {
-        startOffset: result.startOffset,
-        endOffset: result.endOffset,
-        quotedText: result.quotedText
-      };
-    }
-    
-    return null;
+    return result;
   }
 
   async toComment(documentText: string): Promise<Comment | null> {
@@ -81,34 +82,65 @@ export class VerifiedFact {
   }
 }
 
-export class FactCheckAnalyzerJob {
+export class FactCheckPlugin implements SimpleAnalysisPlugin {
+  private documentText: string;
+  private chunks: TextChunk[];
+  private hasRun = false;
   private facts: VerifiedFact[] = [];
+  private comments: Comment[] = [];
+  private summary: string = "";
+  private analysis: string = "";
   private llmInteractions: LLMInteraction[] = [];
+  private totalCost: number = 0;
 
-  static displayName(): string {
-    return "Fact Checker";
+  constructor() {
+    // Initialize empty values - they'll be set in analyze()
+    this.documentText = "";
+    this.chunks = [];
   }
 
-  static promptForWhenToUse(): string {
+  name(): string {
+    return "FACT_CHECK";
+  }
+
+  promptForWhenToUse(): string {
     return "Use this when the document makes specific factual claims that can be verified or when checking for accuracy of statements.";
   }
 
-  static routingExamples(): string[] {
+  routingExamples(): RoutingExample[] {
     return [
-      "Check if the facts in this article are accurate",
-      "Verify the claims made in this research",
-      "Fact-check this political statement",
-      "Check the accuracy of statistics in this report"
+      {
+        chunkText: "The global population reached 8 billion in 2022, marking a significant milestone",
+        shouldProcess: true,
+        reason: "Contains specific factual claim about population statistics"
+      },
+      {
+        chunkText: "Many people believe that climate change is an important issue",
+        shouldProcess: false,
+        reason: "Opinion statement without specific verifiable facts"
+      },
+      {
+        chunkText: "The unemployment rate dropped to 3.5% in December 2023",
+        shouldProcess: true,
+        reason: "Contains specific economic statistic that can be verified"
+      }
     ];
   }
 
-  async analyze(
-    documentText: string,
-    textChunks: TextChunk[]
-  ): Promise<AnalysisResult> {
+  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
+    // Store the inputs
+    this.documentText = documentText;
+    this.chunks = chunks;
+    
+    if (this.hasRun) {
+      return this.getResults();
+    }
+
     try {
+      logger.info("FactCheckPlugin: Starting analysis");
+      logger.info(`FactCheckPlugin: Processing ${chunks.length} chunks`);
       // Phase 1: Extract factual claims from all chunks in parallel
-      const extractionPromises = textChunks.map(chunk => 
+      const extractionPromises = this.chunks.map(chunk => 
         this.extractFactsFromChunk(chunk)
       );
       
@@ -164,20 +196,43 @@ export class FactCheckAnalyzerJob {
       // Sort comments by importance
       comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
 
+      // Store results for later retrieval
+      this.comments = comments;
+      
       // Phase 4: Generate analysis summary
       const { summary, analysisSummary } = this.generateAnalysis();
+      this.summary = summary;
+      this.analysis = analysisSummary;
+      this.totalCost = this.calculateCost();
 
-      return {
-        comments,
-        summary,
-        analysis: analysisSummary,
-        llmInteractions: this.llmInteractions,
-        cost: this.calculateCost()
-      };
+      this.hasRun = true;
+      logger.info(
+        `FactCheckPlugin: Analysis complete - ${this.comments.length} comments generated`
+      );
+
+      return this.getResults();
     } catch (error) {
-      logger.error('Error in FactCheckAnalyzerJob:', error);
-      throw error;
+      logger.error('FactCheckPlugin: Fatal error during analysis', error);
+      // Return a partial result instead of throwing
+      this.hasRun = true;
+      this.summary = "Analysis failed due to an error";
+      this.analysis = "The fact-checking analysis could not be completed due to a technical error.";
+      return this.getResults();
     }
+  }
+
+  public getResults(): AnalysisResult {
+    if (!this.hasRun) {
+      throw new Error("Analysis has not been run yet. Call analyze() first.");
+    }
+
+    return {
+      summary: this.summary,
+      analysis: this.analysis,
+      comments: this.comments,
+      llmInteractions: this.llmInteractions,
+      cost: this.totalCost,
+    };
   }
 
   private async extractFactsFromChunk(chunk: TextChunk): Promise<{
@@ -330,9 +385,9 @@ ${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document ar
     return { summary, analysisSummary };
   }
 
-  // Public methods for the plugin wrapper
+  // Required methods from SimpleAnalysisPlugin interface
   getCost(): number {
-    return this.calculateCost();
+    return this.totalCost;
   }
 
   getLLMInteractions(): LLMInteraction[] {
@@ -357,3 +412,6 @@ ${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document ar
     };
   }
 }
+
+// Export the plugin class for backward compatibility
+export { FactCheckPlugin as FactCheckAnalyzerJob };

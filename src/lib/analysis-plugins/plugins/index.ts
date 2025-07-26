@@ -4,5 +4,5 @@
 
 export { MathPlugin } from './math';
 export { SpellingPlugin } from './spelling';
-export { FactCheckPlugin } from './fact-check/plugin-wrapper';
+export { FactCheckPlugin } from './fact-check';
 export { ForecastPlugin } from './forecast';

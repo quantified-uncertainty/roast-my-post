@@ -23,6 +23,8 @@ async function main() {
     console.log(`🏁 Total execution time: ${Math.round((endTime - startTime) / 1000)}s`);
   } catch (error) {
     logger.error('🔥 Fatal error:', error);
+    // Give database operations time to complete before exiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
     process.exit(1);
   } finally {
     await jobProcessor.disconnect();
@@ -33,7 +35,9 @@ async function main() {
 }
 
 // Run the job processor
-main().catch((error) => {
+main().catch(async (error) => {
   logger.error('🔥 Fatal error:', error);
+  // Give database operations time to complete before exiting
+  await new Promise(resolve => setTimeout(resolve, 1000));
   process.exit(1);
 });

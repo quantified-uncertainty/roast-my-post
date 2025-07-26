@@ -125,6 +125,19 @@ export class DocumentChunkerTool extends Tool<
 
     const warnings: string[] = [];
     
+    // Handle empty input
+    if (!input.text || input.text.length === 0) {
+      return {
+        chunks: [],
+        metadata: {
+          totalChunks: 0,
+          averageChunkSize: 0,
+          strategy: 'markdown',
+          warnings: warnings.length > 0 ? warnings : undefined,
+        },
+      };
+    }
+    
     // Always use markdown-aware chunking
     const chunks = this.markdownAwareChunking(input.text, input, warnings);
 
@@ -226,7 +239,7 @@ export class DocumentChunkerTool extends Tool<
           title,
           content: [],
           startOffset: currentOffset,
-          startLine: i + 1,
+          startLine: i + 1,  // This is the line number (1-based)
           endOffset: text.length,
           endLine: lines.length,
           subsections: [],
@@ -242,8 +255,8 @@ export class DocumentChunkerTool extends Tool<
             level: 0,
             title: '',
             content: [line],
-            startOffset: beforeFirstHeadingStartOffset,
-            startLine: beforeFirstHeadingStartLine,
+            startOffset: 0,
+            startLine: 1,
             endOffset: text.length,
             endLine: lines.length,
             subsections: [],
@@ -262,7 +275,12 @@ export class DocumentChunkerTool extends Tool<
     }
 
     // Build hierarchy
-    return this.buildSectionHierarchy(sections);
+    const hierarchicalSections = this.buildSectionHierarchy(sections);
+    
+    // Update parent section boundaries to include their subsections
+    this.updateSectionBoundaries(hierarchicalSections);
+    
+    return hierarchicalSections;
   }
 
   // Build hierarchical structure from flat sections
@@ -286,6 +304,21 @@ export class DocumentChunkerTool extends Tool<
     }
 
     return root;
+  }
+
+  // Update section boundaries to include all subsections
+  private updateSectionBoundaries(sections: MarkdownSection[]): void {
+    for (const section of sections) {
+      if (section.subsections.length > 0) {
+        // First recursively update subsection boundaries
+        this.updateSectionBoundaries(section.subsections);
+        
+        // Then update this section's end boundary to include all subsections
+        const lastSubsection = section.subsections[section.subsections.length - 1];
+        section.endOffset = lastSubsection.endOffset;
+        section.endLine = lastSubsection.endLine;
+      }
+    }
   }
 
   // Recursively chunk sections based on word count
@@ -562,7 +595,7 @@ export class DocumentChunkerTool extends Tool<
           
           currentChunk = [];
           // Start the next chunk where this one ended (no gap)
-          chunkStartOffset = actualEndOffset + 1; // +1 for space between sentences
+          chunkStartOffset = actualEndOffset; // No gap between chunks
         }
       }
       

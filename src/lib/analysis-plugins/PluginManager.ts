@@ -13,13 +13,15 @@ import { getDocumentFullContent } from "../../utils/documentContentHelpers";
 import { sessionContext } from "../helicone/sessionContext";
 import type { HeliconeSessionConfig } from "../helicone/sessions";
 import { logger } from "../logger";
-import { createChunks } from "./TextChunk";
-import { createChunksWithTool } from "./utils/createChunksWithTool";
-import { PluginLogger, type JobLogSummary } from "./PluginLogger";
+import {
+  type JobLogSummary,
+  PluginLogger,
+} from "./PluginLogger";
 import {
   AnalysisResult,
   SimpleAnalysisPlugin,
 } from "./types";
+import { createChunksWithTool } from "./utils/createChunksWithTool";
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
@@ -93,10 +95,10 @@ export class PluginManager {
     try {
       // Log chunking phase
       this.pluginLogger.log({
-        level: 'info',
-        plugin: 'PluginManager',
-        phase: 'chunking',
-        message: `Starting document chunking - using intelligent markdown chunking`
+        level: "info",
+        plugin: "PluginManager",
+        phase: "chunking",
+        message: `Starting document chunking - using intelligent markdown chunking`,
       });
 
       // Always use intelligent chunking with markdown strategy for plugins
@@ -106,52 +108,53 @@ export class PluginManager {
         minChunkSize: 200,
         preserveContext: true,
       });
-      
+
       // Debug: Verify chunk positions
-      logger.info('Verifying chunk positions after creation', {
+      logger.info("Verifying chunk positions after creation", {
         textLength: text.length,
         textStartsWith: text.slice(0, 100),
-        numberOfChunks: chunks.length
+        numberOfChunks: chunks.length,
       });
-      
-      for (const chunk of chunks.slice(0, 3)) { // Check first 3 chunks
+
+      for (const chunk of chunks.slice(0, 3)) {
+        // Check first 3 chunks
         if (chunk.metadata?.position) {
           const extractedText = text.substring(
-            chunk.metadata.position.start, 
+            chunk.metadata.position.start,
             chunk.metadata.position.end
           );
           const matches = extractedText === chunk.text;
-          
+
           logger.info(`Chunk ${chunk.id} position check`, {
             declaredStart: chunk.metadata.position.start,
             declaredEnd: chunk.metadata.position.end,
             chunkTextStart: chunk.text.slice(0, 50),
             extractedTextStart: extractedText.slice(0, 50),
-            matches
+            matches,
           });
-          
+
           if (!matches) {
             // Try to find where the chunk actually is
             const actualPos = text.indexOf(chunk.text);
-            logger.error('Chunk position mismatch during creation', {
+            logger.error("Chunk position mismatch during creation", {
               chunkId: chunk.id,
               declaredStart: chunk.metadata.position.start,
               actualStart: actualPos,
               difference: actualPos - chunk.metadata.position.start,
               declaredEnd: chunk.metadata.position.end,
               expectedText: chunk.text.slice(0, 50),
-              actualText: extractedText.slice(0, 50)
+              actualText: extractedText.slice(0, 50),
             });
           }
         }
       }
 
       this.pluginLogger.log({
-        level: 'info',
-        plugin: 'PluginManager',
-        phase: 'chunking',
+        level: "info",
+        plugin: "PluginManager",
+        phase: "chunking",
         message: `Created ${chunks.length} chunks for analysis`,
-        context: { totalChunks: chunks.length }
+        context: { totalChunks: chunks.length },
       });
 
       // Process with each plugin in parallel with improved error recovery
@@ -169,14 +172,21 @@ export class PluginManager {
         this.pluginLogger.pluginStarted(pluginName);
 
         // Create a plugin logger instance for this plugin
-        const pluginLoggerInstance = this.pluginLogger.createPluginLogger(pluginName);
+        const pluginLoggerInstance =
+          this.pluginLogger.createPluginLogger(pluginName);
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
           try {
             const isRetry = attempt > 1;
             if (isRetry) {
-              this.pluginLogger.pluginRetried(pluginName, attempt, maxRetries, 
-                lastError instanceof Error ? lastError.message : String(lastError));
+              this.pluginLogger.pluginRetried(
+                pluginName,
+                attempt,
+                maxRetries,
+                lastError instanceof Error
+                  ? lastError.message
+                  : String(lastError)
+              );
               // Add small delay between retries
               await new Promise((resolve) =>
                 setTimeout(resolve, 1000 * attempt)
@@ -184,38 +194,53 @@ export class PluginManager {
             }
 
             const startTime = Date.now();
-            
+
             // Add basic logging wrapper around plugin execution
-            pluginLoggerInstance.startPhase('initialization', `Starting ${pluginName} analysis`);
+            pluginLoggerInstance.startPhase(
+              "initialization",
+              `Starting ${pluginName} analysis`
+            );
             pluginLoggerInstance.processingChunks(chunks.length);
-            
+
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 60000; // 60 seconds
             const timeoutPromise = new Promise<never>((_, reject) => {
-              setTimeout(() => reject(new Error(`Plugin ${pluginName} timed out after ${PLUGIN_TIMEOUT_MS}ms`)), PLUGIN_TIMEOUT_MS);
+              setTimeout(
+                () =>
+                  reject(
+                    new Error(
+                      `Plugin ${pluginName} timed out after ${PLUGIN_TIMEOUT_MS}ms`
+                    )
+                  ),
+                PLUGIN_TIMEOUT_MS
+              );
             });
-            
+
             const result = await Promise.race([
               plugin.analyze(chunks, text),
-              timeoutPromise
+              timeoutPromise,
             ]);
-            
+
             const duration = Date.now() - startTime;
 
             // Log results
             pluginLoggerInstance.itemsExtracted(result.comments.length);
             pluginLoggerInstance.commentsGenerated(result.comments.length);
             pluginLoggerInstance.cost(result.cost);
-            pluginLoggerInstance.endPhase('summary', `Analysis complete - ${result.comments.length} comments generated`, {
-              duration,
-              cost: result.cost
-            });
+            pluginLoggerInstance.endPhase(
+              "summary",
+              `Analysis complete - ${result.comments.length} comments generated`,
+              {
+                duration,
+                cost: result.cost,
+              }
+            );
 
             // Plugin completed successfully
             this.pluginLogger.pluginCompleted(pluginName, {
               itemsFound: result.comments.length,
               commentsGenerated: result.comments.length,
-              cost: result.cost
+              cost: result.cost,
             });
 
             return { plugin: pluginName, result, success: true };
@@ -224,7 +249,11 @@ export class PluginManager {
             const errorMessage =
               error instanceof Error ? error.message : String(error);
 
-            pluginLoggerInstance.error(`Plugin execution failed`, error, 'analysis');
+            pluginLoggerInstance.error(
+              `Plugin execution failed`,
+              error,
+              "analysis"
+            );
 
             // Check if this is a retryable error
             const isRetryable = this.isRetryableError(error);
@@ -235,7 +264,7 @@ export class PluginManager {
             } else {
               // Plugin failed permanently
               this.pluginLogger.pluginCompleted(pluginName, {
-                error: errorMessage
+                error: errorMessage,
               });
               break;
             }
@@ -357,9 +386,9 @@ export class PluginManager {
       // TODO: Make plugin selection configurable
       const plugins: SimpleAnalysisPlugin[] = [
         // Import here to avoid circular dependencies
-        new (await import('./plugins/math')).MathPlugin(),
-        new (await import('./plugins/spelling')).SpellingPlugin(),
-        // new (await import('./plugins/fact-check')).FactCheckPlugin(),
+        new (await import("./plugins/math")).MathPlugin(),
+        // new (await import("./plugins/spelling")).SpellingPlugin(),
+        new (await import("./plugins/fact-check")).FactCheckPlugin(),
         new (await import("./plugins/forecast")).ForecastPlugin(),
       ];
 

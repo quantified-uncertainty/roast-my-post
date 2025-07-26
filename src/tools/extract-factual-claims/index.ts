@@ -189,6 +189,20 @@ ${input.text}
 
     const allClaims = result.toolResult.claims || [];
     
+    // Ensure allClaims is an array
+    if (!Array.isArray(allClaims)) {
+      context.logger.warn('[ExtractFactualClaims] Claims is not an array:', { type: typeof allClaims, value: allClaims });
+      return {
+        claims: [],
+        summary: {
+          totalFound: 0,
+          aboveThreshold: 0,
+          averageQuality: 0
+        },
+        llmInteraction: result.interaction
+      };
+    }
+    
     // Filter claims based on quality threshold
     const qualityClaims = allClaims.filter(claim => {
       const avgScore = (claim.importanceScore + claim.checkabilityScore) / 2;
