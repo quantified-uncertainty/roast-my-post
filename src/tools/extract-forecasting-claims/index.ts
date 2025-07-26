@@ -278,22 +278,29 @@ ${text}
     );
 
     // Process forecasts to validate with schema
-    const forecasts = (result.toolResult.forecasts || []).map((f: any) => {
-      const forecast = {
-        originalText: f.originalText,
-        thinking: f.thinking,
-        precisionScore: f.precisionScore,
-        verifiabilityScore: f.verifiabilityScore,
-        importanceScore: f.importanceScore,
-        rewrittenPredictionText: f.rewrittenPredictionText,
-        authorProbability: f.authorProbability || undefined,
-        robustnessScore: f.robustnessScore,
-        resolutionDate: f.resolutionDate || undefined,
-      };
+    const forecasts = (result.toolResult.forecasts || [])
+      .map((f: any) => {
+        const forecast = {
+          originalText: f.originalText,
+          thinking: f.thinking,
+          precisionScore: f.precisionScore,
+          verifiabilityScore: f.verifiabilityScore,
+          importanceScore: f.importanceScore,
+          rewrittenPredictionText: f.rewrittenPredictionText,
+          authorProbability: f.authorProbability || undefined,
+          robustnessScore: f.robustnessScore,
+          resolutionDate: f.resolutionDate || undefined,
+        };
 
-      // Validate and return the forecast using the schema
-      return forecastSchema.parse(forecast);
-    });
+        // Validate using safeParse to handle errors gracefully
+        const validationResult = forecastSchema.safeParse(forecast);
+        if (!validationResult.success) {
+          context?.logger.warn(`Invalid forecast data, skipping:`, validationResult.error);
+          return null;
+        }
+        return validationResult.data;
+      })
+      .filter((forecast): forecast is NonNullable<typeof forecast> => forecast !== null); // Remove null entries
 
     return {
       forecasts,

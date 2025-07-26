@@ -57,7 +57,7 @@ export async function extractHighlightsFromAnalysis(
       }
       
       // Use unified location finder for more robust highlighting
-      const location = findHighlightLocation(insight.suggestedHighlight, fullContent, {
+      const location = await findHighlightLocation(insight.suggestedHighlight, fullContent, {
         lineNumber: startLine,
         contextBefore: lines[startLine - 2] || '',
         contextAfter: lines[endLine] || ''

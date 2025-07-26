@@ -3,7 +3,11 @@ import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { extractMathExpressionsTool } from '@/tools/extract-math-expressions';
 
-jest.mock('@/tools/extract-math-expressions');
+jest.mock('@/tools/extract-math-expressions', () => ({
+  extractMathExpressionsTool: {
+    execute: jest.fn()
+  }
+}));
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -82,13 +86,14 @@ describe('MathAnalyzerJob', () => {
       (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
         expressions: mockExpressions,
         llmInteraction: {
-          provider: 'claude',
-          model: 'claude-3-opus-20240229',
-          messages: [],
-          response: { content: 'test' },
-          inputTokens: 100,
-          outputTokens: 200,
+          prompt: 'test prompt',
+          response: 'test response',
+          tokensUsed: {
+            prompt: 100,
+            completion: 200
+          },
           cost: 0.01,
+          model: 'claude-3-opus-20240229'
         },
       });
 
@@ -109,21 +114,22 @@ describe('MathAnalyzerJob', () => {
       expect(result.summary).toContain('1 with errors');
       expect(result.comments).toHaveLength(1); // Only the error gets a comment
       expect(result.comments[0].description).toContain('Calculation Error');
-      expect(result.cost).toBe(0);
-      expect(result.llmInteractions).toHaveLength(0);
+      expect(result.cost).toBeGreaterThan(0); // Cost from LLM interactions
+      expect(result.llmInteractions).toHaveLength(2); // One per chunk
     });
 
     it('should handle empty document', async () => {
       (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
         expressions: [],
         llmInteraction: {
-          provider: 'claude',
-          model: 'claude-3-opus-20240229',
-          messages: [],
-          response: { content: 'test' },
-          inputTokens: 50,
-          outputTokens: 10,
+          prompt: 'test prompt',
+          response: 'test response',
+          tokensUsed: {
+            prompt: 50,
+            completion: 10
+          },
           cost: 0.001,
+          model: 'claude-3-opus-20240229'
         },
       });
 
@@ -141,13 +147,14 @@ describe('MathAnalyzerJob', () => {
       (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
         expressions: [],
         llmInteraction: {
-          provider: 'claude',
-          model: 'claude-3-opus-20240229',
-          messages: [],
-          response: { content: 'test' },
-          inputTokens: 50,
-          outputTokens: 10,
+          prompt: 'test prompt',
+          response: 'test response',
+          tokensUsed: {
+            prompt: 50,
+            completion: 10
+          },
           cost: 0.001,
+          model: 'claude-3-opus-20240229'
         },
       });
 
@@ -184,13 +191,14 @@ describe('MathAnalyzerJob', () => {
           verificationStatus: 'verified' as const,
         }],
         llmInteraction: {
-          provider: 'claude',
-          model: 'claude-3-opus-20240229',
-          messages: [],
-          response: { content: 'test' },
-          inputTokens: 50,
-          outputTokens: 10,
+          prompt: 'test prompt',
+          response: 'test response',
+          tokensUsed: {
+            prompt: 50,
+            completion: 10
+          },
           cost: 0.001,
+          model: 'claude-3-opus-20240229'
         },
       });
 
@@ -204,8 +212,8 @@ describe('MathAnalyzerJob', () => {
         hasRun: true,
         expressionsCount: 1,
         commentsCount: 0,
-        totalCost: 0,
-        llmInteractionsCount: 0,
+        totalCost: expect.any(Number), // Will have cost from LLM
+        llmInteractionsCount: 1, // One LLM call
       });
     });
   });

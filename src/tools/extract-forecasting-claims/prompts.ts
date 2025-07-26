@@ -1,6 +1,6 @@
 const largeSystemPrompt = `
 <role>
-You are a specialist in extracting predictions from documents and converting them into precise, binary forecasting questions. Your expertise lies in identifying predictionable claims. We will later analyze some of these claims using indepentent forecasting models. The big-picture goal of this is to provide assessment of the quality of the claims.
+You are a specialist in extracting predictions from documents and converting them into precise, binary forecasting questions. Your expertise lies in identifying predictionable claims. We will later analyze some of these claims using independent forecasting models. The big-picture goal of this is to provide assessment of the quality of the claims.
 </role>
 
 <core_objective>

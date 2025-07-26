@@ -3,7 +3,9 @@
  * These maintain compatibility with existing plugin interfaces
  */
 
-import { findTextLocation, findMultipleTextLocations, TextLocation, TextLocationOptions } from './textLocationFinder';
+import { findTextLocation, type TextLocationOptions } from '@/tools/fuzzy-text-locator/core';
+import { getLineNumberAtPosition, getLineAtPosition } from '../../analysis-plugins/utils/textHelpers';
+import { processLocationsInParallel } from './parallelLocationUtils';
 
 // Forecast plugin wrapper
 export interface ForecastLocation {
@@ -12,44 +14,22 @@ export interface ForecastLocation {
   quotedText: string;
 }
 
-export function findForecastLocation(
+export async function findForecastLocation(
   searchText: string,
   documentText: string,
   options: {
     allowPartialMatch?: boolean;
     normalizeQuotes?: boolean;
   } = {}
-): ForecastLocation | null {
+): Promise<ForecastLocation | null> {
   const forecastOptions: TextLocationOptions = {
-    allowPartialMatch: options.allowPartialMatch,
+    partialMatch: options.allowPartialMatch,
     normalizeQuotes: options.normalizeQuotes,
-    allowFuzzy: true, // Forecast plugin benefits from fuzzy matching
-    expandToBoundaries: 'sentence',
-    keyPhraseExtractors: [
-      // Forecast-specific key phrase extractors
-      (text: string) => {
-        const phrases: string[] = [];
-        
-        // Look for prediction keywords with context
-        const predictionPatterns = [
-          /\b(will|shall|predict|forecast|expect|by 20\d{2})\b.{0,30}/gi,
-          /\d+%.*?\b(chance|probability|likely|percent)/gi,
-          /\b(within|before|after|by)\s+\d+\s+(years?|months?|days?)/gi
-        ];
-        
-        for (const pattern of predictionPatterns) {
-          const matches = text.match(pattern);
-          if (matches) {
-            phrases.push(...matches);
-          }
-        }
-        
-        return phrases;
-      }
-    ]
+    maxTypos: 2, // Allow fuzzy matching for forecast
+    pluginName: 'forecast'
   };
   
-  const result = findTextLocation(searchText, documentText, forecastOptions);
+  const result = await findTextLocation(searchText, documentText, forecastOptions);
   
   if (result) {
     return {
@@ -71,67 +51,33 @@ export interface FactLocation {
   lineText: string;
 }
 
-export function findFactLocation(
+export async function findFactLocation(
   claimText: string,
   documentText: string,
   options: {
     allowFuzzy?: boolean;
     context?: string;
   } = {}
-): FactLocation | null {
+): Promise<FactLocation | null> {
   const factOptions: TextLocationOptions = {
-    allowFuzzy: options.allowFuzzy,
-    context: options.context,
-    normalizeWhitespace: true, // Facts often have whitespace variations
-    caseInsensitive: false, // Facts should be case-sensitive
-    expandToBoundaries: 'sentence',
-    keyPhraseExtractors: [
-      // Fact-specific key phrase extractors
-      (text: string) => {
-        const phrases: string[] = [];
-        
-        // Look for quoted text (often factual claims)
-        const quotedMatches = text.match(/"([^"]+)"/g);
-        if (quotedMatches) {
-          phrases.push(...quotedMatches.map(q => q.slice(1, -1)));
-        }
-        
-        // Look for numbers with context
-        const numberMatches = text.match(/(\d+(?:\.\d+)?(?:%|billion|million|thousand|,\d{3})*)\s+\w+/g);
-        if (numberMatches) {
-          phrases.push(...numberMatches);
-        }
-        
-        // Look for dates
-        const dateMatches = text.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/gi);
-        if (dateMatches) {
-          phrases.push(...dateMatches);
-        }
-        
-        // Look for proper nouns (potential entities)
-        const properNounMatches = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g);
-        if (properNounMatches) {
-          // Filter out common words and keep potential entities
-          const filtered = properNounMatches.filter(match => 
-            match.length > 4 && !['The', 'This', 'That', 'There', 'These', 'Those'].includes(match)
-          );
-          phrases.push(...filtered);
-        }
-        
-        return phrases;
-      }
-    ]
+    maxTypos: options.allowFuzzy ? 2 : 0,
+    llmContext: options.context,
+    caseSensitive: true, // Facts should be case-sensitive
+    pluginName: 'fact-check'
   };
   
-  const result = findTextLocation(claimText, documentText, factOptions);
+  const result = await findTextLocation(claimText, documentText, factOptions);
   
   if (result) {
+    const lineNumber = getLineNumberAtPosition(documentText, result.startOffset);
+    const lineText = getLineAtPosition(documentText, result.startOffset);
+    
     return {
       startOffset: result.startOffset,
       endOffset: result.endOffset,
       quotedText: result.quotedText,
-      lineNumber: result.lineNumber,
-      lineText: result.lineText
+      lineNumber,
+      lineText
     };
   }
   
@@ -143,30 +89,14 @@ export async function findMultipleFactLocations(
   documentText: string,
   options: { allowFuzzy?: boolean } = {}
 ): Promise<Map<string, FactLocation | null>> {
-  const results = await findMultipleTextLocations(claims, documentText, {
-    allowFuzzy: options.allowFuzzy,
-    normalizeWhitespace: true,
-    expandToBoundaries: 'sentence'
-  });
-  
-  // Convert to FactLocation format
-  const factResults = new Map<string, FactLocation | null>();
-  
-  for (const [text, location] of results) {
-    if (location) {
-      factResults.set(text, {
-        startOffset: location.startOffset,
-        endOffset: location.endOffset,
-        quotedText: location.quotedText,
-        lineNumber: location.lineNumber,
-        lineText: location.lineText
-      });
-    } else {
-      factResults.set(text, null);
-    }
-  }
-  
-  return factResults;
+  return processLocationsInParallel(
+    claims,
+    (claim) => claim.text,
+    (claim) => findFactLocation(claim.text, documentText, {
+      allowFuzzy: options.allowFuzzy,
+      context: claim.context
+    })
+  );
 }
 
 // Spelling plugin wrapper
@@ -176,24 +106,23 @@ export interface SpellingLocation {
   quotedText: string;
 }
 
-export function findSpellingErrorLocation(
+export async function findSpellingErrorLocation(
   errorText: string,
   chunkText: string,
   options: {
     allowPartialMatch?: boolean;
     context?: string;
   } = {}
-): SpellingLocation | null {
+): Promise<SpellingLocation | null> {
   const spellingOptions: TextLocationOptions = {
-    allowPartialMatch: options.allowPartialMatch,
-    context: options.context,
-    caseInsensitive: true, // Spelling errors might have case differences
+    partialMatch: options.allowPartialMatch,
+    llmContext: options.context,
+    caseSensitive: false, // Spelling errors might have case differences
     normalizeQuotes: true, // Handle apostrophe variations
-    normalizeWhitespace: false, // Preserve original spacing for spelling
-    expandToBoundaries: 'none' // Don't expand spelling errors
+    pluginName: 'spelling'
   };
   
-  const result = findTextLocation(errorText, chunkText, spellingOptions);
+  const result = await findTextLocation(errorText, chunkText, spellingOptions);
   
   if (result) {
     return {
@@ -217,7 +146,7 @@ export interface HighlightLocation {
   endCharacters: string;
 }
 
-export function findHighlightLocation(
+export async function findHighlightLocation(
   searchText: string,
   documentText: string,
   options: {
@@ -225,11 +154,11 @@ export function findHighlightLocation(
     contextBefore?: string;
     contextAfter?: string;
   } = {}
-): HighlightLocation | null {
+): Promise<HighlightLocation | null> {
   let searchOptions: TextLocationOptions = {
-    caseInsensitive: false,
-    normalizeWhitespace: true,
-    expandToBoundaries: 'none'
+    caseSensitive: false,
+    normalizeQuotes: true,
+    pluginName: 'highlight'
   };
   
   // If we have line information, construct context
@@ -243,29 +172,19 @@ export function findHighlightLocation(
       contextParts.push(lines[lineIndex]);
       if (options.contextAfter) contextParts.push(options.contextAfter);
       
-      searchOptions.context = contextParts.join(' ');
+      searchOptions.llmContext = contextParts.join(' ');
     }
   }
   
-  const result = findTextLocation(searchText, documentText, searchOptions);
+  const result = await findTextLocation(searchText, documentText, searchOptions);
   
   if (result) {
-    // Calculate line-based information
+    // Calculate line-based information using existing utilities
     const lines = documentText.split('\n');
-    const startLineIndex = result.lineNumber - 1;
-    
-    // Find end line
-    const endOffset = result.endOffset;
-    let endLineIndex = startLineIndex;
-    let currentOffset = 0;
-    
-    for (let i = 0; i < lines.length; i++) {
-      currentOffset += lines[i].length + 1; // +1 for newline
-      if (currentOffset >= endOffset) {
-        endLineIndex = i;
-        break;
-      }
-    }
+    const startLineNumber = getLineNumberAtPosition(documentText, result.startOffset);
+    const endLineNumber = getLineNumberAtPosition(documentText, result.endOffset);
+    const startLineIndex = startLineNumber - 1;
+    const endLineIndex = endLineNumber - 1;
     
     // Extract start and end characters
     const startLine = lines[startLineIndex] || '';
@@ -291,10 +210,10 @@ export function findHighlightLocation(
 }
 
 // Generic wrapper that returns the full TextLocation with all metadata
-export function findTextLocationWithMetadata(
+export async function findTextLocationWithMetadata(
   searchText: string,
   documentText: string,
   options: TextLocationOptions = {}
-): TextLocation | null {
-  return findTextLocation(searchText, documentText, options);
+) {
+  return await findTextLocation(searchText, documentText, options);
 }

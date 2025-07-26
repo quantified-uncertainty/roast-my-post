@@ -15,12 +15,12 @@ export interface PluginLocation {
  * Find location for spelling errors
  * Uses: normalizeQuotes (for apostrophes), partialMatch, context
  */
-export function findSpellingErrorLocation(
+export async function findSpellingErrorLocation(
   errorText: string,
   chunkText: string,
   context?: string
-): PluginLocation | null {
-  const result = findTextLocation(errorText, chunkText, {
+): Promise<PluginLocation | null> {
+  const result = await findTextLocation(errorText, chunkText, {
     normalizeQuotes: true,  // Handle apostrophe variations
     partialMatch: true,     // For longer errors
     context                 // Use context if provided
@@ -41,11 +41,11 @@ export function findSpellingErrorLocation(
  * Find location for forecasts
  * Uses: normalizeQuotes, partialMatch
  */
-export function findForecastLocation(
+export async function findForecastLocation(
   forecastText: string,
   documentText: string
-): PluginLocation | null {
-  const result = findTextLocation(forecastText, documentText, {
+): Promise<PluginLocation | null> {
+  const result = await findTextLocation(forecastText, documentText, {
     normalizeQuotes: true,  // Handle quote variations
     partialMatch: true      // Forecasts can be long
   });
@@ -65,11 +65,11 @@ export function findForecastLocation(
  * Find location for facts
  * Just uses defaults (exact match first, then case-insensitive)
  */
-export function findFactLocation(
+export async function findFactLocation(
   claimText: string,
   documentText: string
-): PluginLocation | null {
-  const result = findTextLocation(claimText, documentText);
+): Promise<PluginLocation | null> {
+  const result = await findTextLocation(claimText, documentText);
   
   if (result) {
     return {

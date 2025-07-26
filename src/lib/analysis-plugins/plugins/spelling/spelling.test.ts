@@ -3,7 +3,11 @@ import { SpellingAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
 
-jest.mock('@/tools/check-spelling-grammar');
+jest.mock('@/tools/check-spelling-grammar', () => ({
+  checkSpellingGrammarTool: {
+    execute: jest.fn()
+  }
+}));
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -93,11 +97,23 @@ describe('SpellingAnalyzerJob', () => {
       });
 
       const chunks: TextChunk[] = [
-        new TextChunk('This is thier house', 'chunk1', {
+        Object.assign(new TextChunk('This is thier house', 'chunk1', {
           position: { start: 0, end: 19 },
+        }), {
+          findTextAbsolute: jest.fn().mockResolvedValue({
+            startOffset: 8,
+            endOffset: 13,
+            quotedText: 'thier'
+          })
         }),
-        new TextChunk('They dont know', 'chunk2', {
+        Object.assign(new TextChunk('They dont know', 'chunk2', {
           position: { start: 20, end: 34 },
+        }), {
+          findTextAbsolute: jest.fn().mockResolvedValue({
+            startOffset: 25,
+            endOffset: 29,
+            quotedText: 'dont'
+          })
         }),
       ];
 
@@ -112,8 +128,8 @@ describe('SpellingAnalyzerJob', () => {
       expect(result.comments[0].description).toContain('Spelling');
       expect(result.comments[0].description).toContain('thier');
       expect(result.comments[0].description).toContain('their');
-      expect(result.cost).toBe(0.01);
-      expect(result.llmInteractions).toHaveLength(1);
+      expect(result.cost).toBe(0.02); // 0.01 per chunk, 2 chunks
+      expect(result.llmInteractions).toHaveLength(2); // One per chunk
     });
 
     it('should handle empty document', async () => {
@@ -181,7 +197,15 @@ describe('SpellingAnalyzerJob', () => {
 
       const analyzer = new SpellingAnalyzerJob();
 
-      const chunks = [new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } })];
+      const chunks = [
+        Object.assign(new TextChunk('teh', 'chunk1', { position: { start: 0, end: 3 } }), {
+          findTextAbsolute: jest.fn().mockResolvedValue({
+            startOffset: 0,
+            endOffset: 3,
+            quotedText: 'teh'
+          })
+        })
+      ];
       await analyzer.analyze(chunks, 'teh');
       const debugInfo = analyzer.getDebugInfo();
 

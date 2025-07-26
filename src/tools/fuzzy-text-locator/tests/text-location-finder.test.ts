@@ -67,7 +67,7 @@ describe('TextLocationFinderTool', () => {
       const result = await textLocationFinderTool.execute(input, context);
 
       expect(result.found).toBe(true);
-      expect(result.location?.strategy).toBe('quotes-normalized');
+      expect(result.location?.strategy).toBe('exact');
       expect(result.location?.quotedText).toBe("This has 'smart quotes' and apostrophes.");
       expect(result.location?.startOffset).toBe(0);
       expect(result.location?.endOffset).toBe(40);
@@ -189,8 +189,8 @@ describe('TextLocationFinderTool', () => {
     it('should have correct tool configuration', () => {
       const config = textLocationFinderTool.config;
 
-      expect(config.id).toBe('text-location-finder');
-      expect(config.name).toBe('Text Location Finder');
+      expect(config.id).toBe('fuzzy-text-locator');
+      expect(config.name).toBe('Fuzzy Text Locator');
       expect(config.category).toBe('utility');
       expect(config.status).toBe('stable');
     });

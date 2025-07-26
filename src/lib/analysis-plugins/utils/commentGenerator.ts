@@ -6,6 +6,7 @@ import type { Comment } from '@/types/documentSchema';
 import type { InvestigatedFinding, LocatedFinding } from '../types';
 import { findTextLocation, locateFinding } from './locationFinder';
 import { severityToImportance, sortByImportance } from './findingHelpers';
+import { getLineNumberAtPosition, getLineAtPosition } from './textHelpers';
 import { logger } from '../../logger';
 
 // Previously imported from deprecated-types
@@ -26,15 +27,15 @@ export interface CommentGenerationOptions {
 /**
  * Generate comments from investigated findings
  */
-export function generateCommentsFromFindings(
+export async function generateCommentsFromFindings(
   findings: InvestigatedFinding[],
   context: GenerateCommentsContext,
   options?: CommentGenerationOptions
-): {
+): Promise<{
   comments: Comment[];
   located: LocatedFinding[];
   dropped: number;
-} {
+}> {
   const {
     maxComments = 50,
     minImportance = 2,
@@ -64,7 +65,7 @@ export function generateCommentsFromFindings(
     }
     
     // Try to locate the finding
-    const result = findTextLocation(
+    const result = await findTextLocation(
       finding.highlightHint.searchText,
       context.documentText,
       {
@@ -115,22 +116,7 @@ export function generateCommentsFromFindings(
 }
 
 
-/**
- * Get line number at a character position
- */
-function getLineNumberAtPosition(text: string, position: number): number {
-  const lines = text.substring(0, position).split('\n');
-  return lines.length;
-}
-
-/**
- * Get the line text at a character position
- */
-function getLineAtPosition(text: string, position: number): string {
-  const lines = text.split('\n');
-  const lineNumber = getLineNumberAtPosition(text, position) - 1;
-  return lines[lineNumber] || '';
-}
+// Line position utilities now imported from textHelpers
 
 /**
  * Filter repetitive comments (e.g., same spelling error many times)

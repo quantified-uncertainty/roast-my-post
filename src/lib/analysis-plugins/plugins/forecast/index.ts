@@ -295,7 +295,7 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       })
     );
 
-    // Process successful results
+    // Process successful results and log failures
     for (const chunkResult of chunkResults) {
       if (chunkResult.status === 'fulfilled') {
         const { chunk, result } = chunkResult.value;
@@ -307,6 +307,8 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
           );
           this.extractedForecasts.push(extractedForecast);
         }
+      } else {
+        logger.warn(`Failed to process chunk for forecasting claims: ${chunkResult.reason}`);
       }
     }
 

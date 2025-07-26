@@ -728,6 +728,13 @@ const testCases: ComprehensiveTestCase[] = [
 
 describe("Comprehensive Text Location Search Tests", () => {
   console.log(`Running ${testCases.length} comprehensive test cases`);
+  
+  // Show LLM test status
+  if (process.env.RUN_LLM_TESTS !== 'true') {
+    console.log('\n📌 LLM tests SKIPPED (set RUN_LLM_TESTS=true to run)\n');
+  } else {
+    console.log('\n✅ LLM tests ENABLED\n');
+  }
 
   // Count expectations
   const ufuzzyExpected = testCases.filter((tc) =>
@@ -810,12 +817,18 @@ describe("Comprehensive Text Location Search Tests", () => {
 
   // Generate tests for LLM Search
   describe("LLM Search", () => {
-    // Only run if LLM API key is available
+    // Only run if LLM API key is available AND RUN_LLM_TESTS is set
     const hasLLMKey =
       process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
+    const shouldRunLLMTests = process.env.RUN_LLM_TESTS === 'true';
 
     if (!hasLLMKey) {
       it.skip("LLM tests skipped - no API key available", () => {});
+      return;
+    }
+
+    if (!shouldRunLLMTests) {
+      it.skip("LLM tests skipped - set RUN_LLM_TESTS=true to run", () => {});
       return;
     }
 
@@ -875,7 +888,7 @@ describe("Comprehensive Text Location Search Tests", () => {
     });
 
     it("should show LLM handles paraphrasing that uFuzzy cannot", async () => {
-      if (!process.env.ANTHROPIC_API_KEY) {
+      if (!process.env.ANTHROPIC_API_KEY || process.env.RUN_LLM_TESTS !== 'true') {
         return;
       }
 

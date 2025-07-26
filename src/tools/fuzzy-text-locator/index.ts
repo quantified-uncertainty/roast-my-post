@@ -204,12 +204,18 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
 // Export the tool instance
 export default new FuzzyTextLocatorTool();
 
+// Simple document location interface for compatibility
+export interface DocumentLocation {
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+}
+
 // Re-export core functions and types for use by other tools/plugins
 export {
   findTextLocation,
   type TextLocation,
   type TextLocationOptions,
   type SimpleLocationOptions, // Backward compatibility alias
-  type EnhancedLocationOptions, // Backward compatibility alias
-  type DocumentLocation
+  type EnhancedLocationOptions // Backward compatibility alias
 } from './core';
