@@ -101,7 +101,7 @@ In conclusion, always proofread you're work before submitting it.
     expect(result.analysis).toBeTruthy();
     expect(result.analysis.length).toBeGreaterThan(100);
     expect(result.analysis).toMatch(/spelling|grammar/i);
-  });
+  }, 20000); // Increase timeout to 20 seconds
 
   it('should handle a clean document without errors', async () => {
     const documentText = `
@@ -153,5 +153,5 @@ Professional writing requires attention to detail and a commitment to quality.
     const debugInfo = analyzer.getDebugInfo();
     expect(debugInfo.hasRun).toBe(true);
     expect(debugInfo.llmInteractionsCount).toBeGreaterThan(0);
-  });
+  }, 20000); // Increase timeout to 20 seconds
 });

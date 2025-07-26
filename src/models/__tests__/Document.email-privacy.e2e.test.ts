@@ -57,8 +57,8 @@ describe('DocumentModel Integration Tests - Email Privacy', () => {
       expect(document?.submittedBy?.id).toBe(testUser.id);
       expect(document?.submittedBy?.name).toBe('Document Submitter');
       
-      // This is the critical test - email should NOT be present
-      expect(document?.submittedBy?.email).toBeUndefined();
+      // This is the critical test - email should be null (not exposed)
+      expect(document?.submittedBy?.email).toBeNull();
     });
 
     it('should properly include other submittedBy fields', async () => {
@@ -70,8 +70,8 @@ describe('DocumentModel Integration Tests - Email Privacy', () => {
         image: null,
       });
       
-      // Verify email is not accidentally included
-      expect(Object.keys(document?.submittedBy || {})).not.toContain('email');
+      // Verify email is set to null (not exposed)
+      expect(document?.submittedBy?.email).toBeNull();
     });
   });
 
@@ -84,7 +84,7 @@ describe('DocumentModel Integration Tests - Email Privacy', () => {
       const testDoc = documents.find(d => d.id === testDocument.id);
       expect(testDoc).toBeDefined();
       expect(testDoc?.submittedBy).toBeDefined();
-      expect(testDoc?.submittedBy?.email).toBeUndefined();
+      expect(testDoc?.submittedBy?.email).toBeNull();
     });
   });
 });

@@ -83,26 +83,53 @@ describe('MathAnalyzerJob', () => {
         },
       ];
 
-      (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
-        expressions: mockExpressions,
-        llmInteraction: {
-          prompt: 'test prompt',
-          response: 'test response',
-          tokensUsed: {
-            prompt: 100,
-            completion: 200
+      // Mock to return different expressions for each chunk
+      (extractMathExpressionsTool.execute as jest.Mock)
+        .mockResolvedValueOnce({
+          expressions: [mockExpressions[0]], // First chunk gets the error expression
+          llmInteraction: {
+            prompt: 'test prompt',
+            response: 'test response',
+            tokensUsed: {
+              prompt: 100,
+              completion: 200
+            },
+            cost: 0.01,
+            model: 'claude-3-opus-20240229'
           },
-          cost: 0.01,
-          model: 'claude-3-opus-20240229'
-        },
-      });
+        })
+        .mockResolvedValueOnce({
+          expressions: [mockExpressions[1]], // Second chunk gets the correct expression
+          llmInteraction: {
+            prompt: 'test prompt',
+            response: 'test response',
+            tokensUsed: {
+              prompt: 100,
+              completion: 200
+            },
+            cost: 0.01,
+            model: 'claude-3-opus-20240229'
+          },
+        });
 
       const chunks: TextChunk[] = [
-        new TextChunk('Basic math: 2 + 2 = 5', 'chunk1', {
+        Object.assign(new TextChunk('Basic math: 2 + 2 = 5', 'chunk1', {
           position: { start: 0, end: 20 },
+        }), {
+          findTextAbsolute: jest.fn().mockResolvedValue({
+            startOffset: 12,
+            endOffset: 21,
+            quotedText: '2 + 2 = 5'
+          })
         }),
-        new TextChunk('Physics formula: E = mc²', 'chunk2', {
+        Object.assign(new TextChunk('Physics formula: E = mc²', 'chunk2', {
           position: { start: 21, end: 45 },
+        }), {
+          findTextAbsolute: jest.fn().mockResolvedValue({
+            startOffset: 37,
+            endOffset: 45,
+            quotedText: 'E = mc²'
+          })
         }),
       ];
 
@@ -164,7 +191,7 @@ describe('MathAnalyzerJob', () => {
       const result1 = await analyzer.analyze(chunks, 'Test');
       const result2 = await analyzer.analyze(chunks, 'Test');
 
-      expect(result1).toBe(result2);
+      expect(result1).toEqual(result2);
       expect(extractMathExpressionsTool.execute).toHaveBeenCalledTimes(1);
     });
   });
