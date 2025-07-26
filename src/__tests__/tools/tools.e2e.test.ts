@@ -5,7 +5,7 @@
 
 import { checkMathTool } from '../../tools/check-math';
 import { forecasterTool } from '../../tools/forecaster';
-import { factCheckTool } from '../../tools/fact-check';
+import { factCheckerTool } from '../../tools/fact-checker';
 import { extractForecastingClaimsTool } from '../../tools/extract-forecasting-claims';
 import { extractFactualClaimsTool } from '../../tools/extract-factual-claims';
 import { checkSpellingGrammarTool } from '../../tools/check-spelling-grammar';
@@ -75,17 +75,18 @@ describe('Tools End-to-End Tests', () => {
     });
   });
 
-  describe('Fact Check Tool', () => {
-    it('should extract factual claims from text', async () => {
-      const result = await factCheckTool.execute({
-        text: 'The Earth is approximately 4.5 billion years old. The moon is about 384,400 km from Earth.',
-        maxClaims: 10,
-        verifyHighPriority: false
+  describe('Fact Checker Tool', () => {
+    it('should verify a factual claim', async () => {
+      const result = await factCheckerTool.execute({
+        claim: 'The Earth is approximately 4.5 billion years old.',
+        searchForEvidence: false
       }, testContext);
 
-      expect(result.claims).toBeDefined();
-      expect(result.claims.length).toBeGreaterThan(0);
-      expect(result.summary.totalClaims).toBe(result.claims.length);
+      expect(result.result).toBeDefined();
+      expect(result.result.verdict).toMatch(/^(true|false|partially-true|unverifiable|outdated)$/);
+      expect(result.result.confidence).toMatch(/^(high|medium|low)$/);
+      expect(result.result.explanation).toBeDefined();
+      expect(result.result.evidence).toBeInstanceOf(Array);
     });
   });
 
@@ -96,8 +97,6 @@ describe('Tools End-to-End Tests', () => {
         maxDetailedAnalysis: 2
       }, testContext);
 
-      expect(result.totalFound).toBeDefined();
-      expect(result.totalFound).toBeGreaterThan(0);
       expect(result.forecasts).toBeDefined();
       expect(result.forecasts.length).toBeGreaterThan(0);
     });
@@ -107,8 +106,8 @@ describe('Tools End-to-End Tests', () => {
     it('should extract factual claims and detect contradictions', async () => {
       const result = await extractFactualClaimsTool.execute({
         text: 'Apple was founded in 1976. Microsoft was founded in 1975. Apple was actually founded in 1976.',
-        checkContradictions: true,
-        prioritizeVerification: true
+        minQualityThreshold: 5,
+        maxClaims: 20
       }, testContext);
 
       expect(result.claims).toBeDefined();
@@ -120,25 +119,21 @@ describe('Tools End-to-End Tests', () => {
     it('should detect spelling and grammar errors', async () => {
       const result = await checkSpellingGrammarTool.execute({
         text: 'Their are many reasons why this approch might not work. We should of done better.',
-        includeStyle: true,
         maxErrors: 20
       }, testContext);
 
       expect(result.errors).toBeDefined();
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.summary.totalErrors).toBe(result.errors.length);
     });
 
     it('should find no errors in correct text', async () => {
       const result = await checkSpellingGrammarTool.execute({
         text: 'This is a well-written sentence with no errors.',
-        includeStyle: true,
         maxErrors: 20
       }, testContext);
 
       expect(result.errors).toBeDefined();
       expect(result.errors.length).toBe(0);
-      expect(result.summary.totalErrors).toBe(0);
     });
   });
 });

@@ -1,11 +1,10 @@
 import type { Comment } from "../../../types/documentSchema";
 import { logger } from "@/lib/logger";
 import {
-  type LineBasedHighlight,
-  LineBasedHighlighter,
+  LineBasedLocator,
   type LineSnippetHighlight,
-} from "./lineBasedHighlighter";
-import type { RawLLMHighlight } from "./types";
+} from "@/lib/text-location/line-based";
+import type { LineBasedHighlight, RawLLMHighlight } from "./types";
 
 /**
  * Normalizes raw LLM highlights by adding default values
@@ -99,9 +98,48 @@ export async function validateAndConvertHighlights(
     };
   });
 
-  // Use the line-based highlighter to process highlights
-  const highlighter = new LineBasedHighlighter(documentContent);
-  const processed = highlighter.processLineHighlights(rawHighlights);
+  // Use the line-based locator to process highlights
+  const locator = new LineBasedLocator(documentContent);
+  const processedComments: Comment[] = [];
+
+  for (const highlight of rawHighlights) {
+    const highlightResult = locator.createHighlight(highlight.highlight);
+
+    if (highlightResult) {
+      const processedComment: Comment = {
+        description: highlight.description,
+        importance: highlight.importance || 5,
+        grade: highlight.grade,
+        highlight: {
+          startOffset: highlightResult.startOffset,
+          endOffset: highlightResult.endOffset,
+          quotedText: highlightResult.quotedText,
+          isValid: true,
+          prefix: highlightResult.prefix,
+        },
+        isValid: true,
+      };
+      processedComments.push(processedComment);
+    } else {
+      // Create invalid highlight for debugging
+      const invalidComment: Comment = {
+        description: highlight.description,
+        importance: highlight.importance || 5,
+        grade: highlight.grade,
+        highlight: {
+          startOffset: -1,
+          endOffset: -1,
+          quotedText: "",
+          isValid: false,
+        },
+        isValid: false,
+        error: `Could not find highlight: lines ${highlight.highlight.startLineIndex}-${highlight.highlight.endLineIndex}, snippets "${highlight.highlight.startCharacters}" to "${highlight.highlight.endCharacters}"`,
+      };
+      processedComments.push(invalidComment);
+    }
+  }
+
+  const processed = processedComments;
 
   // Additional validation for the processed highlights
   const validHighlights: Comment[] = [];

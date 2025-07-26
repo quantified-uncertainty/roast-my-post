@@ -4,6 +4,8 @@ import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 export interface MathError {
   lineStart: number;
@@ -78,7 +80,9 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     description: 'Analyze text for mathematical errors including calculations, logic, units, and notation using Claude',
     version: '1.0.0',
     category: 'analysis' as const,
-    costEstimate: '~$0.02 per check (1 Claude call with longer analysis)'
+    costEstimate: '~$0.02 per check (1 Claude call with longer analysis)',
+    path: '/tools/check-math',
+    status: 'stable' as const
   };
   
   inputSchema = inputSchema;
@@ -137,6 +141,15 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/math/check-math-accuracy') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+
     const result = await callClaudeWithTool<{ errors: any[] }>({
       system: systemPrompt,
       messages: [{
@@ -147,7 +160,8 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       temperature: 0,
       toolName: "report_math_errors",
       toolDescription: "Report mathematical errors found in the text",
-      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50)
+      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50),
+      heliconeHeaders
     });
 
     const errors = this.parseErrors(result.toolResult?.errors);
@@ -195,13 +209,22 @@ REMINDER: Use the report_math_errors tool to report your findings.`;
       `${index + 1}: ${line}`
     ).join('\n');
 
-    return `Consider this text. Is the math correct? Think through the details and analyze for any mathematical errors:
-
+    return `<task>
+  <instruction>Consider this text. Is the math correct? Think through the details and analyze for any mathematical errors</instruction>
+  
+  <content>
 ${numberedContent}
-
-${input.context ? `\nContext: ${input.context}` : ''}
-
-Report any mathematical errors found with detailed explanations and corrections.`;
+  </content>
+  
+  ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ''}
+  <parameters>
+    <max_errors>${input.maxErrors || 50}</max_errors>
+  </parameters>
+  
+  <requirements>
+    Report any mathematical errors found with detailed explanations and corrections.
+  </requirements>
+</task>`;
   }
   
   private getMathErrorReportingToolSchema(maxErrors: number) {

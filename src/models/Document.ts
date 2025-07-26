@@ -227,7 +227,7 @@ export class DocumentModel {
         ? {
             id: dbDoc.submittedBy.id,
             name: dbDoc.submittedBy.name,
-            email: dbDoc.submittedBy.email || null,
+            email: null,  // Explicitly set to null for privacy
             image: dbDoc.submittedBy.image,
           }
         : undefined,
@@ -392,7 +392,7 @@ export class DocumentModel {
         ? {
             id: dbDoc.submittedBy.id,
             name: dbDoc.submittedBy.name,
-            email: dbDoc.submittedBy.email || null,
+            email: null,  // Explicitly set to null for privacy
             image: dbDoc.submittedBy.image,
           }
         : undefined,

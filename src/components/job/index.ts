@@ -2,6 +2,7 @@ export { JobStatusBadge, JobStatusIcon } from './JobStatusBadge';
 export { JobCard } from './JobCard';
 export { JobSummary } from './JobSummary';
 export { TaskDisplay } from './TaskDisplay';
+export { LogsViewer } from './LogsViewer';
 
 // Re-export shared utilities
 export { getStatusIcon, getStatusStyles } from '@/lib/job/status';

@@ -1,259 +1,297 @@
-import { ExtractForecastingClaimsTool } from './index';
-import { z } from 'zod';
-import { ToolContext } from '../base/Tool';
-import { createMockLLMInteraction } from '@/lib/claude/testUtils';
-import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
+import { z } from "zod";
+
+import { setupClaudeToolMock } from "@/lib/claude/mockHelpers";
+import { createMockLLMInteraction } from "@/lib/claude/testUtils";
+import { callClaudeWithTool } from "@/lib/claude/wrapper";
+
+import { ToolContext } from "../base/Tool";
+import { ExtractForecastingClaimsTool } from "./index";
 
 // Mock Claude wrapper
-jest.mock('@/lib/claude/wrapper');
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
-const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+jest.mock("@/lib/claude/wrapper");
+
+const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<
+  typeof callClaudeWithTool
+>;
 const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
-describe('ExtractForecastingClaimsTool (legacy tests - updated)', () => {
+describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
   const tool = new ExtractForecastingClaimsTool();
   const mockContext: ToolContext = {
-    userId: 'test-user',
-    logger: { 
-      info: jest.fn(), 
+    userId: "test-user",
+    logger: {
+      info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
-    } as any
+      debug: jest.fn(),
+    } as any,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('input validation', () => {
-    it('should validate required fields', async () => {
+  describe("input validation", () => {
+    it("should validate required fields", async () => {
       const invalidInput = {}; // Missing text
-      
-      await expect(tool.run(invalidInput, mockContext))
-        .rejects.toThrow(z.ZodError);
-    });
-    
-    it('should validate text length limits', async () => {
-      const invalidInput = { text: 'a'.repeat(10001) }; // Too long
-      
-      await expect(tool.run(invalidInput, mockContext))
-        .rejects.toThrow(z.ZodError);
-    });
-    
-    it('should validate maxDetailedAnalysis range', async () => {
-      const invalidInput = { 
-        text: 'Some text with predictions',
-        maxDetailedAnalysis: 11 // Too high
-      };
-      
-      await expect(tool.run(invalidInput, mockContext))
-        .rejects.toThrow(z.ZodError);
+
+      await expect(tool.run(invalidInput, mockContext)).rejects.toThrow(
+        z.ZodError
+      );
     });
 
-    it('should accept valid input with defaults', async () => {
-      const validInput = { text: 'AI will surpass human intelligence by 2030.' };
-      
-      // Mock extraction response
-      mockToolResponse({
-        forecasts: [{
-          text: 'AI will surpass human intelligence by 2030',
-          topic: 'AI development',
-          timeframe: '2030'
-        }]
-      }, { tokens: { input: 100, output: 50 } });
-      
-      // Mock selection response
-      mockToolResponse({
-        selections: [{
-          index: 0,
-          reasoning: 'Significant technological prediction with clear timeframe'
-        }]
-      }, { tokens: { input: 150, output: 30 } });
-      
+    it("should validate text length limits", async () => {
+      const invalidInput = { text: "a".repeat(10001) }; // Too long
+
+      await expect(tool.run(invalidInput, mockContext)).rejects.toThrow(
+        z.ZodError
+      );
+    });
+
+    it("should validate maxDetailedAnalysis range", async () => {
+      const invalidInput = {
+        text: "Some text with predictions",
+        maxDetailedAnalysis: 11, // Too high
+      };
+
+      await expect(tool.run(invalidInput, mockContext)).rejects.toThrow(
+        z.ZodError
+      );
+    });
+
+    it("should accept valid input with defaults", async () => {
+      const validInput = {
+        text: "AI will surpass human intelligence by 2030.",
+      };
+
+      // Mock single-stage extraction and scoring response
+      mockToolResponse(
+        {
+          forecasts: [
+            {
+              originalText: "AI will surpass human intelligence by 2030",
+              thinking:
+                "Clear technological prediction with specific timeframe",
+              precisionScore: 80,
+              verifiabilityScore: 70,
+              importanceScore: 90,
+              robustnessScore: 60,
+              rewrittenPredictionText:
+                "Will AI systems achieve human-level general intelligence by 2030?",
+              resolutionDate: "2030",
+              authorProbability: undefined,
+            },
+          ],
+        },
+        { tokens: { input: 150, output: 80 } }
+      );
+
       const result = await tool.run(validInput, mockContext);
-      
+
       expect(result.forecasts).toHaveLength(1);
-      expect(result.totalFound).toBe(1);
-      expect(result.selectedForAnalysis).toBe(1);
-      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[0].reasoning).toBe('Significant technological prediction with clear timeframe');
+      expect(result.forecasts[0].originalText).toBe(
+        "AI will surpass human intelligence by 2030"
+      );
+      expect(result.forecasts[0].precisionScore).toBe(80);
+      expect(result.forecasts[0].verifiabilityScore).toBe(70);
+      expect(result.forecasts[0].importanceScore).toBe(90);
     });
   });
 
-  describe('execute', () => {
-    it('should extract and analyze forecasting claims successfully', async () => {
+  describe("execute", () => {
+    it("should extract and score forecasting claims successfully", async () => {
       const input = {
-        text: 'The stock market will crash in 2024. There\'s a 70% chance of recession. Climate change might accelerate.',
-        agentInstructions: 'Focus on economic predictions',
-        maxDetailedAnalysis: 2
+        text: "The stock market will crash in 2024. There's a 70% chance of recession. Climate change might accelerate.",
+        agentInstructions: "Focus on economic predictions",
+        maxDetailedAnalysis: 2,
       };
-      
-      // Mock extraction response
+
+      // Mock single-stage response with scored forecasts
       const mockForecasts = [
         {
-          text: 'The stock market will crash in 2024',
-          topic: 'Stock market',
-          timeframe: '2024'
+          originalText: "The stock market will crash in 2024",
+          thinking:
+            "Specific market prediction with timeline, highly relevant to economic focus",
+          precisionScore: 85,
+          verifiabilityScore: 90,
+          importanceScore: 70,
+          robustnessScore: 65,
+          rewrittenPredictionText:
+            "Will the S&P 500 decline by more than 20% in 2024?",
+          resolutionDate: "2024",
+          authorProbability: undefined,
         },
         {
-          text: 'There\'s a 70% chance of recession',
-          topic: 'Economic recession',
-          probability: 70
+          originalText: "There's a 70% chance of recession",
+          thinking: "Quantified economic forecast with specific probability",
+          precisionScore: 75,
+          verifiabilityScore: 80,
+          importanceScore: 85,
+          robustnessScore: 70,
+          rewrittenPredictionText:
+            "Will the US enter a recession (two consecutive quarters of negative GDP growth)?",
+          authorProbability: 70,
+          resolutionDate: undefined,
         },
         {
-          text: 'Climate change might accelerate',
-          topic: 'Climate change'
-        }
+          originalText: "Climate change might accelerate",
+          thinking: "Vague prediction, not economic focus",
+          precisionScore: 20,
+          verifiabilityScore: 30,
+          importanceScore: 40,
+          robustnessScore: 35,
+          rewrittenPredictionText:
+            "Will global temperature rise accelerate beyond current projections?",
+          resolutionDate: undefined,
+          authorProbability: undefined,
+        },
       ];
-      
-      // Mock extraction response
-      mockToolResponse({ forecasts: mockForecasts }, { tokens: { input: 200, output: 100 } });
-      
-      // Mock selection response - select first two
-      mockToolResponse({
-        selections: [
-          { index: 0, reasoning: 'Specific market prediction with timeline' },
-          { index: 1, reasoning: 'Quantified economic forecast' }
-        ]
-      }, { tokens: { input: 300, output: 80 } });
-      
+
+      mockToolResponse(
+        { forecasts: mockForecasts },
+        { tokens: { input: 300, output: 180 } }
+      );
+
       const result = await tool.execute(input, mockContext);
-      
+
       expect(result.forecasts).toHaveLength(3);
-      expect(result.totalFound).toBe(3);
-      expect(result.selectedForAnalysis).toBe(2);
-      
-      // Check selection results
-      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[1].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[2].worthDetailedAnalysis).toBe(false);
-      
-      expect(result.forecasts[0].reasoning).toBe('Specific market prediction with timeline');
-      expect(result.forecasts[1].reasoning).toBe('Quantified economic forecast');
-    });
-    
-    it('should handle text with no forecasts', async () => {
-      const input = {
-        text: 'This is just descriptive text about the past with no predictions.'
-      };
-      
-      // Mock empty extraction response
-      mockToolResponse({ forecasts: [] }, { tokens: { input: 100, output: 20 } });
-      
-      const result = await tool.execute(input, mockContext);
-      
-      expect(result.forecasts).toHaveLength(0);
-      expect(result.totalFound).toBe(0);
-      expect(result.selectedForAnalysis).toBe(0);
+
+      // Check that forecasts are returned with their scores
+      expect(result.forecasts[0].originalText).toBe(
+        "The stock market will crash in 2024"
+      );
+      expect(result.forecasts[0].precisionScore).toBe(85);
+      expect(result.forecasts[0].verifiabilityScore).toBe(90);
+      expect(result.forecasts[0].importanceScore).toBe(70);
+
+      expect(result.forecasts[1].originalText).toBe(
+        "There's a 70% chance of recession"
+      );
+      expect(result.forecasts[1].precisionScore).toBe(75);
+      expect(result.forecasts[1].verifiabilityScore).toBe(80);
+      expect(result.forecasts[1].importanceScore).toBe(85);
+
+      expect(result.forecasts[2].originalText).toBe(
+        "Climate change might accelerate"
+      );
+      expect(result.forecasts[2].precisionScore).toBe(20);
+      expect(result.forecasts[2].verifiabilityScore).toBe(30);
+      expect(result.forecasts[2].importanceScore).toBe(40);
     });
 
-    it('should handle forecasts with probability and timeframe', async () => {
+    it("should handle text with no forecasts", async () => {
       const input = {
-        text: 'There is a 60% chance that Bitcoin will reach $100k by end of 2024.'
+        text: "This is just descriptive text about the past with no predictions.",
       };
-      
-      // Mock extraction response with probability and timeframe
-      mockToolResponse({
-        forecasts: [{
-          text: 'Bitcoin will reach $100k by end of 2024',
-          topic: 'Bitcoin price',
-          probability: 60,
-          timeframe: 'end of 2024'
-        }]
-      }, { tokens: { input: 120, output: 60 } });
-      
-      mockToolResponse({
-        selections: [{
-          index: 0,
-          reasoning: 'Specific cryptocurrency prediction with probability and timeframe'
-        }]
-      }, { tokens: { input: 180, output: 40 } });
-      
+
+      // Mock empty extraction response
+      mockToolResponse(
+        { forecasts: [] },
+        { tokens: { input: 100, output: 20 } }
+      );
+
       const result = await tool.execute(input, mockContext);
-      
-      expect(result.forecasts[0].probability).toBe(60);
-      expect(result.forecasts[0].timeframe).toBe('end of 2024');
-      expect(result.forecasts[0].topic).toBe('Bitcoin price');
+
+      expect(result.forecasts).toHaveLength(0);
+    });
+
+    it("should handle forecasts with probability and timeframe", async () => {
+      const input = {
+        text: "There is a 60% chance that Bitcoin will reach $100k by end of 2024.",
+      };
+
+      // Mock extraction response with probability and timeframe
+      mockToolResponse(
+        {
+          forecasts: [
+            {
+              originalText: "Bitcoin will reach $100k by end of 2024",
+              thinking:
+                "Specific cryptocurrency prediction with probability and timeframe",
+              precisionScore: 70,
+              verifiabilityScore: 80,
+              importanceScore: 50,
+              robustnessScore: 55,
+              rewrittenPredictionText:
+                "Will Bitcoin price reach $100,000 USD by December 31, 2024?",
+              authorProbability: 60,
+              resolutionDate: "end of 2024",
+            },
+          ],
+        },
+        { tokens: { input: 180, output: 100 } }
+      );
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.forecasts[0].authorProbability).toBe(60);
+      expect(result.forecasts[0].resolutionDate).toBe("end of 2024");
+      expect(result.forecasts[0].precisionScore).toBe(70);
+      expect(result.forecasts[0].verifiabilityScore).toBe(80);
+      expect(result.forecasts[0].importanceScore).toBe(50);
     });
   });
 
-  describe('error handling', () => {
-    it('should handle extraction errors', async () => {
-      const input = { text: 'Some text with predictions' };
-      const error = new Error('Anthropic API error');
-      
+  describe("error handling", () => {
+    it("should handle extraction errors", async () => {
+      const input = { text: "Some text with predictions" };
+      const error = new Error("Anthropic API error");
+
       mockCallClaudeWithTool.mockRejectedValueOnce(error);
-      
-      await expect(tool.execute(input, mockContext))
-        .rejects.toThrow('Anthropic API error');
+
+      await expect(tool.execute(input, mockContext)).rejects.toThrow(
+        "Anthropic API error"
+      );
     });
 
-    it('should handle malformed tool responses', async () => {
-      const input = { text: 'Some text with predictions' };
-      
+    it("should handle malformed tool responses", async () => {
+      const input = { text: "Some text with predictions" };
+
       // Mock malformed response (no tool use)
       mockCallClaudeWithTool.mockResolvedValueOnce({
         response: {
-          content: [{ type: 'text', text: 'Not a tool use' }],
-          usage: { input_tokens: 100, output_tokens: 50 }
+          content: [{ type: "text", text: "Not a tool use" }],
+          usage: { input_tokens: 100, output_tokens: 50 },
         } as any,
         interaction: createMockLLMInteraction(),
-        toolResult: {}
+        toolResult: {},
       });
-      
+
       const result = await tool.execute(input, mockContext);
-      
+
       expect(result.forecasts).toHaveLength(0);
-      expect(result.totalFound).toBe(0);
     });
   });
 });
 
-describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
+describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
   const tool = new ExtractForecastingClaimsTool();
   const mockContext: ToolContext = {
-    userId: 'test-user',
-    logger: { 
-      info: jest.fn(), 
+    userId: "test-user",
+    logger: {
+      info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
-    } as any
+      debug: jest.fn(),
+    } as any,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('input validation', () => {
-    it('should validate required fields', async () => {
-      const invalidInput = {}; // Missing text
-      
-      await expect(tool.run(invalidInput, mockContext))
-        .rejects.toThrow(z.ZodError);
-    });
-    
-    it('should validate text length limits', async () => {
-      const invalidInput = { text: 'a'.repeat(10001) }; // Too long
-      
-      await expect(tool.run(invalidInput, mockContext))
-        .rejects.toThrow(z.ZodError);
-    });
-  });
-
-  describe('execute with mocked wrapper', () => {
-    it('should extract and analyze forecasting claims successfully', async () => {
+  describe("execute with mocked wrapper", () => {
+    it("should extract and score forecasting claims successfully", async () => {
       const input = {
-        text: 'AI will surpass human intelligence by 2050. There is a 70% chance of recession in 2025.',
-        maxDetailedAnalysis: 2
+        text: "AI will surpass human intelligence by 2050. There is a 70% chance of recession in 2025.",
+        maxDetailedAnalysis: 2,
       };
-      
+
       const mockInteraction = createMockLLMInteraction();
-      
-      // Mock extraction call with interaction tracking
-      mockCallClaudeWithTool
-        .mockImplementationOnce(async (options, interactions) => {
+
+      // Mock single-stage extraction and scoring
+      mockCallClaudeWithTool.mockImplementationOnce(
+        async (options, interactions) => {
           if (interactions) {
             interactions.push(mockInteraction);
           }
@@ -263,22 +301,68 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             toolResult: {
               forecasts: [
                 {
-                  text: 'AI will surpass human intelligence by 2050',
-                  topic: 'Artificial intelligence',
-                  timeframe: '2050'
+                  originalText: "AI will surpass human intelligence by 2050",
+                  thinking:
+                    "Significant technological prediction with clear timeframe",
+                  precisionScore: 85,
+                  verifiabilityScore: 75,
+                  importanceScore: 90,
+                  robustnessScore: 60,
+                  rewrittenPredictionText:
+                    "Will artificial general intelligence surpass human intelligence by 2050?",
+                  resolutionDate: "2050",
+                  authorProbability: undefined,
                 },
                 {
-                  text: 'There is a 70% chance of recession in 2025',
-                  topic: 'Economic recession',
-                  probability: 70,
-                  timeframe: '2025'
-                }
-              ]
-            }
+                  originalText: "There is a 70% chance of recession in 2025",
+                  thinking:
+                    "Quantified economic forecast with specific probability and near-term timeline",
+                  precisionScore: 90,
+                  verifiabilityScore: 95,
+                  importanceScore: 85,
+                  robustnessScore: 75,
+                  rewrittenPredictionText:
+                    "Will the US economy enter a recession in 2025?",
+                  authorProbability: 70,
+                  resolutionDate: "2025",
+                },
+              ],
+            },
           };
-        })
-        // Mock selection call with interaction tracking
-        .mockImplementationOnce(async (options, interactions) => {
+        }
+      );
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.forecasts).toHaveLength(2);
+      expect(result.llmInteractions).toHaveLength(1); // Single LLM call now
+
+      // Check forecast details
+      expect(result.forecasts[0].originalText).toBe(
+        "AI will surpass human intelligence by 2050"
+      );
+      expect(result.forecasts[0].precisionScore).toBe(85);
+      expect(result.forecasts[0].verifiabilityScore).toBe(75);
+      expect(result.forecasts[0].importanceScore).toBe(90);
+
+      expect(result.forecasts[1].originalText).toBe(
+        "There is a 70% chance of recession in 2025"
+      );
+      expect(result.forecasts[1].precisionScore).toBe(90);
+      expect(result.forecasts[1].verifiabilityScore).toBe(95);
+      expect(result.forecasts[1].importanceScore).toBe(85);
+    });
+
+    it("should handle text with no forecasts", async () => {
+      const input = {
+        text: "This is just descriptive text about the past with no predictions.",
+      };
+
+      const mockInteraction = createMockLLMInteraction();
+
+      // Mock empty extraction response
+      mockCallClaudeWithTool.mockImplementationOnce(
+        async (options, interactions) => {
           if (interactions) {
             interactions.push(mockInteraction);
           }
@@ -286,67 +370,29 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
-              selections: [
-                { index: 0, reasoning: 'Significant technological prediction with clear timeframe' },
-                { index: 1, reasoning: 'Quantified economic forecast with specific probability' }
-              ]
-            }
+              forecasts: [],
+            },
           };
-        });
-      
-      const result = await tool.execute(input, mockContext);
-      
-      expect(result.forecasts).toHaveLength(2);
-      expect(result.totalFound).toBe(2);
-      expect(result.selectedForAnalysis).toBe(2);
-      expect(result.llmInteractions).toHaveLength(2);
-      
-      // Check selection results
-      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[1].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[0].reasoning).toBe('Significant technological prediction with clear timeframe');
-    });
-    
-    it('should handle text with no forecasts', async () => {
-      const input = {
-        text: 'This is just descriptive text about the past with no predictions.'
-      };
-      
-      const mockInteraction = createMockLLMInteraction();
-      
-      // Mock empty extraction response
-      mockCallClaudeWithTool.mockImplementationOnce(async (options, interactions) => {
-        if (interactions) {
-          interactions.push(mockInteraction);
         }
-        return {
-          response: {} as any,
-          interaction: mockInteraction,
-          toolResult: {
-            forecasts: []
-          }
-        };
-      });
-      
+      );
+
       const result = await tool.execute(input, mockContext);
-      
+
       expect(result.forecasts).toHaveLength(0);
-      expect(result.totalFound).toBe(0);
-      expect(result.selectedForAnalysis).toBe(0);
       expect(result.llmInteractions).toHaveLength(1);
     });
 
-    it('should limit selections to maxDetailedAnalysis', async () => {
+    it("should respect maxDetailedAnalysis in scoring guidance", async () => {
       const input = {
-        text: 'Multiple predictions here',
-        maxDetailedAnalysis: 1
+        text: "Multiple predictions here",
+        maxDetailedAnalysis: 1,
       };
-      
+
       const mockInteraction = createMockLLMInteraction();
-      
-      // Mock extraction with 3 forecasts
-      mockCallClaudeWithTool
-        .mockImplementationOnce(async (options, interactions) => {
+
+      // Mock extraction with 3 forecasts, only 1 scored high due to guidance
+      mockCallClaudeWithTool.mockImplementationOnce(
+        async (options, interactions) => {
           if (interactions) {
             interactions.push(mockInteraction);
           }
@@ -355,15 +401,77 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             interaction: mockInteraction,
             toolResult: {
               forecasts: [
-                { text: 'Forecast 1', topic: 'Topic 1' },
-                { text: 'Forecast 2', topic: 'Topic 2' },
-                { text: 'Forecast 3', topic: 'Topic 3' }
-              ]
-            }
+                {
+                  originalText: "Forecast 1",
+                  thinking: "Most relevant forecast",
+                  precisionScore: 80,
+                  verifiabilityScore: 85,
+                  importanceScore: 75,
+                  robustnessScore: 70,
+                  rewrittenPredictionText: "Will forecast 1 occur?",
+                  resolutionDate: "2025",
+                  authorProbability: undefined,
+                },
+                {
+                  originalText: "Forecast 2",
+                  thinking:
+                    "Moderate interest but limited by maxDetailedAnalysis",
+                  precisionScore: 45,
+                  verifiabilityScore: 50,
+                  importanceScore: 40,
+                  robustnessScore: 45,
+                  rewrittenPredictionText: "Will forecast 2 occur?",
+                  resolutionDate: "2026",
+                  authorProbability: undefined,
+                },
+                {
+                  originalText: "Forecast 3",
+                  thinking: "Lower priority",
+                  precisionScore: 30,
+                  verifiabilityScore: 25,
+                  importanceScore: 35,
+                  robustnessScore: 30,
+                  rewrittenPredictionText: "Will forecast 3 occur?",
+                  resolutionDate: "2027",
+                  authorProbability: undefined,
+                },
+              ],
+            },
           };
-        })
-        // Mock selection of only 1 (due to limit)
-        .mockImplementationOnce(async (options, interactions) => {
+        }
+      );
+
+      const result = await tool.execute(input, mockContext);
+
+      expect(result.forecasts).toHaveLength(3);
+      // Check scores
+      expect(result.forecasts[0].precisionScore).toBe(80);
+      expect(result.forecasts[0].verifiabilityScore).toBe(85);
+      expect(result.forecasts[0].importanceScore).toBe(75);
+
+      expect(result.forecasts[1].precisionScore).toBe(45);
+      expect(result.forecasts[1].verifiabilityScore).toBe(50);
+      expect(result.forecasts[1].importanceScore).toBe(40);
+
+      expect(result.forecasts[2].precisionScore).toBe(30);
+      expect(result.forecasts[2].verifiabilityScore).toBe(25);
+      expect(result.forecasts[2].importanceScore).toBe(35);
+    });
+
+    it("should use agent instructions when provided", async () => {
+      const input = {
+        text: "Economic and tech predictions",
+        agentInstructions: "Focus on economic predictions only",
+      };
+
+      const mockInteraction = createMockLLMInteraction({
+        prompt:
+          "Extract and score forecasts from this text:\n\nEconomic and tech predictions",
+      });
+
+      // Mock extraction
+      mockCallClaudeWithTool.mockImplementationOnce(
+        async (options, interactions) => {
           if (interactions) {
             interactions.push(mockInteraction);
           }
@@ -371,85 +479,42 @@ describe('ExtractForecastingClaimsTool with wrapper mocks', () => {
             response: {} as any,
             interaction: mockInteraction,
             toolResult: {
-              selections: [
-                { index: 0, reasoning: 'Most relevant forecast' }
-              ]
-            }
+              forecasts: [
+                {
+                  originalText: "AI will surpass human intelligence by 2050",
+                  thinking:
+                    "Relevant technological prediction but not economic focus",
+                  precisionScore: 20,
+                  verifiabilityScore: 30,
+                  importanceScore: 25,
+                  robustnessScore: 35,
+                  rewrittenPredictionText:
+                    "Will AI achieve human-level intelligence by 2050?",
+                  resolutionDate: "2050",
+                  authorProbability: undefined,
+                },
+              ],
+            },
           };
-        });
-      
-      const result = await tool.execute(input, mockContext);
-      
-      expect(result.totalFound).toBe(3);
-      expect(result.selectedForAnalysis).toBe(1);
-      expect(result.forecasts[0].worthDetailedAnalysis).toBe(true);
-      expect(result.forecasts[1].worthDetailedAnalysis).toBe(false);
-      expect(result.forecasts[2].worthDetailedAnalysis).toBe(false);
-    });
+        }
+      );
 
-    it('should use agent instructions when provided', async () => {
-      const input = {
-        text: 'Economic and tech predictions',
-        agentInstructions: 'Focus on economic predictions only'
-      };
-      
-      const mockInteraction1 = createMockLLMInteraction({
-        prompt: 'Extract forecasts from this text:\n\nEconomic and tech predictions'
-      });
-      
-      const mockInteraction2 = createMockLLMInteraction({
-        prompt: 'Select forecasts for analysis'
-      });
-      
-      // Mock extraction
-      mockCallClaudeWithTool
-        .mockImplementationOnce(async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction1);
-          }
-          return {
-            response: {} as any,
-            interaction: mockInteraction1,
-            toolResult: {
-              forecasts: [{
-                text: 'AI will surpass human intelligence by 2050',
-                topic: 'Technology',
-                timeframe: '2050'
-              }]
-            }
-          };
-        })
-        // Mock selection call
-        .mockImplementationOnce(async (options, interactions) => {
-          if (interactions) {
-            interactions.push(mockInteraction2);
-          }
-          return {
-            response: {} as any,
-            interaction: mockInteraction2,
-            toolResult: {
-              selections: [{
-                index: 0,
-                reasoning: 'Relevant technological prediction'
-              }]
-            }
-          };
-        });
-      
       const result = await tool.execute(input, mockContext);
-      
-      // Verify both calls were made  
-      expect(result.llmInteractions).toHaveLength(2);
-      expect(mockCallClaudeWithTool).toHaveBeenCalledTimes(2);
-      
-      // Verify agent instructions were included in selection call (second call)
-      expect(mockCallClaudeWithTool).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          system: expect.stringContaining('Focus on economic predictions only')
-        }),
+
+      // Verify only one call was made
+      expect(result.llmInteractions).toHaveLength(1);
+      expect(mockCallClaudeWithTool).toHaveBeenCalledTimes(1);
+
+      // Verify agent instructions were included
+      expect(mockCallClaudeWithTool).toHaveBeenCalledWith(
+        expect.anything(),
         expect.any(Array)
       );
+
+      // Verify low scores due to not matching instructions
+      expect(result.forecasts[0].precisionScore).toBe(20);
+      expect(result.forecasts[0].verifiabilityScore).toBe(30);
+      expect(result.forecasts[0].importanceScore).toBe(25);
     });
   });
 });

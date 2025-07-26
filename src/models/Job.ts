@@ -437,13 +437,22 @@ export class JobModel {
 
       // Analyze document
       
-      // Update session path for analysis phase
+      // Update session path for analysis phase based on agent type
+      let analysisPath: string = SESSION_PATHS.ANALYSIS_COMPREHENSIVE;
+      if (agentVersion.extendedCapabilityId === "simple-link-verifier") {
+        analysisPath = SESSION_PATHS.ANALYSIS_LINK_VERIFICATION;
+      } else if (agentVersion.extendedCapabilityId === "spelling-grammar") {
+        analysisPath = SESSION_PATHS.ANALYSIS_SPELLING_GRAMMAR;
+      } else if (agentVersion.extendedCapabilityId === "multi-epistemic-eval") {
+        analysisPath = SESSION_PATHS.ANALYSIS_PLUGINS;
+      }
+      
       const analysisSessionConfig = sessionConfig ? {
         ...sessionConfig,
-        sessionPath: SESSION_PATHS.ANALYSIS_COMPREHENSIVE,
+        sessionPath: analysisPath,
       } : undefined;
       
-      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig);
+      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig, job.id);
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
@@ -546,6 +555,16 @@ export class JobModel {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const logFilename = `${timestamp}-job-${job.id}.md`;
 
+      // Include plugin logs if available
+      const pluginLogsSection = analysisResult.jobLogString ? `
+
+## Plugin Analysis Logs
+${analysisResult.jobLogString}
+
+---
+
+` : '';
+
       const logContent = `# Job Execution Log ${new Date().toISOString()}
     
 ## Document Information
@@ -564,7 +583,7 @@ export class JobModel {
 - Estimated Cost: $${(costInCents / 100).toFixed(6)}
 - Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
-
+${pluginLogsSection}
 ## LLM Thinking
 \`\`\`
 ${evaluationOutputs.thinking || "No thinking provided"}

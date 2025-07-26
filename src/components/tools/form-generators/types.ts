@@ -12,6 +12,12 @@ export interface FieldConfig {
   min?: number; // for number inputs
   max?: number; // for number inputs
   step?: number; // for number inputs
+  // For array fields
+  itemFields?: Record<string, FieldConfig>; // configuration for items in an array
+  // For object fields  
+  fieldConfigs?: Record<string, FieldConfig>; // configuration for nested object fields
+  // For select fields
+  options?: Array<{ value: string; label: string }>;
 }
 
 export interface FormFieldProps {

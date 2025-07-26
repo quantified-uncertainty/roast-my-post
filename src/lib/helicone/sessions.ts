@@ -139,4 +139,9 @@ export const SESSION_PATHS = {
   ANALYSIS_COMPREHENSIVE: "/job/analysis/comprehensive",
   ANALYSIS_HIGHLIGHTS: "/job/analysis/highlights", 
   ANALYSIS_SELF_CRITIQUE: "/job/analysis/self-critique",
+  // Specific analysis types
+  ANALYSIS_LINK_VERIFICATION: "/job/analysis/link-verification",
+  ANALYSIS_SPELLING_GRAMMAR: "/job/analysis/spelling-grammar",
+  ANALYSIS_MULTI_EPISTEMIC: "/job/analysis/multi-epistemic",
+  ANALYSIS_PLUGINS: "/job/analysis",
 } as const;

@@ -69,6 +69,7 @@ export default async function EvaluationPage({
             analysis={evaluationData.analysis}
             thinking={evaluationData.thinking}
             selfCritique={evaluationData.selfCritique}
+            logs={evaluationData.logs}
             comments={evaluationData.comments}
             agentName={evaluationData.agentName}
             agentDescription={evaluationData.agentDescription}

@@ -16,8 +16,9 @@ import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { getHighlightExtractionPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
-import type { LineBasedHighlight } from "../highlightGeneration/lineBasedHighlighter";
+import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { findHighlightLocation } from "../shared/pluginLocationWrappers";
 
 /**
  * Extract and format highlights from the comprehensive analysis
@@ -55,55 +56,78 @@ export async function extractHighlightsFromAnalysis(
         endLine = lineMatch[2] ? parseInt(lineMatch[2]) : startLine;
       }
       
-      // Get the actual line content to extract character snippets
-      const startLineContent = lines[startLine - 1] || '';
-      const endLineContent = lines[endLine - 1] || '';
+      // Use unified location finder for more robust highlighting
+      const location = await findHighlightLocation(insight.suggestedHighlight, fullContent, {
+        lineNumber: startLine,
+        contextBefore: lines[startLine - 2] || '',
+        contextAfter: lines[endLine] || ''
+      });
       
-      // Extract character snippets, ensuring we always have valid content
-      let startCharacters = startLineContent.slice(0, 10).trim();
-      let endCharacters = endLineContent.length > 10 
-        ? endLineContent.slice(-10).trim() 
-        : endLineContent.trim();
-      
-      // Fallback: if snippets are empty, use first/last non-empty content
-      if (!startCharacters) {
-        // Look for first non-empty content starting from the highlight
-        for (let i = startLine - 1; i < Math.min(startLine + 2, lines.length); i++) {
-          const line = lines[i];
-          if (line && line.trim()) {
-            startCharacters = line.slice(0, 10).trim();
-            break;
+      if (location) {
+        // Use the location found by the unified finder
+        const lineBasedHighlight: LineBasedHighlight = {
+          description: insight.suggestedHighlight,
+          importance: 5, // Default importance
+          highlight: {
+            startLineIndex: location.startLineIndex,
+            endLineIndex: location.endLineIndex,
+            startCharacters: location.startCharacters,
+            endCharacters: location.endCharacters,
+          },
+        };
+        
+        lineBasedHighlights.push(lineBasedHighlight);
+      } else {
+        // Fallback to original logic if unified finder fails
+        const startLineContent = lines[startLine - 1] || '';
+        const endLineContent = lines[endLine - 1] || '';
+        
+        // Extract character snippets, ensuring we always have valid content
+        let startCharacters = startLineContent.slice(0, 10).trim();
+        let endCharacters = endLineContent.length > 10 
+          ? endLineContent.slice(-10).trim() 
+          : endLineContent.trim();
+        
+        // Fallback: if snippets are empty, use first/last non-empty content
+        if (!startCharacters) {
+          // Look for first non-empty content starting from the highlight
+          for (let i = startLine - 1; i < Math.min(startLine + 2, lines.length); i++) {
+            const line = lines[i];
+            if (line && line.trim()) {
+              startCharacters = line.slice(0, 10).trim();
+              break;
+            }
           }
+          // Ultimate fallback
+          if (!startCharacters) startCharacters = "...";
         }
-        // Ultimate fallback
-        if (!startCharacters) startCharacters = "...";
-      }
-      
-      if (!endCharacters) {
-        // Look for last non-empty content ending at the highlight
-        for (let i = endLine - 1; i >= Math.max(endLine - 3, 0); i--) {
-          const line = lines[i];
-          if (line && line.trim()) {
-            endCharacters = line.slice(-10).trim();
-            break;
+        
+        if (!endCharacters) {
+          // Look for last non-empty content ending at the highlight
+          for (let i = endLine - 1; i >= Math.max(endLine - 3, 0); i--) {
+            const line = lines[i];
+            if (line && line.trim()) {
+              endCharacters = line.slice(-10).trim();
+              break;
+            }
           }
+          // Ultimate fallback
+          if (!endCharacters) endCharacters = "...";
         }
-        // Ultimate fallback
-        if (!endCharacters) endCharacters = "...";
+        
+        const lineBasedHighlight: LineBasedHighlight = {
+          description: insight.suggestedHighlight,
+          importance: 5, // Default importance
+          highlight: {
+            startLineIndex: startLine - 1, // Convert to 0-based
+            endLineIndex: endLine - 1,
+            startCharacters: startCharacters,
+            endCharacters: endCharacters,
+          },
+        };
+        
+        lineBasedHighlights.push(lineBasedHighlight);
       }
-      
-      const lineBasedHighlight: LineBasedHighlight = {
-        description: insight.suggestedHighlight,
-        importance: 5, // Default importance
-        highlight: {
-          startLineIndex: startLine - 1, // Convert to 0-based
-          endLineIndex: endLine - 1,
-          startCharacters: startCharacters,
-          endCharacters: endCharacters,
-        },
-      };
-      
-      lineBasedHighlights.push(lineBasedHighlight);
     }
     
     // Convert to character-based highlights using the full content (with prepend)

@@ -1,11 +1,14 @@
 import { Tool } from './base/Tool';
 import ForecasterTool from './forecaster';
-import FactCheckTool from './fact-check';
+import FactCheckerTool from './fact-checker';
 import CheckMathTool from './check-math';
 import ExtractForecastingClaimsTool from './extract-forecasting-claims';
 import PerplexityResearchTool from './perplexity-research';
 import ExtractFactualClaimsTool from './extract-factual-claims';
 import CheckSpellingGrammarTool from './check-spelling-grammar';
+import ExtractMathExpressionsTool from './extract-math-expressions';
+import DocumentChunkerTool from './document-chunker';
+import FuzzyTextLocatorTool from './fuzzy-text-locator';
 
 // Tool registry to manage all available tools
 export class ToolRegistry {
@@ -14,12 +17,15 @@ export class ToolRegistry {
   constructor() {
     // Register all available tools
     this.register(ForecasterTool);
-    this.register(FactCheckTool);
+    this.register(FactCheckerTool);
     this.register(CheckMathTool);
     this.register(ExtractForecastingClaimsTool);
     this.register(PerplexityResearchTool);
     this.register(ExtractFactualClaimsTool);
     this.register(CheckSpellingGrammarTool);
+    this.register(ExtractMathExpressionsTool);
+    this.register(DocumentChunkerTool);
+    this.register(FuzzyTextLocatorTool);
   }
   
   register(tool: Tool): void {

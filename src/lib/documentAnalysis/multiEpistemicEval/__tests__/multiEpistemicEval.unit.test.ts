@@ -3,7 +3,7 @@ import type { Agent } from '../../../../types/agentSchema';
 import type { Document } from '../../../../types/documents';
 
 // Mock the plugin system
-jest.mock('../../plugin-system', () => ({
+jest.mock('../../../analysis-plugins', () => ({
   PluginManager: jest.fn().mockImplementation(() => ({
     analyzeDocumentSimple: jest.fn().mockResolvedValue({
       summary: 'Analyzed 5 sections with 4 plugins. Found 3 total issues.',

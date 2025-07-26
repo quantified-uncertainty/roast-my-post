@@ -42,6 +42,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     analysis: latestVersion?.analysis || "",
     thinking: latestVersion?.job?.llmThinking || undefined,
     selfCritique: latestVersion?.selfCritique || undefined,
+    logs: latestVersion?.job?.logs || undefined,
     comments: latestVersion?.comments || [],
     
     // Agent information

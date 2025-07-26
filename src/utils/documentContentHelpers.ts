@@ -2,7 +2,7 @@ import type { Document } from "../types/documents";
 import type { DocumentWithVersions } from "../types/documentWithVersions";
 import { hasVersions, getMarkdownPrepend } from "../types/documentWithVersions";
 import { generateMarkdownPrepend, countPrependLines, getPrependLength } from "./documentMetadata";
-import { logger } from "@/lib/logger";
+import { logger } from "../lib/logger";
 
 /**
  * Options for getting document content

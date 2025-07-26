@@ -76,6 +76,52 @@ export function EvaluationDetailsSection({
   const handleExport = async (format: ExportFormat, destination: ExportDestination) => {
     if (!evaluationData) return;
 
+    // Create export data with only the current/latest version
+    const latestVersion = evaluationData.versions?.[0];
+    const job = latestVersion?.job;
+    const exportData = {
+      evaluation: {
+        id: evaluationData.id,
+        agentId: evaluationData.agentId,
+        documentId: evaluationData.documentId,
+        version: latestVersion?.version || 1,
+        createdAt: latestVersion?.createdAt,
+        updatedAt: latestVersion?.updatedAt,
+        isStale: evaluationData.isStale,
+        summary: latestVersion?.summary,
+        analysis: latestVersion?.analysis,
+        grade: latestVersion?.grade,
+        selfCritique: latestVersion?.selfCritique,
+        comments: latestVersion?.comments || [],
+        llmThinking: job?.llmThinking
+      },
+      job: job ? {
+        id: job.id,
+        status: job.status,
+        costInCents: job.costInCents,
+        durationInSeconds: job.durationInSeconds,
+        llmModel: job.llmModel,
+        inputTokens: job.inputTokens,
+        outputTokens: job.outputTokens,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        startedAt: job.startedAt,
+        completedAt: job.completedAt,
+        attempts: job.attempts,
+        error: job.error,
+        logs: job.logs,
+        llmThinking: job.llmThinking
+      } : null,
+      agent: {
+        id: evaluationData.agent?.id,
+        name: evaluationData.agent?.versions?.[0]?.name || evaluationData.agentName,
+        description: evaluationData.agent?.versions?.[0]?.description || evaluationData.agentDescription
+      },
+      document: {
+        id: evaluationData.documentId
+      }
+    };
+
     let content = '';
     let filename = '';
     let mimeType = '';
@@ -83,19 +129,19 @@ export function EvaluationDetailsSection({
     // Generate content based on format
     switch (format) {
       case 'json':
-        content = JSON.stringify(evaluationData, null, 2);
-        filename = `evaluation-${evaluationData.evaluation?.id || 'export'}.json`;
+        content = JSON.stringify(exportData, null, 2);
+        filename = `evaluation-${exportData.evaluation.id || 'export'}.json`;
         mimeType = 'application/json';
         break;
       case 'yaml':
         // Simple YAML serialization (could use a proper YAML library)
-        content = jsonToYaml(evaluationData);
-        filename = `evaluation-${evaluationData.evaluation?.id || 'export'}.yaml`;
+        content = jsonToYaml(exportData);
+        filename = `evaluation-${exportData.evaluation.id || 'export'}.yaml`;
         mimeType = 'text/yaml';
         break;
       case 'markdown':
-        content = evaluationToMarkdown(evaluationData);
-        filename = `evaluation-${evaluationData.evaluation?.id || 'export'}.md`;
+        content = evaluationToMarkdown(exportData);
+        filename = `evaluation-${exportData.evaluation.id || 'export'}.md`;
         mimeType = 'text/markdown';
         break;
     }
@@ -368,21 +414,70 @@ function yamlValue(value: any): string {
 // Convert evaluation to Markdown format
 function evaluationToMarkdown(data: any): string {
   const evaluation = data.evaluation;
+  const agent = data.agent;
+  const job = data.job;
   if (!evaluation) return '';
 
   let md = `# Evaluation Report\n\n`;
   
-  if (evaluation.documentTitle) {
-    md += `**Document:** ${evaluation.documentTitle}\n`;
+  if (data.document?.id) {
+    md += `**Document ID:** ${data.document.id}\n`;
   }
-  if (evaluation.agentName) {
-    md += `**Agent:** ${evaluation.agentName}\n`;
+  if (agent?.name) {
+    md += `**Agent:** ${agent.name}\n`;
+  }
+  if (agent?.description) {
+    md += `**Agent Description:** ${agent.description}\n`;
   }
   if (evaluation.grade !== undefined && evaluation.grade !== null) {
     md += `**Grade:** ${evaluation.grade}\n`;
   }
+  if (evaluation.version) {
+    md += `**Version:** ${evaluation.version}\n`;
+  }
   if (evaluation.createdAt) {
     md += `**Created:** ${new Date(evaluation.createdAt).toLocaleString()}\n`;
+  }
+  
+  // Job details section
+  if (job) {
+    md += `\n## Job Details\n\n`;
+    if (job.id) {
+      md += `**Job ID:** ${job.id}\n`;
+    }
+    if (job.status) {
+      md += `**Status:** ${job.status}\n`;
+    }
+    if (job.costInCents !== null && job.costInCents !== undefined) {
+      md += `**Cost:** $${(job.costInCents / 100).toFixed(4)}\n`;
+    }
+    if (job.durationInSeconds !== null && job.durationInSeconds !== undefined) {
+      md += `**Duration:** ${job.durationInSeconds}s\n`;
+    }
+    if (job.llmModel) {
+      md += `**LLM Model:** ${job.llmModel}\n`;
+    }
+    if (job.inputTokens !== null && job.inputTokens !== undefined) {
+      md += `**Input Tokens:** ${job.inputTokens.toLocaleString()}\n`;
+    }
+    if (job.outputTokens !== null && job.outputTokens !== undefined) {
+      md += `**Output Tokens:** ${job.outputTokens.toLocaleString()}\n`;
+    }
+    if (job.startedAt) {
+      md += `**Started:** ${new Date(job.startedAt).toLocaleString()}\n`;
+    }
+    if (job.completedAt) {
+      md += `**Completed:** ${new Date(job.completedAt).toLocaleString()}\n`;
+    }
+    if (job.attempts !== null && job.attempts !== undefined) {
+      md += `**Attempts:** ${job.attempts}\n`;
+    }
+    if (job.error) {
+      md += `**Error:** ${job.error}\n`;
+    }
+    if (job.logs) {
+      md += `**Logs:**\n\`\`\`\n${job.logs}\n\`\`\`\n`;
+    }
   }
   
   md += `\n---\n\n`;
@@ -399,8 +494,8 @@ function evaluationToMarkdown(data: any): string {
     md += `## Self-Critique\n\n${evaluation.selfCritique}\n\n`;
   }
 
-  if (evaluation.job?.llmThinking) {
-    md += `## LLM Thinking\n\n${evaluation.job.llmThinking}\n\n`;
+  if (evaluation.llmThinking) {
+    md += `## LLM Thinking\n\n${evaluation.llmThinking}\n\n`;
   }
 
   if (evaluation.comments && evaluation.comments.length > 0) {
