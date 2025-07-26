@@ -193,9 +193,9 @@ export class DocumentChunkerTool extends Tool<
     const sections: MarkdownSection[] = [];
     let currentSection: MarkdownSection | null = null;
     let currentOffset = 0;
-    let currentLineNum = 0;
     let insideCodeBlock = false;
-
+    let beforeFirstHeadingStartOffset = 0;
+    let beforeFirstHeadingStartLine = 1;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -218,7 +218,6 @@ export class DocumentChunkerTool extends Tool<
           currentSection.endOffset = currentOffset - 1;
           currentSection.endLine = i;
           sections.push(currentSection);
-          
         }
 
         // Start new section
@@ -233,27 +232,26 @@ export class DocumentChunkerTool extends Tool<
           subsections: [],
         };
         
-      } else if (currentSection) {
-        currentSection.content.push(line);
       } else {
-        // Content before first heading
-        if (!sections.length || sections[sections.length - 1].level > 0) {
+        // Add content to existing section or create one for content before first heading
+        if (currentSection) {
+          currentSection.content.push(line);
+        } else {
+          // Content before first heading - create a section for initial content
           currentSection = {
             level: 0,
             title: '',
             content: [line],
-            startOffset: currentOffset,
-            startLine: currentLineNum + 1,
+            startOffset: beforeFirstHeadingStartOffset,
+            startLine: beforeFirstHeadingStartLine,
             endOffset: text.length,
             endLine: lines.length,
             subsections: [],
           };
-          
         }
       }
 
       currentOffset += lineLength;
-      currentLineNum++;
     }
 
     // Save final section

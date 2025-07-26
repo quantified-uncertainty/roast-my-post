@@ -34,15 +34,27 @@ describe('ForecastPlugin', () => {
     it('should have clean state on new instance', () => {
       const debugInfo = plugin.getDebugInfo();
       
-      // New instance should have no data
-      expect(debugInfo).toEqual({});
+      // New instance should have initial empty state
+      expect(debugInfo).toEqual({
+        hasRun: false,
+        forecastsCount: 0,
+        commentsCount: 0,
+        totalCost: 0,
+        llmInteractionsCount: 0,
+      });
     });
 
     it('should provide empty debug info before analysis', () => {
       const debugInfo = plugin.getDebugInfo();
       
-      // Before analysis, should return empty object
-      expect(debugInfo).toEqual({});
+      // Before analysis, should return initial empty state
+      expect(debugInfo).toEqual({
+        hasRun: false,
+        forecastsCount: 0,
+        commentsCount: 0,
+        totalCost: 0,
+        llmInteractionsCount: 0,
+      });
     });
   });
 

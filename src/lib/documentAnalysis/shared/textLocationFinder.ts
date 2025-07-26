@@ -5,8 +5,80 @@
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
-import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "@/tools/fuzzy-text-locator";
+import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "@/tools/fuzzy-text-locator/core";
 import { processTextLocationsInParallel } from "./parallelLocationUtils";
+
+/**
+ * Expand text location to sentence or paragraph boundaries
+ */
+function expandToBoundaries(
+  location: { startOffset: number; endOffset: number; quotedText: string; strategy: string; confidence: number },
+  documentText: string,
+  boundary: 'sentence' | 'paragraph' | 'none'
+): { startOffset: number; endOffset: number; quotedText: string; strategy: string; confidence: number } {
+  if (boundary === 'none') {
+    return location;
+  }
+  
+  let newStartOffset = location.startOffset;
+  let newEndOffset = location.endOffset;
+  
+  if (boundary === 'sentence') {
+    // Find sentence boundaries (. ! ?)
+    const sentenceStart = documentText.lastIndexOf('.', location.startOffset - 1);
+    const exclamStart = documentText.lastIndexOf('!', location.startOffset - 1);
+    const questionStart = documentText.lastIndexOf('?', location.startOffset - 1);
+    
+    const actualStart = Math.max(sentenceStart, exclamStart, questionStart);
+    if (actualStart !== -1 && actualStart < location.startOffset) {
+      // Move past the punctuation and any whitespace
+      let searchStart = actualStart + 1;
+      while (searchStart < location.startOffset && /\s/.test(documentText[searchStart])) {
+        searchStart++;
+      }
+      if (searchStart < location.startOffset) {
+        newStartOffset = searchStart;
+      }
+    }
+    
+    // Find end of sentence
+    let sentenceEnd = documentText.indexOf('.', location.endOffset);
+    let exclamEnd = documentText.indexOf('!', location.endOffset);
+    let questionEnd = documentText.indexOf('?', location.endOffset);
+    
+    // Take the nearest end
+    const possibleEnds = [sentenceEnd, exclamEnd, questionEnd].filter(pos => pos !== -1);
+    if (possibleEnds.length > 0) {
+      const actualEnd = Math.min(...possibleEnds);
+      if (actualEnd > location.endOffset) {
+        newEndOffset = actualEnd + 1; // Include the punctuation
+      }
+    }
+  } else if (boundary === 'paragraph') {
+    // Find paragraph boundaries (double newlines or start/end of document)
+    const paragraphStart = documentText.lastIndexOf('\n\n', location.startOffset - 1);
+    if (paragraphStart !== -1) {
+      newStartOffset = paragraphStart + 2; // Skip the double newline
+    } else {
+      newStartOffset = 0; // Start of document
+    }
+    
+    const paragraphEnd = documentText.indexOf('\n\n', location.endOffset);
+    if (paragraphEnd !== -1) {
+      newEndOffset = paragraphEnd;
+    } else {
+      newEndOffset = documentText.length; // End of document
+    }
+  }
+  
+  return {
+    startOffset: newStartOffset,
+    endOffset: newEndOffset,
+    quotedText: documentText.slice(newStartOffset, newEndOffset),
+    strategy: location.strategy,
+    confidence: location.confidence
+  };
+}
 
 export interface TextLocation {
   startOffset: number;
@@ -56,19 +128,24 @@ export async function findTextLocation(
 ): Promise<TextLocation | null> {
   // Map options to the core tool's format
   const coreOptions: CoreOptions = {
-    caseSensitive: !options.caseInsensitive,
+    caseSensitive: options.caseInsensitive ?? false, // Default to case-insensitive for better matching
     normalizeQuotes: options.normalizeQuotes,
     partialMatch: options.allowPartialMatch,
-    maxTypos: options.allowFuzzy ? 3 : 0,
+    maxTypos: options.allowFuzzy ? 3 : undefined, // Enable fuzzy matching if allowFuzzy is true
     useLLMFallback: options.enableLLMFallback ?? false,
     llmContext: options.context,
     pluginName: 'documentAnalysis'
   };
   
-  const result = await findTextLocationCore(searchText, documentText, coreOptions);
+  let result = await findTextLocationCore(searchText, documentText, coreOptions);
   
   if (!result) {
     return null;
+  }
+  
+  // Handle boundary expansion if requested
+  if (options.expandToBoundaries && result) {
+    result = expandToBoundaries(result, documentText, options.expandToBoundaries);
   }
   
   // Add line information

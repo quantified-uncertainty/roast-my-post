@@ -81,6 +81,8 @@ export class LineBasedLocator {
     const endLine = this.lines[endLineIndex] || '';
     
     const startCharacters = startLine.slice(startPosInLine, startPosInLine + 6);
+    // For endCharacters, extract from the end line at the correct position
+    // We want up to 6 characters ending at the endPosInLine
     const endCharacters = endLine.slice(Math.max(0, endPosInLine - 6), endPosInLine);
     
     return {

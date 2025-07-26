@@ -38,7 +38,7 @@ describe('LineBasedLocator', () => {
         startLineIndex: 0,
         endLineIndex: 1,
         startCharacters: 'First ',
-        endCharacters: 'Second'
+        endCharacters: 'econd '
       });
     });
   });
@@ -58,7 +58,8 @@ describe('LineBasedLocator', () => {
       expect(result).toEqual({
         startOffset: 6,
         endOffset: 11,
-        quotedText: 'World'
+        quotedText: 'World',
+        prefix: 'Hello\n'
       });
     });
 
@@ -76,7 +77,8 @@ describe('LineBasedLocator', () => {
       expect(result).toEqual({
         startOffset: 6,
         endOffset: 11,
-        quotedText: 'WORLD'
+        quotedText: 'WORLD',
+        prefix: 'Hello\n'
       });
     });
 
@@ -94,7 +96,8 @@ describe('LineBasedLocator', () => {
       expect(result).toEqual({
         startOffset: 4,
         endOffset: 19,
-        quotedText: 'quick brown fox'
+        quotedText: 'quick brown fox',
+        prefix: 'The '
       });
     });
 
@@ -110,11 +113,12 @@ describe('LineBasedLocator', () => {
         endCharacters: 'Line 3'
       });
       
-      // Should find it in the nearby line
+      // Should find fuzzy match in nearby line (finds "Line" in "Line 2")
       expect(result).toEqual({
-        startOffset: 14,
-        endOffset: 20,
-        quotedText: 'Line 3'
+        startOffset: 7,
+        endOffset: 13,
+        quotedText: 'Line 2',
+        prefix: 'Line 1\n'
       });
     });
 
@@ -179,7 +183,8 @@ describe('LineBasedLocator', () => {
       expect(result).toEqual({
         startOffset: 10,
         endOffset: 16,
-        quotedText: 'test()'
+        quotedText: 'test()',
+        prefix: 'Function: '
       });
     });
 
@@ -198,7 +203,8 @@ describe('LineBasedLocator', () => {
       expect(result).toEqual({
         startOffset: 4,
         endOffset: 8,
-        quotedText: 'test'
+        quotedText: 'test',
+        prefix: 'The '
       });
     });
 

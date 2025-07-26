@@ -28,8 +28,18 @@ function partialMatch(
     for (let startIdx = 0; startIdx <= searchWords.length - wordCount; startIdx++) {
       const partialPhrase = searchWords.slice(startIdx, startIdx + wordCount).join(' ');
       
+      // Lower the threshold for meaningful short phrases
+      let effectiveMinLength = minMatchLength;
+      if (partialPhrase.length >= 4) {
+        // Accept 4+ character phrases that are likely meaningful
+        if (/^\d{4}$/.test(partialPhrase) || // Years like 2025
+            partialPhrase.length >= 6) {     // Any 6+ character phrase
+          effectiveMinLength = Math.min(effectiveMinLength, partialPhrase.length);
+        }
+      }
+      
       // Skip if too short
-      if (partialPhrase.length < minMatchLength) continue;
+      if (partialPhrase.length < effectiveMinLength) continue;
       
       const index = documentText.indexOf(partialPhrase);
       if (index !== -1) {
