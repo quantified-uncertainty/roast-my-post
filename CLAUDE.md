@@ -554,3 +554,60 @@ export const POST = withSecurity(
 );
 ```
 
+## Test Result Reporting Guidelines (2025-01-26)
+
+### Accurate Test Reporting is MANDATORY
+When running tests and reporting results, you MUST:
+
+1. **Always report exact test statistics**:
+   ```
+   Test Suites: X failed, Y passed, Z total
+   Tests: A failed, B skipped, C passed, D total
+   ```
+
+2. **Never claim "all tests pass" if ANY tests are failing**
+   - Even if the failing tests are "expected" to fail (e.g., integration tests without API keys)
+   - Even if you fixed the specific tests mentioned in the task
+   - Even if the failures seem unrelated to your changes
+
+3. **Distinguish between different test categories**:
+   - Unit tests that were fixed: "The unit tests I was asked to fix are now passing"
+   - Integration tests failing: "However, there are still X integration tests failing"
+   - CI-specific tests: "For CI purposes, X tests pass and Y tests fail"
+
+4. **Use this reporting format**:
+   ```
+   Test Results Summary:
+   ✅ Fixed: [list the specific tests you fixed]
+   ❌ Still failing: [list any remaining failures]
+   ⚠️  Notes: [any context about why tests might be failing]
+   ```
+
+5. **Example of GOOD reporting**:
+   ```
+   Test Results:
+   ✅ Fixed: Math plugin tests, spelling tests, email privacy tests
+   ❌ Still failing: 3 integration tests (math.integration.test.ts, spelling.integration.test.ts) 
+   ⚠️  Notes: Integration tests require API keys and are expected to fail in CI
+   ```
+
+6. **Example of BAD reporting**:
+   - "All tests are passing!" (when some are failing)
+   - "The tests are fixed" (vague, doesn't specify which ones)
+   - "CI tests pass" (without mentioning other failures)
+
+### Why This Matters
+Inaccurate test reporting can lead to:
+- Broken code being merged
+- Wasted debugging time
+- Loss of trust in automated systems
+- Hidden regressions
+
+ALWAYS double-check test output before making claims about test status.
+
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

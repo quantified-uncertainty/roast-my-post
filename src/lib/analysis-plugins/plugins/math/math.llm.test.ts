@@ -3,7 +3,10 @@ import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { extractMathExpressionsTool } from '@/tools/extract-math-expressions';
 
-describe('MathAnalyzerJob Integration', () => {
+// Skip these tests in CI or when no API key is available
+const describeIfApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.trim() !== '' ? describe : describe.skip;
+
+describeIfApiKey('MathAnalyzerJob Integration', () => {
   it('should analyze a document with mathematical expressions', async () => {
     const documentText = `
 # Investment Analysis
@@ -60,13 +63,6 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
     ];
 
     const analyzer = new MathAnalyzerJob();
-
-    // Skip if no API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('Skipping integration test - no ANTHROPIC_API_KEY');
-      return;
-    }
-
     const result = await analyzer.analyze(chunks, documentText);
 
     // Verify results structure
@@ -140,13 +136,6 @@ they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.
     ];
 
     const analyzer = new MathAnalyzerJob();
-
-    // Skip if no API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('Skipping integration test - no ANTHROPIC_API_KEY');
-      return;
-    }
-
     const result = await analyzer.analyze(chunks, documentText);
 
     // Should identify complex calculations

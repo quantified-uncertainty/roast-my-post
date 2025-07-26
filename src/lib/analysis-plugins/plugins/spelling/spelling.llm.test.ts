@@ -2,7 +2,10 @@
 import { SpellingAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 
-describe('SpellingAnalyzerJob Integration', () => {
+// Skip these tests in CI or when no API key is available
+const describeIfApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.trim() !== '' ? describe : describe.skip;
+
+describeIfApiKey('SpellingAnalyzerJob Integration', () => {
   it('should analyze a document with spelling and grammar errors', async () => {
     const documentText = `
 # Document Analysis
@@ -55,13 +58,6 @@ In conclusion, always proofread you're work before submitting it.
     ];
 
     const analyzer = new SpellingAnalyzerJob();
-
-    // Skip if no API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('Skipping integration test - no ANTHROPIC_API_KEY');
-      return;
-    }
-
     const result = await analyzer.analyze(chunks, documentText);
 
     // Verify results structure
@@ -133,13 +129,6 @@ Professional writing requires attention to detail and a commitment to quality.
     ];
 
     const analyzer = new SpellingAnalyzerJob();
-
-    // Skip if no API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('Skipping integration test - no ANTHROPIC_API_KEY');
-      return;
-    }
-
     const result = await analyzer.analyze(chunks, documentText);
 
     // Should find few or no errors

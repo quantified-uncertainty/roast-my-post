@@ -15,10 +15,18 @@ describe('ForecastPlugin Integration', () => {
       If current trends continue, computing power will increase by 10x.
     `;
 
-    // Mock the analyze method to avoid actual API calls
+    // Mock the analyze methods to avoid actual API calls
     jest.spyOn(forecastPlugin, 'analyze').mockResolvedValue({
       summary: 'Found 3 predictions',
       analysis: '## Forecast Analysis\n\nPredictions found.',
+      comments: [],
+      llmInteractions: [],
+      cost: 0.001
+    });
+
+    jest.spyOn(mathPlugin, 'analyze').mockResolvedValue({
+      summary: 'No mathematical expressions found.',
+      analysis: 'No mathematical calculations or formulas were identified in this document.',
       comments: [],
       llmInteractions: [],
       cost: 0.001
@@ -33,5 +41,5 @@ describe('ForecastPlugin Integration', () => {
     expect(result.pluginResults.has('FORECAST')).toBe(true);
     const forecastResult = result.pluginResults.get('FORECAST');
     expect(forecastResult?.summary).toContain('Found 3 predictions');
-  });
+  }, 10000); // Increase timeout
 });

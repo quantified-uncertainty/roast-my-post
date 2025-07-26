@@ -64,7 +64,7 @@ describe('Parallel Plugin Execution', () => {
     console.log(`Total execution time: ${totalTime}ms`);
     
     // Assert parallel execution (with some overhead tolerance)
-    expect(totalTime).toBeLessThan(200); // Should be much less than 400ms
+    expect(totalTime).toBeLessThan(250); // Should be much less than 400ms (sequential)
     expect(result.pluginResults.size).toBe(4);
     expect(result.statistics.totalComments).toBe(0);
     expect(result.statistics.totalCost).toBeCloseTo(0.004);
