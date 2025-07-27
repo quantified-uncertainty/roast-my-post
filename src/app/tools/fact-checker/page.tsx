@@ -221,6 +221,18 @@ export default function FactCheckerPage() {
               </div>
             )}
 
+            {/* Perplexity Debug Data */}
+            {typedResult.perplexityData && (
+              <details className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <summary className="font-semibold text-gray-900 cursor-pointer">Debug: Perplexity Research Data</summary>
+                <div className="mt-4 overflow-x-auto rounded bg-gray-900 p-4 text-gray-100">
+                  <pre className="text-xs">
+                    {JSON.stringify(typedResult.perplexityData, null, 2)}
+                  </pre>
+                </div>
+              </details>
+            )}
+
             {/* Raw JSON Data */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Raw LLM Response Data</h3>

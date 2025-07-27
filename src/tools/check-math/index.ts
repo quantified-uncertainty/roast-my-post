@@ -2,74 +2,52 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { RichLLMInteraction } from '@/types/llm';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
-
-export interface MathError {
-  lineStart: number;
-  lineEnd: number;
-  highlightedText: string;
-  description: string;
-  errorType: 'calculation' | 'logic' | 'unit' | 'notation' | 'conceptual';
-  severity: 'critical' | 'major' | 'minor';
-}
+import { 
+  mathStatusSchema, 
+  mathExplanationSchema, 
+  mathReasoningSchema,
+  mathErrorDetailsSchema,
+  MathVerificationStatus,
+  MathErrorDetails
+} from '@/tools/shared/math-schemas';
 
 export interface CheckMathInput {
-  text: string;
+  statement: string;
   context?: string;
-  maxErrors?: number;
 }
 
 export interface CheckMathOutput {
-  errors: MathError[];
-  summary: {
-    totalErrors: number;
-    calculationErrors: number;
-    logicErrors: number;
-    unitErrors: number;
-    notationErrors: number;
-    conceptualErrors: number;
-  };
-  commonPatterns: Array<{
-    type: string;
-    count: number;
-  }>;
-  recommendations: string[];
+  statement: string;
+  status: MathVerificationStatus;
+  explanation: string;
+  reasoning: string;
+  errorDetails?: MathErrorDetails;
   llmInteraction: RichLLMInteraction;
 }
 
 // Input schema
 const inputSchema = z.object({
-  text: z.string().min(1).max(50000).describe('The text to check for mathematical errors'),
-  context: z.string().max(1000).optional().describe('Additional context about the text'),
-  maxErrors: z.number().min(1).max(100).optional().default(50).describe('Maximum number of errors to return')
+  statement: z.string().min(1).max(1000).describe('A single mathematical statement to analyze (e.g., "2 + 2 = 4" or "The square root of 16 is 4")'),
+  context: z.string().max(500).optional().describe('Additional context about the statement')
 }) satisfies z.ZodType<CheckMathInput>;
 
 // Output schema
 const outputSchema = z.object({
-  errors: z.array(z.object({
-    lineStart: z.number().describe('Starting line number where the error occurs'),
-    lineEnd: z.number().describe('Ending line number where the error occurs'),
-    highlightedText: z.string().describe('The mathematical expression or statement containing the error'),
-    description: z.string().describe('Clear explanation of the mathematical error and the correct solution'),
+  statement: z.string().describe('The original statement that was analyzed'),
+  status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('Analysis result'),
+  explanation: z.string().describe('Clear explanation of why the statement is true, false, or cannot be verified'),
+  reasoning: z.string().describe('Detailed reasoning behind the analysis'),
+  errorDetails: z.object({
     errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).describe('Type of mathematical error'),
-    severity: z.enum(['critical', 'major', 'minor']).describe('Severity of the error')
-  })).describe('List of mathematical errors found'),
-  summary: z.object({
-    totalErrors: z.number().describe('Total number of errors found'),
-    calculationErrors: z.number().describe('Number of calculation errors'),
-    logicErrors: z.number().describe('Number of logic errors'),
-    unitErrors: z.number().describe('Number of unit errors'),
-    notationErrors: z.number().describe('Number of notation errors'),
-    conceptualErrors: z.number().describe('Number of conceptual errors')
-  }).describe('Summary statistics of errors found'),
-  commonPatterns: z.array(z.object({
-    type: z.string().describe('Type of error pattern'),
-    count: z.number().describe('Number of occurrences')
-  })).describe('Common error patterns identified'),
-  recommendations: z.array(z.string()).describe('Recommendations for improving the mathematical accuracy'),
+    severity: z.enum(['critical', 'major', 'minor']).describe('Severity of the error'),
+    conciseCorrection: z.string().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x")'),
+    expectedValue: z.string().optional().describe('The expected/correct value'),
+    actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
+  }).optional().describe('Details about the error (only present when status is verified_false)'),
   llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
 }) satisfies z.ZodType<CheckMathOutput>;
 
@@ -89,62 +67,35 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
   outputSchema = outputSchema;
   
   async execute(input: CheckMathInput, context: ToolContext): Promise<CheckMathOutput> {
-    context.logger.info(`[CheckMathTool] Checking text for math errors (${input.text.length} chars)`);
+    context.logger.info(`[CheckMathTool] Analyzing mathematical statement: "${input.statement}"`);
     
     try {
-      const result = await this.checkMathAccuracy(input);
-      
-      // Limit errors to maxErrors
-      const limitedErrors = result.errors.slice(0, input.maxErrors || 50);
-      
-      // Generate summary statistics
-      const summary = {
-        totalErrors: limitedErrors.length,
-        calculationErrors: limitedErrors.filter(e => e.errorType === 'calculation').length,
-        logicErrors: limitedErrors.filter(e => e.errorType === 'logic').length,
-        unitErrors: limitedErrors.filter(e => e.errorType === 'unit').length,
-        notationErrors: limitedErrors.filter(e => e.errorType === 'notation').length,
-        conceptualErrors: limitedErrors.filter(e => e.errorType === 'conceptual').length
-      };
-      
-      // Identify common patterns
-      const patternCounts = new Map<string, number>();
-      limitedErrors.forEach(error => {
-        const count = patternCounts.get(error.errorType) || 0;
-        patternCounts.set(error.errorType, count + 1);
-      });
-      
-      const commonPatterns = Array.from(patternCounts.entries())
-        .map(([type, count]) => ({ type, count }))
-        .sort((a, b) => b.count - a.count);
-      
-      // Generate recommendations
-      const recommendations = this.generateRecommendations(limitedErrors, summary);
-      
-      return {
-        errors: limitedErrors,
-        summary,
-        commonPatterns,
-        recommendations,
-        llmInteraction: result.llmInteraction
-      };
+      const result = await this.analyzeMathStatement(input, context);
+      return result;
     } catch (error) {
-      context.logger.error('[CheckMathTool] Error checking mathematical accuracy:', error);
-      throw error;
+      context.logger.error('[CheckMathTool] Error analyzing statement:', error);
+      return {
+        statement: input.statement,
+        status: 'cannot_verify',
+        explanation: 'Failed to analyze the mathematical statement due to a technical error.',
+        reasoning: `Technical error occurred during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        llmInteraction: {
+          model: 'error',
+          prompt: '',
+          response: '',
+          tokensUsed: { prompt: 0, completion: 0, total: 0 },
+          timestamp: new Date(),
+          duration: 0
+        }
+      };
     }
   }
-  
-  private async checkMathAccuracy(input: CheckMathInput): Promise<{
-    errors: MathError[];
-    llmInteraction: RichLLMInteraction;
-  }> {
-    const systemPrompt = this.buildSystemPrompt();
-    const userPrompt = this.buildUserPrompt(input);
 
+  private async analyzeMathStatement(input: CheckMathInput, context: ToolContext): Promise<CheckMathOutput> {
     // Get session context if available
     const currentSession = sessionContext.getSession();
     const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/check-math-accuracy') : 
+      sessionContext.withPath('/plugins/math/check-math-statement') : 
       undefined;
     const heliconeHeaders = sessionConfig ? 
       createHeliconeHeaders(sessionConfig) : 
@@ -152,232 +103,57 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
 
     // Generate cache seed for consistent responses
     const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
-    const cacheSeed = generateCacheSeed('math-check', [
-      input.text,
-      input.context || '',
-      input.maxErrors || 50
+    const cacheSeed = generateCacheSeed('math-statement-check', [
+      input.statement,
+      input.context || ''
     ]);
 
-    const result = await callClaudeWithTool<{ errors: any[] }>({
+    // Use Claude with tool output for structured response
+    const systemPrompt = `You are a mathematical analyzer. Analyze mathematical statements and determine if they are true, false, or cannot be verified.`;
+    
+    const result = await callClaudeWithTool<{
+      status: MathVerificationStatus;
+      explanation: string;
+      reasoning: string;
+      errorDetails?: MathErrorDetails;
+    }>({
       system: systemPrompt,
       messages: [{
         role: "user",
-        content: userPrompt
+        content: `Analyze this mathematical statement for accuracy: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`
       }],
-      max_tokens: 4000,
-      temperature: 0,
-      toolName: "report_math_errors",
-      toolDescription: "Report mathematical errors found in the text",
-      toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50),
+      model: MODEL_CONFIG.analysis,
+      max_tokens: 2000,
+      temperature: 0.1,
+      toolName: 'analyze_math_statement',
+      toolDescription: 'Report the analysis of a mathematical statement',
+      toolSchema: {
+        type: "object" as const,
+        properties: {
+          status: mathStatusSchema,
+          explanation: mathExplanationSchema,
+          reasoning: mathReasoningSchema,
+          errorDetails: mathErrorDetailsSchema
+        },
+        required: ["status", "explanation", "reasoning"]
+      },
       enablePromptCaching: true,
       heliconeHeaders,
       cacheSeed
     });
 
-    const errors = this.parseErrors(result.toolResult?.errors);
+    const toolResult = result.toolResult;
 
-    return { errors, llmInteraction: result.interaction };
-  }
-  
-  private buildSystemPrompt(): string {
-    return `You are a mathematical reviewer specializing in detecting mathematical errors in text. Your task is to identify calculation errors, logical fallacies, unit mismatches, incorrect mathematical notation, and conceptual misunderstandings.
-
-CRITICAL: You MUST use the report_math_errors tool to provide your analysis. Do NOT provide explanatory text responses.
-
-ANALYSIS INSTRUCTIONS:
-For each mathematical error found:
-1. Use the EXACT line number(s) from the text
-2. For highlightedText, include ONLY the problematic mathematical expression or statement
-3. Provide a clear explanation of the error and the correct calculation/reasoning
-
-Types of errors to look for:
-- Arithmetic errors (e.g., "2 + 2 = 5")
-- Unit conversion errors (e.g., "1 km = 100 meters")
-- Percentage calculations (e.g., "50% of 100 is 60")
-- Statistical misinterpretations
-- Logical fallacies in mathematical reasoning
-- Incorrect formulas or equations
-- Misuse of mathematical notation
-- Order of operations errors
-- Rounding or approximation errors that significantly affect conclusions
-
-Important guidelines:
-- Focus on objective mathematical errors, not stylistic choices
-- Consider the context - approximations may be intentional
-- Flag errors that would lead to incorrect conclusions
-- Be precise about what the error is and how to fix it
-- For calculations, show the correct work when relevant
-- Consider significant figures and precision appropriately
-
-REMINDER: Use the report_math_errors tool to report your findings.`;
-  }
-  
-  private buildUserPrompt(input: CheckMathInput): string {
-    // Add line numbers to content
-    const lines = input.text.split('\n');
-    const numberedContent = lines.map((line, index) => 
-      `${index + 1}: ${line}`
-    ).join('\n');
-
-    return `<task>
-  <instruction>Consider this text. Is the math correct? Think through the details and analyze for any mathematical errors</instruction>
-  
-  <content>
-${numberedContent}
-  </content>
-  
-  ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ''}
-  <parameters>
-    <max_errors>${input.maxErrors || 50}</max_errors>
-  </parameters>
-  
-  <requirements>
-    Report any mathematical errors found with detailed explanations and corrections.
-  </requirements>
-</task>`;
-  }
-  
-  private getMathErrorReportingToolSchema(maxErrors: number) {
     return {
-      type: "object" as const,
-      properties: {
-        errors: {
-          type: "array",
-          description: `List of mathematical errors found (limit to ${maxErrors} most important)`,
-          items: {
-            type: "object",
-            properties: {
-              lineStart: {
-                type: "number",
-                description: "Starting line number where the error occurs",
-              },
-              lineEnd: {
-                type: "number",
-                description: "Ending line number where the error occurs",
-              },
-              highlightedText: {
-                type: "string",
-                description: "The mathematical expression or statement containing the error",
-              },
-              description: {
-                type: "string",
-                description: "Clear explanation of the mathematical error and the correct solution",
-              },
-            },
-            required: ["lineStart", "lineEnd", "highlightedText", "description"],
-          },
-        },
-      },
-      required: ["errors"],
+      statement: input.statement,
+      status: toolResult.status,
+      explanation: toolResult.explanation,
+      reasoning: toolResult.reasoning,
+      errorDetails: toolResult.errorDetails,
+      llmInteraction: result.interaction
     };
   }
-  
-  private parseErrors(errors: any[]): MathError[] {
-    if (!errors || !Array.isArray(errors)) {
-      return [];
-    }
-    
-    return errors.map(error => {
-      const errorType = this.categorizeError(error.description);
-      const severity = this.determineSeverity(errorType, error.description);
 
-      return {
-        lineStart: error.lineStart,
-        lineEnd: error.lineEnd,
-        highlightedText: error.highlightedText,
-        description: error.description,
-        errorType,
-        severity
-      };
-    });
-  }
-  
-  private categorizeError(description: string): MathError['errorType'] {
-    const { type, confidence } = categorizeErrorAdvanced(description);
-    
-    // Log low confidence categorizations for monitoring
-    if (confidence < 0.5) {
-      console.warn(`[CheckMathTool] Low confidence (${confidence}) categorization: ${type} for description: ${description.substring(0, 100)}...`);
-    }
-    
-    return type;
-  }
-  
-  private determineSeverity(errorType: MathError['errorType'], description: string): MathError['severity'] {
-    const { severity, confidence } = determineSeverityAdvanced(errorType, description);
-    
-    // Log low confidence severity determinations for monitoring
-    if (confidence < 0.5) {
-      console.warn(`[CheckMathTool] Low confidence (${confidence}) severity: ${severity} for type: ${errorType}`);
-    }
-    
-    return severity;
-  }
-  
-  private generateRecommendations(errors: MathError[], summary: CheckMathOutput['summary']): string[] {
-    const recommendations: string[] = [];
-    
-    if (summary.totalErrors === 0) {
-      recommendations.push('No mathematical errors found in the text.');
-      return recommendations;
-    }
-    
-    if (summary.totalErrors > 10) {
-      recommendations.push('Consider having a mathematician or subject matter expert review the content');
-    } else if (summary.totalErrors > 5) {
-      recommendations.push('Use calculation verification tools and double-check mathematical work');
-    }
-    
-    if (summary.calculationErrors > 3) {
-      recommendations.push('Use a calculator or computer algebra system to verify arithmetic operations');
-    }
-    
-    if (summary.unitErrors > 2) {
-      recommendations.push('Pay careful attention to unit conversions and dimensional analysis');
-    }
-    
-    if (summary.logicErrors > 2) {
-      recommendations.push('Review logical reasoning and mathematical proof techniques');
-    }
-    
-    if (summary.notationErrors > 3) {
-      recommendations.push('Follow standard mathematical notation conventions');
-    }
-    
-    // Check for critical errors
-    const criticalErrors = errors.filter(e => e.severity === 'critical');
-    if (criticalErrors.length > 0) {
-      recommendations.unshift(`Critical errors found that may invalidate conclusions - immediate review required`);
-    }
-    
-    // Find most common error type
-    const errorTypeCounts = [
-      { type: 'calculation', count: summary.calculationErrors },
-      { type: 'logic', count: summary.logicErrors },
-      { type: 'unit', count: summary.unitErrors },
-      { type: 'notation', count: summary.notationErrors },
-      { type: 'conceptual', count: summary.conceptualErrors }
-    ].sort((a, b) => b.count - a.count);
-    
-    if (errorTypeCounts[0].count > 3) {
-      recommendations.push(`Focus on improving ${errorTypeCounts[0].type} accuracy (most common error type)`);
-    }
-    
-    return recommendations;
-  }
-  
-  override async beforeExecute(input: CheckMathInput, context: ToolContext): Promise<void> {
-    context.logger.info(`[CheckMathTool] Starting mathematical accuracy check for ${input.text.length} characters`);
-  }
-  
-  override async afterExecute(output: CheckMathOutput, context: ToolContext): Promise<void> {
-    context.logger.info(`[CheckMathTool] Found ${output.summary.totalErrors} mathematical errors`);
-    if (output.summary.totalErrors > 0) {
-      const criticalCount = output.errors.filter(e => e.severity === 'critical').length;
-      const majorCount = output.errors.filter(e => e.severity === 'major').length;
-      context.logger.info(`[CheckMathTool] Severity breakdown: ${criticalCount} critical, ${majorCount} major, ${output.summary.totalErrors - criticalCount - majorCount} minor`);
-    }
-  }
 }
 
 // Export singleton instance

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { callClaudeWithTool } from "@/lib/claude/wrapper";
 import { sessionContext } from "@/lib/helicone/sessionContext";
 import { createHeliconeHeaders } from "@/lib/helicone/sessions";
+import { perplexityResearchTool } from "../perplexity-research";
 
 import {
   Tool,
@@ -50,6 +51,10 @@ const outputSchema = z.object({
     .string()
     .optional()
     .describe("Additional research notes if evidence was searched"),
+  perplexityData: z
+    .any()
+    .optional()
+    .describe("Full Perplexity research results for debug"),
   llmInteraction: z.any().describe("LLM interaction for monitoring"),
 }) satisfies z.ZodType<FactCheckerOutput>;
 
@@ -65,6 +70,7 @@ export interface FactCheckerInput {
 export interface FactCheckerOutput {
   result: FactCheckResult;
   researchNotes?: string;
+  perplexityData?: any; // Full Perplexity research results for debug
   llmInteraction?: any;
 }
 
@@ -88,6 +94,28 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
     context: ToolContext
   ): Promise<FactCheckerOutput> {
     context.logger.info(`[FactChecker] Verifying claim: "${input.claim}"`);
+
+    // Search for evidence if requested
+    let researchResults = null;
+    let researchNotes = undefined;
+    
+    if (input.searchForEvidence) {
+      context.logger.info(`[FactChecker] Searching for evidence using Perplexity`);
+      try {
+        researchResults = await perplexityResearchTool.execute({
+          query: input.claim,
+          focusArea: 'general',
+          maxSources: 8, // Increased to get more sources
+          includeForecastingContext: false
+        }, context);
+        
+        researchNotes = `Research Summary: ${researchResults.summary}\n\nKey Findings:\n${researchResults.keyFindings.join('\n- ')}`;
+        context.logger.info(`[FactChecker] Found ${researchResults.sources.length} sources`);
+      } catch (error) {
+        context.logger.warn(`[FactChecker] Perplexity research failed:`, { error: error instanceof Error ? error.message : String(error) });
+        // Continue without research results
+      }
+    }
 
     // Get session context if available
     const currentSession = sessionContext.getSession();
@@ -162,10 +190,10 @@ For each claim, you should:
 5. Sources - CRITICAL RULES:
    - ONLY include sources if you are ABSOLUTELY CERTAIN of the exact URL
    - DO NOT guess or construct URLs (e.g., don't make up Wikipedia links)
-   - If you know a fact but not the exact source URL, explain in text without links
-   - Better to have no sources than incorrect sources
-   - You may mention source names (e.g., "according to Wikipedia") without URLs
-   - Only include in sources array if you have the complete, correct URL
+   - DO NOT claim sources you don't actually have (e.g., don't say "according to Wikipedia" unless you specifically remember this from Wikipedia)
+   - If you know a fact from your training, just state it as fact without false attribution
+   - The sources array will usually be empty - this is expected and fine
+   - Only include in sources array if you have the complete, correct URL that you're certain of
 
 Verdict definitions:
 - **true**: The claim is accurate and supported by reliable evidence
@@ -180,14 +208,15 @@ Confidence levels:
 - **low**: Limited evidence available or conflicting information
 
 FORMAT YOUR EXPLANATION WITH RICH MARKDOWN:
-Example: "The iPhone was actually released in **2007**, not 2006. According to Apple's official announcements and widely documented sources, Steve Jobs announced it at MacWorld on January 9, 2007. The device went on sale on June 29, 2007."
+Example: "The iPhone was actually released in **2007**, not 2006. Steve Jobs announced it at MacWorld on January 9, 2007, and the device went on sale on June 29, 2007."
 
 CRITICAL SOURCE RULES:
 1. **DO NOT HALLUCINATE URLS** - Never make up or guess URLs
-2. **Text citations are fine** - You can say "according to Wikipedia" or "per CDC data" without URLs
-3. **Only include URLs you're certain of** - If unsure, describe the source in text only
-4. **Empty sources array is OK** - Better than incorrect URLs
-5. **Focus on explanation quality** - A good explanation without links is better than one with fake links
+2. **DO NOT CLAIM FALSE SOURCES** - Don't say "according to Wikipedia" unless you actually know this from Wikipedia
+3. **Only cite what you actually know** - If you know a fact from your training, just state it without false attribution
+4. **Use research evidence when provided** - If research evidence is included above, you may cite those specific sources with their URLs
+5. **Empty sources array is normal when no research** - Most facts won't have specific URLs unless research was conducted
+6. **Be honest about uncertainty** - Say "I believe" or "typically" rather than inventing sources
 
 Be especially careful with:
 - Numbers and statistics (check if they're current)
@@ -203,8 +232,9 @@ ${input.claim}
   </claim>
   
   ${input.context ? `<context>\n${input.context}\n  </context>\n  ` : ""}
+  ${researchResults ? `<research_evidence>\n${researchResults.summary}\n\nKey Findings:\n${researchResults.keyFindings.join('\n- ')}\n\nVerified Sources (use these exact URLs):\n${researchResults.sources.map(s => `- Title: ${s.title}\n  URL: ${s.url}\n  Snippet: ${s.snippet}`).join('\n\n')}\n  </research_evidence>\n  ` : ""}
   <requirements>
-    Verify the accuracy of this factual claim and provide a verdict with confidence level and evidence.
+    Verify the accuracy of this factual claim and provide a verdict with confidence level and evidence.${researchResults ? ' IMPORTANT: Use the research evidence above to support your analysis. You MUST include the verified source URLs from the research in your sources array - these are real, verified URLs that you can trust.' : ''}
   </requirements>
 </task>`;
 
@@ -280,6 +310,8 @@ ${input.claim}
 
     return {
       result: result.toolResult,
+      researchNotes,
+      perplexityData: researchResults, // Include full Perplexity data for debug
       llmInteraction: result.interaction,
     };
   }

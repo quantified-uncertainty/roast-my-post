@@ -41,18 +41,20 @@ export function generateFactCheckComments(
 }
 
 function getCommentTitle(fact: VerifiedFact): string {
+  const wasResearched = fact.factCheckerOutput?.perplexityData ? ' 🔍' : '';
+  
   if (fact.verification) {
     switch (fact.verification.verdict) {
       case 'true':
-        return `✓ Verified`;
+        return `✓ Verified${wasResearched}`;
       case 'false':
-        return `✗ False Claim`;
+        return `✗ False Claim${wasResearched}`;
       case 'partially-true':
-        return `⚠️ Partially True`;
+        return `⚠️ Partially True${wasResearched}`;
       case 'unverifiable':
-        return `? Unverifiable`;
+        return `? Unverifiable${wasResearched}`;
       case 'outdated':
-        return `⏰ Outdated`;
+        return `⏰ Outdated${wasResearched}`;
     }
   }
   
@@ -206,6 +208,11 @@ function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation)
   // Build content sections
   let content = styledHeader;
   
+  // Add research indicator if Perplexity was used
+  if (fact.factCheckerOutput?.perplexityData) {
+    content += `\n\n**🔍 Research conducted**: This claim was verified using external sources.`;
+  }
+  
   // Add explanation if available
   if (fact.verification?.explanation) {
     content += `  \n${fact.verification.explanation}`;
@@ -234,6 +241,14 @@ function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation)
     fact.verification.sources.forEach(source => {
       content += `- [${source.title}](${source.url})\n`;
     });
+  }
+  
+  // Add Perplexity debug information if available
+  if (fact.factCheckerOutput?.perplexityData) {
+    content += '\n\n<details>\n<summary>Debug: Research Data</summary>\n\n';
+    content += '```json\n';
+    content += JSON.stringify(fact.factCheckerOutput.perplexityData, null, 2);
+    content += '\n```\n\n</details>';
   }
   
   return content;
