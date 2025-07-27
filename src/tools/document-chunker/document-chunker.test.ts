@@ -404,7 +404,7 @@ Different content.`,
       
       // The heading context should be an array with parent headings
       expect(Array.isArray(deepChunk?.metadata.headingContext)).toBe(true);
-      expect(deepChunk?.metadata.headingContext.length).toBeGreaterThan(0);
+      expect(deepChunk?.metadata.headingContext?.length).toBeGreaterThan(0);
       
       // Find chunk with Subsection 1.2
       const sub12Chunk = result.chunks.find(chunk => chunk.text.includes('### Subsection 1.2'));

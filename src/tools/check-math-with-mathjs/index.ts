@@ -1,9 +1,9 @@
 import { evaluate, format, parse } from 'mathjs';
 import { Tool } from '../base/Tool';
 import { logger } from '@/lib/logger';
-import type { ToolContext } from '../base/types';
+import type { ToolContext } from '../base/Tool';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
-import type { RichLLMInteraction } from '@/lib/claude/types';
+import type { RichLLMInteraction } from '@/types/llm';
 import type { 
   MathVerificationStatus, 
   MathErrorDetails, 
@@ -91,8 +91,9 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
         leftExpression = leftSide;
       } catch (e) {
         // Try some common conversions
-        leftExpression = this.convertToMathJs(leftSide);
-        if (!leftExpression) return null;
+        const converted = this.convertToMathJs(leftSide);
+        if (!converted) return null;
+        leftExpression = converted;
         leftValue = evaluate(leftExpression);
       }
       
@@ -101,8 +102,9 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
         rightExpression = rightSide;
       } catch (e) {
         // Try some common conversions
-        rightExpression = this.convertToMathJs(rightSide);
-        if (!rightExpression) return null;
+        const converted = this.convertToMathJs(rightSide);
+        if (!converted) return null;
+        rightExpression = converted;
         rightValue = evaluate(rightExpression);
       }
       
@@ -285,11 +287,16 @@ Respond with a JSON object containing:
       let parsed: any;
       try {
         // Extract JSON from the response
-        const jsonMatch = result.response.content[0].text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsed = JSON.parse(jsonMatch[0]);
+        const firstContent = result.response.content[0];
+        if (firstContent.type === 'text') {
+          const jsonMatch = firstContent.text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsed = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error('No JSON found in response');
+          }
         } else {
-          throw new Error('No JSON found in response');
+          throw new Error('Expected text content in response');
         }
       } catch (e) {
         // If parsing fails, return cannot_verify
