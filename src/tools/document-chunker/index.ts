@@ -388,6 +388,12 @@ export class DocumentChunkerTool extends Tool<
     options: DocumentChunkerInput,
     documentText?: string
   ): Omit<DocumentChunk, 'id'>[] {
+    // If we have the document text, extract from it directly
+    if (documentText) {
+      return this.splitLargeSectionWithDocumentText(section, targetWords, context, options, documentText);
+    }
+    
+    // Fallback to the old method if no document text
     const chunks: Omit<DocumentChunk, 'id'>[] = [];
     const headerText = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
     const lines = section.content;
@@ -554,6 +560,118 @@ export class DocumentChunkerTool extends Tool<
       offset += section.content[i].length + 1; // +1 for newline
     }
     return offset;
+  }
+
+  private splitLargeSectionWithDocumentText(
+    section: MarkdownSection,
+    targetWords: number,
+    context: string[],
+    options: DocumentChunkerInput,
+    documentText: string
+  ): Omit<DocumentChunk, 'id'>[] {
+    const chunks: Omit<DocumentChunk, 'id'>[] = [];
+    const sectionText = documentText.substring(section.startOffset, section.endOffset);
+    const lines = sectionText.split('\n');
+    
+    let currentChunkStartOffset = section.startOffset;
+    let currentChunkStartLine = section.startLine;
+    let currentChunkLines: string[] = [];
+    let currentWordCount = 0;
+    let currentOffset = section.startOffset;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineLength = line.length + (i < lines.length - 1 ? 1 : 0); // +1 for newline except last line
+      const lineWords = this.countWords(line);
+      
+      // Handle code blocks
+      if (line.trim().startsWith('```')) {
+        let codeBlockEndIndex = i;
+        let codeBlockWordCount = lineWords;
+        let codeBlockLength = lineLength;
+        
+        // Find the end of the code block
+        for (let j = i + 1; j < lines.length; j++) {
+          const codeLine = lines[j];
+          const codeLineLength = codeLine.length + (j < lines.length - 1 ? 1 : 0);
+          codeBlockWordCount += this.countWords(codeLine);
+          codeBlockLength += codeLineLength;
+          
+          if (codeLine.trim().startsWith('```')) {
+            codeBlockEndIndex = j;
+            break;
+          }
+        }
+        
+        // If adding code block exceeds target and we have content, flush current chunk
+        if (currentWordCount + codeBlockWordCount > targetWords && currentChunkLines.length > 0) {
+          const chunkText = currentChunkLines.join('\n');
+          chunks.push(this.createChunkFromContent(
+            chunkText,
+            currentChunkStartOffset,
+            currentChunkStartLine,
+            context,
+            'mixed'
+          ));
+          
+          // Start new chunk
+          currentChunkStartOffset = currentOffset;
+          currentChunkStartLine = section.startLine + i;
+          currentChunkLines = [];
+          currentWordCount = 0;
+        }
+        
+        // Add the entire code block to current chunk
+        for (let j = i; j <= codeBlockEndIndex; j++) {
+          currentChunkLines.push(lines[j]);
+          if (j < lines.length - 1) {
+            currentOffset += lines[j].length + 1;
+          } else {
+            currentOffset += lines[j].length;
+          }
+        }
+        currentWordCount += codeBlockWordCount;
+        i = codeBlockEndIndex;
+        continue;
+      }
+      
+      // Regular line processing
+      if (currentWordCount + lineWords > targetWords && currentChunkLines.length > 0) {
+        // Flush current chunk
+        const chunkText = currentChunkLines.join('\n');
+        chunks.push(this.createChunkFromContent(
+          chunkText,
+          currentChunkStartOffset,
+          currentChunkStartLine,
+          context,
+          'mixed'
+        ));
+        
+        // Start new chunk at current line
+        currentChunkStartOffset = currentOffset;
+        currentChunkStartLine = section.startLine + i;
+        currentChunkLines = [];
+        currentWordCount = 0;
+      }
+      
+      currentChunkLines.push(line);
+      currentWordCount += lineWords;
+      currentOffset += lineLength;
+    }
+    
+    // Flush final chunk
+    if (currentChunkLines.length > 0) {
+      const chunkText = currentChunkLines.join('\n');
+      chunks.push(this.createChunkFromContent(
+        chunkText,
+        currentChunkStartOffset,
+        currentChunkStartLine,
+        context,
+        'mixed'
+      ));
+    }
+    
+    return chunks;
   }
 
   private semanticChunking(

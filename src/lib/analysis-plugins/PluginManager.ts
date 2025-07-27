@@ -442,8 +442,9 @@ export class PluginManager {
 
       logger.info(`Total highlights from plugins: ${highlights.length}`);
 
-      // Deduplicate highlights that might overlap
-      const uniqueHighlights = this.deduplicateHighlights(highlights);
+      // Skip deduplication for now (for debugging purposes)
+      // const uniqueHighlights = this.deduplicateHighlights(highlights);
+      const uniqueHighlights = highlights;
 
       logger.info(`Final highlights: ${uniqueHighlights.length}`);
 

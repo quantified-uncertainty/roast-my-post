@@ -26,9 +26,9 @@ export function calculateCommentPositions(
   const {
     minGap = 10,
     hoveredCommentId = null,
-    baseHeight = 50,
+    baseHeight = 40,
     charsPerLine = 50,
-    lineHeight = 20,
+    lineHeight = 18,
   } = options;
 
   const containerRect = container.getBoundingClientRect();
@@ -107,7 +107,7 @@ export function calculateCommentPositions(
       return baseHeight + 20; // baseHeight + agent name
     }
     
-    const displayLength = (!isExpanded && text.length > 200) ? 200 : text.length;
+    const displayLength = (!isExpanded && text.length > 120) ? 120 : text.length;
     const lines = Math.ceil(displayLength / charsPerLine);
     const extraHeight = isExpanded ? 30 : 0; // Extra height when expanded
     const agentNameHeight = 20; // Additional height for agent name
@@ -166,24 +166,72 @@ export function checkHighlightsReady(
 export function getCommentDisplayText(
   text: string,
   isHovered: boolean,
-  maxLength: number = 200
+  maxLength: number = 250
 ): { text: string; isTruncated: boolean } {
   if (!text) return { text: "", isTruncated: false };
   
-  const needsTruncation = text.length > maxLength;
-  
-  if (!needsTruncation || isHovered) {
+  // When hovered, show full text
+  if (isHovered) {
     return { text, isTruncated: false };
   }
   
-  // Use markdown-truncate to properly handle markdown syntax
-  const truncatedText = truncateMarkdown(text, {
-    limit: maxLength,
-    ellipsis: true
-  });
+  // First, handle line limits
+  const lines = text.split('\n');
+  const needsLineTruncation = lines.length > 2;
   
-  return { 
-    text: truncatedText,
-    isTruncated: true
-  };
+  // If we only need line truncation and the first 2 lines are short enough
+  if (needsLineTruncation && lines.slice(0, 2).join('\n').length <= maxLength) {
+    return {
+      text: lines.slice(0, 2).join('\n') + '...',
+      isTruncated: true
+    };
+  }
+  
+  // Use markdown-truncate for smart truncation that preserves markdown/HTML structure
+  // It's designed to handle markdown properly and not break tags
+  try {
+    const truncated = truncateMarkdown(text, {
+      limit: maxLength,
+      ellipsis: true
+    });
+    
+    // Check if we still need to enforce 2-line limit after smart truncation
+    const truncatedLines = truncated.split('\n');
+    if (truncatedLines.length > 2) {
+      // Try a shorter limit to fit within 2 lines
+      const shorterTruncated = truncateMarkdown(text, {
+        limit: Math.floor(maxLength * 0.6),
+        ellipsis: true
+      });
+      
+      const shorterLines = shorterTruncated.split('\n');
+      if (shorterLines.length <= 2) {
+        return {
+          text: shorterTruncated,
+          isTruncated: true
+        };
+      }
+      
+      // Last resort: just take first 2 lines of the truncated text
+      return {
+        text: truncatedLines.slice(0, 2).join('\n') + '...',
+        isTruncated: true
+      };
+    }
+    
+    return {
+      text: truncated,
+      isTruncated: text !== truncated
+    };
+  } catch (error) {
+    // Fallback if markdown-truncate fails
+    console.error('Markdown truncation failed:', error);
+    const fallbackText = lines.slice(0, 2).join('\n');
+    return {
+      text: fallbackText.length > maxLength 
+        ? fallbackText.substring(0, maxLength) + '...'
+        : fallbackText + (needsLineTruncation ? '...' : ''),
+      isTruncated: true
+    };
+  }
 }

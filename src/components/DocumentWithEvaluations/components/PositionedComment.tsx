@@ -74,7 +74,7 @@ export function PositionedComment({
       <div className="flex items-start">
         {/* Comment text */}
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
-          <div className="prose prose-sm max-w-none break-words">
+          <div className={`prose prose-sm max-w-none break-words ${!isHovered ? 'line-clamp-2' : ''}`}>
             <ReactMarkdown
               {...MARKDOWN_PLUGINS}
               components={MARKDOWN_COMPONENTS}

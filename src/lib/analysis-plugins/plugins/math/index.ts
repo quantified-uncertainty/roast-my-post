@@ -84,15 +84,15 @@ export class ExtractedMathExpression {
   }
 
   public async getComment(): Promise<Comment | null> {
-    // Only generate comments for expressions with errors or high importance
-    if (!this.expression.hasError && this.averageScore < 60) {
-      return null;
-    }
-
     const location = await this.findLocationInDocument();
     if (!location) return null;
 
     const message = generateMathComment(this.expression);
+    
+    // Don't create comment if message is empty
+    if (!message) {
+      return null;
+    }
 
     return {
       description: message,

@@ -78,6 +78,7 @@ export class VerifiedFact {
     const location = await this.findLocation(documentText);
     if (!location) return null;
 
+    // generateFactCheckComments now returns null if the description would be empty
     return generateFactCheckComments(this, location);
   }
 }
@@ -187,7 +188,12 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const commentPromises = this.facts.map(async (fact) => {
         // Run in next tick to ensure true parallelism
         await new Promise(resolve => setImmediate(resolve));
-        return fact.toComment(documentText);
+        const comment = await fact.toComment(documentText);
+        // Filter out comments with empty descriptions
+        if (comment && comment.description && comment.description.trim() !== '') {
+          return comment;
+        }
+        return null;
       });
       
       const commentResults = await Promise.all(commentPromises);

@@ -1,6 +1,7 @@
 import type { ExtractedForecast } from "@/tools/extract-forecasting-claims";
 
 import type { ForecasterOutput } from "@/tools/forecaster";
+import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 interface ForecastWithPrediction {
   forecast: ExtractedForecast;
@@ -11,254 +12,159 @@ interface ForecastWithPrediction {
 export function generateForecastComment(data: ForecastWithPrediction): string {
   const { forecast, prediction } = data;
 
-  // Determine comment type based on scores and prediction availability
-  const commentType = classifyForecast(forecast, prediction);
-
-  switch (commentType) {
-    case "high_quality_agreement":
-      return generateHighQualityAgreement(forecast, prediction!);
-    case "significant_disagreement":
-      return generateSignificantDisagreement(forecast, prediction!);
-    case "low_robustness":
-      return generateLowRobustness(forecast, prediction);
-    case "poorly_specified":
-      return generatePoorlySpecified(forecast, prediction);
-    case "well_specified_economic":
-      return generateWellSpecifiedEconomic(forecast, prediction!);
-    default:
-      return generateDefaultComment(forecast, prediction);
+  // If no prediction available, just note the forecast
+  if (!prediction) {
+    const style = SEVERITY_STYLES[CommentSeverity.INFO];
+    const headerText = forecast.authorProbability ? `${forecast.authorProbability}%` : 'Prediction identified';
+    return `🔮 [Forecast] <span style="color: ${style.color}">${headerText}</span>`;
   }
-}
 
-
-function classifyForecast(
-  forecast: ExtractedForecast,
-  prediction?: ForecasterOutput
-): string {
+  // Calculate confidence gap
   const hasAuthorProb = forecast.authorProbability !== undefined;
-  const hasPrediction = prediction !== undefined;
+  const gap = hasAuthorProb ? Math.abs(forecast.authorProbability! - prediction.probability) : 0;
 
-  if (forecast.precisionScore < 50) {
-    return "poorly_specified";
-  }
-
-  if (forecast.robustnessScore < 40) {
-    return "low_robustness";
-  }
-
-  if (hasPrediction && hasAuthorProb) {
-    const delta = Math.abs(
-      forecast.authorProbability! - prediction.probability
-    );
-
-    if (delta <= 10 && forecast.robustnessScore >= 70) {
-      return "high_quality_agreement";
-    }
-
-    if (delta > 25) {
-      return "significant_disagreement";
-    }
-
-    if (forecast.robustnessScore >= 70 && forecast.verifiabilityScore >= 90) {
-      return "well_specified_economic";
-    }
-  }
-
-  return "default";
-}
-
-function generateHighQualityAgreement(
-  forecast: ExtractedForecast,
-  prediction: ForecasterOutput
-): string {
-  const delta = Math.abs(forecast.authorProbability! - prediction.probability);
-
-  return `### ✅ High-quality forecast identified
-  **Robustness: ${forecast.robustnessScore}%** | **Strong alignment with our analysis**
+  // Determine severity based on gap and robustness
+  let severity: CommentSeverity;
+  let emoji = '🎯';
   
-  **Original text:**  
-  > "${forecast.originalText}"
-  
-  **Extracted forecast:**  
-  _${forecast.rewrittenPredictionText}_
-  
-  ---
-  
-  **Probability estimates:**
-  - **Author:** ${forecast.authorProbability}%
-  - **Our forecast:** ${prediction.probability}% _(Δ${delta}%)_
-  
-  **Quality scores:** Precision: \`${forecast.precisionScore}\` | Verifiable: \`${forecast.verifiabilityScore}\` | Important: \`${forecast.importanceScore}\`
-  
-  **Extraction notes:** ${forecast.thinking}
-  
-  _✓ No significant disagreement - estimates closely aligned_`;
-}
-
-function generateSignificantDisagreement(
-  forecast: ExtractedForecast,
-  prediction: ForecasterOutput
-): string {
-  const delta = Math.abs(forecast.authorProbability! - prediction.probability);
-  const overconfident = forecast.authorProbability! > prediction.probability;
-  const riskLevel = getRiskLevel(delta);
-
-  return `### ${riskLevel.icon} ${overconfident ? 'Extreme Overconfidence Detected' : 'Significant Underconfidence Detected'}
-
-**Reality check:** ~${prediction.probability}% | **Gap:** ${delta.toFixed(1)}%
-
-\`\`\`
-Author: ${generateConfidenceBar(forecast.authorProbability!, 100)} ${forecast.authorProbability}%
-Model:  ${generateConfidenceBar(prediction.probability, 100)} ${prediction.probability}%
-\`\`\`
-
-<details>
-<summary>🔍 Full Analysis</summary>
-
-**Original text:**
-
-> "${forecast.originalText}"
-
-**Extracted forecast:**  
-_${forecast.rewrittenPredictionText}_
-
-**Quality scores:** Precision: \`${forecast.precisionScore}\` | Verifiable: \`${forecast.verifiabilityScore}\` | Important: \`${forecast.importanceScore}\` | Robustness: \`${forecast.robustnessScore}\`
-
-**Our reasoning:**  
-${prediction.description}
-
-**Individual model forecasts:**
-
-${prediction.individualForecasts
-  .map(
-    (f: any, i: number) =>
-      `- **Model ${i + 1}:** ${f.probability}% - "${f.reasoning}"`
-  )
-  .join("\n")}
-
-**Consensus:** ${formatConsensus(prediction.consensus)}
-
-</details>`;
-}
-
-function generateLowRobustness(
-  forecast: ExtractedForecast,
-  prediction?: ForecasterOutput
-): string {
-  const adjective = getRobustnessAdjective(forecast.robustnessScore);
-
-  let probabilitySection = "";
-  if (forecast.authorProbability) {
-    probabilitySection = `**Author probability:** ${forecast.authorProbability}% _(${forecast.authorProbability > 60 ? "implied" : "stated"})_  \n`;
-  }
-
-  if (prediction) {
-    probabilitySection += `**Our forecast:** ${prediction.probability}%  \n`;
+  if (gap >= 40) {
+    severity = CommentSeverity.HIGH;
+    emoji = '⚠️';
+  } else if (gap >= 25) {
+    severity = CommentSeverity.MEDIUM;
+  } else if (forecast.robustnessScore < 40) {
+    severity = CommentSeverity.MEDIUM;
+    emoji = '💡';
   } else {
-    probabilitySection += `**Our forecast:** _Not generated - insufficient empirical grounding_  \n`;
+    severity = CommentSeverity.LOW;
   }
 
-  return `### ⚠️ Weak empirical basis
-  **Robustness: ${forecast.robustnessScore}%** | **Interpret with caution**
+  // Build compact header
+  let headerContent = '';
   
-  **Original text:**  
-  > "${forecast.originalText}"
+  if (hasAuthorProb) {
+    const diff = formatDiff(`${forecast.authorProbability}%`, `${prediction.probability}%`);
+    headerContent = diff;
+    
+    // Add context for large gaps
+    if (gap >= 40) {
+      headerContent += ' (extreme overconfidence)';
+    } else if (gap >= 25) {
+      headerContent += ' (overconfident)';
+    }
+  } else {
+    headerContent = `Our estimate: ${prediction.probability}%`;
+  }
   
-  **Extracted forecast:**  
-  _${forecast.rewrittenPredictionText}_
-  
-  ---
-  
-  ${probabilitySection}
-  **Quality scores:** Precision: \`${forecast.precisionScore}\` | Verifiable: \`${forecast.verifiabilityScore}\` | Important: \`${forecast.importanceScore}\`
-  
-  **Extraction reasoning:**  
-  ${forecast.thinking}
-  
-  **Robustness concerns:**  
-  Claim appears ${adjective}. ${getRobustnessExplanation(forecast.robustnessScore)}`;
-}
-
-function generatePoorlySpecified(
-  forecast: ExtractedForecast,
-  prediction?: ForecasterOutput
-): string {
-  const issues = identifySpecificationIssues(forecast);
-
-  return `### ❌ Poorly specified forecast
-  **Precision: ${forecast.precisionScore}/100** - Significant interpretation required
-  
-  **Original text:**  
-  > "${forecast.originalText}"
-  
-  **Attempted extraction:**  
-  _${forecast.rewrittenPredictionText}_
-  
-  ---
-  
-  **Critical issues identified:**
-  ${issues.map((issue, i) => `${i + 1}. 🚫 **${issue}**`).join("\n")}
-  
-  **Interpretation penalty:** -${100 - forecast.precisionScore} precision points
-  
-  _${prediction ? "Forecast generated with low confidence" : "Cannot generate reliable forecast - too many degrees of freedom in interpretation"}_`;
-}
-
-function generateWellSpecifiedEconomic(
-  forecast: ExtractedForecast,
-  prediction: ForecasterOutput
-): string {
-  const stats = prediction.statistics;
-
-  return `### 🎯 Robust economic forecast
-  **High confidence** - Well-calibrated prediction
-  
-  **Original text:**  
-  > "${forecast.originalText}"
-  
-  **Extracted forecast:**  
-  _${forecast.rewrittenPredictionText}_
-  
-  ---
-  
-  **Probability alignment:**
-  | Source | Probability | Confidence |
-  |--------|------------|------------|
-  | **Author** | ${forecast.authorProbability}% | Explicit |
-  | **Our model** | ${prediction.probability}% | ${formatConsensus(prediction.consensus)} |
-  | **Forecast range** | ${Math.round(stats.mean - stats.stdDev)}%-${Math.round(stats.mean + stats.stdDev)}% | ±1 std dev |
-  
-  **Quality metrics:** \`P${forecast.precisionScore}\` \`V${forecast.verifiabilityScore}\` \`I${forecast.importanceScore}\` \`R${forecast.robustnessScore}\` _(all strong)_
-  
-  **Our reasoning:**
-  ${prediction.description}
-  
-  **Individual forecasts (n=${prediction.individualForecasts.length}):**
-  ${prediction.individualForecasts
-    .map(
-      (f: any, i: number) =>
-        `- **Model ${i + 1}**: ${f.probability}% - ${f.reasoning}`
-    )
-    .join("\n")}`;
-}
-
-function generateDefaultComment(
-  forecast: ExtractedForecast,
-  prediction?: ForecasterOutput
-): string {
-  let message = `### 📝 Forecast identified\n**Quality:** ${forecast.precisionScore}/100 precision, ${forecast.verifiabilityScore}/100 verifiable\n\n`;
-  message += `**Original text:**\n> "${forecast.originalText}"\n\n`;
-  message += `**Extracted forecast:**\n_${forecast.rewrittenPredictionText}_\n\n`;
-
-  if (forecast.authorProbability !== undefined) {
-    message += `**Author probability:** ${forecast.authorProbability}%\n`;
+  // Add robustness warning if needed
+  if (forecast.robustnessScore < 40) {
+    headerContent += ' (weak empirical basis)';
   }
 
+  const style = SEVERITY_STYLES[severity];
+  const styledHeader = `${emoji} [Forecast] <span style="color: ${style.color}">${headerContent}</span>`;
+  
+  // Build content sections
+  let content = styledHeader;
+  
+  // Add the forecast question/claim if available
+  if (forecast.rewrittenPredictionText) {
+    content += `\n\n**Forecast:** ${forecast.rewrittenPredictionText}`;
+  }
+  
+  // Add explanation based on the type of issue
+  let explanation = '';
+  
+  if (hasAuthorProb && gap >= 25) {
+    // Overconfidence explanation
+    explanation = `Our models suggest a more realistic probability of **${prediction.probability}%**. `;
+    if (gap >= 40) {
+      explanation += '_This level of certainty is extremely rare for future predictions._';
+    }
+    if (prediction.description) {
+      explanation += `\n\n${prediction.description}`;
+    } else {
+      explanation += '\n\nHistorical base rates and implementation challenges suggest lower confidence.';
+    }
+  } else if (forecast.robustnessScore < 40) {
+    // Weak empirical basis explanation
+    explanation = '⚠️ **This prediction lacks strong empirical grounding.** ';
+    if (forecast.robustnessScore < 20) {
+      explanation += '_The claim appears extremely speculative with little supporting evidence._';
+    } else {
+      explanation += '_Limited historical precedent makes this forecast highly uncertain._';
+    }
+    if (prediction.description) {
+      explanation += `\n\n${prediction.description}`;
+    }
+  } else if (prediction.description) {
+    // General prediction reasoning
+    explanation = prediction.description;
+  }
+  
+  if (explanation) {
+    content += `  \n${explanation}`;
+  }
+  
+  // Add score table
+  content += '\n\n';
+  content += '| Metric | Score |\n';
+  content += '|--------|-------|\n';
+  content += `| Precision | ${forecast.precisionScore}/100 |\n`;
+  content += `| Verifiability | ${forecast.verifiabilityScore}/100 |\n`;
+  content += `| Importance | ${forecast.importanceScore}/100 |\n`;
+  content += `| Robustness | ${forecast.robustnessScore}/100 |\n`;
+  
+  // Add author probability if available
+  if (hasAuthorProb) {
+    content += `| Author\'s Estimate | ${forecast.authorProbability}% |\n`;
+  }
+  
+  // Add our prediction if available
   if (prediction) {
-    message += `**Our forecast:** ${prediction.probability}%\n`;
+    content += `| Our Estimate | ${prediction.probability}% |\n`;
   }
-
-  return message;
+  
+  // Add resolution date if available
+  if (forecast.resolutionDate) {
+    content += `| Resolution Date | ${forecast.resolutionDate} |\n`;
+  }
+  
+  // Add individual forecasts section if available
+  if (prediction && prediction.individualForecasts && prediction.individualForecasts.length > 0) {
+    content += '\n\n### Individual Forecasts\n\n';
+    
+    prediction.individualForecasts.forEach((forecast, index) => {
+      content += `**Forecast ${index + 1}: \`${forecast.probability}%\`**  \n`;
+      content += `${forecast.reasoning}\n\n`;
+    });
+    
+    // Add statistics if available
+    if (prediction.statistics) {
+      content += `📊 **Statistics:** Mean \`${prediction.statistics.mean.toFixed(1)}%\`, Std Dev \`${prediction.statistics.stdDev.toFixed(1)}%\`\n`;
+    }
+    
+    // Add consensus if available
+    if (prediction.consensus) {
+      const consensusEmoji = prediction.consensus === 'high' ? '🟢' : 
+                            prediction.consensus === 'medium' ? '🟡' : '🔴';
+      content += `${consensusEmoji} **Consensus:** _${prediction.consensus}_\n`;
+    }
+  }
+  
+  // Add Perplexity sources if available
+  if (prediction && prediction.perplexityResults && prediction.perplexityResults.length > 0) {
+    content += '\n\n### Sources\n\n';
+    content += '| Source | Link |\n';
+    content += '|--------|------|\n';
+    prediction.perplexityResults.forEach(result => {
+      // Escape any pipe characters in the title to avoid breaking the table
+      const escapedTitle = result.title.replace(/\|/g, '\\|');
+      content += `| ${escapedTitle} | [View](${result.url}) |\n`;
+    });
+  }
+  
+  return content;
 }
 
 // Helper functions

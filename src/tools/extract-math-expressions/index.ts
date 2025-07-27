@@ -12,6 +12,7 @@ export interface ExtractedMathExpression {
   errorType?: string;
   errorExplanation?: string;
   correctedVersion?: string;
+  conciseCorrection?: string; // e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15"
   complexityScore: number; // 0-100
   contextImportanceScore: number; // 0-100
   errorSeverityScore: number; // 0-100
@@ -45,6 +46,7 @@ const outputSchema = z.object({
     errorType: z.string().optional().describe('Type of error if present (e.g., "Calculation Error", "Unit Mismatch", "Logic Error")'),
     errorExplanation: z.string().optional().describe('Explanation of the error'),
     correctedVersion: z.string().optional().describe('Corrected version of the expression'),
+    conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15")'),
     complexityScore: z.number().min(0).max(100).describe('How complex the mathematical expression is (0-100)'),
     contextImportanceScore: z.number().min(0).max(100).describe('How important this expression is to the document context (0-100)'),
     errorSeverityScore: z.number().min(0).max(100).describe('How severe the error is if present (0-100)'),
@@ -169,6 +171,18 @@ For each expression:
    - 60-80: Significant errors affecting understanding
    - 80-100: Critical errors that invalidate conclusions
 
+6. For errors, provide a conciseCorrection that shows ONLY the key change needed:
+   - Simple arithmetic: "67 → 68" (not "45 + 23 = 67 → 45 + 23 = 68")
+   - Coefficients: "4ma → ma" (not "F = 4ma → F = ma")
+   - Missing operations: "×0.15 → ×1.15" (not the entire calculation)
+   - Percentages: "40 → 30" (just the result)
+   - Order of magnitude: "50,000 → 5,000,000"
+   - Units: "30 km → 30 km/h"
+   - Signs: "50 → -50"
+   - Variables: "4x → 5x"
+   
+   The conciseCorrection should be under 15 characters when possible and highlight ONLY the specific number, operation, or term that's wrong.
+
 Provide simplified explanations for complex expressions when helpful.`;
   }
   
@@ -225,6 +239,10 @@ ${input.text}
               correctedVersion: {
                 type: "string",
                 description: "Corrected version of the expression",
+              },
+              conciseCorrection: {
+                type: "string",
+                description: "Concise summary of the correction showing only the key change (e.g., '45 → 234', '4x → 5x', '×0.15 → ×1.15')",
               },
               complexityScore: {
                 type: "number",

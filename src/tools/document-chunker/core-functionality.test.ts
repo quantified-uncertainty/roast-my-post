@@ -249,6 +249,155 @@ Different content.`,
     });
   });
 
+  describe('Complete Content Coverage', () => {
+    it('should ensure every single character appears in exactly one chunk', async () => {
+      const testCases = [
+        {
+          name: 'simple document',
+          text: 'Hello world',
+        },
+        {
+          name: 'document with heading',
+          text: '# Title\n\nContent here',
+        },
+        {
+          name: 'complex document',
+          text: `# Main Title
+
+Some intro text.
+
+## Section 1
+
+Content for section 1.
+
+### Subsection 1.1
+
+Nested content.
+
+## Section 2
+
+Different content.
+
+### Subsection 2.1
+
+More nested content.
+
+### Subsection 2.2
+
+Even more content.
+
+## Conclusion
+
+Final thoughts.`,
+        },
+        {
+          name: 'document with code blocks',
+          text: `# Code Examples
+
+\`\`\`python
+def hello():
+    print("Hello")
+\`\`\`
+
+## More Examples
+
+\`\`\`javascript
+console.log("World");
+\`\`\``,
+        },
+      ];
+
+      for (const testCase of testCases) {
+        const input: DocumentChunkerInput = {
+          text: testCase.text,
+          targetWords: 50, // Small to force multiple chunks
+        };
+
+        const result = await documentChunkerTool.execute(input, mockContext);
+        
+        // Create a character tracking array
+        const charCoverage = new Array(testCase.text.length).fill(false);
+        
+        // Mark which characters are covered by chunks
+        for (const chunk of result.chunks) {
+          for (let i = chunk.startOffset; i < chunk.endOffset; i++) {
+            if (charCoverage[i]) {
+              throw new Error(`Character at position ${i} appears in multiple chunks for test case: ${testCase.name}`);
+            }
+            charCoverage[i] = true;
+          }
+          
+          // Verify chunk text matches the source text exactly
+          const expectedText = testCase.text.substring(chunk.startOffset, chunk.endOffset);
+          expect(chunk.text).toBe(expectedText);
+        }
+        
+        // Check if any character was missed
+        const uncoveredIndices = [];
+        for (let i = 0; i < charCoverage.length; i++) {
+          if (!charCoverage[i]) {
+            uncoveredIndices.push(i);
+          }
+        }
+        
+        if (uncoveredIndices.length > 0) {
+          const missedChars = uncoveredIndices.map(i => ({
+            index: i,
+            char: testCase.text[i],
+            context: testCase.text.substring(Math.max(0, i - 10), Math.min(testCase.text.length, i + 10))
+          }));
+          
+          console.error('Missed characters:', missedChars);
+          throw new Error(`${uncoveredIndices.length} characters were not included in any chunk for test case: ${testCase.name}`);
+        }
+        
+        // Additional verification: reconstruct the document
+        const sortedChunks = [...result.chunks].sort((a, b) => a.startOffset - b.startOffset);
+        const reconstructed = sortedChunks.map(c => c.text).join('');
+        expect(reconstructed).toBe(testCase.text);
+      }
+    });
+
+    it('should never have overlapping chunks', async () => {
+      const input: DocumentChunkerInput = {
+        text: `# Document
+
+## Section A
+
+Lots of content here to ensure multiple chunks.
+${Array(50).fill('More content. ').join('')}
+
+### Subsection A.1
+
+${Array(50).fill('Even more content. ').join('')}
+
+## Section B
+
+${Array(50).fill('Different content. ').join('')}`,
+        targetWords: 50,
+      };
+
+      const result = await documentChunkerTool.execute(input, mockContext);
+      
+      // Sort chunks by start offset
+      const sortedChunks = [...result.chunks].sort((a, b) => a.startOffset - b.startOffset);
+      
+      // Check for overlaps
+      for (let i = 0; i < sortedChunks.length - 1; i++) {
+        const currentChunk = sortedChunks[i];
+        const nextChunk = sortedChunks[i + 1];
+        
+        if (currentChunk.endOffset > nextChunk.startOffset) {
+          throw new Error(
+            `Chunks ${i} and ${i + 1} overlap: ` +
+            `chunk ${i} ends at ${currentChunk.endOffset}, ` +
+            `chunk ${i + 1} starts at ${nextChunk.startOffset}`
+          );
+        }
+      }
+    });
+  });
+
   describe('Edge Cases that Should Work', () => {
     it('should handle empty sections correctly', async () => {
       const input: DocumentChunkerInput = {

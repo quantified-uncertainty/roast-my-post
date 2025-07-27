@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 // Database comment type (different from the documentSchema Comment type)
 type DatabaseComment = {
@@ -23,7 +25,6 @@ type DatabaseComment = {
     error: string | null;
   };
 };
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface EvaluationCommentsProps {
   comments: DatabaseComment[];
@@ -109,7 +110,10 @@ export function EvaluationComments({
           <div className="mb-6">
             {/* Comment description */}
             <div className="prose prose-gray mb-8 max-w-none rounded-lg border border-gray-100 px-4 py-3">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+              >
                 {comment.description}
               </ReactMarkdown>
             </div>

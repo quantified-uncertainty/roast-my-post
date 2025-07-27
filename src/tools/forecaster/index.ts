@@ -25,6 +25,10 @@ export interface ForecasterOutput {
     mean: number;
     stdDev: number;
   };
+  perplexityResults?: Array<{
+    title: string;
+    url: string;
+  }>;
   llmInteractions: RichLLMInteraction[];
 }
 
@@ -49,6 +53,10 @@ const outputSchema = z.object({
     mean: z.number(),
     stdDev: z.number()
   }).describe('Statistical summary of the forecasts'),
+  perplexityResults: z.array(z.object({
+    title: z.string(),
+    url: z.string()
+  })).optional().describe('Perplexity search results if available'),
   llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging')
 }) satisfies z.ZodType<ForecasterOutput>;
 
@@ -90,6 +98,7 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
           mean: result.statistics.mean,
           stdDev: result.statistics.std_dev
         },
+        perplexityResults: result.perplexityResults,
         llmInteractions: result.llmInteractions
       };
     } catch (error) {

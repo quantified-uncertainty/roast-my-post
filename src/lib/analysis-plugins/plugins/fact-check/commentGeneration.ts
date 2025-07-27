@@ -2,12 +2,18 @@ import type { Comment } from '@/types/documentSchema';
 import type { VerifiedFact } from './index';
 import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
 import { THRESHOLDS, FORMATTING } from './constants';
+import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from '../../utils/comment-styles';
 
 export function generateFactCheckComments(
   fact: VerifiedFact,
   location: DocumentLocation
-): Comment {
+): Comment | null {
   const content = generateCommentContent(fact, location);
+  
+  // Don't create a comment if the content is empty
+  if (!content || content.trim() === '') {
+    return null;
+  }
   
   const comment: Comment = {
     description: content,
@@ -38,29 +44,29 @@ function getCommentTitle(fact: VerifiedFact): string {
   if (fact.verification) {
     switch (fact.verification.verdict) {
       case 'true':
-        return `✓ Verified: ${fact.topic}`;
+        return `✓ Verified`;
       case 'false':
-        return `✗ False Claim: ${fact.topic}`;
+        return `✗ False Claim`;
       case 'partially-true':
-        return `⚠️ Partially True: ${fact.topic}`;
+        return `⚠️ Partially True`;
       case 'unverifiable':
-        return `? Unverifiable: ${fact.topic}`;
+        return `? Unverifiable`;
       case 'outdated':
-        return `⏰ Outdated: ${fact.topic}`;
+        return `⏰ Outdated`;
     }
   }
   
   // Unverified claims - show estimated truth probability
   if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE) {
-    return `🚨 Likely False: ${fact.topic}`;
+    return `🚨 Likely False`;
   }
   if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
-    return `⚠️ Questionable: ${fact.topic}`;
+    return `⚠️ Questionable`;
   }
   if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH) {
-    return `📌 Key Claim: ${fact.topic}`;
+    return `📌 Key Claim`;
   }
-  return `📊 Factual Claim: ${fact.topic}`;
+  return `📊 Factual Claim`;
 }
 
 function getObservation(fact: VerifiedFact): string | undefined {
@@ -121,37 +127,112 @@ function getImportanceScore(fact: VerifiedFact): number {
 }
 
 function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation): string {
-  const parts: string[] = [];
+  // Determine severity and emoji based on verification status
+  let severity: CommentSeverity;
+  let emoji: string;
+  let headerContent = '';
   
-  // Location info - removed line number as it's not in PluginLocation
-  // The location is already handled by the highlight offset
-  
-  // Scores summary
-  parts.push(`**Scores**: Importance ${fact.claim.importanceScore}/${FORMATTING.MAX_SCORE}, Checkability ${fact.claim.checkabilityScore}/${FORMATTING.MAX_SCORE}`);
-  
-  if (!fact.verification) {
-    parts.push(`\n**Truth Probability**: ${fact.claim.truthProbability}% (estimated)`);
-  }
-  
-  // Verification details
   if (fact.verification) {
-    parts.push(`\n\n**Verdict**: ${formatVerdict(fact.verification.verdict)} (${fact.verification.confidence} confidence)`);
-    
-    if (fact.verification.evidence.length > 0) {
-      parts.push(`\n\n**Evidence**:`);
-      fact.verification.evidence.forEach(e => parts.push(`\n- ${e}`));
+    switch (fact.verification.verdict) {
+      case 'false':
+        severity = CommentSeverity.HIGH;
+        emoji = '⚠️';
+        // If we have corrections, show as diff
+        if (fact.verification.corrections) {
+          // Extract the correction from the text (often in format "X should be Y" or "Actually Y")
+          const correctionMatch = fact.verification.corrections.match(/(?:should be|actually|is)\s+(.+)/i);
+          if (correctionMatch && correctionMatch[1]) {
+            headerContent = formatDiff(fact.claim.topic, correctionMatch[1].trim());
+          } else {
+            headerContent = 'Incorrect';
+          }
+        } else {
+          headerContent = 'Incorrect';
+        }
+        break;
+      case 'partially-true':
+        severity = CommentSeverity.MEDIUM;
+        emoji = '📝';
+        headerContent = 'Partially correct';
+        break;
+      case 'outdated':
+        severity = CommentSeverity.MEDIUM;
+        emoji = '📅';
+        headerContent = 'Outdated';
+        break;
+      case 'true':
+        severity = CommentSeverity.GOOD;
+        emoji = '✅';
+        headerContent = 'Verified';
+        break;
+      case 'unverifiable':
+        severity = CommentSeverity.LOW;
+        emoji = '💡';
+        headerContent = 'Cannot verify';
+        break;
+      default:
+        severity = CommentSeverity.INFO;
+        emoji = '📋';
+        headerContent = 'Claim';
     }
-    
-    if (fact.verification.lastVerified) {
-      parts.push(`\n\n*Last verified: ${fact.verification.lastVerified}*`);
+  } else {
+    // Unverified claims - only create comments for problematic or important ones
+    if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE) {
+      severity = CommentSeverity.HIGH;
+      emoji = '🚨';
+      headerContent = 'Likely false';
+    } else if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
+      severity = CommentSeverity.MEDIUM;
+      emoji = '⚠️';
+      headerContent = 'Questionable';
+    } else if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH && fact.claim.truthProbability < THRESHOLDS.TRUTH_PROBABILITY_HIGH) {
+      severity = CommentSeverity.LOW;
+      emoji = '📍';
+      headerContent = 'Key claim';
+    } else {
+      // Don't create comments for unverified facts with high truth probability
+      // These are just normal factual statements that don't need attention
+      return '';
     }
-  } else if (fact.shouldVerify()) {
-    parts.push(`\n\n*This claim has high priority for verification but was not checked due to resource limits.*`);
   }
   
-  // Additional context section removed - fields not in simplified schema
+  const style = SEVERITY_STYLES[severity];
+  const styledHeader = `${emoji} [Fact] <span style="color: ${style.color}">${headerContent}</span>`;
   
-  return parts.join('');
+  // Build content sections
+  let content = styledHeader;
+  
+  // Add explanation if available
+  if (fact.verification?.explanation) {
+    content += `  \n${fact.verification.explanation}`;
+  } else if (!fact.verification && fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM) {
+    content += `  \nEstimated ${fact.claim.truthProbability}% probability of being true`;
+  }
+  
+  // Add score table
+  content += '\n\n';
+  content += '| Metric | Score |\n';
+  content += '|--------|-------|\n';
+  content += `| Importance | ${fact.claim.importanceScore}/100 |\n`;
+  content += `| Checkability | ${fact.claim.checkabilityScore}/100 |\n`;
+  content += `| Truth Probability | ${fact.claim.truthProbability}% |\n`;
+  
+  // Add verification confidence if available
+  if (fact.verification?.confidence) {
+    const confidenceMap = { low: '⚪', medium: '🟡', high: '🟢' };
+    const confidenceEmoji = confidenceMap[fact.verification.confidence] || '';
+    content += `| Verification Confidence | ${confidenceEmoji} ${fact.verification.confidence} |\n`;
+  }
+  
+  // Add sources if available
+  if (fact.verification?.sources && fact.verification.sources.length > 0) {
+    content += '\n\n### Sources\n\n';
+    fact.verification.sources.forEach(source => {
+      content += `- [${source.title}](${source.url})\n`;
+    });
+  }
+  
+  return content;
 }
 
 function formatVerdict(verdict: string): string {

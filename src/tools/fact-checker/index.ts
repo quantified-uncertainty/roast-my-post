@@ -17,7 +17,11 @@ const factCheckResultSchema = z.object({
   explanation: z.string(),
   evidence: z.array(z.string()),
   corrections: z.string().optional(),
-  lastVerified: z.string().optional()
+  lastVerified: z.string().optional(),
+  sources: z.array(z.object({
+    title: z.string(),
+    url: z.string()
+  })).optional()
 });
 
 const outputSchema = z.object({
