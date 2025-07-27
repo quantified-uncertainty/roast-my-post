@@ -99,6 +99,7 @@ ${options.question}
       temperature: 0.8, // Increased for more variation
       toolName: "provide_forecast",
       toolDescription: "Provide a probability forecast with reasoning",
+      enablePromptCaching: true,
       toolSchema: {
         type: "object",
         properties: {

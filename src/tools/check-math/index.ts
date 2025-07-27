@@ -161,6 +161,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       toolName: "report_math_errors",
       toolDescription: "Report mathematical errors found in the text",
       toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50),
+      enablePromptCaching: true,
       heliconeHeaders
     });
 

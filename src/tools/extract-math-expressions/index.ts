@@ -131,6 +131,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       toolName: "extract_math_expressions",
       toolDescription: "Extract and analyze mathematical expressions from the text",
       toolSchema: this.getMathExtractionToolSchema(),
+      enablePromptCaching: true,
       heliconeHeaders
     });
 

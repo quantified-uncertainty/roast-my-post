@@ -184,6 +184,7 @@ ${input.text}
         },
         required: ["errors"]
       },
+      enablePromptCaching: true,
       heliconeHeaders
     });
 
