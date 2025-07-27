@@ -2,9 +2,11 @@
  * Enhanced error categorization for mathematical errors
  */
 
+import type { MathErrorType, MathSeverity } from '@/tools/shared/math-schemas';
+
 export interface ErrorPattern {
   pattern: RegExp | string[];
-  type: 'calculation' | 'logic' | 'unit' | 'notation' | 'conceptual';
+  type: MathErrorType;
   weight: number; // 0-1, higher weight = stronger match
 }
 
@@ -137,13 +139,13 @@ export function categorizeErrorAdvanced(description: string): {
   }
   
   // Find the type with highest score
-  let bestType: 'calculation' | 'logic' | 'unit' | 'notation' | 'conceptual' = 'conceptual';
+  let bestType: MathErrorType = 'conceptual';
   let bestScore = 0;
   
   for (const [type, score] of scores.entries()) {
     if (score > bestScore) {
       bestScore = score;
-      bestType = type as typeof bestType;
+      bestType = type as MathErrorType;
     }
   }
   
@@ -161,10 +163,10 @@ export function categorizeErrorAdvanced(description: string): {
  * Determine severity based on description and error type
  */
 export function determineSeverityAdvanced(
-  errorType: string,
+  errorType: MathErrorType,
   description: string
 ): {
-  severity: 'critical' | 'major' | 'minor';
+  severity: MathSeverity;
   confidence: number;
 } {
   const lowerDesc = description.toLowerCase();

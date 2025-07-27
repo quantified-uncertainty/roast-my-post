@@ -6,6 +6,7 @@ import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 import { RichLLMInteraction } from "@/types/llm";
 import { llmInteractionSchema } from "@/types/llmSchema";
 import { logger } from "@/lib/logger";
+import { generateCacheSeed } from "@/tools/shared/cache-utils";
 
 import {
   Tool,
@@ -188,7 +189,6 @@ ${text}
       undefined;
 
     // Generate cache seed for consistent responses
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('forecast-extract', [
       text,
       additionalContext || '',

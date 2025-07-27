@@ -4,6 +4,7 @@ import { RichLLMInteraction } from '@/types/llm';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
@@ -139,7 +140,6 @@ ${input.text}
       undefined;
     
     // Generate cache seed based on content for consistent caching
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('fact-extract', [
       input.text,
       input.instructions || '',

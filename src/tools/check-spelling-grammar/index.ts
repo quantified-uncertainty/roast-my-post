@@ -5,6 +5,7 @@ import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
 
 export interface SpellingGrammarError {
   text: string;
@@ -146,7 +147,6 @@ ${input.text}
       undefined;
     
     // Generate cache seed based on content for consistent caching
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('spelling', [
       input.text,
       input.context || '',

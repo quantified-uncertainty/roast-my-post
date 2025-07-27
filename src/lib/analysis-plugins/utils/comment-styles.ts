@@ -46,6 +46,36 @@ export function importanceToSeverity(importance: number): CommentSeverity {
 }
 
 /**
+ * Convert error severity score (0-100) to severity
+ */
+export function errorScoreToSeverity(score: number): CommentSeverity {
+  if (score >= 80) return CommentSeverity.CRITICAL;
+  if (score >= 50) return CommentSeverity.HIGH;
+  return CommentSeverity.MEDIUM;
+}
+
+/**
+ * Convert quality/priority score (0-100) to CSS class for background color
+ */
+export function scoreToColorClass(score: number, prefix: string = 'bg'): string {
+  if (score >= 80) return `${prefix}-red-100 text-red-800`;
+  if (score >= 70) return `${prefix}-orange-100 text-orange-800`;
+  if (score >= 60) return `${prefix}-yellow-100 text-yellow-800`;
+  if (score >= 50) return `${prefix}-blue-100 text-blue-800`;
+  return `${prefix}-gray-100 text-gray-600`;
+}
+
+/**
+ * Convert complexity score to progress bar color classes
+ */
+export function complexityToProgressColor(score: number): { bg: string; fill: string } {
+  if (score >= 80) return { bg: 'bg-red-200', fill: 'bg-red-500' };
+  if (score >= 60) return { bg: 'bg-orange-200', fill: 'bg-orange-500' };
+  if (score >= 40) return { bg: 'bg-yellow-200', fill: 'bg-yellow-500' };
+  return { bg: 'bg-green-200', fill: 'bg-green-500' };
+}
+
+/**
  * Format a diff showing removed (red, strikethrough) and added (green) content
  */
 export function formatDiff(oldValue: string, newValue: string, separator: string = ' → '): string {

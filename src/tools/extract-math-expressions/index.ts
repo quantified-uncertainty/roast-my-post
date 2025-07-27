@@ -5,11 +5,13 @@ import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import type { MathErrorType, MathSeverity } from '@/tools/shared/math-schemas';
 
 export interface ExtractedMathExpression {
   originalText: string;
   hasError: boolean;
-  errorType?: string;
+  errorType?: MathErrorType;
   errorExplanation?: string;
   correctedVersion?: string;
   conciseCorrection?: string; // e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15"
@@ -18,6 +20,7 @@ export interface ExtractedMathExpression {
   errorSeverityScore: number; // 0-100
   simplifiedExplanation?: string;
   verificationStatus: 'verified' | 'unverified' | 'unverifiable';
+  severity?: MathSeverity;
 }
 
 export interface ExtractMathExpressionsInput {
@@ -43,7 +46,8 @@ const outputSchema = z.object({
   expressions: z.array(z.object({
     originalText: z.string().describe('The exact mathematical expression as it appears in the text'),
     hasError: z.boolean().describe('Whether the expression contains an error'),
-    errorType: z.string().optional().describe('Type of error if present (e.g., "Calculation Error", "Unit Mismatch", "Logic Error")'),
+    errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).optional().describe('Type of mathematical error'),
+    severity: z.enum(['critical', 'major', 'minor']).optional().describe('Severity of the error'),
     errorExplanation: z.string().optional().describe('Explanation of the error'),
     correctedVersion: z.string().optional().describe('Corrected version of the expression'),
     conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15")'),
@@ -121,7 +125,6 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       undefined;
 
     // Generate cache seed based on content for consistent caching
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('math-extract', [
       input.text,
       input.verifyCalculations ?? true,
@@ -247,7 +250,13 @@ ${input.text}
               },
               errorType: {
                 type: "string",
-                description: "Type of error if present (e.g., 'Calculation Error', 'Unit Mismatch', 'Logic Error')",
+                enum: ["calculation", "logic", "unit", "notation", "conceptual"],
+                description: "Type of mathematical error",
+              },
+              severity: {
+                type: "string",
+                enum: ["critical", "major", "minor"],
+                description: "Severity of the error",
               },
               errorExplanation: {
                 type: "string",

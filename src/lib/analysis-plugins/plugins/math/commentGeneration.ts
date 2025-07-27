@@ -2,7 +2,7 @@ import type {
   ExtractedMathExpression,
 } from "@/tools/extract-math-expressions";
 import type { ExtractedMathExpression as ExtractedMathExpressionClass } from "./index";
-import { styleHeader, CommentSeverity, importanceToSeverity, formatDiff, formatSmartDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
+import { styleHeader, CommentSeverity, importanceToSeverity, formatDiff, formatSmartDiff, SEVERITY_STYLES, errorScoreToSeverity } from "../../utils/comment-styles";
 
 /**
  * Generate a comment for a single math expression
@@ -23,9 +23,7 @@ export function generateMathComment(
  */
 function generateErrorComment(expression: ExtractedMathExpression): string {
   // Determine severity based on error score
-  const severity = expression.errorSeverityScore >= 80 ? CommentSeverity.CRITICAL :
-                   expression.errorSeverityScore >= 50 ? CommentSeverity.HIGH :
-                   CommentSeverity.MEDIUM;
+  const severity = errorScoreToSeverity(expression.errorSeverityScore);
   
   // Build header with emoji
   let headerContent = '';

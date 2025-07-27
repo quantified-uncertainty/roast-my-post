@@ -4,6 +4,7 @@ import { callClaudeWithTool } from "@/lib/claude/wrapper";
 import { sessionContext } from "@/lib/helicone/sessionContext";
 import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 import { perplexityResearchTool } from "../perplexity-research";
+import { generateCacheSeed } from "@/tools/shared/cache-utils";
 
 import {
   Tool,
@@ -127,7 +128,6 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
       : undefined;
 
     // Generate cache seed based on content for consistent caching
-    const { generateCacheSeed } = await import("@/tools/shared/cache-utils");
     const cacheSeed = generateCacheSeed("fact-check", [
       input.claim,
       input.context || "",

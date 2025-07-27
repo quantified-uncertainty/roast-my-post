@@ -9,6 +9,7 @@ import type {
   MathErrorDetails, 
   MathVerificationDetails 
 } from '@/tools/shared/math-schemas';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
 
 // Import types and schemas
 import { CheckMathWithMathJsInput, CheckMathWithMathJsOutput } from './types';
@@ -266,7 +267,6 @@ Respond with a JSON object containing:
     const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
     
     // Generate cache seed
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('math-check-mathjs-llm', [
       input.statement,
       input.context || ''

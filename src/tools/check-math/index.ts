@@ -6,6 +6,7 @@ import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
 import { 
   mathStatusSchema, 
   mathExplanationSchema, 
@@ -102,7 +103,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       undefined;
 
     // Generate cache seed for consistent responses
-    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
     const cacheSeed = generateCacheSeed('math-statement-check', [
       input.statement,
       input.context || ''
