@@ -129,7 +129,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       max_tokens: 4000,
       temperature: 0,
       toolName: "extract_math_expressions",
-      toolDescription: "Extract and analyze mathematical expressions from the text",
+      toolDescription: "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
       enablePromptCaching: true,
       heliconeHeaders
@@ -141,60 +141,61 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
   }
   
   private buildSystemPrompt(): string {
-    return `You are a mathematical analysis expert. Your task is to extract all mathematical expressions from text and analyze them for correctness, complexity, and importance.
+    return `You are a mathematical analysis expert. Your task is to identify ONLY mathematical expressions that are likely INCORRECT (20%+ chance of being wrong).
 
 CRITICAL: You MUST use the extract_math_expressions tool to provide your analysis.
 
-Extract ALL mathematical content including:
-- Equations and formulas (2+2=4, E=mc², etc.)
-- Statistical calculations or percentages
-- Numerical comparisons (X is 3x larger than Y)
-- Unit conversions
-- Mathematical reasoning or proofs
-- Back-of-the-envelope calculations
+IMPORTANT FILTERING RULES:
+1. ONLY extract expressions you suspect are mathematically incorrect (20%+ chance)
+2. DO NOT extract:
+   - Simple correct percentages like "54%" or "increased by 30%"
+   - Trivial arithmetic that is correct
+   - Factual claims (handled by fact-checking plugin)
+   - Forecasting/predictions (handled by forecasting plugin)
+   - Statistical claims without calculations shown
+   - Correct unit conversions
+   
+3. DO extract:
+   - Clear arithmetic errors (2+2=5, 45% of 400 = 125)
+   - Unit mismatch errors (comparing km to km/h)
+   - Order of magnitude errors
+   - Formula application errors (F=ma used incorrectly)
+   - Percentage calculation errors
+   - Compound interest/growth miscalculations
 
-For each expression:
+For each SUSPECTED ERROR:
 1. Extract the EXACT text as it appears
-2. Verify if calculations are correct
-3. Assess complexity (0-100):
-   - 0-30: Simple arithmetic
-   - 30-60: Moderate calculations (percentages, basic algebra)
-   - 60-80: Complex formulas or multi-step calculations
-   - 80-100: Advanced mathematics (calculus, statistics, proofs)
-
-4. Assess contextual importance (0-100):
-   - How central is this to the document's argument?
-   - Does the conclusion depend on this calculation?
-
-5. For errors, assess severity (0-100):
+2. Verify the calculation - only include if likely wrong
+3. Set hasError = true for all extracted expressions
+4. Assess complexity (0-100) based on the calculation type
+5. Assess contextual importance (0-100) - how much does this error matter?
+6. Assess error severity (0-100):
    - 0-30: Minor errors that don't affect conclusions
    - 30-60: Moderate errors that might mislead
    - 60-80: Significant errors affecting understanding
    - 80-100: Critical errors that invalidate conclusions
 
-6. For errors, provide a conciseCorrection that shows ONLY the key change needed:
-   - Simple arithmetic: "67 → 68" (not "45 + 23 = 67 → 45 + 23 = 68")
-   - Coefficients: "4ma → ma" (not "F = 4ma → F = ma")
-   - Missing operations: "×0.15 → ×1.15" (not the entire calculation)
-   - Percentages: "40 → 30" (just the result)
+7. For errors, provide a conciseCorrection that shows ONLY the key change:
+   - Arithmetic: "125 → 100"
+   - Coefficients: "4x → 5x"
+   - Operations: "×0.15 → ×1.15"
    - Order of magnitude: "50,000 → 5,000,000"
-   - Units: "30 km → 30 km/h"
-   - Signs: "50 → -50"
-   - Variables: "4x → 5x"
+   - Units: "km → km/h"
    
-   The conciseCorrection should be under 15 characters when possible and highlight ONLY the specific number, operation, or term that's wrong.
+Keep conciseCorrection under 15 characters when possible.
 
-Provide simplified explanations for complex expressions when helpful.`;
+Remember: If you're not reasonably confident it's a MATH ERROR, don't include it.`;
   }
   
   private buildUserPrompt(input: ExtractMathExpressionsInput): string {
     const requirements = [];
-    if (input.verifyCalculations) requirements.push('Verify all calculations for correctness.');
-    if (input.includeContext) requirements.push('Consider the context when assessing importance.');
-    requirements.push('Extract ALL mathematical content, no matter how simple or complex.');
+    if (input.verifyCalculations) requirements.push('Verify calculations and ONLY include those likely to be incorrect.');
+    if (input.includeContext) requirements.push('Consider the context when assessing error importance.');
+    requirements.push('ONLY extract mathematical expressions that appear to have errors (20%+ chance of being wrong).');
+    requirements.push('DO NOT include trivial percentages, correct calculations, or non-mathematical claims.');
     
     return `<task>
-  <instruction>Extract and analyze all mathematical expressions from this text</instruction>
+  <instruction>Identify and extract ONLY mathematical expressions that are likely INCORRECT</instruction>
   
   <content>
 ${input.text}
@@ -208,6 +209,12 @@ ${input.text}
   <requirements>
     ${requirements.join('\n    ')}
   </requirements>
+  
+  <reminder>
+    Remember: Only include expressions you suspect contain MATHEMATICAL ERRORS.
+    Skip factual claims (for fact-checker) and predictions (for forecaster).
+    If a calculation looks correct, don't include it.
+  </reminder>
 </task>`;
   }
   
