@@ -120,6 +120,14 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       createHeliconeHeaders(sessionConfig) : 
       undefined;
 
+    // Generate cache seed based on content for consistent caching
+    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
+    const cacheSeed = generateCacheSeed('math-extract', [
+      input.text,
+      input.verifyCalculations ?? true,
+      input.includeContext ?? true
+    ]);
+
     const result = await callClaudeWithTool<{ expressions: ExtractedMathExpression[] }>({
       system: systemPrompt,
       messages: [{
@@ -132,7 +140,8 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       toolDescription: "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
       enablePromptCaching: true,
-      heliconeHeaders
+      heliconeHeaders,
+      cacheSeed
     });
 
     const expressions = result.toolResult?.expressions || [];

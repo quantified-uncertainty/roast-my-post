@@ -138,6 +138,15 @@ ${input.text}
       createHeliconeHeaders(sessionConfig) : 
       undefined;
     
+    // Generate cache seed based on content for consistent caching
+    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
+    const cacheSeed = generateCacheSeed('fact-extract', [
+      input.text,
+      input.instructions || '',
+      input.minQualityThreshold || 50,
+      input.maxClaims || 30
+    ]);
+    
     const result = await callClaudeWithTool<{ claims: ExtractedFactualClaim[] }>({
       system: systemPrompt,
       messages: [{
@@ -184,14 +193,34 @@ ${input.text}
         required: ["claims"]
       },
       enablePromptCaching: true,
-      heliconeHeaders
+      heliconeHeaders,
+      cacheSeed
     });
 
-    const allClaims = result.toolResult.claims || [];
+    let allClaims = result.toolResult.claims || [];
+    
+    // Handle case where LLM returns claims as a JSON string
+    if (typeof allClaims === 'string') {
+      context.logger.warn('[ExtractFactualClaims] Claims returned as string, attempting to parse');
+      try {
+        allClaims = JSON.parse(allClaims);
+      } catch (error) {
+        context.logger.error('[ExtractFactualClaims] Failed to parse claims string:', error);
+        return {
+          claims: [],
+          summary: {
+            totalFound: 0,
+            aboveThreshold: 0,
+            averageQuality: 0
+          },
+          llmInteraction: result.interaction
+        };
+      }
+    }
     
     // Ensure allClaims is an array
     if (!Array.isArray(allClaims)) {
-      context.logger.warn('[ExtractFactualClaims] Claims is not an array:', { type: typeof allClaims, value: allClaims });
+      context.logger.warn('[ExtractFactualClaims] Claims is not an array after parsing:', { type: typeof allClaims, value: allClaims });
       return {
         claims: [],
         summary: {

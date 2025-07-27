@@ -137,8 +137,12 @@ function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation)
       case 'false':
         severity = CommentSeverity.HIGH;
         emoji = '⚠️';
-        // If we have corrections, show as diff
-        if (fact.verification.corrections) {
+        // Use conciseCorrection if available
+        if (fact.verification.conciseCorrection) {
+          headerContent = fact.verification.conciseCorrection;
+        } 
+        // Otherwise try to extract from corrections
+        else if (fact.verification.corrections) {
           // Extract the correction from the text (often in format "X should be Y" or "Actually Y")
           const correctionMatch = fact.verification.corrections.match(/(?:should be|actually|is)\s+(.+)/i);
           if (correctionMatch && correctionMatch[1]) {

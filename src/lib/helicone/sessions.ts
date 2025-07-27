@@ -105,7 +105,8 @@ export function createJobSessionConfig(
   userId?: string
 ): HeliconeSessionConfig {
   // Use originalJobId for retries to group them under the same session
-  const sessionId = originalJobId || jobId;
+  let sessionId = originalJobId || jobId;
+  
   
   // Truncate document title for readability
   const truncatedTitle = documentTitle.length > 50 

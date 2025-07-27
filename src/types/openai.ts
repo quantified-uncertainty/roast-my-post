@@ -44,7 +44,6 @@ export function createAnthropicClient(additionalHeaders?: Record<string, string>
           "Helicone-Cache-Enabled": "true",
           "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
           "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
-          "Helicone-Cache-Seed": "spelling-grammar-v1",
         }),
         ...additionalHeaders
       }

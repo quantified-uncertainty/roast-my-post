@@ -313,9 +313,9 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         verdict: 'unverifiable',
         confidence: 'low',
         explanation: `Verification failed: ${errorMessage}`,
-        evidence: [],
         corrections: undefined,
-        lastVerified: new Date().toISOString()
+        conciseCorrection: undefined,
+        sources: []
       };
     }
   }

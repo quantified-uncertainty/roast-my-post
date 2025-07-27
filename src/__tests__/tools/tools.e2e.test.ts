@@ -86,7 +86,9 @@ describe('Tools End-to-End Tests', () => {
       expect(result.result.verdict).toMatch(/^(true|false|partially-true|unverifiable|outdated)$/);
       expect(result.result.confidence).toMatch(/^(high|medium|low)$/);
       expect(result.result.explanation).toBeDefined();
-      expect(result.result.evidence).toBeInstanceOf(Array);
+      if (result.result.sources) {
+        expect(result.result.sources).toBeInstanceOf(Array);
+      }
     });
   });
 

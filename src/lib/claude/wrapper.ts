@@ -20,6 +20,7 @@ export interface ClaudeCallOptions {
   temperature?: number;
   heliconeHeaders?: Record<string, string>;
   enablePromptCaching?: boolean; // Enable Anthropic prompt caching
+  cacheSeed?: string; // Custom cache seed for Helicone response caching
 }
 
 export interface ClaudeCallResult {
@@ -73,7 +74,14 @@ export async function callClaude(
   previousInteractions?: RichLLMInteraction[]
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
-  const anthropic = createAnthropicClient(options.heliconeHeaders);
+  
+  // If a cache seed is provided, add it to the headers
+  const heliconeHeaders = options.cacheSeed ? {
+    ...options.heliconeHeaders,
+    'Helicone-Cache-Seed': options.cacheSeed
+  } : options.heliconeHeaders;
+  
+  const anthropic = createAnthropicClient(heliconeHeaders);
   
   // Use centralized model config if not specified
   const model = options.model || MODEL_CONFIG.analysis;
@@ -198,7 +206,8 @@ export async function callClaudeWithTool<T>(
       description: options.toolDescription,
       input_schema: options.toolSchema
     }],
-    tool_choice: { type: "tool", name: options.toolName }
+    tool_choice: { type: "tool", name: options.toolName },
+    cacheSeed: options.cacheSeed // Pass through cache seed
   };
 
   const result = await callClaude(toolOptions, previousInteractions);

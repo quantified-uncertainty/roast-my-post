@@ -145,6 +145,14 @@ ${input.text}
       createHeliconeHeaders(sessionConfig) : 
       undefined;
     
+    // Generate cache seed based on content for consistent caching
+    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
+    const cacheSeed = generateCacheSeed('spelling', [
+      input.text,
+      input.context || '',
+      input.maxErrors || 50
+    ]);
+    
     const result = await callClaudeWithTool<{ errors: SpellingGrammarError[] }>({
       system: systemPrompt,
       messages: [{
@@ -185,7 +193,8 @@ ${input.text}
         required: ["errors"]
       },
       enablePromptCaching: true,
-      heliconeHeaders
+      heliconeHeaders,
+      cacheSeed
     });
 
     const rawErrors = result.toolResult.errors || [];

@@ -150,6 +150,14 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       createHeliconeHeaders(sessionConfig) : 
       undefined;
 
+    // Generate cache seed for consistent responses
+    const { generateCacheSeed } = await import('@/tools/shared/cache-utils');
+    const cacheSeed = generateCacheSeed('math-check', [
+      input.text,
+      input.context || '',
+      input.maxErrors || 50
+    ]);
+
     const result = await callClaudeWithTool<{ errors: any[] }>({
       system: systemPrompt,
       messages: [{
@@ -162,7 +170,8 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       toolDescription: "Report mathematical errors found in the text",
       toolSchema: this.getMathErrorReportingToolSchema(input.maxErrors || 50),
       enablePromptCaching: true,
-      heliconeHeaders
+      heliconeHeaders,
+      cacheSeed
     });
 
     const errors = this.parseErrors(result.toolResult?.errors);
