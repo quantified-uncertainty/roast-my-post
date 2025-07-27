@@ -234,6 +234,7 @@ model Job {
   costInCents         Int?
   durationInSeconds   Int?
   logs                String?
+  heliconeVerified    Boolean            @default(false)
   evaluationId        String
   evaluationVersionId String?            @unique
   agentEvalBatchId    String?

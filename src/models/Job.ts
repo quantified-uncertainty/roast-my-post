@@ -20,6 +20,7 @@ import {
   heliconeSessionsConfig,
   SESSION_PATHS,
 } from "../lib/helicone/sessions";
+import { fetchJobCostWithRetry } from "../lib/helicone/costFetcher";
 
 export class JobModel {
   /**
@@ -199,6 +200,7 @@ export class JobModel {
       costInCents: number;
       durationInSeconds: number;
       logs: string;
+      heliconeVerified?: boolean;
     }
   ) {
     return prisma.job.update({
@@ -545,7 +547,7 @@ export class JobModel {
         }
       }
 
-      // Calculate total usage from all interactions
+      // Calculate token totals for logging (always needed regardless of cost source)
       const totalInputTokens = tasks.reduce(
         (sum, task) =>
           sum +
@@ -559,13 +561,32 @@ export class JobModel {
         0
       );
 
-      const costInCents = calculateApiCost(
-        {
-          input_tokens: totalInputTokens,
-          output_tokens: totalOutputTokens,
-        },
-        mapModelToCostModel(ANALYSIS_MODEL)
-      );
+      // Try to get accurate cost from Helicone first
+      let costInCents: number;
+      let heliconeVerified = false;
+      
+      try {
+        const heliconeData = await fetchJobCostWithRetry(job.id, 3, 1000);
+        
+        if (heliconeData) {
+          costInCents = Math.round(heliconeData.totalCostUSD * 100);
+          heliconeVerified = true;
+          logger.info(`Using Helicone cost data for job ${job.id}: $${heliconeData.totalCostUSD}`);
+        } else {
+          throw new Error('Helicone data not available');
+        }
+      } catch (error) {
+        // Fallback to manual cost calculation
+        logger.warn(`Failed to fetch Helicone cost for job ${job.id}, falling back to manual calculation:`, { error: error instanceof Error ? error.message : String(error) });
+        
+        costInCents = calculateApiCost(
+          {
+            input_tokens: totalInputTokens,
+            output_tokens: totalOutputTokens,
+          },
+          mapModelToCostModel(ANALYSIS_MODEL)
+        );
+      }
 
       // Create log file with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -639,6 +660,7 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         costInCents: costInCents,
         durationInSeconds: (Date.now() - startTime) / 1000,
         logs: logContent,
+        heliconeVerified: heliconeVerified,
       });
 
       // Log successful completion to session
