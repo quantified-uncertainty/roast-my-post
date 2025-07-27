@@ -4,10 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 
-interface CheckMathResult {
+interface CheckMathHybridResult {
+  statement: string;
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
   explanation: string;
-  reasoning?: string;
+  verifiedBy: 'mathjs' | 'llm';
+  toolsUsed: string[];
+  conciseCorrection?: string;
   errorDetails?: {
     errorType: string;
     severity: string;
@@ -15,12 +18,25 @@ interface CheckMathResult {
     expectedValue?: string;
     actualValue?: string;
   };
+  mathJsResult?: {
+    verificationDetails?: {
+      mathJsExpression: string;
+      computedValue: string;
+      steps?: Array<{
+        expression: string;
+        result: string;
+      }>;
+    };
+  };
+  llmResult?: {
+    reasoning?: string;
+  };
 }
 
-export default function MathCheckerPage() {
+export default function MathCheckerHybridPage() {
   const [statement, setStatement] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<CheckMathResult | null>(null);
+  const [result, setResult] = useState<CheckMathHybridResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +46,7 @@ export default function MathCheckerPage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/tools/check-math', {
+      const response = await fetch('/api/tools/check-math-hybrid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statement }),
@@ -50,18 +66,17 @@ export default function MathCheckerPage() {
   };
 
   const exampleStatements = [
-    'Revenue grew by 50% from $2 million to $3.5 million',
-    '15% of $3.5 million equals $525,000',
-    'The square root of 16 is 5',
-    '2 + 2 = 4',
+    '2 + 2 = 5',
+    '100 - 30% = 60',
+    '1 kilometer equals 100 meters',
+    '15 ÷ 3 = 6',
+    'π × 5² = 78.5',
+    '25% of 80 is 25',
+    'sqrt(16) = 5',
+    '2^8 = 256',
+    'The limit of 1/x as x approaches infinity is 0',
     'The derivative of x^2 is 3x'
   ];
-
-  const severityColors = {
-    critical: 'bg-red-100 border-red-300 text-red-900',
-    major: 'bg-orange-100 border-orange-300 text-orange-900',
-    minor: 'bg-yellow-100 border-yellow-300 text-yellow-900',
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -71,9 +86,9 @@ export default function MathCheckerPage() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Statement Checker</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Hybrid Math Checker</h1>
         <p className="text-gray-600">
-          Check a single mathematical statement for accuracy and correctness.
+          Comprehensive verification using MathJS first, then falling back to LLM analysis for complex statements.
         </p>
       </div>
 
@@ -138,6 +153,14 @@ export default function MathCheckerPage() {
                 {result.status === 'verified_false' && '✗ Statement Contains Error'}
                 {result.status === 'cannot_verify' && '? Cannot Verify Statement'}
               </h3>
+              <div className="mt-2 flex gap-2">
+                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                  Verified by: {result.verifiedBy === 'mathjs' ? 'MathJS' : 'LLM'}
+                </span>
+                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-800 rounded">
+                  Tools used: {result.toolsUsed.join(', ')}
+                </span>
+              </div>
             </div>
             
             <div className="space-y-3">
@@ -153,10 +176,54 @@ export default function MathCheckerPage() {
                 <p className="mt-1 text-sm">{result.explanation}</p>
               </div>
               
-              {result.reasoning && (
+              {result.llmResult?.reasoning && (
                 <div>
                   <p className="text-sm font-medium text-gray-700">Reasoning:</p>
-                  <p className="mt-1 text-sm">{result.reasoning}</p>
+                  <p className="mt-1 text-sm">{result.llmResult.reasoning}</p>
+                </div>
+              )}
+              
+              {result.mathJsResult?.verificationDetails && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-sm font-medium text-gray-700 mb-2">MathJS Verification:</p>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Expression:</span> 
+                      <code className="ml-2 px-2 py-1 bg-white rounded border border-gray-300">
+                        {result.mathJsResult.verificationDetails.mathJsExpression}
+                      </code>
+                    </div>
+                    <div>
+                      <span className="font-medium">Computed Value:</span> 
+                      <span className="ml-2 font-mono text-green-700">
+                        {result.mathJsResult.verificationDetails.computedValue}
+                      </span>
+                    </div>
+                    {result.mathJsResult.verificationDetails.steps && result.mathJsResult.verificationDetails.steps.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-medium mb-1">Calculation Steps:</p>
+                        <div className="ml-4 space-y-1">
+                          {result.mathJsResult.verificationDetails.steps.map((step, i) => (
+                            <div key={i} className="font-mono text-xs">
+                              <code className="bg-gray-100 px-1 rounded">{step.expression}</code>
+                              <span className="mx-2">→</span>
+                              <span className="text-green-700">{step.result}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-xs text-gray-600">
+                    <a 
+                      href={`https://mathjs.org/examples/browser/basic_usage.html.html#${encodeURIComponent(result.mathJsResult.verificationDetails.mathJsExpression)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Try in MathJS calculator →
+                    </a>
+                  </div>
                 </div>
               )}
               

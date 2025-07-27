@@ -31,7 +31,7 @@ describe('CheckMathTool', () => {
 
     it('should validate input schema', () => {
       const validInput = {
-        text: 'The result is 2 + 2 = 4'
+        statement: 'The result is 2 + 2 = 4'
       };
 
       expect(() => CheckMathTool.inputSchema.parse(validInput)).not.toThrow();
@@ -39,8 +39,7 @@ describe('CheckMathTool', () => {
 
     it('should reject invalid input', () => {
       const invalidInput = {
-        text: '',  // Empty text
-        maxErrors: 200  // Too high
+        statement: ''  // Empty statement
       };
 
       expect(() => CheckMathTool.inputSchema.parse(invalidInput)).toThrow();
@@ -51,206 +50,182 @@ describe('CheckMathTool', () => {
     it('should detect simple arithmetic errors', async () => {
       // Mock response with arithmetic error
       mockToolResponse({
-        errors: [
-          {
-            lineStart: 1,
-            lineEnd: 1,
-            highlightedText: '2 + 2 = 5',
-            description: 'Calculation error: 2 + 2 equals 4, not 5. The arithmetic is incorrect.'
-          }
-        ]
+        status: 'verified_false',
+        explanation: 'The arithmetic is incorrect. 2 + 2 equals 4, not 5.',
+        reasoning: 'Simple addition: 2 + 2 = 4. The statement claims it equals 5, which is false.',
+        errorDetails: {
+          errorType: 'calculation',
+          severity: 'major',
+          conciseCorrection: '5 → 4',
+          expectedValue: '4',
+          actualValue: '5'
+        }
       });
 
       const input = {
-        text: 'The calculation shows that 2 + 2 = 5, which is clearly correct.'
+        statement: '2 + 2 = 5'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      expect(result.errors.length).toBe(1);
-      expect(result.errors[0].errorType).toBe('calculation');
-      expect(result.errors[0].severity).toBe('major');
-      expect(result.summary.totalErrors).toBe(1);
-      expect(result.summary.calculationErrors).toBe(1);
-      expect(result.llmInteraction).toBeDefined();
-      expect(result.llmInteraction.model).toBe('claude-sonnet-4-20250514');
+      expect(result.status).toBe('verified_false');
+      expect(result.errorDetails).toBeDefined();
+      expect(result.errorDetails?.errorType).toBe('calculation');
+      expect(result.errorDetails?.severity).toBe('major');
+      expect(result.errorDetails?.conciseCorrection).toBe('5 → 4');
     });
 
-    it('should handle text with no math errors', async () => {
-      // Mock empty errors response
+    it('should verify correct statements', async () => {
+      // Mock response for correct statement
       mockToolResponse({
-        errors: []
+        status: 'verified_true',
+        explanation: 'The arithmetic is correct. 2 + 2 equals 4.',
+        reasoning: 'Simple addition: 2 + 2 = 4. The statement correctly states this.'
       });
       
       const input = {
-        text: 'This is a simple text with no mathematical content or calculations.'
+        statement: '2 + 2 = 4'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      expect(result.errors.length).toBe(0);
-      expect(result.summary.totalErrors).toBe(0);
-      expect(result.recommendations).toContain('No mathematical errors found in the text.');
-      expect(result.llmInteraction).toBeDefined();
+      expect(result.status).toBe('verified_true');
+      expect(result.errorDetails).toBeUndefined();
     });
 
-    it('should categorize different types of errors correctly', async () => {
-      // Mock response with multiple error types
+    it('should handle statements that cannot be verified', async () => {
+      // Mock response for unverifiable statement
       mockToolResponse({
-        errors: [
-          {
-            lineStart: 1,
-            lineEnd: 1,
-            highlightedText: '5 + 3 = 9',
-            description: 'Calculation error: The sum 5 + 3 equals 8, not 9'
-          },
-          {
-            lineStart: 2,
-            lineEnd: 2,
-            highlightedText: '1 kilometer to 100 meters',
-            description: 'Unit conversion error: 1 kilometer equals 1000 meters, not 100'
-          },
-          {
-            lineStart: 3,
-            lineEnd: 3,
-            highlightedText: '∑ = 5',
-            description: 'Notation error: Incorrect use of summation symbol - requires bounds and expression'
-          }
-        ]
+        status: 'cannot_verify',
+        explanation: 'This statement contains variables or conditions that cannot be verified without additional context.',
+        reasoning: 'The value of x is not provided, so we cannot verify if x + 2 = 5.'
       });
 
       const input = {
-        text: 'Math problems:\n5 + 3 = 9\n1 kilometer to 100 meters\n∑ = 5'
+        statement: 'x + 2 = 5'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      expect(result.errors.length).toBe(3);
-      expect(result.summary.totalErrors).toBe(3);
-      
-      // Check that we have different types of errors (at least calculation and unit)
-      const errorTypes = result.errors.map(e => e.errorType);
-      expect(errorTypes).toContain('calculation');
-      expect(errorTypes).toContain('unit');
-      
-      // Verify that we do categorize errors differently
-      const uniqueErrorTypes = [...new Set(errorTypes)];
-      expect(uniqueErrorTypes.length).toBeGreaterThan(1);
+      expect(result.status).toBe('cannot_verify');
+      expect(result.errorDetails).toBeUndefined();
     });
 
-    it('should respect maxErrors limit', async () => {
-      // Create many errors
-      const manyErrors = Array.from({ length: 20 }, (_, i) => ({
-        lineStart: i + 1,
-        lineEnd: i + 1,
-        highlightedText: `Error ${i + 1}`,
-        description: `Calculation error ${i + 1}`
-      }));
-
+    it('should detect unit conversion errors', async () => {
+      // Mock response with unit error
       mockToolResponse({
-        errors: manyErrors
+        status: 'verified_false',
+        explanation: 'Unit conversion error: 1 kilometer equals 1000 meters, not 100 meters.',
+        reasoning: 'The metric system defines 1 km = 1000 m. The statement incorrectly claims 1 km = 100 m.',
+        errorDetails: {
+          errorType: 'unit',
+          severity: 'critical',
+          conciseCorrection: '100 m → 1000 m',
+          expectedValue: '1000 meters',
+          actualValue: '100 meters'
+        }
       });
 
       const input = {
-        text: 'Text with many errors',
-        maxErrors: 10
+        statement: '1 kilometer equals 100 meters'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      // Should be limited to maxErrors
-      expect(result.errors.length).toBe(10);
-      expect(result.summary.totalErrors).toBe(10);
+      expect(result.status).toBe('verified_false');
+      expect(result.errorDetails?.errorType).toBe('unit');
+      expect(result.errorDetails?.severity).toBe('critical');
+      expect(result.errorDetails?.conciseCorrection).toBe('100 m → 1000 m');
     });
 
-    it('should identify common error patterns', async () => {
+    it('should handle context when provided', async () => {
+      // Mock response considering context
       mockToolResponse({
-        errors: [
-          {
-            lineStart: 1,
-            lineEnd: 1,
-            highlightedText: '10%',
-            description: 'Unit error: Missing context for percentage'
-          },
-          {
-            lineStart: 2,
-            lineEnd: 2,
-            highlightedText: '25%',
-            description: 'Unit error: Missing context for percentage'
-          },
-          {
-            lineStart: 3,
-            lineEnd: 3,
-            highlightedText: '50%',
-            description: 'Unit error: Missing context for percentage'
-          }
-        ]
+        status: 'verified_true',
+        explanation: 'In the context of engineering approximations, using π ≈ 3.14 is acceptable.',
+        reasoning: 'While π is irrational (3.14159...), the context indicates this is for engineering calculations where 3.14 is a standard approximation.'
       });
 
       const input = {
-        text: 'Results: 10%\n25%\n50%'
+        statement: 'For this calculation, we use π = 3.14',
+        context: 'Engineering approximation with 2 decimal places'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      // Check pattern detection
-      const unitPattern = result.commonPatterns.find(p => p.type === 'unit');
-      expect(unitPattern).toBeDefined();
-      expect(unitPattern?.count).toBe(3);
+      expect(result.status).toBe('verified_true');
+      expect(result.explanation).toContain('engineering approximations');
     });
 
-    it('should use context when provided', async () => {
-      mockToolResponse({
-        errors: []
-      });
+    it('should handle API errors gracefully', async () => {
+      // Mock API error
+      mockCallClaudeWithTool.mockRejectedValueOnce(new Error('API rate limit exceeded'));
 
       const input = {
-        text: 'The answer is 42',
-        context: 'This is from a science fiction novel'
+        statement: '2 + 2 = 4'
       };
 
       const result = await CheckMathTool.execute(input, mockContext);
 
-      // Just verify the tool executed successfully with context
-      expect(result.errors.length).toBe(0);
-      expect(result.llmInteraction).toBeDefined();
+      expect(result.status).toBe('cannot_verify');
+      expect(result.explanation).toContain('technical error');
     });
   });
 
-  describe('error handling', () => {
-    it('should handle LLM failures gracefully', async () => {
-      // Mock a rejection
-      const mockError = new Error('LLM service unavailable');
-      mockCallClaudeWithTool.mockRejectedValueOnce(mockError);
-
-      const input = {
-        text: 'Some mathematical text'
-      };
-
-      await expect(CheckMathTool.execute(input, mockContext))
-        .rejects.toThrow('LLM service unavailable');
-    });
-  });
-
-  describe('output validation', () => {
-    it('should produce valid output structure', async () => {
+  describe('error categorization', () => {
+    it('should identify calculation errors', async () => {
       mockToolResponse({
-        errors: [{
-          lineStart: 1,
-          lineEnd: 1,
-          highlightedText: '2 + 2',
-          description: 'Correct calculation'
-        }]
+        status: 'verified_false',
+        explanation: 'Multiplication error: 5 × 7 = 35, not 40.',
+        reasoning: 'Basic multiplication: 5 × 7 = 35.',
+        errorDetails: {
+          errorType: 'calculation',
+          severity: 'major',
+          conciseCorrection: '40 → 35'
+        }
       });
 
-      const input = {
-        text: '2 + 2 = 4'
-      };
+      const result = await CheckMathTool.execute({ statement: '5 × 7 = 40' }, mockContext);
 
-      const result = await CheckMathTool.execute(input, mockContext);
+      expect(result.errorDetails?.errorType).toBe('calculation');
+    });
 
-      // Validate output schema
-      expect(() => CheckMathTool.outputSchema.parse(result)).not.toThrow();
+    it('should identify logic errors', async () => {
+      mockToolResponse({
+        status: 'verified_false',
+        explanation: 'Logic error: If a > b and b > c, then a must be greater than c, not less than c.',
+        reasoning: 'Transitive property violation.',
+        errorDetails: {
+          errorType: 'logic',
+          severity: 'critical',
+          conciseCorrection: 'a < c → a > c'
+        }
+      });
+
+      const result = await CheckMathTool.execute({ 
+        statement: 'Given a > b and b > c, therefore a < c' 
+      }, mockContext);
+
+      expect(result.errorDetails?.errorType).toBe('logic');
+    });
+
+    it('should identify notation errors', async () => {
+      mockToolResponse({
+        status: 'verified_false',
+        explanation: 'Notation error: The expression mixes incompatible notation systems.',
+        reasoning: 'Cannot mix set notation with arithmetic operations in this way.',
+        errorDetails: {
+          errorType: 'notation',
+          severity: 'minor',
+          conciseCorrection: 'Fix notation consistency'
+        }
+      });
+
+      const result = await CheckMathTool.execute({ 
+        statement: 'The set {1, 2, 3} + 4 = {5, 6, 7}' 
+      }, mockContext);
+
+      expect(result.errorDetails?.errorType).toBe('notation');
     });
   });
 });

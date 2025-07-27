@@ -7,7 +7,14 @@ import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 interface CheckMathResult {
   status: 'verified_true' | 'verified_false' | 'cannot_verify';
   explanation: string;
-  reasoning?: string;
+  verificationDetails?: {
+    mathJsExpression: string;
+    computedValue: string;
+    steps?: Array<{
+      expression: string;
+      result: string;
+    }>;
+  };
   errorDetails?: {
     errorType: string;
     severity: string;
@@ -17,7 +24,7 @@ interface CheckMathResult {
   };
 }
 
-export default function MathCheckerPage() {
+export default function MathCheckerWithMathJsPage() {
   const [statement, setStatement] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CheckMathResult | null>(null);
@@ -30,7 +37,7 @@ export default function MathCheckerPage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/tools/check-math', {
+      const response = await fetch('/api/tools/check-math-with-mathjs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statement }),
@@ -50,11 +57,14 @@ export default function MathCheckerPage() {
   };
 
   const exampleStatements = [
-    'Revenue grew by 50% from $2 million to $3.5 million',
-    '15% of $3.5 million equals $525,000',
-    'The square root of 16 is 5',
-    '2 + 2 = 4',
-    'The derivative of x^2 is 3x'
+    '2 + 2 = 5',
+    '100 - 30% = 60',
+    '1 kilometer equals 100 meters',
+    '15 ÷ 3 = 6',
+    'π × 5² = 78.5',
+    '25% of 80 is 25',
+    'sqrt(16) = 5',
+    '2^8 = 256'
   ];
 
   const severityColors = {
@@ -71,9 +81,9 @@ export default function MathCheckerPage() {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Statement Checker</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Checker with MathJS</h1>
         <p className="text-gray-600">
-          Check a single mathematical statement for accuracy and correctness.
+          Verify mathematical statements using computational evaluation with MathJS.
         </p>
       </div>
 
@@ -153,10 +163,47 @@ export default function MathCheckerPage() {
                 <p className="mt-1 text-sm">{result.explanation}</p>
               </div>
               
-              {result.reasoning && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Reasoning:</p>
-                  <p className="mt-1 text-sm">{result.reasoning}</p>
+              {result.verificationDetails && (
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-sm font-medium text-gray-700 mb-2">MathJS Verification:</p>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Expression:</span> 
+                      <code className="ml-2 px-2 py-1 bg-white rounded border border-gray-300">
+                        {result.verificationDetails.mathJsExpression}
+                      </code>
+                    </div>
+                    <div>
+                      <span className="font-medium">Computed Value:</span> 
+                      <span className="ml-2 font-mono text-green-700">
+                        {result.verificationDetails.computedValue}
+                      </span>
+                    </div>
+                    {result.verificationDetails.steps && result.verificationDetails.steps.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-medium mb-1">Calculation Steps:</p>
+                        <div className="ml-4 space-y-1">
+                          {result.verificationDetails.steps.map((step, i) => (
+                            <div key={i} className="font-mono text-xs">
+                              <code className="bg-gray-100 px-1 rounded">{step.expression}</code>
+                              <span className="mx-2">→</span>
+                              <span className="text-green-700">{step.result}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-xs text-gray-600">
+                    <a 
+                      href={`https://mathjs.org/examples/browser/basic_usage.html.html#${encodeURIComponent(result.verificationDetails.mathJsExpression)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Try in MathJS calculator →
+                    </a>
+                  </div>
                 </div>
               )}
               

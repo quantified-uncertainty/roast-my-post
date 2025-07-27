@@ -2,6 +2,8 @@ import { Tool } from './base/Tool';
 import ForecasterTool from './forecaster';
 import FactCheckerTool from './fact-checker';
 import CheckMathTool from './check-math';
+import CheckMathWithMathJsTool from './check-math-with-mathjs';
+import CheckMathHybridTool from './check-math-hybrid';
 import ExtractForecastingClaimsTool from './extract-forecasting-claims';
 import PerplexityResearchTool from './perplexity-research';
 import ExtractFactualClaimsTool from './extract-factual-claims';
@@ -19,6 +21,8 @@ export class ToolRegistry {
     this.register(ForecasterTool);
     this.register(FactCheckerTool);
     this.register(CheckMathTool);
+    this.register(CheckMathWithMathJsTool);
+    this.register(CheckMathHybridTool);
     this.register(ExtractForecastingClaimsTool);
     this.register(PerplexityResearchTool);
     this.register(ExtractFactualClaimsTool);
