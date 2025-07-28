@@ -6,6 +6,8 @@ import {
 } from "@/tools/extract-math-expressions";
 import { checkMathHybridTool } from "@/tools/check-math-hybrid";
 import type { CheckMathHybridOutput } from "@/tools/check-math-hybrid/types";
+import { checkMathAgenticTool } from "@/tools/check-math-agentic";
+import type { CheckMathAgenticOutput } from "@/tools/check-math-agentic/types";
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../logger";

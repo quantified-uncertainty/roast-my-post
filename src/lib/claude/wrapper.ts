@@ -135,7 +135,18 @@ export async function callClaude(
       
       if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
       
-      const result = await anthropic.messages.create(requestOptions);
+      // Add timeout to prevent hanging indefinitely
+      const CLAUDE_TIMEOUT_MS = 45000; // 45 seconds (less than the 60s plugin timeout)
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`Claude API call timed out after ${CLAUDE_TIMEOUT_MS}ms`));
+        }, CLAUDE_TIMEOUT_MS);
+      });
+      
+      const result = await Promise.race([
+        anthropic.messages.create(requestOptions),
+        timeoutPromise
+      ]);
       
       // Validate response structure
       if (!result || !result.content || !result.usage) {

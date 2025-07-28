@@ -10,6 +10,8 @@ import type {
   MathVerificationDetails 
 } from '@/tools/shared/math-schemas';
 import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import { sessionContext } from '@/lib/helicone/sessionContext';
+import { createHeliconeHeaders } from '@/lib/helicone/sessions';
 
 // Import types and schemas
 import { CheckMathWithMathJsInput, CheckMathWithMathJsOutput } from './types';
@@ -236,35 +238,181 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
     }
   }
   
+  private async extractMathJsExpression(statement: string, context: ToolContext): Promise<string | null> {
+    const systemPrompt = `Extract the mathematical relationship from the statement as a MathJS expression. Return ONLY the expression.
+
+IMPORTANT: 
+- Focus on extracting the COMPLETE mathematical relationship or claim being made
+- For statements with "so", "therefore", "thus", extract the conclusion as an equality
+- If a value is stated without comparison, just return the value
+- For contextual statements like "X ... so Y", focus on Y as the main claim
+
+MathJS Syntax Reference:
+- Equality/comparison: == != < > <= >= (chained: 5 < x < 10)
+- Arithmetic: + - * / ^ % mod
+- Percentages: 30% → 0.3 (automatic)
+- Scientific notation: 1e-7, 3.14e5
+- Functions: sqrt() sin() cos() tan() log() exp() abs() floor() ceil() round()
+- Logarithms: log(x) for ln, log(x, base) for other bases
+- Constants: pi, e, tau, phi
+- Units: 5 km, 100 cm to m, 60 mph, 32 degF
+- Factorial: 5! or factorial(5)
+- Combinations: combinations(n, k) for "n choose k"
+- Matrices: [[1,2],[3,4]], det(), transpose()
+- Vectors: [1,2,3], dot()
+- Complex: 3+4i, abs(3+4i)
+- Implicit multiplication: 2 pi, (1+2)(3+4)
+- Number formats: 0b11, 0o77, 0xff
+
+Common patterns:
+"X is Y" → "X == Y"
+"X equals Y" → "X == Y"
+"X gives Y" → "X == Y"
+"X% of Y is Z" → "X% * Y == Z"
+"increase X by Y%" → "X * (1 + Y%) == result"
+"X per Y" → often just extract the value X/Y
+"the relationship between X and Y" → try to find the equation
+
+Examples:
+"2 + 2 = 4" → "2 + 2 == 4"
+"30% of 150 is 45" → "30% * 150 == 45"
+"Log base 2 of 8 equals 3" → "log(8, 2) == 3"
+"5 factorial is 120" → "5! == 120"
+"The determinant of [[1,2],[3,4]] is -2" → "det([[1,2],[3,4]]) == -2"`;
+
+    // Get session context for Helicone tracking
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/math/check-math-extract-expression') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
+
+    const maxAttempts = 3;
+    const attemptHistory: Array<{expression: string, error: string}> = [];
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // Build messages with history of previous attempts
+        const messages: Array<{role: "user" | "assistant", content: string}> = [
+          { role: 'user', content: statement }
+        ];
+        
+        // Add history of previous failed attempts
+        for (const prevAttempt of attemptHistory) {
+          messages.push({ role: 'assistant', content: prevAttempt.expression });
+          messages.push({ role: 'user', content: `Error: ${prevAttempt.error}. Try again with valid MathJS syntax.` });
+        }
+        
+        const result = await callClaude({
+          system: systemPrompt,
+          messages,
+          max_tokens: 100,
+          temperature: 0,
+          model: MODEL_CONFIG.analysis, // Use Sonnet for accuracy
+          enablePromptCaching: true, // Enable caching since prompt is long
+          heliconeHeaders
+        });
+
+        const firstContent = result.response.content[0];
+        if (firstContent.type === 'text') {
+          const expression = firstContent.text.trim();
+          // Try to evaluate it
+          try {
+            evaluate(expression);
+            context.logger.info(`[CheckMathWithMathJsTool] Extracted valid expression: ${expression}`);
+            return expression;
+          } catch (evalError: any) {
+            const errorMsg = evalError.message || 'Invalid expression';
+            context.logger.debug(`[CheckMathWithMathJsTool] Expression invalid on attempt ${attempt}: ${expression} - ${errorMsg}`);
+            attemptHistory.push({ expression, error: errorMsg });
+          }
+        }
+      } catch (error) {
+        context.logger.debug(`[CheckMathWithMathJsTool] Extraction attempt ${attempt} failed: ${error}`);
+      }
+    }
+    return null;
+  }
+
   private async llmAssistedVerification(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput> {
     context.logger.info(`[CheckMathWithMathJsTool] Falling back to LLM-assisted verification`);
     
-    const systemPrompt = `You are a mathematical verification assistant. Your task is to verify mathematical statements using MathJS syntax.
+    // First, try to extract just the MathJS expression
+    const extractedExpression = await this.extractMathJsExpression(input.statement, context);
+    
+    if (extractedExpression) {
+      // We successfully extracted an expression, try to evaluate it directly
+      try {
+        const result = evaluate(extractedExpression);
+        const isTrue = result === true || (typeof result === 'number' && Math.abs(result) < 0.0001);
+        
+        // If false, try to extract the values to provide a correction
+        let errorDetails = undefined;
+        if (!isTrue && extractedExpression.includes('==')) {
+          try {
+            const [leftSide, rightSide] = extractedExpression.split('==').map(s => s.trim());
+            const leftValue = evaluate(leftSide);
+            const rightValue = evaluate(rightSide);
+            errorDetails = {
+              errorType: 'calculation' as const,
+              severity: 'major' as const,
+              conciseCorrection: `${rightValue} → ${leftValue}`,
+              expectedValue: String(leftValue),
+              actualValue: String(rightValue)
+            };
+          } catch (e) {
+            // Ignore errors in extracting values
+          }
+        }
+        
+        return {
+          statement: input.statement,
+          status: isTrue ? 'verified_true' : 'verified_false',
+          explanation: isTrue 
+            ? `The statement is correct. ${extractedExpression} evaluates to true.`
+            : `The statement is incorrect. ${extractedExpression} evaluates to ${result}.`,
+          verificationDetails: {
+            mathJsExpression: extractedExpression,
+            computedValue: String(result),
+            steps: [{
+              expression: extractedExpression,
+              result: String(result)
+            }]
+          },
+          errorDetails,
+          llmInteraction: {
+            model: MODEL_CONFIG.routing,
+            prompt: 'Expression extraction only',
+            response: extractedExpression,
+            tokensUsed: { prompt: 50, completion: 20, total: 70 }, // Approximate
+            timestamp: new Date(),
+            duration: 100
+          }
+        };
+      } catch (evalError) {
+        context.logger.debug(`[CheckMathWithMathJsTool] Failed to evaluate extracted expression: ${evalError}`);
+        // Continue to full LLM verification
+      }
+    }
+    
+    // If extraction failed or evaluation failed, fall back to full LLM verification
+    const systemPrompt = `Convert mathematical statements to MathJS syntax and verify. Be extremely concise.
 
-Given a mathematical statement, you should:
-1. Convert it to a MathJS expression that can be evaluated
-2. Determine if the statement is true, false, or cannot be verified
-3. Provide a clear explanation
-
-Important MathJS syntax:
-- Percentages: Use % directly (e.g., 30% evaluates to 0.3)
-- Units: Use unit syntax (e.g., 5 km to m, 1 kg + 500 g)
-- Functions: sqrt(), sin(), cos(), log(), etc.
-- Constants: pi, e, tau
-
-Respond with a JSON object containing:
-- status: "verified_true", "verified_false", or "cannot_verify"
-- explanation: Clear explanation of the verification
-- mathJsExpression: The MathJS expression used (if applicable)
-- computedValue: The computed value (if applicable)
-- errorDetails: (only if verified_false) Object with:
-  - errorType: Must be one of: "calculation", "logic", "unit", "notation", or "conceptual"
-  - severity: Must be one of: "critical", "major", or "minor"
-  - conciseCorrection: Brief correction like "60 → 70" or "5 → 4"
-  - expectedValue: The correct value (optional)
-  - actualValue: The incorrect value from the statement (optional)`;
+Respond with JSON only:
+{"status":"verified_true|verified_false|cannot_verify","explanation":"brief","mathJsExpression":"expr","computedValue":"val","errorDetails":{"errorType":"calculation|logic|unit|notation|conceptual","severity":"critical|major|minor","conciseCorrection":"old→new"}}`;
 
     const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
+    
+    // Get session context if available
+    const currentSession = sessionContext.getSession();
+    const sessionConfig = currentSession ? 
+      sessionContext.withPath('/plugins/math/check-math-with-mathjs-llm') : 
+      undefined;
+    const heliconeHeaders = sessionConfig ? 
+      createHeliconeHeaders(sessionConfig) : 
+      undefined;
     
     // Generate cache seed
     const cacheSeed = generateCacheSeed('math-check-mathjs-llm', [
@@ -276,10 +424,11 @@ Respond with a JSON object containing:
       const result = await callClaude({
         system: systemPrompt,
         messages: [{ role: 'user', content: userPrompt }],
-        max_tokens: 1000,
+        max_tokens: 300,
         temperature: 0,
-        model: MODEL_CONFIG.analysis,
+        model: MODEL_CONFIG.analysis, // Use Sonnet for accuracy in full verification too
         enablePromptCaching: true,
+        heliconeHeaders,
         cacheSeed
       });
       
