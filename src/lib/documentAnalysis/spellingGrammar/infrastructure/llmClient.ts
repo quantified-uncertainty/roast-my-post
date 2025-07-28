@@ -4,7 +4,6 @@
  */
 
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
-import type { LLMInteraction, RichLLMInteraction } from '@/types/llm';
 import { DEFAULT_TEMPERATURE } from '../../../../types/openai';
 import { logger } from '@/lib/logger';
 import { MAX_RETRIES, RETRY_BASE_DELAY_MS, LOG_PREFIXES } from '../constants';
@@ -20,7 +19,6 @@ export interface LLMResponse {
     input_tokens: number;
     output_tokens: number;
   };
-  llmInteraction: LLMInteraction;
 }
 
 /**
@@ -42,7 +40,6 @@ export class SpellingGrammarLLMClient {
     sessionConfig?: HeliconeSessionConfig
   ): Promise<LLMResponse> {
     let lastUsage: any = null;
-    const interactions: RichLLMInteraction[] = [];
 
     const analyzeWithRetry = async (): Promise<LLMResponse> => {
       const toolDefinition = this.getErrorReportingTool();
@@ -66,12 +63,11 @@ export class SpellingGrammarLLMClient {
           max_tokens: 8000,
           temperature: this.temperature,
           heliconeHeaders
-        }, interactions);
+        });
 
         lastUsage = result.response.usage;
 
         const errors = this.parseErrors(result.toolResult);
-        const llmInteraction = this.createInteractionFromRich(result.interaction, result.toolResult);
 
         logger.debug(`${LOG_PREFIXES.CHUNK_ANALYSIS} Token usage`, {
           inputTokens: result.response.usage?.input_tokens,
@@ -84,26 +80,9 @@ export class SpellingGrammarLLMClient {
           usage: {
             input_tokens: result.response.usage?.input_tokens || 0,
             output_tokens: result.response.usage?.output_tokens || 0
-          },
-          llmInteraction
+          }
         };
       } catch (error) {
-        // Check if it's a tool use error that might contain a text response
-        if (error instanceof Error && error.message.includes('Expected tool use') && interactions.length > 0) {
-          const lastInteraction = interactions[interactions.length - 1];
-          const fallbackResult = this.tryParseTextResponse(lastInteraction.response);
-          if (fallbackResult) {
-            logger.warn(`${LOG_PREFIXES.CHUNK_ANALYSIS} Successfully parsed fallback text response`);
-            return {
-              errors: this.parseErrors(fallbackResult),
-              usage: {
-                input_tokens: lastInteraction.tokensUsed.prompt,
-                output_tokens: lastInteraction.tokensUsed.completion
-              },
-              llmInteraction: this.createInteractionFromRich(lastInteraction, fallbackResult)
-            };
-          }
-        }
         throw error;
       }
     };
@@ -115,14 +94,15 @@ export class SpellingGrammarLLMClient {
         logPrefix: LOG_PREFIXES.CHUNK_ANALYSIS
       });
     } catch (error) {
-      // If all retries failed and we have usage info, return empty result
-      if (lastUsage || interactions.length > 0) {
-        const usage = lastUsage || (interactions.length > 0 ? {
-          input_tokens: interactions[interactions.length - 1].tokensUsed.prompt,
-          output_tokens: interactions[interactions.length - 1].tokensUsed.completion
-        } : { input_tokens: 0, output_tokens: 0 });
-        
-        return this.createEmptyResponse(usage, 'No tool use in response after all retries');
+      // If all retries failed, return empty result with basic usage info
+      if (lastUsage) {
+        return {
+          errors: [],
+          usage: {
+            input_tokens: lastUsage?.input_tokens || 0,
+            output_tokens: lastUsage?.output_tokens || 0
+          }
+        };
       }
       throw error;
     }
@@ -189,59 +169,6 @@ export class SpellingGrammarLLMClient {
     });
   }
 
-  /**
-   * Create LLM interaction record from RichLLMInteraction
-   */
-  private createInteractionFromRich(
-    richInteraction: RichLLMInteraction,
-    result: any
-  ): LLMInteraction {
-    // Parse prompt to extract system and user messages
-    const promptParts = richInteraction.prompt.split('\n\n');
-    let systemContent = '';
-    let userContent = '';
-    
-    if (promptParts[0].startsWith('SYSTEM:')) {
-      systemContent = promptParts[0].replace('SYSTEM: ', '');
-      userContent = promptParts.slice(1).join('\n\n').replace('USER: ', '');
-    } else {
-      userContent = richInteraction.prompt.replace('USER: ', '');
-    }
-
-    return {
-      messages: [
-        ...(systemContent ? [{ role: 'system' as const, content: systemContent }] : []),
-        { role: 'user' as const, content: userContent },
-        { role: 'assistant' as const, content: JSON.stringify(result) }
-      ],
-      usage: {
-        input_tokens: richInteraction.tokensUsed.prompt,
-        output_tokens: richInteraction.tokensUsed.completion
-      }
-    };
-  }
-
-  /**
-   * Create empty response
-   */
-  private createEmptyResponse(usage: any, error: string): LLMResponse {
-    return {
-      errors: [],
-      usage: {
-        input_tokens: usage?.input_tokens || 0,
-        output_tokens: usage?.output_tokens || 0
-      },
-      llmInteraction: {
-        messages: [
-          { role: 'assistant', content: `Error: ${error}` }
-        ],
-        usage: {
-          input_tokens: usage?.input_tokens || 0,
-          output_tokens: usage?.output_tokens || 0
-        }
-      }
-    };
-  }
 
   /**
    * Try to parse text response as fallback when tool use fails

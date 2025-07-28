@@ -2,7 +2,7 @@ import type { Agent } from "../../../types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
-import type { LLMInteraction, LLMMessage, RichLLMInteraction } from "../../../types/llm";
+import type { LLMMessage } from "../../../types/llm";
 import {
   DEFAULT_TEMPERATURE,
   withTimeout,
@@ -204,7 +204,7 @@ export async function extractHighlightsFromAnalysis(
   ];
 
   let highlights: Comment[] = [];
-  const richInteractions: RichLLMInteraction[] = [];
+  let interaction;
 
   try {
     const toolSchema: Anthropic.Messages.Tool.InputSchema = {
@@ -249,7 +249,7 @@ export async function extractHighlightsFromAnalysis(
       required: ["highlights"],
     };
 
-    const { response, interaction, toolResult } = await withTimeout(
+    const result = await withTimeout(
       callClaudeWithTool<{ highlights: LineBasedHighlight[] }>({
         model: MODEL_CONFIG.analysis,
         system: systemMessage,
@@ -265,34 +265,31 @@ export async function extractHighlightsFromAnalysis(
         toolDescription: "Extract and format highlights based on the comprehensive analysis",
         toolSchema,
         enablePromptCaching: true // Enable caching for highlight extraction system prompt and tools
-      }, richInteractions),
+      }),
       HIGHLIGHT_EXTRACTION_TIMEOUT,
       `Anthropic API request timed out after ${HIGHLIGHT_EXTRACTION_TIMEOUT / 60000} minutes`
     );
     
+    interaction = result.interaction;
+    
     // Convert line-based to character-based highlights
     // Get the full content with prepend (same as what was shown to the LLM)
     const { content: fullContent } = getDocumentFullContent(document);
-    highlights = await validateAndConvertHighlights(toolResult.highlights, fullContent);
+    highlights = await validateAndConvertHighlights(result.toolResult.highlights, fullContent);
 
   } catch (error: unknown) {
     logger.error('Error in highlight extraction:', error);
     throw error;
   }
 
-  // Convert RichLLMInteraction to LLMInteraction format
-  const llmInteraction: LLMInteraction = {
-    messages: [...messages, { role: "assistant", content: JSON.stringify({ highlights }) }],
-    usage: {
-      input_tokens: richInteractions[0]?.tokensUsed.prompt || 0,
-      output_tokens: richInteractions[0]?.tokensUsed.completion || 0,
-    },
-  };
-
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(MODEL_CONFIG.analysis, llmInteraction.usage);
+  const usage = {
+    input_tokens: interaction?.tokensUsed.prompt || 0,
+    output_tokens: interaction?.tokensUsed.completion || 0,
+  };
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, usage);
 
   const logDetails = createLogDetails(
     "extractHighlightsFromAnalysis",
@@ -300,8 +297,8 @@ export async function extractHighlightsFromAnalysis(
     startTime,
     endTime,
     cost,
-    llmInteraction.usage.input_tokens,
-    llmInteraction.usage.output_tokens,
+    usage.input_tokens,
+    usage.output_tokens,
     {
       targetHighlights,
       agentName: agentInfo.name,

@@ -1,6 +1,5 @@
 // Shared types used across documentAnalysis modules
 import type { Comment } from "../../../types/documentSchema";
-import type { LLMInteraction } from "../../../types/llm";
 
 export interface TaskResult {
   name: string;

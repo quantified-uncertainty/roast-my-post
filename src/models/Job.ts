@@ -7,7 +7,6 @@ import {
 
 import {
   analyzeDocument,
-  countTokensFromInteractions,
 } from "../lib/documentAnalysis";
 import { Agent } from "../types/agentSchema";
 import { ANALYSIS_MODEL } from "../types/openai";

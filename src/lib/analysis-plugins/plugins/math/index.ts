@@ -12,7 +12,6 @@ import { logger } from "../../../logger";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
-  LLMInteraction,
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
@@ -537,9 +536,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     return this.totalCost;
   }
 
-  getLLMInteractions(): LLMInteraction[] {
-    return [];
-  }
 
   getDebugInfo(): Record<string, unknown> {
     return {

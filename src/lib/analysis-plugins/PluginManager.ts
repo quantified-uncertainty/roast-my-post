@@ -7,7 +7,7 @@
 
 import type { Document } from "@/types/documents";
 import type { Comment } from "@/types/documentSchema";
-import type { LLMInteraction } from "@/types/llm";
+import type { LLMInteraction } from "./types";
 
 import { getDocumentFullContent } from "../../utils/documentContentHelpers";
 import { sessionContext } from "../helicone/sessionContext";

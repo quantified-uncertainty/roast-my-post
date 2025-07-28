@@ -7,7 +7,6 @@ import type { Agent } from '../../../../types/agentSchema';
 import type { Document } from '../../../../types/documents';
 import type { Comment } from '../../../../types/documentSchema';
 import type { TaskResult } from '../../shared/types';
-import type { LLMInteraction } from '@/types/llm';
 
 import { getDocumentFullContent } from '../../../../utils/documentContentHelpers';
 import { logger } from '@/lib/logger';

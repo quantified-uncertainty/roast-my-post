@@ -1,6 +1,5 @@
 import type { Agent } from "../../../types/agentSchema";
 import { logger } from "@/lib/logger";
-import type { LLMInteraction } from "../../../types/llm";
 import {
   DEFAULT_TEMPERATURE,
   withTimeout,
@@ -120,23 +119,13 @@ ${evaluationText}`;
     .replace(/\\\\/g, "\\")
     .trim();
 
-  // Convert RichLLMInteraction to LLMInteraction format
-  const llmInteraction: LLMInteraction = {
-    messages: [
-      { role: "system", content: systemMessage },
-      { role: "user", content: userMessage },
-      { role: "assistant", content: JSON.stringify(validationResult) }
-    ],
-    usage: {
-      input_tokens: interaction.tokensUsed.prompt,
-      output_tokens: interaction.tokensUsed.completion,
-    },
-  };
-
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(MODEL_CONFIG.analysis, llmInteraction.usage);
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, {
+    input_tokens: interaction.tokensUsed.prompt,
+    output_tokens: interaction.tokensUsed.completion,
+  });
 
   const logDetails = createLogDetails(
     "generateSelfCritique",

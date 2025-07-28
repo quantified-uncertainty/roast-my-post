@@ -1,100 +1,48 @@
-import { countTokensFromInteractions } from '../llmUtils';
-import type { LLMInteraction } from '../../../../types/llm';
+import { createLogDetails } from '../llmUtils';
 
 describe('llmUtils', () => {
-  describe('countTokensFromInteractions', () => {
-    it('should count tokens correctly when all interactions have usage data', () => {
-      const interactions: LLMInteraction[] = [
-        {
-          messages: [
-            { role: 'user', content: 'test' },
-            { role: 'assistant', content: 'response' }
-          ],
-          usage: {
-            input_tokens: 10,
-            output_tokens: 20
-          }
-        },
-        {
-          messages: [
-            { role: 'user', content: 'test2' },
-            { role: 'assistant', content: 'response2' }
-          ],
-          usage: {
-            input_tokens: 15,
-            output_tokens: 25
-          }
-        }
-      ];
-
-      expect(countTokensFromInteractions(interactions, 'input_tokens')).toBe(25);
-      expect(countTokensFromInteractions(interactions, 'output_tokens')).toBe(45);
-    });
-
-    it('should handle interactions with undefined usage gracefully', () => {
-      const interactions: LLMInteraction[] = [
-        {
-          messages: [
-            { role: 'user', content: 'test' },
-            { role: 'assistant', content: 'response' }
-          ],
-          usage: {
-            input_tokens: 10,
-            output_tokens: 20
-          }
-        },
-        {
-          messages: [
-            { role: 'user', content: 'test2' },
-            { role: 'assistant', content: 'response2' }
-          ],
-          // Missing usage property - this is what caused the bug
-          usage: undefined as any
-        },
-        {
-          messages: [
-            { role: 'user', content: 'test3' },
-            { role: 'assistant', content: 'response3' }
-          ],
-          usage: {
-            input_tokens: 5,
-            output_tokens: 15
-          }
-        }
-      ];
-
-      // Should not throw and should count only valid usage data
-      expect(countTokensFromInteractions(interactions, 'input_tokens')).toBe(15);
-      expect(countTokensFromInteractions(interactions, 'output_tokens')).toBe(35);
-    });
-
-    it('should return 0 when all interactions have undefined usage', () => {
-      const interactions: LLMInteraction[] = [
-        {
-          messages: [
-            { role: 'user', content: 'test' },
-            { role: 'assistant', content: 'response' }
-          ],
-          usage: undefined as any
-        },
-        {
-          messages: [
-            { role: 'user', content: 'test2' },
-            { role: 'assistant', content: 'response2' }
-          ],
-          usage: undefined as any
-        }
-      ];
-
-      expect(countTokensFromInteractions(interactions, 'input_tokens')).toBe(0);
-      expect(countTokensFromInteractions(interactions, 'output_tokens')).toBe(0);
-    });
-
-    it('should handle empty array', () => {
-      const interactions: LLMInteraction[] = [];
+  describe('createLogDetails', () => {
+    it('should create log details with correct structure', () => {
+      const startTime = Date.now();
+      const endTime = startTime + 5000; // 5 seconds later
       
-      expect(countTokensFromInteractions(interactions, 'input_tokens')).toBe(0);
-      expect(countTokensFromInteractions(interactions, 'output_tokens')).toBe(0);
+      const logDetails = createLogDetails(
+        'test-task',
+        'claude-3-5-sonnet',
+        startTime,
+        endTime,
+        150, // cost in cents
+        100, // input tokens
+        50,  // output tokens
+        { documentId: 'test-doc' },
+        { responseLength: 200 },
+        'Test task completed successfully'
+      );
+
+      expect(logDetails.task.name).toBe('test-task');
+      expect(logDetails.task.model).toBe('claude-3-5-sonnet');
+      expect(logDetails.task.durationSeconds).toBe(5);
+      expect(logDetails.cost.estimatedCents).toBe(150);
+      expect(logDetails.cost.usage.input_tokens).toBe(100);
+      expect(logDetails.cost.usage.output_tokens).toBe(50);
+      expect(logDetails.context.documentId).toBe('test-doc');
+      expect(logDetails.outputStats.responseLength).toBe(200);
+      expect(logDetails.summary).toBe('Test task completed successfully');
+    });
+
+    it('should format timestamps correctly', () => {
+      const testTime = new Date('2024-01-01T12:00:00.000Z').getTime();
+      
+      const logDetails = createLogDetails(
+        'test-task',
+        'claude-3-5-sonnet',
+        testTime,
+        testTime + 1000,
+        0, 0, 0, {}, {}, 'test'
+      );
+
+      expect(logDetails.task.startTime).toBe('2024-01-01T12:00:00.000Z');
+      expect(logDetails.task.endTime).toBe('2024-01-01T12:00:01.000Z');
     });
   });
 });
