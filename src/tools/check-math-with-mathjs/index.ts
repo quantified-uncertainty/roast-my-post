@@ -173,7 +173,7 @@ IMPORTANT:
       const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
       currentPrompt = userPrompt;
       
-      // Early detection of symbolic math to save tokens
+      // Early detection of symbolic math and incomplete expressions to save tokens
       const symbolicKeywords = [
         'derivative', 'integral', 'limit', 'lim', 'd/dx', '∫', '∂',
         'prove', 'theorem', 'identity', 'simplify', 'expand', 'factor'
@@ -183,6 +183,12 @@ IMPORTANT:
       const isLikelySymbolic = symbolicKeywords.some(keyword => 
         statementLower.includes(keyword)
       );
+      
+      // Check for incomplete expressions
+      const isIncomplete = input.statement.trim().endsWith('...') || 
+                          input.statement.trim().endsWith('..') ||
+                          /\b(of|to|from|equals?|is)\s*\.{2,}/.test(input.statement) ||
+                          /\b(of|to|from|equals?|is)\s*$/.test(input.statement.trim());
       
       // Pre-written responses for common cases
       if (isLikelySymbolic) {
@@ -194,6 +200,22 @@ IMPORTANT:
             model: MODEL_CONFIG.analysis,
             prompt: userPrompt,
             response: 'Detected symbolic mathematics - early return',
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
+        };
+      }
+      
+      if (isIncomplete) {
+        return {
+          statement: input.statement,
+          status: 'cannot_verify',
+          explanation: 'Cannot verify incomplete expression. The statement appears to be missing information or cut off.',
+          llmInteraction: {
+            model: MODEL_CONFIG.analysis,
+            prompt: userPrompt,
+            response: 'Detected incomplete expression - early return',
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
