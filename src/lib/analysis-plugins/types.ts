@@ -82,10 +82,14 @@ export interface InvestigatedFinding {
 }
 
 
-// Re-export from shared types to avoid duplication
-import type { LLMInteraction as BaseLLMInteraction } from '@/types/llm';
 import type { Comment } from '@/types/documentSchema';
-export type LLMInteraction = BaseLLMInteraction;
+import type { LLMMessage, LLMUsage } from '@/types/llm';
+
+// Local LLMInteraction type for analysis plugins
+export interface LLMInteraction {
+  messages: LLMMessage[];
+  usage: LLMUsage;
+}
 
 export interface RoutingExample {
   chunkText: string;
@@ -98,7 +102,6 @@ export interface AnalysisResult {
   summary: string;
   analysis: string;
   comments: Comment[];
-  llmInteractions: LLMInteraction[];
   cost: number;
 }
 
@@ -114,5 +117,4 @@ export interface SimpleAnalysisPlugin {
   // For testing/debugging - expose internal state
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
-  getLLMInteractions(): LLMInteraction[];
 }

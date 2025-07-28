@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
@@ -31,7 +29,6 @@ export interface ExtractMathExpressionsInput {
 
 export interface ExtractMathExpressionsOutput {
   expressions: ExtractedMathExpression[];
-  llmInteraction: RichLLMInteraction;
 }
 
 // Input schema
@@ -56,8 +53,7 @@ const outputSchema = z.object({
     errorSeverityScore: z.number().min(0).max(100).describe('How severe the error is if present (0-100)'),
     simplifiedExplanation: z.string().optional().describe('Simplified explanation of complex expressions'),
     verificationStatus: z.enum(['verified', 'unverified', 'unverifiable']).describe('Whether the calculation was verified')
-  })).describe('List of extracted mathematical expressions'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
+  })).describe('List of extracted mathematical expressions')
 }) satisfies z.ZodType<ExtractMathExpressionsOutput>;
 
 export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput, ExtractMathExpressionsOutput> {
@@ -82,8 +78,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       const result = await this.extractExpressions(input);
       
       return {
-        expressions: result.expressions,
-        llmInteraction: result.llmInteraction
+        expressions: result.expressions
       };
     } catch (error) {
       context.logger.error('[ExtractMathExpressionsTool] Error extracting expressions:', error);
@@ -93,7 +88,6 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
   
   private async extractExpressions(input: ExtractMathExpressionsInput): Promise<{
     expressions: ExtractedMathExpression[];
-    llmInteraction: RichLLMInteraction;
   }> {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
@@ -149,7 +143,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
 
     const expressions = result.toolResult?.expressions || [];
 
-    return { expressions, llmInteraction: result.interaction };
+    return { expressions };
   }
   
   private buildSystemPrompt(): string {

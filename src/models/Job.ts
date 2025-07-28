@@ -7,7 +7,6 @@ import {
 
 import {
   analyzeDocument,
-  countTokensFromInteractions,
 } from "../lib/documentAnalysis";
 import { Agent } from "../types/agentSchema";
 import { ANALYSIS_MODEL } from "../types/openai";
@@ -20,6 +19,7 @@ import {
   heliconeSessionsConfig,
   SESSION_PATHS,
 } from "../lib/helicone/sessions";
+import { fetchJobCostWithRetry } from "../lib/helicone/costFetcher";
 
 export class JobModel {
   /**
@@ -235,6 +235,9 @@ export class JobModel {
     // Update current job as failed
     // Sanitize error message to handle Unicode characters
     let errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Remove problematic Unicode characters that might cause database issues
+    errorMessage = errorMessage.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
     
     // Log the error for debugging
     logger.error(`Marking job ${jobId} as failed with error: ${errorMessage}`);
@@ -513,7 +516,6 @@ export class JobModel {
             priceInDollars: task.priceInDollars,
             timeInSeconds: task.timeInSeconds,
             log: task.log,
-            llmInteractions: task.llmInteractions as any, // Cast for Prisma Json type
             jobId: job.id,
           },
         });
@@ -545,27 +547,34 @@ export class JobModel {
         }
       }
 
-      // Calculate total usage from all interactions
-      const totalInputTokens = tasks.reduce(
-        (sum, task) =>
-          sum +
-          countTokensFromInteractions(task.llmInteractions, "input_tokens"),
-        0
-      );
-      const totalOutputTokens = tasks.reduce(
-        (sum, task) =>
-          sum +
-          countTokensFromInteractions(task.llmInteractions, "output_tokens"),
-        0
-      );
+      // Note: Token totals are now tracked automatically by the Claude wrapper
+      const totalInputTokens = 0; // Legacy field, kept for compatibility
+      const totalOutputTokens = 0; // Legacy field, kept for compatibility
 
-      const costInCents = calculateApiCost(
-        {
-          input_tokens: totalInputTokens,
-          output_tokens: totalOutputTokens,
-        },
-        mapModelToCostModel(ANALYSIS_MODEL)
-      );
+      // Try to get accurate cost from Helicone first
+      let costInCents: number;
+      
+      try {
+        const heliconeData = await fetchJobCostWithRetry(job.id, 3, 1000);
+        
+        if (heliconeData) {
+          costInCents = Math.round(heliconeData.totalCostUSD * 100);
+          logger.info(`Using Helicone cost data for job ${job.id}: $${heliconeData.totalCostUSD}`);
+        } else {
+          throw new Error('Helicone data not available');
+        }
+      } catch (error) {
+        // Fallback to manual cost calculation
+        logger.warn(`Failed to fetch Helicone cost for job ${job.id}, falling back to manual calculation:`, { error: error instanceof Error ? error.message : String(error) });
+        
+        costInCents = calculateApiCost(
+          {
+            input_tokens: totalInputTokens,
+            output_tokens: totalOutputTokens,
+          },
+          mapModelToCostModel(ANALYSIS_MODEL)
+        );
+      }
 
       // Create log file with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -613,17 +622,7 @@ ${tasks
 - Model: ${task.modelName}
 - Time: ${task.timeInSeconds}s
 - Cost: $${task.priceInDollars.toFixed(6)}
-- Interactions: ${task.llmInteractions.length}
-${task.llmInteractions
-  .map(
-    (interaction) => `
-#### Interaction
-\`\`\`
-${interaction.messages?.map((m) => `${m.role}: ${m.content}`).join("\n") || "No messages"}
-\`\`\`
-`
-  )
-  .join("\n")}
+- Note: LLM interactions now tracked automatically by Claude wrapper
 `
   )
   .join("\n")}

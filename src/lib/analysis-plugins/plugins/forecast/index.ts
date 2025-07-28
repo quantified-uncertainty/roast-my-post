@@ -253,7 +253,6 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       summary: this.summary,
       analysis: this.analysis,
       comments: this.comments,
-      llmInteractions: this.llmInteractions,
       cost: this.totalCost,
     };
   }

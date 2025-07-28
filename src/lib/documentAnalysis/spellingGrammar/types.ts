@@ -2,8 +2,6 @@
  * Types for spelling and grammar analysis
  */
 
-import type { LLMInteraction } from "@/types/llm";
-
 /**
  * A chunk of document content with line number information
  */
@@ -68,6 +66,4 @@ export interface ChunkAnalysisResult {
   highlights: SpellingGrammarHighlight[];
   /** Token usage from the LLM */
   usage?: TokenUsage;
-  /** LLM interaction for tracking */
-  llmInteraction?: LLMInteraction;
 }

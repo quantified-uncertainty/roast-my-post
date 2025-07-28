@@ -79,8 +79,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
           reasoning: llmResult.reasoning
         } : undefined,
         conciseCorrection,
-        toolsUsed,
-        llmInteraction: llmResult?.llmInteraction || mathJsResult.llmInteraction
+        toolsUsed
       };
       
     } catch (error) {
@@ -90,15 +89,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
         status: 'cannot_verify',
         explanation: 'Failed to verify the mathematical statement due to a technical error.',
         verifiedBy: 'mathjs',
-        toolsUsed: ['mathjs'],
-        llmInteraction: {
-          model: 'error',
-          prompt: '',
-          response: '',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
+        toolsUsed: ['mathjs']
       };
     }
   }

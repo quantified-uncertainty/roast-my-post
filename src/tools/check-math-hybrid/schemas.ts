@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { llmInteractionSchema } from '@/types/llmSchema';
 
 // Input schema - single mathematical statement
 export const inputSchema = z.object({
@@ -32,6 +31,5 @@ export const outputSchema = z.object({
     reasoning: z.string().describe('Detailed reasoning')
   }).optional().describe('LLM analysis details'),
   conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x")'),
-  toolsUsed: z.array(z.enum(['mathjs', 'llm'])).describe('Which tools were used'),
-  llmInteraction: llmInteractionSchema.optional().describe('LLM interaction for monitoring and debugging')
+  toolsUsed: z.array(z.enum(['mathjs', 'llm'])).describe('Which tools were used')
 });

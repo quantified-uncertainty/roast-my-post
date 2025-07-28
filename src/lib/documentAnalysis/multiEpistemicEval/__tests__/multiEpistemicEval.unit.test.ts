@@ -259,7 +259,6 @@ describe('multiEpistemicEval', () => {
     
     const pluginTask = result.tasks.find(t => t.name === 'Plugin Analysis');
     expect(pluginTask).toBeDefined();
-    expect(pluginTask?.llmInteractions).toHaveLength(1); // Router interaction
   });
 
   it('should calculate costs correctly', async () => {
