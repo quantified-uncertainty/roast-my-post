@@ -236,6 +236,9 @@ export class JobModel {
     // Sanitize error message to handle Unicode characters
     let errorMessage = error instanceof Error ? error.message : String(error);
     
+    // Remove problematic Unicode characters that might cause database issues
+    errorMessage = errorMessage.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+    
     // Log the error for debugging
     logger.error(`Marking job ${jobId} as failed with error: ${errorMessage}`);
     

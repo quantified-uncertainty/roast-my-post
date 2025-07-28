@@ -414,7 +414,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
           }
         );
 
-
         // Only create wrapper if there's an error (status is verified_false)
         if (result.status === 'verified_false') {
           const errorWrapper = new HybridMathErrorWrapper(result, extractedExpr.expression, this.documentText);
