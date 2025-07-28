@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { llmInteractionSchema } from '@/types/llmSchema';
+import { richLLMInteractionSchema } from '@/types/llmSchema';
 
 // Input schema - single mathematical statement
 export const inputSchema = z.object({
@@ -28,5 +28,5 @@ export const outputSchema = z.object({
     actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
   }).optional().describe('Details about the error (only present when status is verified_false)'),
   error: z.string().optional().describe('Technical error if verification failed'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
+  llmInteraction: richLLMInteractionSchema.describe('LLM interaction for monitoring and debugging')
 });

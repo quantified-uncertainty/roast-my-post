@@ -56,7 +56,7 @@ export default function CheckMathAgenticPage() {
         throw new Error(response.error || 'Failed to verify statement');
       }
 
-      setResult(response.result);
+      setResult(response.result || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

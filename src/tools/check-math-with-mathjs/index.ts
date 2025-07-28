@@ -125,10 +125,12 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     
     // Store the previous session to restore later
     const previousSession = sessionContext.getSession();
+    let sessionId = '';
+    let currentPrompt = '';
     
     try {
       // Always create a new session for each tool execution
-      const sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const newSession = {
         sessionId,
         sessionName: `Math Agentic Tool - ${input.statement.substring(0, 50)}${input.statement.length > 50 ? '...' : ''}`,
@@ -169,8 +171,9 @@ IMPORTANT:
 - For unit errors, provide the correct value with proper units`;
 
       const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
+      currentPrompt = userPrompt;
       
-      // Early detection of symbolic math to save tokens
+      // Early detection of symbolic math and incomplete expressions to save tokens
       const symbolicKeywords = [
         'derivative', 'integral', 'limit', 'lim', 'd/dx', '∫', '∂',
         'prove', 'theorem', 'identity', 'simplify', 'expand', 'factor'
@@ -180,6 +183,12 @@ IMPORTANT:
       const isLikelySymbolic = symbolicKeywords.some(keyword => 
         statementLower.includes(keyword)
       );
+      
+      // Check for incomplete expressions
+      const isIncomplete = input.statement.trim().endsWith('...') || 
+                          input.statement.trim().endsWith('..') ||
+                          /\b(of|to|from|equals?|is)\s*\.{2,}/.test(input.statement) ||
+                          /\b(of|to|from|equals?|is)\s*$/.test(input.statement.trim());
       
       // Pre-written responses for common cases
       if (isLikelySymbolic) {
@@ -191,6 +200,22 @@ IMPORTANT:
             model: MODEL_CONFIG.analysis,
             prompt: userPrompt,
             response: 'Detected symbolic mathematics - early return',
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
+        };
+      }
+      
+      if (isIncomplete) {
+        return {
+          statement: input.statement,
+          status: 'cannot_verify',
+          explanation: 'Cannot verify incomplete expression. The statement appears to be missing information or cut off.',
+          llmInteraction: {
+            model: MODEL_CONFIG.analysis,
+            prompt: userPrompt,
+            response: 'Detected incomplete expression - early return',
             tokensUsed: { prompt: 0, completion: 0, total: 0 },
             timestamp: new Date(),
             duration: Date.now() - startTime
@@ -211,11 +236,19 @@ IMPORTANT:
       // Create Anthropic client
       const anthropic = createAnthropicClient();
       
-      // Allow up to 5 rounds of tool calls
+      // Allow up to 5 rounds of tool calls with 60 second timeout
       let lastResponse: Anthropic.Message | null = null;
       let totalTokens = { prompt: 0, completion: 0, total: 0 };
+      const TIMEOUT_MS = 60000; // 60 seconds
       
       for (let round = 0; round < 5; round++) {
+        const roundStartTime = Date.now();
+        
+        // Check for timeout
+        if (Date.now() - startTime > TIMEOUT_MS) {
+          throw new Error(`Tool execution timed out after ${TIMEOUT_MS}ms`);
+        }
+        
         // Call Claude with tools using the Anthropic client directly
         const response = await anthropic.messages.create({
           model: MODEL_CONFIG.analysis,
@@ -341,28 +374,56 @@ IMPORTANT:
       return output;
       
     } catch (error) {
-      context.logger.error('[CheckMathWithMathJsTool] Error:', error);
+      const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      // Log detailed error information
+      context.logger.error('[CheckMathWithMathJsTool] Error during execution:', {
+        error: errorMessage,
+        statement: input.statement,
+        sessionId,
+        duration,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Determine error type and create appropriate explanation
+      let explanation = 'An error occurred during verification.';
+      if (errorMessage.includes('timeout')) {
+        explanation = 'Verification timed out. The mathematical statement may be too complex for automated analysis.';
+      } else if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        explanation = 'Rate limit exceeded. Please try again later.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('ENOTFOUND')) {
+        explanation = 'Network error occurred. Please check your connection and try again.';
+      } else if (errorMessage.includes('API key') || errorMessage.includes('authentication')) {
+        explanation = 'Authentication error. Please check API configuration.';
+      }
+      
       return {
         statement: input.statement,
         status: 'cannot_verify',
-        explanation: 'An error occurred during verification.',
-        error: error instanceof Error ? error.message : 'Unknown error occurred.',
+        explanation,
+        error: errorMessage,
         llmInteraction: {
-          model: 'error',
-          prompt: '',
-          response: '',
+          model: MODEL_CONFIG.analysis,
+          prompt: currentPrompt || `Statement: "${input.statement}"`,
+          response: `Error: ${errorMessage}`,
           tokensUsed: { prompt: 0, completion: 0, total: 0 },
           timestamp: new Date(),
-          duration: 0
+          duration
         }
       };
     } finally {
-      // Restore the previous session context
-      if (previousSession) {
-        sessionContext.setSession(previousSession);
-      } else {
-        // Clear the session if there was no previous one
-        sessionContext.setSession(undefined);
+      // Safely restore the previous session context
+      try {
+        if (previousSession) {
+          sessionContext.setSession(previousSession);
+        } else {
+          // Clear the session if there was no previous one
+          sessionContext.setSession(undefined);
+        }
+      } catch (sessionError) {
+        // Log session restoration error but don't throw
+        context.logger.warn('[CheckMathWithMathJsTool] Failed to restore session context:', { error: sessionError });
       }
     }
   }
@@ -388,7 +449,8 @@ IMPORTANT:
     }
   }
   
-  private async tryDirectEvaluation(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput | null> {
+  private async tryDirectEvaluation(input: CheckMathAgenticInput, context: ToolContext): Promise<CheckMathAgenticOutput | null> {
+    const startTime = Date.now();
     context.logger.info(`[CheckMathWithMathJsTool] Attempting direct MathJS evaluation for: "${input.statement}"`);
     
     try {
@@ -458,6 +520,14 @@ IMPORTANT:
               { expression: rightExpression, result: rightFormatted }
             ]
           },
+          llmInteraction: {
+            model: 'direct-evaluation',
+            prompt: input.statement,
+            response: `Direct MathJS evaluation: ${leftExpression} = ${leftFormatted}`,
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
         };
       } else {
         return {
@@ -479,6 +549,14 @@ IMPORTANT:
             expectedValue: leftFormatted,
             actualValue: rightFormatted
           },
+          llmInteraction: {
+            model: 'direct-evaluation',
+            prompt: input.statement,
+            response: `Direct MathJS evaluation found error: ${leftExpression} = ${leftFormatted}, not ${rightFormatted}`,
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
         };
       }
     } catch (error) {
@@ -549,7 +627,8 @@ IMPORTANT:
     }
   }
   
-  private async llmAssistedVerification(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput> {
+  private async llmAssistedVerification(input: CheckMathAgenticInput, context: ToolContext): Promise<CheckMathAgenticOutput> {
+    const startTime = Date.now();
     context.logger.info(`[CheckMathWithMathJsTool] Falling back to LLM-assisted verification`);
     
     const systemPrompt = `You are a mathematical verification assistant. Your task is to verify mathematical statements using MathJS syntax.
@@ -617,14 +696,30 @@ Respond with a JSON object containing:
           statement: input.statement,
           status: 'cannot_verify',
           explanation: 'Could not parse the verification result.',
+          llmInteraction: {
+            model: MODEL_CONFIG.analysis,
+            prompt: userPrompt,
+            response: 'Failed to parse JSON response',
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
         };
       }
       
       // Build the output
-      const output: CheckMathWithMathJsOutput = {
+      const output: CheckMathAgenticOutput = {
         statement: input.statement,
         status: parsed.status || 'cannot_verify',
         explanation: parsed.explanation || 'No explanation provided.',
+        llmInteraction: {
+          model: result.interaction.model,
+          prompt: result.interaction.prompt,
+          response: result.interaction.response,
+          tokensUsed: result.interaction.tokensUsed,
+          timestamp: new Date(),
+          duration: Date.now() - startTime
+        }
       };
       
       // Add verification details if present
@@ -664,10 +759,25 @@ Respond with a JSON object containing:
       
       return output;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      context.logger.error('[CheckMathWithMathJsTool] LLM verification failed:', {
+        error: errorMessage,
+        statement: input.statement,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       return {
         statement: input.statement,
         status: 'cannot_verify',
-        explanation: `LLM verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        explanation: `LLM verification failed: ${errorMessage}`,
+        llmInteraction: {
+          model: MODEL_CONFIG.analysis,
+          prompt: userPrompt,
+          response: `Error: ${errorMessage}`,
+          tokensUsed: { prompt: 0, completion: 0, total: 0 },
+          timestamp: new Date(),
+          duration: Date.now() - startTime
+        }
       };
     }
   }

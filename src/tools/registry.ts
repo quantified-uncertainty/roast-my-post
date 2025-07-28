@@ -2,7 +2,6 @@ import { Tool } from './base/Tool';
 import ForecasterTool from './forecaster';
 import FactCheckerTool from './fact-checker';
 import CheckMathTool from './check-math';
-import CheckMathOldTool from './check-math-old';
 import CheckMathWithMathJsTool from './check-math-with-mathjs';
 import CheckMathHybridTool from './check-math-hybrid';
 import ExtractForecastingClaimsTool from './extract-forecasting-claims';
@@ -22,7 +21,6 @@ export class ToolRegistry {
     this.register(ForecasterTool);
     this.register(FactCheckerTool);
     this.register(CheckMathTool);
-    this.register(CheckMathOldTool);
     this.register(CheckMathWithMathJsTool);
     this.register(CheckMathHybridTool);
     this.register(ExtractForecastingClaimsTool);
