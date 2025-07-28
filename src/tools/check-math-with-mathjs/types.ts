@@ -1,27 +1,22 @@
 import { z } from 'zod';
-import { inputSchema, outputSchema } from './schemas';
+import { 
+  MathVerificationStatus, 
+  MathErrorDetails, 
+  MathVerificationDetails 
+} from '@/tools/shared/math-schemas';
+import { RichLLMInteraction } from '@/types/llm';
 
-export interface MathError {
-  lineStart: number;
-  lineEnd: number;
-  highlightedText: string;
-  description: string;
-  errorType: 'calculation' | 'logic' | 'unit' | 'notation' | 'conceptual';
-  severity: 'critical' | 'major' | 'minor';
-  conciseCorrection?: string;
-  verificationResult?: {
-    evaluated: boolean;
-    expectedValue?: string;
-    actualValue?: string;
-    error?: string;
-    steps?: Array<{
-      expression: string;
-      result: string;
-      description?: string;
-    }>;
-    copyableExpression?: string; // Full expression for copy-paste
-  };
+export interface CheckMathAgenticInput {
+  statement: string;
+  context?: string;
 }
 
-export type CheckMathWithMathJsInput = z.infer<typeof inputSchema>;
-export type CheckMathWithMathJsOutput = z.infer<typeof outputSchema>;
+export interface CheckMathAgenticOutput {
+  statement: string;
+  status: MathVerificationStatus;
+  explanation: string;
+  verificationDetails?: MathVerificationDetails;
+  errorDetails?: MathErrorDetails;
+  error?: string;
+  llmInteraction: RichLLMInteraction;
+}

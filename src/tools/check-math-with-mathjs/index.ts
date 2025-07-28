@@ -3,6 +3,7 @@ import { Tool } from '../base/Tool';
 import { logger } from '@/lib/logger';
 import type { ToolContext } from '../base/Tool';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { createAnthropicClient } from '@/types/openai';
 import type { RichLLMInteraction } from '@/types/llm';
 import type { 
   MathVerificationStatus, 
@@ -12,20 +13,105 @@ import type {
 import { generateCacheSeed } from '@/tools/shared/cache-utils';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { Anthropic } from '@anthropic-ai/sdk';
 
 // Import types and schemas
-import { CheckMathWithMathJsInput, CheckMathWithMathJsOutput } from './types';
+import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
 import { inputSchema, outputSchema } from './schemas';
-import { buildSystemPrompt, buildUserPrompt } from './prompts';
 
-export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, CheckMathWithMathJsOutput> {
+// Helper function to build prompt string for logging
+function buildPromptString(
+  system: string | undefined,
+  messages: Array<{ role: string; content: string }>
+): string {
+  let prompt = '';
+  if (system) {
+    prompt += `SYSTEM: ${system}\n\n`;
+  }
+  
+  messages.forEach(msg => {
+    prompt += `${msg.role.toUpperCase()}: ${msg.content}\n`;
+  });
+  
+  return prompt.trim();
+}
+
+// Tool definitions for Claude - simplified to 2 tools
+const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
+  {
+    name: 'evaluate_expression',
+    description: 'Evaluate a mathematical expression using MathJS. Supports arithmetic, functions (sqrt, factorial, etc.), comparisons, and unit conversions.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        expression: {
+          type: 'string',
+          description: 'The MathJS expression to evaluate (e.g., "2 + 2", "sqrt(16)", "5! == 120", "5 km + 3000 m in km")'
+        }
+      },
+      required: ['expression']
+    }
+  },
+  {
+    name: 'provide_verdict',
+    description: 'Provide the final verification result',
+    input_schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['verified_true', 'verified_false', 'cannot_verify'],
+          description: 'The verification status'
+        },
+        explanation: {
+          type: 'string',
+          description: 'Clear explanation of why the statement is true, false, or cannot be verified'
+        },
+        mathjs_expression: {
+          type: 'string',
+          description: 'The MathJS expression that was evaluated (if any)'
+        },
+        computed_value: {
+          type: 'string',
+          description: 'The computed value from MathJS (if any)'
+        },
+        error_type: {
+          type: 'string',
+          enum: ['calculation', 'logic', 'unit', 'notation', 'conceptual'],
+          description: 'Type of error (only if status is verified_false)'
+        },
+        severity: {
+          type: 'string',
+          enum: ['critical', 'major', 'minor'],
+          description: 'Severity of error (only if status is verified_false)'
+        },
+        concise_correction: {
+          type: 'string',
+          description: 'Brief correction like "60 → 70" (only if status is verified_false)'
+        },
+        expected_value: {
+          type: 'string',
+          description: 'The expected/correct value (only if status is verified_false)'
+        },
+        actual_value: {
+          type: 'string',
+          description: 'The actual/incorrect value found in the statement (only if status is verified_false)'
+        }
+      },
+      required: ['status', 'explanation']
+    }
+  }
+];
+
+
+export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMathAgenticOutput> {
   config = {
     id: 'check-math-with-mathjs',
-    name: 'Check Mathematical Accuracy with MathJS',
-    description: 'Verify a single mathematical statement using MathJS computation',
-    version: '1.0.0',
+    name: 'Check Math with MathJS',
+    description: 'Verify mathematical statements using an agentic approach with Claude and MathJS',
+    version: '2.0.0',
     category: 'analysis' as const,
-    costEstimate: 'Free for simple math, ~$0.01 for complex statements requiring LLM',
+    costEstimate: '~$0.02-0.05 per statement (uses Claude with multiple tool calls)',
     path: '/tools/check-math-with-mathjs',
     status: 'stable' as const
   };
@@ -33,22 +119,234 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
   inputSchema = inputSchema;
   outputSchema = outputSchema as any;
   
-  async execute(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput> {
+  async execute(input: CheckMathAgenticInput, context: ToolContext): Promise<CheckMathAgenticOutput> {
+    const startTime = Date.now();
+    context.logger.info(`[CheckMathWithMathJsTool] Analyzing statement: "${input.statement}"`);
+    
+    // Store the previous session to restore later
+    const previousSession = sessionContext.getSession();
+    
     try {
-      // First, try direct MathJS evaluation
-      const directResult = await this.tryDirectEvaluation(input, context);
-      if (directResult) {
-        return directResult;
+      // Always create a new session for each tool execution
+      const sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const newSession = {
+        sessionId,
+        sessionName: `Math Agentic Tool - ${input.statement.substring(0, 50)}${input.statement.length > 50 ? '...' : ''}`,
+        sessionPath: '/tools/check-math-with-mathjs'
+      };
+      
+      // Set our new session
+      sessionContext.setSession(newSession);
+      context.logger.info(`[CheckMathWithMathJsTool] Created new session: ${sessionId}`);
+      
+      const sessionConfig = sessionContext.withPath('/tools/check-math-with-mathjs');
+      const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+      
+      // Simplified system prompt
+      const systemPrompt = `You are a mathematical verification agent. Verify if mathematical statements are true, false, or cannot be verified.
+
+TOOLS:
+- evaluate_expression: Use this to compute numerical expressions with MathJS
+- provide_verdict: Use this to give your final answer
+
+APPROACH:
+1. ALWAYS start by calling evaluate_expression to check any numerical claims
+2. For symbolic/theoretical statements: return 'cannot_verify' (MathJS only does numerical computation)
+3. For unit mismatches: compute the correct value and note the error
+
+MATHJS SYNTAX EXAMPLES:
+- Arithmetic: 2 + 2, 5 * 7, 10 / 2
+- Functions: sqrt(16), factorial(5) or 5!, combinations(10, 3)
+- Comparisons: 5 == 5, 10 > 8
+- Units: 5 km + 3000 m, (5 km + 3000 m) in km
+- Percentages: 30% * 150 or 0.3 * 150
+- Constants: pi, e
+
+IMPORTANT:
+- Keep explanations clear and concise 
+- Always include mathjs_expression and computed_value when using MathJS
+- For rounding (e.g., π ≈ 3.14), accept if reasonable
+- For unit errors, provide the correct value with proper units`;
+
+      const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
+      
+      // Early detection of symbolic math to save tokens
+      const symbolicKeywords = [
+        'derivative', 'integral', 'limit', 'lim', 'd/dx', '∫', '∂',
+        'prove', 'theorem', 'identity', 'simplify', 'expand', 'factor'
+      ];
+      
+      const statementLower = input.statement.toLowerCase();
+      const isLikelySymbolic = symbolicKeywords.some(keyword => 
+        statementLower.includes(keyword)
+      );
+      
+      // Pre-written responses for common cases
+      if (isLikelySymbolic) {
+        return {
+          statement: input.statement,
+          status: 'cannot_verify',
+          explanation: 'Cannot verify symbolic math. MathJS only handles numerical computations.',
+          llmInteraction: {
+            model: MODEL_CONFIG.analysis,
+            prompt: userPrompt,
+            response: 'Detected symbolic mathematics - early return',
+            tokensUsed: { prompt: 0, completion: 0, total: 0 },
+            timestamp: new Date(),
+            duration: Date.now() - startTime
+          }
+        };
       }
       
-      // If direct evaluation failed, fall back to LLM-assisted verification
-      return await this.llmAssistedVerification(input, context);
+      // Track tool calls for debugging
+      const toolCalls: Array<{ tool: string; input: any; output: any }> = [];
+      let finalResponse: any = null;
+      let agentReasoning = '';
+      
+      // Build conversation messages
+      const messages: Anthropic.MessageParam[] = [
+        { role: 'user', content: userPrompt }
+      ];
+      
+      // Create Anthropic client
+      const anthropic = createAnthropicClient();
+      
+      // Allow up to 5 rounds of tool calls
+      let lastResponse: Anthropic.Message | null = null;
+      let totalTokens = { prompt: 0, completion: 0, total: 0 };
+      
+      for (let round = 0; round < 5; round++) {
+        // Call Claude with tools using the Anthropic client directly
+        const response = await anthropic.messages.create({
+          model: MODEL_CONFIG.analysis,
+          system: systemPrompt,
+          messages,
+          tools: MATH_AGENT_TOOLS,
+          tool_choice: { type: 'auto' },
+          max_tokens: 2000,
+          temperature: 0
+        }, {
+          headers: heliconeHeaders
+        });
+        
+        lastResponse = response;
+        
+        // Update token count
+        if (response.usage) {
+          totalTokens.prompt += response.usage.input_tokens;
+          totalTokens.completion += response.usage.output_tokens;
+          totalTokens.total = totalTokens.prompt + totalTokens.completion;
+        }
+        
+        // Extract text reasoning
+        const textBlocks = response.content.filter(
+          (block): block is Anthropic.TextBlock => block.type === 'text'
+        );
+        if (textBlocks.length > 0) {
+          agentReasoning += (agentReasoning ? '\n' : '') + textBlocks.map(block => block.text).join('\n');
+        }
+        
+        // Process tool calls
+        const toolUses = response.content.filter(
+          (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+        );
+        
+        if (toolUses.length === 0) {
+          // No more tool calls, we're done
+          break;
+        }
+        
+        // Add Claude's response to messages
+        messages.push({ role: 'assistant', content: response.content });
+        
+        // Process each tool call and collect results
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+        
+        for (const toolUse of toolUses) {
+          const toolResult = await this.executeToolCall(toolUse, context);
+          toolCalls.push({
+            tool: toolUse.name,
+            input: toolUse.input,
+            output: toolResult
+          });
+          
+          if (toolUse.name === 'provide_verdict') {
+            finalResponse = toolUse.input;
+          }
+          
+          // Format tool result for Claude
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: toolUse.id,
+            content: JSON.stringify(toolResult)
+          });
+        }
+        
+        // Add tool results to messages
+        messages.push({ role: 'user', content: toolResults });
+        
+        // If we got a final response, we can stop
+        if (finalResponse) {
+          break;
+        }
+      }
+      
+      // If no final response was provided, create a default one
+      if (!finalResponse) {
+        finalResponse = {
+          status: 'cannot_verify',
+          explanation: 'The agent did not provide a final response.'
+        };
+      }
+      
+      // Build the output
+      const output: CheckMathAgenticOutput = {
+        statement: input.statement,
+        status: finalResponse.status,
+        explanation: finalResponse.explanation,
+        llmInteraction: {
+          model: MODEL_CONFIG.analysis,
+          prompt: buildPromptString(systemPrompt, [{ role: 'user', content: userPrompt }]),
+          response: lastResponse ? lastResponse.content.map(block => {
+            if (block.type === 'text') return block.text;
+            if (block.type === 'tool_use') return `[Tool call: ${block.name}]`;
+            return '';
+          }).join('\n') : '',
+          tokensUsed: totalTokens,
+          timestamp: new Date(),
+          duration: Date.now() - startTime
+        }
+      };
+      
+      // Add verification details if available
+      if (finalResponse.mathjs_expression || finalResponse.computed_value) {
+        output.verificationDetails = {
+          mathJsExpression: finalResponse.mathjs_expression || '',
+          computedValue: finalResponse.computed_value || '',
+          steps: []
+        };
+      }
+      
+      // Add error details if status is false
+      if (finalResponse.status === 'verified_false' && finalResponse.error_type) {
+        output.errorDetails = {
+          errorType: finalResponse.error_type,
+          severity: finalResponse.severity || 'major',
+          conciseCorrection: finalResponse.concise_correction || '',
+          expectedValue: finalResponse.expected_value,
+          actualValue: finalResponse.actual_value
+        };
+      }
+      
+      return output;
+      
     } catch (error) {
-      // Return a graceful error response
+      context.logger.error('[CheckMathWithMathJsTool] Error:', error);
       return {
         statement: input.statement,
         status: 'cannot_verify',
-        explanation: `A technical error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        explanation: 'An error occurred during verification.',
+        error: error instanceof Error ? error.message : 'Unknown error occurred.',
         llmInteraction: {
           model: 'error',
           prompt: '',
@@ -58,472 +356,65 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
           duration: 0
         }
       };
-    }
-  }
-  
-  private async tryDirectEvaluation(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput | null> {
-    context.logger.info(`[CheckMathWithMathJsTool] Attempting direct MathJS evaluation for: "${input.statement}"`);
-    
-    try {
-      // First, try to handle special mathematical symbols
-      let normalizedStatement = input.statement;
-      normalizedStatement = normalizedStatement.replace(/π/g, 'pi');
-      normalizedStatement = normalizedStatement.replace(/×/g, '*');
-      normalizedStatement = normalizedStatement.replace(/÷/g, '/');
-      normalizedStatement = normalizedStatement.replace(/−/g, '-');
-      normalizedStatement = normalizedStatement.replace(/–/g, '-');
-      
-      // Parse the statement to find equals sign
-      const parts = normalizedStatement.split('=');
-      if (parts.length !== 2) {
-        // Not a simple equation, need LLM help
-        return null;
-      }
-      
-      const leftSide = parts[0].trim();
-      const rightSide = parts[1].trim();
-      
-      // Try to evaluate both sides
-      let leftValue: any;
-      let rightValue: any;
-      let leftExpression = leftSide;
-      let rightExpression = rightSide;
-      
-      try {
-        leftValue = evaluate(leftSide);
-        leftExpression = leftSide;
-      } catch (e) {
-        // Try some common conversions
-        const converted = this.convertToMathJs(leftSide);
-        if (!converted) return null;
-        leftExpression = converted;
-        leftValue = evaluate(leftExpression);
-      }
-      
-      try {
-        rightValue = evaluate(rightSide);
-        rightExpression = rightSide;
-      } catch (e) {
-        // Try some common conversions
-        const converted = this.convertToMathJs(rightSide);
-        if (!converted) return null;
-        rightExpression = converted;
-        rightValue = evaluate(rightExpression);
-      }
-      
-      // Format the values for comparison
-      const leftFormatted = format(leftValue, { precision: 14 });
-      const rightFormatted = format(rightValue, { precision: 14 });
-      
-      // Compare values (handle floating point precision)
-      const isEqual = Math.abs(leftValue - rightValue) < 1e-10;
-      
-      if (isEqual) {
-        return {
-          statement: input.statement,
-          status: 'verified_true',
-          explanation: `The statement is correct. ${leftExpression} equals ${leftFormatted}.`,
-          verificationDetails: {
-            mathJsExpression: leftExpression,
-            computedValue: leftFormatted,
-            steps: [
-              { expression: leftExpression, result: leftFormatted },
-              { expression: rightExpression, result: rightFormatted }
-            ]
-          },
-          llmInteraction: {
-            model: 'none',
-            prompt: 'Direct MathJS evaluation',
-            response: 'Success',
-            tokensUsed: { prompt: 0, completion: 0, total: 0 },
-            timestamp: new Date(),
-            duration: 0
-          }
-        };
+    } finally {
+      // Restore the previous session context
+      if (previousSession) {
+        sessionContext.setSession(previousSession);
       } else {
-        return {
-          statement: input.statement,
-          status: 'verified_false',
-          explanation: `The statement is incorrect. ${leftExpression} equals ${leftFormatted}, not ${rightFormatted}.`,
-          verificationDetails: {
-            mathJsExpression: leftExpression,
-            computedValue: leftFormatted,
-            steps: [
-              { expression: leftExpression, result: leftFormatted },
-              { expression: rightExpression, result: rightFormatted }
-            ]
-          },
-          errorDetails: {
-            errorType: 'calculation',
-            severity: 'major',
-            conciseCorrection: `${rightFormatted} → ${leftFormatted}`,
-            expectedValue: leftFormatted,
-            actualValue: rightFormatted
-          },
-          llmInteraction: {
-            model: 'none',
-            prompt: 'Direct MathJS evaluation',
-            response: 'Success',
-            tokensUsed: { prompt: 0, completion: 0, total: 0 },
-            timestamp: new Date(),
-            duration: 0
-          }
-        };
+        // Clear the session if there was no previous one
+        sessionContext.setSession(undefined);
+      }
+    }
+  }
+  
+  private async executeToolCall(toolUse: Anthropic.ToolUseBlock, context: ToolContext): Promise<any> {
+    try {
+      switch (toolUse.name) {
+        case 'evaluate_expression':
+          return this.evaluateExpression(toolUse.input as { expression: string }, context);
+          
+        case 'provide_verdict':
+          // Just return success for the verdict tool
+          return { success: true };
+          
+        default:
+          return { error: `Unknown tool: ${toolUse.name}` };
       }
     } catch (error) {
-      context.logger.debug(`[CheckMathWithMathJsTool] Direct evaluation failed: ${error}`);
-      return null;
-    }
-  }
-  
-  private convertToMathJs(expression: string): string | null {
-    // Try some common conversions
-    let converted = expression;
-    
-    // Convert mathematical symbols
-    converted = converted.replace(/π/g, 'pi');
-    converted = converted.replace(/×/g, '*');
-    converted = converted.replace(/÷/g, '/');
-    converted = converted.replace(/−/g, '-');  // en dash
-    converted = converted.replace(/–/g, '-');  // em dash
-    
-    // Convert word numbers to digits
-    const wordNumbers: Record<string, string> = {
-      'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
-      'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
-      'ten': '10', 'eleven': '11', 'twelve': '12', 'thirteen': '13',
-      'fourteen': '14', 'fifteen': '15', 'sixteen': '16', 'seventeen': '17',
-      'eighteen': '18', 'nineteen': '19', 'twenty': '20', 'thirty': '30',
-      'forty': '40', 'fifty': '50', 'sixty': '60', 'seventy': '70',
-      'eighty': '80', 'ninety': '90', 'hundred': '100', 'thousand': '1000',
-      'million': '1000000', 'billion': '1000000000'
-    };
-    
-    for (const [word, num] of Object.entries(wordNumbers)) {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      converted = converted.replace(regex, num);
-    }
-    
-    // Convert common unit words
-    converted = converted.replace(/\bkilometer(s)?\b/gi, 'km');
-    converted = converted.replace(/\bmeter(s)?\b/gi, 'm');
-    converted = converted.replace(/\bcentimeter(s)?\b/gi, 'cm');
-    converted = converted.replace(/\bmillimeter(s)?\b/gi, 'mm');
-    converted = converted.replace(/\bkilogram(s)?\b/gi, 'kg');
-    converted = converted.replace(/\bgram(s)?\b/gi, 'g');
-    converted = converted.replace(/\bliter(s)?\b/gi, 'L');
-    converted = converted.replace(/\bmilliliter(s)?\b/gi, 'mL');
-    
-    // Convert "of" to multiplication for percentages
-    converted = converted.replace(/(\d+\.?\d*%?)\s+of\s+/gi, '$1 * ');
-    
-    // Convert common operations
-    converted = converted.replace(/\bplus\b/gi, '+');
-    converted = converted.replace(/\bminus\b/gi, '-');
-    converted = converted.replace(/\btimes\b/gi, '*');
-    converted = converted.replace(/\bmultiplied by\b/gi, '*');
-    converted = converted.replace(/\bdivided by\b/gi, '/');
-    converted = converted.replace(/\bover\b/gi, '/');
-    converted = converted.replace(/\bsquared\b/gi, '^2');
-    converted = converted.replace(/\bcubed\b/gi, '^3');
-    converted = converted.replace(/\bto the power of\b/gi, '^');
-    converted = converted.replace(/\braised to\b/gi, '^');
-    
-    // Try to evaluate the converted expression
-    try {
-      evaluate(converted);
-      return converted;
-    } catch {
-      return null;
-    }
-  }
-  
-  private async extractMathJsExpression(statement: string, context: ToolContext): Promise<string | null> {
-    const systemPrompt = `Extract the mathematical relationship from the statement as a MathJS expression. Return ONLY the expression.
-
-IMPORTANT: 
-- Focus on extracting the COMPLETE mathematical relationship or claim being made
-- For statements with "so", "therefore", "thus", extract the conclusion as an equality
-- If a value is stated without comparison, just return the value
-- For contextual statements like "X ... so Y", focus on Y as the main claim
-
-MathJS Syntax Reference:
-- Equality/comparison: == != < > <= >= (chained: 5 < x < 10)
-- Arithmetic: + - * / ^ % mod
-- Percentages: 30% → 0.3 (automatic)
-- Scientific notation: 1e-7, 3.14e5
-- Functions: sqrt() sin() cos() tan() log() exp() abs() floor() ceil() round()
-- Logarithms: log(x) for ln, log(x, base) for other bases
-- Constants: pi, e, tau, phi
-- Units: 5 km, 100 cm to m, 60 mph, 32 degF
-- Factorial: 5! or factorial(5)
-- Combinations: combinations(n, k) for "n choose k"
-- Matrices: [[1,2],[3,4]], det(), transpose()
-- Vectors: [1,2,3], dot()
-- Complex: 3+4i, abs(3+4i)
-- Implicit multiplication: 2 pi, (1+2)(3+4)
-- Number formats: 0b11, 0o77, 0xff
-
-Common patterns:
-"X is Y" → "X == Y"
-"X equals Y" → "X == Y"
-"X gives Y" → "X == Y"
-"X% of Y is Z" → "X% * Y == Z"
-"increase X by Y%" → "X * (1 + Y%) == result"
-"X per Y" → often just extract the value X/Y
-"the relationship between X and Y" → try to find the equation
-
-Examples:
-"2 + 2 = 4" → "2 + 2 == 4"
-"30% of 150 is 45" → "30% * 150 == 45"
-"Log base 2 of 8 equals 3" → "log(8, 2) == 3"
-"5 factorial is 120" → "5! == 120"
-"The determinant of [[1,2],[3,4]] is -2" → "det([[1,2],[3,4]]) == -2"`;
-
-    // Get session context for Helicone tracking
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/check-math-extract-expression') : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
-
-    const maxAttempts = 3;
-    const attemptHistory: Array<{expression: string, error: string}> = [];
-    
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        // Build messages with history of previous attempts
-        const messages: Array<{role: "user" | "assistant", content: string}> = [
-          { role: 'user', content: statement }
-        ];
-        
-        // Add history of previous failed attempts
-        for (const prevAttempt of attemptHistory) {
-          messages.push({ role: 'assistant', content: prevAttempt.expression });
-          messages.push({ role: 'user', content: `Error: ${prevAttempt.error}. Try again with valid MathJS syntax.` });
-        }
-        
-        const result = await callClaude({
-          system: systemPrompt,
-          messages,
-          max_tokens: 100,
-          temperature: 0,
-          model: MODEL_CONFIG.analysis, // Use Sonnet for accuracy
-          enablePromptCaching: true, // Enable caching since prompt is long
-          heliconeHeaders
-        });
-
-        const firstContent = result.response.content[0];
-        if (firstContent.type === 'text') {
-          const expression = firstContent.text.trim();
-          // Try to evaluate it
-          try {
-            evaluate(expression);
-            context.logger.info(`[CheckMathWithMathJsTool] Extracted valid expression: ${expression}`);
-            return expression;
-          } catch (evalError: any) {
-            const errorMsg = evalError.message || 'Invalid expression';
-            context.logger.debug(`[CheckMathWithMathJsTool] Expression invalid on attempt ${attempt}: ${expression} - ${errorMsg}`);
-            attemptHistory.push({ expression, error: errorMsg });
-          }
-        }
-      } catch (error) {
-        context.logger.debug(`[CheckMathWithMathJsTool] Extraction attempt ${attempt} failed: ${error}`);
-      }
-    }
-    return null;
-  }
-
-  private async llmAssistedVerification(input: CheckMathWithMathJsInput, context: ToolContext): Promise<CheckMathWithMathJsOutput> {
-    context.logger.info(`[CheckMathWithMathJsTool] Falling back to LLM-assisted verification`);
-    
-    // First, try to extract just the MathJS expression
-    const extractedExpression = await this.extractMathJsExpression(input.statement, context);
-    
-    if (extractedExpression) {
-      // We successfully extracted an expression, try to evaluate it directly
-      try {
-        const result = evaluate(extractedExpression);
-        const isTrue = result === true || (typeof result === 'number' && Math.abs(result) < 0.0001);
-        
-        // If false, try to extract the values to provide a correction
-        let errorDetails = undefined;
-        if (!isTrue && extractedExpression.includes('==')) {
-          try {
-            const [leftSide, rightSide] = extractedExpression.split('==').map(s => s.trim());
-            const leftValue = evaluate(leftSide);
-            const rightValue = evaluate(rightSide);
-            errorDetails = {
-              errorType: 'calculation' as const,
-              severity: 'major' as const,
-              conciseCorrection: `${rightValue} → ${leftValue}`,
-              expectedValue: String(leftValue),
-              actualValue: String(rightValue)
-            };
-          } catch (e) {
-            // Ignore errors in extracting values
-          }
-        }
-        
-        return {
-          statement: input.statement,
-          status: isTrue ? 'verified_true' : 'verified_false',
-          explanation: isTrue 
-            ? `The statement is correct. ${extractedExpression} evaluates to true.`
-            : `The statement is incorrect. ${extractedExpression} evaluates to ${result}.`,
-          verificationDetails: {
-            mathJsExpression: extractedExpression,
-            computedValue: String(result),
-            steps: [{
-              expression: extractedExpression,
-              result: String(result)
-            }]
-          },
-          errorDetails,
-          llmInteraction: {
-            model: MODEL_CONFIG.routing,
-            prompt: 'Expression extraction only',
-            response: extractedExpression,
-            tokensUsed: { prompt: 50, completion: 20, total: 70 }, // Approximate
-            timestamp: new Date(),
-            duration: 100
-          }
-        };
-      } catch (evalError) {
-        context.logger.debug(`[CheckMathWithMathJsTool] Failed to evaluate extracted expression: ${evalError}`);
-        // Continue to full LLM verification
-      }
-    }
-    
-    // If extraction failed or evaluation failed, fall back to full LLM verification
-    const systemPrompt = `Convert mathematical statements to MathJS syntax and verify. Be extremely concise.
-
-Respond with JSON only:
-{"status":"verified_true|verified_false|cannot_verify","explanation":"brief","mathJsExpression":"expr","computedValue":"val","errorDetails":{"errorType":"calculation|logic|unit|notation|conceptual","severity":"critical|major|minor","conciseCorrection":"old→new"}}`;
-
-    const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
-    
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/check-math-with-mathjs-llm') : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
-    
-    // Generate cache seed
-    const cacheSeed = generateCacheSeed('math-check-mathjs-llm', [
-      input.statement,
-      input.context || ''
-    ]);
-    
-    try {
-      const result = await callClaude({
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-        max_tokens: 300,
-        temperature: 0,
-        model: MODEL_CONFIG.analysis, // Use Sonnet for accuracy in full verification too
-        enablePromptCaching: true,
-        heliconeHeaders,
-        cacheSeed
-      });
-      
-      // Parse the response
-      let parsed: any;
-      try {
-        // Extract JSON from the response
-        const firstContent = result.response.content[0];
-        if (firstContent.type === 'text') {
-          const jsonMatch = firstContent.text.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            parsed = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error('No JSON found in response');
-          }
-        } else {
-          throw new Error('Expected text content in response');
-        }
-      } catch (e) {
-        // If parsing fails, return cannot_verify
-        return {
-          statement: input.statement,
-          status: 'cannot_verify',
-          explanation: 'Could not parse the verification result.',
-          llmInteraction: result.interaction
-        };
-      }
-      
-      // Build the output
-      const output: CheckMathWithMathJsOutput = {
-        statement: input.statement,
-        status: parsed.status || 'cannot_verify',
-        explanation: parsed.explanation || 'No explanation provided.',
-        llmInteraction: result.interaction
+      return { 
+        error: error instanceof Error ? error.message : 'Tool execution failed',
+        details: String(error)
       };
+    }
+  }
+  
+  private evaluateExpression(input: { expression: string }, context: ToolContext): any {
+    try {
+      const result = evaluate(input.expression);
       
-      // Add verification details if present
-      if (parsed.mathJsExpression || parsed.computedValue) {
-        output.verificationDetails = {
-          mathJsExpression: String(parsed.mathJsExpression || ''),
-          computedValue: String(parsed.computedValue || ''),
-          steps: parsed.steps || []
-        };
+      // Format the result nicely
+      let formatted: string;
+      if (typeof result === 'boolean') {
+        formatted = result.toString();
+      } else if (typeof result === 'number') {
+        formatted = result.toString();
+      } else {
+        formatted = format(result);
       }
       
-      // Add error details if present
-      if (parsed.errorDetails) {
-        // Map any invalid error types to valid ones
-        const validErrorTypes = ['calculation', 'logic', 'unit', 'notation', 'conceptual'];
-        const errorType = parsed.errorDetails.errorType;
-        if (!validErrorTypes.includes(errorType)) {
-          // Map common variations to valid types
-          if (errorType === 'rounding_error' || errorType === 'rounding') {
-            parsed.errorDetails.errorType = 'calculation';
-          } else {
-            parsed.errorDetails.errorType = 'calculation'; // Default to calculation
-          }
-        }
-        // Ensure all string fields are actually strings
-        if (parsed.errorDetails.expectedValue !== undefined) {
-          parsed.errorDetails.expectedValue = String(parsed.errorDetails.expectedValue);
-        }
-        if (parsed.errorDetails.actualValue !== undefined) {
-          parsed.errorDetails.actualValue = String(parsed.errorDetails.actualValue);
-        }
-        if (parsed.errorDetails.conciseCorrection !== undefined) {
-          parsed.errorDetails.conciseCorrection = String(parsed.errorDetails.conciseCorrection);
-        }
-        output.errorDetails = parsed.errorDetails;
-      }
-      
-      return output;
-    } catch (error) {
       return {
-        statement: input.statement,
-        status: 'cannot_verify',
-        explanation: `LLM verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        llmInteraction: {
-          model: MODEL_CONFIG.analysis,
-          prompt: userPrompt,
-          response: '',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
+        success: true,
+        result: formatted,
+        type: typeof result,
+        raw: result
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+        type: 'error'
       };
     }
-  }
-  
-  override async beforeExecute(input: CheckMathWithMathJsInput, context: ToolContext): Promise<void> {
-    context.logger.info(`[CheckMathWithMathJsTool] Starting MathJS verification for statement: "${input.statement}"`);
-  }
-  
-  override async afterExecute(output: CheckMathWithMathJsOutput, context: ToolContext): Promise<void> {
-    context.logger.info(`[CheckMathWithMathJsTool] Verification result: ${output.status}`);
   }
 }
 

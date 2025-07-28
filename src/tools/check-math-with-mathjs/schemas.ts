@@ -1,16 +1,9 @@
 import { z } from 'zod';
-import { Anthropic } from '@anthropic-ai/sdk';
 import { llmInteractionSchema } from '@/types/llmSchema';
-import { 
-  mathStatusSchema,
-  mathExplanationSchema,
-  mathVerificationDetailsSchema,
-  mathErrorDetailsSchema
-} from '@/tools/shared/math-schemas';
 
 // Input schema - single mathematical statement
 export const inputSchema = z.object({
-  statement: z.string().min(1).max(1000).describe('A single mathematical statement to verify (e.g., "2 + 2 = 4" or "The square root of 16 is 4")'),
+  statement: z.string().min(1).max(1000).describe('A mathematical statement to verify'),
   context: z.string().max(500).optional().describe('Additional context about the statement')
 });
 
@@ -37,61 +30,3 @@ export const outputSchema = z.object({
   error: z.string().optional().describe('Technical error if verification failed'),
   llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
 });
-
-// Tool schemas for Claude
-export const verifyStatementToolSchema: Anthropic.Messages.Tool = {
-  name: "verify_statement",
-  description: "Verify a single mathematical statement using MathJS computation",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      statement: {
-        type: "string",
-        description: "A single mathematical statement to verify (e.g., '2 + 2 = 4', 'sqrt(16) = 4')"
-      },
-      mathJsExpression: {
-        type: "string",
-        description: "The MathJS expression to evaluate for verification"
-      }
-    },
-    required: ["statement", "mathJsExpression"]
-  }
-};
-
-export const getMathJsDocsToolSchema: Anthropic.Messages.Tool = {
-  name: "get_mathjs_docs",
-  description: "Get MathJS documentation for a specific topic",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      topic: {
-        type: "string",
-        description: "The topic to get documentation for (e.g., 'expressions', 'units', 'functions')"
-      }
-    },
-    required: ["topic"]
-  }
-};
-
-export const reportVerificationResultToolSchema: Anthropic.Messages.Tool = {
-  name: "report_verification_result",
-  description: "Report the final verification result for the mathematical statement",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      statement: {
-        type: "string",
-        description: "The original mathematical statement"
-      },
-      status: mathStatusSchema,
-      explanation: mathExplanationSchema,
-      verificationDetails: mathVerificationDetailsSchema,
-      errorDetails: mathErrorDetailsSchema,
-      error: {
-        type: "string",
-        description: "Technical error if verification failed"
-      }
-    },
-    required: ["statement", "status", "explanation"]
-  }
-};

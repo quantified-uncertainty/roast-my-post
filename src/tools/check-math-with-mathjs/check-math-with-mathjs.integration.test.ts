@@ -6,7 +6,7 @@ import {
   it,
 } from "@jest/globals";
 
-import { checkMathAgenticTool } from "./index";
+import { checkMathWithMathJsTool } from "./index";
 import type { CheckMathAgenticInput } from "./types";
 
 // Skip these tests in CI or when no API key is available
@@ -18,7 +18,7 @@ const describeIfApiKey =
 // Extend timeout for API calls
 const API_TIMEOUT = 30000;
 
-describeIfApiKey("CheckMathAgenticTool Integration", () => {
+describeIfApiKey("CheckMathWithMathJsTool Integration", () => {
   const mockContext = {
     logger,
     userId: "test-user",
@@ -36,11 +36,11 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "2 + 2 = 4",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
-        expect(result.reasoning).toBeTruthy();
+        expect(result.verificationDetails).toBeDefined();
         expect(result.llmInteraction).toBeDefined();
       },
       API_TIMEOUT
@@ -53,7 +53,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "2 + 2 = 5",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("4");
@@ -72,7 +72,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "5 × 7 = 35",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -87,7 +87,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "5 × 7 = 40",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("35");
@@ -106,7 +106,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "15% of 200 equals 30",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -121,7 +121,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "15% of 200 equals 35",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("30");
@@ -138,7 +138,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "1 kilometer equals 1000 meters",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -153,7 +153,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "1 mile equals 1000 meters",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toMatch(/1609|1,609/);
@@ -172,7 +172,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "5 km + 3000 m = $8",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.errorDetails?.errorType).toBe("unit");
@@ -190,9 +190,9 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           );
         }
 
-        // Should have expected/actual values in error details
-        if (result.errorDetails?.expectedValue) {
-          expect(result.errorDetails.expectedValue).toMatch(/8\s*km/);
+        // Should have computed the correct value if verification details exist
+        if (result.verificationDetails) {
+          expect(result.verificationDetails.computedValue).toBeTruthy();
         }
       },
       API_TIMEOUT
@@ -207,7 +207,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "π ≈ 3.14",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toMatch(
@@ -224,7 +224,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "π ≈ 3.0",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("3.14");
@@ -245,7 +245,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
             "Engineering approximation context where precise values are not required",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toMatch(
@@ -264,7 +264,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "The derivative of x³ is 3x²",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("cannot_verify");
         expect(result.explanation).toMatch(/symbolic|numerical|cannot/i);
@@ -280,7 +280,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "The integral of 2x is x² + C",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("cannot_verify");
         expect(result.explanation).toMatch(/symbolic|numerical|cannot/i);
@@ -296,7 +296,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "(a + b)² = a² + 2ab + b²",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("cannot_verify");
         expect(result.explanation).toMatch(/symbolic|algebraic|cannot/i);
@@ -313,11 +313,11 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "sqrt(16) = 4",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
-        expect(result.reasoning).toBeTruthy();
+        expect(result.verificationDetails?.mathJsExpression).toBeTruthy();
       },
       API_TIMEOUT
     );
@@ -329,7 +329,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "sqrt(16) = 5",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("4");
@@ -346,7 +346,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "5! = 120",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -361,7 +361,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "5! = 100",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("120");
@@ -378,7 +378,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "10 choose 3 equals 120",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -393,7 +393,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "10 choose 3 equals 30",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("120");
@@ -412,7 +412,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
             "If we flip a coin 10 times, we will definitely get exactly 5 heads",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.errorDetails?.errorType).toBe("logic");
@@ -430,7 +430,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "For any triangle, a² + b² = c²",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         // This is a theoretical statement that might be cannot_verify or verified_false
         expect(["verified_false", "cannot_verify"]).toContain(result.status);
@@ -458,10 +458,11 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "2^10 = 1024",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
-        expect(result.reasoning).toBeTruthy();
-        expect(result.reasoning.length).toBeGreaterThan(50); // Should have detailed reasoning
+        expect(result.verificationDetails).toBeDefined();
+        expect(result.verificationDetails?.mathJsExpression).toBeTruthy();
+        expect(result.verificationDetails?.computedValue).toBeTruthy();
       },
       API_TIMEOUT
     );
@@ -476,7 +477,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
             "Given that 2 + 2 = 4 and 3 × 5 = 15, therefore 4 + 15 = 19",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_true");
         expect(result.explanation).toBeTruthy();
@@ -491,7 +492,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "Since 2 + 2 = 4 and 3 × 5 = 16, therefore 4 + 16 = 20",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("verified_false");
         expect(result.explanation).toContain("15");
@@ -507,7 +508,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "6/2(1+2) = 9",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         // Should either verify as true (following order of operations) or flag as notation issue
         expect(["verified_true", "verified_false"]).toContain(result.status);
@@ -525,7 +526,7 @@ describeIfApiKey("CheckMathAgenticTool Integration", () => {
           statement: "The result is 0.736% of...",
         };
 
-        const result = await checkMathAgenticTool.execute(input, mockContext);
+        const result = await checkMathWithMathJsTool.execute(input, mockContext);
 
         expect(result.status).toBe("cannot_verify");
         expect(result.explanation).toMatch(
