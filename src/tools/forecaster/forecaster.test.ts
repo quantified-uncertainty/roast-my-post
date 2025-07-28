@@ -65,8 +65,7 @@ describe('ForecasterTool', () => {
           mean: 35,
           std_dev: 5
         },
-        outliers_removed: [],
-        llmInteractions: []
+        outliers_removed: []
       };
       
       (generateForecastWithAggregation as jest.Mock).mockResolvedValueOnce(mockResponse);
@@ -107,8 +106,7 @@ describe('ForecasterTool', () => {
           mean: 65,
           std_dev: 5
         },
-        outliers_removed: [],
-        llmInteractions: []
+        outliers_removed: []
       };
       
       (generateForecastWithAggregation as jest.Mock).mockResolvedValueOnce(mockResponse);
@@ -128,7 +126,7 @@ describe('ForecasterTool', () => {
           mean: 65,
           stdDev: 5
         },
-        llmInteractions: []
+        perplexityResults: undefined
       });
     });
     

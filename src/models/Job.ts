@@ -199,7 +199,6 @@ export class JobModel {
       costInCents: number;
       durationInSeconds: number;
       logs: string;
-      heliconeVerified?: boolean;
     }
   ) {
     return prisma.job.update({
@@ -551,14 +550,12 @@ export class JobModel {
 
       // Try to get accurate cost from Helicone first
       let costInCents: number;
-      let heliconeVerified = false;
       
       try {
         const heliconeData = await fetchJobCostWithRetry(job.id, 3, 1000);
         
         if (heliconeData) {
           costInCents = Math.round(heliconeData.totalCostUSD * 100);
-          heliconeVerified = true;
           logger.info(`Using Helicone cost data for job ${job.id}: $${heliconeData.totalCostUSD}`);
         } else {
           throw new Error('Helicone data not available');
@@ -638,7 +635,6 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         costInCents: costInCents,
         durationInSeconds: (Date.now() - startTime) / 1000,
         logs: logContent,
-        heliconeVerified: heliconeVerified,
       });
 
       // Log successful completion to session

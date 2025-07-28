@@ -284,6 +284,6 @@ describe('Plugin Integration Tests', () => {
     
     expect(result).toBeDefined();
     expect(result.summary).toBeDefined();
-    expect(result.cost).toBeGreaterThan(0);
+    expect(result.cost).toBe(0); // Cost is now tracked automatically by Helicone
   });
 });

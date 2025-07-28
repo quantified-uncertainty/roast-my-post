@@ -61,7 +61,6 @@ export async function GET(
       select: {
         id: true,
         costInCents: true,
-        heliconeVerified: true,
         completedAt: true,
         durationInSeconds: true
       },
@@ -73,7 +72,6 @@ export async function GET(
     // Calculate totals
     const totalCostCents = jobs.reduce((sum, job) => sum + (job.costInCents || 0), 0);
     const totalCostUSD = totalCostCents / 100;
-    const heliconeVerifiedCount = jobs.filter(job => job.heliconeVerified).length;
     const jobCount = jobs.length;
 
     // Calculate daily breakdown if requested
@@ -98,10 +96,6 @@ export async function GET(
       },
       totalCostUSD: Number(totalCostUSD.toFixed(4)),
       jobCount,
-      heliconeVerified: {
-        count: heliconeVerifiedCount,
-        percentage: jobCount > 0 ? Math.round((heliconeVerifiedCount / jobCount) * 100) : 0
-      },
       ...(dailyBreakdown && {
         dailyBreakdown: Object.entries(dailyBreakdown)
           .map(([date, data]) => ({
