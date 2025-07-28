@@ -32,9 +32,15 @@ interface TestBatchResult {
   errors: Array<{ testName: string; error: string }>;
 }
 
+interface TestResult {
+  success: boolean;
+  testName: string;
+  error?: string;
+}
+
 async function runTestBatch(testCases: TestCase[], mockContext: any): Promise<TestBatchResult> {
   const results = await Promise.allSettled(
-    testCases.map(async (testCase) => {
+    testCases.map(async (testCase): Promise<TestResult> => {
       try {
         const result = await checkMathWithMathJsTool.execute(testCase.input, mockContext);
         testCase.expectations(result);
@@ -63,7 +69,7 @@ async function runTestBatch(testCases: TestCase[], mockContext: any): Promise<Te
         batchResult.failed++;
         batchResult.errors.push({
           testName: result.value.testName,
-          error: result.value.error
+          error: result.value.error || 'Unknown error'
         });
       }
     } else {
