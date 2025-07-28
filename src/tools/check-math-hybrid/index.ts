@@ -25,7 +25,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
     
     try {
       // Step 1: Try MathJS first
-      const mathJsResult = await checkMathWithMathJsTool.run({
+      const mathJsResult = await checkMathWithMathJsTool.execute({
         statement: input.statement,
         context: input.context
       }, context);
@@ -39,7 +39,7 @@ export class CheckMathHybridTool extends Tool<CheckMathHybridInput, CheckMathHyb
       // Step 2: If MathJS can't verify, fall back to LLM for conceptual analysis
       if (mathJsResult.status === 'cannot_verify') {
         context.logger.info('[CheckMathHybridTool] MathJS could not verify, trying LLM for conceptual analysis...');
-        llmResult = await checkMathTool.run({
+        llmResult = await checkMathTool.execute({
           statement: input.statement,
           context: input.context
         }, context);
