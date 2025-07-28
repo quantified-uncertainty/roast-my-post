@@ -36,7 +36,9 @@
     "worktree:list": "./scripts/worktree-manager.sh list",
     "worktree:ports": "./scripts/worktree-manager.sh ports",
     "worktree": "./scripts/worktree-manager.sh",
-    "migrations:status": "node scripts/show-migrations.js"
+    "migrations:status": "node scripts/show-migrations.js",
+    "check": "npx prisma generate && npm run typecheck && npm run lint",
+    "precommit": "npm run check && npm run test:ci"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
