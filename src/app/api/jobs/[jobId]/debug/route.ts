@@ -143,7 +143,6 @@ export async function GET(
         jobId,
         jobInfo: {
           status: job.status,
-          heliconeVerified: job.heliconeVerified || false,
           costInCents: job.costInCents,
           createdAt: job.createdAt,
           completedAt: job.completedAt,
@@ -178,7 +177,6 @@ export async function GET(
         jobId,
         jobInfo: {
           status: job.status,
-          heliconeVerified: job.heliconeVerified || false,
           costInCents: job.costInCents,
           createdAt: job.createdAt,
           completedAt: job.completedAt,
