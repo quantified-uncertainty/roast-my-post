@@ -3,7 +3,7 @@ import { checkMathHybridTool } from './index';
 import { checkMathWithMathJsTool } from '../check-math-with-mathjs';
 import { checkMathTool } from '../check-math';
 import { logger } from '@/lib/logger';
-import type { CheckMathWithMathJsOutput } from '../check-math-with-mathjs/types';
+import type { CheckMathAgenticOutput } from '../check-math-with-mathjs/types';
 import type { CheckMathOutput } from '../check-math/index';
 
 // Mock the dependent tools
@@ -12,6 +12,16 @@ jest.mock('../check-math');
 
 const mockCheckMathWithMathJs = checkMathWithMathJsTool.execute as jest.MockedFunction<typeof checkMathWithMathJsTool.execute>;
 const mockCheckMath = checkMathTool.execute as jest.MockedFunction<typeof checkMathTool.execute>;
+
+// Helper to create mock llmInteraction
+const createMockLLMInteraction = () => ({
+  model: 'test',
+  prompt: 'test',
+  response: 'test',
+  tokensUsed: { prompt: 0, completion: 0, total: 0 },
+  timestamp: new Date(),
+  duration: 0
+});
 
 describe('CheckMathHybridTool', () => {
   const mockContext = {
@@ -42,7 +52,7 @@ describe('CheckMathHybridTool', () => {
   describe('execute method', () => {
     it('should use only MathJS when it can verify', async () => {
       // Mock MathJS successfully verifying
-      const mathJsResult: CheckMathWithMathJsOutput = {
+      const mathJsResult: CheckMathAgenticOutput = {
         statement: '2 + 2 = 4',
         status: 'verified_true',
         explanation: 'The calculation is correct: 2 + 2 = 4',
@@ -51,6 +61,7 @@ describe('CheckMathHybridTool', () => {
           computedValue: '4',
           steps: [{ expression: '2 + 2', result: '4' }]
         },
+        llmInteraction: createMockLLMInteraction()
       };
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
@@ -70,10 +81,11 @@ describe('CheckMathHybridTool', () => {
 
     it('should fall back to LLM when MathJS cannot verify', async () => {
       // Mock MathJS unable to verify
-      const mathJsResult: CheckMathWithMathJsOutput = {
+      const mathJsResult: CheckMathAgenticOutput = {
         statement: 'The limit of 1/x as x approaches infinity is 0',
         status: 'cannot_verify',
         explanation: 'Cannot express this limit calculation in MathJS',
+        llmInteraction: createMockLLMInteraction()
       };
 
       const llmResult: CheckMathOutput = {
@@ -101,7 +113,7 @@ describe('CheckMathHybridTool', () => {
 
     it('should detect errors with MathJS', async () => {
       // Mock MathJS detecting an error
-      const mathJsResult: CheckMathWithMathJsOutput = {
+      const mathJsResult: CheckMathAgenticOutput = {
         statement: '2 + 2 = 5',
         status: 'verified_false',
         explanation: 'Calculation error: 2 + 2 = 4, not 5',
@@ -110,6 +122,7 @@ describe('CheckMathHybridTool', () => {
           computedValue: '4',
           steps: [{ expression: '2 + 2', result: '4' }]
         },
+        llmInteraction: createMockLLMInteraction(),
         errorDetails: {
           errorType: 'calculation',
           severity: 'major',
@@ -151,10 +164,11 @@ describe('CheckMathHybridTool', () => {
 
     it('should extract concise correction from LLM when MathJS cannot', async () => {
       // Mock MathJS cannot verify
-      const mathJsResult: CheckMathWithMathJsOutput = {
+      const mathJsResult: CheckMathAgenticOutput = {
         statement: 'The derivative of x^2 is 3x',
         status: 'cannot_verify',
         explanation: 'Cannot verify derivative statements',
+        llmInteraction: createMockLLMInteraction()
       };
 
       const llmResult: CheckMathOutput = {
