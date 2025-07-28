@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
@@ -22,7 +20,6 @@ export interface CheckSpellingGrammarInput {
 
 export interface CheckSpellingGrammarOutput {
   errors: SpellingGrammarError[];
-  llmInteractions: RichLLMInteraction[];
 }
 
 // Input schema
@@ -41,7 +38,6 @@ const outputSchema = z.object({
     context: z.string().optional().describe('Context around the error'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)')
   })).describe('List of spelling and grammar errors found'),
-  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging')
 });
 
 export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, CheckSpellingGrammarOutput> {
@@ -62,15 +58,11 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   async execute(input: CheckSpellingGrammarInput, context: ToolContext): Promise<CheckSpellingGrammarOutput> {
     context.logger.info(`[CheckSpellingGrammarTool] Checking text (${input.text.length} chars)`);
     
-    const llmInteractions: RichLLMInteraction[] = [];
-    
     try {
-      const { errors, interaction } = await this.checkSpellingGrammar(input);
-      llmInteractions.push(interaction);
+      const { errors } = await this.checkSpellingGrammar(input);
       
       return {
         errors,
-        llmInteractions
       };
     } catch (error) {
       context.logger.error('[CheckSpellingGrammarTool] Error checking spelling/grammar:', error);
@@ -80,7 +72,6 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   
   private async checkSpellingGrammar(input: CheckSpellingGrammarInput): Promise<{
     errors: SpellingGrammarError[];
-    interaction: RichLLMInteraction;
   }> {
     const systemPrompt = `You are a proofreading assistant. Identify spelling and grammar errors in text.
 
@@ -216,7 +207,7 @@ ${input.text}
       return exists;
     });
 
-    return { errors, interaction: result.interaction };
+    return { errors };
   }
   
   

@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import { sessionContext } from '@/lib/helicone/sessionContext';
@@ -26,7 +24,6 @@ export interface CheckMathOutput {
   explanation: string;
   reasoning: string;
   errorDetails?: MathErrorDetails;
-  llmInteraction: RichLLMInteraction;
 }
 
 // Input schema
@@ -48,7 +45,6 @@ const outputSchema = z.object({
     expectedValue: z.string().optional().describe('The expected/correct value'),
     actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
   }).optional().describe('Details about the error (only present when status is verified_false)'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
 }) satisfies z.ZodType<CheckMathOutput>;
 
 export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
@@ -79,14 +75,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
         status: 'cannot_verify',
         explanation: 'Failed to analyze the mathematical statement due to a technical error.',
         reasoning: `Technical error occurred during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        llmInteraction: {
-          model: 'error',
-          prompt: '',
-          response: '',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
     }
   }
@@ -150,7 +138,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
       explanation: toolResult.explanation,
       reasoning: toolResult.reasoning,
       errorDetails: toolResult.errorDetails,
-      llmInteraction: result.interaction
     };
   }
 

@@ -237,7 +237,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       summary: this.summary,
       analysis: this.analysis,
       comments: this.comments,
-      llmInteractions: this.llmInteractions,
       cost: this.totalCost,
     };
   }
@@ -260,7 +259,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       
       return {
         facts,
-        llmInteraction: result.llmInteraction
       };
     } catch (error) {
       logger.error('Error extracting facts from chunk:', error);

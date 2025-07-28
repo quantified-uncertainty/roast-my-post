@@ -98,7 +98,6 @@ export interface AnalysisResult {
   summary: string;
   analysis: string;
   comments: Comment[];
-  llmInteractions: LLMInteraction[];
   cost: number;
 }
 
@@ -114,5 +113,4 @@ export interface SimpleAnalysisPlugin {
   // For testing/debugging - expose internal state
   getDebugInfo?(): Record<string, unknown>;
   getCost(): number;
-  getLLMInteractions(): LLMInteraction[];
 }

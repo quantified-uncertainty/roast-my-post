@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { RichLLMInteraction } from '@/types/llm';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
@@ -32,7 +31,6 @@ const outputSchema = z.object({
     aboveThreshold: z.number(),
     averageQuality: z.number()
   }).describe('Summary statistics'),
-  llmInteraction: z.any().describe('LLM interaction for monitoring')
 }) satisfies z.ZodType<ExtractFactualClaimsOutput>;
 
 // Export types
@@ -52,7 +50,6 @@ export interface ExtractFactualClaimsOutput {
     aboveThreshold: number;
     averageQuality: number;
   };
-  llmInteraction?: any;
 }
 
 export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, ExtractFactualClaimsOutput> {
@@ -213,7 +210,6 @@ ${input.text}
             aboveThreshold: 0,
             averageQuality: 0
           },
-          llmInteraction: result.interaction
         };
       }
     }
@@ -228,7 +224,6 @@ ${input.text}
           aboveThreshold: 0,
           averageQuality: 0
         },
-        llmInteraction: result.interaction
       };
     }
     
@@ -263,7 +258,6 @@ ${input.text}
         aboveThreshold: sortedClaims.length,
         averageQuality: Math.round(avgQuality)
       },
-      llmInteraction: result.interaction
     };
   }
 }

@@ -149,7 +149,6 @@ describe('SpellingAnalyzerJob', () => {
       expect(result.comments[0].description).toContain('thier');
       expect(result.comments[0].description).toContain('their');
       expect(result.cost).toBeGreaterThan(0); // Based on token usage calculation
-      expect(result.llmInteractions).toHaveLength(2); // One per chunk
     });
 
     it('should handle empty document', async () => {

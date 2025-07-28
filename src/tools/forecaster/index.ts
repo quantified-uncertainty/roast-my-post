@@ -2,8 +2,6 @@ import { z } from 'zod';
 import { Tool } from '../base/Tool';
 import { ToolContext } from '../base/Tool';
 import { generateForecastWithAggregation } from './generator';
-import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 
 // Define types explicitly to avoid inference issues with defaults
 export interface ForecasterInput {
@@ -29,7 +27,6 @@ export interface ForecasterOutput {
     title: string;
     url: string;
   }>;
-  llmInteractions: RichLLMInteraction[];
 }
 
 // Simplified input schema
@@ -56,8 +53,7 @@ const outputSchema = z.object({
   perplexityResults: z.array(z.object({
     title: z.string(),
     url: z.string()
-  })).optional().describe('Perplexity search results if available'),
-  llmInteractions: z.array(llmInteractionSchema).describe('LLM interactions for monitoring and debugging')
+  })).optional().describe('Perplexity search results if available')
 }) satisfies z.ZodType<ForecasterOutput>;
 
 export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
@@ -98,8 +94,7 @@ export class ForecasterTool extends Tool<ForecasterInput, ForecasterOutput> {
           mean: result.statistics.mean,
           stdDev: result.statistics.std_dev
         },
-        perplexityResults: result.perplexityResults,
-        llmInteractions: result.llmInteractions
+        perplexityResults: result.perplexityResults
       };
     } catch (error) {
       context.logger.error('[ForecasterTool] Error generating forecast:', error);

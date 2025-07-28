@@ -127,7 +127,6 @@ Some text without math to test routing.`,
     expect(result.tasks.length).toBeGreaterThan(0);
     const pluginTask = result.tasks.find(t => t.name === 'Plugin Analysis');
     expect(pluginTask).toBeDefined();
-    expect(pluginTask?.llmInteractions).toBeDefined();
     expect(pluginTask?.priceInDollars).toBeGreaterThanOrEqual(0); // May be 0 with mocked LLM
   });
 
@@ -286,6 +285,5 @@ describe('Plugin Integration Tests', () => {
     expect(result).toBeDefined();
     expect(result.summary).toBeDefined();
     expect(result.cost).toBeGreaterThan(0);
-    expect(result.llmInteractions).toHaveLength(2); // One for each chunk
   });
 });

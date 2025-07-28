@@ -163,7 +163,6 @@ ${evaluationText}`;
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [llmInteraction],
     },
     outputs: validationResult,
   };

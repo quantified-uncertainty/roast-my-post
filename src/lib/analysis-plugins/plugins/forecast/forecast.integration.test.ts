@@ -20,7 +20,6 @@ describe('ForecastPlugin Integration', () => {
       summary: 'Found 3 predictions',
       analysis: '## Forecast Analysis\n\nPredictions found.',
       comments: [],
-      llmInteractions: [],
       cost: 0.001
     });
 
@@ -28,7 +27,6 @@ describe('ForecastPlugin Integration', () => {
       summary: 'No mathematical expressions found.',
       analysis: 'No mathematical calculations or formulas were identified in this document.',
       comments: [],
-      llmInteractions: [],
       cost: 0.001
     });
 

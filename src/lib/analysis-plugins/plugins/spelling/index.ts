@@ -29,7 +29,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
-  private llmInteractions: LLMInteraction[] = [];
   private totalCost: number = 0;
   private errors: SpellingErrorWithLocation[] = [];
 
@@ -114,7 +113,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       summary: this.summary,
       analysis: this.analysis,
       comments: this.comments,
-      llmInteractions: this.llmInteractions,
       cost: this.totalCost,
     };
   }
@@ -139,28 +137,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           }
         );
 
-        // Track LLM interactions
-        if (result.llmInteractions) {
-          for (const richInteraction of result.llmInteractions) {
-            const llmInteraction: LLMInteraction = {
-              messages: [
-                { role: "user", content: richInteraction.prompt },
-                { role: "assistant", content: richInteraction.response }
-              ],
-              usage: {
-                input_tokens: richInteraction.tokensUsed.prompt,
-                output_tokens: richInteraction.tokensUsed.completion
-              }
-            };
-            this.llmInteractions.push(llmInteraction);
-            // Calculate cost based on token usage
-            const costPerInputToken = 0.003 / 1000; // $3 per 1M input tokens
-            const costPerOutputToken = 0.015 / 1000; // $15 per 1M output tokens
-            const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
-                        (richInteraction.tokensUsed.completion * costPerOutputToken);
-            this.totalCost += cost;
-          }
-        }
 
         logger.info(`SpellingAnalyzer: Chunk ${chunk.id} returned ${result.errors.length} errors`);
 
@@ -322,7 +298,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   getLLMInteractions(): LLMInteraction[] {
-    return this.llmInteractions;
+    return [];
   }
 
   getDebugInfo(): Record<string, unknown> {
@@ -331,7 +307,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       errorsCount: this.errors.length,
       commentsCount: this.comments.length,
       totalCost: this.totalCost,
-      llmInteractionsCount: this.llmInteractions.length,
+      llmInteractionsCount: 0,
     };
   }
 }

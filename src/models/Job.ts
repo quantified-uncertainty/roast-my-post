@@ -515,7 +515,6 @@ export class JobModel {
             priceInDollars: task.priceInDollars,
             timeInSeconds: task.timeInSeconds,
             log: task.log,
-            llmInteractions: task.llmInteractions as any, // Cast for Prisma Json type
             jobId: job.id,
           },
         });
@@ -547,19 +546,9 @@ export class JobModel {
         }
       }
 
-      // Calculate token totals for logging (always needed regardless of cost source)
-      const totalInputTokens = tasks.reduce(
-        (sum, task) =>
-          sum +
-          countTokensFromInteractions(task.llmInteractions, "input_tokens"),
-        0
-      );
-      const totalOutputTokens = tasks.reduce(
-        (sum, task) =>
-          sum +
-          countTokensFromInteractions(task.llmInteractions, "output_tokens"),
-        0
-      );
+      // Note: Token totals are now tracked automatically by the Claude wrapper
+      const totalInputTokens = 0; // Legacy field, kept for compatibility
+      const totalOutputTokens = 0; // Legacy field, kept for compatibility
 
       // Try to get accurate cost from Helicone first
       let costInCents: number;
@@ -634,17 +623,7 @@ ${tasks
 - Model: ${task.modelName}
 - Time: ${task.timeInSeconds}s
 - Cost: $${task.priceInDollars.toFixed(6)}
-- Interactions: ${task.llmInteractions.length}
-${task.llmInteractions
-  .map(
-    (interaction) => `
-#### Interaction
-\`\`\`
-${interaction.messages?.map((m) => `${m.role}: ${m.content}`).join("\n") || "No messages"}
-\`\`\`
-`
-  )
-  .join("\n")}
+- Note: LLM interactions now tracked automatically by Claude wrapper
 `
   )
   .join("\n")}

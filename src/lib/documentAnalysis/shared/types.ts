@@ -8,7 +8,6 @@ export interface TaskResult {
   priceInDollars: number;
   timeInSeconds: number;
   log: string;
-  llmInteractions: LLMInteraction[];
 }
 
 export interface ThinkingOutputs {

@@ -51,14 +51,6 @@ describe('CheckMathHybridTool', () => {
           computedValue: '4',
           steps: [{ expression: '2 + 2', result: '4' }]
         },
-        llmInteraction: {
-          model: 'none',
-          prompt: 'Direct MathJS evaluation',
-          response: 'Success',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
@@ -82,14 +74,6 @@ describe('CheckMathHybridTool', () => {
         statement: 'The limit of 1/x as x approaches infinity is 0',
         status: 'cannot_verify',
         explanation: 'Cannot express this limit calculation in MathJS',
-        llmInteraction: {
-          model: 'none',
-          prompt: 'Direct MathJS evaluation',
-          response: 'Cannot verify',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
 
       const llmResult: CheckMathOutput = {
@@ -97,14 +81,6 @@ describe('CheckMathHybridTool', () => {
         status: 'verified_true',
         explanation: 'This is correct. As x approaches infinity, 1/x approaches 0.',
         reasoning: 'By the definition of limits, lim(x→∞) 1/x = 0',
-        llmInteraction: {
-          model: 'claude-3-sonnet-20240229',
-          prompt: 'Verify mathematical statement',
-          response: 'Statement is correct',
-          tokensUsed: { prompt: 50, completion: 25, total: 75 },
-          timestamp: new Date(),
-          duration: 1000
-        }
       };
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
@@ -141,14 +117,6 @@ describe('CheckMathHybridTool', () => {
           expectedValue: '4',
           actualValue: '5'
         },
-        llmInteraction: {
-          model: 'none',
-          prompt: 'Direct MathJS evaluation',
-          response: 'Success',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
@@ -187,14 +155,6 @@ describe('CheckMathHybridTool', () => {
         statement: 'The derivative of x^2 is 3x',
         status: 'cannot_verify',
         explanation: 'Cannot verify derivative statements',
-        llmInteraction: {
-          model: 'none',
-          prompt: 'Direct MathJS evaluation',
-          response: 'Cannot verify',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
 
       const llmResult: CheckMathOutput = {
@@ -207,14 +167,6 @@ describe('CheckMathHybridTool', () => {
           severity: 'major',
           conciseCorrection: '3x → 2x'
         },
-        llmInteraction: {
-          model: 'claude-3-sonnet-20240229',
-          prompt: 'Verify mathematical statement',
-          response: 'Statement is incorrect',
-          tokensUsed: { prompt: 60, completion: 40, total: 100 },
-          timestamp: new Date(),
-          duration: 1200
-        }
       };
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);

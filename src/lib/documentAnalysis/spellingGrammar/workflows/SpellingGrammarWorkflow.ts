@@ -179,7 +179,6 @@ export class SpellingGrammarWorkflow {
       priceInDollars: conventionCost,
       timeInSeconds: (Date.now() - startTime) / 1000,
       log: `Detected ${conventions.language} English, ${conventions.documentType} document type, ${conventions.formality} formality. Document has ${docProcessor.getWordCount()} words across ${docProcessor.getLineCount()} lines.`,
-      llmInteractions: []
     });
 
     return conventions;
@@ -325,7 +324,6 @@ export class SpellingGrammarWorkflow {
         priceInDollars: chunkCost,
         timeInSeconds: (Date.now() - chunkStartTime) / 1000,
         log: `Analyzed chunk ${index + 1} (lines ${chunk.startLineNumber}-${chunk.endLineNumber}): ${validErrors.length} errors found`,
-        llmInteractions: response.llmInteraction ? [response.llmInteraction] : []
       });
 
       return validErrors;
@@ -350,8 +348,7 @@ export class SpellingGrammarWorkflow {
         priceInDollars: 0,
         timeInSeconds: (Date.now() - chunkStartTime) / 1000,
         log: `FAILED to analyze chunk ${index + 1} (lines ${chunk.startLineNumber}-${chunk.endLineNumber}): ${errorMessage}. This chunk was skipped and may contain undetected errors.`,
-        llmInteractions: []
-      });
+        });
 
       return [];
     }
@@ -390,7 +387,6 @@ export class SpellingGrammarWorkflow {
       priceInDollars: 0,
       timeInSeconds: (Date.now() - postProcessingStartTime) / 1000,
       log: `Consolidated ${errors.length} errors into ${processedResults.uniqueErrorCount} unique groups`,
-      llmInteractions: []
     });
 
     return processedResults;

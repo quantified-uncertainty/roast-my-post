@@ -249,7 +249,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private comments: Comment[] = [];
   private summary: string = "";
   private analysis: string = "";
-  private llmInteractions: LLMInteraction[] = [];
   private totalCost: number = 0;
   private extractedExpressions: ExtractedMathExpression[] = [];
   private hybridErrorWrappers: HybridMathErrorWrapper[] = [];
@@ -344,7 +343,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       summary: this.summary,
       analysis: this.analysis,
       comments: this.comments,
-      llmInteractions: this.llmInteractions,
       cost: this.totalCost,
     };
   }
@@ -369,27 +367,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
             }
           );
 
-          // Track LLM interactions - convert from RichLLMInteraction to LLMInteraction
-          if (result.llmInteraction) {
-            const richInteraction = result.llmInteraction;
-            const llmInteraction: LLMInteraction = {
-              messages: [
-                { role: "user", content: richInteraction.prompt },
-                { role: "assistant", content: richInteraction.response }
-              ],
-              usage: {
-                input_tokens: richInteraction.tokensUsed.prompt,
-                output_tokens: richInteraction.tokensUsed.completion
-              }
-            };
-            this.llmInteractions.push(llmInteraction);
-            // Calculate cost based on token usage (using rough estimate)
-            const costPerInputToken = 0.003 / 1000; // $3 per 1M input tokens
-            const costPerOutputToken = 0.015 / 1000; // $15 per 1M output tokens
-            const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
-                        (richInteraction.tokensUsed.completion * costPerOutputToken);
-            this.totalCost += cost;
-          }
 
           return { chunk, result };
         } catch (error) {
@@ -438,28 +415,6 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
           }
         );
 
-        // Track LLM interaction
-        if (result.llmInteraction) {
-          const richInteraction = result.llmInteraction;
-          const llmInteraction: LLMInteraction = {
-            messages: [
-              { role: "user", content: richInteraction.prompt },
-              { role: "assistant", content: richInteraction.response }
-            ],
-            usage: {
-              input_tokens: richInteraction.tokensUsed.prompt,
-              output_tokens: richInteraction.tokensUsed.completion
-            }
-          };
-          this.llmInteractions.push(llmInteraction);
-        
-          // Calculate cost
-          const costPerInputToken = 0.003 / 1000;
-          const costPerOutputToken = 0.015 / 1000;
-          const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
-                      (richInteraction.tokensUsed.completion * costPerOutputToken);
-          this.totalCost += cost;
-        }
 
         // Only create wrapper if there's an error (status is verified_false)
         if (result.status === 'verified_false') {
@@ -583,7 +538,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   getLLMInteractions(): LLMInteraction[] {
-    return this.llmInteractions;
+    return [];
   }
 
   getDebugInfo(): Record<string, unknown> {
@@ -592,7 +547,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       expressionsCount: this.extractedExpressions.length,
       commentsCount: this.comments.length,
       totalCost: this.totalCost,
-      llmInteractionsCount: this.llmInteractions.length,
+      llmInteractionsCount: 0,
     };
   }
 }

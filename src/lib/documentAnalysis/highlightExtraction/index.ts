@@ -183,7 +183,6 @@ export async function extractHighlightsFromAnalysis(
         priceInDollars: 0,
         timeInSeconds,
         log: JSON.stringify(logDetails, null, 2),
-        llmInteractions: [],
       },
       outputs: {
         highlights,
@@ -320,7 +319,6 @@ export async function extractHighlightsFromAnalysis(
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [llmInteraction],
     },
     outputs: {
       highlights,

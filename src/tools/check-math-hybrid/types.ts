@@ -1,4 +1,3 @@
-import { RichLLMInteraction } from '@/types/llm';
 
 export interface CheckMathHybridInput {
   statement: string;
@@ -30,5 +29,4 @@ export interface CheckMathHybridOutput {
   };
   conciseCorrection?: string;
   toolsUsed: Array<'mathjs' | 'llm'>;
-  llmInteraction: RichLLMInteraction;
 }

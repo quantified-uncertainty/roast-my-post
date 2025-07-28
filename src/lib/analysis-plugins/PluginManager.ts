@@ -56,7 +56,6 @@ export interface FullDocumentAnalysisResult {
     priceInDollars: number;
     timeInSeconds: number;
     log: string;
-    llmInteractions: LLMInteraction[];
   }>;
   errors?: Array<{
     plugin: string;
@@ -405,11 +404,7 @@ export class PluginManager {
       const pluginDuration = Date.now() - pluginStartTime;
       logger.info(`Plugin analysis completed in ${pluginDuration}ms`);
 
-      // Collect LLM interactions from all plugins
-      const allLLMInteractions: LLMInteraction[] = [];
-      for (const [pluginName, result] of pluginResults.pluginResults) {
-        allLLMInteractions.push(...result.llmInteractions);
-      }
+      // Note: LLM interactions are now tracked automatically by the Claude wrapper
 
       tasks.push({
         name: "Plugin Analysis",
@@ -417,7 +412,6 @@ export class PluginManager {
         priceInDollars: pluginResults.statistics.totalCost,
         timeInSeconds: pluginDuration / 1000,
         log: `Analyzed ${pluginResults.statistics.totalChunks} chunks, generated ${pluginResults.statistics.totalComments} comments using ${plugins.length} plugins.`,
-        llmInteractions: allLLMInteractions,
       });
 
       // Step 2: Plugin results are ready
@@ -480,7 +474,6 @@ export class PluginManager {
             priceInDollars: 0,
             timeInSeconds: 0,
             log: `Analysis failed: ${errorMessage}`,
-            llmInteractions: [],
           },
         ],
         errors: [

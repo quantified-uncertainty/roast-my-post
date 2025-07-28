@@ -47,7 +47,6 @@ export class PluginContextAdapter {
     summary: string;
     analysis?: string;
     cost: number;
-    llmInteractions: import('@/types/llm').LLMInteraction[];
   }> {
     const { logger } = this.context;
     
