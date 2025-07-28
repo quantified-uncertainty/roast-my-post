@@ -76,7 +76,8 @@ export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<J
     const modelStats = new Map<string, { cost: number; tokens: number; count: number }>();
     
     requests.forEach(req => {
-      totalCostUSD += req.cost || 0;
+      // Helicone returns costUSD, not cost
+      totalCostUSD += req.costUSD || 0;
       promptTokens += req.prompt_tokens || 0;
       completionTokens += req.completion_tokens || 0;
       totalTokens += req.total_tokens || 0;
@@ -84,7 +85,7 @@ export async function fetchDetailedJobCostFromHelicone(jobId: string): Promise<J
       // Update model breakdown
       const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
       modelStats.set(req.model, {
-        cost: existing.cost + (req.cost || 0),
+        cost: existing.cost + (req.costUSD || 0),
         tokens: existing.tokens + (req.total_tokens || 0),
         count: existing.count + 1
       });
