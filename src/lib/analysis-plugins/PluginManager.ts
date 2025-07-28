@@ -202,13 +202,13 @@ export class PluginManager {
             pluginLoggerInstance.processingChunks(chunks.length);
 
             // Add timeout to prevent hanging
-            const PLUGIN_TIMEOUT_MS = 60000; // 60 seconds
+            const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
             const timeoutPromise = new Promise<never>((_, reject) => {
               setTimeout(
                 () =>
                   reject(
                     new Error(
-                      `Plugin ${pluginName} timed out after ${PLUGIN_TIMEOUT_MS}ms`
+                      `Plugin ${pluginName} timed out after ${PLUGIN_TIMEOUT_MS}ms (${PLUGIN_TIMEOUT_MS / 1000}s)`
                     )
                   ),
                 PLUGIN_TIMEOUT_MS

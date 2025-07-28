@@ -97,7 +97,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
     ]);
 
     // Use Claude with tool output for structured response
-    const systemPrompt = `You are a mathematical analyzer. Analyze mathematical statements and determine if they are true, false, or cannot be verified.`;
+    const systemPrompt = `Verify math statements concisely. Focus on the calculation/logic error if any.`;
     
     const result = await callClaudeWithTool<{
       status: MathVerificationStatus;
@@ -110,8 +110,8 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
         role: "user",
         content: `Analyze this mathematical statement for accuracy: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`
       }],
-      model: MODEL_CONFIG.analysis,
-      max_tokens: 2000,
+      model: MODEL_CONFIG.analysis, // Use Sonnet for accuracy
+      max_tokens: 500,
       temperature: 0.1,
       toolName: 'analyze_math_statement',
       toolDescription: 'Report the analysis of a mathematical statement',

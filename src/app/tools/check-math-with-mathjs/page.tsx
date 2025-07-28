@@ -1,232 +1,257 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import { CheckMathAgenticInput, CheckMathAgenticOutput } from '@/tools/check-math-with-mathjs/types';
+import { CalculatorIcon, CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { checkMathWithMathJs } from './actions';
 
-interface CheckMathResult {
-  status: 'verified_true' | 'verified_false' | 'cannot_verify';
-  explanation: string;
-  verificationDetails?: {
-    mathJsExpression: string;
-    computedValue: string;
-    steps?: Array<{
-      expression: string;
-      result: string;
-    }>;
-  };
-  errorDetails?: {
-    errorType: string;
-    severity: string;
-    conciseCorrection?: string;
-    expectedValue?: string;
-    actualValue?: string;
-  };
-}
+const statusConfig = {
+  verified_true: {
+    icon: CheckCircleIcon,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    label: 'Verified True',
+  },
+  verified_false: {
+    icon: XCircleIcon,
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    label: 'Verified False',
+  },
+  cannot_verify: {
+    icon: QuestionMarkCircleIcon,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    label: 'Cannot Verify',
+  },
+};
 
-export default function MathCheckerWithMathJsPage() {
-  const [statement, setStatement] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<CheckMathResult | null>(null);
+export default function CheckMathAgenticPage() {
+  const [input, setInput] = useState('');
+  const [context, setContext] = useState('');
+  const [result, setResult] = useState<CheckMathAgenticOutput | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!input.trim()) return;
+
+    setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch('/api/tools/check-math-with-mathjs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statement }),
-      });
+      const payload: CheckMathAgenticInput = {
+        statement: input.trim(),
+        ...(context.trim() && { context: context.trim() }),
+      };
 
-      if (!response.ok) {
-        throw new Error(`Failed: ${response.statusText}`);
+      const response = await checkMathWithMathJs(payload);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to verify statement');
       }
 
-      const data = await response.json();
-      setResult(data.result);
+      setResult(response.result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const exampleStatements = [
-    '2 + 2 = 5',
-    '100 - 30% = 60',
-    '1 kilometer equals 100 meters',
-    '15 ÷ 3 = 6',
-    'π × 5² = 78.5',
-    '25% of 80 is 25',
-    'sqrt(16) = 5',
-    '2^8 = 256'
+    '2 + 2 = 4',
+    'The binomial coefficient "10 choose 3" equals 120',
+    'Converting 100 fahrenheit to celsius gives 37.78 degrees',
+    '10% of 50 is 10',
+    'sqrt(144) = 12',
+    'log(1000, 10) = 3',
+    'The derivative of x³ is 3x²',
+    '5 km + 3000 m = 8 km',
   ];
-
-  const severityColors = {
-    critical: 'bg-red-100 border-red-300 text-red-900',
-    major: 'bg-orange-100 border-orange-300 text-orange-900',
-    minor: 'bg-yellow-100 border-yellow-300 text-yellow-900',
-  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
-        <ChevronLeftIcon className="h-4 w-4 mr-1" />
-        Back to Tools
-      </Link>
-
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Checker with MathJS</h1>
-        <p className="text-gray-600">
-          Verify mathematical statements using computational evaluation with MathJS.
+        <div className="flex items-center gap-3 mb-4">
+          <CalculatorIcon className="h-8 w-8 text-blue-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Math Verification Agent</h1>
+        </div>
+        <p className="text-gray-600 mb-2">
+          Verify mathematical statements using Claude with MathJS tools. This agentic approach uses
+          Claude to intelligently choose and use appropriate MathJS functions.
         </p>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>Note:</strong> This tool uses numerical computation (MathJS), not symbolic math.
+            It cannot verify symbolic equations, theorems, or perform algebraic manipulations.
+          </p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
+      <form onSubmit={handleSubmit} className="space-y-6 mb-8">
         <div>
-          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-1">
-            Mathematical Statement <span className="text-red-500">*</span>
+          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-2">
+            Mathematical Statement
           </label>
-          <input
+          <textarea
             id="statement"
-            type="text"
-            value={statement}
-            onChange={(e) => setStatement(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-            placeholder="Enter a mathematical statement (e.g., '2 + 2 = 4')"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Enter a mathematical statement to verify..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={3}
             required
           />
-          <div className="mt-2 space-y-1">
-            <p className="text-sm text-gray-600">Example statements:</p>
-            <div className="flex flex-wrap gap-2">
-              {exampleStatements.map((example, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setStatement(example)}
-                  className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
-          </div>
+        </div>
+
+        <div>
+          <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
+            Additional Context (Optional)
+          </label>
+          <textarea
+            id="context"
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder="Provide any additional context if needed..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={2}
+          />
         </div>
 
         <button
           type="submit"
-          disabled={isLoading || !statement.trim()}
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          disabled={loading || !input.trim()}
+          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Checking Statement...' : 'Check Statement'}
+          {loading ? 'Verifying...' : 'Verify Statement'}
         </button>
       </form>
 
+      {/* Example Statements */}
+      <div className="mb-8">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Try these examples:</h3>
+        <div className="flex flex-wrap gap-2">
+          {exampleStatements.map((statement, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setInput(statement);
+                setContext('');
+              }}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              {statement}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-800">Error: {error}</p>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+          <p className="text-red-800">{error}</p>
         </div>
       )}
 
       {result && (
-        <div className="mt-8 space-y-6">
-          <div className={`p-6 rounded-lg border ${
-            result.status === 'verified_true' 
-              ? 'bg-green-50 border-green-200' 
-              : result.status === 'verified_false'
-              ? 'bg-red-50 border-red-200'
-              : 'bg-yellow-50 border-yellow-200'
-          }`}>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">
-                {result.status === 'verified_true' && '✓ Statement is Correct'}
-                {result.status === 'verified_false' && '✗ Statement Contains Error'}
-                {result.status === 'cannot_verify' && '? Cannot Verify Statement'}
-              </h3>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Statement:</p>
-                <p className="mt-1 font-mono text-sm bg-white bg-opacity-60 p-2 rounded">
-                  "{statement}"
-                </p>
+        <div className="space-y-6">
+          {/* Status Card */}
+          <div className={`p-6 rounded-lg border-2 ${statusConfig[result.status].bgColor} ${statusConfig[result.status].borderColor}`}>
+            <div className="flex items-start gap-4">
+              {(() => {
+                const StatusIcon = statusConfig[result.status].icon;
+                return <StatusIcon className={`h-8 w-8 ${statusConfig[result.status].color} flex-shrink-0`} />;
+              })()}
+              <div className="flex-1">
+                <h2 className={`text-xl font-semibold mb-2 ${statusConfig[result.status].color}`}>
+                  {statusConfig[result.status].label}
+                </h2>
+                <p className="text-gray-800">{result.explanation}</p>
               </div>
-              
-              <div>
-                <p className="text-sm font-medium text-gray-700">Explanation:</p>
-                <p className="mt-1 text-sm">{result.explanation}</p>
-              </div>
-              
-              {result.verificationDetails && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                  <p className="text-sm font-medium text-gray-700 mb-2">MathJS Verification:</p>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium">Expression:</span> 
-                      <code className="ml-2 px-2 py-1 bg-white rounded border border-gray-300">
-                        {result.verificationDetails.mathJsExpression}
-                      </code>
-                    </div>
-                    <div>
-                      <span className="font-medium">Computed Value:</span> 
-                      <span className="ml-2 font-mono text-green-700">
-                        {result.verificationDetails.computedValue}
-                      </span>
-                    </div>
-                    {result.verificationDetails.steps && result.verificationDetails.steps.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-medium mb-1">Calculation Steps:</p>
-                        <div className="ml-4 space-y-1">
-                          {result.verificationDetails.steps.map((step, i) => (
-                            <div key={i} className="font-mono text-xs">
-                              <code className="bg-gray-100 px-1 rounded">{step.expression}</code>
-                              <span className="mx-2">→</span>
-                              <span className="text-green-700">{step.result}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-3 text-xs text-gray-600">
-                    <a 
-                      href={`https://mathjs.org/examples/browser/basic_usage.html.html#${encodeURIComponent(result.verificationDetails.mathJsExpression)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Try in MathJS calculator →
-                    </a>
-                  </div>
-                </div>
-              )}
-              
-              {result.errorDetails && (
-                <div className="mt-4 p-3 bg-white bg-opacity-60 rounded">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Error Details:</p>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="font-medium">Type:</span> {result.errorDetails.errorType}</p>
-                    <p><span className="font-medium">Severity:</span> {result.errorDetails.severity}</p>
-                    {result.errorDetails.conciseCorrection && (
-                      <p><span className="font-medium">Correction:</span> {result.errorDetails.conciseCorrection}</p>
-                    )}
-                    {result.errorDetails.expectedValue && (
-                      <p><span className="font-medium">Expected:</span> {result.errorDetails.expectedValue}</p>
-                    )}
-                    {result.errorDetails.actualValue && (
-                      <p><span className="font-medium">Actual:</span> {result.errorDetails.actualValue}</p>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Verification Details */}
+          {result.verificationDetails && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">Verification Details</h3>
+              {result.verificationDetails.mathJsExpression && (
+                <div className="mb-2">
+                  <span className="text-sm text-blue-700">Expression:</span>
+                  <code className="ml-2 px-2 py-1 bg-blue-100 rounded text-sm">
+                    {result.verificationDetails.mathJsExpression}
+                  </code>
+                </div>
+              )}
+              {result.verificationDetails.computedValue && (
+                <div>
+                  <span className="text-sm text-blue-700">Result:</span>
+                  <code className="ml-2 px-2 py-1 bg-blue-100 rounded text-sm">
+                    {result.verificationDetails.computedValue}
+                  </code>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Error Details */}
+          {result.errorDetails && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <h3 className="font-semibold text-red-900 mb-2">Error Details</h3>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <span className="text-red-700">Type:</span> 
+                  <span className="ml-2 font-medium">{result.errorDetails.errorType}</span>
+                </div>
+                <div>
+                  <span className="text-red-700">Severity:</span> 
+                  <span className="ml-2 font-medium">{result.errorDetails.severity}</span>
+                </div>
+                {result.errorDetails.conciseCorrection && (
+                  <div>
+                    <span className="text-red-700">Correction:</span> 
+                    <code className="ml-2 px-2 py-1 bg-red-100 rounded">
+                      {result.errorDetails.conciseCorrection}
+                    </code>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Technical Error */}
+          {result.error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <h3 className="font-semibold text-red-900 mb-2">Technical Error</h3>
+              <p className="text-sm text-red-800">{result.error}</p>
+            </div>
+          )}
+
+          {/* LLM Token Usage */}
+          {result.llmInteraction && (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Token Usage</h3>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Prompt:</span>
+                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.prompt}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Completion:</span>
+                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.completion}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total:</span>
+                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.total}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
