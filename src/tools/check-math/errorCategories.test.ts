@@ -1,5 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
+import type { MathErrorType } from '@/tools/shared/math-schemas';
 
 describe('errorCategories', () => {
   describe('categorizeErrorAdvanced', () => {
@@ -89,7 +90,7 @@ describe('errorCategories', () => {
   
   describe('determineSeverityAdvanced', () => {
     it('should identify critical errors', () => {
-      const testCases = [
+      const testCases: Array<{ type: MathErrorType; desc: string }> = [
         { type: 'calculation', desc: 'This completely invalidates the conclusion' },
         { type: 'logic', desc: 'Fundamental error in the proof' },
         { type: 'unit', desc: 'Fatal error: mixing incompatible units' }
@@ -103,7 +104,7 @@ describe('errorCategories', () => {
     });
     
     it('should identify major errors', () => {
-      const testCases = [
+      const testCases: Array<{ type: MathErrorType; desc: string }> = [
         { type: 'calculation', desc: 'Incorrect arithmetic result' },
         { type: 'unit', desc: 'Wrong conversion factor used' },
         { type: 'logic', desc: 'Flawed reasoning in the argument' }
@@ -117,7 +118,7 @@ describe('errorCategories', () => {
     });
     
     it('should identify minor errors', () => {
-      const testCases = [
+      const testCases: Array<{ type: MathErrorType; desc: string }> = [
         { type: 'notation', desc: 'Minor formatting issue' },
         { type: 'notation', desc: 'Style preference for equation layout' },
         { type: 'conceptual', desc: 'Could be improved slightly' }

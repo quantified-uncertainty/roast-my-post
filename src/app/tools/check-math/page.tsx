@@ -4,32 +4,36 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 
-interface MathError {
-  type: string;
-  severity: string;
-  highlightedText: string;
-  description: string;
-  lineStart?: number;
-  lineEnd?: number;
+interface CheckMathResult {
+  status: 'verified_true' | 'verified_false' | 'cannot_verify';
+  explanation: string;
+  reasoning?: string;
+  errorDetails?: {
+    errorType: string;
+    severity: string;
+    conciseCorrection?: string;
+    expectedValue?: string;
+    actualValue?: string;
+  };
 }
 
 export default function MathCheckerPage() {
-  const [text, setText] = useState('');
+  const [statement, setStatement] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<MathError[] | null>(null);
+  const [result, setResult] = useState<CheckMathResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setErrors(null);
+    setResult(null);
 
     try {
       const response = await fetch('/api/tools/check-math', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ statement }),
       });
 
       if (!response.ok) {
@@ -37,7 +41,7 @@ export default function MathCheckerPage() {
       }
 
       const data = await response.json();
-      setErrors(data.result?.errors || []);
+      setResult(data.result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -45,14 +49,13 @@ export default function MathCheckerPage() {
     }
   };
 
-  const exampleText = `Our analysis shows that revenue grew by 50% from $2 million to $3.5 million 
-last year. With a 15% profit margin, that means we made $525,000 in profit (15% of $3.5 million).
-
-If we maintain this growth rate, next year's revenue will be $5.25 million (50% increase from 
-$3.5 million). At the same margin, profits would reach $787,500.
-
-The compound annual growth rate (CAGR) over 3 years would be approximately 38% if we grow from 
-$2 million to $5.25 million.`;
+  const exampleStatements = [
+    'Revenue grew by 50% from $2 million to $3.5 million',
+    '15% of $3.5 million equals $525,000',
+    'The square root of 16 is 5',
+    '2 + 2 = 4',
+    'The derivative of x^2 is 3x'
+  ];
 
   const severityColors = {
     critical: 'bg-red-100 border-red-300 text-red-900',
@@ -68,41 +71,49 @@ $2 million to $5.25 million.`;
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Error Checker</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Math Statement Checker</h1>
         <p className="text-gray-600">
-          Check text for mathematical errors, incorrect calculations, and numerical inconsistencies.
+          Check a single mathematical statement for accuracy and correctness.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
         <div>
-          <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">
-            Text to Check <span className="text-red-500">*</span>
+          <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-1">
+            Mathematical Statement <span className="text-red-500">*</span>
           </label>
-          <textarea
-            id="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+          <input
+            id="statement"
+            type="text"
+            value={statement}
+            onChange={(e) => setStatement(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-            rows={10}
-            placeholder="Paste text containing calculations, statistics, or mathematical claims..."
+            placeholder="Enter a mathematical statement (e.g., '2 + 2 = 4')"
             required
           />
-          <button
-            type="button"
-            onClick={() => setText(exampleText)}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-          >
-            Use example text with errors
-          </button>
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-gray-600">Example statements:</p>
+            <div className="flex flex-wrap gap-2">
+              {exampleStatements.map((example, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setStatement(example)}
+                  className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <button
           type="submit"
-          disabled={isLoading || !text.trim()}
+          disabled={isLoading || !statement.trim()}
           className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? 'Checking for Math Errors...' : 'Check Math'}
+          {isLoading ? 'Checking Statement...' : 'Check Statement'}
         </button>
       </form>
 
@@ -112,55 +123,63 @@ $2 million to $5.25 million.`;
         </div>
       )}
 
-      {errors !== null && Array.isArray(errors) && (
+      {result && (
         <div className="mt-8 space-y-6">
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <p className="text-green-900">
-              Found <span className="font-semibold">{errors.length}</span> mathematical{' '}
-              {errors.length === 1 ? 'error' : 'errors'}.
-            </p>
-          </div>
-
-          {errors.length === 0 ? (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <p className="text-blue-900">✓ No mathematical errors detected!</p>
+          <div className={`p-6 rounded-lg border ${
+            result.status === 'verified_true' 
+              ? 'bg-green-50 border-green-200' 
+              : result.status === 'verified_false'
+              ? 'bg-red-50 border-red-200'
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">
+                {result.status === 'verified_true' && '✓ Statement is Correct'}
+                {result.status === 'verified_false' && '✗ Statement Contains Error'}
+                {result.status === 'cannot_verify' && '? Cannot Verify Statement'}
+              </h3>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {errors.map((mathError, i) => (
-                <div
-                  key={i}
-                  className={`p-4 rounded-lg border ${
-                    severityColors[mathError.severity as keyof typeof severityColors] ||
-                    severityColors.minor
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <span className="font-semibold capitalize">{mathError.type} Error</span>
-                      <span className="ml-2 text-sm">({mathError.severity})</span>
-                    </div>
-                    {mathError.lineStart && (
-                      <span className="text-sm opacity-70">
-                        Line {mathError.lineStart}
-                        {mathError.lineEnd && mathError.lineEnd !== mathError.lineStart && 
-                          `-${mathError.lineEnd}`}
-                      </span>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Statement:</p>
+                <p className="mt-1 font-mono text-sm bg-white bg-opacity-60 p-2 rounded">
+                  "{statement}"
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-gray-700">Explanation:</p>
+                <p className="mt-1 text-sm">{result.explanation}</p>
+              </div>
+              
+              {result.reasoning && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Reasoning:</p>
+                  <p className="mt-1 text-sm">{result.reasoning}</p>
+                </div>
+              )}
+              
+              {result.errorDetails && (
+                <div className="mt-4 p-3 bg-white bg-opacity-60 rounded">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Error Details:</p>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Type:</span> {result.errorDetails.errorType}</p>
+                    <p><span className="font-medium">Severity:</span> {result.errorDetails.severity}</p>
+                    {result.errorDetails.conciseCorrection && (
+                      <p><span className="font-medium">Correction:</span> {result.errorDetails.conciseCorrection}</p>
+                    )}
+                    {result.errorDetails.expectedValue && (
+                      <p><span className="font-medium">Expected:</span> {result.errorDetails.expectedValue}</p>
+                    )}
+                    {result.errorDetails.actualValue && (
+                      <p><span className="font-medium">Actual:</span> {result.errorDetails.actualValue}</p>
                     )}
                   </div>
-                  
-                  <div className="mb-2">
-                    <span className="text-sm font-medium">Highlighted text:</span>
-                    <p className="mt-1 font-mono text-sm bg-white bg-opacity-50 p-2 rounded">
-                      "{mathError.highlightedText}"
-                    </p>
-                  </div>
-                  
-                  <p className="text-sm">{mathError.description}</p>
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

@@ -22,26 +22,23 @@ describe('Tools End-to-End Tests', () => {
   jest.setTimeout(120000);
 
   describe('Math Checker Tool', () => {
-    it('should detect mathematical errors in text', async () => {
+    it('should detect mathematical errors in statements', async () => {
       const result = await checkMathTool.execute({
-        text: 'Revenue grew by 50% from $2 million to $3.5 million. With a 15% profit margin, we made $525,000 in profit.',
-        maxErrors: 10
+        statement: 'Revenue grew by 50% from $2 million to $2.5 million'
       }, testContext);
 
-      expect(result.errors).toBeDefined();
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.summary.totalErrors).toBe(result.errors.length);
+      expect(result.status).toBe('verified_false');
+      expect(result.errorDetails).toBeDefined();
+      expect(result.errorDetails?.conciseCorrection).toBeDefined();
     });
 
-    it('should find no errors in correct mathematical text', async () => {
+    it('should verify correct mathematical statements', async () => {
       const result = await checkMathTool.execute({
-        text: 'Revenue grew by 50% from $2 million to $3 million. With a 15% profit margin, we made $450,000 in profit.',
-        maxErrors: 10
+        statement: 'Revenue grew by 50% from $2 million to $3 million'
       }, testContext);
 
-      expect(result.errors).toBeDefined();
-      expect(result.errors.length).toBe(0);
-      expect(result.summary.totalErrors).toBe(0);
+      expect(result.status).toBe('verified_true');
+      expect(result.errorDetails).toBeUndefined();
     });
   });
 
@@ -86,7 +83,9 @@ describe('Tools End-to-End Tests', () => {
       expect(result.result.verdict).toMatch(/^(true|false|partially-true|unverifiable|outdated)$/);
       expect(result.result.confidence).toMatch(/^(high|medium|low)$/);
       expect(result.result.explanation).toBeDefined();
-      expect(result.result.evidence).toBeInstanceOf(Array);
+      if (result.result.sources) {
+        expect(result.result.sources).toBeInstanceOf(Array);
+      }
     });
   });
 

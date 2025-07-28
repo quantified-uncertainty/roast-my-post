@@ -5,18 +5,22 @@ import { llmInteractionSchema } from '@/types/llmSchema';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import type { MathErrorType, MathSeverity } from '@/tools/shared/math-schemas';
 
 export interface ExtractedMathExpression {
   originalText: string;
   hasError: boolean;
-  errorType?: string;
+  errorType?: MathErrorType;
   errorExplanation?: string;
   correctedVersion?: string;
+  conciseCorrection?: string; // e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15"
   complexityScore: number; // 0-100
   contextImportanceScore: number; // 0-100
   errorSeverityScore: number; // 0-100
   simplifiedExplanation?: string;
   verificationStatus: 'verified' | 'unverified' | 'unverifiable';
+  severity?: MathSeverity;
 }
 
 export interface ExtractMathExpressionsInput {
@@ -42,9 +46,11 @@ const outputSchema = z.object({
   expressions: z.array(z.object({
     originalText: z.string().describe('The exact mathematical expression as it appears in the text'),
     hasError: z.boolean().describe('Whether the expression contains an error'),
-    errorType: z.string().optional().describe('Type of error if present (e.g., "Calculation Error", "Unit Mismatch", "Logic Error")'),
+    errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).optional().describe('Type of mathematical error'),
+    severity: z.enum(['critical', 'major', 'minor']).optional().describe('Severity of the error'),
     errorExplanation: z.string().optional().describe('Explanation of the error'),
     correctedVersion: z.string().optional().describe('Corrected version of the expression'),
+    conciseCorrection: z.string().optional().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x", "×0.15 → ×1.15")'),
     complexityScore: z.number().min(0).max(100).describe('How complex the mathematical expression is (0-100)'),
     contextImportanceScore: z.number().min(0).max(100).describe('How important this expression is to the document context (0-100)'),
     errorSeverityScore: z.number().min(0).max(100).describe('How severe the error is if present (0-100)'),
@@ -118,6 +124,13 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       createHeliconeHeaders(sessionConfig) : 
       undefined;
 
+    // Generate cache seed based on content for consistent caching
+    const cacheSeed = generateCacheSeed('math-extract', [
+      input.text,
+      input.verifyCalculations ?? true,
+      input.includeContext ?? true
+    ]);
+
     const result = await callClaudeWithTool<{ expressions: ExtractedMathExpression[] }>({
       system: systemPrompt,
       messages: [{
@@ -127,9 +140,11 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       max_tokens: 4000,
       temperature: 0,
       toolName: "extract_math_expressions",
-      toolDescription: "Extract and analyze mathematical expressions from the text",
+      toolDescription: "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
-      heliconeHeaders
+      enablePromptCaching: true,
+      heliconeHeaders,
+      cacheSeed
     });
 
     const expressions = result.toolResult?.expressions || [];
@@ -138,48 +153,61 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
   }
   
   private buildSystemPrompt(): string {
-    return `You are a mathematical analysis expert. Your task is to extract all mathematical expressions from text and analyze them for correctness, complexity, and importance.
+    return `You are a mathematical analysis expert. Your task is to identify ONLY mathematical expressions that are likely INCORRECT (20%+ chance of being wrong).
 
 CRITICAL: You MUST use the extract_math_expressions tool to provide your analysis.
 
-Extract ALL mathematical content including:
-- Equations and formulas (2+2=4, E=mc², etc.)
-- Statistical calculations or percentages
-- Numerical comparisons (X is 3x larger than Y)
-- Unit conversions
-- Mathematical reasoning or proofs
-- Back-of-the-envelope calculations
+IMPORTANT FILTERING RULES:
+1. ONLY extract expressions you suspect are mathematically incorrect (20%+ chance)
+2. DO NOT extract:
+   - Simple correct percentages like "54%" or "increased by 30%"
+   - Trivial arithmetic that is correct
+   - Factual claims (handled by fact-checking plugin)
+   - Forecasting/predictions (handled by forecasting plugin)
+   - Statistical claims without calculations shown
+   - Correct unit conversions
+   
+3. DO extract:
+   - Clear arithmetic errors (2+2=5, 45% of 400 = 125)
+   - Unit mismatch errors (comparing km to km/h)
+   - Order of magnitude errors
+   - Formula application errors (F=ma used incorrectly)
+   - Percentage calculation errors
+   - Compound interest/growth miscalculations
 
-For each expression:
+For each SUSPECTED ERROR:
 1. Extract the EXACT text as it appears
-2. Verify if calculations are correct
-3. Assess complexity (0-100):
-   - 0-30: Simple arithmetic
-   - 30-60: Moderate calculations (percentages, basic algebra)
-   - 60-80: Complex formulas or multi-step calculations
-   - 80-100: Advanced mathematics (calculus, statistics, proofs)
-
-4. Assess contextual importance (0-100):
-   - How central is this to the document's argument?
-   - Does the conclusion depend on this calculation?
-
-5. For errors, assess severity (0-100):
+2. Verify the calculation - only include if likely wrong
+3. Set hasError = true for all extracted expressions
+4. Assess complexity (0-100) based on the calculation type
+5. Assess contextual importance (0-100) - how much does this error matter?
+6. Assess error severity (0-100):
    - 0-30: Minor errors that don't affect conclusions
    - 30-60: Moderate errors that might mislead
    - 60-80: Significant errors affecting understanding
    - 80-100: Critical errors that invalidate conclusions
 
-Provide simplified explanations for complex expressions when helpful.`;
+7. For errors, provide a conciseCorrection that shows ONLY the key change:
+   - Arithmetic: "125 → 100"
+   - Coefficients: "4x → 5x"
+   - Operations: "×0.15 → ×1.15"
+   - Order of magnitude: "50,000 → 5,000,000"
+   - Units: "km → km/h"
+   
+Keep conciseCorrection under 15 characters when possible.
+
+Remember: If you're not reasonably confident it's a MATH ERROR, don't include it.`;
   }
   
   private buildUserPrompt(input: ExtractMathExpressionsInput): string {
     const requirements = [];
-    if (input.verifyCalculations) requirements.push('Verify all calculations for correctness.');
-    if (input.includeContext) requirements.push('Consider the context when assessing importance.');
-    requirements.push('Extract ALL mathematical content, no matter how simple or complex.');
+    if (input.verifyCalculations) requirements.push('Verify calculations and ONLY include those likely to be incorrect.');
+    if (input.includeContext) requirements.push('Consider the context when assessing error importance.');
+    requirements.push('ONLY extract mathematical expressions that appear to have errors (20%+ chance of being wrong).');
+    requirements.push('DO NOT include trivial percentages, correct calculations, or non-mathematical claims.');
     
     return `<task>
-  <instruction>Extract and analyze all mathematical expressions from this text</instruction>
+  <instruction>Identify and extract ONLY mathematical expressions that are likely INCORRECT</instruction>
   
   <content>
 ${input.text}
@@ -193,6 +221,12 @@ ${input.text}
   <requirements>
     ${requirements.join('\n    ')}
   </requirements>
+  
+  <reminder>
+    Remember: Only include expressions you suspect contain MATHEMATICAL ERRORS.
+    Skip factual claims (for fact-checker) and predictions (for forecaster).
+    If a calculation looks correct, don't include it.
+  </reminder>
 </task>`;
   }
   
@@ -216,7 +250,13 @@ ${input.text}
               },
               errorType: {
                 type: "string",
-                description: "Type of error if present (e.g., 'Calculation Error', 'Unit Mismatch', 'Logic Error')",
+                enum: ["calculation", "logic", "unit", "notation", "conceptual"],
+                description: "Type of mathematical error",
+              },
+              severity: {
+                type: "string",
+                enum: ["critical", "major", "minor"],
+                description: "Severity of the error",
               },
               errorExplanation: {
                 type: "string",
@@ -225,6 +265,10 @@ ${input.text}
               correctedVersion: {
                 type: "string",
                 description: "Corrected version of the expression",
+              },
+              conciseCorrection: {
+                type: "string",
+                description: "Concise summary of the correction showing only the key change (e.g., '45 → 234', '4x → 5x', '×0.15 → ×1.15')",
               },
               complexityScore: {
                 type: "number",

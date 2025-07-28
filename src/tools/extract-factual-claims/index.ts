@@ -4,6 +4,7 @@ import { RichLLMInteraction } from '@/types/llm';
 import { callClaudeWithTool } from '@/lib/claude/wrapper';
 import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { generateCacheSeed } from '@/tools/shared/cache-utils';
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({
@@ -138,6 +139,14 @@ ${input.text}
       createHeliconeHeaders(sessionConfig) : 
       undefined;
     
+    // Generate cache seed based on content for consistent caching
+    const cacheSeed = generateCacheSeed('fact-extract', [
+      input.text,
+      input.instructions || '',
+      input.minQualityThreshold || 50,
+      input.maxClaims || 30
+    ]);
+    
     const result = await callClaudeWithTool<{ claims: ExtractedFactualClaim[] }>({
       system: systemPrompt,
       messages: [{
@@ -184,10 +193,44 @@ ${input.text}
         required: ["claims"]
       },
       enablePromptCaching: true,
-      heliconeHeaders
+      heliconeHeaders,
+      cacheSeed
     });
 
-    const allClaims = result.toolResult.claims || [];
+    let allClaims = result.toolResult.claims || [];
+    
+    // Handle case where LLM returns claims as a JSON string
+    if (typeof allClaims === 'string') {
+      context.logger.warn('[ExtractFactualClaims] Claims returned as string, attempting to parse');
+      try {
+        allClaims = JSON.parse(allClaims);
+      } catch (error) {
+        context.logger.error('[ExtractFactualClaims] Failed to parse claims string:', error);
+        return {
+          claims: [],
+          summary: {
+            totalFound: 0,
+            aboveThreshold: 0,
+            averageQuality: 0
+          },
+          llmInteraction: result.interaction
+        };
+      }
+    }
+    
+    // Ensure allClaims is an array
+    if (!Array.isArray(allClaims)) {
+      context.logger.warn('[ExtractFactualClaims] Claims is not an array after parsing:', { type: typeof allClaims, value: allClaims });
+      return {
+        claims: [],
+        summary: {
+          totalFound: 0,
+          aboveThreshold: 0,
+          averageQuality: 0
+        },
+        llmInteraction: result.interaction
+      };
+    }
     
     // Filter claims based on quality threshold
     const qualityClaims = allClaims.filter(claim => {

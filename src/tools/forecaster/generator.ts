@@ -99,6 +99,7 @@ ${options.question}
       temperature: 0.8, // Increased for more variation
       toolName: "provide_forecast",
       toolDescription: "Provide a probability forecast with reasoning",
+      enablePromptCaching: true,
       toolSchema: {
         type: "object",
         properties: {
@@ -245,6 +246,7 @@ export async function generateForecastWithAggregation(
     std_dev: number;
   };
   outliers_removed: ForecastResponse[];
+  perplexityResults?: Array<{ title: string; url: string; }>;
   llmInteractions: RichLLMInteraction[];
 }> {
   console.log(`\n🔮 Generating forecast for: ${options.question}`);
@@ -255,6 +257,7 @@ export async function generateForecastWithAggregation(
   // If using Perplexity, enhance context with research
   let enhancedOptions = options;
   let perplexityInteraction: RichLLMInteraction | null = null;
+  let perplexityResults: Array<{ title: string; url: string; }> | undefined;
   
   if (options.usePerplexity) {
     try {
@@ -271,6 +274,12 @@ export async function generateForecastWithAggregation(
       });
       
       perplexityInteraction = research.llmInteraction;
+      
+      // Extract sources for perplexityResults
+      perplexityResults = research.sources.map(source => ({
+        title: source.title,
+        url: source.url
+      }));
       
       const additionalContext = research.forecastingContext || 
         `Summary: ${research.summary}\n\nKey findings:\n${research.keyFindings.map(f => `- ${f}`).join('\n')}`;
@@ -360,6 +369,7 @@ export async function generateForecastWithAggregation(
     individual_forecasts: forecasts,
     outliers_removed: outliers,
     statistics: stats,
+    perplexityResults,
     llmInteractions,
   };
 }

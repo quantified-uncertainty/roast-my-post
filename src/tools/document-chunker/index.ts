@@ -125,6 +125,19 @@ export class DocumentChunkerTool extends Tool<
 
     const warnings: string[] = [];
     
+    // Handle empty input
+    if (!input.text || input.text.length === 0) {
+      return {
+        chunks: [],
+        metadata: {
+          totalChunks: 0,
+          averageChunkSize: 0,
+          strategy: 'markdown',
+          warnings: warnings.length > 0 ? warnings : undefined,
+        },
+      };
+    }
+    
     // Always use markdown-aware chunking
     const chunks = this.markdownAwareChunking(input.text, input, warnings);
 
@@ -173,6 +186,58 @@ export class DocumentChunkerTool extends Tool<
     const sections = this.parseMarkdownHierarchy(text);
     const chunks = this.recursivelyChunkSections(sections, targetWords, options, [], text);
     
+    // Sort chunks by start offset
+    chunks.sort((a, b) => a.startOffset - b.startOffset);
+    
+    // Adjust chunk boundaries to eliminate small gaps (e.g., missing newlines between sections)
+    const MAX_GAP_TO_MERGE = 5; // Only merge gaps of 5 characters or less (handles newlines, spaces)
+    
+    for (let i = 0; i < chunks.length - 1; i++) {
+      const currentChunk = chunks[i];
+      const nextChunk = chunks[i + 1];
+      
+      const gap = nextChunk.startOffset - currentChunk.endOffset;
+      
+      // Only merge small gaps to avoid breaking intentional chunk boundaries
+      if (gap > 0 && gap <= MAX_GAP_TO_MERGE) {
+        currentChunk.endOffset = nextChunk.startOffset;
+        currentChunk.text = text.substring(currentChunk.startOffset, currentChunk.endOffset);
+      } else if (gap > MAX_GAP_TO_MERGE) {
+        // For larger gaps, create a small filler chunk to ensure no text is lost
+        const gapChunk = {
+          text: text.substring(currentChunk.endOffset, nextChunk.startOffset),
+          startOffset: currentChunk.endOffset,
+          endOffset: nextChunk.startOffset,
+          startLine: currentChunk.endLine,
+          endLine: nextChunk.startLine,
+          metadata: {
+            type: 'mixed' as const,
+            headingContext: [],
+            isComplete: true,
+            confidence: 0.95,
+          },
+        };
+        chunks.splice(i + 1, 0, gapChunk);
+        i++; // Skip the newly inserted chunk
+      }
+    }
+    
+    // Ensure first chunk starts at 0
+    if (chunks.length > 0 && chunks[0].startOffset > 0) {
+      const firstChunk = chunks[0];
+      firstChunk.text = text.substring(0, firstChunk.endOffset);
+      firstChunk.startOffset = 0;
+    }
+    
+    // Ensure last chunk ends at text length
+    if (chunks.length > 0) {
+      const lastChunk = chunks[chunks.length - 1];
+      if (lastChunk.endOffset < text.length) {
+        lastChunk.text = text.substring(lastChunk.startOffset, text.length);
+        lastChunk.endOffset = text.length;
+      }
+    }
+    
     // Add metadata and convert to final chunk format
     const finalChunks = chunks.map((chunk, index) => ({
       id: `chunk-${index}`,
@@ -194,12 +259,15 @@ export class DocumentChunkerTool extends Tool<
     let currentSection: MarkdownSection | null = null;
     let currentOffset = 0;
     let insideCodeBlock = false;
+    let beforeFirstHeadingContent: string[] = [];
     let beforeFirstHeadingStartOffset = 0;
     let beforeFirstHeadingStartLine = 1;
+    let lineStartOffset = 0;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const lineLength = line.length + 1; // +1 for newline
+      lineStartOffset = currentOffset;  // Store where this line starts
+      const lineLength = line.length + (i < lines.length - 1 ? 1 : 0); // +1 for newline except last line
       
       // Track code block boundaries
       if (line.trim().startsWith('```')) {
@@ -213,45 +281,67 @@ export class DocumentChunkerTool extends Tool<
         const level = headingMatch[1].length;
         const title = headingMatch[2];
 
+        // If we have content before first heading, create a section for it
+        if (beforeFirstHeadingContent.length > 0 && !currentSection) {
+          const beforeHeadingSection: MarkdownSection = {
+            level: 0,
+            title: '',
+            content: beforeFirstHeadingContent,
+            startOffset: beforeFirstHeadingStartOffset,
+            startLine: beforeFirstHeadingStartLine,
+            endOffset: currentOffset - 1,
+            endLine: i,
+            subsections: [],
+          };
+          sections.push(beforeHeadingSection);
+          beforeFirstHeadingContent = [];
+        }
+
         // Save previous section if exists
         if (currentSection) {
+          // End the section just before the current heading line
           currentSection.endOffset = currentOffset - 1;
           currentSection.endLine = i;
           sections.push(currentSection);
         }
 
-        // Start new section
+        // Start new section - should include the heading line itself
         currentSection = {
           level,
           title,
           content: [],
-          startOffset: currentOffset,
-          startLine: i + 1,
+          startOffset: lineStartOffset,  // Start at the beginning of the heading line
+          startLine: i + 1,  // This is the line number (1-based)
           endOffset: text.length,
           endLine: lines.length,
           subsections: [],
         };
         
       } else {
-        // Add content to existing section or create one for content before first heading
+        // Add content to existing section or store as before-first-heading content
         if (currentSection) {
           currentSection.content.push(line);
         } else {
-          // Content before first heading - create a section for initial content
-          currentSection = {
-            level: 0,
-            title: '',
-            content: [line],
-            startOffset: beforeFirstHeadingStartOffset,
-            startLine: beforeFirstHeadingStartLine,
-            endOffset: text.length,
-            endLine: lines.length,
-            subsections: [],
-          };
+          beforeFirstHeadingContent.push(line);
         }
       }
 
       currentOffset += lineLength;
+    }
+
+    // If we have content before first heading and no sections were created, create one
+    if (beforeFirstHeadingContent.length > 0 && !currentSection) {
+      const beforeHeadingSection: MarkdownSection = {
+        level: 0,
+        title: '',
+        content: beforeFirstHeadingContent,
+        startOffset: beforeFirstHeadingStartOffset,
+        startLine: beforeFirstHeadingStartLine,
+        endOffset: text.length,
+        endLine: lines.length,
+        subsections: [],
+      };
+      sections.push(beforeHeadingSection);
     }
 
     // Save final section
@@ -262,7 +352,12 @@ export class DocumentChunkerTool extends Tool<
     }
 
     // Build hierarchy
-    return this.buildSectionHierarchy(sections);
+    const hierarchicalSections = this.buildSectionHierarchy(sections);
+    
+    // Update parent section boundaries to include their subsections
+    this.updateSectionBoundaries(hierarchicalSections);
+    
+    return hierarchicalSections;
   }
 
   // Build hierarchical structure from flat sections
@@ -288,6 +383,21 @@ export class DocumentChunkerTool extends Tool<
     return root;
   }
 
+  // Update section boundaries to include all subsections
+  private updateSectionBoundaries(sections: MarkdownSection[]): void {
+    for (const section of sections) {
+      if (section.subsections.length > 0) {
+        // First recursively update subsection boundaries
+        this.updateSectionBoundaries(section.subsections);
+        
+        // Then update this section's end boundary to include all subsections
+        const lastSubsection = section.subsections[section.subsections.length - 1];
+        section.endOffset = lastSubsection.endOffset;
+        section.endLine = lastSubsection.endLine;
+      }
+    }
+  }
+
   // Recursively chunk sections based on word count
   private recursivelyChunkSections(
     sections: MarkdownSection[],
@@ -307,7 +417,6 @@ export class DocumentChunkerTool extends Tool<
 
       if (wordCount <= targetWords) {
         // Section is small enough, create a single chunk
-        // Don't pass sectionText as it includes subsections
         const chunk = this.createChunkFromSection(section, currentContext, documentText);
         chunks.push(chunk);
         
@@ -316,16 +425,45 @@ export class DocumentChunkerTool extends Tool<
         const headerText = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
         const contentBeforeSubsections = section.content.join('\n').trim();
         
-        // Add content before subsections as a separate chunk if significant
-        if (contentBeforeSubsections && this.countWords(contentBeforeSubsections) > 50) {
-          const introChunk = this.createChunkFromContent(
-            headerText + contentBeforeSubsections,
-            section.startOffset,
-            section.startLine,
-            currentContext,
-            'section'
-          );
-          chunks.push(introChunk);
+        // Add content before subsections as a separate chunk (including header-only sections)
+        // Calculate where the content before subsections ends
+        let contentEndOffset = section.startOffset;
+        
+        if (section.subsections.length > 0) {
+          // Content ends just before the first subsection starts (inclusive of whitespace)
+          contentEndOffset = section.subsections[0].startOffset - 1;
+        } else {
+          // If no subsections, use the section's end offset
+          contentEndOffset = section.endOffset;
+        }
+        
+        // Always create a chunk for sections with titles to ensure complete coverage
+        if (section.title && documentText) {
+          // Extract the exact text from the document
+          const chunkText = documentText.substring(section.startOffset, contentEndOffset);
+          if (chunkText.trim()) {
+            const introChunk = this.createChunkFromContent(
+              chunkText,
+              section.startOffset,
+              section.startLine,
+              currentContext,
+              'section'
+            );
+            chunks.push(introChunk);
+          }
+        } else if (section.title || contentBeforeSubsections) {
+          // Fallback to reconstruction if no documentText
+          const introText = headerText + contentBeforeSubsections;
+          if (introText.trim()) {
+            const introChunk = this.createChunkFromContent(
+              introText,
+              section.startOffset,
+              section.startLine,
+              currentContext,
+              'section'
+            );
+            chunks.push(introChunk);
+          }
         }
 
         // Recursively chunk subsections
@@ -355,6 +493,12 @@ export class DocumentChunkerTool extends Tool<
     options: DocumentChunkerInput,
     documentText?: string
   ): Omit<DocumentChunk, 'id'>[] {
+    // If we have the document text, extract from it directly
+    if (documentText) {
+      return this.splitLargeSectionWithDocumentText(section, targetWords, context, options, documentText);
+    }
+    
+    // Fallback to the old method if no document text
     const chunks: Omit<DocumentChunk, 'id'>[] = [];
     const headerText = section.title ? `${'#'.repeat(section.level)} ${section.title}\n\n` : '';
     const lines = section.content;
@@ -523,6 +667,118 @@ export class DocumentChunkerTool extends Tool<
     return offset;
   }
 
+  private splitLargeSectionWithDocumentText(
+    section: MarkdownSection,
+    targetWords: number,
+    context: string[],
+    options: DocumentChunkerInput,
+    documentText: string
+  ): Omit<DocumentChunk, 'id'>[] {
+    const chunks: Omit<DocumentChunk, 'id'>[] = [];
+    const sectionText = documentText.substring(section.startOffset, section.endOffset);
+    const lines = sectionText.split('\n');
+    
+    let currentChunkStartOffset = section.startOffset;
+    let currentChunkStartLine = section.startLine;
+    let currentChunkLines: string[] = [];
+    let currentWordCount = 0;
+    let currentOffset = section.startOffset;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineLength = line.length + (i < lines.length - 1 ? 1 : 0); // +1 for newline except last line
+      const lineWords = this.countWords(line);
+      
+      // Handle code blocks
+      if (line.trim().startsWith('```')) {
+        let codeBlockEndIndex = i;
+        let codeBlockWordCount = lineWords;
+        let codeBlockLength = lineLength;
+        
+        // Find the end of the code block
+        for (let j = i + 1; j < lines.length; j++) {
+          const codeLine = lines[j];
+          const codeLineLength = codeLine.length + (j < lines.length - 1 ? 1 : 0);
+          codeBlockWordCount += this.countWords(codeLine);
+          codeBlockLength += codeLineLength;
+          
+          if (codeLine.trim().startsWith('```')) {
+            codeBlockEndIndex = j;
+            break;
+          }
+        }
+        
+        // If adding code block exceeds target and we have content, flush current chunk
+        if (currentWordCount + codeBlockWordCount > targetWords && currentChunkLines.length > 0) {
+          const chunkText = currentChunkLines.join('\n');
+          chunks.push(this.createChunkFromContent(
+            chunkText,
+            currentChunkStartOffset,
+            currentChunkStartLine,
+            context,
+            'mixed'
+          ));
+          
+          // Start new chunk
+          currentChunkStartOffset = currentOffset;
+          currentChunkStartLine = section.startLine + i;
+          currentChunkLines = [];
+          currentWordCount = 0;
+        }
+        
+        // Add the entire code block to current chunk
+        for (let j = i; j <= codeBlockEndIndex; j++) {
+          currentChunkLines.push(lines[j]);
+          if (j < lines.length - 1) {
+            currentOffset += lines[j].length + 1;
+          } else {
+            currentOffset += lines[j].length;
+          }
+        }
+        currentWordCount += codeBlockWordCount;
+        i = codeBlockEndIndex;
+        continue;
+      }
+      
+      // Regular line processing
+      if (currentWordCount + lineWords > targetWords && currentChunkLines.length > 0) {
+        // Flush current chunk
+        const chunkText = currentChunkLines.join('\n');
+        chunks.push(this.createChunkFromContent(
+          chunkText,
+          currentChunkStartOffset,
+          currentChunkStartLine,
+          context,
+          'mixed'
+        ));
+        
+        // Start new chunk at current line
+        currentChunkStartOffset = currentOffset;
+        currentChunkStartLine = section.startLine + i;
+        currentChunkLines = [];
+        currentWordCount = 0;
+      }
+      
+      currentChunkLines.push(line);
+      currentWordCount += lineWords;
+      currentOffset += lineLength;
+    }
+    
+    // Flush final chunk
+    if (currentChunkLines.length > 0) {
+      const chunkText = currentChunkLines.join('\n');
+      chunks.push(this.createChunkFromContent(
+        chunkText,
+        currentChunkStartOffset,
+        currentChunkStartLine,
+        context,
+        'mixed'
+      ));
+    }
+    
+    return chunks;
+  }
+
   private semanticChunking(
     text: string,
     options: DocumentChunkerInput,
@@ -562,7 +818,7 @@ export class DocumentChunkerTool extends Tool<
           
           currentChunk = [];
           // Start the next chunk where this one ended (no gap)
-          chunkStartOffset = actualEndOffset + 1; // +1 for space between sentences
+          chunkStartOffset = actualEndOffset; // No gap between chunks
         }
       }
       

@@ -233,17 +233,33 @@ export class JobModel {
     }
 
     // Update current job as failed
-    await prisma.job.update({
-      where: { id: jobId },
-      data: {
-        status: JobStatus.FAILED,
-        error: error instanceof Error ? error.message : String(error),
-        completedAt: new Date(),
-      },
-    });
+    // Sanitize error message to handle Unicode characters
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Log the error for debugging
+    logger.error(`Marking job ${jobId} as failed with error: ${errorMessage}`);
+    
+    // Truncate error message if it's too long (Prisma String fields have limits)
+    if (errorMessage.length > 1000) {
+      errorMessage = errorMessage.substring(0, 997) + '...';
+    }
+    
+    try {
+      await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.FAILED,
+          error: errorMessage,
+          completedAt: new Date(),
+        },
+      });
+      logger.info(`Successfully marked job ${jobId} as FAILED`);
+    } catch (dbError) {
+      logger.error(`Failed to update job ${jobId} status to FAILED:`, dbError);
+      throw dbError;
+    }
 
     // Check if we should retry
-    const errorMessage = error instanceof Error ? error.message : String(error);
     const isRetryableError = this.isRetryableError(errorMessage);
     
     if (isRetryableError && job.attempts < MAX_RETRY_ATTEMPTS) {

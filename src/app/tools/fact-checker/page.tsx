@@ -119,9 +119,16 @@ export default function FactCheckerPage() {
                       {factCheckResult.confidence} confidence
                     </span>
                   </div>
-                  <p className={`text-${verdictColor}-800 text-lg`}>
-                    {factCheckResult.explanation}
-                  </p>
+                  {/* Show concise correction if available */}
+                  {factCheckResult.conciseCorrection && (
+                    <div className={`text-lg font-semibold text-${verdictColor}-900 mb-2`}>
+                      {factCheckResult.conciseCorrection}
+                    </div>
+                  )}
+                  <div 
+                    className={`text-${verdictColor}-800 prose prose-sm max-w-none`}
+                    dangerouslySetInnerHTML={{ __html: factCheckResult.explanation }}
+                  />
                 </div>
                 <div className="ml-4">
                   {factCheckResult.verdict === 'true' && (
@@ -161,44 +168,48 @@ export default function FactCheckerPage() {
               </div>
             )}
 
-            {/* Supporting Evidence */}
-            {factCheckResult.evidence && factCheckResult.evidence.length > 0 && (
+            {/* Sources */}
+            {factCheckResult.sources && factCheckResult.sources.length > 0 ? (
               <div className="rounded-lg border border-gray-200 bg-white p-6">
-                <h4 className="text-lg font-semibold mb-4">Supporting Evidence</h4>
-                <ul className="space-y-2">
-                  {factCheckResult.evidence.map((evidence: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2">
+                <h4 className="text-lg font-semibold mb-4">Sources</h4>
+                <div className="space-y-2">
+                  {factCheckResult.sources.map((source: { title: string; url: string }, i: number) => (
+                    <a 
+                      key={i} 
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-2 text-blue-600 hover:text-blue-800 hover:underline"
+                    >
                       <svg className="h-4 w-4 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                       </svg>
-                      <span className="text-gray-700">{evidence}</span>
-                    </li>
+                      <span>{source.title}</span>
+                    </a>
                   ))}
-                </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="text-gray-600 text-sm">
+                  <span className="font-medium">Note:</span> Sources mentioned in the explanation above. 
+                  Specific URLs not provided to avoid inaccuracies.
+                </p>
               </div>
             )}
 
-            {/* Additional Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {factCheckResult.lastVerified && (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <h4 className="font-medium text-gray-900 mb-1">Last Verified</h4>
-                  <p className="text-gray-600">{factCheckResult.lastVerified}</p>
-                </div>
-              )}
-              
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <h4 className="font-medium text-gray-900 mb-1">Confidence Level</h4>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-${confidenceColor}-100 text-${confidenceColor}-800`}>
-                    {factCheckResult.confidence}
-                  </span>
-                  <span className="text-gray-600 text-sm">
-                    {factCheckResult.confidence === 'high' && 'Multiple reliable sources confirm this'}
-                    {factCheckResult.confidence === 'medium' && 'Good evidence but some uncertainty remains'}
-                    {factCheckResult.confidence === 'low' && 'Limited evidence available'}
-                  </span>
-                </div>
+            {/* Confidence Level */}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h4 className="font-medium text-gray-900 mb-1">Confidence Level</h4>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-${confidenceColor}-100 text-${confidenceColor}-800`}>
+                  {factCheckResult.confidence}
+                </span>
+                <span className="text-gray-600 text-sm">
+                  {factCheckResult.confidence === 'high' && 'Multiple reliable sources confirm this'}
+                  {factCheckResult.confidence === 'medium' && 'Good evidence but some uncertainty remains'}
+                  {factCheckResult.confidence === 'low' && 'Limited evidence available'}
+                </span>
               </div>
             </div>
 
@@ -208,6 +219,18 @@ export default function FactCheckerPage() {
                 <h4 className="font-semibold text-purple-900 mb-2">Research Notes:</h4>
                 <p className="text-purple-800">{typedResult.researchNotes}</p>
               </div>
+            )}
+
+            {/* Perplexity Debug Data */}
+            {typedResult.perplexityData && (
+              <details className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <summary className="font-semibold text-gray-900 cursor-pointer">Debug: Perplexity Research Data</summary>
+                <div className="mt-4 overflow-x-auto rounded bg-gray-900 p-4 text-gray-100">
+                  <pre className="text-xs">
+                    {JSON.stringify(typedResult.perplexityData, null, 2)}
+                  </pre>
+                </div>
+              </details>
             )}
 
             {/* Raw JSON Data */}

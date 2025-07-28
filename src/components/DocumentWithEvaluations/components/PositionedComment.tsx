@@ -4,14 +4,17 @@ import ReactMarkdown from "react-markdown";
 
 import type { Comment } from "@/types/documentSchema";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
-import { MARKDOWN_PLUGINS, MARKDOWN_COMPONENTS } from "../config/markdown";
+
 import {
-  COMMENT_PADDING,
-  COMMENT_MARGIN_LEFT,
-  COMMENT_MARGIN_RIGHT,
+  MARKDOWN_COMPONENTS,
+  MARKDOWN_PLUGINS,
+} from "../config/markdown";
+import {
   COMMENT_BG_DEFAULT,
   COMMENT_BG_HOVERED,
   COMMENT_BORDER_HOVERED,
+  COMMENT_MARGIN_LEFT,
+  COMMENT_MARGIN_RIGHT,
   Z_INDEX_COMMENT,
   Z_INDEX_COMMENT_HOVERED,
 } from "../constants";
@@ -54,7 +57,7 @@ export function PositionedComment({
         top: `${position}px`,
         left: `${COMMENT_MARGIN_LEFT}px`,
         right: `${COMMENT_MARGIN_RIGHT}px`,
-        padding: `${COMMENT_PADDING}px`,
+        padding: `2px 8px`,
         transition: skipAnimation
           ? "none"
           : "opacity 0.2s ease-out, background-color 0.2s ease-out",
@@ -74,7 +77,9 @@ export function PositionedComment({
       <div className="flex items-start">
         {/* Comment text */}
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
-          <div className="prose prose-sm max-w-none break-words">
+          <div
+            className={`prose prose-sm max-w-none break-words ${!isHovered ? "line-clamp-2" : ""}`}
+          >
             <ReactMarkdown
               {...MARKDOWN_PLUGINS}
               components={MARKDOWN_COMPONENTS}
@@ -98,10 +103,12 @@ export function PositionedComment({
 
           {/* Show quoted text snippet when expanded */}
           {isHovered && comment.highlight?.quotedText && (
-            <div className="mt-3 border-l-2 border-gray-300 bg-gray-50 p-3 rounded-r">
-              <div className="text-xs text-gray-500 mb-1">Referenced text:</div>
-              <div className="font-mono text-xs bg-gray-100 text-gray-700 p-2 rounded overflow-x-auto">
-                <pre className="whitespace-pre-wrap">{comment.highlight.quotedText}</pre>
+            <div className="mt-3 rounded-r border-l-2 border-gray-300 bg-gray-50 p-3">
+              <div className="mb-1 text-xs text-gray-500">Referenced text:</div>
+              <div className="overflow-x-auto rounded bg-gray-100 p-2 font-mono text-xs text-gray-700">
+                <pre className="whitespace-pre-wrap">
+                  {comment.highlight.quotedText}
+                </pre>
               </div>
             </div>
           )}

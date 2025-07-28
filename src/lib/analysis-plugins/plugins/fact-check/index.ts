@@ -1,10 +1,12 @@
 import type { 
   AnalysisResult,
-  TextChunk,
-  LLMInteraction
+  LLMInteraction,
+  RoutingExample,
+  SimpleAnalysisPlugin
 } from '../../types';
+import { TextChunk } from '../../TextChunk';
 import type { Comment } from '@/types/documentSchema';
-import { findTextLocation, type DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
 import extractFactualClaimsTool from '@/tools/extract-factual-claims';
@@ -18,6 +20,7 @@ export class VerifiedFact {
   public claim: ExtractedFactualClaim;
   private chunk: TextChunk;
   public verification?: FactCheckResult;
+  public factCheckerOutput?: any; // Store full fact-checker output including Perplexity data
 
   constructor(claim: ExtractedFactualClaim, chunk: TextChunk) {
     this.claim = claim;
@@ -57,58 +60,89 @@ export class VerifiedFact {
   }
 
   async findLocation(documentText: string): Promise<DocumentLocation | null> {
-    const result = await findTextLocation(this.originalText, documentText, {
-      partialMatch: true,
-      normalizeQuotes: true
-    });
+    // Use the chunk's method to find text and convert to absolute position
+    const result = await this.chunk.findTextAbsolute(
+      this.originalText,
+      {
+        normalizeQuotes: true,  // Handle quote variations
+        partialMatch: true,     // Facts can be partial matches
+        useLLMFallback: true,   // Enable LLM fallback for paraphrased text
+        pluginName: 'fact-check',
+        documentText: documentText  // Pass for position verification
+      }
+    );
     
-    if (result) {
-      return {
-        startOffset: result.startOffset,
-        endOffset: result.endOffset,
-        quotedText: result.quotedText
-      };
-    }
-    
-    return null;
+    return result;
   }
 
   async toComment(documentText: string): Promise<Comment | null> {
     const location = await this.findLocation(documentText);
     if (!location) return null;
 
+    // generateFactCheckComments now returns null if the description would be empty
     return generateFactCheckComments(this, location);
   }
 }
 
-export class FactCheckAnalyzerJob {
+export class FactCheckPlugin implements SimpleAnalysisPlugin {
+  private documentText: string;
+  private chunks: TextChunk[];
+  private hasRun = false;
   private facts: VerifiedFact[] = [];
+  private comments: Comment[] = [];
+  private summary: string = "";
+  private analysis: string = "";
   private llmInteractions: LLMInteraction[] = [];
+  private totalCost: number = 0;
 
-  static displayName(): string {
-    return "Fact Checker";
+  constructor() {
+    // Initialize empty values - they'll be set in analyze()
+    this.documentText = "";
+    this.chunks = [];
   }
 
-  static promptForWhenToUse(): string {
+  name(): string {
+    return "FACT_CHECK";
+  }
+
+  promptForWhenToUse(): string {
     return "Use this when the document makes specific factual claims that can be verified or when checking for accuracy of statements.";
   }
 
-  static routingExamples(): string[] {
+  routingExamples(): RoutingExample[] {
     return [
-      "Check if the facts in this article are accurate",
-      "Verify the claims made in this research",
-      "Fact-check this political statement",
-      "Check the accuracy of statistics in this report"
+      {
+        chunkText: "The global population reached 8 billion in 2022, marking a significant milestone",
+        shouldProcess: true,
+        reason: "Contains specific factual claim about population statistics"
+      },
+      {
+        chunkText: "Many people believe that climate change is an important issue",
+        shouldProcess: false,
+        reason: "Opinion statement without specific verifiable facts"
+      },
+      {
+        chunkText: "The unemployment rate dropped to 3.5% in December 2023",
+        shouldProcess: true,
+        reason: "Contains specific economic statistic that can be verified"
+      }
     ];
   }
 
-  async analyze(
-    documentText: string,
-    textChunks: TextChunk[]
-  ): Promise<AnalysisResult> {
+  async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
+    // Store the inputs
+    this.documentText = documentText;
+    this.chunks = chunks;
+    
+    if (this.hasRun) {
+      return this.getResults();
+    }
+
     try {
+      logger.info("FactCheckPlugin: Starting analysis");
+      logger.info(`FactCheckPlugin: Processing ${chunks.length} chunks`);
       // Phase 1: Extract factual claims from all chunks in parallel
-      const extractionPromises = textChunks.map(chunk => 
+      const extractionPromises = this.chunks.map(chunk => 
         this.extractFactsFromChunk(chunk)
       );
       
@@ -155,7 +189,12 @@ export class FactCheckAnalyzerJob {
       const commentPromises = this.facts.map(async (fact) => {
         // Run in next tick to ensure true parallelism
         await new Promise(resolve => setImmediate(resolve));
-        return fact.toComment(documentText);
+        const comment = await fact.toComment(documentText);
+        // Filter out comments with empty descriptions
+        if (comment && comment.description && comment.description.trim() !== '') {
+          return comment;
+        }
+        return null;
       });
       
       const commentResults = await Promise.all(commentPromises);
@@ -164,20 +203,43 @@ export class FactCheckAnalyzerJob {
       // Sort comments by importance
       comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
 
+      // Store results for later retrieval
+      this.comments = comments;
+      
       // Phase 4: Generate analysis summary
       const { summary, analysisSummary } = this.generateAnalysis();
+      this.summary = summary;
+      this.analysis = analysisSummary;
+      this.totalCost = this.calculateCost();
 
-      return {
-        comments,
-        summary,
-        analysis: analysisSummary,
-        llmInteractions: this.llmInteractions,
-        cost: this.calculateCost()
-      };
+      this.hasRun = true;
+      logger.info(
+        `FactCheckPlugin: Analysis complete - ${this.comments.length} comments generated`
+      );
+
+      return this.getResults();
     } catch (error) {
-      logger.error('Error in FactCheckAnalyzerJob:', error);
-      throw error;
+      logger.error('FactCheckPlugin: Fatal error during analysis', error);
+      // Return a partial result instead of throwing
+      this.hasRun = true;
+      this.summary = "Analysis failed due to an error";
+      this.analysis = "The fact-checking analysis could not be completed due to a technical error.";
+      return this.getResults();
     }
+  }
+
+  public getResults(): AnalysisResult {
+    if (!this.hasRun) {
+      throw new Error("Analysis has not been run yet. Call analyze() first.");
+    }
+
+    return {
+      summary: this.summary,
+      analysis: this.analysis,
+      comments: this.comments,
+      llmInteractions: this.llmInteractions,
+      cost: this.totalCost,
+    };
   }
 
   private async extractFactsFromChunk(chunk: TextChunk): Promise<{
@@ -232,17 +294,63 @@ export class FactCheckAnalyzerJob {
     await Promise.allSettled(verificationPromises);
   }
 
+  private shouldUsePerplexityResearch(fact: VerifiedFact): boolean {
+    // Use Perplexity research for high-priority claims that need verification
+    return false; // Disabled for now
+    /*
+    // Use Perplexity research for high-priority claims that need verification
+    
+    // 1. High importance claims (likely core to the document's argument)
+    const isHighImportance = fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH;
+    
+    // 2. Claims with low truth probability (likely false, need evidence to refute)
+    const isLikelyFalse = fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_VERY_LOW;
+    
+    // 3. Uncertain but important claims (need evidence to confirm/deny)
+    const isUncertainButImportant = fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_MEDIUM && 
+                                    fact.claim.truthProbability >= 40 && 
+                                    fact.claim.truthProbability <= 70;
+    
+    // 4. Highly checkable claims with questionable truth (easy to verify)
+    const isEasilyVerifiable = fact.claim.checkabilityScore >= THRESHOLDS.CHECKABILITY_HIGH && 
+                               fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM;
+    
+    // Use research if any of these conditions are met
+    const shouldResearch = isHighImportance || isLikelyFalse || isUncertainButImportant || isEasilyVerifiable;
+    
+    logger.debug(`[FactCheck] Research decision for "${fact.text.substring(0, 50)}...": ${shouldResearch}`, {
+      importance: fact.claim.importanceScore,
+      checkability: fact.claim.checkabilityScore, 
+      truthProbability: fact.claim.truthProbability,
+      isHighImportance,
+      isLikelyFalse,
+      isUncertainButImportant,
+      isEasilyVerifiable
+    });
+    
+    return shouldResearch;
+    */
+  }
+
   private async verifySingleFact(fact: VerifiedFact): Promise<void> {
     try {
+      // Decide whether to use Perplexity research based on claim characteristics
+      const shouldResearch = this.shouldUsePerplexityResearch(fact);
+      
+      if (shouldResearch) {
+        logger.info(`[FactCheck] Using Perplexity research for high-priority claim: "${fact.text.substring(0, 100)}..."`);
+      }
+      
       const result = await factCheckerTool.execute({
         claim: fact.text,
         context: `Topic: ${fact.topic}, Importance: ${fact.claim.importanceScore}/100, Initial truth estimate: ${fact.claim.truthProbability}%`,
-        searchForEvidence: false
+        searchForEvidence: shouldResearch
       }, {
         logger
       });
 
       fact.verification = result.result;
+      fact.factCheckerOutput = result; // Store full output including Perplexity data
       this.llmInteractions.push(this.convertRichToLLMInteraction(result.llmInteraction));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown verification error';
@@ -252,9 +360,9 @@ export class FactCheckAnalyzerJob {
         verdict: 'unverifiable',
         confidence: 'low',
         explanation: `Verification failed: ${errorMessage}`,
-        evidence: [],
         corrections: undefined,
-        lastVerified: new Date().toISOString()
+        conciseCorrection: undefined,
+        sources: []
       };
     }
   }
@@ -285,6 +393,7 @@ export class FactCheckAnalyzerJob {
   private generateAnalysis(): { summary: string; analysisSummary: string } {
     const totalFacts = this.facts.length;
     const verifiedFacts = this.facts.filter(f => f.verification).length;
+    const researchedFacts = this.facts.filter(f => f.factCheckerOutput?.perplexityData).length;
     const trueFacts = this.facts.filter(f => f.verification?.verdict === 'true').length;
     const falseFacts = this.facts.filter(f => f.verification?.verdict === 'false').length;
     const partiallyTrueFacts = this.facts.filter(f => f.verification?.verdict === 'partially-true').length;
@@ -293,7 +402,7 @@ export class FactCheckAnalyzerJob {
     const likelyFalseFacts = this.facts.filter(f => f.claim.truthProbability <= 40).length;
     const uncertainFacts = this.facts.filter(f => f.claim.truthProbability > 40 && f.claim.truthProbability <= 70).length;
 
-    const summary = `Found ${totalFacts} factual claims: ${verifiedFacts} verified (${trueFacts} true, ${falseFacts} false, ${partiallyTrueFacts} partially true)`;
+    const summary = `Found ${totalFacts} factual claims: ${verifiedFacts} verified (${trueFacts} true, ${falseFacts} false, ${partiallyTrueFacts} partially true)${researchedFacts > 0 ? `, ${researchedFacts} researched` : ''}`;
 
     const topicStats = this.facts.reduce((acc, fact) => {
       acc[fact.topic] = (acc[fact.topic] || 0) + 1;
@@ -305,7 +414,7 @@ export class FactCheckAnalyzerJob {
 
 **Overview**: Extracted and analyzed ${totalFacts} factual claims from the document.
 
-**Verification Results** (${verifiedFacts} claims verified):
+**Verification Results** (${verifiedFacts} claims verified${researchedFacts > 0 ? `, ${researchedFacts} with external research 🔍` : ''}):
 - ✓ True: ${trueFacts} claims
 - ✗ False: ${falseFacts} claims
 - ⚠️ Partially True: ${partiallyTrueFacts} claims
@@ -330,9 +439,9 @@ ${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document ar
     return { summary, analysisSummary };
   }
 
-  // Public methods for the plugin wrapper
+  // Required methods from SimpleAnalysisPlugin interface
   getCost(): number {
-    return this.calculateCost();
+    return this.totalCost;
   }
 
   getLLMInteractions(): LLMInteraction[] {
@@ -357,3 +466,6 @@ ${uncertainFacts > totalFacts / 2 ? `\n**Note**: Many claims in this document ar
     };
   }
 }
+
+// Export the plugin class for backward compatibility
+export { FactCheckPlugin as FactCheckAnalyzerJob };

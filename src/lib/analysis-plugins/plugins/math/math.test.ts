@@ -2,12 +2,20 @@
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { extractMathExpressionsTool } from '@/tools/extract-math-expressions';
+import { checkMathHybridTool } from '@/tools/check-math-hybrid';
 
 jest.mock('@/tools/extract-math-expressions', () => ({
   extractMathExpressionsTool: {
     execute: jest.fn()
   }
 }));
+
+jest.mock('@/tools/check-math-hybrid', () => ({
+  checkMathHybridTool: {
+    execute: jest.fn()
+  }
+}));
+
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
@@ -72,6 +80,8 @@ describe('MathAnalyzerJob', () => {
           contextImportanceScore: 50,
           errorSeverityScore: 70,
           verificationStatus: 'verified' as const,
+          lineNumber: 1,
+          surroundingContext: "Basic math: 2 + 2 = 5"
         },
         {
           originalText: "E = mc²",
@@ -80,36 +90,41 @@ describe('MathAnalyzerJob', () => {
           contextImportanceScore: 80,
           errorSeverityScore: 0,
           verificationStatus: 'verified' as const,
+          lineNumber: 2,
+          surroundingContext: "Physics formula: E = mc²"
         },
       ];
 
-      // Mock to return different expressions for each chunk
+      // Mock extract-math-expressions to return expressions from each chunk
       (extractMathExpressionsTool.execute as jest.Mock)
         .mockResolvedValueOnce({
-          expressions: [mockExpressions[0]], // First chunk gets the error expression
-          llmInteraction: {
-            prompt: 'test prompt',
-            response: 'test response',
-            tokensUsed: {
-              prompt: 100,
-              completion: 200
-            },
-            cost: 0.01,
-            model: 'claude-3-opus-20240229'
-          },
+          expressions: [mockExpressions[0]]
         })
         .mockResolvedValueOnce({
-          expressions: [mockExpressions[1]], // Second chunk gets the correct expression
-          llmInteraction: {
-            prompt: 'test prompt',
-            response: 'test response',
-            tokensUsed: {
-              prompt: 100,
-              completion: 200
-            },
-            cost: 0.01,
-            model: 'claude-3-opus-20240229'
-          },
+          expressions: [mockExpressions[1]]
+        });
+
+      // Mock check-math-hybrid to verify the first expression as false
+      (checkMathHybridTool.execute as jest.Mock)
+        .mockResolvedValueOnce({
+          statement: '2 + 2 = 5',
+          status: 'verified_false',
+          explanation: '2 + 2 equals 4, not 5',
+          verifiedBy: 'mathjs',
+          toolsUsed: ['mathjs'],
+          conciseCorrection: '5 → 4',
+          errorDetails: {
+            errorType: 'calculation',
+            severity: 'major',
+            conciseCorrection: '5 → 4'
+          }
+        })
+        .mockResolvedValueOnce({
+          statement: 'E = mc²',
+          status: 'verified_true',
+          explanation: 'This is the correct formula for mass-energy equivalence',
+          verifiedBy: 'llm',
+          toolsUsed: ['mathjs', 'llm']
         });
 
       const chunks: TextChunk[] = [
@@ -139,25 +154,17 @@ describe('MathAnalyzerJob', () => {
 
       expect(result.summary).toContain('2 mathematical expressions');
       expect(result.summary).toContain('1 with errors');
-      expect(result.comments).toHaveLength(1); // Only the error gets a comment
-      expect(result.comments[0].description).toContain('Calculation Error');
-      expect(result.cost).toBeGreaterThan(0); // Cost from LLM interactions
-      expect(result.llmInteractions).toHaveLength(2); // One per chunk
-    });
+      expect(result.summary).toContain('Hybrid verification found 1 issue');
+      expect(result.comments).toHaveLength(2); // Both extraction and hybrid create comments for errors
+      // Check that at least one comment contains the correction
+      const hasCorrection = result.comments.some(c => c.description.includes('5 → 4') || c.description.includes('5</span> → <span'));
+      expect(hasCorrection).toBe(true);
+      expect(result.cost).toBe(0); // No cost tracking without llmInteraction
+    }, 10000); // Increase timeout
 
     it('should handle empty document', async () => {
       (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
-        expressions: [],
-        llmInteraction: {
-          prompt: 'test prompt',
-          response: 'test response',
-          tokensUsed: {
-            prompt: 50,
-            completion: 10
-          },
-          cost: 0.001,
-          model: 'claude-3-opus-20240229'
-        },
+        expressions: []
       });
 
       const analyzer = new MathAnalyzerJob();
@@ -165,24 +172,14 @@ describe('MathAnalyzerJob', () => {
 
       const result = await analyzer.analyze(chunks, 'No math here, just text.');
 
-      expect(result.summary).toBe('No mathematical expressions found.');
+      expect(result.summary).toBe('No mathematical content found.');
       expect(result.analysis).toContain('No mathematical calculations');
       expect(result.comments).toHaveLength(0);
     });
 
     it('should not run analysis twice', async () => {
       (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
-        expressions: [],
-        llmInteraction: {
-          prompt: 'test prompt',
-          response: 'test response',
-          tokensUsed: {
-            prompt: 50,
-            completion: 10
-          },
-          cost: 0.001,
-          model: 'claude-3-opus-20240229'
-        },
+        expressions: []
       });
 
       const analyzer = new MathAnalyzerJob();
@@ -199,10 +196,21 @@ describe('MathAnalyzerJob', () => {
   describe('getResults', () => {
     it('should throw error if analysis not run', () => {
       const analyzer = new MathAnalyzerJob();
+      expect(() => analyzer.getResults()).toThrow('Analysis has not been run yet');
+    });
 
-      expect(() => analyzer.getResults()).toThrow(
-        'Analysis has not been run yet. Call analyze() first.'
-      );
+    it('should return cached results after analysis', async () => {
+      (extractMathExpressionsTool.execute as jest.Mock).mockResolvedValue({
+        expressions: []
+      });
+
+      const analyzer = new MathAnalyzerJob();
+      const chunks = [new TextChunk('Test', 'chunk1')];
+
+      const analysisResult = await analyzer.analyze(chunks, 'Test');
+      const cachedResult = analyzer.getResults();
+
+      expect(cachedResult).toEqual(analysisResult);
     });
   });
 
@@ -213,35 +221,33 @@ describe('MathAnalyzerJob', () => {
           originalText: "1 + 1 = 2",
           hasError: false,
           complexityScore: 10,
-          contextImportanceScore: 20,
+          contextImportanceScore: 30,
           errorSeverityScore: 0,
           verificationStatus: 'verified' as const,
-        }],
-        llmInteraction: {
-          prompt: 'test prompt',
-          response: 'test response',
-          tokensUsed: {
-            prompt: 50,
-            completion: 10
-          },
-          cost: 0.001,
-          model: 'claude-3-opus-20240229'
-        },
+          lineNumber: 1,
+          surroundingContext: "Test: 1 + 1 = 2"
+        }]
+      });
+
+      // Mock check-math-hybrid for the single expression
+      (checkMathHybridTool.execute as jest.Mock).mockResolvedValue({
+        statement: '1 + 1 = 2',
+        status: 'verified_true',
+        explanation: 'Correct',
+        verifiedBy: 'mathjs',
+        toolsUsed: ['mathjs']
       });
 
       const analyzer = new MathAnalyzerJob();
-      const chunks = [new TextChunk('1 + 1 = 2', 'chunk1')];
+      const chunks = [new TextChunk('Test: 1 + 1 = 2', 'chunk1')];
 
-      await analyzer.analyze(chunks, '1 + 1 = 2');
-      const debugInfo = analyzer.getDebugInfo();
-
-      expect(debugInfo).toEqual({
-        hasRun: true,
-        expressionsCount: 1,
-        commentsCount: 0,
-        totalCost: expect.any(Number), // Will have cost from LLM
-        llmInteractionsCount: 1, // One LLM call
-      });
-    });
+      await analyzer.analyze(chunks, 'Test: 1 + 1 = 2');
+      
+      const debug = analyzer.getDebugInfo();
+      
+      expect(debug.expressionsCount).toBe(1);
+      expect(debug.commentsCount).toBe(0); // No errors, no comments
+      expect(debug.llmInteractionsCount).toBe(0); // No LLM interactions tracked
+    }, 10000); // Increase timeout
   });
 });

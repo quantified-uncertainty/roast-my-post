@@ -6,6 +6,7 @@ import { createHeliconeHeaders } from "@/lib/helicone/sessions";
 import { RichLLMInteraction } from "@/types/llm";
 import { llmInteractionSchema } from "@/types/llmSchema";
 import { logger } from "@/lib/logger";
+import { generateCacheSeed } from "@/tools/shared/cache-utils";
 
 import {
   Tool,
@@ -187,6 +188,14 @@ ${text}
       createHeliconeHeaders(sessionConfig) : 
       undefined;
 
+    // Generate cache seed for consistent responses
+    const cacheSeed = generateCacheSeed('forecast-extract', [
+      text,
+      additionalContext || '',
+      minQualityThreshold || 0,
+      maxDetailedAnalysis || 30
+    ]);
+
     const result = await callClaudeWithTool<{ forecasts: any[] }>(
       {
         system: systemPrompt,
@@ -203,6 +212,7 @@ ${text}
         toolDescription:
           "Extract forecast statements and score them for analysis priority",
         heliconeHeaders,
+        cacheSeed,
         toolSchema: {
           type: "object",
           properties: {

@@ -22,20 +22,30 @@ export class PerplexityClient {
     }
     
     const heliconeKey = process.env.HELICONE_API_KEY;
-    if (!heliconeKey) {
-      throw new Error('Helicone API key is required for Perplexity integration');
-    }
     
-    // Use Helicone proxy for OpenRouter
-    this.client = new OpenAI({
-      baseURL: 'https://openrouter.helicone.ai/api/v1',
-      apiKey: key,
-      defaultHeaders: {
-        'Helicone-Auth': `Bearer ${heliconeKey}`,
-        'HTTP-Referer': 'https://roastmypost.org',
-        'X-Title': 'RoastMyPost Tools',
-      }
-    });
+    // Use Helicone proxy if available, otherwise direct OpenRouter
+    if (heliconeKey) {
+      console.log('[PerplexityClient] Using Helicone proxy for OpenRouter');
+      this.client = new OpenAI({
+        baseURL: 'https://openrouter.helicone.ai/api/v1',
+        apiKey: key,
+        defaultHeaders: {
+          'Helicone-Auth': `Bearer ${heliconeKey}`,
+          'HTTP-Referer': 'https://roastmypost.org',
+          'X-Title': 'RoastMyPost Tools',
+        }
+      });
+    } else {
+      console.log('[PerplexityClient] Using direct OpenRouter (no Helicone)');
+      this.client = new OpenAI({
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: key,
+        defaultHeaders: {
+          'HTTP-Referer': 'https://roastmypost.org',
+          'X-Title': 'RoastMyPost Tools',
+        }
+      });
+    }
   }
 
   /**

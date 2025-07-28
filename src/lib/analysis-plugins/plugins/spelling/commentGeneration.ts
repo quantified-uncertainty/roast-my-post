@@ -1,30 +1,30 @@
 import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
 import type { SpellingErrorWithLocation } from "./index";
+import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 /**
  * Generate a comment for a single spelling/grammar error
  */
 export function generateSpellingComment(error: SpellingGrammarError): string {
-  const parts: string[] = [];
-  
   // Safety check for required fields
   if (!error.text || !error.correction) {
-    return "**Error**: Invalid spelling/grammar error data";
+    const style = SEVERITY_STYLES[CommentSeverity.HIGH];
+    return `⚠️ [Error] <span style="color: ${style.color}">Invalid spelling/grammar data</span>`;
   }
   
-  // Start with error type
-  const typeLabel = error.type ? error.type.charAt(0).toUpperCase() + error.type.slice(1) : 'Error';
-  parts.push(`**${typeLabel}**:`);
+  // Determine type and emoji
+  const isSpelling = error.type === 'spelling';
+  const emoji = isSpelling ? '✏️' : '📝';
   
-  // Show the correction
-  parts.push(`"${error.text}" → "${error.correction}"`);
+  // Build header with diff formatting
+  const diff = formatDiff(`"${error.text}"`, `"${error.correction}"`);
+  const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
   
-  // Add context if available
-  if (error.context && error.context.length > error.text.length + 10) {
-    parts.push(`\n\nContext: *...${error.context}...*`);
-  }
+  // Spelling errors are usually less severe than grammar errors
+  const severity = isSpelling ? CommentSeverity.MEDIUM : CommentSeverity.MEDIUM;
+  const style = SEVERITY_STYLES[severity];
   
-  return parts.join(" ");
+  return `${emoji} [${pluginLabel}] <span style="color: ${style.color}">${diff}</span>`;
 }
 
 /**

@@ -4,6 +4,8 @@ import type {
 import {
   extractMathExpressionsTool,
 } from "@/tools/extract-math-expressions";
+import { checkMathHybridTool } from "@/tools/check-math-hybrid";
+import type { CheckMathHybridOutput } from "@/tools/check-math-hybrid/types";
 import type { Comment } from "@/types/documentSchema";
 
 import { logger } from "../../../logger";
@@ -19,6 +21,138 @@ import { generateMathComment, generateDocumentSummary } from "./commentGeneratio
 export interface MathExpressionWithComment {
   expression: ExtractedMathExpressionToolType;
   comment?: Comment;
+}
+
+export class HybridMathErrorWrapper {
+  public verificationResult: CheckMathHybridOutput;
+  public expression: ExtractedMathExpressionToolType;
+  private documentText: string;
+
+  constructor(verificationResult: CheckMathHybridOutput, expression: ExtractedMathExpressionToolType, documentText: string) {
+    this.verificationResult = verificationResult;
+    this.expression = expression;
+    this.documentText = documentText;
+  }
+
+  get originalText(): string {
+    return this.expression.originalText;
+  }
+
+  get averageScore(): number {
+    // Convert severity to score for sorting
+    if (this.verificationResult.status === 'verified_false') {
+      const severity = this.verificationResult.llmResult?.severity || 'minor';
+      const severityScore = severity === 'critical' ? 10 : 
+                           severity === 'major' ? 7 : 4;
+      return severityScore;
+    }
+    return 0;
+  }
+
+  private commentImportanceScore(): number {
+    if (this.verificationResult.status === 'verified_false') {
+      const baseScore = this.verificationResult.verifiedBy === 'mathjs' ? 9 : 6; // MathJS verified errors are more important
+      const severity = this.verificationResult.llmResult?.severity || 'minor';
+      const severityBonus = severity === 'critical' ? 2 : 
+                           severity === 'major' ? 1 : 0;
+      return Math.min(10, baseScore + severityBonus);
+    }
+    return 0;
+  }
+
+  public async getComment(): Promise<Comment | null> {
+    // Only generate comments for errors
+    if (this.verificationResult.status !== 'verified_false') {
+      return null;
+    }
+    
+    // Use the expression text to find location
+    const startOffset = this.findTextOffsetInDocument(this.expression.originalText);
+    if (startOffset === -1) {
+      logger.warn(`Math expression text not found: "${this.expression.originalText}"`);
+      return null;
+    }
+
+    const endOffset = startOffset + this.expression.originalText.length;
+    const message = this.generateEnhancedComment();
+    
+    if (!message) {
+      return null;
+    }
+
+    return {
+      description: message,
+      isValid: true,
+      highlight: {
+        startOffset,
+        endOffset,
+        quotedText: this.expression.originalText,
+        isValid: true,
+      },
+      importance: this.commentImportanceScore(),
+    };
+  }
+
+  private findTextOffsetInDocument(text: string): number {
+    // Simple text search - could be enhanced with fuzzy matching
+    return this.documentText.indexOf(text);
+  }
+
+  private generateEnhancedComment(): string {
+    const { verificationResult: result, expression } = this;
+    
+    // Only generate comments for errors
+    if (result.status !== 'verified_false') {
+      return '';
+    }
+    
+    let comment = `🧮 **Math ${result.verifiedBy === 'mathjs' ? 'Verification' : 'Analysis'}**\n\n`;
+    
+    // Show concise correction prominently if available
+    if (result.conciseCorrection) {
+      comment += `**📝 Quick Fix:** \`${result.conciseCorrection}\`\n\n`;
+    }
+    
+    // Error explanation
+    comment += result.explanation;
+    
+    // MathJS-specific enhancements
+    if (result.verifiedBy === 'mathjs' && result.mathJsResult) {
+      const mjResult = result.mathJsResult;
+      
+      // Copyable expression with link to MathJS
+      if (mjResult.mathJsExpression) {
+        const encodedExpr = encodeURIComponent(mjResult.mathJsExpression);
+        comment += `\n\n**🔗 Try it yourself:**\n`;
+        comment += `[\`${mjResult.mathJsExpression}\`](https://mathjs.org/examples/expressions.js.html?expr=${encodedExpr})\n`;
+        comment += `*Click to open in MathJS calculator*`;
+      }
+      
+      // Actual result
+      if (mjResult.computedValue) {
+        comment += `\n\n**✅ Correct result:** \`${mjResult.computedValue}\``;
+      }
+      
+      // Step-by-step work in collapsible section
+      if (mjResult.steps && mjResult.steps.length > 1) {
+        comment += `\n\n<details>\n<summary>📊 Step-by-step verification</summary>\n\n`;
+        mjResult.steps.forEach((step: { expression: string; result: string }, i: number) => {
+          comment += `${i + 1}. \`${step.expression}\` = \`${step.result}\`\n`;
+        });
+        comment += `\n</details>`;
+      }
+      
+      // Debug info in collapsible section
+      comment += `\n\n<details>\n<summary>🔍 Debug information</summary>\n\n`;
+      comment += `\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\n</details>`;
+    } else {
+      // For LLM-only errors, still show debug info
+      comment += `\n\n<details>\n<summary>🔍 Debug information</summary>\n\n`;
+      comment += `\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n\n</details>`;
+    }
+
+    return comment;
+  }
 }
 
 export class ExtractedMathExpression {
@@ -84,15 +218,15 @@ export class ExtractedMathExpression {
   }
 
   public async getComment(): Promise<Comment | null> {
-    // Only generate comments for expressions with errors or high importance
-    if (!this.expression.hasError && this.averageScore < 60) {
-      return null;
-    }
-
     const location = await this.findLocationInDocument();
     if (!location) return null;
 
     const message = generateMathComment(this.expression);
+    
+    // Don't create comment if message is empty
+    if (!message) {
+      return null;
+    }
 
     return {
       description: message,
@@ -118,6 +252,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private llmInteractions: LLMInteraction[] = [];
   private totalCost: number = 0;
   private extractedExpressions: ExtractedMathExpression[] = [];
+  private hybridErrorWrappers: HybridMathErrorWrapper[] = [];
 
   name(): string {
     return "MATH";
@@ -176,8 +311,9 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       logger.info(`MathAnalyzer: Processing ${chunks.length} chunks`);
 
       await this.extractMathExpressions();
+      await this.runHybridMathCheck();
       
-      logger.info(`MathAnalyzer: Extracted ${this.extractedExpressions.length} math expressions from document`);
+      logger.info(`MathAnalyzer: Extracted ${this.extractedExpressions.length} math expressions and found ${this.hybridErrorWrappers.length} hybrid errors`);
       await this.createComments();
       
       logger.info(`MathAnalyzer: Created ${this.comments.length} comments`);
@@ -286,31 +422,132 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     );
   }
 
-  private async createComments(): Promise<void> {
-    // Process comments in parallel for better performance
-    const comments = await Promise.all(
-      this.extractedExpressions.map(extractedExpression => extractedExpression.getComment())
-    );
-    
-    // Filter out null comments and add to array
-    this.comments = comments.filter((comment): comment is Comment => comment !== null);
+  private async runHybridMathCheck(): Promise<void> {
+    logger.debug("MathAnalyzer: Running hybrid math check on extracted expressions");
 
-    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments`);
+    // Check each extracted expression individually
+    for (const extractedExpr of this.extractedExpressions) {
+      try {
+        const result = await checkMathHybridTool.execute(
+          {
+            statement: extractedExpr.expression.originalText,
+            context: undefined // ExtractedMathExpression doesn't have context
+          },
+          {
+            logger: logger,
+          }
+        );
+
+        // Track LLM interaction
+        if (result.llmInteraction) {
+          const richInteraction = result.llmInteraction;
+          const llmInteraction: LLMInteraction = {
+            messages: [
+              { role: "user", content: richInteraction.prompt },
+              { role: "assistant", content: richInteraction.response }
+            ],
+            usage: {
+              input_tokens: richInteraction.tokensUsed.prompt,
+              output_tokens: richInteraction.tokensUsed.completion
+            }
+          };
+          this.llmInteractions.push(llmInteraction);
+        
+          // Calculate cost
+          const costPerInputToken = 0.003 / 1000;
+          const costPerOutputToken = 0.015 / 1000;
+          const cost = (richInteraction.tokensUsed.prompt * costPerInputToken) + 
+                      (richInteraction.tokensUsed.completion * costPerOutputToken);
+          this.totalCost += cost;
+        }
+
+        // Only create wrapper if there's an error (status is verified_false)
+        if (result.status === 'verified_false') {
+          const errorWrapper = new HybridMathErrorWrapper(result, extractedExpr.expression, this.documentText);
+          this.hybridErrorWrappers.push(errorWrapper);
+        }
+      } catch (error) {
+        logger.error("MathAnalyzer: Failed to check expression:", { 
+          expression: extractedExpr.expression.originalText, 
+          error 
+        });
+        // Continue checking other expressions
+      }
+    }
+    
+    logger.debug(
+      `MathAnalyzer: Hybrid check found ${this.hybridErrorWrappers.length} errors`
+    );
+  }
+
+  private async createComments(): Promise<void> {
+    // Process both expression comments and hybrid error comments in parallel
+    const [expressionComments, hybridComments] = await Promise.all([
+      Promise.all(
+        this.extractedExpressions.map(extractedExpression => extractedExpression.getComment())
+      ),
+      Promise.all(
+        this.hybridErrorWrappers.map(errorWrapper => errorWrapper.getComment())
+      )
+    ]);
+    
+    // Filter out null comments and combine both types
+    const validExpressionComments = expressionComments.filter((comment): comment is Comment => comment !== null);
+    const validHybridComments = hybridComments.filter((comment): comment is Comment => comment !== null);
+    
+    this.comments = [...validExpressionComments, ...validHybridComments];
+
+    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments (${validExpressionComments.length} expressions, ${validHybridComments.length} hybrid errors)`);
   }
 
   private generateAnalysis(): void {
-    if (this.extractedExpressions.length === 0) {
-      this.summary = "No mathematical expressions found.";
-      this.analysis =
-        "No mathematical calculations or formulas were identified in this document.";
+    const totalExpressions = this.extractedExpressions.length;
+    const totalHybridErrors = this.hybridErrorWrappers.length;
+    const mathJsErrors = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'mathjs').length;
+    const llmErrors = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'llm').length;
+
+    if (totalExpressions === 0 && totalHybridErrors === 0) {
+      this.summary = "No mathematical content found.";
+      this.analysis = "No mathematical calculations, formulas, or errors were identified in this document.";
       return;
     }
 
-    // Use the document summary generator
-    this.analysis = generateDocumentSummary(this.extractedExpressions);
+    // Use the document summary generator for extracted expressions
+    let analysis = "";
+    if (totalExpressions > 0) {
+      analysis = generateDocumentSummary(this.extractedExpressions);
+    }
 
-    // Generate simple summary for the summary field
-    const totalExpressions = this.extractedExpressions.length;
+    // Add hybrid analysis
+    if (totalHybridErrors > 0) {
+      if (analysis) analysis += "\n\n";
+      analysis += `**Hybrid Math Verification Results:**\n\n`;
+      analysis += `Found ${totalHybridErrors} mathematical issue${totalHybridErrors !== 1 ? 's' : ''}:\n`;
+      if (mathJsErrors > 0) {
+        analysis += `- ${mathJsErrors} computationally verified error${mathJsErrors !== 1 ? 's' : ''} (using MathJS)\n`;
+      }
+      if (llmErrors > 0) {
+        analysis += `- ${llmErrors} conceptual error${llmErrors !== 1 ? 's' : ''} (using LLM analysis)\n`;
+      }
+      
+      // Add severity breakdown
+      const critical = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'critical').length;
+      const major = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'major').length;
+      const minor = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'minor').length;
+      
+      if (critical > 0 || major > 0 || minor > 0) {
+        analysis += `\nSeverity breakdown: `;
+        const severities = [];
+        if (critical > 0) severities.push(`${critical} critical`);
+        if (major > 0) severities.push(`${major} major`);
+        if (minor > 0) severities.push(`${minor} minor`);
+        analysis += severities.join(', ');
+      }
+    }
+
+    this.analysis = analysis;
+
+    // Generate enhanced summary
     const expressionsWithErrors = this.extractedExpressions.filter(
       (ee) => ee.expression.hasError
     ).length;
@@ -318,13 +555,27 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
       (ee) => ee.expression.complexityScore > 70
     ).length;
 
-    this.summary = `Found ${totalExpressions} mathematical expression${totalExpressions !== 1 ? "s" : ""}`;
-    if (expressionsWithErrors > 0) {
-      this.summary += ` (${expressionsWithErrors} with errors)`;
+    let summary = "";
+    if (totalExpressions > 0) {
+      summary = `Found ${totalExpressions} mathematical expression${totalExpressions !== 1 ? "s" : ""}`;
+      if (expressionsWithErrors > 0) {
+        summary += ` (${expressionsWithErrors} with errors)`;
+      }
+      if (complexExpressions > 0) {
+        summary += `. ${complexExpressions} complex calculations analyzed.`;
+      }
     }
-    if (complexExpressions > 0) {
-      this.summary += `. ${complexExpressions} complex calculations analyzed.`;
+
+    if (totalHybridErrors > 0) {
+      if (summary) summary += " ";
+      summary += `Hybrid verification found ${totalHybridErrors} issue${totalHybridErrors !== 1 ? 's' : ''}`;
+      if (mathJsErrors > 0) {
+        summary += ` (${mathJsErrors} verified computationally)`;
+      }
+      summary += ".";
     }
+
+    this.summary = summary || "Mathematical analysis complete.";
   }
 
   getCost(): number {
