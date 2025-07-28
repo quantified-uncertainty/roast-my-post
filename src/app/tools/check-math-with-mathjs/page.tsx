@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckMathAgenticInput, CheckMathAgenticOutput } from '@/tools/check-math-agentic/types';
+import { CheckMathAgenticInput, CheckMathAgenticOutput } from '@/tools/check-math-with-mathjs/types';
 import { CalculatorIcon, CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { checkMathWithMathJs } from './actions';
 
 const statusConfig = {
   verified_true: {
@@ -49,19 +50,13 @@ export default function CheckMathAgenticPage() {
         ...(context.trim() && { context: context.trim() }),
       };
 
-      const response = await fetch('/api/tools/check-math-agentic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to verify statement');
+      const response = await checkMathWithMathJs(payload);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to verify statement');
       }
 
-      const data = await response.json();
-      setResult(data);
+      setResult(response.result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -229,50 +224,12 @@ export default function CheckMathAgenticPage() {
             </div>
           )}
 
-          {/* Agent Reasoning */}
-          {result.agentReasoning && (
-            <details className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <summary className="font-semibold text-gray-900 cursor-pointer">
-                Agent Reasoning Process
-              </summary>
-              <div className="mt-4 space-y-2">
-                {result.agentReasoning.split('\n').map((line, index) => (
-                  <p key={index} className="text-sm text-gray-700">{line}</p>
-                ))}
-              </div>
-            </details>
-          )}
-
-          {/* Tool Calls */}
-          {result.toolCalls && result.toolCalls.length > 0 && (
-            <details className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <summary className="font-semibold text-gray-900 cursor-pointer">
-                Tool Calls ({result.toolCalls.length})
-              </summary>
-              <div className="mt-4 space-y-4">
-                {result.toolCalls.map((call, index) => (
-                  <div key={index} className="p-3 bg-white rounded border border-gray-200">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      {index + 1}. {call.tool}
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-gray-600">Input:</span>
-                        <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto">
-                          {JSON.stringify(call.input, null, 2)}
-                        </pre>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Output:</span>
-                        <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto">
-                          {JSON.stringify(call.output, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </details>
+          {/* Technical Error */}
+          {result.error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <h3 className="font-semibold text-red-900 mb-2">Technical Error</h3>
+              <p className="text-sm text-red-800">{result.error}</p>
+            </div>
           )}
 
           {/* LLM Token Usage */}
