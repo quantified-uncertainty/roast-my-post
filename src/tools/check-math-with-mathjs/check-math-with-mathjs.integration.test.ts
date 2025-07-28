@@ -42,7 +42,7 @@ async function runTestBatch(testCases: TestCase[], mockContext: any): Promise<Te
   const results = await Promise.allSettled(
     testCases.map(async (testCase): Promise<TestResult> => {
       try {
-        const result = await checkMathWithMathJsTool.execute(testCase.input, mockContext);
+        const result = await checkMathWithMathJsTool.run(testCase.input, mockContext);
         testCase.expectations(result);
         return { success: true, testName: testCase.name };
       } catch (error) {

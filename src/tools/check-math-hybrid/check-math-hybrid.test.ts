@@ -66,7 +66,7 @@ describe('CheckMathHybridTool', () => {
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
 
-      const result = await checkMathHybridTool.execute(
+      const result = await checkMathHybridTool.run(
         { statement: '2 + 2 = 4' },
         mockContext
       );
@@ -98,7 +98,7 @@ describe('CheckMathHybridTool', () => {
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
       mockCheckMath.mockResolvedValueOnce(llmResult);
 
-      const result = await checkMathHybridTool.execute(
+      const result = await checkMathHybridTool.run(
         { statement: 'The limit of 1/x as x approaches infinity is 0' },
         mockContext
       );
@@ -134,7 +134,7 @@ describe('CheckMathHybridTool', () => {
 
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
 
-      const result = await checkMathHybridTool.execute(
+      const result = await checkMathHybridTool.run(
         { statement: '2 + 2 = 5' },
         mockContext
       );
@@ -151,7 +151,7 @@ describe('CheckMathHybridTool', () => {
       // Mock MathJS throwing an error
       mockCheckMathWithMathJs.mockRejectedValueOnce(new Error('MathJS evaluation failed'));
 
-      const result = await checkMathHybridTool.execute(
+      const result = await checkMathHybridTool.run(
         { statement: '2 + 2 = 4' },
         mockContext
       );
@@ -186,7 +186,7 @@ describe('CheckMathHybridTool', () => {
       mockCheckMathWithMathJs.mockResolvedValueOnce(mathJsResult);
       mockCheckMath.mockResolvedValueOnce(llmResult);
 
-      const result = await checkMathHybridTool.execute(
+      const result = await checkMathHybridTool.run(
         { statement: 'The derivative of x^2 is 3x' },
         mockContext
       );
