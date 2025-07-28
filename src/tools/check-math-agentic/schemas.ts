@@ -9,29 +9,16 @@ export const inputSchema = z.object({
 
 // Output schema - agentic verification result
 export const outputSchema = z.object({
-  statement: z.string().describe('The original statement'),
-  status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('Verification result'),
-  explanation: z.string().describe('Clear explanation of the verification result'),
-  verificationDetails: z.object({
-    mathJsExpression: z.string().optional(),
-    computedValue: z.string().optional(),
-    steps: z.array(z.object({
-      expression: z.string(),
-      result: z.string()
-    })).optional()
-  }).optional(),
+  statement: z.string().describe('The original statement that was analyzed'),
+  status: z.enum(['verified_true', 'verified_false', 'cannot_verify']).describe('Analysis result'),
+  explanation: z.string().describe('Clear explanation of why the statement is true, false, or cannot be verified'),
+  reasoning: z.string().describe('Detailed reasoning behind the analysis'),
   errorDetails: z.object({
-    errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']),
-    severity: z.enum(['critical', 'major', 'minor']),
-    conciseCorrection: z.string().optional(),
-    expectedValue: z.string().optional(),
-    actualValue: z.string().optional()
-  }).optional(),
-  agentReasoning: z.string().optional().describe('The agent\'s reasoning process'),
-  toolCalls: z.array(z.object({
-    tool: z.string(),
-    input: z.any(),
-    output: z.any()
-  })).optional().describe('Record of tool calls made by the agent'),
-  llmInteraction: llmInteractionSchema
+    errorType: z.enum(['calculation', 'logic', 'unit', 'notation', 'conceptual']).describe('Type of mathematical error'),
+    severity: z.enum(['critical', 'major', 'minor']).describe('Severity of the error'),
+    conciseCorrection: z.string().describe('Concise summary of the correction (e.g., "45 → 234", "4x → 5x")'),
+    expectedValue: z.string().optional().describe('The expected/correct value'),
+    actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
+  }).optional().describe('Details about the error (only present when status is verified_false)'),
+  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
 });

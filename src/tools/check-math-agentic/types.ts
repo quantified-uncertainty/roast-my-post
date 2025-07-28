@@ -15,13 +15,13 @@ export interface CheckMathAgenticOutput {
   statement: string;
   status: MathVerificationStatus;
   explanation: string;
-  verificationDetails?: MathVerificationDetails;
-  errorDetails?: MathErrorDetails;
-  agentReasoning?: string;
-  toolCalls?: Array<{
-    tool: string;
-    input: any;
-    output: any;
-  }>;
+  reasoning: string;
+  errorDetails?: {
+    errorType: 'calculation' | 'logic' | 'unit' | 'notation' | 'conceptual';
+    severity: 'critical' | 'major' | 'minor';
+    conciseCorrection: string;
+    expectedValue?: string;
+    actualValue?: string;
+  };
   llmInteraction: RichLLMInteraction;
 }

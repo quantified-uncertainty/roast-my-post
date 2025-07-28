@@ -18,7 +18,6 @@ import { Anthropic } from '@anthropic-ai/sdk';
 // Import types and schemas
 import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
 import { inputSchema, outputSchema } from './schemas';
-import { getMathJsDocs, MATHJS_CONCISE_DOCS } from './mathjs-docs';
 
 // Helper function to build prompt string for logging
 function buildPromptString(
@@ -37,75 +36,24 @@ function buildPromptString(
   return prompt.trim();
 }
 
-// Tool definitions for Claude
+// Tool definitions for Claude - simplified to 2 tools
 const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
   {
-    name: 'evaluate_mathjs',
-    description: 'Evaluate a MathJS expression and get the result',
+    name: 'evaluate_expression',
+    description: 'Evaluate a mathematical expression using MathJS. Supports arithmetic, functions (sqrt, factorial, etc.), comparisons, and unit conversions.',
     input_schema: {
       type: 'object',
       properties: {
         expression: {
           type: 'string',
-          description: 'The MathJS expression to evaluate (e.g., "2 + 2", "sqrt(16)", "5! == 120")'
+          description: 'The MathJS expression to evaluate (e.g., "2 + 2", "sqrt(16)", "5! == 120", "5 km + 3000 m in km")'
         }
       },
       required: ['expression']
     }
   },
   {
-    name: 'get_mathjs_syntax',
-    description: 'Get MathJS syntax documentation for a specific topic',
-    input_schema: {
-      type: 'object',
-      properties: {
-        topic: {
-          type: 'string',
-          description: 'The topic to get syntax for (e.g., "derivatives", "matrices", "units", "logarithms")'
-        }
-      },
-      required: ['topic']
-    }
-  },
-  {
-    name: 'convert_to_mathjs',
-    description: 'Get suggestions for converting natural language to MathJS syntax',
-    input_schema: {
-      type: 'object',
-      properties: {
-        phrase: {
-          type: 'string',
-          description: 'The natural language phrase to convert (e.g., "10 choose 3", "log base 2 of 8")'
-        }
-      },
-      required: ['phrase']
-    }
-  },
-  {
-    name: 'compare_values',
-    description: 'Compare two values with optional tolerance for floating point',
-    input_schema: {
-      type: 'object',
-      properties: {
-        value1: {
-          type: 'string',
-          description: 'First value to compare'
-        },
-        value2: {
-          type: 'string',
-          description: 'Second value to compare'
-        },
-        tolerance: {
-          type: 'number',
-          description: 'Tolerance for comparison (default: 0.0001)',
-          default: 0.0001
-        }
-      },
-      required: ['value1', 'value2']
-    }
-  },
-  {
-    name: 'respond',
+    name: 'provide_verdict',
     description: 'Provide the final verification result',
     input_schema: {
       type: 'object',
@@ -117,15 +65,11 @@ const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
         },
         explanation: {
           type: 'string',
-          description: 'Clear explanation of the verification result'
+          description: 'Brief explanation (1-2 sentences max)'
         },
-        mathjs_expression: {
+        reasoning: {
           type: 'string',
-          description: 'The MathJS expression that was evaluated (if any)'
-        },
-        computed_value: {
-          type: 'string',
-          description: 'The computed value from MathJS (if any)'
+          description: 'Detailed reasoning behind the analysis'
         },
         error_type: {
           type: 'string',
@@ -140,29 +84,21 @@ const MATH_AGENT_TOOLS: Anthropic.Tool[] = [
         concise_correction: {
           type: 'string',
           description: 'Brief correction like "60 → 70" (only if status is verified_false)'
+        },
+        expected_value: {
+          type: 'string',
+          description: 'The expected/correct value (only if status is verified_false)'
+        },
+        actual_value: {
+          type: 'string',
+          description: 'The actual/incorrect value found in the statement (only if status is verified_false)'
         }
       },
-      required: ['status', 'explanation']
+      required: ['status', 'explanation', 'reasoning']
     }
   }
 ];
 
-// Natural language to MathJS conversion hints
-const CONVERSION_HINTS: Record<string, string> = {
-  'choose': 'Use combinations(n, k) for "n choose k"',
-  'factorial': 'Use n! or factorial(n)',
-  'log base': 'Use log(x, base) for logarithm with specific base',
-  'square root': 'Use sqrt(x)',
-  'cube root': 'Use cbrt(x)',
-  'power': 'Use x^n for x to the power of n',
-  'percent': 'Percentages like 30% automatically convert to 0.3',
-  'pi': 'Use pi for π',
-  'e': 'Use e for Euler\'s number',
-  'infinity': 'Use Infinity',
-  'derivative': 'MathJS has limited symbolic math - verify numerically',
-  'integral': 'MathJS has limited symbolic math - verify numerically',
-  'limit': 'MathJS cannot compute limits - verify the claimed value'
-};
 
 export class CheckMathAgenticTool extends Tool<CheckMathAgenticInput, CheckMathAgenticOutput> {
   config = {
@@ -202,56 +138,31 @@ export class CheckMathAgenticTool extends Tool<CheckMathAgenticInput, CheckMathA
       const sessionConfig = sessionContext.withPath('/tools/check-math-agentic');
       const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
       
-      // System prompt for the agent
-      const systemPrompt = `You are a mathematical verification agent with access to MathJS for computation.
+      // Simplified system prompt
+      const systemPrompt = `You are a mathematical verification agent. Verify if mathematical statements are true, false, or cannot be verified.
 
-Your task is to verify whether the given mathematical statement is true, false, or cannot be verified.
+TOOLS:
+- evaluate_expression: Use this to compute numerical expressions with MathJS
+- provide_verdict: Use this to give your final answer
 
-IMPORTANT: You MUST complete EVERY verification by calling the 'respond' tool with your final answer.
+APPROACH:
+1. ALWAYS start by calling evaluate_expression to check any numerical claims
+2. For symbolic/theoretical statements: return 'cannot_verify' (MathJS only does numerical computation)
+3. For unit mismatches: compute the correct value and note the error
 
-CRITICAL LIMITATION: MathJS is a NUMERICAL computation library, NOT a symbolic math system. It CANNOT:
-- Verify symbolic equations (like "derivative of x³ is 3x²" or "integral of sin(x) is -cos(x)")
-- Prove mathematical theorems or identities
-- Perform algebraic manipulations or simplifications
-- Compare symbolic expressions for equality
+MATHJS SYNTAX EXAMPLES:
+- Arithmetic: 2 + 2, 5 * 7, 10 / 2
+- Functions: sqrt(16), factorial(5) or 5!, combinations(10, 3)
+- Comparisons: 5 == 5, 10 > 8
+- Units: 5 km + 3000 m, (5 km + 3000 m) in km
+- Percentages: 30% * 150 or 0.3 * 150
+- Constants: pi, e
 
-For symbolic math statements, you should immediately respond with 'cannot_verify' and explain that MathJS only handles numerical computations.
-
-${MATHJS_CONCISE_DOCS}
-
-Strategy:
-1. First, determine if the statement requires symbolic or numerical verification
-2. For NUMERICAL statements: use evaluate_mathjs to compute and verify
-3. For SYMBOLIC statements: respond with 'cannot_verify' immediately
-4. If you need syntax help, use get_mathjs_syntax or convert_to_mathjs
-5. For comparing numerical values (with floating point tolerance), use compare_values
-6. ALWAYS finish by calling 'respond' with your final verification result
-
-Important:
-- Focus on the complete mathematical relationship, not just isolated values
-- For statements like "X equals Y" with numbers, verify if X == Y
-- For contextual statements with "so", "therefore", extract the numerical conclusion
-- Be precise about mathematical notation and units
-- Incomplete statements (like "0.736 % ...") cannot be verified without full context
-- ROUNDING: When a statement gives a rounded value (like "3.14" for pi or "1.41" for sqrt(2)), consider it TRUE if the rounding is reasonable and conventional. Don't mark statements false just because they show rounded values instead of infinite precision.
-
-You MUST call the 'respond' tool with:
-- status: 'verified_true' if the statement is mathematically correct
-- status: 'verified_false' if the statement contains an error
-- status: 'cannot_verify' if you cannot determine the truth value
-- explanation: BRIEF reasoning (1-2 sentences max). Be concise!
-- Include mathjs_expression and computed_value when applicable
-- Include error details (error_type, severity, concise_correction) when status is 'verified_false'
-- For unit errors, ALWAYS provide the correct answer with proper units in concise_correction
-
-IMPORTANT: Keep explanations SHORT. Examples:
-- "2+2 equals 4" → "Correct arithmetic."
-- "10% of 50 is 10" → "Incorrect. 10% of 50 is 5, not 10."
-- "derivative of x³ is 3x²" → "Cannot verify symbolic math."
-- "100F = 37.78C" → "Correct with standard rounding."
-- "5 km + 3 km = $8" → "Unit error. 5 km + 3 km = 8 km, not $8."
-
-When units are incompatible (e.g., distance vs money), provide the mathematically correct answer with proper units.`;
+IMPORTANT:
+- Keep explanations to 1-2 sentences
+- For provide_verdict, include both a brief explanation and detailed reasoning
+- For rounding (e.g., π ≈ 3.14), accept if reasonable
+- For unit errors, provide the correct value with proper units`;
 
       const userPrompt = `Verify this mathematical statement: "${input.statement}"${input.context ? `\nContext: ${input.context}` : ''}`;
       
@@ -272,6 +183,7 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
           statement: input.statement,
           status: 'cannot_verify',
           explanation: 'Cannot verify symbolic math. MathJS only handles numerical computations.',
+          reasoning: 'This statement involves symbolic mathematics (derivatives, integrals, algebraic identities, etc.) which cannot be evaluated numerically. MathJS is designed for numerical computation, not symbolic manipulation.',
           llmInteraction: {
             model: MODEL_CONFIG.analysis,
             prompt: userPrompt,
@@ -355,7 +267,7 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
             output: toolResult
           });
           
-          if (toolUse.name === 'respond') {
+          if (toolUse.name === 'provide_verdict') {
             finalResponse = toolUse.input;
           }
           
@@ -380,7 +292,8 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
       if (!finalResponse) {
         finalResponse = {
           status: 'cannot_verify',
-          explanation: 'The agent did not provide a final response.'
+          explanation: 'The agent did not provide a final response.',
+          reasoning: 'No verdict was reached after tool execution.'
         };
       }
       
@@ -389,8 +302,7 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
         statement: input.statement,
         status: finalResponse.status,
         explanation: finalResponse.explanation,
-        agentReasoning,
-        toolCalls,
+        reasoning: finalResponse.reasoning || agentReasoning || 'No detailed reasoning provided.',
         llmInteraction: {
           model: MODEL_CONFIG.analysis,
           prompt: buildPromptString(systemPrompt, [{ role: 'user', content: userPrompt }]),
@@ -405,21 +317,14 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
         }
       };
       
-      // Add verification details if available
-      if (finalResponse.mathjs_expression || finalResponse.computed_value) {
-        output.verificationDetails = {
-          mathJsExpression: finalResponse.mathjs_expression || '',
-          computedValue: finalResponse.computed_value || '',
-          steps: []
-        };
-      }
-      
       // Add error details if status is false
       if (finalResponse.status === 'verified_false' && finalResponse.error_type) {
         output.errorDetails = {
           errorType: finalResponse.error_type,
           severity: finalResponse.severity || 'major',
-          conciseCorrection: finalResponse.concise_correction
+          conciseCorrection: finalResponse.concise_correction || '',
+          expectedValue: finalResponse.expected_value,
+          actualValue: finalResponse.actual_value
         };
       }
       
@@ -431,6 +336,7 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
         statement: input.statement,
         status: 'cannot_verify',
         explanation: 'An error occurred during verification.',
+        reasoning: error instanceof Error ? error.message : 'Unknown error occurred.',
         llmInteraction: {
           model: 'error',
           prompt: '',
@@ -454,23 +360,11 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
   private async executeToolCall(toolUse: Anthropic.ToolUseBlock, context: ToolContext): Promise<any> {
     try {
       switch (toolUse.name) {
-        case 'evaluate_mathjs':
-          return this.evaluateMathJS(toolUse.input as { expression: string }, context);
+        case 'evaluate_expression':
+          return this.evaluateExpression(toolUse.input as { expression: string }, context);
           
-        case 'get_mathjs_syntax':
-          return this.getMathJSSyntax(toolUse.input as { topic: string });
-          
-        case 'convert_to_mathjs':
-          return this.convertToMathJS(toolUse.input as { phrase: string });
-          
-        case 'compare_values':
-          return this.compareValues(
-            toolUse.input as { value1: string; value2: string; tolerance?: number },
-            context
-          );
-          
-        case 'respond':
-          // Just return success for the respond tool
+        case 'provide_verdict':
+          // Just return success for the verdict tool
           return { success: true };
           
         default:
@@ -484,7 +378,7 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
     }
   }
   
-  private evaluateMathJS(input: { expression: string }, context: ToolContext): any {
+  private evaluateExpression(input: { expression: string }, context: ToolContext): any {
     try {
       const result = evaluate(input.expression);
       
@@ -509,121 +403,6 @@ When units are incompatible (e.g., distance vs money), provide the mathematicall
         success: false,
         error: error.message,
         type: 'error'
-      };
-    }
-  }
-  
-  private getMathJSSyntax(input: { topic: string }): any {
-    const topic = input.topic.toLowerCase();
-    
-    // Get documentation from the imported module
-    const documentation = getMathJsDocs(topic);
-    
-    return {
-      topic,
-      documentation,
-      available_topics: [
-        'arithmetic', 'numbers', 'functions', 'comparison', 'units',
-        'matrices', 'percentages', 'calculus', 'expressions', 'statistics',
-        'complex', 'limitations', 'common_patterns'
-      ]
-    };
-  }
-  
-  private convertToMathJS(input: { phrase: string }): any {
-    const phrase = input.phrase.toLowerCase();
-    const hints: string[] = [];
-    
-    // Check for conversion hints
-    for (const [key, hint] of Object.entries(CONVERSION_HINTS)) {
-      if (phrase.includes(key)) {
-        hints.push(hint);
-      }
-    }
-    
-    // Provide common conversions
-    const conversions: Record<string, string> = {
-      'equals': '==',
-      'is equal to': '==',
-      'is': '==',
-      'multiplied by': '*',
-      'times': '*',
-      'divided by': '/',
-      'plus': '+',
-      'minus': '-',
-      'to the power of': '^',
-      'squared': '^2',
-      'cubed': '^3',
-      'percent': '/ 100',
-      'percentage': '/ 100'
-    };
-    
-    let suggestion = phrase;
-    for (const [from, to] of Object.entries(conversions)) {
-      suggestion = suggestion.replace(new RegExp(from, 'g'), to);
-    }
-    
-    return {
-      original: input.phrase,
-      suggestion,
-      hints,
-      examples: [
-        '"10 choose 3" → combinations(10, 3)',
-        '"log base 2 of 8" → log(8, 2)',
-        '"5 factorial" → 5! or factorial(5)',
-        '"square root of 16" → sqrt(16)',
-        '"30% of 150" → 30% * 150 or 0.3 * 150'
-      ]
-    };
-  }
-  
-  private compareValues(
-    input: { value1: string; value2: string; tolerance?: number },
-    context: ToolContext
-  ): any {
-    try {
-      const val1 = evaluate(input.value1);
-      const val2 = evaluate(input.value2);
-      const tolerance = input.tolerance || 0.0001;
-      
-      // Handle different types
-      if (typeof val1 === 'boolean' || typeof val2 === 'boolean') {
-        return {
-          equal: val1 === val2,
-          value1: val1,
-          value2: val2,
-          comparison: 'exact'
-        };
-      }
-      
-      if (typeof val1 === 'number' && typeof val2 === 'number') {
-        const diff = Math.abs(val1 - val2);
-        const equal = diff <= tolerance;
-        
-        return {
-          equal,
-          value1: val1,
-          value2: val2,
-          difference: diff,
-          tolerance,
-          comparison: 'numeric',
-          note: diff > 0 && diff < 0.01 ? 'Values differ by less than 0.01' : undefined
-        };
-      }
-      
-      // For other types, use string comparison
-      return {
-        equal: String(val1) === String(val2),
-        value1: String(val1),
-        value2: String(val2),
-        comparison: 'string'
-      };
-      
-    } catch (error: any) {
-      return {
-        error: `Comparison failed: ${error.message}`,
-        value1: input.value1,
-        value2: input.value2
       };
     }
   }

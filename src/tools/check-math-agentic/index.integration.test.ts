@@ -59,7 +59,7 @@ describe('CheckMathAgenticTool Integration Tests', () => {
 
       expect(result.status).toBe('verified_true');
       expect(result.explanation.length).toBeLessThan(100); // Ensure explanation is concise
-      expect(result.verificationDetails?.mathJsExpression).toBeTruthy();
+      expect(result.reasoning).toBeTruthy();
     }, 30000);
 
     it('should detect errors with brief explanation', async () => {
@@ -90,7 +90,7 @@ describe('CheckMathAgenticTool Integration Tests', () => {
       }, mockContext);
 
       expect(result.status).toBe('verified_true');
-      expect(result.verificationDetails?.computedValue).toBe('true');
+      expect(result.reasoning).toBeTruthy();
     }, 30000);
   });
 
@@ -100,13 +100,8 @@ describe('CheckMathAgenticTool Integration Tests', () => {
         statement: "5 factorial equals 120"
       }, mockContext);
 
-      expect(result.toolCalls).toBeDefined();
-      expect(result.toolCalls?.length).toBeGreaterThan(0);
-      
-      // Should have at least evaluate_mathjs and respond calls
-      const toolNames = result.toolCalls?.map(call => call.tool);
-      expect(toolNames).toContain('evaluate_mathjs');
-      expect(toolNames).toContain('respond');
+      expect(result.reasoning).toBeTruthy();
+      expect(result.reasoning.length).toBeGreaterThan(50); // Should have detailed reasoning
     }, 30000);
   });
 
@@ -117,7 +112,7 @@ describe('CheckMathAgenticTool Integration Tests', () => {
       }, mockContext);
 
       expect(result.status).toBe('verified_true');
-      expect(result.verificationDetails?.mathJsExpression).toContain('combinations');
+      expect(result.reasoning).toBeTruthy();
     }, 30000);
 
     it('should handle unit operations', async () => {
