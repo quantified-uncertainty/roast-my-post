@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     // Check authentication
@@ -20,7 +20,7 @@ export async function GET(
     }
 
     // Users can only view their own costs (unless admin)
-    const requestedUserId = params.userId;
+    const { userId: requestedUserId } = await params;
     const currentUserId = session.user.id;
     
     if (requestedUserId !== currentUserId && session.user.role !== 'ADMIN') {

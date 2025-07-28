@@ -11,7 +11,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     // Check authentication
@@ -20,7 +20,7 @@ export async function GET(
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const jobId = params.jobId;
+    const { jobId } = await params;
 
     // Get job details and check permissions
     const job = await prisma.job.findUnique({
