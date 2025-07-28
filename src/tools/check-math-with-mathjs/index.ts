@@ -3,7 +3,6 @@ import { Tool } from '../base/Tool';
 import { logger } from '@/lib/logger';
 import type { ToolContext } from '../base/Tool';
 import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
-import type { RichLLMInteraction } from '@/types/llm';
 import type { 
   MathVerificationStatus, 
   MathErrorDetails, 
@@ -47,14 +46,6 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
         statement: input.statement,
         status: 'cannot_verify',
         explanation: `A technical error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        llmInteraction: {
-          model: 'error',
-          prompt: '',
-          response: '',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
     }
   }
@@ -129,14 +120,6 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
               { expression: rightExpression, result: rightFormatted }
             ]
           },
-          llmInteraction: {
-            model: 'none',
-            prompt: 'Direct MathJS evaluation',
-            response: 'Success',
-            tokensUsed: { prompt: 0, completion: 0, total: 0 },
-            timestamp: new Date(),
-            duration: 0
-          }
         };
       } else {
         return {
@@ -158,14 +141,6 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathWithMathJsInput, Chec
             expectedValue: leftFormatted,
             actualValue: rightFormatted
           },
-          llmInteraction: {
-            model: 'none',
-            prompt: 'Direct MathJS evaluation',
-            response: 'Success',
-            tokensUsed: { prompt: 0, completion: 0, total: 0 },
-            timestamp: new Date(),
-            duration: 0
-          }
         };
       }
     } catch (error) {
@@ -304,7 +279,6 @@ Respond with a JSON object containing:
           statement: input.statement,
           status: 'cannot_verify',
           explanation: 'Could not parse the verification result.',
-          llmInteraction: result.interaction
         };
       }
       
@@ -313,7 +287,6 @@ Respond with a JSON object containing:
         statement: input.statement,
         status: parsed.status || 'cannot_verify',
         explanation: parsed.explanation || 'No explanation provided.',
-        llmInteraction: result.interaction
       };
       
       // Add verification details if present
@@ -357,14 +330,6 @@ Respond with a JSON object containing:
         statement: input.statement,
         status: 'cannot_verify',
         explanation: `LLM verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        llmInteraction: {
-          model: MODEL_CONFIG.analysis,
-          prompt: userPrompt,
-          response: '',
-          tokensUsed: { prompt: 0, completion: 0, total: 0 },
-          timestamp: new Date(),
-          duration: 0
-        }
       };
     }
   }

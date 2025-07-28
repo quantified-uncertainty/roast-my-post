@@ -4,9 +4,6 @@
  */
 
 import {
-  RichLLMInteraction,
-} from "@/types/llm";
-import {
   DEFAULT_TIMEOUT,
   withTimeout,
 } from "@/types/openai";
@@ -34,7 +31,7 @@ interface ForecastGeneratorOptions {
 async function generateSingleForecast(
   options: ForecastGeneratorOptions,
   callNumber: number
-): Promise<{ forecast: ForecastResponse; interaction: RichLLMInteraction }> {
+): Promise<{ forecast: ForecastResponse }> {
   // Add timestamp and random seed to prevent caching
   const timestamp = Date.now();
   const randomSeed = Math.random();
@@ -124,8 +121,7 @@ ${options.question}
   );
 
   return { 
-    forecast: result.toolResult, 
-    interaction: result.interaction 
+    forecast: result.toolResult 
   };
 }
 
@@ -247,7 +243,6 @@ export async function generateForecastWithAggregation(
   };
   outliers_removed: ForecastResponse[];
   perplexityResults?: Array<{ title: string; url: string; }>;
-  llmInteractions: RichLLMInteraction[];
 }> {
   console.log(`\n🔮 Generating forecast for: ${options.question}`);
   console.log(
@@ -256,7 +251,6 @@ export async function generateForecastWithAggregation(
 
   // If using Perplexity, enhance context with research
   let enhancedOptions = options;
-  let perplexityInteraction: RichLLMInteraction | null = null;
   let perplexityResults: Array<{ title: string; url: string; }> | undefined;
   
   if (options.usePerplexity) {
@@ -273,7 +267,6 @@ export async function generateForecastWithAggregation(
         logger: logger
       });
       
-      perplexityInteraction = research.llmInteraction;
       
       // Extract sources for perplexityResults
       perplexityResults = research.sources.map(source => ({
@@ -300,12 +293,6 @@ export async function generateForecastWithAggregation(
 
   // Generate forecasts in parallel
   console.log(`  🚀 Launching ${options.numForecasts} parallel forecasts...`);
-  const llmInteractions: RichLLMInteraction[] = [];
-  
-  // Add Perplexity interaction if we used it
-  if (perplexityInteraction) {
-    llmInteractions.push(perplexityInteraction);
-  }
 
   const forecastPromises = Array.from(
     { length: options.numForecasts },
@@ -315,7 +302,6 @@ export async function generateForecastWithAggregation(
           console.log(
             `     ✓ Forecast ${i + 1}: ${result.forecast.probability.toFixed(1)}%`
           );
-          llmInteractions.push(result.interaction);
           return result.forecast;
         })
         .catch((error) => {
@@ -370,6 +356,5 @@ export async function generateForecastWithAggregation(
     outliers_removed: outliers,
     statistics: stats,
     perplexityResults,
-    llmInteractions,
   };
 }

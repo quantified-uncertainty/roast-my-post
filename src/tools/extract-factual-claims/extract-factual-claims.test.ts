@@ -91,7 +91,6 @@ describe('ExtractFactualClaimsTool', () => {
       expect(result.claims).toHaveLength(1);
       expect(result.summary.totalFound).toBe(1);
       expect(result.summary.aboveThreshold).toBe(1);
-      expect(result.llmInteraction).toBeDefined();
       expect(result.claims[0].originalText).toBe('The Berlin Wall fell in 1989');
     });
   });
@@ -146,7 +145,6 @@ describe('ExtractFactualClaimsTool', () => {
       expect(result.claims).toHaveLength(2);
       expect(result.summary.totalFound).toBe(2);
       expect(result.summary.aboveThreshold).toBe(2);
-      expect(result.llmInteraction).toBeDefined();
       
       // Check that claims are sorted by priority (importance + checkability + (100 - truthProbability))
       const firstPriority = result.claims[0].importanceScore + result.claims[0].checkabilityScore + (100 - result.claims[0].truthProbability);
@@ -184,7 +182,6 @@ describe('ExtractFactualClaimsTool', () => {
       expect(result.claims).toHaveLength(0);
       expect(result.summary.totalFound).toBe(0);
       expect(result.summary.aboveThreshold).toBe(0);
-      expect(result.llmInteraction).toBeDefined();
     });
 
     it('should filter claims based on quality threshold', async () => {

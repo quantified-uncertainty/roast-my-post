@@ -77,7 +77,6 @@ describe('ExtractMathExpressionsTool', () => {
       expect(result.expressions[0].hasError).toBe(true);
       expect(result.expressions[0].conciseCorrection).toBe('5 → 4');
       expect(result.expressions[0].errorSeverityScore).toBe(80);
-      expect(result.llmInteraction).toBeDefined();
     });
 
     it('should not extract correct simple percentages', async () => {

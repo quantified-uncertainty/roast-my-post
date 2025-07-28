@@ -10,21 +10,20 @@
 import { heliconeSessionsConfig } from '@/lib/helicone/sessions';
 
 export interface HeliconeRequest {
-  id: string;
-  created_at: string;
+  request_id?: string;
+  response_id?: string;
+  request_created_at?: string;
+  response_created_at?: string;
   model: string;
-  user_id?: string;
+  request_user_id?: string;
   completion_tokens?: number;
   prompt_tokens?: number;
   total_tokens?: number;
-  cost?: number;
-  properties?: Record<string, string>;
+  costUSD?: number;
+  request_properties?: Record<string, string>;
   request_path?: string;
-  session?: {
-    id: string;
-    name?: string;
-    path?: string;
-  };
+  delay_ms?: number;
+  time_to_first_token?: number;
 }
 
 export interface HeliconeQueryFilter {
@@ -127,12 +126,10 @@ export class HeliconeAPIClient {
     try {
       const result = await this.queryRequests({
         filter: {
-          request: {
-            properties: {
-              'Helicone-Session-Id': { equals: sessionId }
-            }
+          properties: {
+            'Helicone-Session-Id': { equals: sessionId }
           }
-        },
+        } as any, // Type cast needed as our interface doesn't match actual API
         sort: { created_at: 'asc' },
         limit: 100
       });
@@ -159,7 +156,7 @@ export class HeliconeAPIClient {
   }> {
     const requests = await this.getSessionRequests(sessionId);
     
-    const totalCost = requests.reduce((sum, req) => sum + (req.cost || 0), 0);
+    const totalCost = requests.reduce((sum, req) => sum + (req.costUSD || 0), 0);
     const totalTokens = requests.reduce((sum, req) => sum + (req.total_tokens || 0), 0);
     
     // Group by model
@@ -168,7 +165,7 @@ export class HeliconeAPIClient {
     requests.forEach(req => {
       const existing = modelStats.get(req.model) || { cost: 0, tokens: 0, count: 0 };
       modelStats.set(req.model, {
-        cost: existing.cost + (req.cost || 0),
+        cost: existing.cost + (req.costUSD || 0),
         tokens: existing.tokens + (req.total_tokens || 0),
         count: existing.count + 1
       });
@@ -211,17 +208,17 @@ export class HeliconeAPIClient {
     const sessionMap = new Map<string, any>();
     
     result.data.forEach(req => {
-      const sessionId = req.properties?.['Helicone-Session-Id'];
+      const sessionId = req.request_properties?.['Helicone-Session-Id'];
       if (!sessionId) return;
       
       if (!sessionMap.has(sessionId)) {
         sessionMap.set(sessionId, {
           sessionId,
-          sessionName: req.properties?.['Helicone-Session-Name'] || '',
-          jobId: req.properties?.['JobId'] || '',
-          agentName: req.properties?.['AgentName'] || '',
-          documentTitle: req.properties?.['DocumentTitle'] || '',
-          createdAt: req.created_at,
+          sessionName: req.request_properties?.['Helicone-Session-Name'] || '',
+          jobId: req.request_properties?.['JobId'] || '',
+          agentName: req.request_properties?.['AgentName'] || '',
+          documentTitle: req.request_properties?.['DocumentTitle'] || '',
+          createdAt: req.request_created_at || req.response_created_at || '',
           requests: [],
           totalCost: 0
         });
@@ -229,7 +226,7 @@ export class HeliconeAPIClient {
       
       const session = sessionMap.get(sessionId);
       session.requests.push(req);
-      session.totalCost += req.cost || 0;
+      session.totalCost += req.costUSD || 0;
     });
 
     // Convert to array and sort by creation date
@@ -272,9 +269,9 @@ export class HeliconeAPIClient {
       const sessionsMap = new Map<string, { name: string; paths: Set<string>; count: number }>();
       
       result.data.forEach(req => {
-        const sessionId = req.properties?.['Helicone-Session-Id'] || req.session?.id;
-        const sessionName = req.properties?.['Helicone-Session-Name'] || req.session?.name || '';
-        const sessionPath = req.properties?.['Helicone-Session-Path'] || req.session?.path || '';
+        const sessionId = req.request_properties?.['Helicone-Session-Id'];
+        const sessionName = req.request_properties?.['Helicone-Session-Name'] || '';
+        const sessionPath = req.request_properties?.['Helicone-Session-Path'] || '';
         
         if (sessionId) {
           if (!sessionsMap.has(sessionId)) {
@@ -351,21 +348,21 @@ export class HeliconeAPIClient {
 
     result.data.forEach(req => {
       // Update totals
-      totalCost += req.cost || 0;
+      totalCost += req.costUSD || 0;
       totalTokens += req.total_tokens || 0;
 
       // Update by model
       const modelStats = byModel.get(req.model) || { requests: 0, cost: 0, tokens: 0 };
       modelStats.requests++;
-      modelStats.cost += req.cost || 0;
+      modelStats.cost += req.costUSD || 0;
       modelStats.tokens += req.total_tokens || 0;
       byModel.set(req.model, modelStats);
 
       // Update by day
-      const day = req.created_at.split('T')[0];
+      const day = (req.request_created_at || req.response_created_at || '').split('T')[0];
       const dayStats = byDayMap.get(day) || { requests: 0, cost: 0 };
       dayStats.requests++;
-      dayStats.cost += req.cost || 0;
+      dayStats.cost += req.costUSD || 0;
       byDayMap.set(day, dayStats);
     });
 

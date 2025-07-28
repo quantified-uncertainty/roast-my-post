@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { PerplexityClient } from './client';
-import { RichLLMInteraction } from '@/types/llm';
-import { llmInteractionSchema } from '@/types/llmSchema';
 
 // Define types for the tool
 export interface PerplexityResearchInput {
@@ -17,7 +15,6 @@ export interface PerplexityResearchOutput {
   sources: Array<{ title: string; url: string; snippet: string }>;
   keyFindings: string[];
   forecastingContext?: string;
-  llmInteraction: RichLLMInteraction;
 }
 
 // Input validation schema
@@ -42,8 +39,7 @@ const outputSchema = z.object({
     snippet: z.string()
   })).describe('Sources found during research'),
   keyFindings: z.array(z.string()).describe('Key findings as bullet points'),
-  forecastingContext: z.string().optional().describe('Context specifically for forecasting'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring')
+  forecastingContext: z.string().optional().describe('Context specifically for forecasting')
 }) satisfies z.ZodType<PerplexityResearchOutput>;
 
 export class PerplexityResearchTool extends Tool<PerplexityResearchInput, PerplexityResearchOutput> {
@@ -115,41 +111,13 @@ export class PerplexityResearchTool extends Tool<PerplexityResearchInput, Perple
       
       const endTime = Date.now();
       
-      // Create LLM interaction record
-      // Use actual token counts if available, otherwise estimate
-      const totalInputTokens = (usage?.prompt_tokens || 0) + (forecastingUsage?.prompt_tokens || 0);
-      const totalOutputTokens = (usage?.completion_tokens || 0) + (forecastingUsage?.completion_tokens || 0);
-      
-      const llmInteraction: RichLLMInteraction = {
-        model: 'perplexity/sonar',
-        prompt: input.query,
-        response: JSON.stringify({
-          summary: researchResult.summary,
-          keyFindings: researchResult.keyFindings,
-          sources: researchResult.sources,
-          ...(forecastingContext && { forecastingContext })
-        }),
-        tokensUsed: {
-          prompt: totalInputTokens || Math.ceil((input.query.length + 200) / 4),
-          completion: totalOutputTokens || Math.ceil((researchResult.summary.length + 
-            researchResult.keyFindings.join('').length + 
-            (forecastingContext?.length || 0)) / 4),
-          total: (totalInputTokens || Math.ceil((input.query.length + 200) / 4)) + 
-                 (totalOutputTokens || Math.ceil((researchResult.summary.length + 
-                   researchResult.keyFindings.join('').length + 
-                   (forecastingContext?.length || 0)) / 4))
-        },
-        timestamp: new Date(),
-        duration: endTime - startTime
-      };
       
       const timeInSeconds = Math.round((endTime - startTime) / 1000);
       context.logger.info(`[PerplexityResearch] Completed in ${timeInSeconds}s`);
       
       return {
         ...researchResult,
-        forecastingContext,
-        llmInteraction
+        forecastingContext
       };
     } catch (error) {
       context.logger.error('[PerplexityResearch] Error:', error);

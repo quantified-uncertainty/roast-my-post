@@ -335,7 +335,6 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const result = await tool.execute(input, mockContext);
 
       expect(result.forecasts).toHaveLength(2);
-      expect(result.llmInteractions).toHaveLength(1); // Single LLM call now
 
       // Check forecast details
       expect(result.forecasts[0].originalText).toBe(
@@ -379,7 +378,6 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const result = await tool.execute(input, mockContext);
 
       expect(result.forecasts).toHaveLength(0);
-      expect(result.llmInteractions).toHaveLength(1);
     });
 
     it("should respect maxDetailedAnalysis in scoring guidance", async () => {
@@ -502,7 +500,6 @@ describe("ExtractForecastingClaimsTool with wrapper mocks", () => {
       const result = await tool.execute(input, mockContext);
 
       // Verify only one call was made
-      expect(result.llmInteractions).toHaveLength(1);
       expect(mockCallClaudeWithTool).toHaveBeenCalledTimes(1);
 
       // Verify agent instructions were included

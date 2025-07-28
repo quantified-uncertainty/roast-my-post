@@ -8,4 +8,4 @@ export { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 export { extractHighlightsFromAnalysis } from "./highlightExtraction";
 
 // Utility functions used by external modules
-export { countTokensFromInteractions } from "./shared/llmUtils";
+// Note: Legacy functions removed as part of LLMInteraction cleanup

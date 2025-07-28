@@ -27,7 +27,6 @@ class DelayedPlugin implements SimpleAnalysisPlugin {
       summary: `${this.name_} analysis complete`,
       analysis: `Analyzed in ${duration}ms`,
       comments: [],
-      llmInteractions: [],
       cost: 0.001
     };
   }
@@ -36,9 +35,6 @@ class DelayedPlugin implements SimpleAnalysisPlugin {
     return 0.001;
   }
   
-  getLLMInteractions(): LLMInteraction[] {
-    return [];
-  }
 }
 
 describe('Parallel Plugin Execution', () => {
@@ -81,7 +77,6 @@ describe('Parallel Plugin Execution', () => {
         throw new Error('Plugin intentionally failed');
       },
       getCost: () => 0,
-      getLLMInteractions: () => []
     };
     
     const plugins = [

@@ -1,7 +1,6 @@
 import type { Agent } from "../../../types/agentSchema";
 import { logger } from "@/lib/logger";
 import type { Document } from "../../../types/documents";
-import type { LLMInteraction } from "../../../types/llm";
 import {
   withTimeout,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
@@ -179,23 +178,13 @@ export async function generateComprehensiveAnalysis(
     }
   }
 
-  // Convert RichLLMInteraction to LLMInteraction format
-  const llmInteraction: LLMInteraction = {
-    messages: [
-      { role: "system", content: systemMessage },
-      { role: "user", content: userMessage },
-      { role: "assistant", content: JSON.stringify(validationResult) }
-    ],
-    usage: {
-      input_tokens: interaction.tokensUsed.prompt,
-      output_tokens: interaction.tokensUsed.completion,
-    },
-  };
-
   const endTime = Date.now();
   const timeInSeconds = Math.round((endTime - startTime) / 1000);
 
-  const cost = calculateLLMCost(MODEL_CONFIG.analysis, llmInteraction.usage);
+  const cost = calculateLLMCost(MODEL_CONFIG.analysis, {
+    input_tokens: interaction.tokensUsed.prompt,
+    output_tokens: interaction.tokensUsed.completion,
+  });
 
   const logDetails = createLogDetails(
     "generateComprehensiveAnalysis",
@@ -226,7 +215,6 @@ export async function generateComprehensiveAnalysis(
       priceInDollars: cost / 100,
       timeInSeconds,
       log: JSON.stringify(logDetails, null, 2),
-      llmInteractions: [llmInteraction],
     },
     outputs: validationResult,
   };

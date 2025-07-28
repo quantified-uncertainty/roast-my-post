@@ -3,8 +3,6 @@ import { z } from "zod";
 import { callClaudeWithTool } from "@/lib/claude/wrapper";
 import { sessionContext } from "@/lib/helicone/sessionContext";
 import { createHeliconeHeaders } from "@/lib/helicone/sessions";
-import { RichLLMInteraction } from "@/types/llm";
-import { llmInteractionSchema } from "@/types/llmSchema";
 import { logger } from "@/lib/logger";
 import { generateCacheSeed } from "@/tools/shared/cache-utils";
 
@@ -25,7 +23,6 @@ export interface ExtractForecastingClaimsInput {
 
 export interface ExtractForecastingClaimsOutput {
   forecasts: ExtractedForecast[];
-  llmInteractions: RichLLMInteraction[];
 }
 
 // Input validation schema
@@ -79,9 +76,6 @@ const outputSchema = z.object({
   forecasts: z
     .array(forecastSchema)
     .describe("Extracted forecasts with multi-dimensional scores"),
-  llmInteractions: z
-    .array(llmInteractionSchema)
-    .describe("LLM interactions for monitoring"),
 }) satisfies z.ZodType<ExtractForecastingClaimsOutput>;
 
 export class ExtractForecastingClaimsTool extends Tool<
@@ -126,7 +120,6 @@ export class ExtractForecastingClaimsTool extends Tool<
 
     return {
       forecasts: results.forecasts,
-      llmInteractions: results.llmInteractions,
     };
   }
 
@@ -136,7 +129,7 @@ export class ExtractForecastingClaimsTool extends Tool<
     maxDetailedAnalysis: number,
     minQualityThreshold?: number,
     context?: ToolContext
-  ): Promise<ExtractForecastingClaimsOutput> {
+  ): Promise<{ forecasts: ExtractedForecast[] }> {
     const systemPrompt = smallSystemPrompt;
 
     const qualityInstruction =
@@ -314,7 +307,6 @@ ${text}
 
     return {
       forecasts,
-      llmInteractions: [result.interaction],
     };
   }
 }

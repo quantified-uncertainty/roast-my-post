@@ -1,14 +1,5 @@
-import { LLMInteraction, LLMUsage } from "../../../types/llm";
-
-export function countTokensFromInteractions(
-  interactions: LLMInteraction[],
-  tokenType: "input_tokens" | "output_tokens"
-): number {
-  return interactions.reduce(
-    (sum, interaction) => sum + (interaction.usage?.[tokenType] || 0),
-    0
-  );
-}
+// LLM interaction tracking is now handled automatically by Helicone
+// This file maintains legacy logging utilities for task results
 
 interface LogDetails {
   task: {
@@ -20,7 +11,10 @@ interface LogDetails {
   };
   cost: {
     estimatedCents: number;
-    usage: LLMUsage;
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+    };
   };
   context: Record<string, any>;
   outputStats: Record<string, any>;

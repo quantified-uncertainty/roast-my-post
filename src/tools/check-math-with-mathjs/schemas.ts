@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { Anthropic } from '@anthropic-ai/sdk';
-import { llmInteractionSchema } from '@/types/llmSchema';
 import { 
   mathStatusSchema,
   mathExplanationSchema,
@@ -34,8 +33,7 @@ export const outputSchema = z.object({
     expectedValue: z.string().optional().describe('The expected/correct value'),
     actualValue: z.string().optional().describe('The actual/incorrect value found in the statement')
   }).optional().describe('Details about the error (only present when status is verified_false)'),
-  error: z.string().optional().describe('Technical error if verification failed'),
-  llmInteraction: llmInteractionSchema.describe('LLM interaction for monitoring and debugging')
+  error: z.string().optional().describe('Technical error if verification failed')
 });
 
 // Tool schemas for Claude

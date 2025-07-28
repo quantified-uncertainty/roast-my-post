@@ -36,7 +36,6 @@ function buildAuthConfig(): NextAuthConfig {
       session: async ({ session, user }) => {
         if (session?.user) {
           session.user.id = user.id;
-          // @ts-expect-error - Adding role to session
           session.user.role = user.role;
         }
         return session;
@@ -60,6 +59,5 @@ export const auth = cache(nextAuth.auth);
 
 export async function isAdmin() {
   const session = await auth();
-  // @ts-expect-error - role is added in session callback
   return session?.user?.role === "ADMIN";
 }

@@ -35,7 +35,6 @@ No URLs were found in this document. This analysis focuses on link validation, s
         priceInDollars: 0,
         timeInSeconds: 0,
         log: JSON.stringify({ message: "No URLs found" }, null, 2),
-        llmInteractions: [],
       },
       outputs: {
         thinking: noLinksThinking,
@@ -80,7 +79,6 @@ No URLs were found in this document. This analysis focuses on link validation, s
         urlsFound: urls.length,
         validationResults: validationResults.length
       }, null, 2),
-      llmInteractions: [],
     },
     outputs: {
       thinking: thinkingDocument,

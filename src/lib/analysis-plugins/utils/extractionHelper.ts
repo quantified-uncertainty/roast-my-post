@@ -10,7 +10,7 @@ import { TextChunk } from '../TextChunk';
 import { logger } from '../../logger';
 import { estimateTokens } from '../../tokenUtils';
 import { calculateCost as utilsCalculateCost, mapModelToCostModel } from '@/utils/costCalculator';
-import type { LLMInteraction } from '@/types/llm';
+import type { LLMInteraction } from '../types';
 
 export interface ExtractionConfig {
   toolName: string;
