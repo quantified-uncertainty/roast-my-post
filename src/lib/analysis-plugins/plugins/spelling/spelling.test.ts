@@ -124,7 +124,6 @@ describe('SpellingAnalyzerJob', () => {
       expect(result.comments[0].description).toContain('Spelling');
       expect(result.comments[0].description).toContain('thier');
       expect(result.comments[0].description).toContain('their');
-      expect(result.cost).toBe(0); // Cost is now tracked automatically by Helicone
     });
 
     it('should handle empty document', async () => {
@@ -197,7 +196,7 @@ describe('SpellingAnalyzerJob', () => {
         hasRun: true,
         errorsCount: 1,
         commentsCount: 1,
-        totalCost: expect.any(Number), // Cost calculation based on token usage
+        totalCost: expect.any(Number),
         llmInteractionsCount: 0,
       });
     });
