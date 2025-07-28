@@ -73,7 +73,6 @@ export async function GET(
           message: 'No Helicone data found for this job',
           jobInfo: {
             status: job.status,
-            heliconeVerified: job.heliconeVerified || false,
             costInCents: job.costInCents,
             createdAt: job.createdAt,
             completedAt: job.completedAt
