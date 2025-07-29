@@ -80,7 +80,8 @@ export async function analyzeDocument(
       document,
       agentInfo,
       analysisResult.outputs,
-      targetHighlights
+      targetHighlights,
+      sessionConfig
     );
     logger.info(
       `Extracted ${highlightResult.outputs.highlights.length} highlights`
@@ -103,7 +104,8 @@ export async function analyzeDocument(
             };
           }),
         },
-        agentInfo
+        agentInfo,
+        sessionConfig
       );
       logger.info(`Generated self-critique`);
       selfCritique = critiqueResult.outputs.selfCritique;
