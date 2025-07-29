@@ -134,15 +134,26 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       `SpellingAnalyzer: Processing ${this.chunks.length} chunks`
     );
 
+    // Log detected convention once before processing
+    if (this.languageConvention && this.languageConvention.convention !== 'unknown') {
+      logger.info(`SpellingAnalyzer: Using detected ${this.languageConvention.convention} English convention for spell checking`);
+    }
+
     // Process chunks sequentially to maintain order and process errors immediately
     for (const chunk of this.chunks) {
       try {
         logger.debug(`SpellingAnalyzer: Checking chunk ${chunk.id}`);
         
+        // Use detected convention if available, otherwise auto-detect
+        const convention = this.languageConvention && this.languageConvention.convention !== 'unknown' 
+          ? (this.languageConvention.convention === 'mixed' ? 'auto' : this.languageConvention.convention)
+          : 'auto';
+        
         const result = await checkSpellingGrammarTool.execute(
           {
             text: chunk.text,
             maxErrors: 20, // Limit errors per chunk
+            convention: convention as 'US' | 'UK' | 'auto',
           },
           {
             logger: logger,
