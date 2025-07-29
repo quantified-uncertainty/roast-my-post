@@ -48,6 +48,15 @@ ALSO EXCLUDE - Facts Not Predictions:
 - General observations: "Customers prefer X", "Users want Y"
 - Research findings: "Studies show X", "Data indicates Y"
 
+CRITICALLY EXCLUDE - Math and Fact-Check Territory:
+- MATHEMATICAL CALCULATIONS: "15% of 1000 is 150", "Revenue grew 3x from $10M to $30M"
+- HISTORICAL FACTS: "GDP was $21T in 2023", "The company was founded in 1990"
+- SCIENTIFIC FACTS: "Water boils at 100°C", "The speed of light is 299,792 km/s"
+- CURRENT STATISTICS: "Unemployment is 3.5%", "Market cap is $500B"
+- PERCENTAGE CALCULATIONS: "45% of users equals 4,500 people"
+- Past events with specific dates: "The merger completed in March 2023"
+- Verifiable present-state claims: "The product has 1M users"
+
 ALSO EXCLUDE - Too Difficult to Formalize:
 - Multi-factor outcomes: "Success depends on X, Y, and Z aligning"
 - Subjective experiences: "Users will love it", "Customers will be delighted"

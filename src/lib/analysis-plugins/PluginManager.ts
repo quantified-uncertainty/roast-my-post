@@ -23,6 +23,7 @@ import {
 } from "./types";
 import { PluginType, type PluginSelection } from "./types/plugin-types";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
+import { ChunkRouter } from "./utils/ChunkRouter";
 
 // Import all plugins
 import { MathPlugin } from "./plugins/math";
@@ -167,10 +168,63 @@ export class PluginManager {
         context: { totalChunks: chunks.length },
       });
 
+      // Route chunks to appropriate plugins
+      this.pluginLogger.log({
+        level: "info",
+        plugin: "PluginManager",
+        phase: "routing",
+        message: `Starting chunk routing to determine which plugins should process each chunk`,
+      });
+
+      const router = new ChunkRouter(plugins);
+      const routingResult = await router.routeChunks(chunks);
+      let totalCost = routingResult.totalCost;
+
+      // Create plugin-specific chunk lists based on routing decisions
+      const chunksPerPlugin = new Map<string, typeof chunks>();
+      for (const plugin of plugins) {
+        chunksPerPlugin.set(plugin.name(), []);
+      }
+
+      // Populate chunk lists based on routing decisions
+      for (const [chunkId, pluginNames] of routingResult.routingDecisions) {
+        const chunk = chunks.find(c => c.id === chunkId);
+        if (chunk) {
+          for (const pluginName of pluginNames) {
+            const pluginChunks = chunksPerPlugin.get(pluginName);
+            if (pluginChunks) {
+              pluginChunks.push(chunk);
+            }
+          }
+        } else {
+          // Log warning if chunk is not found
+          this.pluginLogger.log({
+            level: "warn",
+            plugin: "PluginManager",
+            phase: "routing",
+            message: `Chunk with ID ${chunkId} not found in chunks array`,
+          });
+        }
+      }
+
+      // Log routing results
+      for (const [pluginName, assignedChunks] of chunksPerPlugin) {
+        this.pluginLogger.log({
+          level: "info",
+          plugin: "PluginManager",
+          phase: "routing",
+          message: `Plugin ${pluginName} assigned ${assignedChunks.length} chunks`,
+          context: { 
+            pluginName, 
+            chunkCount: assignedChunks.length,
+            chunkIds: assignedChunks.map(c => c.id)
+          },
+        });
+      }
+
       // Process with each plugin in parallel with improved error recovery
       const pluginResults = new Map<string, AnalysisResult>();
       const allComments: Comment[] = [];
-      let totalCost = 0;
 
       // Create promises for all plugin analyses with retry logic
       const pluginPromises = plugins.map(async (plugin) => {
@@ -205,12 +259,34 @@ export class PluginManager {
 
             const startTime = Date.now();
 
+            // Get the chunks assigned to this plugin
+            const assignedChunks = chunksPerPlugin.get(pluginName) || [];
+            
+            // Skip plugin if no chunks were routed to it
+            if (assignedChunks.length === 0) {
+              pluginLoggerInstance.startPhase(
+                "skipped",
+                `Skipping ${pluginName} - no chunks routed to this plugin`
+              );
+              pluginLoggerInstance.endPhase("skipped");
+              return {
+                plugin: pluginName,
+                result: {
+                  summary: "No relevant content found for this plugin",
+                  analysis: "",
+                  comments: [],
+                  cost: 0
+                },
+                success: true
+              };
+            }
+
             // Add basic logging wrapper around plugin execution
             pluginLoggerInstance.startPhase(
               "initialization",
-              `Starting ${pluginName} analysis`
+              `Starting ${pluginName} analysis with ${assignedChunks.length} chunks`
             );
-            pluginLoggerInstance.processingChunks(chunks.length);
+            pluginLoggerInstance.processingChunks(assignedChunks.length);
 
             // Add timeout to prevent hanging
             const PLUGIN_TIMEOUT_MS = 300000; // 5 minutes
@@ -227,7 +303,7 @@ export class PluginManager {
             });
 
             const result = await Promise.race([
-              plugin.analyze(chunks, text),
+              plugin.analyze(assignedChunks, text),
               timeoutPromise,
             ]);
 
