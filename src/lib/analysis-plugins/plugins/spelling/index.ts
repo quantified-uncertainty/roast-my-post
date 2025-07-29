@@ -10,7 +10,7 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
-import { detectLanguageConvention, detectDocumentType, getConventionExamples } from "./conventionDetector";
+import { detectLanguageConvention, detectDocumentType, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
 import { calculateGrade, countWords, generateGradeSummary } from "./grading";
 
 export interface SpellingErrorWithLocation {
@@ -135,8 +135,8 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     );
 
     // Log detected convention once before processing
-    if (this.languageConvention && this.languageConvention.convention !== 'unknown') {
-      logger.info(`SpellingAnalyzer: Using detected ${this.languageConvention.convention} English convention for spell checking`);
+    if (this.languageConvention) {
+      logger.info(`SpellingAnalyzer: Using detected ${this.languageConvention.convention} English convention for spell checking (consistency: ${Math.round(this.languageConvention.consistency * 100)}%)`);
     }
 
     // Process chunks sequentially to maintain order and process errors immediately
@@ -144,9 +144,9 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       try {
         logger.debug(`SpellingAnalyzer: Checking chunk ${chunk.id}`);
         
-        // Use detected convention if available, otherwise auto-detect
-        const convention = this.languageConvention && this.languageConvention.convention !== 'unknown' 
-          ? (this.languageConvention.convention === 'mixed' ? 'auto' : this.languageConvention.convention)
+        // Use detected convention if available
+        const convention = this.languageConvention 
+          ? this.languageConvention.convention
           : 'auto';
         
         const result = await checkSpellingGrammarTool.execute(
@@ -312,15 +312,15 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     }
     
     // Always add convention detection results if available
-    if (this.languageConvention && this.languageConvention.convention !== 'unknown') {
+    if (this.languageConvention) {
       analysisText += `**Language Convention**: ${this.languageConvention.convention} English`;
       if (this.languageConvention.confidence < 0.8) {
         analysisText += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
       }
       analysisText += '\n';
       
-      if (this.languageConvention.convention === 'mixed') {
-        analysisText += '⚠️ Mixed US/UK spelling detected. Consider standardizing to one convention.\n';
+      if (this.languageConvention.consistency < 0.8) {
+        analysisText += `⚠️ Mixed US/UK spelling detected (${Math.round(this.languageConvention.consistency * 100)}% consistency). Consider standardizing to ${this.languageConvention.convention} English.\n`;
       }
       
       const examples = getConventionExamples(this.languageConvention.convention);

@@ -33,11 +33,11 @@ describe('conventionDetector', () => {
         const result = detectLanguageConvention(text);
         expect(result.convention).toBe('US');
         
-        // Check evidence includes pattern types
+        // Check evidence includes strong pattern words
         const strongEvidence = result.evidence.filter(e => 
-          e.patternType === 'ize/ise' || e.patternType === 'or/our'
+          e.word === 'organize' || e.word === 'colors'
         );
-        expect(strongEvidence.length).toBeGreaterThan(0);
+        expect(strongEvidence.length).toBe(2);
       });
 
       it('should handle equal weighted patterns correctly', () => {

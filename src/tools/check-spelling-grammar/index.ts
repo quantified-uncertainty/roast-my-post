@@ -75,9 +75,9 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
         );
         
         // Use detected convention if confident enough, otherwise let Claude decide
-        if (detectionResult.confidence > 0.7 && detectionResult.convention !== 'unknown') {
-          convention = detectionResult.convention === 'mixed' ? 'auto' : detectionResult.convention;
-          context.logger.info(`[CheckSpellingGrammarTool] Detected ${convention} English with ${Math.round(detectionResult.confidence * 100)}% confidence`);
+        if (detectionResult.confidence > 0.5) {
+          convention = detectionResult.convention;
+          context.logger.info(`[CheckSpellingGrammarTool] Detected ${convention} English with ${Math.round(detectionResult.confidence * 100)}% confidence (${Math.round(detectionResult.consistency * 100)}% consistency)`);
         } else {
           context.logger.info('[CheckSpellingGrammarTool] Convention detection inconclusive, letting Claude decide');
         }

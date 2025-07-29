@@ -15,8 +15,9 @@ const exampleTexts = {
 };
 
 interface DetectionResult {
-  convention: 'US' | 'UK' | 'mixed' | 'unknown';
+  convention: 'US' | 'UK';
   confidence: number;
+  consistency: number;
   evidence: Array<{
     word: string;
     convention: 'US' | 'UK';
@@ -43,11 +44,9 @@ export default function DetectLanguageConventionPage() {
               <span className="text-gray-600">Convention:</span>
               <span className={`font-semibold px-3 py-1 rounded-full ${
                 detectionResult.convention === 'US' ? 'bg-blue-100 text-blue-800' :
-                detectionResult.convention === 'UK' ? 'bg-purple-100 text-purple-800' :
-                detectionResult.convention === 'mixed' ? 'bg-amber-100 text-amber-800' :
-                'bg-gray-100 text-gray-800'
+                'bg-purple-100 text-purple-800'
               }`}>
-                {detectionResult.convention.toUpperCase()} English
+                {detectionResult.convention} English
               </span>
             </div>
             
@@ -62,6 +61,28 @@ export default function DetectLanguageConventionPage() {
                 </div>
                 <span className="text-sm font-medium">
                   {Math.round(detectionResult.confidence * 100)}%
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Consistency:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      detectionResult.consistency > 0.8 ? 'bg-green-500' :
+                      detectionResult.consistency > 0.5 ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${detectionResult.consistency * 100}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium">
+                  {Math.round(detectionResult.consistency * 100)}%
+                  {detectionResult.consistency < 0.8 && (
+                    <span className="text-gray-500 ml-1">(mixed usage)</span>
+                  )}
                 </span>
               </div>
             </div>

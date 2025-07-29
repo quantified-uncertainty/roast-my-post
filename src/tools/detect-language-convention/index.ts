@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { detectLanguageConvention, detectDocumentType } from '@/lib/analysis-plugins/plugins/spelling/conventionDetector';
+import { detectLanguageConvention, detectDocumentType } from './conventionDetector';
 
 export interface DetectLanguageConventionInput {
   text: string;
@@ -8,8 +8,9 @@ export interface DetectLanguageConventionInput {
 }
 
 export interface DetectLanguageConventionOutput {
-  convention: 'US' | 'UK' | 'mixed' | 'unknown';
+  convention: 'US' | 'UK';
   confidence: number;
+  consistency: number;
   evidence: Array<{
     word: string;
     convention: 'US' | 'UK';
@@ -29,8 +30,9 @@ const inputSchema = z.object({
 
 // Output schema
 const outputSchema = z.object({
-  convention: z.enum(['US', 'UK', 'mixed', 'unknown']).describe('Detected language convention'),
+  convention: z.enum(['US', 'UK']).describe('Dominant language convention'),
   confidence: z.number().min(0).max(1).describe('Confidence in the detection (0-1)'),
+  consistency: z.number().min(0).max(1).describe('How consistent the document is (0-1)'),
   evidence: z.array(z.object({
     word: z.string().describe('Example word found'),
     convention: z.enum(['US', 'UK']).describe('Which convention this word belongs to'),
@@ -88,6 +90,7 @@ export class DetectLanguageConventionTool extends Tool<DetectLanguageConventionI
     return {
       convention: conventionResult.convention,
       confidence: conventionResult.confidence,
+      consistency: conventionResult.consistency,
       evidence: conventionResult.evidence.slice(0, 10), // Limit to top 10 evidence items
       documentType: {
         type: documentTypeResult.type,
