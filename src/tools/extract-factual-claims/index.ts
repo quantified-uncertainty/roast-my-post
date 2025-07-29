@@ -73,6 +73,8 @@ export class ExtractFactualClaimsTool extends Tool<ExtractFactualClaimsInput, Ex
     
     const systemPrompt = `You are an expert fact extraction system. Extract verifiable factual claims from text and score them.
 
+CRITICAL: You work alongside Math and Forecast extractors. Stay in your lane!
+
 Look for:
 - Specific statistics or data points (e.g., "GDP was $21T in 2023")
 - Historical facts (e.g., "The Berlin Wall fell in 1989")
@@ -87,6 +89,20 @@ Do NOT extract:
 - Predictions or forecasts (those go to the forecast extractor)
 - Hypotheticals or thought experiments
 - Vague generalizations without specifics
+
+CRITICALLY IMPORTANT - DO NOT EXTRACT (Other tools handle these):
+- MATHEMATICAL ERRORS: "15% of 1000 is 125" (Math plugin checks calculations)
+- COMPUTATIONAL MISTAKES: "Revenue grew 3x from $10M to $50M" (Math plugin)
+- FUTURE PREDICTIONS: "GDP will reach $25T by 2025" (Forecast plugin)
+- PROBABILITY STATEMENTS: "70% chance of recession" (Forecast plugin)
+- TREND PROJECTIONS: "At this rate, we'll have 1M users by December" (Forecast plugin)
+
+EDGE CASES - How to decide:
+- "Revenue was $100M last year" → EXTRACT (historical fact)
+- "Revenue grew 50% to $100M" → EXTRACT (but don't verify the math, just the $100M claim)
+- "Revenue will be $150M next year" → DON'T EXTRACT (prediction)
+- "Studies show 70% effectiveness" → EXTRACT (research finding)
+- "There's a 70% chance of success" → DON'T EXTRACT (probability forecast)
 
 For each claim, provide:
 

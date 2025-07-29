@@ -11,7 +11,7 @@ export interface PluginLogEntry {
   timestamp: string;
   level: 'debug' | 'info' | 'warn' | 'error';
   plugin: string;
-  phase: 'initialization' | 'chunking' | 'analysis' | 'location_finding' | 'comment_generation' | 'cleanup' | 'summary';
+  phase: 'initialization' | 'chunking' | 'routing' | 'analysis' | 'location_finding' | 'comment_generation' | 'cleanup' | 'summary' | 'skipped';
   message: string;
   context?: {
     chunkIndex?: number;
@@ -31,6 +31,9 @@ export interface PluginLogEntry {
       stack?: string;
       context?: any;
     };
+    pluginName?: string;
+    chunkCount?: number;
+    chunkIds?: string[];
     data?: any;
   };
 }

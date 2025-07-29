@@ -151,6 +151,8 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
 
 CRITICAL: You MUST use the extract_math_expressions tool to provide your analysis.
 
+CRITICAL: You work alongside Fact-Check and Forecast extractors. Stay in your lane!
+
 IMPORTANT FILTERING RULES:
 1. ONLY extract expressions you suspect are mathematically incorrect (20%+ chance)
 2. DO NOT extract:
@@ -168,6 +170,20 @@ IMPORTANT FILTERING RULES:
    - Formula application errors (F=ma used incorrectly)
    - Percentage calculation errors
    - Compound interest/growth miscalculations
+
+CRITICALLY IMPORTANT - DO NOT EXTRACT (Other tools handle these):
+- FACTUAL CLAIMS: "GDP was $21T in 2023" (Fact-check plugin verifies the number)
+- FUTURE PREDICTIONS: "Revenue will grow 50% next year" (Forecast plugin)
+- HISTORICAL FACTS: "Stock price was $150 in January" (Fact-check plugin)
+- RESEARCH FINDINGS: "Study shows 75% improvement" (Fact-check plugin)
+- PROBABILITY FORECASTS: "70% chance of success" (Forecast plugin)
+
+EDGE CASES - How to decide:
+- "Revenue grew 3x from $10M to $25M" → EXTRACT (math error: should be $30M)
+- "Revenue grew from $10M to $30M" → DON'T EXTRACT (no calculation shown)
+- "15% of 1000 users is 125" → EXTRACT (math error: should be 150)
+- "We have 15% market share" → DON'T EXTRACT (just a statistic)
+- "Efficiency improved by 150%" → DON'T EXTRACT (unless calculation shown)
 
 For each SUSPECTED ERROR:
 1. Extract the EXACT text as it appears
@@ -199,6 +215,7 @@ Remember: If you're not reasonably confident it's a MATH ERROR, don't include it
     if (input.includeContext) requirements.push('Consider the context when assessing error importance.');
     requirements.push('ONLY extract mathematical expressions that appear to have errors (20%+ chance of being wrong).');
     requirements.push('DO NOT include trivial percentages, correct calculations, or non-mathematical claims.');
+    requirements.push('DO NOT extract factual statistics or future predictions - other plugins handle those.');
     
     return `<task>
   <instruction>Identify and extract ONLY mathematical expressions that are likely INCORRECT</instruction>
@@ -216,11 +233,14 @@ ${input.text}
     ${requirements.join('\n    ')}
   </requirements>
   
-  <reminder>
-    Remember: Only include expressions you suspect contain MATHEMATICAL ERRORS.
-    Skip factual claims (for fact-checker) and predictions (for forecaster).
-    If a calculation looks correct, don't include it.
-  </reminder>
+  <critical_reminders>
+    - Only include expressions with CALCULATION ERRORS (wrong math)
+    - Skip factual claims like "GDP was $21T" (fact-checker handles)
+    - Skip predictions like "will grow 50%" (forecaster handles)
+    - Skip statistics without shown calculations
+    - If the math looks correct, DON'T include it
+    - Focus ONLY on computational/arithmetic mistakes
+  </critical_reminders>
 </task>`;
   }
   
