@@ -10,7 +10,7 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
-import { detectLanguageConvention, detectDocumentType, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
+import { detectLanguageConvention, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
 import { calculateGrade, countWords, generateGradeSummary } from "./grading";
 
 export interface SpellingErrorWithLocation {
@@ -33,7 +33,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private totalCost: number = 0;
   private errors: SpellingErrorWithLocation[] = [];
   private languageConvention?: ReturnType<typeof detectLanguageConvention>;
-  private documentType?: ReturnType<typeof detectDocumentType>;
   private gradeResult?: ReturnType<typeof calculateGrade>;
 
   name(): string {
@@ -285,20 +284,17 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private detectConventions(): void {
-    logger.info("SpellingAnalyzer: Detecting language conventions and document type");
+    logger.info("SpellingAnalyzer: Detecting language conventions");
     
     // Take a sample from the beginning for analysis
     const sampleSize = Math.min(2000, this.documentText.length);
     const sample = this.documentText.slice(0, sampleSize);
     
     this.languageConvention = detectLanguageConvention(sample);
-    this.documentType = detectDocumentType(sample);
     
     logger.info("SpellingAnalyzer: Detected conventions", {
       language: this.languageConvention.convention,
-      languageConfidence: this.languageConvention.confidence,
-      documentType: this.documentType.type,
-      documentTypeConfidence: this.documentType.confidence
+      languageConfidence: this.languageConvention.confidence
     });
   }
 
@@ -330,10 +326,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       analysisText += '\n';
     }
     
-    // Always add document type if available
-    if (this.documentType && this.documentType.type !== 'unknown') {
-      analysisText += `**Document Type**: ${this.documentType.type.charAt(0).toUpperCase() + this.documentType.type.slice(1)}\n\n`;
-    }
     
     if (this.errors.length === 0) {
       // No errors case

@@ -34,10 +34,6 @@ describe('SpellingAnalyzerJob', () => {
       evidence: []
     });
     
-    (conventionDetector.detectDocumentType as jest.Mock).mockReturnValue({
-      type: 'blog',
-      confidence: 0.8
-    });
     
     (conventionDetector.getConventionExamples as jest.Mock).mockReturnValue([
       'Uses US spelling: organize, color, center'
@@ -169,7 +165,6 @@ describe('SpellingAnalyzerJob', () => {
       // Check analysis includes all components
       expect(result.analysis).toContain('Good (85/100)');
       expect(result.analysis).toContain('**Language Convention**: US English');
-      expect(result.analysis).toContain('**Document Type**: Blog');
       
       expect(result.comments).toHaveLength(2);
       expect(result.comments[0].description).toContain('Spelling');
@@ -290,22 +285,6 @@ describe('SpellingAnalyzerJob', () => {
       expect(result.analysis).toContain('Mixed US/UK spelling detected');
     });
 
-    it('should detect document type', async () => {
-      (conventionDetector.detectDocumentType as jest.Mock).mockReturnValue({
-        type: 'academic',
-        confidence: 0.9
-      });
-
-      (checkSpellingGrammarTool.execute as jest.Mock).mockResolvedValue({ errors: [] });
-
-      const analyzer = new SpellingAnalyzerJob();
-      const result = await analyzer.analyze(
-        [new TextChunk('Academic text with references', 'chunk1')], 
-        'Academic text with references'
-      );
-
-      expect(result.analysis).toContain('**Document Type**: Academic');
-    });
   });
 
   describe('error location finding', () => {
