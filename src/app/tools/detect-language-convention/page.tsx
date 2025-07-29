@@ -43,10 +43,12 @@ export default function DetectLanguageConventionPage() {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Convention:</span>
               <span className={`font-semibold px-3 py-1 rounded-full ${
+                detectionResult.confidence === 0 ? 'bg-gray-100 text-gray-600' :
                 detectionResult.convention === 'US' ? 'bg-blue-100 text-blue-800' :
                 'bg-purple-100 text-purple-800'
               }`}>
                 {detectionResult.convention} English
+                {detectionResult.confidence === 0 && ' (default)'}
               </span>
             </div>
             
@@ -55,12 +57,17 @@ export default function DetectLanguageConventionPage() {
               <div className="flex items-center gap-2">
                 <div className="w-32 bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      detectionResult.confidence === 0 ? 'bg-gray-400' : 'bg-green-500'
+                    }`}
                     style={{ width: `${detectionResult.confidence * 100}%` }}
                   />
                 </div>
                 <span className="text-sm font-medium">
                   {Math.round(detectionResult.confidence * 100)}%
+                  {detectionResult.confidence === 0 && (
+                    <span className="text-gray-500 ml-1">(insufficient evidence)</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -104,7 +111,7 @@ export default function DetectLanguageConventionPage() {
         </div>
 
         {/* Evidence */}
-        {detectionResult.evidence && detectionResult.evidence.length > 0 && (
+        {detectionResult.evidence && detectionResult.evidence.length > 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold mb-4">Evidence Found</h3>
             
@@ -126,6 +133,17 @@ export default function DetectLanguageConventionPage() {
               ))}
             </div>
           </div>
+        ) : (
+          <div className="bg-amber-50 rounded-lg shadow-sm border border-amber-200 p-6">
+            <h3 className="text-lg font-semibold mb-2 text-amber-900">No Convention Markers Found</h3>
+            <p className="text-sm text-amber-800">
+              The text doesn't contain enough US/UK spelling differences to determine the convention. 
+              We need at least 3 indicator words (like organize/organise, color/colour) to make a reliable determination.
+            </p>
+            <p className="text-sm text-amber-700 mt-2">
+              Default: US English (with 0% confidence)
+            </p>
+          </div>
         )}
 
         {/* Explanation */}
@@ -146,6 +164,12 @@ export default function DetectLanguageConventionPage() {
       tool={detectLanguageConventionTool}
       renderResults={renderResult}
       formConfig={{
+        fieldConfigs: {
+          text: {
+            rows: 10,
+            placeholder: 'Paste or type your text here to detect US or UK English conventions...'
+          }
+        },
         examples: [
           {
             name: 'US English',

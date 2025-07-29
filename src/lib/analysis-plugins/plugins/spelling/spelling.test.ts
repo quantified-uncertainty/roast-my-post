@@ -20,7 +20,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // Mock convention detector and grading modules
-jest.mock('./conventionDetector');
+jest.mock('@/tools/detect-language-convention/conventionDetector');
 jest.mock('./grading');
 
 describe('SpellingAnalyzerJob', () => {
@@ -31,12 +31,13 @@ describe('SpellingAnalyzerJob', () => {
     (conventionDetector.detectLanguageConvention as jest.Mock).mockReturnValue({
       convention: 'US',
       confidence: 0.9,
+      consistency: 0.9, // High consistency, no mixed warning
       evidence: []
     });
     
     
     (conventionDetector.getConventionExamples as jest.Mock).mockReturnValue([
-      'Uses US spelling: organize, color, center'
+      'Uses -ize endings (organize, realize)'
     ]);
     
     (grading.countWords as jest.Mock).mockReturnValue(100);
@@ -267,6 +268,7 @@ describe('SpellingAnalyzerJob', () => {
       (conventionDetector.detectLanguageConvention as jest.Mock).mockReturnValue({
         convention: 'mixed',
         confidence: 0.6,
+        consistency: 0.5, // Low consistency triggers mixed warning
         evidence: [
           { word: 'organize', convention: 'US', count: 2 },
           { word: 'colour', convention: 'UK', count: 3 }
