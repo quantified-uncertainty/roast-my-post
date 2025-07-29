@@ -672,11 +672,11 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         return false;
       }
 
-
       await this.processJob(job);
       return true;
-    } finally {
-      await prisma.$disconnect();
+    } catch (error) {
+      // Re-throw the error to be handled by the caller
+      throw error;
     }
   }
 

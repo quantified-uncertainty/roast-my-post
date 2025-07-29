@@ -21,6 +21,7 @@ export interface ClaudeCallOptions {
   heliconeHeaders?: Record<string, string>;
   enablePromptCaching?: boolean; // Enable Anthropic prompt caching
   cacheSeed?: string; // Custom cache seed for Helicone response caching
+  timeout?: number; // Custom timeout in milliseconds
 }
 
 export interface ClaudeCallResult {
@@ -136,11 +137,12 @@ export async function callClaude(
       if (options.tool_choice) requestOptions.tool_choice = options.tool_choice;
       
       // Add timeout to prevent hanging indefinitely
-      const CLAUDE_TIMEOUT_MS = 45000; // 45 seconds (less than the 60s plugin timeout)
+      const DEFAULT_CLAUDE_TIMEOUT_MS = 180000; // 3 minutes default (should handle most cases)
+      const timeoutMs = options.timeout || DEFAULT_CLAUDE_TIMEOUT_MS;
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error(`Claude API call timed out after ${CLAUDE_TIMEOUT_MS}ms`));
-        }, CLAUDE_TIMEOUT_MS);
+          reject(new Error(`Claude API call timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
       });
       
       const result = await Promise.race([

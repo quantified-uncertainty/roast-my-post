@@ -302,45 +302,72 @@ class AdaptiveJobProcessor {
             this.jobWorkerMap.delete(worker.jobId);
           }
 
+          // Log exit details for debugging
+          const exitInfo = signal ? `signal ${signal}` : `code ${code}`;
+          console.log(`🔍 Worker ${workerId} exited with ${exitInfo}`);
+
           // Check if any work was done
           const hadWork =
             stdout.includes("Processing job") ||
             stderr.includes("Processing job") ||
             !stdout.includes("No pending jobs");
 
-          if (hadWork) {
-            this.totalJobsProcessed++;
-            const duration = Math.round(
-              (Date.now() - worker.startTime.getTime()) / 1000
-            );
-            const jobInfo = worker.jobId ? ` (job ${worker.jobId})` : '';
-            console.log(
-              `✅ Worker ${workerId} completed job${jobInfo} in ${duration}s (Total processed: ${this.totalJobsProcessed})`
-            );
-            // Worker successfully processed a job, resolve even if exit code is non-zero
-            resolve();
-          } else if (code === 0 || stdout.includes("No pending jobs") || worker.isDraining) {
-            // Worker found no jobs, exited cleanly, or was draining
-            if (!worker.isDraining) {
+          if (code === 0) {
+            // Exit code 0 means success
+            // We trust the process to exit with 0 only when it completes successfully
+            // This handles both cases: jobs processed successfully or no jobs found
+            if (hadWork) {
+              this.totalJobsProcessed++;
+              const duration = Math.round(
+                (Date.now() - worker.startTime.getTime()) / 1000
+              );
+              const jobInfo = worker.jobId ? ` (job ${worker.jobId})` : '';
+              console.log(
+                `✅ Worker ${workerId} completed job${jobInfo} in ${duration}s (Total processed: ${this.totalJobsProcessed})`
+              );
+            } else {
               console.log(`💤 Worker ${workerId} found no jobs`);
             }
+            resolve();
+          } else if (worker.isDraining && !worker.jobId) {
+            // Worker was draining and had no active job
+            console.log(`👋 Worker ${workerId} shut down gracefully (draining)`);
             resolve();
           } else {
             // Worker failed
             this.totalErrors++;
-            console.error(`\n❌ Worker ${workerId} failed with exit code ${code}`);
+            console.error(`\n❌ Worker ${workerId} failed with exit ${exitInfo}`);
+            
+            // Log diagnostic info
+            console.error(`   📊 Debug info:`);
+            console.error(`      - Exit code: ${code}`);
+            console.error(`      - Signal: ${signal || 'none'}`);
+            console.error(`      - Had work: ${hadWork}`);
+            console.error(`      - Job ID: ${worker.jobId || 'none'}`);
+            console.error(`      - Stdout length: ${stdout.length} chars`);
+            console.error(`      - Stderr length: ${stderr.length} chars`);
             
             // If worker was processing a job, mark it as failed
             if (worker.jobId) {
               console.error(`   🔥 Job ${worker.jobId} needs recovery (worker died)`);
-              await this.markJobAsFailed(worker.jobId, `Worker ${workerId} crashed with exit code ${code}`);
+              await this.markJobAsFailed(worker.jobId, `Worker ${workerId} crashed with ${exitInfo}`);
+            }
+            
+            // Show the last few lines of stdout for context
+            if (stdout.trim()) {
+              const lastLines = stdout.trim().split('\n').slice(-5);
+              console.error(`   📜 Last stdout lines:`);
+              lastLines.forEach(line => {
+                console.error(`      ${line}`);
+              });
             }
             
             // Show the actual error output
             if (stderr.trim()) {
-              console.error(`   Error output:`);
-              stderr.trim().split('\n').forEach(line => {
-                console.error(`     ${line}`);
+              const errorLines = stderr.trim().split('\n').slice(-5);
+              console.error(`   ❌ Last stderr lines:`);
+              errorLines.forEach(line => {
+                console.error(`      ${line}`);
               });
             }
             
@@ -350,16 +377,16 @@ class AdaptiveJobProcessor {
                 line.toLowerCase().includes('error') || 
                 line.includes('❌') ||
                 line.includes('Failed')
-              );
+              ).slice(-3);
               if (errorLines.length > 0) {
-                console.error(`   Output errors:`);
+                console.error(`   ⚠️  Error indicators in output:`);
                 errorLines.forEach(line => {
-                  console.error(`     ${line.trim()}`);
+                  console.error(`      ${line.trim()}`);
                 });
               }
             }
             
-            reject(new Error(`Worker ${workerId} exited with code ${code}`));
+            reject(new Error(`Worker ${workerId} exited with ${exitInfo}`));
           }
         }
       });
