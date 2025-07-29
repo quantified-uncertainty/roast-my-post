@@ -314,6 +314,8 @@ class AdaptiveJobProcessor {
 
           if (code === 0) {
             // Exit code 0 means success
+            // We trust the process to exit with 0 only when it completes successfully
+            // This handles both cases: jobs processed successfully or no jobs found
             if (hadWork) {
               this.totalJobsProcessed++;
               const duration = Math.round(

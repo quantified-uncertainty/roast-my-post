@@ -663,16 +663,21 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
    * Find and process the next pending job
    */
   async run() {
-    logger.info('🔍 Looking for pending jobs...');
-    const job = await this.claimNextPendingJob();
+    try {
+      logger.info('🔍 Looking for pending jobs...');
+      const job = await this.claimNextPendingJob();
 
-    if (!job) {
-      logger.info('✅ No pending jobs found.');
-      return false;
+      if (!job) {
+        logger.info('✅ No pending jobs found.');
+        return false;
+      }
+
+      await this.processJob(job);
+      return true;
+    } catch (error) {
+      // Re-throw the error to be handled by the caller
+      throw error;
     }
-
-    await this.processJob(job);
-    return true;
   }
 
   /**
