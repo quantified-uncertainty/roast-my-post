@@ -7,6 +7,11 @@ export async function GET(
 ) {
   try {
     const { userId } = await context.params;
+    
+    if (!userId || userId.trim() === '') {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+    
     const count = await UserModel.getUserDocumentsCount(userId);
     
     return NextResponse.json({ count });
