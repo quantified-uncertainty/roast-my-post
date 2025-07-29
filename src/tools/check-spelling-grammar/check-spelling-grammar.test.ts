@@ -40,8 +40,13 @@ describe('CheckSpellingGrammarTool', () => {
         info: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
-      }
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
     });
 
     expect(result.errors).toHaveLength(0);
@@ -87,8 +92,13 @@ describe('CheckSpellingGrammarTool', () => {
         info: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
-      }
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
     });
 
     expect(result.errors).toHaveLength(2);
@@ -129,8 +139,13 @@ describe('CheckSpellingGrammarTool', () => {
         info: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
-      }
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
     });
 
     expect(result.errors).toHaveLength(1);
@@ -184,8 +199,13 @@ describe('CheckSpellingGrammarTool', () => {
         info: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
-      }
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
     });
 
     // Only the valid error should be returned (exact match only)
@@ -229,8 +249,13 @@ describe('CheckSpellingGrammarTool', () => {
         info: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
-      }
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
     });
 
     expect(result.errors[0].startIndex).toBe(10); // Position of "mistake"

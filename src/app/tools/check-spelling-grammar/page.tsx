@@ -27,7 +27,7 @@ export default function CheckSpellingGrammarAutoPage() {
           strictness: {
             label: 'Checking Strictness',
             helpText: 'How thorough should the checking be?',
-            enumOptions: [
+            options: [
               { value: 'minimal', label: 'Minimal - Only major errors' },
               { value: 'standard', label: 'Standard - Common errors and clarity issues' },
               { value: 'thorough', label: 'Thorough - All issues including style' }
@@ -36,7 +36,7 @@ export default function CheckSpellingGrammarAutoPage() {
           convention: {
             label: 'Spelling Convention',
             helpText: 'Which English spelling convention to use',
-            enumOptions: [
+            options: [
               { value: 'auto', label: 'Auto-detect' },
               { value: 'US', label: 'US English' },
               { value: 'UK', label: 'UK English' }
