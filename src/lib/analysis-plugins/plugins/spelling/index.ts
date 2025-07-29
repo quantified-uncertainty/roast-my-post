@@ -10,6 +10,8 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
+import { detectLanguageConvention, detectDocumentType, getConventionExamples } from "./conventionDetector";
+import { calculateGrade, countWords, generateGradeSummary } from "./grading";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -30,6 +32,9 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private analysis: string = "";
   private totalCost: number = 0;
   private errors: SpellingErrorWithLocation[] = [];
+  private languageConvention?: ReturnType<typeof detectLanguageConvention>;
+  private documentType?: ReturnType<typeof detectDocumentType>;
+  private gradeResult?: ReturnType<typeof calculateGrade>;
 
   name(): string {
     return "SPELLING";
@@ -81,15 +86,22 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     try {
       logger.info("SpellingAnalyzer: Starting analysis");
 
+      // Detect conventions and document type
+      this.detectConventions();
+
       // Process chunks and create comments in one pass
       await this.processChunksAndCreateComments();
+      
+      // Calculate grade
+      const wordCount = countWords(this.documentText);
+      this.gradeResult = calculateGrade(this.errors.map(e => e.error), wordCount);
       
       logger.info("SpellingAnalyzer: Generating analysis summary...");
       this.generateAnalysis();
 
       this.hasRun = true;
       logger.info(
-        `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+        `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated, grade: ${this.gradeResult.grade}/100`
       );
 
       return this.getResults();
@@ -113,6 +125,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       analysis: this.analysis,
       comments: this.comments,
       cost: this.totalCost,
+      grade: this.gradeResult?.grade,
     };
   }
 
@@ -260,35 +273,84 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     }
   }
 
+  private detectConventions(): void {
+    logger.info("SpellingAnalyzer: Detecting language conventions and document type");
+    
+    // Take a sample from the beginning for analysis
+    const sampleSize = Math.min(2000, this.documentText.length);
+    const sample = this.documentText.slice(0, sampleSize);
+    
+    this.languageConvention = detectLanguageConvention(sample);
+    this.documentType = detectDocumentType(sample);
+    
+    logger.info("SpellingAnalyzer: Detected conventions", {
+      language: this.languageConvention.convention,
+      languageConfidence: this.languageConvention.confidence,
+      documentType: this.documentType.type,
+      documentTypeConfidence: this.documentType.confidence
+    });
+  }
+
   private generateAnalysis(): void {
+    // Build comprehensive analysis
+    let analysisText = '';
+    
+    // Always add grade summary if available
+    if (this.gradeResult) {
+      analysisText += generateGradeSummary(this.gradeResult) + '\n\n';
+    }
+    
+    // Always add convention detection results if available
+    if (this.languageConvention && this.languageConvention.convention !== 'unknown') {
+      analysisText += `**Language Convention**: ${this.languageConvention.convention} English`;
+      if (this.languageConvention.confidence < 0.8) {
+        analysisText += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+      }
+      analysisText += '\n';
+      
+      if (this.languageConvention.convention === 'mixed') {
+        analysisText += '⚠️ Mixed US/UK spelling detected. Consider standardizing to one convention.\n';
+      }
+      
+      const examples = getConventionExamples(this.languageConvention.convention);
+      if (examples.length > 0) {
+        analysisText += examples.map(ex => `• ${ex}`).join('\n') + '\n';
+      }
+      analysisText += '\n';
+    }
+    
+    // Always add document type if available
+    if (this.documentType && this.documentType.type !== 'unknown') {
+      analysisText += `**Document Type**: ${this.documentType.type.charAt(0).toUpperCase() + this.documentType.type.slice(1)}\n\n`;
+    }
+    
     if (this.errors.length === 0) {
+      // No errors case
+      if (!analysisText) {
+        this.analysis = "The document appears to be free of spelling and grammar errors.";
+      } else {
+        analysisText += "The document appears to be free of spelling and grammar errors.";
+        this.analysis = analysisText;
+      }
+      
       this.summary = "No spelling or grammar errors found.";
-      this.analysis = "The document appears to be free of spelling and grammar errors.";
+      if (this.gradeResult) {
+        this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.summary}`;
+      }
       return;
     }
-
-    // Use the document summary generator
-    this.analysis = generateDocumentSummary(this.errors);
+    
+    // Add detailed error analysis
+    analysisText += generateDocumentSummary(this.errors);
+    
+    this.analysis = analysisText;
 
     // Generate simple summary for the summary field
-    const totalErrors = this.errors.length;
-    const errorsByType = {
-      spelling: this.errors.filter(e => e.error.type === 'spelling').length,
-      grammar: this.errors.filter(e => e.error.type === 'grammar').length,
-    };
-
-    this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
-    
-    const parts = [];
-    if (errorsByType.spelling > 0) {
-      parts.push(`${errorsByType.spelling} spelling`);
-    }
-    if (errorsByType.grammar > 0) {
-      parts.push(`${errorsByType.grammar} grammar`);
-    }
-    
-    if (parts.length > 0) {
-      this.summary += ` (${parts.join(", ")})`;
+    if (this.gradeResult) {
+      this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.gradeResult.statistics.totalErrors} issue${this.gradeResult.statistics.totalErrors !== 1 ? 's' : ''}`;
+    } else {
+      const totalErrors = this.errors.length;
+      this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
     }
   }
 

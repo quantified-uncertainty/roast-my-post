@@ -131,6 +131,11 @@ Previous research have shown similar results, although the methodologies varied 
                         {' → '}
                         <span className="text-green-700 font-medium">{error.correction}</span>
                       </p>
+                      {error.conciseCorrection && (
+                        <p className="text-xs mt-1 font-mono bg-gray-100 inline-block px-2 py-1 rounded">
+                          {error.conciseCorrection}
+                        </p>
+                      )}
                     </div>
                     
                     {error.context && (

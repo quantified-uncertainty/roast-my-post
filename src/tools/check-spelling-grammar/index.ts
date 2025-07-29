@@ -8,6 +8,7 @@ import { generateCacheSeed } from '@/tools/shared/cache-utils';
 export interface SpellingGrammarError {
   text: string;
   correction: string;
+  conciseCorrection: string;
   type: 'spelling' | 'grammar';
   context?: string;
   importance: number; // 0-100
@@ -35,6 +36,7 @@ const outputSchema = z.object({
   errors: z.array(z.object({
     text: z.string().describe('The incorrect text'),
     correction: z.string().describe('Suggested correction'),
+    conciseCorrection: z.string().describe('Concise correction showing the key change (e.g., "teh → the", "there → their")'),
     type: z.enum(['spelling', 'grammar']).describe('Type of error'),
     context: z.string().optional().describe('Context around the error'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)')
@@ -81,6 +83,7 @@ CRITICAL REQUIREMENTS:
 2. DO NOT paraphrase, summarize, or modify the error text in any way
 3. If an error spans multiple words, include the complete exact phrase
 4. DO NOT include errors that don't exist in the provided text
+5. The "conciseCorrection" field should show the minimal change (e.g., "teh → the", "there → their", "is → are")
 
 Focus on:
 - Clear spelling errors
@@ -164,6 +167,7 @@ ${input.text}
               properties: {
                 text: { type: "string", description: "The incorrect text" },
                 correction: { type: "string", description: "Suggested correction" },
+                conciseCorrection: { type: "string", description: "Concise correction showing the key change (e.g., 'teh → the', 'there → their')" },
                 type: {
                   type: "string",
                   enum: ["spelling", "grammar"],
@@ -177,7 +181,7 @@ ${input.text}
                   maximum: 100
                 }
               },
-              required: ["text", "correction", "type", "importance"]
+              required: ["text", "correction", "conciseCorrection", "type", "importance"]
             }
           }
         },

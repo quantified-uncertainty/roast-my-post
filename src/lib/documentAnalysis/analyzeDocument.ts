@@ -5,7 +5,6 @@ import type { Comment } from "../../types/documentSchema";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
-import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
@@ -34,13 +33,14 @@ export async function analyzeDocument(
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
   
+  // Note: spelling-grammar is now handled by the plugin system in multi-epistemic-eval
+  // If we encounter a spelling-grammar agent, use the multi-epistemic-eval workflow
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
-    logger.info(`Using spelling/grammar workflow for agent ${agentInfo.name} (parallel execution)`);
-    return await analyzeSpellingGrammar(document, agentInfo, {
+    logger.info(`Using multi-epistemic evaluation workflow for spelling/grammar agent ${agentInfo.name}`);
+    return await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
-      executionMode: 'parallel',
-      maxConcurrency: 5,
-      sessionConfig
+      sessionConfig,
+      jobId
     });
   }
   
