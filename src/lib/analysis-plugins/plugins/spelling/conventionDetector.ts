@@ -8,13 +8,30 @@ interface ConventionEvidence {
   word: string;
   convention: 'US' | 'UK';
   count: number;
+  patternType?: string;
 }
+
+// Strong patterns that are most reliable for US/UK detection
+const STRONG_PATTERNS = new Set([
+  'ize/ise',  // organize vs organise
+  'or/our',   // color vs colour
+]);
+
+// Words that are ambiguous or used globally
+const AMBIGUOUS_WORDS = new Set([
+  'program',    // Both use for software
+  'license',    // US spelling but used globally  
+  'aluminum',   // Different words entirely (UK: aluminium)
+  'check',      // Both use for verification
+  'practice',   // Can be noun in both
+]);
 
 // Common US/UK spelling differences
 const SPELLING_PATTERNS: Array<{
   us: RegExp;
   uk: RegExp;
   examples: { us: string; uk: string }[];
+  type: string;
 }> = [
   // -ize vs -ise
   {
@@ -24,7 +41,8 @@ const SPELLING_PATTERNS: Array<{
       { us: 'organize', uk: 'organise' },
       { us: 'recognize', uk: 'recognise' },
       { us: 'realize', uk: 'realise' },
-    ]
+    ],
+    type: 'ize/ise'
   },
   // -or vs -our
   {
@@ -34,7 +52,8 @@ const SPELLING_PATTERNS: Array<{
       { us: 'color', uk: 'colour' },
       { us: 'honor', uk: 'honour' },
       { us: 'behavior', uk: 'behaviour' },
-    ]
+    ],
+    type: 'or/our'
   },
   // -er vs -re
   {
@@ -44,7 +63,8 @@ const SPELLING_PATTERNS: Array<{
       { us: 'center', uk: 'centre' },
       { us: 'meter', uk: 'metre' },
       { us: 'theater', uk: 'theatre' },
-    ]
+    ],
+    type: 'er/re'
   },
   // -yze vs -yse
   {
@@ -53,7 +73,8 @@ const SPELLING_PATTERNS: Array<{
     examples: [
       { us: 'analyze', uk: 'analyse' },
       { us: 'paralyze', uk: 'paralyse' },
-    ]
+    ],
+    type: 'yze/yse'
   },
   // Single vs double L
   {
@@ -63,7 +84,8 @@ const SPELLING_PATTERNS: Array<{
       { us: 'traveled', uk: 'travelled' },
       { us: 'canceled', uk: 'cancelled' },
       { us: 'modeled', uk: 'modelled' },
-    ]
+    ],
+    type: 'single/double-l'
   },
   {
     us: /\b(travel|cancel|model|fuel|dial|cruel|jewel)ing\b/gi,
@@ -71,7 +93,8 @@ const SPELLING_PATTERNS: Array<{
     examples: [
       { us: 'traveling', uk: 'travelling' },
       { us: 'canceling', uk: 'cancelling' },
-    ]
+    ],
+    type: 'single/double-l'
   },
   // -ense vs -ence
   {
@@ -80,7 +103,8 @@ const SPELLING_PATTERNS: Array<{
     examples: [
       { us: 'defense', uk: 'defence' },
       { us: 'offense', uk: 'offence' },
-    ]
+    ],
+    type: 'ense/ence'
   },
   // -og vs -ogue
   {
@@ -89,7 +113,8 @@ const SPELLING_PATTERNS: Array<{
     examples: [
       { us: 'catalog', uk: 'catalogue' },
       { us: 'dialog', uk: 'dialogue' },
-    ]
+    ],
+    type: 'og/ogue'
   }
 ];
 
@@ -126,6 +151,20 @@ const WORD_DIFFERENCES: Record<string, { us: string[]; uk: string[] }> = {
 };
 
 /**
+ * Calculate confidence based on the dominance of one convention
+ */
+function calculateConfidence(usCount: number, ukCount: number): number {
+  const total = usCount + ukCount;
+  if (total < 3) return 0; // Need minimum evidence
+  
+  const stronger = Math.max(usCount, ukCount);
+  const weaker = Math.min(usCount, ukCount);
+  
+  // How dominant is the stronger signal?
+  return (stronger - weaker) / total;
+}
+
+/**
  * Detect language convention based on spelling patterns
  */
 export function detectLanguageConvention(text: string): {
@@ -134,16 +173,22 @@ export function detectLanguageConvention(text: string): {
   evidence: ConventionEvidence[];
 } {
   const evidence: ConventionEvidence[] = [];
-  const wordCounts = new Map<string, { us: number; uk: number }>();
+  const wordCounts = new Map<string, { us: number; uk: number; patternType: string }>();
 
   // Check spelling patterns
   for (const pattern of SPELLING_PATTERNS) {
+    // Determine weight based on pattern reliability
+    const weight = STRONG_PATTERNS.has(pattern.type) ? 2 : 1;
+    
     // Count US spellings
     const usMatches = text.match(pattern.us) || [];
     for (const match of usMatches) {
       const key = match.toLowerCase();
-      const counts = wordCounts.get(key) || { us: 0, uk: 0 };
-      counts.us++;
+      // Skip ambiguous words
+      if (AMBIGUOUS_WORDS.has(key)) continue;
+      
+      const counts = wordCounts.get(key) || { us: 0, uk: 0, patternType: pattern.type };
+      counts.us += weight;
       wordCounts.set(key, counts);
     }
 
@@ -151,8 +196,11 @@ export function detectLanguageConvention(text: string): {
     const ukMatches = text.match(pattern.uk) || [];
     for (const match of ukMatches) {
       const key = match.toLowerCase();
-      const counts = wordCounts.get(key) || { us: 0, uk: 0 };
-      counts.uk++;
+      // Skip ambiguous words
+      if (AMBIGUOUS_WORDS.has(key)) continue;
+      
+      const counts = wordCounts.get(key) || { us: 0, uk: 0, patternType: pattern.type };
+      counts.uk += weight;
       wordCounts.set(key, counts);
     }
   }
@@ -166,7 +214,7 @@ export function detectLanguageConvention(text: string): {
       const matches = lowerText.match(regex) || [];
       if (matches.length > 0) {
         const key = `${category}_us`;
-        const counts = wordCounts.get(key) || { us: 0, uk: 0 };
+        const counts = wordCounts.get(key) || { us: 0, uk: 0, patternType: 'vocabulary' };
         counts.us += matches.length;
         wordCounts.set(key, counts);
       }
@@ -178,7 +226,7 @@ export function detectLanguageConvention(text: string): {
       const matches = lowerText.match(regex) || [];
       if (matches.length > 0) {
         const key = `${category}_uk`;
-        const counts = wordCounts.get(key) || { us: 0, uk: 0 };
+        const counts = wordCounts.get(key) || { us: 0, uk: 0, patternType: 'vocabulary' };
         counts.uk += matches.length;
         wordCounts.set(key, counts);
       }
@@ -191,38 +239,94 @@ export function detectLanguageConvention(text: string): {
 
   for (const [word, counts] of wordCounts.entries()) {
     if (counts.us > 0 && counts.uk === 0) {
-      evidence.push({ word, convention: 'US', count: counts.us });
+      // For vocabulary categories, extract the actual word used
+      let displayWord = word;
+      if (word.includes('_us')) {
+        // This is a vocabulary category, find the actual word used
+        const category = word.replace('_us', '');
+        const variants = WORD_DIFFERENCES[category];
+        if (variants) {
+          // Find which US word was actually used in the text
+          for (const usWord of variants.us) {
+            if (text.toLowerCase().includes(usWord.toLowerCase())) {
+              displayWord = usWord;
+              break;
+            }
+          }
+        }
+      }
+      
+      evidence.push({ 
+        word: displayWord, 
+        convention: 'US', 
+        count: counts.us,
+        patternType: counts.patternType 
+      });
       usCount += counts.us;
     } else if (counts.uk > 0 && counts.us === 0) {
-      evidence.push({ word, convention: 'UK', count: counts.uk });
+      // For vocabulary categories, extract the actual word used
+      let displayWord = word;
+      if (word.includes('_uk')) {
+        // This is a vocabulary category, find the actual word used
+        const category = word.replace('_uk', '');
+        const variants = WORD_DIFFERENCES[category];
+        if (variants) {
+          // Find which UK word was actually used in the text
+          for (const ukWord of variants.uk) {
+            if (text.toLowerCase().includes(ukWord.toLowerCase())) {
+              displayWord = ukWord;
+              break;
+            }
+          }
+        }
+      }
+      
+      evidence.push({ 
+        word: displayWord, 
+        convention: 'UK', 
+        count: counts.uk,
+        patternType: counts.patternType 
+      });
       ukCount += counts.uk;
     }
   }
 
-  // Determine convention
+  // Determine convention with improved logic
   const total = usCount + ukCount;
   if (total === 0) {
     return { convention: 'unknown', confidence: 0, evidence: [] };
   }
 
-  const usRatio = usCount / total;
-  const ukRatio = ukCount / total;
+  // Check for mixed usage first
+  if (usCount > 0 && ukCount > 0) {
+    const ratio = Math.min(usCount, ukCount) / Math.max(usCount, ukCount);
+    if (ratio > 0.3) { // Both are substantially present
+      // Confidence for mixed is the balance ratio (0.3-1.0 mapped to 0.3-0.99)
+      const mixedConfidence = 0.3 + (ratio - 0.3) * 0.99;
+      return { 
+        convention: 'mixed', 
+        confidence: Math.min(mixedConfidence, 0.99), // Cap at 0.99
+        evidence: evidence.sort((a, b) => b.count - a.count).slice(0, 10)
+      };
+    }
+  }
 
+  // Calculate confidence using improved method
+  const confidence = calculateConfidence(usCount, ukCount);
+  
+  // Determine dominant convention
   let convention: LanguageConvention;
-  let confidence: number;
-
-  if (usRatio > 0.8) {
+  if (usCount > ukCount) {
     convention = 'US';
-    confidence = usRatio;
-  } else if (ukRatio > 0.8) {
+  } else if (ukCount > usCount) {
     convention = 'UK';
-    confidence = ukRatio;
-  } else if (usRatio > 0.2 && ukRatio > 0.2) {
-    convention = 'mixed';
-    confidence = 1 - Math.abs(usRatio - ukRatio);
   } else {
     convention = 'unknown';
-    confidence = 0;
+  }
+
+  // Need minimum confidence threshold
+  if (confidence < 0.5 && total < 5) {
+    convention = 'unknown';
   }
 
   // Sort evidence by count
