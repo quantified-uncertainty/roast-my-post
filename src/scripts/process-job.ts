@@ -15,21 +15,34 @@ async function main() {
   logger.info('🚀 Starting job processor...');
   
   const jobProcessor = new JobModel();
+  let hasProcessedJob = false;
 
   try {
-    await jobProcessor.run();
+    hasProcessedJob = await jobProcessor.run();
     
     const endTime = Date.now();
-    console.log(`🏁 Total execution time: ${Math.round((endTime - startTime) / 1000)}s`);
+    const duration = Math.round((endTime - startTime) / 1000);
+    
+    if (hasProcessedJob) {
+      console.log(`✅ Job completed successfully`);
+      console.log(`🏁 Total execution time: ${duration}s`);
+    } else {
+      console.log(`💤 No pending jobs found (checked in ${duration}s)`);
+    }
   } catch (error) {
     logger.error('🔥 Fatal error:', error);
+    console.error('💥 Process failed with error:', error instanceof Error ? error.message : String(error));
     // Give database operations time to complete before exiting
     await new Promise(resolve => setTimeout(resolve, 1000));
     process.exit(1);
   } finally {
-    await jobProcessor.disconnect();
-    logger.info('👋 Process exiting...');
-    // Force exit to ensure the process terminates
+    try {
+      await jobProcessor.disconnect();
+      logger.info('👋 Process exiting cleanly...');
+    } catch (disconnectError) {
+      console.warn('⚠️  Error during disconnect:', disconnectError);
+    }
+    // Exit with 0 to indicate success
     process.exit(0);
   }
 }

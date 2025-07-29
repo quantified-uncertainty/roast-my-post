@@ -663,21 +663,16 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
    * Find and process the next pending job
    */
   async run() {
-    try {
-      logger.info('🔍 Looking for pending jobs...');
-      const job = await this.claimNextPendingJob();
+    logger.info('🔍 Looking for pending jobs...');
+    const job = await this.claimNextPendingJob();
 
-      if (!job) {
-        logger.info('✅ No pending jobs found.');
-        return false;
-      }
-
-
-      await this.processJob(job);
-      return true;
-    } finally {
-      await prisma.$disconnect();
+    if (!job) {
+      logger.info('✅ No pending jobs found.');
+      return false;
     }
+
+    await this.processJob(job);
+    return true;
   }
 
   /**
