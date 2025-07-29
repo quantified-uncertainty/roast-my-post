@@ -9,7 +9,7 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins";
+import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins/PluginManager";
 import type { TaskResult } from "../shared/types";
 
 export async function analyzeWithMultiEpistemicEval(
