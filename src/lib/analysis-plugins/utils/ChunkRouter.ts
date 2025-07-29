@@ -82,14 +82,45 @@ export class ChunkRouter {
 
       return {
         routingDecisions,
-        totalCost: 0.001 * batches.length // Rough estimate
+        totalCost: 0.001 * batches.length // TODO: Track actual API costs from callClaudeWithTool responses
       };
     } catch (error) {
       logger.error('[ChunkRouter] Routing failed:', error);
-      // Fallback: route all chunks to all plugins
-      for (const chunk of chunks) {
-        routingDecisions.set(chunk.id, this.pluginInfo.map(p => p.name));
+      // Conservative fallback: only route to plugins without routing examples
+      // This prevents overwhelming the system while still allowing basic functionality
+      const fallbackPlugins = this.pluginInfo
+        .filter(p => p.examples.length === 0)
+        .map(p => p.name);
+      
+      if (fallbackPlugins.length > 0) {
+        for (const chunk of chunks) {
+          routingDecisions.set(chunk.id, fallbackPlugins);
+        }
+      } else {
+        // If all plugins have routing examples, do basic keyword matching as last resort
+        for (const chunk of chunks) {
+          const assignedPlugins: string[] = [];
+          
+          // Simple keyword-based routing
+          const chunkLower = chunk.text.toLowerCase();
+          for (const plugin of this.pluginInfo) {
+            const promptLower = plugin.prompt.toLowerCase();
+            if (
+              (promptLower.includes('math') && /\d+[\+\-\*\/\%]|\bmultipl|\bdivid|\bcalculat/.test(chunkLower)) ||
+              (promptLower.includes('fact') && /\bwas\b|\bwere\b|\bin \d{4}\b|\baccording to\b/.test(chunkLower)) ||
+              (promptLower.includes('forecast') && /\bwill\b|\bexpect|\bpredict|\bnext year\b|\bfuture\b/.test(chunkLower))
+            ) {
+              assignedPlugins.push(plugin.name);
+            }
+          }
+          
+          // If no keyword matches, skip this chunk
+          if (assignedPlugins.length > 0) {
+            routingDecisions.set(chunk.id, assignedPlugins);
+          }
+        }
       }
+      
       return { routingDecisions, totalCost: 0 };
     }
   }

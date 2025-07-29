@@ -185,6 +185,14 @@ export class PluginManager {
               pluginChunks.push(chunk);
             }
           }
+        } else {
+          // Log warning if chunk is not found
+          this.pluginLogger.log({
+            level: "warn",
+            plugin: "PluginManager",
+            phase: "routing",
+            message: `Chunk with ID ${chunkId} not found in chunks array`,
+          });
         }
       }
 
@@ -249,6 +257,7 @@ export class PluginManager {
                 "skipped",
                 `Skipping ${pluginName} - no chunks routed to this plugin`
               );
+              pluginLoggerInstance.endPhase("skipped");
               return {
                 plugin: pluginName,
                 result: {
