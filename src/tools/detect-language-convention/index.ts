@@ -23,7 +23,7 @@ export interface DetectLanguageConventionOutput {
 
 // Input schema
 const inputSchema = z.object({
-  text: z.string().min(1).describe('The text to analyze for language convention'),
+  text: z.string().min(1).max(500000).describe('The text to analyze for language convention'),
   sampleSize: z.number().min(100).max(10000).optional().default(2000).describe('How many characters to sample from the beginning')
 }) satisfies z.ZodType<DetectLanguageConventionInput>;
 

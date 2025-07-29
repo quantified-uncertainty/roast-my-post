@@ -28,7 +28,7 @@ export interface CheckSpellingGrammarOutput {
 
 // Input schema
 const inputSchema = z.object({
-  text: z.string().min(1).max(10000).describe('The text to check for spelling and grammar errors'),
+  text: z.string().min(1).max(500000).describe('The text to check for spelling and grammar errors'),
   context: z.string().max(1000).optional().describe('Additional context about the text'),
   maxErrors: z.number().min(1).max(100).optional().default(50).describe('Maximum number of errors to return'),
   convention: z.enum(['US', 'UK', 'auto']).optional().default('auto').describe('Which English convention to use (US, UK, or auto-detect)')
