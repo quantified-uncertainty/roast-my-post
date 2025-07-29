@@ -78,55 +78,8 @@ export async function extractHighlightsFromAnalysis(
         
         lineBasedHighlights.push(lineBasedHighlight);
       } else {
-        // Fallback to original logic if unified finder fails
-        const startLineContent = lines[startLine - 1] || '';
-        const endLineContent = lines[endLine - 1] || '';
-        
-        // Extract character snippets, ensuring we always have valid content
-        let startCharacters = startLineContent.slice(0, 10).trim();
-        let endCharacters = endLineContent.length > 10 
-          ? endLineContent.slice(-10).trim() 
-          : endLineContent.trim();
-        
-        // Fallback: if snippets are empty, use first/last non-empty content
-        if (!startCharacters) {
-          // Look for first non-empty content starting from the highlight
-          for (let i = startLine - 1; i < Math.min(startLine + 2, lines.length); i++) {
-            const line = lines[i];
-            if (line && line.trim()) {
-              startCharacters = line.slice(0, 10).trim();
-              break;
-            }
-          }
-          // Ultimate fallback
-          if (!startCharacters) startCharacters = "...";
-        }
-        
-        if (!endCharacters) {
-          // Look for last non-empty content ending at the highlight
-          for (let i = endLine - 1; i >= Math.max(endLine - 3, 0); i--) {
-            const line = lines[i];
-            if (line && line.trim()) {
-              endCharacters = line.slice(-10).trim();
-              break;
-            }
-          }
-          // Ultimate fallback
-          if (!endCharacters) endCharacters = "...";
-        }
-        
-        const lineBasedHighlight: LineBasedHighlight = {
-          description: insight.suggestedHighlight,
-          importance: 5, // Default importance
-          highlight: {
-            startLineIndex: startLine - 1, // Convert to 0-based
-            endLineIndex: endLine - 1,
-            startCharacters: startCharacters,
-            endCharacters: endCharacters,
-          },
-        };
-        
-        lineBasedHighlights.push(lineBasedHighlight);
+        // Log warning but continue - don't create invalid highlights
+        logger.warn(`Could not find location for highlight: "${insight.suggestedHighlight}" near line ${startLine}`);
       }
     }
     
