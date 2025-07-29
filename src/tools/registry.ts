@@ -11,6 +11,7 @@ import CheckSpellingGrammarTool from './check-spelling-grammar';
 import ExtractMathExpressionsTool from './extract-math-expressions';
 import DocumentChunkerTool from './document-chunker';
 import FuzzyTextLocatorTool from './fuzzy-text-locator';
+import { detectLanguageConventionTool } from './detect-language-convention';
 
 // Tool registry to manage all available tools
 export class ToolRegistry {
@@ -30,6 +31,7 @@ export class ToolRegistry {
     this.register(ExtractMathExpressionsTool);
     this.register(DocumentChunkerTool);
     this.register(FuzzyTextLocatorTool);
+    this.register(detectLanguageConventionTool);
   }
   
   register(tool: Tool): void {
