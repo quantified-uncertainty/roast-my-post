@@ -10,6 +10,8 @@ import { createLogDetails } from "../shared/llmUtils";
 import type { TaskResult } from "../shared/types";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
 import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import { createHeliconeHeaders } from "../../helicone/sessions";
 
 export interface SelfCritiqueInput {
   summary: string;
@@ -27,7 +29,8 @@ export interface SelfCritiqueOutput {
 
 export async function generateSelfCritique(
   evaluationOutput: SelfCritiqueInput,
-  agent: Agent
+  agent: Agent,
+  sessionConfig?: HeliconeSessionConfig
 ): Promise<{ task: TaskResult; outputs: SelfCritiqueOutput }> {
   const startTime = Date.now();
 
@@ -68,6 +71,9 @@ ${evaluationText}`;
   let validationResult;
   let interaction;
 
+  // Prepare helicone headers if session config is provided
+  const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+
   try {
     const result = await withTimeout(
       callClaudeWithTool<SelfCritiqueOutput>({
@@ -88,7 +94,8 @@ ${evaluationText}`;
             },
           },
           required: ["selfCritique"],
-        }
+        },
+        heliconeHeaders
       }),
       SELF_CRITIQUE_TIMEOUT,
       `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
