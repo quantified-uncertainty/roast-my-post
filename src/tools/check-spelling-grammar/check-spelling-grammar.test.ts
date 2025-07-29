@@ -1,0 +1,239 @@
+import { checkSpellingGrammarTool } from './index';
+
+// Mock the Claude API call to test specific scenarios
+jest.mock('@/lib/claude/wrapper', () => ({
+  callClaudeWithTool: jest.fn()
+}));
+
+// Mock the language convention detection
+jest.mock('../detect-language-convention', () => ({
+  detectLanguageConventionTool: {
+    execute: jest.fn().mockResolvedValue({
+      convention: 'US',
+      confidence: 0.8,
+      consistency: 0.9
+    })
+  }
+}));
+
+describe('CheckSpellingGrammarTool', () => {
+  it('should not flag informal/colloquial words as errors', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    // Mock Claude's response - no errors for informal words
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [],
+        totalErrorsFound: 0
+      }
+    });
+
+    const input = {
+      text: "The implementation looks jankily put together, but it's gonna work. We kinda need to refactor it later.",
+      context: 'Code review comment',
+      strictness: 'standard' as const
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn()
+      }
+    });
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.metadata?.totalErrorsFound).toBe(0);
+  });
+
+  it('should flag actual spelling errors', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    // Mock Claude's response with spelling errors
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [
+          {
+            text: 'teh',
+            correction: 'the',
+            conciseCorrection: 'teh → the',
+            type: 'spelling',
+            context: 'This is teh best approach',
+            importance: 15
+          },
+          {
+            text: 'recieve',
+            correction: 'receive',
+            conciseCorrection: 'recieve → receive',
+            type: 'spelling',
+            context: 'We will recieve the data',
+            importance: 20
+          }
+        ],
+        totalErrorsFound: 2
+      }
+    });
+
+    const input = {
+      text: "This is teh best approach. We will recieve the data tomorrow.",
+      strictness: 'standard' as const
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn()
+      }
+    });
+
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors[0].text).toBe('teh');
+    expect(result.errors[0].conciseCorrection).toBe('teh → the');
+    expect(result.errors[1].text).toBe('recieve');
+    expect(result.metadata?.totalErrorsFound).toBe(2);
+  });
+
+  it('should respect strictness levels', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    // For minimal strictness - only major errors
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [
+          {
+            text: 'dont',
+            correction: "don't",
+            conciseCorrection: "dont → don't",
+            type: 'spelling',
+            context: "We dont have time",
+            importance: 55 // Above minimal threshold of 51
+          }
+        ],
+        totalErrorsFound: 5 // More errors found but filtered by importance
+      }
+    });
+
+    const input = {
+      text: "We dont have time for minor issues.",
+      strictness: 'minimal' as const
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn()
+      }
+    });
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.metadata?.totalErrorsFound).toBe(5);
+  });
+
+  it('should validate that error text exists in input', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    // Mock Claude's response with errors including case mismatches
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [
+          {
+            text: 'notintext', // This doesn't exist in the input
+            correction: 'corrected',
+            conciseCorrection: 'notintext → corrected',
+            type: 'spelling',
+            importance: 50
+          },
+          {
+            text: 'antropics', // Case mismatch - actual text is "Anthropic's"
+            correction: "Anthropic's",
+            conciseCorrection: "antropics → Anthropic's",
+            type: 'spelling',
+            importance: 40
+          },
+          {
+            text: 'actual',
+            correction: 'actual',
+            conciseCorrection: 'actual → actual',
+            type: 'spelling',
+            context: 'This is the actual text',
+            importance: 30
+          }
+        ],
+        totalErrorsFound: 3
+      }
+    });
+
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const input = {
+      text: "This is the actual text about Anthropic's technology."
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn()
+      }
+    });
+
+    // Only the valid error should be returned (exact match only)
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].text).toBe('actual');
+    
+    // Should have logged warning about invalid errors
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Filtered 2 invalid errors')
+    );
+
+    consoleWarnSpy.mockRestore();
+    consoleDebugSpy.mockRestore();
+  });
+
+  it('should add position indices to errors', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [
+          {
+            text: 'mistake',
+            correction: 'correct',
+            conciseCorrection: 'mistake → correct',
+            type: 'spelling',
+            importance: 40
+          }
+        ],
+        totalErrorsFound: 1
+      }
+    });
+
+    const input = {
+      text: "This is a mistake in the text."
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn()
+      }
+    });
+
+    expect(result.errors[0].startIndex).toBe(10); // Position of "mistake"
+    expect(result.errors[0].endIndex).toBe(17); // End position of "mistake"
+  });
+});

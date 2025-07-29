@@ -1,6 +1,6 @@
 import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
 import type { SpellingErrorWithLocation } from "./index";
-import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
+import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 /**
  * Generate a comment for a single spelling/grammar error
@@ -15,10 +15,12 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
   // Determine type and emoji
   const isSpelling = error.type === 'spelling';
   const emoji = isSpelling ? '✏️' : '📝';
-  
-  // Build header with diff formatting
-  const diff = formatDiff(`"${error.text}"`, `"${error.correction}"`);
   const pluginLabel = isSpelling ? 'Spelling' : 'Grammar';
+  
+  // Format the diff - prioritize conciseCorrection if available
+  const diff = error.conciseCorrection 
+    ? formatConciseCorrection(error.conciseCorrection)
+    : formatDiff(`"${error.text}"`, `"${error.correction}"`);
   
   // Spelling errors are usually less severe than grammar errors
   const severity = isSpelling ? CommentSeverity.MEDIUM : CommentSeverity.MEDIUM;

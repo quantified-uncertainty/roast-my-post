@@ -85,6 +85,23 @@ export function formatDiff(oldValue: string, newValue: string, separator: string
 }
 
 /**
+ * Format a concise correction string, handling arrow format if present
+ * Used by plugins to format corrections like "teh → the" or "is → are"
+ */
+export function formatConciseCorrection(correction: string): string {
+  // Check if correction already has arrow format
+  if (correction.includes('→')) {
+    // Split and apply formatting
+    const parts = correction.split('→').map(s => s.trim());
+    if (parts.length === 2) {
+      return formatDiff(parts[0], parts[1]);
+    }
+  }
+  // Return as-is if no arrow format
+  return correction;
+}
+
+/**
  * Format a smart diff that only colors the changed parts
  * Best for similar strings where only a small part changes
  */

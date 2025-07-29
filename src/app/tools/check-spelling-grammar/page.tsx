@@ -3,13 +3,14 @@
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
 import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
+import { formatConciseCorrection } from '@/lib/analysis-plugins/utils/comment-styles';
 
 export default function CheckSpellingGrammarAutoPage() {
   return (
     <ToolPageTemplate
       tool={checkSpellingGrammarTool}
       formConfig={{
-        fieldOrder: ['text', 'context', 'maxErrors'],
+        fieldOrder: ['text', 'context', 'strictness', 'convention', 'maxErrors'],
         fieldConfigs: {
           text: {
             label: 'Text to Check',
@@ -22,6 +23,24 @@ export default function CheckSpellingGrammarAutoPage() {
             placeholder: 'E.g., "Technical documentation", "Blog post", "Academic paper"...',
             helpText: 'Optional context helps tailor suggestions to your document type',
             rows: 2
+          },
+          strictness: {
+            label: 'Checking Strictness',
+            helpText: 'How thorough should the checking be?',
+            enumOptions: [
+              { value: 'minimal', label: 'Minimal - Only major errors' },
+              { value: 'standard', label: 'Standard - Common errors and clarity issues' },
+              { value: 'thorough', label: 'Thorough - All issues including style' }
+            ]
+          },
+          convention: {
+            label: 'Spelling Convention',
+            helpText: 'Which English spelling convention to use',
+            enumOptions: [
+              { value: 'auto', label: 'Auto-detect' },
+              { value: 'US', label: 'US English' },
+              { value: 'UK', label: 'UK English' }
+            ]
           },
           maxErrors: {
             label: 'Maximum Errors to Return',
@@ -44,6 +63,8 @@ The team have been working hard on this project for the last 6 months. Between y
 
 Going forward, we should try and be more carefull with our planning. Me and my colleague will take the lead on this. Hopefully we wont make the same mistakes again.`,
               context: 'Business communication',
+              strictness: 'standard',
+              convention: 'auto',
               maxErrors: 50
             }
           },
@@ -57,6 +78,8 @@ When the server recieves a request, it first validates the input parameters. If 
 
 The response will include a status code and a body containing the requested data. In case of errors, the body will contain an error message explaining the issue.`,
               context: 'API documentation',
+              strictness: 'standard',
+              convention: 'US',
               maxErrors: 30
             }
           },
@@ -69,6 +92,8 @@ Our findings suggests that excessive social media use correlates with increased 
 
 Previous research have shown similar results, although the methodologies varied significantly. We believe our approach provides a more comprehensive understanding of the phenomenon.`,
               context: 'Academic research paper',
+              strictness: 'thorough',
+              convention: 'auto',
               maxErrors: 50
             }
           }
@@ -84,13 +109,22 @@ Previous research have shown similar results, although the methodologies varied 
         
         return (
           <div className="space-y-6">
-            {/* Summary */}
+            {/* Summary with metadata */}
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <p className="text-green-900">
-                Found <span className="font-semibold">{typedResult.errors.length}</span> issues in your text.
+                Found <span className="font-semibold">{typedResult.errors.length}</span> issues in your text
+                {typedResult.metadata?.totalErrorsFound && typedResult.metadata.totalErrorsFound > typedResult.errors.length && 
+                  ` (showing top ${typedResult.errors.length} of ${typedResult.metadata.totalErrorsFound} total)`}.
               </p>
+              {typedResult.metadata && (
+                <div className="mt-2 text-sm text-green-800 space-y-1">
+                  <p>Convention: <span className="font-medium">{typedResult.metadata.convention} English</span></p>
+                  {typedResult.metadata.processingTime && (
+                    <p>Processing time: <span className="font-medium">{typedResult.metadata.processingTime}ms</span></p>
+                  )}
+                </div>
+              )}
             </div>
-
 
             {/* Errors list */}
             {typedResult.errors.length === 0 ? (
@@ -126,14 +160,18 @@ Previous research have shown similar results, although the methodologies varied 
                     </div>
                     
                     <div className="mb-2">
-                      <p className="text-sm mb-1">
-                        <span className="line-through text-red-700">{error.text}</span>
-                        {' → '}
-                        <span className="text-green-700 font-medium">{error.correction}</span>
-                      </p>
-                      {error.conciseCorrection && (
-                        <p className="text-xs mt-1 font-mono bg-gray-100 inline-block px-2 py-1 rounded">
-                          {error.conciseCorrection}
+                      {error.conciseCorrection ? (
+                        <div 
+                          className="text-sm font-medium"
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatConciseCorrection(error.conciseCorrection) 
+                          }}
+                        />
+                      ) : (
+                        <p className="text-sm mb-1">
+                          <span className="line-through text-red-700">{error.text}</span>
+                          {' → '}
+                          <span className="text-green-700 font-medium">{error.correction}</span>
                         </p>
                       )}
                     </div>
@@ -148,6 +186,15 @@ Previous research have shown similar results, although the methodologies varied 
               </div>
             )}
 
+            {/* JSON View at bottom */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-3">Raw JSON Output</h3>
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <pre className="whitespace-pre-wrap font-mono text-sm overflow-auto">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            </div>
           </div>
         );
       }}

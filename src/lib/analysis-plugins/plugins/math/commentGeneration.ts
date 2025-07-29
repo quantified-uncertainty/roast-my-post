@@ -2,7 +2,7 @@ import type {
   ExtractedMathExpression,
 } from "@/tools/extract-math-expressions";
 import type { ExtractedMathExpression as ExtractedMathExpressionClass } from "./index";
-import { styleHeader, CommentSeverity, importanceToSeverity, formatDiff, formatSmartDiff, SEVERITY_STYLES, errorScoreToSeverity } from "../../utils/comment-styles";
+import { styleHeader, CommentSeverity, importanceToSeverity, formatDiff, formatConciseCorrection, formatSmartDiff, SEVERITY_STYLES, errorScoreToSeverity } from "../../utils/comment-styles";
 
 /**
  * Generate a comment for a single math expression
@@ -30,18 +30,7 @@ function generateErrorComment(expression: ExtractedMathExpression): string {
   
   // Priority 1: Use conciseCorrection if available
   if (expression.conciseCorrection) {
-    // Check if conciseCorrection already has arrow format
-    if (expression.conciseCorrection.includes('→')) {
-      // Split and apply formatting
-      const parts = expression.conciseCorrection.split('→').map(s => s.trim());
-      if (parts.length === 2) {
-        headerContent = formatDiff(parts[0], parts[1]);
-      } else {
-        headerContent = expression.conciseCorrection;
-      }
-    } else {
-      headerContent = expression.conciseCorrection;
-    }
+    headerContent = formatConciseCorrection(expression.conciseCorrection);
   } 
   // Priority 2: Try to extract concise diff from full versions
   else if (expression.correctedVersion) {
