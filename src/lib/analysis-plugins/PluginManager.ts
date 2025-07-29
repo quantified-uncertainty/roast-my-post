@@ -21,11 +21,19 @@ import {
   AnalysisResult,
   SimpleAnalysisPlugin,
 } from "./types";
+import { PluginType, type PluginSelection } from "./types/plugin-types";
 import { createChunksWithTool } from "./utils/createChunksWithTool";
+
+// Import all plugins
+import { MathPlugin } from "./plugins/math";
+import { SpellingPlugin } from "./plugins/spelling";
+import { FactCheckPlugin } from "./plugins/fact-check";
+import { ForecastPlugin } from "./plugins/forecast";
 
 export interface PluginManagerConfig {
   sessionConfig?: HeliconeSessionConfig;
   jobId?: string; // For logging integration
+  pluginSelection?: PluginSelection; // Optional plugin selection configuration
 }
 
 export interface SimpleDocumentAnalysisResult {
@@ -70,10 +78,13 @@ export class PluginManager {
   private sessionConfig?: HeliconeSessionConfig;
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
+  private pluginSelection?: PluginSelection;
+  private allPlugins?: Map<PluginType, SimpleAnalysisPlugin>;
 
   constructor(config: PluginManagerConfig = {}) {
     this.sessionConfig = config.sessionConfig;
     this.pluginLogger = new PluginLogger(config.jobId);
+    this.pluginSelection = config.pluginSelection;
   }
 
   /**
@@ -382,14 +393,8 @@ export class PluginManager {
       logger.info(`Starting document analysis with plugin system...`);
       const pluginStartTime = Date.now();
 
-      // TODO: Make plugin selection configurable
-      const plugins: SimpleAnalysisPlugin[] = [
-        // Import here to avoid circular dependencies
-        new (await import("./plugins/math")).MathPlugin(),
-        // new (await import("./plugins/spelling")).SpellingPlugin(),
-        new (await import("./plugins/fact-check")).FactCheckPlugin(),
-        new (await import("./plugins/forecast")).ForecastPlugin(),
-      ];
+      // Get selected plugins
+      const plugins = await this.getSelectedPlugins();
 
       // Get full document content with prepend
       const { content: fullContent, prependLineCount } =
@@ -487,6 +492,67 @@ export class PluginManager {
         jobLogString: this.pluginLogger.generateJobLogString(),
       };
     }
+  }
+
+  /**
+   * Initialize all plugins once
+   */
+  private initializeAllPlugins(): Map<PluginType, SimpleAnalysisPlugin> {
+    if (this.allPlugins) {
+      return this.allPlugins;
+    }
+    
+    // Create all plugin instances once
+    this.allPlugins = new Map<PluginType, SimpleAnalysisPlugin>([
+      [PluginType.MATH, new MathPlugin()],
+      [PluginType.SPELLING, new SpellingPlugin()],
+      [PluginType.FACT_CHECK, new FactCheckPlugin()],
+      [PluginType.FORECAST, new ForecastPlugin()],
+    ]);
+    
+    logger.info(`Initialized all ${this.allPlugins.size} plugins`);
+    return this.allPlugins;
+  }
+  
+  /**
+   * Get selected plugins based on configuration
+   */
+  private async getSelectedPlugins(): Promise<SimpleAnalysisPlugin[]> {
+    const allPlugins = this.initializeAllPlugins();
+    
+    // Default plugins if no selection specified
+    const defaultPluginTypes = [
+      PluginType.MATH,
+      PluginType.FACT_CHECK,
+      PluginType.FORECAST,
+    ];
+    
+    let selectedTypes: PluginType[];
+    
+    if (this.pluginSelection?.include) {
+      // Use explicitly included plugins
+      selectedTypes = this.pluginSelection.include;
+    } else if (this.pluginSelection?.exclude) {
+      // Use defaults minus excluded plugins
+      selectedTypes = defaultPluginTypes.filter(
+        type => !this.pluginSelection!.exclude!.includes(type)
+      );
+    } else {
+      // Use all defaults
+      selectedTypes = defaultPluginTypes;
+    }
+    
+    // Get the selected plugin instances
+    const selectedPlugins: SimpleAnalysisPlugin[] = [];
+    for (const type of selectedTypes) {
+      const plugin = allPlugins.get(type);
+      if (plugin) {
+        selectedPlugins.push(plugin);
+      }
+    }
+    
+    logger.info(`Selected ${selectedPlugins.length} plugins: ${selectedTypes.join(', ')}`);
+    return selectedPlugins;
   }
 
   /**

@@ -1,25 +1,26 @@
 /**
- * Multi-Epistemic Evaluation workflow for document analysis
+ * Spelling and Grammar Analysis workflow for document analysis
  * 
- * This is now a simple wrapper around the plugin system.
- * The main logic has been moved to PluginManager.analyzeDocument()
+ * This workflow uses only the spelling/grammar plugin for focused language analysis.
+ * It's used when agentInfo.extendedCapabilityId === "spelling-grammar"
  */
 
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins/PluginManager";
+import { PluginManager } from "../../analysis-plugins/PluginManager";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
+import { logger } from "../../logger";
 
-export async function analyzeWithMultiEpistemicEval(
+export async function analyzeSpellingGrammar(
   document: Document,
   agentInfo: Agent,
   options: {
     targetHighlights?: number;
     sessionConfig?: HeliconeSessionConfig;
-    jobId?: string; // For logging integration
+    jobId?: string;
   } = {}
 ): Promise<{
   thinking: string;
@@ -28,15 +29,16 @@ export async function analyzeWithMultiEpistemicEval(
   grade?: number;
   highlights: Comment[];
   tasks: TaskResult[];
-  jobLogString?: string; // Include job log string in results
+  jobLogString?: string;
 }> {
-  // Create plugin manager with default plugin selection for multi-epistemic eval
-  // By default, exclude spelling plugin for multi-epistemic eval
+  logger.info(`Starting spelling/grammar analysis for agent ${agentInfo.name}`);
+  
+  // Create plugin manager with only the spelling plugin
   const manager = new PluginManager({
     sessionConfig: options.sessionConfig,
     jobId: options.jobId,
     pluginSelection: {
-      exclude: [PluginType.SPELLING],
+      include: [PluginType.SPELLING], // Only use spelling/grammar plugin
     },
   });
 
@@ -45,14 +47,14 @@ export async function analyzeWithMultiEpistemicEval(
     targetHighlights: options.targetHighlights,
   });
 
+  // The spelling plugin provides a grade, so we can include it
   return {
     thinking: result.thinking,
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
     highlights: result.highlights,
-    tasks: result.tasks, // TaskResult interface is compatible
-    jobLogString: result.jobLogString, // Include centralized plugin logs
+    tasks: result.tasks,
+    jobLogString: result.jobLogString,
   };
 }
-

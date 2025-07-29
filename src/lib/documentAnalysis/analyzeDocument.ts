@@ -6,6 +6,7 @@ import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
+import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 import type { HeliconeSessionConfig } from "../helicone/sessions";
@@ -33,11 +34,10 @@ export async function analyzeDocument(
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
   
-  // Note: spelling-grammar is now handled by the plugin system in multi-epistemic-eval
-  // If we encounter a spelling-grammar agent, use the multi-epistemic-eval workflow
+  // Use dedicated spelling/grammar workflow for spelling-grammar agents
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
-    logger.info(`Using multi-epistemic evaluation workflow for spelling/grammar agent ${agentInfo.name}`);
-    return await analyzeWithMultiEpistemicEval(document, agentInfo, {
+    logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
+    return await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
       sessionConfig,
       jobId
