@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { JobStatusBadge, JobStatusIcon } from "./JobStatusBadge";
-import { formatCost, formatDuration, formatRelativeDate } from "@/lib/job/formatters";
+import { formatCostFromDollars, formatDuration, formatRelativeDate } from "@/lib/job/formatters";
 import { JobData } from "@/lib/job/types";
 import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/lib/job/transformers";
 
@@ -100,7 +100,7 @@ export function JobCard({
       {!compact && (
         <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
           <span>{formatDuration(job.durationInSeconds)}</span>
-          <span>{formatCost(job.costInCents)}</span>
+          <span>{formatCostFromDollars(job.priceInDollars)}</span>
         </div>
       )}
     </div>

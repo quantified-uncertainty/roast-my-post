@@ -26,6 +26,7 @@ async function getDailySpending(userId: string, days: number = 30) {
       id: true,
       createdAt: true,
       costInCents: true,
+      priceInDollars: true,
     },
     orderBy: {
       createdAt: 'asc',
@@ -51,12 +52,17 @@ async function getDailySpending(userId: string, days: number = 30) {
     const dateKey = job.createdAt.toISOString().split('T')[0];
     const existing = dailySpending.get(dateKey) || { costInCents: 0, evaluationCount: 0 };
     
-    existing.costInCents += job.costInCents || 0;
+    // Use priceInDollars if available, otherwise fall back to costInCents
+    const costInCents = job.priceInDollars 
+      ? Math.round(parseFloat(job.priceInDollars.toString()) * 100)
+      : (job.costInCents || 0);
+    
+    existing.costInCents += costInCents;
     existing.evaluationCount += 1;
     
     dailySpending.set(dateKey, existing);
     
-    totalCostInCents += job.costInCents || 0;
+    totalCostInCents += costInCents;
     totalEvaluations += 1;
   }
 

@@ -36,6 +36,7 @@ export interface EvaluationDisplayData {
   
   // Run stats
   costInCents?: number | null;
+  priceInDollars?: number | string | null;
   durationInSeconds?: number | null;
   createdAt: Date | string;
   
@@ -89,6 +90,7 @@ export interface EvaluationContentProps {
   
   // Run stats
   costInCents?: number | null;
+  priceInDollars?: number | string | null;
   durationInSeconds?: number | null;
   createdAt: Date | string;
   

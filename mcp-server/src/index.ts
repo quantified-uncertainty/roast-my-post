@@ -547,7 +547,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     agentVersion: agentVersion?.version || 0,
                     status: job?.status || "NO_JOB",
                     grade: latestVersion?.grade || null,
-                    cost: job?.costInCents ? job.costInCents / 100 : 0,
+                    cost: job?.priceInDollars ? parseFloat(job.priceInDollars.toString()) : (job?.costInCents ? job.costInCents / 100 : 0),
                     createdAt: evaluation.createdAt,
                     error: job?.error || null,
                   };
@@ -607,7 +607,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             stats.evaluationsInPeriod++;
 
             if (evaluationVersion.job) {
-              stats.totalCost += (evaluationVersion.job.costInCents || 0) / 100;
+              stats.totalCost += evaluationVersion.job.priceInDollars ? parseFloat(evaluationVersion.job.priceInDollars.toString()) : ((evaluationVersion.job.costInCents || 0) / 100);
 
               if (evaluationVersion.job.status === "COMPLETED") {
                 successCount++;
@@ -925,7 +925,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Cost and time tracking
           if (job) {
-            stats.totalCost += (job.costInCents || 0) / 100;
+            stats.totalCost += job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : ((job.costInCents || 0) / 100);
             if (job.durationInSeconds) {
               totalProcessingTime += job.durationInSeconds;
               processedCount++;
@@ -1063,7 +1063,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             results.pendingCount++;
           }
 
-          results.totalCost += (job.costInCents || 0) / 100;
+          results.totalCost += job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : ((job.costInCents || 0) / 100);
 
           results.evaluations.push({
             jobId: job.id,
@@ -1151,7 +1151,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             id: job.id,
             completedAt: job.completedAt,
             duration: job.durationInSeconds,
-            cost: job.costInCents ? job.costInCents / 100 : 0,
+            cost: job.priceInDollars ? parseFloat(job.priceInDollars.toString()) : (job.costInCents ? job.costInCents / 100 : 0),
             agent: (job as any).evaluation?.agent?.id,
             document: (job as any).evaluation?.document?.id,
           }));

@@ -6,7 +6,7 @@ import { Bot } from "lucide-react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { EvaluationSection } from "./EvaluationSection";
-import { formatCost, formatDuration, formatDate } from "@/lib/job/formatters";
+import { formatCost, formatCostFromDollars, formatDuration, formatDate } from "@/lib/job/formatters";
 import { 
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon,
@@ -28,6 +28,7 @@ interface EvaluationDetailsSectionProps {
     isEphemeral: boolean;
   } | null;
   costInCents?: number | null;
+  priceInDollars?: number | string | null;
   durationInSeconds?: number | null;
   createdAt?: string | Date;
   evaluationData?: any; // Full evaluation data for export
@@ -46,6 +47,7 @@ export function EvaluationDetailsSection({
   grade,
   ephemeralBatch,
   costInCents,
+  priceInDollars,
   durationInSeconds,
   createdAt,
   evaluationData,
@@ -99,6 +101,7 @@ export function EvaluationDetailsSection({
         id: job.id,
         status: job.status,
         costInCents: job.costInCents,
+        priceInDollars: job.priceInDollars,
         durationInSeconds: job.durationInSeconds,
         llmModel: job.llmModel,
         inputTokens: job.inputTokens,
@@ -242,14 +245,21 @@ export function EvaluationDetailsSection({
                   </dd>
                 </div>
               )}
-              {costInCents !== undefined && costInCents !== null && (
+              {(priceInDollars !== undefined && priceInDollars !== null) ? (
+                <div>
+                  <dt className="text-xs text-gray-500 uppercase tracking-wide">Cost</dt>
+                  <dd className="text-sm font-medium text-gray-900 mt-1">
+                    {formatCostFromDollars(priceInDollars)}
+                  </dd>
+                </div>
+              ) : (costInCents !== undefined && costInCents !== null && (
                 <div>
                   <dt className="text-xs text-gray-500 uppercase tracking-wide">Cost</dt>
                   <dd className="text-sm font-medium text-gray-900 mt-1">
                     {formatCost(costInCents)}
                   </dd>
                 </div>
-              )}
+              ))}
               {createdAt && (
                 <div>
                   <dt className="text-xs text-gray-500 uppercase tracking-wide">Created</dt>
@@ -448,7 +458,9 @@ function evaluationToMarkdown(data: any): string {
     if (job.status) {
       md += `**Status:** ${job.status}\n`;
     }
-    if (job.costInCents !== null && job.costInCents !== undefined) {
+    if (job.priceInDollars !== null && job.priceInDollars !== undefined) {
+      md += `**Cost:** $${parseFloat(job.priceInDollars.toString()).toFixed(4)}\n`;
+    } else if (job.costInCents !== null && job.costInCents !== undefined) {
       md += `**Cost:** $${(job.costInCents / 100).toFixed(4)}\n`;
     }
     if (job.durationInSeconds !== null && job.durationInSeconds !== undefined) {

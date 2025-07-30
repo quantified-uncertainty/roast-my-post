@@ -196,7 +196,6 @@ export class JobModel {
     jobId: string,
     data: {
       llmThinking: string | null;
-      costInCents: number;
       priceInDollars: number;
       durationInSeconds: number;
       logs: string;
@@ -553,7 +552,6 @@ export class JobModel {
       const totalOutputTokens = 0; // Legacy field, kept for compatibility
 
       // Try to get accurate cost from Helicone first
-      let costInCents: number;
       let priceInDollars: number;
       
       try {
@@ -562,9 +560,7 @@ export class JobModel {
         if (heliconeData) {
           // Store exact price in dollars with full precision
           priceInDollars = heliconeData.totalCostUSD;
-          // Keep costInCents for backward compatibility, but use Math.ceil to avoid 0
-          costInCents = Math.ceil(heliconeData.totalCostUSD * 100);
-          logger.info(`Using Helicone cost data for job ${job.id}: $${priceInDollars} (${costInCents} cents)`);
+          logger.info(`Using Helicone cost data for job ${job.id}: $${priceInDollars}`);
         } else {
           throw new Error('Helicone data not available');
         }
@@ -572,7 +568,7 @@ export class JobModel {
         // Fallback to manual cost calculation
         logger.warn(`Failed to fetch Helicone cost for job ${job.id}, falling back to manual calculation:`, { error: error instanceof Error ? error.message : String(error) });
         
-        costInCents = calculateApiCost(
+        const costInCents = calculateApiCost(
           {
             input_tokens: totalInputTokens,
             output_tokens: totalOutputTokens,
@@ -643,7 +639,6 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
 
       await this.markJobAsCompleted(job.id, {
         llmThinking: evaluationOutputs.thinking,
-        costInCents: costInCents,
         priceInDollars: priceInDollars,
         durationInSeconds: (Date.now() - startTime) / 1000,
         logs: logContent,
