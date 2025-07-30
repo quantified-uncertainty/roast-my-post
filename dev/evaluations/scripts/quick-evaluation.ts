@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 
-import { checkSpellingGrammarTool } from '@roast/web/src/tools/check-spelling-grammar/index';
-import { logger } from '@roast/web/src/lib/logger';
+import { checkSpellingGrammarTool } from '../../../apps/web/src/tools/check-spelling-grammar/index';
+import { logger } from '../../../apps/web/src/lib/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 

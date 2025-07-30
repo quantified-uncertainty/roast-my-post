@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { GET } from "../route";
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 // Mock dependencies
 jest.mock("@/lib/auth-helpers");
-jest.mock("@/lib/prisma", () => ({
+jest.mock("@roast/db", () => ({
   prisma: {
     agent: {
       findUnique: jest.fn(),

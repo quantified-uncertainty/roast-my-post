@@ -1,10 +1,10 @@
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 import { authenticateRequestSessionFirst } from '@/lib/auth-helpers';
 
 // Mock dependencies
-jest.mock('@/lib/prisma', () => ({
+jest.mock('@roast/db', () => ({
   prisma: {
     agent: {
       findUnique: jest.fn(),

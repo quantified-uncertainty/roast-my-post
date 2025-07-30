@@ -3,13 +3,13 @@ import { POST } from "../route";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 // Mock dependencies
 jest.mock("@/lib/auth-helpers");
 jest.mock("@/lib/articleImport");
 jest.mock("@/models/Document");
-jest.mock("@/lib/prisma", () => ({
+jest.mock("@roast/db", () => ({
   prisma: {
     $transaction: jest.fn(),
     agent: {

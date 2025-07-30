@@ -1,10 +1,10 @@
 import { POST } from "./route";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies
-jest.mock("@/lib/prisma", () => ({
+jest.mock("@roast/db", () => ({
   prisma: {
     $transaction: jest.fn(),
     agentEvalBatch: {

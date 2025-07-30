@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 import { UserModel } from '../User';
 
 describe('UserModel Integration Tests - Email Privacy', () => {

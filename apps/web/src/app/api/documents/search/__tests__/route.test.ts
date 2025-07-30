@@ -1,11 +1,11 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 import { authenticateRequest } from '@/lib/auth-helpers';
 import { DocumentModel } from '@/models/Document';
 
 // Mock dependencies
-jest.mock('@/lib/prisma', () => ({
+jest.mock('@roast/db', () => ({
   prisma: {
     document: {
       findMany: jest.fn(),

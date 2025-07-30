@@ -1,8 +1,8 @@
 import { DocumentModel } from '../Document';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 
 // Mock Prisma
-jest.mock('@/lib/prisma', () => ({
+jest.mock('@roast/db', () => ({
   prisma: {
     document: {
       findUnique: jest.fn(),

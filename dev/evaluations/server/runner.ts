@@ -1,7 +1,7 @@
-import { checkSpellingGrammarTool } from '@roast/web/src/tools/check-spelling-grammar';
-import { logger } from '@roast/web/src/lib/logger';
+import { checkSpellingGrammarTool } from '../../../apps/web/src/tools/check-spelling-grammar';
+import { logger } from '../../../apps/web/src/lib/logger';
 import type { TestCase } from '../data/test-cases';
-import { sessionContext } from '@roast/web/src/lib/helicone/sessionContext';
+import { sessionContext } from '../../../apps/web/src/lib/helicone/sessionContext';
 import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables

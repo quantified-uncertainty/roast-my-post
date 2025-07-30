@@ -1,10 +1,10 @@
 import { GET, DELETE } from "./route";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies
-jest.mock("@/lib/prisma", () => ({
+jest.mock("@roast/db", () => ({
   prisma: {
     agentEvalBatch: {
       findFirst: jest.fn(),

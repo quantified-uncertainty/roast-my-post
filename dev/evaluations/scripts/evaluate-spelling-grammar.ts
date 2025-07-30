@@ -1,11 +1,11 @@
 #!/usr/bin/env npx tsx
-import { logger } from "@roast/web/src/lib/logger";
-import { checkSpellingGrammarTool } from "@roast/web/src/tools/check-spelling-grammar";
+import { logger } from "../../../apps/web/src/lib/logger";
+import { checkSpellingGrammarTool } from "../../../apps/web/src/tools/check-spelling-grammar";
 import type { 
   CheckSpellingGrammarInput, 
   CheckSpellingGrammarOutput,
   SpellingGrammarError 
-} from "@roast/web/src/tools/check-spelling-grammar";
+} from "../../../apps/web/src/tools/check-spelling-grammar";
 import * as fs from "fs";
 import * as path from "path";
 

@@ -8,7 +8,7 @@
  */
 
 import { prisma } from '@roast/db';
-import { logger } from '@roast/web/src/lib/logger';
+import { logger } from '../../../apps/web/src/lib/logger';
 import { cleanupExpiredBatches } from "./cleanup-expired-batches";
 
 // Configuration with validation

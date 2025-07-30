@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 import { DocumentModel } from '../Document';
 import { nanoid } from 'nanoid';
 
