@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate --schema=../../internal-packages/db/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",
@@ -17,11 +17,13 @@
     "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.'",
     "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.'",
     "test:ci": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.'",
+    "test:debug": "TEST_DEBUG=true jest --config ./config/jest/jest.config.cjs",
     "process-jobs": "dotenv -e .env.local -- tsx src/scripts/process-job.ts",
     "process-jobs-adaptive": "dotenv -e .env.local -- tsx src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "dotenv -e .env.local -- tsx src/scripts/cleanup-stale-jobs.ts",
     "test-helicone-sessions": "dotenv -e .env.local -- tsx src/scripts/test-helicone-sessions.ts",
-    "helicone-cost-report": "dotenv -e .env.local -- tsx src/scripts/helicone-cost-report.ts"
+    "helicone-cost-report": "dotenv -e .env.local -- tsx src/scripts/helicone-cost-report.ts",
+    "postinstall": "prisma generate --schema=../../internal-packages/db/prisma/schema.prisma"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -47,6 +49,7 @@
     "next-auth": "5.0.0-beta.28",
     "next-safe-action": "^7.10.8",
     "openai": "^4.93.0",
+    "@prisma/client": "^6.13.0",
     "prism-react-renderer": "^2.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -95,6 +98,7 @@
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.3.2",
     "tsx": "^4.7.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "prisma": "^6.13.0"
   }
 }

@@ -52,7 +52,9 @@ class Logger {
   }
 
   debug(message: string, context?: LogContext) {
-    if (this.isDevelopment && !this.isTest) {
+    // Allow debug logs in tests when explicitly enabled
+    const allowTestDebug = process.env.JEST_DEBUG === "true" || process.env.TEST_DEBUG === "true";
+    if (this.isDevelopment && (!this.isTest || allowTestDebug)) {
       this.log("debug", message, context);
     }
   }

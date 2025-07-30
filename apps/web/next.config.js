@@ -50,6 +50,12 @@ const nextConfig = {
         'canvas': 'commonjs canvas',
         'sharp': 'commonjs sharp',
       });
+
+      // Ensure Prisma engines are included in the bundle
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@prisma/client': require.resolve('@roast/db/generated'),
+      };
     } else {
       // For client-side, completely ignore these modules
       config.resolve.fallback = {
@@ -61,6 +67,31 @@ const nextConfig = {
         'path': false,
         'os': false,
       };
+    }
+    
+    // Copy Prisma engines to output directory
+    if (isServer) {
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new (require('webpack').IgnorePlugin)({
+          checkResource(resource) {
+            const lazyImports = [
+              '@nestjs/microservices',
+              '@nestjs/websockets/socket-module',
+              'class-transformer/storage',
+            ];
+            if (!lazyImports.includes(resource)) {
+              return false;
+            }
+            try {
+              require.resolve(resource);
+            } catch (err) {
+              return true;
+            }
+            return false;
+          },
+        }),
+      );
     }
     
     // Ignore native node modules
