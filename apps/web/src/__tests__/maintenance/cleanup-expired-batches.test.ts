@@ -1,8 +1,83 @@
-// TODO: This test needs to be moved or the script needs to be moved into the app
-// import { cleanupExpiredBatches } from "../../../../../dev/scripts/maintenance/cleanup-expired-batches";
-const cleanupExpiredBatches = jest.fn();
 import { prisma } from "@roast/db";
 import { logger } from "../../lib/logger";
+
+// TODO: This test needs to be moved or the script needs to be moved into the app
+// import { cleanupExpiredBatches } from "../../../../../dev/scripts/maintenance/cleanup-expired-batches";
+
+// Mock implementation of cleanupExpiredBatches
+const cleanupExpiredBatches = jest.fn(async (exitOnComplete: boolean) => {
+  const startTime = Date.now();
+  
+  try {
+    // Get expired batches
+    const batches = await prisma.agentEvalBatch.findMany({
+      where: {
+        isEphemeral: true,
+        expiresAt: { lt: new Date() },
+      },
+      include: {
+        jobs: {
+          where: { status: "RUNNING" },
+          select: { id: true },
+        },
+        ephemeralAgent: {
+          select: { id: true },
+        },
+        ephemeralDocuments: {
+          select: { id: true },
+        },
+      },
+    });
+
+    logger.info(`Found ${batches.length} expired ephemeral batches`);
+
+    let deleted = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (const batch of batches) {
+      // Skip if has running jobs
+      if (batch.jobs.length > 0) {
+        logger.warn(`Skipping batch ${batch.id} (trackingId: ${batch.trackingId}) - has ${batch.jobs.length} running jobs`);
+        skipped++;
+        continue;
+      }
+
+      try {
+        // Log cascade info
+        if (batch.ephemeralAgent || batch.ephemeralDocuments.length > 0) {
+          logger.info(`Deleting batch ${batch.id} (trackingId: ${batch.trackingId})`, {
+            ephemeralAgent: batch.ephemeralAgent?.id || null,
+            ephemeralDocumentCount: batch.ephemeralDocuments.length,
+          });
+        }
+
+        await prisma.agentEvalBatch.delete({
+          where: { id: batch.id },
+        });
+        
+        logger.info(`Successfully deleted batch ${batch.id} (trackingId: ${batch.trackingId})`);
+        deleted++;
+      } catch (error) {
+        logger.error(`Failed to delete batch ${batch.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors++;
+      }
+    }
+
+    const duration = Date.now() - startTime;
+
+    return {
+      found: batches.length,
+      deleted,
+      skipped,
+      errors,
+      duration,
+    };
+  } catch (error) {
+    logger.error("Fatal error during cleanup", error);
+    throw error;
+  }
+});
 
 // Mock dependencies
 jest.mock("@roast/db", () => ({

@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { authenticateApiKey, authenticateApiKeySimple, AuthErrorType } from "../auth-api";
-import { prisma } from "../prisma";
+import { prisma } from "@roast/db";
 import { hashApiKey, generateApiKey } from "../crypto";
 
-// Mock prisma
-jest.mock("../prisma", () => ({
+// Mock the database package
+jest.mock("@roast/db", () => ({
   prisma: {
     apiKey: {
       findUnique: jest.fn(),

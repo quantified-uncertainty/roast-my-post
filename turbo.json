@@ -18,17 +18,22 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "@roast/db#gen"],
-      "outputs": ["dist/**", ".next/**", "build/**"]
+      "outputs": ["dist/**", ".next/**", "build/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/eslint*"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "@roast/db#gen"]
+      "dependsOn": ["^build", "@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/tsconfig*.json"]
     },
     "test": {
       "dependsOn": ["build"],
@@ -37,11 +42,30 @@
     },
     "test:unit": {
       "dependsOn": ["build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
     },
     "test:integration": {
       "dependsOn": ["build"],
       "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
+      "cache": false
+    },
+    "test:ci": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.e2e.test.ts", "**/jest.config.*"],
+      "cache": false
+    },
+    "test:llm": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.llm.test.ts", "**/jest.config.*"],
       "cache": false
     },
     "gen": {

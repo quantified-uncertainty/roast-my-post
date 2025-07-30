@@ -13,7 +13,9 @@ NC='\033[0m' # No Color
 
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+# In monorepo, project root is two levels up from dev/scripts
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+DB_PACKAGE_DIR="$PROJECT_ROOT/internal-packages/db"
 
 # Function to create backup
 create_backup() {
@@ -28,7 +30,13 @@ create_backup() {
 # Function to count database rows
 check_database_health() {
     echo -e "${YELLOW}Checking database health...${NC}"
-    local total_rows=$(psql -U postgres -d roast_my_post -t -c "
+    # Extract database name from DATABASE_URL if available
+    local db_name="roast_my_post"
+    if [[ -n "$DATABASE_URL" ]]; then
+        db_name=$(echo $DATABASE_URL | sed -n 's/.*/\([^?]*\).*/\1/p')
+    fi
+    
+    local total_rows=$(psql "$DATABASE_URL" -t -c "
         SELECT SUM(count) FROM (
             SELECT COUNT(*) as count FROM \"Agent\"
             UNION ALL SELECT COUNT(*) FROM \"Document\"
@@ -49,16 +57,10 @@ check_database_health() {
     fi
 }
 
-# Check if we're in a subdirectory with its own node_modules
-if [[ -f "./node_modules/.bin/prisma" && "$PWD" != "$PROJECT_ROOT" ]]; then
-    echo -e "${RED}ERROR: Detected Prisma in subdirectory!${NC}"
-    echo "Current directory: $PWD"
-    echo "Please run Prisma commands from the project root: $PROJECT_ROOT"
-    echo ""
-    echo "To fix this, run:"
-    echo "  cd $PROJECT_ROOT"
-    echo "  npm run ${1}:${2:-}"
-    exit 1
+# Check if we're in the wrong directory
+if [[ "$PWD" != "$DB_PACKAGE_DIR" && "$PWD" != "$PROJECT_ROOT" ]]; then
+    echo -e "${YELLOW}Note: Running from $PWD${NC}"
+    echo "Switching to database package directory: $DB_PACKAGE_DIR"
 fi
 
 # Parse Prisma command
@@ -119,7 +121,7 @@ elif [[ "$COMMAND" == "migrate" ]]; then
     esac
 fi
 
-# Execute the Prisma command
-echo -e "${GREEN}Executing: npx prisma $@${NC}"
-cd "$PROJECT_ROOT"
-exec npx prisma "$@"
+# Execute the Prisma command from the db package directory
+echo -e "${GREEN}Executing: pnpm prisma $@${NC}"
+cd "$DB_PACKAGE_DIR"
+exec pnpm prisma "$@"

@@ -46,6 +46,7 @@ next-env.d.ts
 # turbo
 .turbo/
 */.turbo/
+**/.turbo/
 
 # Environment variables
 .env
@@ -79,5 +80,15 @@ backups/
 *.bak
 .env.backup
 .env.bak
+
+# pnpm
+.pnpm-store/
+
+# Monorepo build outputs
+**/dist
+**/build
+**/.next
+**/coverage
+**/*.tsbuildinfo
 # Evaluation results
 evaluations/results/

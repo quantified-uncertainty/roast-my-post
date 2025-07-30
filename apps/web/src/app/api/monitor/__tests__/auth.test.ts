@@ -9,7 +9,22 @@ jest.mock('@/lib/auth-helpers', () => ({
 }));
 
 jest.mock('@/lib/auth', () => ({
+  auth: jest.fn(),
   isAdmin: jest.fn(),
+}));
+
+jest.mock('@/lib/api-response-helpers', () => ({
+  commonErrors: {
+    unauthorized: jest.fn(() => new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })),
+    forbidden: jest.fn(() => new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 })),
+    serverError: jest.fn((message) => new Response(JSON.stringify({ error: message }), { status: 500 })),
+  },
+}));
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: jest.fn(),
+  },
 }));
 
 jest.mock('@roast/db', () => ({
@@ -21,6 +36,12 @@ jest.mock('@roast/db', () => ({
     document: { count: jest.fn() },
     agent: { count: jest.fn() },
     $transaction: jest.fn(),
+  },
+  JobStatus: {
+    PENDING: 'PENDING',
+    RUNNING: 'RUNNING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
   },
 }));
 
@@ -51,16 +72,52 @@ describe('Monitor Routes Authentication', () => {
       
       // Mock all the required database calls
       const { prisma } = require('@roast/db');
-      prisma.job.groupBy.mockResolvedValue([]);
+      
+      // Job stats grouped by status
+      prisma.job.groupBy.mockResolvedValue([
+        { status: 'COMPLETED', _count: { id: 10 } },
+        { status: 'FAILED', _count: { id: 2 } },
+        { status: 'RUNNING', _count: { id: 1 } },
+      ]);
+      
+      // Jobs created today
       prisma.job.findMany.mockResolvedValue([]);
-      prisma.job.aggregate.mockResolvedValue({ _avg: { durationInSeconds: null }, _sum: { costInCents: null } });
+      
+      // Job aggregates
+      prisma.job.aggregate.mockResolvedValue({ 
+        _avg: { durationInSeconds: 45.5 }, 
+        _sum: { priceInDollars: 12.34 } 
+      });
+      
+      // Counts
+      prisma.job.count.mockResolvedValue(0);
       prisma.evaluation.count.mockResolvedValue(0);
       prisma.evaluationComment.count.mockResolvedValue(0);
-      prisma.evaluationVersion.aggregate.mockResolvedValue({ _avg: { grade: null } });
-      prisma.$transaction.mockResolvedValue([0, 0]);
+      prisma.evaluationVersion.aggregate.mockResolvedValue({ _avg: { grade: 7.5 } });
+      prisma.document.count.mockResolvedValue(0);
+      prisma.agent.count.mockResolvedValue(0);
+      
+      // Transaction for recent counts
+      prisma.$transaction.mockResolvedValue([5, 3]);
       
       const response = await getStats(mockRequest);
+      if (response.status !== 200) {
+        const errorData = await response.json();
+        console.error('Response error:', errorData);
+        console.error('Response status:', response.status);
+      }
       expect(response.status).toBe(200);
+      const data = await response.json();
+      
+      // Verify the response structure
+      expect(data).toHaveProperty('jobs');
+      expect(data).toHaveProperty('evaluations');
+      expect(data).toHaveProperty('documents');
+      expect(data).toHaveProperty('agents');
+      
+      // Check some specific values
+      expect(data.jobs.total).toBe(13); // 10 + 2 + 1
+      expect(data.evaluations.avgGrade).toBe(7.5);
     });
   });
 
