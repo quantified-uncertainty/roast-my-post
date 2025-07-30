@@ -183,8 +183,8 @@ export function EvaluationsTab({
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>{formatDateWithTime(evalItem.createdAt)}</span>
                       <div className="flex space-x-3">
-                        {evalItem.priceInDollars !== undefined && (
-                          <span>${evalItem.priceInDollars?.toFixed(2) || '0.00'}</span>
+                        {evalItem.priceInDollars !== undefined && evalItem.priceInDollars !== null && (
+                          <span>${Number(evalItem.priceInDollars).toFixed(2)}</span>
                         )}
                         <span
                           className={`rounded px-1.5 py-0.5 text-xs ${

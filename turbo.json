@@ -11,8 +11,15 @@
     "AUTH_RESEND_KEY",
     "EMAIL_FROM",
     "HELICONE_API_KEY",
+    "HELICONE_API_BASE_URL",
     "FIRECRAWL_KEY",
-    "NODE_ENV"
+    "DIFFBOT_KEY",
+    "NODE_ENV",
+    "NEXT_PUBLIC_API_URL",
+    "CI",
+    "INTEGRATION_TESTS",
+    "RUN_LLM_TESTS",
+    "SHOW_TEST_LOGS"
   ],
   "globalDependencies": [
     ".env",

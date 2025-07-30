@@ -38,6 +38,10 @@
     "worktree": "./dev/scripts/worktree-manager.sh",
     "migrations:status": "node dev/scripts/show-migrations.js",
     "check": "pnpm run typecheck && pnpm run lint",
+    "check:all": "turbo run lint typecheck test:ci --parallel",
+    "check:deps": "pnpm -r exec pnpm outdated || true",
+    "check:security": "pnpm audit",
+    "check:health": "pnpm run check:all && pnpm run check:deps && pnpm run check:security",
     "precommit": "pnpm run check && pnpm run test:ci"
   },
   "devDependencies": {

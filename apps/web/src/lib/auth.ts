@@ -9,7 +9,7 @@ import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 
-import { prisma, PrismaClient } from "@roast/db";
+import { prisma } from "@roast/db";
 
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];
@@ -26,12 +26,12 @@ function buildAuthConfig(): NextAuthConfig {
     );
   }
 
-  // TODO: Fix type compatibility between @auth/prisma-adapter v2.10.0 and Prisma Client v6.13.0
-  // The PrismaAdapter function expects a different Prisma Client type than what we're providing
-  // due to version mismatches in the type definitions. This works at runtime but requires type assertion.
-  // Consider upgrading both packages to compatible versions or wait for official compatibility.
+  // Type compatibility workaround for @auth/prisma-adapter v2.10.0 with Prisma Client v6.13.0
+  // The adapter expects a specific Prisma Client type structure. This creates a properly typed wrapper.
+  const prismaAdapter = PrismaAdapter(prisma as Parameters<typeof PrismaAdapter>[0]) as Adapter;
+  
   const config: NextAuthConfig = {
-    adapter: PrismaAdapter(prisma as any) as any,
+    adapter: prismaAdapter,
     providers,
     session: {
       strategy: "database",

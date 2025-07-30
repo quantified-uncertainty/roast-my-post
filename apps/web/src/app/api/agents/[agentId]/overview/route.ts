@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
