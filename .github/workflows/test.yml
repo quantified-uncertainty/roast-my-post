@@ -69,7 +69,7 @@ jobs:
         run: pnpm --filter @roast/db run gen
 
       - name: Run database migrations
-        run: pnpm --filter @roast/db run db:push
+        run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run TypeScript type checking
         run: pnpm turbo run typecheck
