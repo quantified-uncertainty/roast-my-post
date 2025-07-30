@@ -1,0 +1,31 @@
+{
+  "name": "roast-my-post",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:ci": "turbo run test:unit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "turbo run clean",
+    "nodeclean": "find . -not -path '.git' -name 'node_modules' -exec rm -Rf '{}' +",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "@changesets/cli": "^2.27.10",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "typescript": "^5"
+  },
+  "pnpm": {
+    "overrides": {}
+  }
+}
