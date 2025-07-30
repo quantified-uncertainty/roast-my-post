@@ -17,7 +17,7 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "prisma:generate"],
+      "dependsOn": ["^build", "@roast/db#gen"],
       "outputs": ["dist/**", ".next/**", "build/**"]
     },
     "dev": {
@@ -44,9 +44,9 @@
       "outputs": ["coverage/**"],
       "cache": false
     },
-    "prisma:generate": {
+    "gen": {
       "cache": false,
-      "outputs": ["node_modules/.prisma/**", "node_modules/@prisma/client/**"]
+      "outputs": ["generated/**"]
     },
     "db:push": {
       "cache": false

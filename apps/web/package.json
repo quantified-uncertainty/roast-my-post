@@ -2,24 +2,20 @@
   "name": "@roast/web",
   "version": "0.1.0",
   "private": true,
-  "prisma": {
-    "schema": "../../prisma/schema.prisma"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --config ../../config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",
-    "test": "jest --config ../../config/jest/jest.config.cjs",
-    "prisma:generate": "prisma generate"
+    "test": "jest --config ../../config/jest/jest.config.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
     "@auth/prisma-adapter": "^2.9.1",
     "@heroicons/react": "^2.2.0",
     "@leeoniya/ufuzzy": "^1.0.18",
-    "@prisma/client": "^6.13.0",
+    "@roast/db": "workspace:*",
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.10.0",
     "chroma-js": "^3.1.2",
@@ -82,7 +78,6 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.3.2",
-    "typescript": "^5",
-    "prisma": "^6.13.0"
+    "typescript": "^5"
   }
 }

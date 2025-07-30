@@ -21,11 +21,11 @@
     "test:ci": "turbo run test:ci",
     "test:quiet": "turbo run test:quiet",
     "test:ci:quiet": "turbo run test:ci:quiet",
-    "db:push": "./scripts/safe-prisma.sh db push",
-    "db:migrate": "./scripts/safe-prisma.sh migrate dev",
-    "db:migrate:reset": "./scripts/safe-prisma.sh migrate reset",
-    "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio",
+    "db:push": "pnpm --filter @roast/db db:push",
+    "db:migrate": "pnpm --filter @roast/db db:migrate",
+    "db:migrate:reset": "cd internal-packages/db && ../../scripts/safe-prisma.sh migrate reset",
+    "db:deploy": "pnpm --filter @roast/db exec prisma migrate deploy",
+    "db:studio": "pnpm --filter @roast/db db:studio",
     "process-jobs": "tsx apps/web/src/scripts/process-job.ts",
     "process-jobs-adaptive": "tsx apps/web/src/scripts/process-jobs-adaptive.ts",
     "cleanup-stale-jobs": "tsx apps/web/src/scripts/cleanup-stale-jobs.ts",
@@ -56,8 +56,5 @@
     "turbo": "^2.3.3",
     "uuid": "^11.1.0"
   },
-  "packageManager": "pnpm@9.15.1",
-  "dependencies": {
-    "@prisma/client": "6.13.0"
-  }
+  "packageManager": "pnpm@9.15.1"
 }
