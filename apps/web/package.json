@@ -8,7 +8,17 @@
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",
-    "test": "jest --config ./config/jest/jest.config.cjs"
+    "test": "jest --config ./config/jest/jest.config.cjs",
+    "test:unit": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.'",
+    "test:integration": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.integration.test.ts'",
+    "test:e2e": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.e2e.test.ts'",
+    "test:llm": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.llm.test.ts'",
+    "test:fast": "npm run test:unit && npm run test:integration",
+    "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.'",
+    "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.'",
+    "test:ci": "npm run test:unit",
+    "process-jobs": "tsx src/scripts/process-job.ts",
+    "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -79,6 +89,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.3.2",
+    "tsx": "^4.7.1",
     "typescript": "^5"
   }
 }

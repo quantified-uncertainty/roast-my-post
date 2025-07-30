@@ -1,6 +1,12 @@
 // Type declarations for @jest/globals
 declare module '@jest/globals' {
-  export const jest: typeof import('jest');
+  const globalJest: typeof import('jest');
+  export const jest: typeof globalJest & {
+    mock: typeof globalJest.mock;
+    clearAllMocks: typeof globalJest.clearAllMocks;
+    resetAllMocks: typeof globalJest.resetAllMocks;
+    restoreAllMocks: typeof globalJest.restoreAllMocks;
+  };
   export const test: typeof import('jest').test;
   export const it: typeof import('jest').it;
   export const describe: typeof import('jest').describe;

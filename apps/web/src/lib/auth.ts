@@ -8,7 +8,7 @@ import Resend from "next-auth/providers/resend";
 
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
-import { prisma } from "./prisma";
+import { prisma, PrismaClient } from "@roast/db";
 
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];

@@ -5,15 +5,23 @@ WORKDIR /app
 # Install dependencies for native modules
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Install pnpm
+RUN npm install -g pnpm@9
+
 # Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY apps/mcp-server/package.json ./apps/mcp-server/
+COPY internal-packages/db/package.json ./internal-packages/db/
+
+# Copy Prisma schema
+COPY internal-packages/db/prisma ./internal-packages/db/prisma/
 
 # Install all dependencies
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN pnpm --filter @roast/db run gen
 
 # Copy source code
 COPY . .
@@ -24,7 +32,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 
 # Build Next.js application
-RUN npm run build
+RUN pnpm --filter @roast/web run build
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -41,12 +49,12 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
 # Copy only the standalone build (includes necessary node_modules)
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 
 # Copy Prisma schema for reference (migrations handled separately)
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/internal-packages/db/prisma ./prisma
 
 USER nextjs
 

@@ -5,15 +5,23 @@ WORKDIR /app
 # Install dependencies for native modules
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Install pnpm
+RUN npm install -g pnpm@9
+
 # Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY apps/mcp-server/package.json ./apps/mcp-server/
+COPY internal-packages/db/package.json ./internal-packages/db/
+
+# Copy Prisma schema
+COPY internal-packages/db/prisma ./internal-packages/db/prisma/
 
 # Install all dependencies (including dev dependencies for tsx)
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN pnpm --filter @roast/db run gen
 
 # Copy source code
 COPY . .
@@ -25,4 +33,4 @@ RUN addgroup -g 1001 -S nodejs && \
 USER nextjs
 
 # Run the adaptive job processor
-CMD ["npm", "run", "process-jobs-adaptive"]
+CMD ["pnpm", "--filter", "@roast/web", "run", "process-jobs-adaptive"]
