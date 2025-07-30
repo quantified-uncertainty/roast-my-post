@@ -5,20 +5,22 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "gen": "prisma generate",
-    "db:push": "prisma db push",
+    "with-env": "dotenv -e ../../apps/web/.env.local --",
+    "gen": "pnpm with-env prisma generate",
+    "db:push": "pnpm with-env prisma db push",
     "db:push:safe": "../../dev/scripts/safe-prisma.sh db push",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:reset": "prisma migrate reset",
+    "db:migrate": "pnpm with-env prisma migrate dev",
+    "db:migrate:reset": "pnpm with-env prisma migrate reset",
     "db:migrate:reset:safe": "../../dev/scripts/safe-prisma.sh migrate reset",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio",
+    "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
+    "db:studio": "pnpm with-env prisma studio",
     "clean": "rm -rf generated .turbo"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0"
   },
   "devDependencies": {
+    "dotenv-cli": "^10.0.0",
     "prisma": "^6.13.0",
     "typescript": "^5"
   },

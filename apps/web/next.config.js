@@ -26,7 +26,7 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm", "@roast/db"],
+  transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
   async headers() {
     return [
       {
@@ -35,7 +35,7 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { isServer, webpack }) => {
+  webpack: (config, { isServer }) => {
     // Add markdown loader
     config.module.rules.push({
       test: /\.md$/,
@@ -69,19 +69,7 @@ const nextConfig = {
       use: 'ignore-loader',
     });
 
-    // Fix for Prisma in monorepo
-    config.plugins.push(
-      new webpack.ContextReplacementPlugin(
-        /^\.prisma[\\/]client$/,
-        /^$/,
-      )
-    );
-
     return config;
-  },
-  experimental: {
-    // Optimize for monorepo structure
-    externalDir: true,
   },
 };
 
