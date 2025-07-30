@@ -2,7 +2,7 @@
  * Grading functionality for spelling/grammar analysis
  */
 
-import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
+import type { SpellingGrammarError } from "./index";
 
 export interface GradeResult {
   grade: number; // 0-100

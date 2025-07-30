@@ -16,8 +16,6 @@ export interface SpellingGrammarError {
   confidence: number; // 0-100
   description?: string; // 0 for obvious, 1-2 sentences for complex
   lineNumber?: number; // Approximate line number where error occurs
-  startIndex?: number; // Position in original text
-  endIndex?: number;
 }
 
 export interface CheckSpellingGrammarInput {
@@ -56,10 +54,8 @@ const outputSchema = z.object({
     context: z.string().optional().describe('Surrounding context (20-30 chars each side)'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
     confidence: z.number().min(0).max(100).describe('Confidence in this error (0-100)'),
-    description: z.string().optional().describe('Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)'),
-    lineNumber: z.number().optional().describe('Approximate line number where error occurs'),
-    startIndex: z.number().optional().describe('Starting character index in original text'),
-    endIndex: z.number().optional().describe('Ending character index in original text')
+    description: z.string().nullable().optional().describe('Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)'),
+    lineNumber: z.number().optional().describe('Approximate line number where error occurs')
   })).describe('List of errors found'),
   metadata: z.object({
     totalErrorsFound: z.number().describe('Total number of errors found (before limiting)'),
@@ -113,9 +109,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       
       const result = await this.checkSpellingGrammar({ ...input, convention }, detectedConvention);
       
-      // Note: We don't add position indices here because indexOf only finds
-      // the first occurrence, which might be wrong if the text appears multiple times.
-      // The fuzzy-text-locator tool should be used for accurate position finding.
+      // Note: For accurate position finding, use the fuzzy-text-locator tool
+      // with the lineNumber hint from the errors
       
       return {
         errors: result.errors,
@@ -476,7 +471,7 @@ ${textWithLineNumbers}
                   maximum: 100
                 },
                 description: {
-                  type: "string",
+                  type: ["string", "null"],
                   description: "Explanation for complex cases (null for obvious errors, 1-2 sentences otherwise)"
                 },
                 lineNumber: {
@@ -538,7 +533,11 @@ ${textWithLineNumbers}
     
     const errors = validationResults
       .filter(r => r.valid)
-      .map(r => r.error);
+      .map(r => ({
+        ...r.error,
+        // Convert null description to undefined for cleaner output
+        description: r.error.description === null ? undefined : r.error.description
+      }));
 
     return { errors, totalFound };
   }

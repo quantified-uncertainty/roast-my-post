@@ -9,9 +9,9 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
+import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation as ToolSpellingErrorWithLocation } from "@/tools/check-spelling-grammar/commentGeneration";
 import { detectLanguageConvention, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
-import { calculateGrade, countWords, generateGradeSummary } from "./grading";
+import { calculateGrade, countWords, generateGradeSummary } from "@/tools/check-spelling-grammar/grading";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -343,8 +343,15 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       return;
     }
     
-    // Add detailed error analysis
-    analysisText += generateDocumentSummary(this.errors);
+    // Add detailed error analysis - convert to tool format
+    const toolErrors: ToolSpellingErrorWithLocation[] = this.errors.map(e => ({
+      error: e.error,
+      location: {
+        lineNumber: e.chunk.getLineNumber(e.location?.startOffset || 0) || 1,
+        columnNumber: 0
+      }
+    }));
+    analysisText += generateDocumentSummary(toolErrors);
     
     this.analysis = analysisText;
 

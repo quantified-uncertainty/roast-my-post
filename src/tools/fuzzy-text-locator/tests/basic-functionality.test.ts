@@ -39,6 +39,77 @@ describe('Fuzzy Text Locator - Basic Functionality', () => {
       expect(result.error).toBe('Text not found in document');
     });
 
+    it('should use line number hint when text appears multiple times', async () => {
+      const documentText = `Line 1: The quick brown fox jumps over the lazy dog.
+Line 2: This is some other text.
+Line 3: The quick brown fox jumps over the lazy dog.
+Line 4: More text here.
+Line 5: And even more text.
+Line 6: The quick brown fox jumps over the lazy dog.
+Line 7: Final line of text.`;
+
+      const searchText = 'quick brown fox';
+
+      // First, search without line hint - should find first occurrence
+      const inputWithoutHint: TextLocationFinderInput = {
+        documentText,
+        searchText
+      };
+
+      const resultWithoutHint = await textLocationFinderTool.execute(inputWithoutHint, context);
+      
+      expect(resultWithoutHint.found).toBe(true);
+      expect(resultWithoutHint.location?.strategy).toBe('exact');
+      // Should find the first occurrence on line 1
+      const firstOccurrenceIndex = documentText.indexOf(searchText);
+      expect(resultWithoutHint.location?.startOffset).toBe(firstOccurrenceIndex);
+
+      // Now search with line hint 3 - should find occurrence on line 3
+      const inputWithLineHint3: TextLocationFinderInput = {
+        documentText,
+        searchText,
+        lineNumberHint: 3
+      };
+
+      const resultWithLineHint3 = await textLocationFinderTool.execute(inputWithLineHint3, context);
+      
+      expect(resultWithLineHint3.found).toBe(true);
+      expect(resultWithLineHint3.location?.strategy).toBe('exact-line-hint');
+      
+      // Calculate expected offset for line 3
+      const lines = documentText.split('\n');
+      let line3Offset = 0;
+      for (let i = 0; i < 2; i++) { // Lines 0 and 1
+        line3Offset += lines[i].length + 1; // +1 for newline
+      }
+      const line3Index = documentText.indexOf(searchText, line3Offset);
+      expect(resultWithLineHint3.location?.startOffset).toBe(line3Index);
+
+      // Search with line hint 6 - should find occurrence on line 6
+      const inputWithLineHint6: TextLocationFinderInput = {
+        documentText,
+        searchText,
+        lineNumberHint: 6
+      };
+
+      const resultWithLineHint6 = await textLocationFinderTool.execute(inputWithLineHint6, context);
+      
+      expect(resultWithLineHint6.found).toBe(true);
+      expect(resultWithLineHint6.location?.strategy).toBe('exact-line-hint');
+      
+      // Calculate expected offset for line 6
+      let line6Offset = 0;
+      for (let i = 0; i < 5; i++) { // Lines 0-4
+        line6Offset += lines[i].length + 1; // +1 for newline
+      }
+      const line6Index = documentText.indexOf(searchText, line6Offset);
+      expect(resultWithLineHint6.location?.startOffset).toBe(line6Index);
+      
+      // Verify that all three searches found different positions
+      expect(firstOccurrenceIndex).toBeLessThan(line3Index);
+      expect(line3Index).toBeLessThan(line6Index);
+    });
+
     it('should handle quote normalization', async () => {
       const input: TextLocationFinderInput = {
         documentText: "This has 'smart quotes' and apostrophes.",

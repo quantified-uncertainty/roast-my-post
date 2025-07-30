@@ -3,7 +3,9 @@
 import React from 'react';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
 import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
-import { formatConciseCorrection } from '@/lib/analysis-plugins/utils/comment-styles';
+import { CommentSeverity, importanceToSeverity } from '@/tools/check-spelling-grammar/comment-styles';
+import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation } from '@/tools/check-spelling-grammar/commentGeneration';
+import { calculateGrade, countWords } from '@/tools/check-spelling-grammar/grading';
 
 export default function CheckSpellingGrammarAutoPage() {
   return (
@@ -102,28 +104,74 @@ Previous research have shown similar results, although the methodologies varied 
       renderResults={(result) => {
         const typedResult = result as any;
         
-        const errorTypeColors = {
-          spelling: 'bg-red-100 border-red-300 text-red-900',
-          grammar: 'bg-orange-100 border-orange-300 text-orange-900'
+        // Calculate grade based on word count from input
+        const wordCount = countWords((result as any).input?.text || '');
+        const gradeResult = calculateGrade(typedResult.errors, wordCount);
+        
+        // Convert errors to SpellingErrorWithLocation format for summary
+        const errorsWithLocation: SpellingErrorWithLocation[] = typedResult.errors.map((error: any) => ({
+          error,
+          location: {
+            lineNumber: error.lineNumber || 1,
+            columnNumber: 0
+          }
+        }));
+        
+        // Get severity-based colors
+        const getSeverityColors = (importance: number) => {
+          const severity = importanceToSeverity(importance);
+          switch(severity) {
+            case CommentSeverity.CRITICAL:
+            case CommentSeverity.HIGH:
+              return 'bg-red-100 border-red-300 text-red-900';
+            case CommentSeverity.MEDIUM:
+              return 'bg-orange-100 border-orange-300 text-orange-900';
+            case CommentSeverity.LOW:
+              return 'bg-yellow-100 border-yellow-300 text-yellow-900';
+            case CommentSeverity.INFO:
+            default:
+              return 'bg-blue-100 border-blue-300 text-blue-900';
+          }
         };
         
         return (
           <div className="space-y-6">
-            {/* Summary with metadata */}
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <p className="text-green-900">
-                Found <span className="font-semibold">{typedResult.errors.length}</span> issues in your text
-                {typedResult.metadata?.totalErrorsFound && typedResult.metadata.totalErrorsFound > typedResult.errors.length && 
-                  ` (showing top ${typedResult.errors.length} of ${typedResult.metadata.totalErrorsFound} total)`}.
-              </p>
-              {typedResult.metadata && (
-                <div className="mt-2 text-sm text-green-800 space-y-1">
-                  <p>Convention: <span className="font-medium">{typedResult.metadata.convention} English</span></p>
-                  {typedResult.metadata.processingTime && (
-                    <p>Processing time: <span className="font-medium">{typedResult.metadata.processingTime}ms</span></p>
+            {/* Grade and Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className={`p-4 rounded-lg border ${
+                gradeResult.grade >= 90 ? 'bg-green-50 border-green-200' :
+                gradeResult.grade >= 80 ? 'bg-blue-50 border-blue-200' :
+                gradeResult.grade >= 70 ? 'bg-yellow-50 border-yellow-200' :
+                gradeResult.grade >= 50 ? 'bg-orange-50 border-orange-200' :
+                'bg-red-50 border-red-200'
+              }`}>
+                <h3 className="text-lg font-semibold mb-2">Writing Grade</h3>
+                <div className="text-3xl font-bold mb-1">{gradeResult.grade}/100</div>
+                <p className="text-sm font-medium">{gradeResult.category}</p>
+                <p className="text-sm mt-2">{gradeResult.description}</p>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-semibold mb-2">Analysis Summary</h3>
+                <div className="text-sm space-y-1">
+                  <p>Total errors: <span className="font-medium">{typedResult.errors.length}</span>
+                    {typedResult.metadata?.totalErrorsFound && typedResult.metadata.totalErrorsFound > typedResult.errors.length && 
+                      ` (showing top ${typedResult.errors.length} of ${typedResult.metadata.totalErrorsFound})`}
+                  </p>
+                  <p>Word count: <span className="font-medium">{wordCount}</span></p>
+                  <p>Error density: <span className="font-medium">{gradeResult.statistics.errorDensity}</span> per 100 words</p>
+                  {typedResult.metadata && (
+                    <p>Convention: <span className="font-medium">{typedResult.metadata.convention} English</span></p>
                   )}
                 </div>
-              )}
+              </div>
+            </div>
+            
+            {/* Document Summary */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 prose prose-sm max-w-none">
+              <div dangerouslySetInnerHTML={{ 
+                __html: generateDocumentSummary(errorsWithLocation).replace(/\n/g, '<br>').replace(/##\s+(.+)/g, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>').replace(/###\s+(.+)/g, '<h4 class="text-base font-semibold mt-3 mb-1">$1</h4>')
+              }} />
             </div>
 
             {/* Errors list */}
@@ -137,10 +185,7 @@ Previous research have shown similar results, although the methodologies varied 
                 {typedResult.errors.map((error: any, i: number) => (
                   <div
                     key={i}
-                    className={`p-4 rounded-lg border ${
-                      errorTypeColors[error.type as keyof typeof errorTypeColors] ||
-                      errorTypeColors.grammar
-                    }`}
+                    className={`p-4 rounded-lg border ${getSeverityColors(error.importance)}`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -162,20 +207,12 @@ Previous research have shown similar results, although the methodologies varied 
                     </div>
                     
                     <div className="mb-2">
-                      {error.conciseCorrection ? (
-                        <div 
-                          className="text-sm font-medium"
-                          dangerouslySetInnerHTML={{ 
-                            __html: formatConciseCorrection(error.conciseCorrection) 
-                          }}
-                        />
-                      ) : (
-                        <p className="text-sm mb-1">
-                          <span className="line-through text-red-700">{error.text}</span>
-                          {' → '}
-                          <span className="text-green-700 font-medium">{error.correction}</span>
-                        </p>
-                      )}
+                      <div 
+                        className="text-sm"
+                        dangerouslySetInnerHTML={{ 
+                          __html: generateSpellingComment(error)
+                        }}
+                      />
                     </div>
                     
                     {error.context && (

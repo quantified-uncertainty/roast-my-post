@@ -3,7 +3,7 @@ import { SpellingAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
 import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
 import * as conventionDetector from '@/tools/detect-language-convention/conventionDetector';
-import * as grading from './grading';
+import * as grading from '@/tools/check-spelling-grammar/grading';
 
 jest.mock('@/tools/check-spelling-grammar', () => ({
   checkSpellingGrammarTool: {
@@ -21,7 +21,7 @@ jest.mock('@/lib/logger', () => ({
 
 // Mock convention detector and grading modules
 jest.mock('@/tools/detect-language-convention/conventionDetector');
-jest.mock('./grading');
+jest.mock('@/tools/check-spelling-grammar/grading');
 
 describe('SpellingAnalyzerJob', () => {
   beforeEach(() => {

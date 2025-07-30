@@ -1,6 +1,5 @@
-import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
-import type { SpellingErrorWithLocation } from "./index";
-import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES } from "../../utils/comment-styles";
+import type { SpellingGrammarError } from "./index";
+import { styleHeader, CommentSeverity, formatDiff, formatConciseCorrection, SEVERITY_STYLES, importanceToSeverity } from "./comment-styles";
 
 /**
  * Generate a comment for a single spelling/grammar error
@@ -22,11 +21,19 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
     ? formatConciseCorrection(error.conciseCorrection)
     : formatDiff(`"${error.text}"`, `"${error.correction}"`);
   
-  // Spelling errors are usually less severe than grammar errors
-  const severity = isSpelling ? CommentSeverity.MEDIUM : CommentSeverity.MEDIUM;
+  // Use importance score to determine severity
+  const severity = importanceToSeverity(error.importance);
   const style = SEVERITY_STYLES[severity];
   
   return `${emoji} [${pluginLabel}] <span style="color: ${style.color}">${diff}</span>`;
+}
+
+export interface SpellingErrorWithLocation {
+  error: SpellingGrammarError;
+  location: {
+    lineNumber: number;
+    columnNumber: number;
+  };
 }
 
 /**
