@@ -1,8 +1,0 @@
-
-> @roast/web@0.1.0 build /Users/ozziegooen/Documents/Github/monorepo-migration/apps/web
-> next build
-
-   ▲ Next.js 15.3.2
-
-   Creating an optimized production build ...
- ELIFECYCLE  Command failed with exit code 130.
