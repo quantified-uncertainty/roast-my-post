@@ -78,7 +78,7 @@ jobs:
         run: pnpm --filter @roast/web run lint
 
       - name: Run CI tests (unit + integration, no external deps)
-        run: pnpm --filter @roast/web run test -- --coverage --coverageReporters=text-summary
+        run: pnpm --filter @roast/web run test:ci -- --coverage --coverageReporters=text-summary
 
       - name: Build application
         run: pnpm --filter @roast/web run build
