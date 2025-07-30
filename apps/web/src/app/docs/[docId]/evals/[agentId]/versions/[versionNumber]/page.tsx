@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { checkDocumentOwnership } from "@/lib/document-auth";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";

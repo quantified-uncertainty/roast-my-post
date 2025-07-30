@@ -46,6 +46,7 @@ module.exports = {
   // Add this section to handle .js imports in ESM/TS projects
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^@roast/db$": "<rootDir>/../../internal-packages/db/src/index.ts",
     "^server-only$": "<rootDir>/src/__mocks__/server-only.js",
     "^next-auth$": "<rootDir>/src/__mocks__/next-auth.js",
     "^next-auth/providers/resend$": "<rootDir>/src/__mocks__/next-auth/providers/resend.js",

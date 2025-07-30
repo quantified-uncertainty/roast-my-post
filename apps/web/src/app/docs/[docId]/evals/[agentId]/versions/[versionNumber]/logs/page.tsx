@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { checkDocumentOwnership } from "@/lib/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
