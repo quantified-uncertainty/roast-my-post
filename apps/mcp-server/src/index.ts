@@ -110,7 +110,7 @@ const UpdateDocumentArgsSchema = z.object({
 
 const server = new Server(
   {
-    name: "roast-my-post-mcp",
+    name: "@roast/mcp-server",
     version: "0.1.0",
   },
   {

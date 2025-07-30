@@ -1,5 +1,5 @@
 {
-  "name": "roast-my-post-mcp",
+  "name": "@roast/mcp-server",
   "version": "0.1.0",
   "description": "MCP server for Roast My Post database operations",
   "type": "module",
