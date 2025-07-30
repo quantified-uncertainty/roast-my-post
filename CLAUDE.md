@@ -27,6 +27,76 @@ The project has been successfully migrated to a pnpm workspace monorepo structur
 ### Command Changes
 All commands now use `pnpm` with workspace filters. See Commands section below for details.
 
+## CRITICAL: Git Safety Protocol for Parallel Claude Sessions (2025-01-30)
+
+### The Problem
+Multiple Claude Code instances working in parallel can accidentally commit unwanted files (node_modules, .claude/, etc.) because they don't coordinate git operations.
+
+### MANDATORY Pre-Commit Protocol
+**EVERY Claude instance MUST follow this checklist before ANY commit:**
+
+1. **ALWAYS run `git status` first**:
+   ```bash
+   git status
+   ```
+   - Check for unexpected files (node_modules, .claude/, *.log, etc.)
+   - Verify only intended changes are staged
+
+2. **NEVER use `git add -A` or `git add .`**:
+   ```bash
+   # ❌ DANGEROUS - commits everything
+   git add -A
+   git add .
+   
+   # ✅ SAFE - specific files only
+   git add src/specific-file.ts
+   git add apps/web/src/components/
+   ```
+
+3. **Use staged commit pattern**:
+   ```bash
+   # 1. Add specific files/directories
+   git add path/to/specific/files
+   
+   # 2. Verify what's staged
+   git status
+   git diff --cached
+   
+   # 3. Commit only if staging looks correct
+   git commit -m "message"
+   ```
+
+4. **Check for these FORBIDDEN files**:
+   - `**/node_modules/**` (symlinks from pnpm)
+   - `**/.claude/**` (Claude settings)
+   - `**/package-lock.json` (npm artifacts in pnpm repo)
+   - `**/*.log` (log files)
+   - `**/.env.local` (environment files)
+
+### Git Safety Commands
+```bash
+# Safe staging commands for monorepo
+git add apps/web/src/           # Specific app directory
+git add internal-packages/db/   # Specific package
+git add CLAUDE.md README.md     # Specific files
+
+# NEVER use these in monorepo:
+# git add -A                    # Stages everything
+# git add .                     # Stages current directory and below
+```
+
+### Emergency Recovery
+If you accidentally commit unwanted files:
+```bash
+# Remove from index but keep local files
+git rm -r --cached path/to/unwanted/files
+
+# Commit the removal
+git commit -m "Remove accidentally committed files"
+```
+
+**Remember**: Future Claude instances will also work in parallel. This protocol protects against accidents.
+
 ## Critical Database Safety Incident (2024-01-23)
 
 ### What Happened
