@@ -13,6 +13,8 @@ export interface SpellingGrammarError {
   type: 'spelling' | 'grammar';
   context?: string;
   importance: number; // 0-100
+  confidence: number; // 0-100
+  description?: string; // 0 for obvious, 1-2 sentences for complex
   startIndex?: number; // Position in original text
   endIndex?: number;
 }
@@ -52,6 +54,8 @@ const outputSchema = z.object({
     type: z.enum(['spelling', 'grammar']).describe('Type of error'),
     context: z.string().optional().describe('Surrounding context (20-30 chars each side)'),
     importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
+    confidence: z.number().min(0).max(100).describe('Confidence in this error (0-100)'),
+    description: z.string().optional().describe('Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)'),
     startIndex: z.number().optional().describe('Starting character index in original text'),
     endIndex: z.number().optional().describe('Ending character index in original text')
   })).describe('List of errors found'),
@@ -107,18 +111,12 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       
       const result = await this.checkSpellingGrammar({ ...input, convention }, detectedConvention);
       
-      // Add position indices for each error
-      const errorsWithIndices = result.errors.map(error => {
-        const index = input.text.indexOf(error.text);
-        return {
-          ...error,
-          startIndex: index >= 0 ? index : undefined,
-          endIndex: index >= 0 ? index + error.text.length : undefined
-        };
-      });
+      // Note: We don't add position indices here because indexOf only finds
+      // the first occurrence, which might be wrong if the text appears multiple times.
+      // The fuzzy-text-locator tool should be used for accurate position finding.
       
       return {
-        errors: errorsWithIndices,
+        errors: result.errors,
         metadata: {
           totalErrorsFound: result.totalFound,
           convention: detectedConvention,
@@ -230,6 +228,107 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   76-100: Severe grammar errors or misspellings in key terms (e.g., technical/domain terms, proper nouns in formal contexts)
 </importance_scoring>
 
+<confidence_scoring>
+  90-100: Certain this is an error (obvious typos, clear grammar violations)
+  70-89: High confidence (standard errors, well-established rules)
+  50-69: Moderate confidence (style preferences, context-dependent)
+  0-49: Low confidence (ambiguous cases, could be intentional)
+</confidence_scoring>
+
+<description_guidelines>
+  - For obvious errors (confidence 90+): Leave description empty or null
+  - For complex cases: 1-2 sentences explaining why it's an error
+  - Focus on WHY it's wrong, not just restating the correction
+  - Examples:
+    - Empty for: "teh" → "the" 
+    - "The subject 'team' is collective and takes singular verb 'has'" for subject-verb disagreement
+    - "Ambiguous pronoun reference - unclear whether 'he' refers to John or Mark"
+</description_guidelines>
+
+<examples>
+  <example>
+    Input: "I recieved teh package yesterday."
+    Error 1:
+    {
+      "text": "recieved",
+      "correction": "received",
+      "conciseCorrection": "recieved → received",
+      "type": "spelling",
+      "context": "I recieved teh package",
+      "importance": 30,
+      "confidence": 100,
+      "description": null
+    }
+    Error 2:
+    {
+      "text": "teh",
+      "correction": "the",
+      "conciseCorrection": "teh → the",
+      "type": "spelling",
+      "context": "recieved teh package yesterday",
+      "importance": 15,
+      "confidence": 100,
+      "description": null
+    }
+  </example>
+  
+  <example>
+    Input: "The team of engineers are working on the project."
+    Error:
+    {
+      "text": "are",
+      "correction": "is",
+      "conciseCorrection": "are → is",
+      "type": "grammar",
+      "context": "engineers are working on",
+      "importance": 45,
+      "confidence": 85,
+      "description": "The subject 'team' is singular and requires the singular verb 'is', not the plural 'are'."
+    }
+  </example>
+  
+  <example>
+    Input: "Its a beautiful day, but the cat licked it's paws."
+    Error 1:
+    {
+      "text": "Its",
+      "correction": "It's",
+      "conciseCorrection": "Its → It's",
+      "type": "grammar",
+      "context": "Its a beautiful",
+      "importance": 40,
+      "confidence": 95,
+      "description": null
+    }
+    Error 2:
+    {
+      "text": "it's",
+      "correction": "its",
+      "conciseCorrection": "it's → its",
+      "type": "grammar",
+      "context": "cat licked it's paws",
+      "importance": 40,
+      "confidence": 95,
+      "description": null
+    }
+  </example>
+  
+  <example>
+    Input: "The data is compelling." (in academic context)
+    Error:
+    {
+      "text": "data is",
+      "correction": "data are",
+      "conciseCorrection": "data is → data are",
+      "type": "grammar",
+      "context": "The data is compelling",
+      "importance": 25,
+      "confidence": 65,
+      "description": "In formal academic writing, 'data' is traditionally treated as plural, though singular usage is increasingly accepted."
+    }
+  </example>
+</examples>
+
 <output_format>
   For each error, provide:
   1. text: The EXACT error text from input
@@ -238,6 +337,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   4. type: "spelling" or "grammar"
   5. context: ~20-30 characters on each side of the error
   6. importance: Score from 0-100
+  7. confidence: Score from 0-100
+  8. description: null for obvious errors, 1-2 sentences for complex cases
 </output_format>`;
 
     const userPrompt = `<context>
@@ -342,9 +443,19 @@ ${input.text}
                   description: "Importance score (0-100)",
                   minimum: 0,
                   maximum: 100
+                },
+                confidence: {
+                  type: "number",
+                  description: "Confidence in this error (0-100)",
+                  minimum: 0,
+                  maximum: 100
+                },
+                description: {
+                  type: "string",
+                  description: "Explanation for complex cases (null for obvious errors, 1-2 sentences otherwise)"
                 }
               },
-              required: ["text", "correction", "conciseCorrection", "type", "importance"]
+              required: ["text", "correction", "conciseCorrection", "type", "importance", "confidence"]
             }
           },
           totalErrorsFound: {

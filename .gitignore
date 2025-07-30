@@ -69,3 +69,5 @@ backups/
 *.bak
 .env.backup
 .env.bak
+# Evaluation results
+evaluations/results/

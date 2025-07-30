@@ -148,14 +148,16 @@ Previous research have shown similar results, although the methodologies varied 
                         <span className="font-semibold capitalize">{error.type}</span>
                       </div>
                       <div className="flex items-center gap-2">
+                        {error.confidence && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
+                            Confidence: {error.confidence}%
+                          </span>
+                        )}
                         {error.importance && (
                           <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-70">
                             Importance: {error.importance}/100
                           </span>
                         )}
-                        <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
-                          {error.type}
-                        </span>
                       </div>
                     </div>
                     
@@ -179,6 +181,12 @@ Previous research have shown similar results, although the methodologies varied 
                     {error.context && (
                       <div className="mt-2 p-2 bg-white bg-opacity-50 rounded text-xs">
                         <span className="font-medium">Context:</span> ...{error.context}...
+                      </div>
+                    )}
+                    
+                    {error.description && (
+                      <div className="mt-2 p-2 bg-white bg-opacity-70 rounded text-sm italic">
+                        {error.description}
                       </div>
                     )}
                   </div>
