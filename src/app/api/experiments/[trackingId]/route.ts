@@ -107,7 +107,12 @@ export async function GET(
       averageGrade: grades.length > 0 
         ? grades.reduce((sum, g) => sum + g, 0) / grades.length 
         : null,
-      totalCost: batch.jobs.reduce((sum, j) => sum + (j.costInCents || 0), 0),
+      totalCost: batch.jobs.reduce((sum, j) => {
+        if (j.priceInDollars) {
+          return sum + Math.round(parseFloat(j.priceInDollars.toString()) * 100);
+        }
+        return sum;
+      }, 0),
       totalTime: batch.jobs.reduce((sum, j) => sum + (j.durationInSeconds || 0), 0),
       successRate: calculateSuccessRate(jobStats),
     };
@@ -125,7 +130,7 @@ export async function GET(
         highlightCount: job.evaluation.versions[0].comments.length,
       } : null,
       processingTime: job.durationInSeconds,
-      cost: job.costInCents,
+      cost: job.priceInDollars ? Math.round(parseFloat(job.priceInDollars.toString()) * 100) : null,
     }));
 
     // Format response

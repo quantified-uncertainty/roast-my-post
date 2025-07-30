@@ -126,14 +126,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
         ? evaluations.filter(e => e.grade !== null).reduce((sum, e) => sum + e.grade!, 0) / evaluations.filter(e => e.grade !== null).length
         : null,
       grade_std_dev: null as number | null,
-      average_cost_cents: evaluations.filter(e => e.job?.priceInDollars || e.job?.costInCents).length > 0
-        ? evaluations.filter(e => e.job?.priceInDollars || e.job?.costInCents).reduce((sum, e) => {
+      average_cost_cents: evaluations.filter(e => e.job?.priceInDollars).length > 0
+        ? evaluations.filter(e => e.job?.priceInDollars).reduce((sum, e) => {
             const job = e.job!;
-            if (job.priceInDollars) {
-              return sum + (parseFloat(job.priceInDollars.toString()) * 100);
-            }
-            return sum + (job.costInCents || 0);
-          }, 0) / evaluations.filter(e => e.job?.priceInDollars || e.job?.costInCents).length
+            return sum + (job.priceInDollars ? parseFloat(job.priceInDollars.toString()) * 100 : 0);
+          }, 0) / evaluations.filter(e => e.job?.priceInDollars).length
         : null,
       average_duration_seconds: null as number | null,
       total_comments: evaluations.reduce((sum, e) => sum + e.comments.length, 0),
@@ -207,7 +204,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
           status: evalVersion.job.status,
           created_at: evalVersion.job.createdAt.toISOString(),
           completed_at: evalVersion.job.completedAt?.toISOString(),
-          cost_in_cents: evalVersion.job.priceInDollars ? Math.round(parseFloat(evalVersion.job.priceInDollars.toString()) * 100) : evalVersion.job.costInCents,
+          cost_in_cents: evalVersion.job.priceInDollars ? Math.round(parseFloat(evalVersion.job.priceInDollars.toString()) * 100) : null,
           attempts: evalVersion.job.attempts,
           error: evalVersion.job.error,
           tasks: evalVersion.job.tasks?.map((task) => {

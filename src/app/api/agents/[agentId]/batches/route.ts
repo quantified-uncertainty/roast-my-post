@@ -43,7 +43,6 @@ export async function GET(
           select: {
             id: true,
             status: true,
-            costInCents: true,
             priceInDollars: true,
             durationInSeconds: true,
             evaluationVersion: {

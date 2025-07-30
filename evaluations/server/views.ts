@@ -109,7 +109,7 @@ export function renderResults(data: any, filename: string) {
           
           <h3>Category Breakdown</h3>
           <div class="category-stats">
-            ${Object.entries(metadata.categoryStats).map(([cat, stats]) => html`
+            ${Object.entries(metadata.categoryStats).map(([cat, stats]: [string, any]) => html`
               <div class="category-stat">
                 <span class="category-name">${cat}</span>
                 <span class="category-score">${stats.passed}/${stats.total}</span>
@@ -143,7 +143,7 @@ export function renderResults(data: any, filename: string) {
               </tr>
             </thead>
             <tbody>
-              ${results.map(result => html`
+              ${results.map((result: any) => html`
                 <tr class="${result.overallPassed ? 'passed' : 'failed'}" data-status="${result.overallPassed ? 'passed' : 'failed'}" data-consistency="${result.consistencyScore}">
                   <td class="status">
                     ${result.overallPassed ? '✅' : '❌'}
@@ -154,7 +154,7 @@ export function renderResults(data: any, filename: string) {
                   </td>
                   <td>${result.testCase.category}</td>
                   <td class="runs">
-                    ${result.runs.map((run, i) => html`
+                    ${result.runs.map((run: any, i: number) => html`
                       <span class="run-indicator ${run.passed ? 'success' : 'error'}" title="Run ${i+1}: ${run.duration}ms">
                         ${i+1}
                       </span>
@@ -199,7 +199,7 @@ export function renderResults(data: any, filename: string) {
                       </div>
                       <div class="detail-section">
                         <h4>Run Details</h4>
-                        ${result.runs.map((run, i) => html`
+                        ${result.runs.map((run: any, i: number) => html`
                           <details class="run-detail">
                             <summary>
                               <span class="run-summary">
@@ -216,7 +216,7 @@ export function renderResults(data: any, filename: string) {
                                 <div class="failure-reasons">
                                   <strong>Failure Reasons:</strong>
                                   <ul>
-                                    ${run.failureReasons.map(reason => html`<li>${reason}</li>`)}
+                                    ${run.failureReasons.map((reason: string) => html`<li>${reason}</li>`)}
                                   </ul>
                                 </div>
                               ` : ''}
@@ -225,7 +225,7 @@ export function renderResults(data: any, filename: string) {
                                 <div class="errors-found">
                                   <strong>Errors Found:</strong>
                                   <ul>
-                                    ${run.errors.map(err => html`
+                                    ${run.errors.map((err: any) => html`
                                       <li>
                                         "${err.text}" → "${err.correction}" 
                                         <span class="error-meta">(${err.type}, importance: ${err.importance})</span>

@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
         },
         select: {
           status: true,
-          costInCents: true,
           priceInDollars: true,
         },
       }),
@@ -141,7 +140,6 @@ export async function GET(request: NextRequest) {
       // Total cost today
       prisma.job.aggregate({
         _sum: {
-          costInCents: true,
           priceInDollars: true,
         },
         where: {
@@ -177,11 +175,9 @@ export async function GET(request: NextRequest) {
     jobsToday.forEach((job) => {
       if (job.status === JobStatus.COMPLETED) {
         jobsTodayByStatus.completed++;
-        // Use priceInDollars if available, otherwise fall back to costInCents
+        // Use priceInDollars if available
         if (job.priceInDollars) {
           jobsTodayByStatus.totalCost += parseFloat(job.priceInDollars.toString()) * 100; // Convert to cents for consistency
-        } else {
-          jobsTodayByStatus.totalCost += job.costInCents || 0;
         }
       } else if (job.status === JobStatus.FAILED) {
         jobsTodayByStatus.failed++;
@@ -209,7 +205,7 @@ export async function GET(request: NextRequest) {
         failedToday: jobsTodayByStatus.failed,
         successRate24h,
         avgDurationMinutes,
-        totalCostToday: totalCostToday._sum.priceInDollars ? parseFloat(totalCostToday._sum.priceInDollars.toString()) * 100 : (totalCostToday._sum.costInCents || 0),
+        totalCostToday: totalCostToday._sum.priceInDollars ? parseFloat(totalCostToday._sum.priceInDollars.toString()) * 100 : 0,
       },
       evaluations: {
         total: evaluationStats,

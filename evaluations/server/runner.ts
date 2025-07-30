@@ -82,16 +82,16 @@ export async function runEvaluation(
   console.log(`Helicone Session ID: ${sessionId}`);
   
   // Set up session context
-  sessionContext.createSession({
+  sessionContext.setSession({
     sessionId,
     sessionName: 'spelling-grammar-evaluation',
     sessionPath: '/evaluations/spelling-grammar',
-    sessionTags: ['evaluation', 'spelling-grammar'],
     customProperties: {
       evaluationId,
-      testCount: testCases.length,
-      runsPerTest,
-      timestamp: new Date().toISOString()
+      testCount: testCases.length.toString(),
+      runsPerTest: runsPerTest.toString(),
+      timestamp: new Date().toISOString(),
+      tags: 'evaluation,spelling-grammar'
     }
   });
   
@@ -175,6 +175,9 @@ export async function runEvaluation(
   } catch (error) {
     console.error('Error running evaluation:', error);
     throw error;
+  } finally {
+    // Clear session context when done
+    sessionContext.clear();
   }
 }
 
@@ -200,7 +203,7 @@ function checkExpectations(output: any, expectations: TestCase['expectations']) 
   // Check must find
   if (expectations.mustFind) {
     for (const must of expectations.mustFind) {
-      const found = output.errors.find(e => {
+      const found = output.errors.find((e: any) => {
         const textMatch = !must.text || 
           e.text?.toLowerCase() === must.text.toLowerCase();
         const correctionMatch = !must.correction || 

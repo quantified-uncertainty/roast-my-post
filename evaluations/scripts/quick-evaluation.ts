@@ -42,7 +42,7 @@ async function runQuickEvaluation() {
   for (const testCase of testCases) {
     console.log(`\nTesting: ${testCase.name}`);
     
-    const runs = [];
+    const runs: any[] = [];
     for (let i = 0; i < 3; i++) {
       console.log(`  Run ${i + 1}/3...`);
       const start = Date.now();
@@ -62,11 +62,11 @@ async function runQuickEvaluation() {
       } catch (error) {
         runs.push({
           passed: false,
-          failureReasons: [error.message],
+          failureReasons: [error instanceof Error ? error.message : String(error)],
           duration: Date.now() - start,
           errorCount: 0,
           errors: [],
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           output: null
         });
       }
