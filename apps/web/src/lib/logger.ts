@@ -13,6 +13,7 @@ interface LogContext {
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV !== "production";
+  private isTest = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined;
 
   private log(level: LogLevel, message: string, context?: LogContext) {
     const timestamp = new Date().toISOString();
@@ -51,7 +52,7 @@ class Logger {
   }
 
   debug(message: string, context?: LogContext) {
-    if (this.isDevelopment) {
+    if (this.isDevelopment && !this.isTest) {
       this.log("debug", message, context);
     }
   }

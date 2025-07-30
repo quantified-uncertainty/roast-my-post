@@ -66,6 +66,7 @@ src/data/agents/dist/
 
 # Claude settings (local to each developer)
 .claude/settings.local.json
+**/.claude/
 
 # MCP server safety - prevent accidental Prisma usage
 mcp-server/prisma/
@@ -83,6 +84,9 @@ backups/
 
 # pnpm
 .pnpm-store/
+
+# Prevent npm lock files in pnpm monorepo
+**/package-lock.json
 
 # Monorepo build outputs
 **/dist
