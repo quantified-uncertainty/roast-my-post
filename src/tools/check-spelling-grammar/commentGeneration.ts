@@ -25,7 +25,21 @@ export function generateSpellingComment(error: SpellingGrammarError): string {
   const severity = importanceToSeverity(error.importance);
   const style = SEVERITY_STYLES[severity];
   
-  return `${emoji} [${pluginLabel}] <span style="color: ${style.color}">${diff}</span>`;
+  // Build the comment
+  let comment = `${emoji} [${pluginLabel}] <span style="color: ${style.color}">${diff}</span>`;
+  
+  // Add confidence indicator for low-confidence errors
+  if (error.confidence && error.confidence < 70) {
+    const confidenceEmoji = error.confidence < 50 ? '❓' : '❔';
+    comment += ` ${confidenceEmoji} <span style="opacity: 0.7">(${error.confidence}% confident)</span>`;
+  }
+  
+  // Add description if available (for complex cases)
+  if (error.description && error.description.trim()) {
+    comment += `<br><span style="opacity: 0.8; font-size: 0.9em">${error.description}</span>`;
+  }
+  
+  return comment;
 }
 
 export interface SpellingErrorWithLocation {
@@ -49,6 +63,14 @@ export function generateDocumentSummary(errors: SpellingErrorWithLocation[]): st
   // Overview
   sections.push(`## Spelling & Grammar Analysis\n`);
   sections.push(`Found ${errors.length} issues in this document.\n`);
+  
+  // Add confidence breakdown if relevant
+  const lowConfidenceErrors = errors.filter(e => e.error.confidence && e.error.confidence < 70);
+  if (lowConfidenceErrors.length > 0) {
+    const veryLowConfidence = lowConfidenceErrors.filter(e => e.error.confidence && e.error.confidence < 50);
+    sections.push(`\n**Confidence Note**: ${lowConfidenceErrors.length} errors have lower confidence (${veryLowConfidence.length} with < 50% confidence).`);
+    sections.push(`These may be false positives or context-dependent issues.\n`);
+  }
   
   // Break down by type
   const errorsByType = {

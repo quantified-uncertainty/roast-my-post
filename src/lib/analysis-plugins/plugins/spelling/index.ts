@@ -34,6 +34,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private errors: SpellingErrorWithLocation[] = [];
   private languageConvention?: ReturnType<typeof detectLanguageConvention>;
   private gradeResult?: ReturnType<typeof calculateGrade>;
+  private strictness: 'minimal' | 'standard' | 'thorough' = 'standard';
 
   name(): string {
     return "SPELLING";
@@ -153,6 +154,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
             text: chunk.text,
             maxErrors: 20, // Limit errors per chunk
             convention: convention as 'US' | 'UK' | 'auto',
+            strictness: this.strictness,
           },
           {
             logger: logger,
@@ -167,6 +169,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           // Validate error has required fields
           if (!error || !error.text || typeof error.text !== 'string' || !error.text.trim()) {
             logger.warn('SpellingAnalyzer: Skipping invalid error from LLM', { error });
+            continue;
+          }
+          
+          // Skip very low confidence errors (below 30%)
+          if (error.confidence && error.confidence < 30) {
+            logger.debug(`SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, 30)}..." (${error.confidence}% confidence)`);
             continue;
           }
 
@@ -265,21 +273,33 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private calculateImportance(error: SpellingGrammarError): number {
-    // Map importance (0-100) to comment importance (1-10)
-    const score = error.importance;
+    // Combine importance and confidence to determine final priority
+    // If we're not confident about an error, reduce its priority
+    const baseScore = error.importance;
+    const confidence = error.confidence || 100; // Default to 100 if not provided
     
-    if (score <= 25) {
-      // Minor typos: importance 2-3
-      return 2 + Math.floor(score / 25);
-    } else if (score <= 50) {
-      // Noticeable errors: importance 4-5
-      return 4 + Math.floor((score - 25) / 25);
-    } else if (score <= 75) {
-      // Errors affecting clarity: importance 6-7
-      return 6 + Math.floor((score - 50) / 25);
+    // Apply confidence as a multiplier (0.5 to 1.0 range)
+    // Low confidence (0-50) reduces score by up to 50%
+    // High confidence (50-100) has minimal impact
+    const confidenceMultiplier = 0.5 + (confidence / 200);
+    const adjustedScore = baseScore * confidenceMultiplier;
+    
+    // Map adjusted score (0-100) to comment importance (1-10)
+    if (adjustedScore <= 20) {
+      // Very minor or uncertain: importance 1-2
+      return 1 + Math.floor(adjustedScore / 20);
+    } else if (adjustedScore <= 40) {
+      // Minor typos: importance 3-4
+      return 3 + Math.floor((adjustedScore - 20) / 20);
+    } else if (adjustedScore <= 60) {
+      // Noticeable errors: importance 5-6
+      return 5 + Math.floor((adjustedScore - 40) / 20);
+    } else if (adjustedScore <= 80) {
+      // Errors affecting clarity: importance 7-8
+      return 7 + Math.floor((adjustedScore - 60) / 20);
     } else {
-      // Critical errors: importance 8-10
-      return 8 + Math.floor((score - 75) / 12.5);
+      // Critical errors with high confidence: importance 9-10
+      return 9 + Math.floor((adjustedScore - 80) / 20);
     }
   }
 

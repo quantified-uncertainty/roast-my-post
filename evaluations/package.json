@@ -1,0 +1,19 @@
+{
+  "name": "evaluations",
+  "version": "1.0.0",
+  "description": "This directory contains the evaluation framework for the spelling/grammar checking tool.",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx server/index.ts",
+    "dev": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx watch server/index.ts",
+    "evaluate": "cd /Users/ozziegooen/Documents/Github/ui-cleanup/evaluations && tsx scripts/run-evaluation.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hono/node-server": "^1.17.1",
+    "hono": "^4.8.10"
+  }
+}

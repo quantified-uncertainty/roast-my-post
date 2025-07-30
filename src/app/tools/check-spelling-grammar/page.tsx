@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { ToolPageTemplate } from '@/components/tools/form-generators';
 import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
 import { CommentSeverity, importanceToSeverity } from '@/tools/check-spelling-grammar/comment-styles';
@@ -136,44 +139,6 @@ Previous research have shown similar results, although the methodologies varied 
         
         return (
           <div className="space-y-6">
-            {/* Grade and Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className={`p-4 rounded-lg border ${
-                gradeResult.grade >= 90 ? 'bg-green-50 border-green-200' :
-                gradeResult.grade >= 80 ? 'bg-blue-50 border-blue-200' :
-                gradeResult.grade >= 70 ? 'bg-yellow-50 border-yellow-200' :
-                gradeResult.grade >= 50 ? 'bg-orange-50 border-orange-200' :
-                'bg-red-50 border-red-200'
-              }`}>
-                <h3 className="text-lg font-semibold mb-2">Writing Grade</h3>
-                <div className="text-3xl font-bold mb-1">{gradeResult.grade}/100</div>
-                <p className="text-sm font-medium">{gradeResult.category}</p>
-                <p className="text-sm mt-2">{gradeResult.description}</p>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="text-lg font-semibold mb-2">Analysis Summary</h3>
-                <div className="text-sm space-y-1">
-                  <p>Total errors: <span className="font-medium">{typedResult.errors.length}</span>
-                    {typedResult.metadata?.totalErrorsFound && typedResult.metadata.totalErrorsFound > typedResult.errors.length && 
-                      ` (showing top ${typedResult.errors.length} of ${typedResult.metadata.totalErrorsFound})`}
-                  </p>
-                  <p>Word count: <span className="font-medium">{wordCount}</span></p>
-                  <p>Error density: <span className="font-medium">{gradeResult.statistics.errorDensity}</span> per 100 words</p>
-                  {typedResult.metadata && (
-                    <p>Convention: <span className="font-medium">{typedResult.metadata.convention} English</span></p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Document Summary */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ 
-                __html: generateDocumentSummary(errorsWithLocation).replace(/\n/g, '<br>').replace(/##\s+(.+)/g, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>').replace(/###\s+(.+)/g, '<h4 class="text-base font-semibold mt-3 mb-1">$1</h4>')
-              }} />
-            </div>
-
             {/* Errors list */}
             {typedResult.errors.length === 0 ? (
               <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
@@ -206,13 +171,13 @@ Previous research have shown similar results, although the methodologies varied 
                       </div>
                     </div>
                     
-                    <div className="mb-2">
-                      <div 
-                        className="text-sm"
-                        dangerouslySetInnerHTML={{ 
-                          __html: generateSpellingComment(error)
-                        }}
-                      />
+                    <div className="mb-2 prose prose-sm max-w-none">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                      >
+                        {generateSpellingComment(error)}
+                      </ReactMarkdown>
                     </div>
                     
                     {error.context && (
@@ -233,6 +198,52 @@ Previous research have shown similar results, although the methodologies varied 
                 ))}
               </div>
             )}
+
+            {/* Analysis Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Analysis</h3>
+              
+              {/* Grade and Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`p-4 rounded-lg border ${
+                  gradeResult.grade >= 90 ? 'bg-green-50 border-green-200' :
+                  gradeResult.grade >= 80 ? 'bg-blue-50 border-blue-200' :
+                  gradeResult.grade >= 70 ? 'bg-yellow-50 border-yellow-200' :
+                  gradeResult.grade >= 50 ? 'bg-orange-50 border-orange-200' :
+                  'bg-red-50 border-red-200'
+                }`}>
+                  <h4 className="text-base font-semibold mb-2">Writing Grade</h4>
+                  <div className="text-3xl font-bold mb-1">{gradeResult.grade}/100</div>
+                  <p className="text-sm font-medium">{gradeResult.category}</p>
+                  <p className="text-sm mt-2">{gradeResult.description}</p>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h4 className="text-base font-semibold mb-2">Statistics</h4>
+                  <div className="text-sm space-y-1">
+                    <p>Total errors: <span className="font-medium">{typedResult.errors.length}</span>
+                      {typedResult.metadata?.totalErrorsFound && typedResult.metadata.totalErrorsFound > typedResult.errors.length && 
+                        ` (showing top ${typedResult.errors.length} of ${typedResult.metadata.totalErrorsFound})`}
+                    </p>
+                    <p>Word count: <span className="font-medium">{wordCount}</span></p>
+                    <p>Error density: <span className="font-medium">{gradeResult.statistics.errorDensity}</span> per 100 words</p>
+                    {typedResult.metadata && (
+                      <p>Convention: <span className="font-medium">{typedResult.metadata.convention} English</span></p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Document Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 prose prose-sm max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {generateDocumentSummary(errorsWithLocation)}
+                </ReactMarkdown>
+              </div>
+            </div>
 
             {/* JSON View at bottom */}
             <div className="mt-8">
