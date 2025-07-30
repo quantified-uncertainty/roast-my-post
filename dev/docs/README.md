@@ -43,7 +43,8 @@ Security documentation and procedures
 ## Quick Navigation
 
 ### For Developers
-- **Getting Started**: See main [README.md](../README.md)
+- **Getting Started**: See main [README.md](../../README.md) 
+- **Monorepo Structure**: See [CLAUDE.md](../../CLAUDE.md#monorepo-migration-2025-01-30) for workspace setup
 - **Agent Development**: [development/agents.md](development/agents.md)
 - **Claude API Integration**: [development/claude-wrapper-pattern.md](development/claude-wrapper-pattern.md)
 - **Ephemeral Experiments**: [features/ephemeral-experiments.md](features/ephemeral-experiments.md)
@@ -65,8 +66,8 @@ Security documentation and procedures
 ## Claude Code Operations
 
 For Claude-specific development operations and analysis, see:
-- **[/claude/README.md](../claude/README.md)** - Claude Code operations guide
-- **[/CLAUDE.md](../CLAUDE.md)** - Claude development notes and critical incidents
+- **[/claude/README.md](../../claude/README.md)** - Claude Code operations guide
+- **[/CLAUDE.md](../../CLAUDE.md)** - Claude development notes and critical incidents
 
 ## Contributing to Documentation
 

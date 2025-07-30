@@ -9,12 +9,19 @@ This document provides a comprehensive overview of the roast-my-post system arch
 This documentation is currently being developed. Key topics to be covered:
 
 ### System Components
-- Frontend (Next.js App Router)
-- Backend API Routes
-- Database Layer (PostgreSQL + Prisma)
-- Job Processing System
-- AI Integration Layer
-- Authentication System
+- **Frontend** (Next.js App Router) - `apps/web/`
+- **Backend API Routes** - `apps/web/src/app/api/`
+- **Database Layer** - PostgreSQL + Prisma (`internal-packages/db/`)
+- **Job Processing System** - Asynchronous job queue
+- **AI Integration Layer** - Claude/OpenAI wrappers
+- **Authentication System** - NextAuth.js
+- **MCP Server** - Database access (`apps/mcp-server/`)
+
+### Monorepo Structure
+- **Workspaces**: pnpm workspace monorepo
+- **Shared Packages**: `@roast/db` for database access
+- **Build System**: Turborepo for coordinated builds
+- **Development Tools**: Centralized in `dev/` directory
 
 ### Architecture Patterns
 - Request/Response Flow
