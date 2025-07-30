@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 export async function checkDocumentOwnership(documentId: string): Promise<boolean> {
   const session = await auth();

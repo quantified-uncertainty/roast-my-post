@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as yaml from 'js-yaml';
 
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
 import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
 import { estimateTokens } from "@/lib/tokenUtils";

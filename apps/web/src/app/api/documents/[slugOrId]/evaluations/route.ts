@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
 
 /**

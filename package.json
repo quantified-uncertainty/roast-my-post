@@ -15,7 +15,7 @@
     "test:integration": "turbo run test:integration",
     "test:e2e": "turbo run test:e2e",
     "test:llm": "turbo run test:llm",
-    "test:fast": "npm run test:unit && npm run test:integration",
+    "test:fast": "pnpm run test:unit && pnpm run test:integration",
     "test:without-llms": "turbo run test:without-llms",
     "test:without-external": "turbo run test:without-external",
     "test:ci": "turbo run test:ci",

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
-import { JobStatus } from "@/lib/prisma";
+import { prisma } from "@roast/db";
+import { JobStatus } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { isAdmin } from "@/lib/auth";

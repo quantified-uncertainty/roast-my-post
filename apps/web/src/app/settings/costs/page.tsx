@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCost } from "@/utils/costCalculator";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 export const dynamic = 'force-dynamic';
 

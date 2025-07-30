@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 import { agentSchema } from "@/models/Agent";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { successResponse, commonErrors } from "@/lib/api-response-helpers";
 import { ZodError } from "zod";
 

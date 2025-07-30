@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentModel } from "@/models/Document";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 export interface ImportDocumentResult {
   success: boolean;

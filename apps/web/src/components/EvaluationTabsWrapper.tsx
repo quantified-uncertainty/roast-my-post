@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { EvaluationTabs } from "./EvaluationTabs";
 import { RerunButton } from "./RerunButton";
 import { JobStatusIndicator } from "./JobStatusIndicator";

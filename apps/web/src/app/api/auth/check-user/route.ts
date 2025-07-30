@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { z } from "zod";
 
 const checkUserSchema = z.object({

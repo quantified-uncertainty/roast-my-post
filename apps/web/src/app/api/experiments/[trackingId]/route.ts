@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { calculateJobStats, calculateSuccessRate } from "@/lib/batch-utils";
 

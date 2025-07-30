@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma, Prisma } from "@/lib/prisma";
+import { prisma, Prisma } from "@roast/db";
 import { DocumentModel } from "@/models/Document";
 
 export async function GET(request: NextRequest) {

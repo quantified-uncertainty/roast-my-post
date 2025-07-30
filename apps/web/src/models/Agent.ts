@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import type { Agent, AgentInput } from "@/types/agentSchema";
 import {
   AgentInputSchema,

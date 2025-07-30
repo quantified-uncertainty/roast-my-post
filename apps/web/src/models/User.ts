@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { z } from "zod";
 import { getUserSelectFields, getPublicUserFields } from "@/lib/user-permissions";
 

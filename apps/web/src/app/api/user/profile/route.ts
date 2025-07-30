@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1).max(100),

@@ -10,7 +10,7 @@
 
 import 'dotenv/config';
 import { heliconeAPI } from '@/lib/helicone/api-client';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@roast/db';
 
 async function generateCostReport() {
   const args = process.argv.slice(2);

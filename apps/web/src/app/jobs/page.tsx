@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { formatDistanceToNow } from "date-fns";
 
 export const dynamic = 'force-dynamic';

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import AgentsList from "@/components/AgentsList";
 import type { Agent } from "@/types/agentSchema";
 import { USER_DISPLAY } from "@/lib/constants";

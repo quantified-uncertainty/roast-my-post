@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "start:with-env": "DATABASE_URL=\"$DATABASE_URL\" node dist/index.js",
     "configure": "node configure-claude.js",
-    "setup": "npm install && npm run build && npm run configure"
+    "setup": "pnpm install && pnpm run build && pnpm run configure"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.7.0",

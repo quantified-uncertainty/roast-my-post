@@ -11,7 +11,7 @@ import SlateEditor from "@/components/SlateEditor";
 import { PageHeader } from "@/components/PageHeader";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,

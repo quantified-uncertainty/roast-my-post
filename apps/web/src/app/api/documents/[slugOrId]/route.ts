@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 
 import { DocumentModel } from "@/models/Document";
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@roast/db";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
   const params = await context.params;
