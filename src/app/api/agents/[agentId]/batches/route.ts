@@ -44,6 +44,7 @@ export async function GET(
             id: true,
             status: true,
             costInCents: true,
+            priceInDollars: true,
             durationInSeconds: true,
             evaluationVersion: {
               select: {
@@ -61,7 +62,12 @@ export async function GET(
       const jobStats = calculateJobStats(jobs);
       const completedJobs = jobs.filter(job => job.status === "COMPLETED");
       
-      const totalCost = jobs.reduce((sum, job) => sum + (job.costInCents || 0), 0);
+      const totalCost = jobs.reduce((sum: number, job: any) => {
+        if (job.priceInDollars) {
+          return sum + (parseFloat(job.priceInDollars.toString()) * 100);
+        }
+        return sum + (job.costInCents || 0);
+      }, 0);
       const avgDuration = completedJobs.length > 0 
         ? completedJobs.reduce((sum, job) => sum + (job.durationInSeconds || 0), 0) / completedJobs.length 
         : 0;

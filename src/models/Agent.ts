@@ -293,6 +293,7 @@ export class AgentModel {
                   createdAt: true,
                   completedAt: true,
                   costInCents: true,
+              priceInDollars: true,
                 },
               },
             },
@@ -380,6 +381,7 @@ export class AgentModel {
               createdAt: true,
               completedAt: true,
               costInCents: true,
+              priceInDollars: true,
               llmThinking: true,
               tasks: {
                 select: {

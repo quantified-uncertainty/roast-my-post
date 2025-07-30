@@ -158,20 +158,24 @@ export async function runEvaluation(
     const categoryStats = calculateCategoryStats(results);
     
     return {
-    metadata: {
-      timestamp: new Date().toISOString(),
-      totalTests: results.length,
-      passedTests,
-      failedTests: results.length - passedTests,
-      passRate: Math.round((passedTests / results.length) * 100),
-      avgConsistency: Math.round(
-        results.reduce((sum, r) => sum + r.consistencyScore, 0) / results.length
-      ),
-      inconsistentTests: results.filter(r => r.consistencyScore < 100).length,
-      categoryStats
-    },
-    results
-  };
+      metadata: {
+        timestamp: new Date().toISOString(),
+        totalTests: results.length,
+        passedTests,
+        failedTests: results.length - passedTests,
+        passRate: Math.round((passedTests / results.length) * 100),
+        avgConsistency: Math.round(
+          results.reduce((sum, r) => sum + r.consistencyScore, 0) / results.length
+        ),
+        inconsistentTests: results.filter(r => r.consistencyScore < 100).length,
+        categoryStats
+      },
+      results
+    };
+  } catch (error) {
+    console.error('Error running evaluation:', error);
+    throw error;
+  }
 }
 
 function checkExpectations(output: any, expectations: TestCase['expectations']) {

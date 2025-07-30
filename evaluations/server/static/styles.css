@@ -220,16 +220,19 @@ h1 {
 /* Results table */
 .results-table {
   background: white;
-  padding: 28px 32px;
+  padding: 0;
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
   border: 1px solid #e1e4e8;
+  overflow: hidden;
 }
 
 .filters {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  padding: 20px 32px;
+  background: #fafbfc;
+  border-bottom: 1px solid #e1e4e8;
 }
 
 .filter-btn {
@@ -253,19 +256,26 @@ h1 {
 }
 
 /* Table styles */
+.results-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 0;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  border: 1px solid #e1e4e8;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 th, td {
-  padding: 14px 16px;
+  padding: 16px;
   text-align: left;
   border-bottom: 1px solid #e1e4e8;
+  vertical-align: middle;
+  min-height: 60px;
+  box-sizing: border-box;
 }
 
 th {
@@ -278,18 +288,15 @@ th {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: 2px solid #e1e4e8;
 }
 
 tr {
   transition: background-color 0.15s ease;
 }
 
-tr:hover {
+tr:hover:not(.details-row) {
   background: #fafbfc;
-}
-
-tr:last-child td {
-  border-bottom: none;
 }
 
 tr.passed .status { 
@@ -302,32 +309,95 @@ tr.failed .status {
   font-weight: 500;
 }
 
+/* Ensure consistent borders */
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Fix for details row */
+tr.details-row {
+  border: none;
+}
+
+tr.details-row:hover {
+  background: transparent;
+}
+
+/* Ensure clean table borders */
+.results-table tbody tr:not(.details-row) {
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.results-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.results-table tbody tr.details-row td {
+  border-top: none;
+  border-bottom: 1px solid #e1e4e8;
+}
+
 .test-name {
-  max-width: 300px;
+  max-width: 400px;
 }
 
 .test-description {
   font-size: 12px;
   color: #6c757d;
   margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Column widths */
+th:nth-child(1), td:nth-child(1) { /* Status */
+  width: 60px;
+  text-align: center;
+}
+
+th:nth-child(3), td:nth-child(3) { /* Category */
+  width: 140px;
+}
+
+th:nth-child(4), td:nth-child(4) { /* Runs */
+  width: 120px;
+}
+
+th:nth-child(6), td:nth-child(6) { /* Consistency */
+  width: 160px;
+}
+
+th:nth-child(7), td:nth-child(7) { /* Actions */
+  width: 100px;
+  text-align: center;
+}
+
+td:nth-child(7) {
+  text-align: center;
 }
 
 /* Run indicators */
 .runs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
+  align-items: center;
+  min-height: 40px;
+}
+
+td.runs {
+  white-space: nowrap;
 }
 
 .run-indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   color: white;
+  flex-shrink: 0;
 }
 
 .run-indicator.success {
@@ -343,12 +413,17 @@ tr.failed .status {
   max-width: 600px;
 }
 
+td.errors {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .error-item {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  margin: 4px;
+  margin: 4px 4px 4px 0;
   background: white;
   border-radius: 6px;
   font-size: 13px;
@@ -434,8 +509,13 @@ tr.failed .status {
 
 /* Details row */
 .details-row td {
-  background: #f8f9fa;
+  background: #fafbfc;
   padding: 0;
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.details-row:last-child td {
+  border-bottom: none;
 }
 
 .test-details {
