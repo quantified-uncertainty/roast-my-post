@@ -17,7 +17,7 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "prisma:generate"],
       "outputs": ["dist/**", ".next/**", "build/**"]
     },
     "dev": {
