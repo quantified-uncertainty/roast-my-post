@@ -18,7 +18,7 @@ import { createLogDetails } from "../shared/llmUtils";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
 import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
-import { findHighlightLocation } from "../shared/pluginLocationWrappers";
+import { findHighlightLocation, type HighlightLocation } from "../shared/pluginLocationWrappers";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
 import { createHeliconeHeaders } from "../../helicone/sessions";
 
@@ -66,71 +66,12 @@ export async function extractHighlightsFromAnalysis(
         contextAfter: lines[endLine] || ''
       });
       
-      if (location) {
-        // Use the location found by the unified finder
-        const lineBasedHighlight: LineBasedHighlight = {
-          description: insight.suggestedHighlight,
-          importance: 5, // Default importance
-          highlight: {
-            startLineIndex: location.startLineIndex,
-            endLineIndex: location.endLineIndex,
-            startCharacters: location.startCharacters,
-            endCharacters: location.endCharacters,
-          },
-        };
-        
-        lineBasedHighlights.push(lineBasedHighlight);
-      } else {
-        // Fallback to original logic if unified finder fails
-        const startLineContent = lines[startLine - 1] || '';
-        const endLineContent = lines[endLine - 1] || '';
-        
-        // Extract character snippets, ensuring we always have valid content
-        let startCharacters = startLineContent.slice(0, 10).trim();
-        let endCharacters = endLineContent.length > 10 
-          ? endLineContent.slice(-10).trim() 
-          : endLineContent.trim();
-        
-        // Fallback: if snippets are empty, use first/last non-empty content
-        if (!startCharacters) {
-          // Look for first non-empty content starting from the highlight
-          for (let i = startLine - 1; i < Math.min(startLine + 2, lines.length); i++) {
-            const line = lines[i];
-            if (line && line.trim()) {
-              startCharacters = line.slice(0, 10).trim();
-              break;
-            }
-          }
-          // Ultimate fallback
-          if (!startCharacters) startCharacters = "...";
-        }
-        
-        if (!endCharacters) {
-          // Look for last non-empty content ending at the highlight
-          for (let i = endLine - 1; i >= Math.max(endLine - 3, 0); i--) {
-            const line = lines[i];
-            if (line && line.trim()) {
-              endCharacters = line.slice(-10).trim();
-              break;
-            }
-          }
-          // Ultimate fallback
-          if (!endCharacters) endCharacters = "...";
-        }
-        
-        const lineBasedHighlight: LineBasedHighlight = {
-          description: insight.suggestedHighlight,
-          importance: 5, // Default importance
-          highlight: {
-            startLineIndex: startLine - 1, // Convert to 0-based
-            endLineIndex: endLine - 1,
-            startCharacters: startCharacters,
-            endCharacters: endCharacters,
-          },
-        };
-        
-        lineBasedHighlights.push(lineBasedHighlight);
-      }
+      // Create the highlight either from location finder results or fallback
+      const lineBasedHighlight = location 
+        ? createHighlightFromLocation(location, insight)
+        : createFallbackHighlight(lines, startLine, endLine, insight);
+      
+      lineBasedHighlights.push(lineBasedHighlight);
     }
     
     // Convert to character-based highlights using the full content (with prepend)
@@ -328,4 +269,85 @@ export async function extractHighlightsFromAnalysis(
       highlights,
     },
   };
+}
+
+/**
+ * Creates a LineBasedHighlight from successful location finder results
+ */
+function createHighlightFromLocation(
+  location: HighlightLocation,
+  insight: { suggestedHighlight: string }
+): LineBasedHighlight {
+  return {
+    description: insight.suggestedHighlight,
+    importance: 5, // Default importance
+    highlight: {
+      startLineIndex: location.startLineIndex,
+      endLineIndex: location.endLineIndex,
+      startCharacters: location.startCharacters,
+      endCharacters: location.endCharacters,
+    },
+  };
+}
+
+/**
+ * Creates a fallback LineBasedHighlight when location finder fails
+ * 
+ * This fallback is necessary because:
+ * 1. The location finder might fail on edge cases (e.g., very short text)
+ * 2. The LLM-provided line numbers might point to valid content that the fuzzy finder misses
+ * 3. We want to preserve all insights from the analysis, even if imperfect
+ * 
+ * The fallback uses the first 10 chars of start line and last 10 chars of end line
+ * as anchor points for the highlight validator to work with.
+ */
+function createFallbackHighlight(
+  lines: string[],
+  startLine: number,
+  endLine: number,
+  insight: { suggestedHighlight: string }
+): LineBasedHighlight {
+  logger.debug(`Location finder failed for: "${insight.suggestedHighlight}" near line ${startLine}, using fallback`);
+  
+  // Get the actual line content (convert from 1-based to 0-based index)
+  const startLineContent = lines[startLine - 1] || '';
+  const endLineContent = lines[endLine - 1] || '';
+  
+  // Extract character snippets that will help the validator find the highlight
+  // We use the first 10 chars of start line and last 10 chars of end line
+  const startCharacters = extractStartCharacters(startLineContent);
+  const endCharacters = extractEndCharacters(endLineContent);
+  
+  return {
+    description: insight.suggestedHighlight,
+    importance: 5, // Default importance
+    highlight: {
+      startLineIndex: startLine - 1, // Convert to 0-based
+      endLineIndex: endLine - 1,
+      startCharacters,
+      endCharacters,
+    },
+  };
+}
+
+/**
+ * Extracts the starting characters from a line for highlight anchoring
+ * Returns "..." if the line is empty or only whitespace
+ */
+function extractStartCharacters(lineContent: string): string {
+  const trimmed = lineContent.slice(0, 10).trim();
+  return trimmed || "...";
+}
+
+/**
+ * Extracts the ending characters from a line for highlight anchoring
+ * Returns "..." if the line is empty or only whitespace
+ */
+function extractEndCharacters(lineContent: string): string {
+  if (lineContent.length > 10) {
+    const trimmed = lineContent.slice(-10).trim();
+    return trimmed || "...";
+  }
+  const trimmed = lineContent.trim();
+  return trimmed || "...";
 }

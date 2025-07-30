@@ -6,6 +6,7 @@ export interface TextLocationFinderInput {
   documentText: string;
   searchText: string;
   context?: string;
+  lineNumberHint?: number; // Optional line number to help narrow search
   options?: {
     // Simple options based on actual plugin usage
     normalizeQuotes?: boolean;
@@ -34,6 +35,7 @@ const inputSchema = z.object({
   documentText: z.string().min(1, "Document text is required").max(100000, "Document text too long"),
   searchText: z.string().min(1, "Search text is required").max(1000, "Search text too long"),
   context: z.string().optional(),
+  lineNumberHint: z.number().min(1).optional().describe("Optional line number to help narrow search"),
   options: z.object({
     normalizeQuotes: z.boolean().optional(),
     partialMatch: z.boolean().optional(),
@@ -84,7 +86,8 @@ export class FuzzyTextLocatorTool extends Tool<TextLocationFinderInput, TextLoca
         partialMatch: input.options?.partialMatch ?? false,
         useLLMFallback: input.options?.useLLMFallback ?? false,
         llmContext: input.context,
-        pluginName: 'fuzzy-text-locator'
+        pluginName: 'fuzzy-text-locator',
+        lineNumberHint: input.lineNumberHint
       };
 
       // Use the unified finder with all strategies

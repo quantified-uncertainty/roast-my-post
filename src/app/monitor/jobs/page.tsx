@@ -11,7 +11,7 @@ interface Job {
   completedAt?: string;
   error?: string;
   logs?: string;
-  costInCents?: number;
+  priceInDollars?: number;
   durationInSeconds?: number;
   attempts: number;
   originalJobId?: string | null;
@@ -156,7 +156,7 @@ export default function JobsMonitorPage() {
                     createdAt: selectedJob.createdAt,
                     completedAt: selectedJob.completedAt,
                     durationInSeconds: selectedJob.durationInSeconds,
-                    costInCents: selectedJob.costInCents,
+                    priceInDollars: selectedJob.priceInDollars,
                     attempts: selectedJob.attempts,
                     originalJobId: selectedJob.originalJobId,
                     error: selectedJob.error

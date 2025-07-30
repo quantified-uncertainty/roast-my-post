@@ -231,7 +231,7 @@ model Job {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   llmThinking         String?
-  costInCents         Int?
+  priceInDollars      Decimal?           @db.Decimal(10, 6)
   durationInSeconds   Int?
   logs                String?
   evaluationId        String

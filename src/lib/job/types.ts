@@ -6,7 +6,7 @@ export interface JobData {
   completedAt?: string | Date | null;
   startedAt?: string | Date | null;
   durationInSeconds?: number | null;
-  costInCents?: number | null;
+  priceInDollars?: number | string | null;
   attempts?: number;
   originalJobId?: string | null;
   error?: string | null;

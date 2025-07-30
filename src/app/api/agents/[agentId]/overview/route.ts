@@ -45,11 +45,11 @@ export async function GET(
     const costsResult = await prisma.job.aggregate({
       where: {
         evaluation: { agentId: agentId },
-        costInCents: { not: null },
+        priceInDollars: { not: null },
       },
-      _sum: { costInCents: true },
-      _avg: { costInCents: true },
-      _count: { costInCents: true },
+      _sum: { priceInDollars: true },
+      _avg: { priceInDollars: true },
+      _count: { priceInDollars: true },
     });
 
     // Get average time
@@ -120,8 +120,8 @@ export async function GET(
     const stats = {
       totalEvaluations,
       averageGrade: gradesResult._avg.grade,
-      totalCost: costsResult._sum.costInCents || 0,
-      averageCost: costsResult._avg.costInCents || 0,
+      totalCost: costsResult._sum.priceInDollars ? Math.round(parseFloat(costsResult._sum.priceInDollars.toString()) * 100) : 0,
+      averageCost: costsResult._avg.priceInDollars ? Math.round(parseFloat(costsResult._avg.priceInDollars.toString()) * 100) : 0,
       averageTime: timeResult._avg.durationInSeconds || 0,
       successRate,
       uniqueDocuments: uniqueDocuments.length,

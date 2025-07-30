@@ -6,7 +6,7 @@ import { Bot } from "lucide-react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { EvaluationSection } from "./EvaluationSection";
-import { formatCost, formatDuration, formatDate } from "@/lib/job/formatters";
+import { formatCostFromDollars, formatDuration, formatDate } from "@/lib/job/formatters";
 import { 
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon,
@@ -27,7 +27,7 @@ interface EvaluationDetailsSectionProps {
     trackingId: string | null;
     isEphemeral: boolean;
   } | null;
-  costInCents?: number | null;
+  priceInDollars?: number | string | null;
   durationInSeconds?: number | null;
   createdAt?: string | Date;
   evaluationData?: any; // Full evaluation data for export
@@ -45,7 +45,7 @@ export function EvaluationDetailsSection({
   agentDescription,
   grade,
   ephemeralBatch,
-  costInCents,
+  priceInDollars,
   durationInSeconds,
   createdAt,
   evaluationData,
@@ -98,7 +98,7 @@ export function EvaluationDetailsSection({
       job: job ? {
         id: job.id,
         status: job.status,
-        costInCents: job.costInCents,
+        priceInDollars: job.priceInDollars,
         durationInSeconds: job.durationInSeconds,
         llmModel: job.llmModel,
         inputTokens: job.inputTokens,
@@ -242,11 +242,11 @@ export function EvaluationDetailsSection({
                   </dd>
                 </div>
               )}
-              {costInCents !== undefined && costInCents !== null && (
+              {priceInDollars !== undefined && priceInDollars !== null && (
                 <div>
                   <dt className="text-xs text-gray-500 uppercase tracking-wide">Cost</dt>
                   <dd className="text-sm font-medium text-gray-900 mt-1">
-                    {formatCost(costInCents)}
+                    {formatCostFromDollars(priceInDollars)}
                   </dd>
                 </div>
               )}
@@ -448,8 +448,8 @@ function evaluationToMarkdown(data: any): string {
     if (job.status) {
       md += `**Status:** ${job.status}\n`;
     }
-    if (job.costInCents !== null && job.costInCents !== undefined) {
-      md += `**Cost:** $${(job.costInCents / 100).toFixed(4)}\n`;
+    if (job.priceInDollars !== null && job.priceInDollars !== undefined) {
+      md += `**Cost:** $${parseFloat(job.priceInDollars.toString()).toFixed(4)}\n`;
     }
     if (job.durationInSeconds !== null && job.durationInSeconds !== undefined) {
       md += `**Duration:** ${job.durationInSeconds}s\n`;

@@ -1,6 +1,7 @@
 import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
 import { checkSpellingGrammarTool } from "@/tools/check-spelling-grammar";
 import type { Comment } from "@/types/documentSchema";
+import type { LanguageConventionOption } from "@/types/languageConvention";
 
 import { logger } from "../../../logger";
 import { TextChunk } from "../../TextChunk";
@@ -9,7 +10,9 @@ import {
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { generateSpellingComment, generateDocumentSummary } from "./commentGeneration";
+import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation as ToolSpellingErrorWithLocation } from "@/tools/check-spelling-grammar/commentGeneration";
+import { detectLanguageConvention, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
+import { calculateGrade, countWords, generateGradeSummary } from "@/tools/check-spelling-grammar/grading";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -30,6 +33,9 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private analysis: string = "";
   private totalCost: number = 0;
   private errors: SpellingErrorWithLocation[] = [];
+  private languageConvention?: ReturnType<typeof detectLanguageConvention>;
+  private gradeResult?: ReturnType<typeof calculateGrade>;
+  private strictness: 'minimal' | 'standard' | 'thorough' = 'standard';
 
   name(): string {
     return "SPELLING";
@@ -81,15 +87,22 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     try {
       logger.info("SpellingAnalyzer: Starting analysis");
 
+      // Detect conventions and document type
+      this.detectConventions();
+
       // Process chunks and create comments in one pass
       await this.processChunksAndCreateComments();
+      
+      // Calculate grade
+      const wordCount = countWords(this.documentText);
+      this.gradeResult = calculateGrade(this.errors.map(e => e.error), wordCount);
       
       logger.info("SpellingAnalyzer: Generating analysis summary...");
       this.generateAnalysis();
 
       this.hasRun = true;
       logger.info(
-        `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated`
+        `SpellingAnalyzer: Analysis complete - ${this.comments.length} comments generated, grade: ${this.gradeResult.grade}/100`
       );
 
       return this.getResults();
@@ -113,6 +126,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       analysis: this.analysis,
       comments: this.comments,
       cost: this.totalCost,
+      grade: this.gradeResult?.grade,
     };
   }
 
@@ -121,15 +135,27 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       `SpellingAnalyzer: Processing ${this.chunks.length} chunks`
     );
 
+    // Log detected convention once before processing
+    if (this.languageConvention) {
+      logger.info(`SpellingAnalyzer: Using detected ${this.languageConvention.convention} English convention for spell checking (consistency: ${Math.round(this.languageConvention.consistency * 100)}%)`);
+    }
+
     // Process chunks sequentially to maintain order and process errors immediately
     for (const chunk of this.chunks) {
       try {
         logger.debug(`SpellingAnalyzer: Checking chunk ${chunk.id}`);
         
+        // Use detected convention if available
+        const convention = this.languageConvention 
+          ? this.languageConvention.convention
+          : 'auto';
+        
         const result = await checkSpellingGrammarTool.execute(
           {
             text: chunk.text,
             maxErrors: 20, // Limit errors per chunk
+            convention: convention as LanguageConventionOption,
+            strictness: this.strictness,
           },
           {
             logger: logger,
@@ -144,6 +170,12 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           // Validate error has required fields
           if (!error || !error.text || typeof error.text !== 'string' || !error.text.trim()) {
             logger.warn('SpellingAnalyzer: Skipping invalid error from LLM', { error });
+            continue;
+          }
+          
+          // Skip very low confidence errors (below 30%)
+          if (error.confidence && error.confidence < 30) {
+            logger.debug(`SpellingAnalyzer: Skipping low-confidence error "${error.text.slice(0, 30)}..." (${error.confidence}% confidence)`);
             continue;
           }
 
@@ -242,53 +274,111 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private calculateImportance(error: SpellingGrammarError): number {
-    // Map importance (0-100) to comment importance (1-10)
-    const score = error.importance;
+    // Combine importance and confidence to determine final priority
+    // If we're not confident about an error, reduce its priority
+    const baseScore = error.importance;
+    const confidence = error.confidence || 100; // Default to 100 if not provided
     
-    if (score <= 25) {
-      // Minor typos: importance 2-3
-      return 2 + Math.floor(score / 25);
-    } else if (score <= 50) {
-      // Noticeable errors: importance 4-5
-      return 4 + Math.floor((score - 25) / 25);
-    } else if (score <= 75) {
-      // Errors affecting clarity: importance 6-7
-      return 6 + Math.floor((score - 50) / 25);
+    // Apply confidence as a multiplier (0.5 to 1.0 range)
+    // Low confidence (0-50) reduces score by up to 50%
+    // High confidence (50-100) has minimal impact
+    const confidenceMultiplier = 0.5 + (confidence / 200);
+    const adjustedScore = baseScore * confidenceMultiplier;
+    
+    // Map adjusted score (0-100) to comment importance (1-10)
+    // Based on test expectations:
+    // 10 -> 2, 30 -> 4, 60 -> 6, 90 -> 9
+    if (adjustedScore < 20) {
+      return 2; // trivial errors get importance 2
+    } else if (adjustedScore < 40) {
+      return 4; // minor errors get importance 4
+    } else if (adjustedScore < 70) {
+      return 6; // major errors get importance 6
+    } else if (adjustedScore < 100) {
+      return 9; // critical errors get importance 9
     } else {
-      // Critical errors: importance 8-10
-      return 8 + Math.floor((score - 75) / 12.5);
+      return 10; // maximum importance
     }
   }
 
+  private detectConventions(): void {
+    logger.info("SpellingAnalyzer: Detecting language conventions");
+    
+    // Take a sample from the beginning for analysis
+    const sampleSize = Math.min(2000, this.documentText.length);
+    const sample = this.documentText.slice(0, sampleSize);
+    
+    this.languageConvention = detectLanguageConvention(sample);
+    
+    logger.info("SpellingAnalyzer: Detected conventions", {
+      language: this.languageConvention.convention,
+      languageConfidence: this.languageConvention.confidence
+    });
+  }
+
   private generateAnalysis(): void {
+    // Build comprehensive analysis
+    let analysisText = '';
+    
+    // Always add grade summary if available
+    if (this.gradeResult) {
+      analysisText += generateGradeSummary(this.gradeResult) + '\n\n';
+    }
+    
+    // Always add convention detection results if available
+    if (this.languageConvention) {
+      analysisText += `**Language Convention**: ${this.languageConvention.convention} English`;
+      if (this.languageConvention.confidence < 0.8) {
+        analysisText += ` (${Math.round(this.languageConvention.confidence * 100)}% confidence)`;
+      }
+      analysisText += '\n';
+      
+      if (this.languageConvention.consistency < 0.8) {
+        analysisText += `⚠️ Mixed US/UK spelling detected (${Math.round(this.languageConvention.consistency * 100)}% consistency). Consider standardizing to ${this.languageConvention.convention} English.\n`;
+      }
+      
+      const examples = getConventionExamples(this.languageConvention.convention);
+      if (examples.length > 0) {
+        analysisText += examples.map(ex => `• ${ex}`).join('\n') + '\n';
+      }
+      analysisText += '\n';
+    }
+    
+    
     if (this.errors.length === 0) {
+      // No errors case
+      if (!analysisText) {
+        this.analysis = "The document appears to be free of spelling and grammar errors.";
+      } else {
+        analysisText += "The document appears to be free of spelling and grammar errors.";
+        this.analysis = analysisText;
+      }
+      
       this.summary = "No spelling or grammar errors found.";
-      this.analysis = "The document appears to be free of spelling and grammar errors.";
+      if (this.gradeResult) {
+        this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.summary}`;
+      }
       return;
     }
-
-    // Use the document summary generator
-    this.analysis = generateDocumentSummary(this.errors);
+    
+    // Add detailed error analysis - convert to tool format
+    const toolErrors: ToolSpellingErrorWithLocation[] = this.errors.map(e => ({
+      error: e.error,
+      location: {
+        lineNumber: e.chunk.getLineNumber(e.location?.startOffset || 0) || 1,
+        columnNumber: 0
+      }
+    }));
+    analysisText += generateDocumentSummary(toolErrors);
+    
+    this.analysis = analysisText;
 
     // Generate simple summary for the summary field
-    const totalErrors = this.errors.length;
-    const errorsByType = {
-      spelling: this.errors.filter(e => e.error.type === 'spelling').length,
-      grammar: this.errors.filter(e => e.error.type === 'grammar').length,
-    };
-
-    this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
-    
-    const parts = [];
-    if (errorsByType.spelling > 0) {
-      parts.push(`${errorsByType.spelling} spelling`);
-    }
-    if (errorsByType.grammar > 0) {
-      parts.push(`${errorsByType.grammar} grammar`);
-    }
-    
-    if (parts.length > 0) {
-      this.summary += ` (${parts.join(", ")})`;
+    if (this.gradeResult) {
+      this.summary = `${this.gradeResult.category} (${this.gradeResult.grade}/100) - ${this.gradeResult.statistics.totalErrors} issue${this.gradeResult.statistics.totalErrors !== 1 ? 's' : ''}`;
+    } else {
+      const totalErrors = this.errors.length;
+      this.summary = `Found ${totalErrors} issue${totalErrors !== 1 ? "s" : ""}`;
     }
   }
 

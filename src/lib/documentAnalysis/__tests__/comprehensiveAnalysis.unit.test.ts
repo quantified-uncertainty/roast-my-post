@@ -141,12 +141,12 @@ Overall, this is a well-structured test document.
         highlightInsights: [
           {
             id: "insight-1",
-            location: "Lines 1",
+            location: "Lines 11", // Line 11 is where the actual content starts after prepend
             suggestedHighlight: "Test Highlight 1. This is the first highlight text",
           },
           {
             id: "insight-2",
-            location: "Lines 2-3",
+            location: "Lines 12-13", // Lines 12-13 contain the actual document content
             suggestedHighlight: "Test Highlight 2. This is the second highlight text",
           },
         ],

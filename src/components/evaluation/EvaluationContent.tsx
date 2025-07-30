@@ -22,6 +22,7 @@ export function EvaluationContent({
   grade,
   ephemeralBatch,
   costInCents,
+  priceInDollars,
   durationInSeconds,
   createdAt,
   isStale = false,
@@ -127,7 +128,7 @@ export function EvaluationContent({
           agentDescription={agentDescription}
           grade={grade}
           ephemeralBatch={ephemeralBatch}
-          costInCents={costInCents}
+          priceInDollars={priceInDollars}
           durationInSeconds={durationInSeconds}
           createdAt={createdAt}
           evaluationData={isOwner ? evaluationData : undefined}

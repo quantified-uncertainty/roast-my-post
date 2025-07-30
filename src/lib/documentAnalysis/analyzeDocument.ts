@@ -5,8 +5,8 @@ import type { Comment } from "../../types/documentSchema";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
-import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
+import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
 import type { HeliconeSessionConfig } from "../helicone/sessions";
@@ -34,13 +34,13 @@ export async function analyzeDocument(
     return await analyzeLinkDocument(document, agentInfo, targetHighlights);
   }
   
+  // Use dedicated spelling/grammar workflow for spelling-grammar agents
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
-    logger.info(`Using spelling/grammar workflow for agent ${agentInfo.name} (parallel execution)`);
+    logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
     return await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
-      executionMode: 'parallel',
-      maxConcurrency: 5,
-      sessionConfig
+      sessionConfig,
+      jobId
     });
   }
   

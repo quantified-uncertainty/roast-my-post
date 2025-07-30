@@ -1,37 +1,60 @@
 /**
- * Spelling and Grammar Analysis Module
+ * Spelling and Grammar Analysis workflow for document analysis
  * 
- * This module provides functionality for analyzing documents for spelling and grammar errors.
- * It uses a clean architecture with separated domain, application, infrastructure, and workflow layers.
+ * This workflow uses only the spelling/grammar plugin for focused language analysis.
+ * It's used when agentInfo.extendedCapabilityId === "spelling-grammar"
  */
 
-import { SpellingGrammarWorkflow } from './workflows';
-import type { WorkflowOptions } from './workflows';
-import type { Agent } from '../../../types/agentSchema';
-import type { Document } from '../../../types/documents';
+import type { Agent } from "../../../types/agentSchema";
+import type { Document } from "../../../types/documents";
+import type { Comment } from "../../../types/documentSchema";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import { PluginManager } from "../../analysis-plugins/PluginManager";
+import { PluginType } from "../../analysis-plugins/types/plugin-types";
+import type { TaskResult } from "../shared/types";
+import { logger } from "../../logger";
 
-// Create singleton workflow instance
-const workflow = new SpellingGrammarWorkflow();
-
-
-/**
- * Analyze document for spelling and grammar errors
- * This is the main entry point for the module
- */
 export async function analyzeSpellingGrammar(
   document: Document,
   agentInfo: Agent,
-  options?: WorkflowOptions
-) {
-  return workflow.analyze(document, agentInfo, options);
+  options: {
+    targetHighlights?: number;
+    sessionConfig?: HeliconeSessionConfig;
+    jobId?: string;
+  } = {}
+): Promise<{
+  thinking: string;
+  analysis: string;
+  summary: string;
+  grade?: number;
+  highlights: Comment[];
+  tasks: TaskResult[];
+  jobLogString?: string;
+}> {
+  logger.info(`Starting spelling/grammar analysis for agent ${agentInfo.name}`);
+  
+  // Create plugin manager with only the spelling plugin
+  const manager = new PluginManager({
+    sessionConfig: options.sessionConfig,
+    jobId: options.jobId,
+    pluginSelection: {
+      include: [PluginType.SPELLING], // Only use spelling/grammar plugin
+    },
+  });
+
+  // Delegate to plugin system
+  const result = await manager.analyzeDocument(document, {
+    targetHighlights: options.targetHighlights,
+  });
+
+  // The spelling plugin provides a grade, so we can include it
+  return {
+    thinking: result.thinking,
+    analysis: result.analysis,
+    summary: result.summary,
+    grade: result.grade,
+    highlights: result.highlights,
+    tasks: result.tasks,
+    jobLogString: result.jobLogString,
+  };
 }
-
-// Export types for backwards compatibility
-export type { 
-  ChunkWithLineNumbers, 
-  SpellingGrammarHighlight,
-  AgentContext 
-} from "./types";
-
-// Export utility functions that might be used externally
-export { convertHighlightsToComments, validateConvertedHighlights } from "./highlightConverter";

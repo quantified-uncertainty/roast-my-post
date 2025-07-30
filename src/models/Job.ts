@@ -11,7 +11,7 @@ import {
 import { Agent } from "../types/agentSchema";
 import { ANALYSIS_MODEL } from "../types/openai";
 import {
-  calculateApiCost,
+  calculateApiCostInDollars,
   mapModelToCostModel,
 } from "../utils/costCalculator";
 import {
@@ -196,7 +196,7 @@ export class JobModel {
     jobId: string,
     data: {
       llmThinking: string | null;
-      costInCents: number;
+      priceInDollars: number;
       durationInSeconds: number;
       logs: string;
     }
@@ -552,14 +552,15 @@ export class JobModel {
       const totalOutputTokens = 0; // Legacy field, kept for compatibility
 
       // Try to get accurate cost from Helicone first
-      let costInCents: number;
+      let priceInDollars: number;
       
       try {
         const heliconeData = await fetchJobCostWithRetry(job.id, 3, 1000);
         
         if (heliconeData) {
-          costInCents = Math.round(heliconeData.totalCostUSD * 100);
-          logger.info(`Using Helicone cost data for job ${job.id}: $${heliconeData.totalCostUSD}`);
+          // Store exact price in dollars with full precision
+          priceInDollars = heliconeData.totalCostUSD;
+          logger.info(`Using Helicone cost data for job ${job.id}: $${priceInDollars}`);
         } else {
           throw new Error('Helicone data not available');
         }
@@ -567,7 +568,7 @@ export class JobModel {
         // Fallback to manual cost calculation
         logger.warn(`Failed to fetch Helicone cost for job ${job.id}, falling back to manual calculation:`, { error: error instanceof Error ? error.message : String(error) });
         
-        costInCents = calculateApiCost(
+        priceInDollars = calculateApiCostInDollars(
           {
             input_tokens: totalInputTokens,
             output_tokens: totalOutputTokens,
@@ -605,7 +606,7 @@ ${analysisResult.jobLogString}
 - Total Tokens: ${totalInputTokens + totalOutputTokens}
   * Input Tokens: ${totalInputTokens}
   * Output Tokens: ${totalOutputTokens}
-- Estimated Cost: $${(costInCents / 100).toFixed(6)}
+- Estimated Cost: $${priceInDollars.toFixed(6)}
 - Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
 ${pluginLogsSection}
@@ -635,7 +636,7 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
 
       await this.markJobAsCompleted(job.id, {
         llmThinking: evaluationOutputs.thinking,
-        costInCents: costInCents,
+        priceInDollars: priceInDollars,
         durationInSeconds: (Date.now() - startTime) / 1000,
         logs: logContent,
       });

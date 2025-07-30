@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
             job: {
               select: {
                 id: true,
-                costInCents: true,
+                priceInDollars: true,
                 llmThinking: true,
                 tasks: {
                   select: {
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
             createdAt: true,
             completedAt: true,
             error: true,
-            costInCents: true,
+            priceInDollars: true,
             durationInSeconds: true,
           },
         },
@@ -122,12 +122,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the data to match the expected format
-    const evaluations = recentEvaluations.map((evaluation) => ({
+    const evaluations = recentEvaluations.map((evaluation: any) => ({
       id: evaluation.id,
       createdAt: evaluation.createdAt,
       document: evaluation.document,
       agent: evaluation.agent,
-      versions: evaluation.versions.map((version) => ({
+      versions: evaluation.versions.map((version: any) => ({
         id: version.id,
         version: version.version,
         summary: version.summary,

@@ -46,7 +46,7 @@ export async function GET(
         startedAt: true,
         completedAt: true,
         error: true,
-        costInCents: true,
+        priceInDollars: true,
         durationInSeconds: true,
         attempts: true,
         originalJobId: true,
@@ -87,7 +87,7 @@ export async function GET(
       completedAt: job.completedAt,
       startedAt: job.startedAt,
       error: job.error,
-      costInCents: job.costInCents,
+      priceInDollars: job.priceInDollars,
       durationInSeconds: job.durationInSeconds,
       document: {
         id: job.evaluation.document.id,

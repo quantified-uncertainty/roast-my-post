@@ -112,8 +112,8 @@ export default async function JobsPage() {
                   {job.durationInSeconds ? `${job.durationInSeconds}s` : "N/A"}
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  {job.costInCents
-                    ? `$${(job.costInCents / 100).toFixed(2)}`
+                  {job.priceInDollars
+                    ? `$${parseFloat(job.priceInDollars.toString()).toFixed(4)}`
                     : "N/A"}
                 </td>
               </tr>

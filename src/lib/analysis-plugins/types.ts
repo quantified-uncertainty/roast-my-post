@@ -103,6 +103,7 @@ export interface AnalysisResult {
   analysis: string;
   comments: Comment[];
   cost: number;
+  grade?: number; // Optional grade (0-100) for quality assessment
 }
 
 export interface SimpleAnalysisPlugin {

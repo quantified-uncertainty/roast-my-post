@@ -25,7 +25,7 @@ async function getDailySpending(userId: string, days: number = 30) {
     select: {
       id: true,
       createdAt: true,
-      costInCents: true,
+      priceInDollars: true,
     },
     orderBy: {
       createdAt: 'asc',
@@ -33,14 +33,14 @@ async function getDailySpending(userId: string, days: number = 30) {
   });
 
   // Group by day
-  const dailySpending = new Map<string, { costInCents: number; evaluationCount: number }>();
+  const dailySpending = new Map<string, { priceInDollars: number; evaluationCount: number }>();
   
   // Initialize all days with zero spending
   for (let i = 0; i < days; i++) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateKey = date.toISOString().split('T')[0];
-    dailySpending.set(dateKey, { costInCents: 0, evaluationCount: 0 });
+    dailySpending.set(dateKey, { priceInDollars: 0, evaluationCount: 0 });
   }
 
   // Aggregate spending by day
@@ -49,14 +49,19 @@ async function getDailySpending(userId: string, days: number = 30) {
 
   for (const job of jobs) {
     const dateKey = job.createdAt.toISOString().split('T')[0];
-    const existing = dailySpending.get(dateKey) || { costInCents: 0, evaluationCount: 0 };
+    const existing = dailySpending.get(dateKey) || { priceInDollars: 0, evaluationCount: 0 };
     
-    existing.costInCents += job.costInCents || 0;
+    // Use priceInDollars if available, otherwise fall back to priceInDollars
+    const priceInDollars = job.priceInDollars 
+      ? Math.round(parseFloat(job.priceInDollars.toString()) * 100)
+      : (job.priceInDollars || 0);
+    
+    existing.priceInDollars += priceInDollars;
     existing.evaluationCount += 1;
     
     dailySpending.set(dateKey, existing);
     
-    totalCostInCents += job.costInCents || 0;
+    totalCostInCents += priceInDollars;
     totalEvaluations += 1;
   }
 
@@ -134,7 +139,7 @@ export default async function CostsPage() {
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {spendingData.dailySpending
                       .filter((day: { evaluationCount: number }) => day.evaluationCount > 0)
-                      .map((day: { date: string; evaluationCount: number; costInCents: number }) => (
+                      .map((day: { date: string; evaluationCount: number; priceInDollars: number }) => (
                         <tr key={day.date}>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                             {new Date(day.date).toLocaleDateString('en-US', { 
@@ -147,7 +152,7 @@ export default async function CostsPage() {
                             {day.evaluationCount}
                           </td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                            {formatCost(day.costInCents / 100)}
+                            {formatCost(day.priceInDollars / 100)}
                           </td>
                         </tr>
                       ))}

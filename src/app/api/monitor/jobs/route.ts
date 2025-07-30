@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         completedAt: true,
         error: true,
         logs: true,
-        costInCents: true,
+        priceInDollars: true,
         durationInSeconds: true,
         attempts: true,
         originalJobId: true,

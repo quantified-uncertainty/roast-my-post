@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Spelling/Grammar Tool Evaluation Dashboard</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      margin: 0 auto;
+      max-width: 1600px;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .file-selector {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+    }
+    .file-list {
+      margin-top: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 10px;
+    }
+    .file-item {
+      padding: 8px 12px;
+      margin: 4px 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-item:hover {
+      background: #f0f7ff;
+      border-color: #0066cc;
+    }
+    .file-item.active {
+      background: #e3f2fd;
+      border-color: #1976d2;
+    }
+    .file-date {
+      font-size: 12px;
+      color: #666;
+    }
+    .summary {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+      display: none;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .stat-card {
+      background: white;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .passed { color: #27ae60; }
+    .failed { color: #e74c3c; }
+    .warning { color: #f39c12; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 13px;
+      display: none;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      vertical-align: top;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    tr:hover {
+      background: #fafafa;
+    }
+    .status-icon {
+      font-size: 16px;
+      text-align: center !important;
+    }
+    
+    /* Expected checks list */
+    .expected-checks {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 12px;
+    }
+    .expected-checks li {
+      padding: 2px 0;
+      position: relative;
+      padding-left: 20px;
+    }
+    .expected-checks li:before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #666;
+    }
+    
+    /* Error display */
+    .error-item {
+      background: #f8f9fa;
+      padding: 6px 8px;
+      margin: 4px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      border-left: 3px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-text {
+      color: #d32f2f;
+      font-weight: 600;
+    }
+    .error-arrow {
+      color: #666;
+    }
+    .error-correction {
+      color: #388e3c;
+      font-weight: 600;
+    }
+    .error-type {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-left: auto;
+      font-weight: 500;
+    }
+    .type-spelling {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    .type-grammar {
+      background: #f3e5f5;
+      color: #6a1b9a;
+    }
+    .importance {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .importance-low { background: #fff8e1; color: #f57c00; }
+    .importance-medium { background: #fff3cd; color: #856404; }
+    .importance-high { background: #ffebee; color: #c62828; }
+    
+    .filter-buttons {
+      margin: 20px 0;
+      display: none;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      margin-right: 10px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      background: #f8f9fa;
+      border-color: #aaa;
+    }
+    .filter-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .run-indicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin: 0 2px;
+      font-size: 11px;
+      text-align: center;
+      line-height: 20px;
+      color: white;
+      font-weight: bold;
+    }
+    .run-pass { background: #27ae60; }
+    .run-fail { background: #e74c3c; }
+    .consistency-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .consistency-perfect { background: #d4edda; color: #155724; }
+    .consistency-good { background: #fff3cd; color: #856404; }
+    .consistency-poor { background: #f8d7da; color: #721c24; }
+    .run-details {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .run-header {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #495057;
+    }
+    .no-errors {
+      color: #666;
+      font-style: italic;
+      font-size: 12px;
+    }
+    
+    /* Expandable sections */
+    details {
+      cursor: pointer;
+    }
+    details summary {
+      padding: 4px;
+      margin: -4px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #0066cc;
+      user-select: none;
+    }
+    details summary:hover {
+      background: #f0f0f0;
+    }
+    details[open] summary {
+      margin-bottom: 8px;
+    }
+    
+    /* JSON display */
+    .json-output {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, Consolas, monospace;
+      font-size: 11px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .json-toggle {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #333;
+    }
+    .json-toggle:hover {
+      background: #d0d0d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Spelling/Grammar Tool Evaluation Dashboard</h1>
+    
+    <div class="file-selector">
+      <h3>Select Evaluation Results</h3>
+      <div id="fileList" class="file-list">
+        <div style="color: #666; text-align: center; padding: 20px;">
+          Loading available results...
+        </div>
+      </div>
+    </div>
+    
+    <div id="content" style="display: none;">
+      <div class="summary" id="summary"></div>
+      
+      <div class="filter-buttons" id="filterButtons">
+        <button class="filter-btn active" onclick="filterTests('all')">All Tests</button>
+        <button class="filter-btn" onclick="filterTests('passed')">Passed Only</button>
+        <button class="filter-btn" onclick="filterTests('failed')">Failed Only</button>
+        <button class="filter-btn" onclick="filterTests('inconsistent')">Inconsistent Only</button>
+      </div>
+
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;">Status</th>
+            <th style="width: 80px;">Runs</th>
+            <th style="width: 120px;">Category</th>
+            <th style="width: 200px;">Test Name</th>
+            <th style="width: 250px;">Input Text</th>
+            <th style="width: 300px;">Expected Checks</th>
+            <th style="width: 400px;">Errors Found</th>
+            <th style="width: 100px;">Consistency</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let currentData = null;
+    let availableFiles = [];
+    
+    // Load file list on startup
+    async function loadFileList() {
+      try {
+        const response = await fetch('/api/list-results');
+        if (response.ok) {
+          const data = await response.json();
+          availableFiles = data.files || [];
+          renderFileList();
+          
+          // Auto-load the latest file
+          if (availableFiles.length > 0) {
+            loadFile(availableFiles[0]);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load file list:', e);
+        document.getElementById('fileList').innerHTML = `
+          <div style="color: #e74c3c; text-align: center; padding: 20px;">
+            Failed to load results. Make sure the server is running.
+          </div>
+        `;
+      }
+    }
+    
+    function renderFileList() {
+      const fileListDiv = document.getElementById('fileList');
+      
+      if (availableFiles.length === 0) {
+        fileListDiv.innerHTML = `
+          <div style="color: #666; text-align: center; padding: 20px;">
+            No evaluation results found. Run an evaluation first.
+          </div>
+        `;
+        return;
+      }
+      
+      fileListDiv.innerHTML = availableFiles.map((file, index) => `
+        <div class="file-item ${index === 0 ? 'active' : ''}" onclick="loadFile('${file.name}')">
+          <span>${file.name}</span>
+          <span class="file-date">${new Date(file.timestamp).toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+    
+    async function loadFile(filename) {
+      // Update active state
+      document.querySelectorAll('.file-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.textContent.includes(filename)) {
+          item.classList.add('active');
+        }
+      });
+      
+      try {
+        const response = await fetch(`/evaluations/results/${filename}`);
+        if (!response.ok) {
+          throw new Error('Failed to load file');
+        }
+        currentData = await response.json();
+        renderData();
+      } catch (e) {
+        console.error('Failed to load file:', e);
+        alert('Failed to load file: ' + filename);
+      }
+    }
+    
+    function renderData() {
+      if (!currentData) return;
+      
+      document.getElementById('content').style.display = 'block';
+      document.querySelector('.summary').style.display = 'block';
+      document.querySelector('.filter-buttons').style.display = 'block';
+      document.querySelector('table').style.display = 'table';
+      
+      // Render summary
+      const summary = currentData.metadata;
+      document.getElementById('summary').innerHTML = `
+        <h2>Summary</h2>
+        <p style="color: #666;">Generated: ${new Date(summary.timestamp).toLocaleString()}</p>
+        <div class="summary-grid">
+          <div class="stat-card">
+            <div class="stat-value">${summary.totalTests}</div>
+            <div class="stat-label">Total Tests</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value passed">${summary.passedTests}</div>
+            <div class="stat-label">Passed All Runs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value failed">${summary.failedTests}</div>
+            <div class="stat-label">Failed Any Run</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${summary.passRate}%</div>
+            <div class="stat-label">Pass Rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value ${summary.avgConsistency < 90 ? 'warning' : ''}">${summary.avgConsistency.toFixed(1)}%</div>
+            <div class="stat-label">Avg Consistency</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value ${summary.inconsistentTests > 0 ? 'warning' : 'passed'}">${summary.inconsistentTests}</div>
+            <div class="stat-label">Inconsistent Tests</div>
+          </div>
+        </div>
+      `;
+      
+      // Render table
+      renderTable(currentData.results);
+    }
+
+    function renderTable(results) {
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = results.map((result, idx) => {
+        const statusIcon = result.overallPassed ? '✅' : '❌';
+        
+        // Generate run indicators
+        const runIndicators = result.runs.map((run, i) => 
+          `<span class="run-indicator ${run.passed ? 'run-pass' : 'run-fail'}" title="Run ${i+1}: ${run.passed ? 'Pass' : 'Fail'}">${i+1}</span>`
+        ).join('');
+        
+        // Consistency badge
+        const consistencyClass = result.consistencyScore === 100 ? 'consistency-perfect' :
+                               result.consistencyScore >= 75 ? 'consistency-good' : 'consistency-poor';
+        const consistencyBadge = `<span class="consistency-badge ${consistencyClass}">${result.consistencyScore}%</span>`;
+        
+        // Format expected checks
+        const expectedChecksHtml = result.testCase.specificChecks ? 
+          `<ul class="expected-checks">
+            ${result.testCase.specificChecks.map(check => `<li>${check}</li>`).join('')}
+          </ul>` : 
+          `<div style="color: #666; font-size: 12px;">${result.testCase.expectedBehavior}</div>`;
+        
+        // Format errors found (consolidated view)
+        const allErrors = [];
+        result.runs.forEach((run, runIndex) => {
+          run.errors.forEach(error => {
+            const key = `${error.text}->${error.correction}`;
+            if (!allErrors.find(e => e.key === key)) {
+              allErrors.push({ ...error, key, runs: [runIndex + 1] });
+            } else {
+              allErrors.find(e => e.key === key).runs.push(runIndex + 1);
+            }
+          });
+        });
+        
+        const errorsHtml = allErrors.length === 0 
+          ? '<span class="no-errors">No errors found</span>'
+          : allErrors.map(error => {
+              const importanceClass = error.importance <= 25 ? 'importance-low' :
+                                    error.importance <= 50 ? 'importance-medium' : 'importance-high';
+              return `
+                <div class="error-item">
+                  <span class="error-text">${error.text}</span>
+                  <span class="error-arrow">→</span>
+                  <span class="error-correction">${error.correction}</span>
+                  <span class="error-type type-${error.type}">${error.type}</span>
+                  <span class="importance ${importanceClass}">${error.importance}</span>
+                </div>
+              `;
+            }).join('');
+        
+        // Add JSON toggle for each run
+        const jsonToggles = result.runs.map((run, i) => {
+          if (!run.output) return '';
+          return `
+            <div style="margin-top: 8px;">
+              <details>
+                <summary style="font-size: 11px; color: #666;">Run ${i+1} JSON Output</summary>
+                <div class="json-output">
+                  <pre>${JSON.stringify(run.output, null, 2)}</pre>
+                </div>
+              </details>
+            </div>
+          `;
+        }).join('');
+        
+        return `
+          <tr data-passed="${result.overallPassed}" data-consistency="${result.consistencyScore}">
+            <td class="status-icon">${statusIcon}</td>
+            <td style="text-align: center;">${runIndicators}</td>
+            <td>${result.testCase.category}</td>
+            <td style="font-weight: 600;">${result.testCase.name}</td>
+            <td>
+              <details>
+                <summary>${result.testCase.input.text.substring(0, 40)}${result.testCase.input.text.length > 40 ? '...' : ''}</summary>
+                <div style="margin-top: 8px;">
+                  <code style="display: block; white-space: pre-wrap; font-size: 11px; background: #f5f5f5; padding: 8px; border-radius: 3px;">
+${result.testCase.input.text}</code>
+                  ${result.testCase.input.context ? `<div style="font-size: 11px; color: #666; margin-top: 4px;">Context: ${result.testCase.input.context}</div>` : ''}
+                  ${result.testCase.input.strictness ? `<div style="font-size: 11px; color: #666;">Strictness: ${result.testCase.input.strictness}</div>` : ''}
+                </div>
+              </details>
+            </td>
+            <td>${expectedChecksHtml}</td>
+            <td>
+              ${errorsHtml}
+              ${jsonToggles}
+            </td>
+            <td style="text-align: center;">${consistencyBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterTests(filter) {
+      if (!currentData) return;
+      
+      const buttons = document.querySelectorAll('.filter-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      let filteredResults;
+      switch(filter) {
+        case 'passed':
+          filteredResults = currentData.results.filter(r => r.overallPassed);
+          break;
+        case 'failed':
+          filteredResults = currentData.results.filter(r => !r.overallPassed);
+          break;
+        case 'inconsistent':
+          filteredResults = currentData.results.filter(r => r.consistencyScore < 100);
+          break;
+        default:
+          filteredResults = currentData.results;
+      }
+      
+      renderTable(filteredResults);
+    }
+    
+    // Load file list on page load
+    window.addEventListener('DOMContentLoaded', loadFileList);
+  </script>
+</body>
+</html>

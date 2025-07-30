@@ -46,7 +46,7 @@ export const EvaluationVersionSchema = z.object({
   createdAt: z.date(),
   job: z
     .object({
-      costInCents: z.number(),
+      priceInDollars: z.number(),
       llmThinking: z.string(),
       durationInSeconds: z.number().optional(),
       logs: z.string().optional(),
@@ -80,7 +80,7 @@ export const EvaluationSchema = z.object({
     providesGrades: z.boolean().optional(),
   }),
   createdAt: z.date(),
-  costInCents: z.number(),
+  priceInDollars: z.number(),
   comments: z.array(CommentSchema),
   thinking: z.string(),
   summary: z.string(),
@@ -167,7 +167,7 @@ export type DocumentResponse = z.infer<typeof DocumentResponseSchema>;
 export const AnalysisResultSchema = z.object({
   agentId: z.string(),
   createdAt: z.date(),
-  costInCents: z.number(),
+  priceInDollars: z.number(),
   comments: z.array(CommentSchema),
   thinking: z.string(),
   summary: z.string(),

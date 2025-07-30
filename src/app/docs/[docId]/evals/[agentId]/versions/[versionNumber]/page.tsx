@@ -166,7 +166,8 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
-  const costInCents = selectedVersion.job?.costInCents;
+  const costInCents = selectedVersion.job?.priceInDollars ? Math.round(parseFloat(selectedVersion.job.priceInDollars.toString()) * 100) : null;
+  const priceInDollars = selectedVersion.job?.priceInDollars;
   const durationInSeconds = selectedVersion.job?.durationInSeconds;
   
   // Get all evaluations for the sidebar

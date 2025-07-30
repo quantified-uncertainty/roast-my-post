@@ -1,6 +1,6 @@
 import { JobStatusBadge } from "./JobStatusBadge";
 import { LogsViewer } from "./LogsViewer";
-import { formatCost, formatDuration, formatDate } from "@/lib/job/formatters";
+import { formatCostFromDollars, formatDuration, formatDate } from "@/lib/job/formatters";
 import { JobData } from "@/lib/job/types";
 import { getRetryText } from "@/lib/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
@@ -65,10 +65,10 @@ export function JobSummary({ job, showError = true, showLogs = true, compact = f
           </div>
         )}
 
-        {job.costInCents && (
+        {job.priceInDollars && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-1">Cost</h4>
-            <p className="text-sm text-gray-900">{formatCost(job.costInCents)}</p>
+            <p className="text-sm text-gray-900">{formatCostFromDollars(job.priceInDollars)}</p>
           </div>
         )}
       </div>

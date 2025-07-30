@@ -15,6 +15,7 @@ export interface TextLocationOptions {
   normalizeQuotes?: boolean;
   partialMatch?: boolean;
   caseSensitive?: boolean;
+  lineNumberHint?: number; // Optional line number to help narrow search
   
   // Fuzzy matching options
   maxTypos?: number; // Maximum number of typos/errors allowed in fuzzy search

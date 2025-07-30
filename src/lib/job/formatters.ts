@@ -2,9 +2,16 @@
  * Shared formatting utilities for job display
  */
 
+// Deprecated - use formatCostFromDollars instead
 export function formatCost(costInCents?: number | null): string {
   if (!costInCents) return "—";
   return `$${(costInCents / 100).toFixed(4)}`;
+}
+
+export function formatCostFromDollars(priceInDollars?: number | null | string): string {
+  if (!priceInDollars) return "—";
+  const price = typeof priceInDollars === 'string' ? parseFloat(priceInDollars) : priceInDollars;
+  return `$${price.toFixed(4)}`;
 }
 
 export function formatDuration(durationInSeconds?: number | null): string {

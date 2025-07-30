@@ -54,7 +54,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
       : null,
     
     // Run stats
-    costInCents: latestVersion?.job?.costInCents,
+    priceInDollars: latestVersion?.job?.priceInDollars,
     durationInSeconds: latestVersion?.job?.durationInSeconds,
     createdAt: latestVersion?.createdAt || new Date(),
     
@@ -106,7 +106,7 @@ export async function getEvaluationBasic(docId: string, agentId: string) {
         include: {
           job: {
             select: {
-              costInCents: true,
+              priceInDollars: true,
               durationInSeconds: true,
             },
           },

@@ -292,7 +292,7 @@ export class AgentModel {
                   status: true,
                   createdAt: true,
                   completedAt: true,
-                  costInCents: true,
+                  priceInDollars: true,
                 },
               },
             },
@@ -300,15 +300,15 @@ export class AgentModel {
         },
       });
 
-      return evaluations.map((evaluation) => {
-        const latestDocumentVersion = evaluation.document.versions[0];
-        const latestEvaluationVersion = evaluation.versions[0];
+      return evaluations.map((evaluation: any) => {
+        const latestDocumentVersion = evaluation.document?.versions?.[0];
+        const latestEvaluationVersion = evaluation.versions?.[0];
 
         return {
-          id: evaluation.document.id,
+          id: evaluation.document?.id || evaluation.documentId,
           title: latestDocumentVersion?.title || "Untitled",
-          author: evaluation.document.submittedBy.name || "Unknown",
-          publishedDate: evaluation.document.publishedDate,
+          author: evaluation.document?.submittedBy?.name || "Unknown",
+          publishedDate: evaluation.document?.publishedDate,
           evaluationId: evaluation.id,
           evaluationCreatedAt: evaluation.createdAt,
           summary: latestEvaluationVersion?.summary,
@@ -317,7 +317,7 @@ export class AgentModel {
           jobStatus: latestEvaluationVersion?.job?.status,
           jobCreatedAt: latestEvaluationVersion?.job?.createdAt,
           jobCompletedAt: latestEvaluationVersion?.job?.completedAt,
-          costInCents: latestEvaluationVersion?.job?.costInCents,
+          priceInDollars: latestEvaluationVersion?.job?.priceInDollars,
         };
       });
     } finally {
@@ -379,7 +379,7 @@ export class AgentModel {
               status: true,
               createdAt: true,
               completedAt: true,
-              costInCents: true,
+              priceInDollars: true,
               llmThinking: true,
               tasks: {
                 select: {
@@ -432,7 +432,7 @@ export class AgentModel {
           jobStatus: evalVersion.job?.status,
           jobCreatedAt: evalVersion.job?.createdAt,
           jobCompletedAt: evalVersion.job?.completedAt,
-          costInCents: evalVersion.job?.costInCents,
+          priceInDollars: evalVersion.job?.priceInDollars,
           comments: evalVersion.comments,
           job: evalVersion.job,
         };

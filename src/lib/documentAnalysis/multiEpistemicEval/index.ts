@@ -9,7 +9,8 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins";
+import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins/PluginManager";
+import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
 
 export async function analyzeWithMultiEpistemicEval(
@@ -29,10 +30,14 @@ export async function analyzeWithMultiEpistemicEval(
   tasks: TaskResult[];
   jobLogString?: string; // Include job log string in results
 }> {
-  // Create plugin manager with session config and job ID for logging
+  // Create plugin manager with default plugin selection for multi-epistemic eval
+  // By default, exclude spelling plugin for multi-epistemic eval
   const manager = new PluginManager({
     sessionConfig: options.sessionConfig,
     jobId: options.jobId,
+    pluginSelection: {
+      exclude: [PluginType.SPELLING],
+    },
   });
 
   // Delegate to plugin system
