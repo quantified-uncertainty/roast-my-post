@@ -1,5 +1,5 @@
 import { prisma } from "@roast/db";
-import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
+import { fullEvaluationInclude } from "@roast/web/src/lib/prisma/evaluation-includes";
 
 /**
  * Shared query pattern for getting evaluation data for display
