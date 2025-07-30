@@ -3,7 +3,18 @@
 // Load environment variables
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
+
+// Try both .env.local and .env
+const envLocalPath = path.join(process.cwd(), '..', '.env.local');
+const envPath = path.join(process.cwd(), '..', '.env');
+
+const localResult = dotenv.config({ path: envLocalPath });
+if (localResult.error) {
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.warn('Warning: Could not load .env.local or .env file');
+  }
+}
 
 import { runEvaluation } from '../server/runner';
 import { testCases } from '../data/test-cases';

@@ -1,11 +1,45 @@
 import { checkSpellingGrammarTool } from '../../src/tools/check-spelling-grammar';
 import { logger } from '../../src/lib/logger';
 import type { TestCase } from '../data/test-cases';
+import { sessionContext } from '../../src/lib/helicone/sessionContext';
+import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
+
+// Try multiple paths to find .env
+const envPaths = [
+  path.join(process.cwd(), '.env.local'),
+  path.join(process.cwd(), '..', '.env.local'),
+  path.join(__dirname, '..', '..', '.env.local'),
+  path.join(__dirname, '..', '..', '..', '.env.local'),
+  path.join(process.cwd(), '.env'),
+  path.join(process.cwd(), '..', '.env'),
+  path.join(__dirname, '..', '..', '.env'),
+  path.join(__dirname, '..', '..', '..', '.env'),
+];
+
+let envLoaded = false;
+for (const envPath of envPaths) {
+  const result = dotenv.config({ path: envPath });
+  if (!result.error) {
+    console.log(`[Runner] Loaded .env from: ${envPath}`);
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.warn('[Runner] Warning: Could not load .env file from any of the expected paths');
+}
+
+// Check if API key is loaded
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn('[Runner] Warning: ANTHROPIC_API_KEY not found in environment');
+} else {
+  console.log('[Runner] ANTHROPIC_API_KEY loaded successfully');
+}
 
 export interface RunResult {
   passed: boolean;
@@ -40,61 +74,90 @@ export async function runEvaluation(
   testCases: TestCase[],
   runsPerTest: number = 3
 ): Promise<EvaluationResult> {
-  const mockContext = { logger, userId: 'test-evaluation' };
-  const results: TestResult[] = [];
+  // Create a single Helicone session for the entire evaluation
+  const evaluationId = uuidv4();
+  const sessionId = `evaluation-${evaluationId}`;
   
   console.log(`Running ${testCases.length} tests with ${runsPerTest} runs each...`);
+  console.log(`Helicone Session ID: ${sessionId}`);
   
-  for (const testCase of testCases) {
-    console.log(`Testing: ${testCase.name}`);
-    const runs: RunResult[] = [];
-    
-    for (let i = 0; i < runsPerTest; i++) {
-      const start = Date.now();
-      
-      try {
-        const output = await checkSpellingGrammarTool.run(testCase.input, mockContext);
-        const duration = Date.now() - start;
-        
-        // Check expectations
-        const { passed, reasons } = checkExpectations(output, testCase.expectations);
-        
-        runs.push({
-          passed,
-          errors: output.errors,
-          output,
-          duration,
-          failureReasons: reasons
-        });
-      } catch (error) {
-        runs.push({
-          passed: false,
-          errors: [],
-          output: null,
-          duration: Date.now() - start,
-          failureReasons: [error.message]
-        });
-      }
+  // Set up session context
+  sessionContext.createSession({
+    sessionId,
+    sessionName: 'spelling-grammar-evaluation',
+    sessionPath: '/evaluations/spelling-grammar',
+    sessionTags: ['evaluation', 'spelling-grammar'],
+    customProperties: {
+      evaluationId,
+      testCount: testCases.length,
+      runsPerTest,
+      timestamp: new Date().toISOString()
     }
-    
-    // Calculate consistency
-    const errorCounts = runs.map(r => r.errors.length);
-    const consistencyScore = errorCounts.every(c => c === errorCounts[0]) ? 100 : 
-      calculateConsistencyScore(runs);
-    
-    results.push({
-      testCase,
-      runs,
-      overallPassed: runs.every(r => r.passed),
-      consistencyScore
+  });
+  
+  try {
+    // Run all tests in parallel
+    const testPromises = testCases.map(async (testCase) => {
+      console.log(`Testing: ${testCase.name}`);
+      
+      // Run all runs for this test in parallel
+      const runPromises = Array.from({ length: runsPerTest }, async (_, i) => {
+        const start = Date.now();
+        
+        try {
+          // Create a context with the session
+          const contextWithSession = { 
+            logger, 
+            userId: 'test-evaluation',
+            sessionId // This ensures the tool uses the same session
+          };
+          
+          const output = await checkSpellingGrammarTool.run(testCase.input, contextWithSession);
+          const duration = Date.now() - start;
+          
+          // Check expectations
+          const { passed, reasons } = checkExpectations(output, testCase.expectations);
+          
+          return {
+            passed,
+            errors: output.errors,
+            output,
+            duration,
+            failureReasons: reasons
+          };
+        } catch (error: any) {
+          return {
+            passed: false,
+            errors: [],
+            output: null,
+            duration: Date.now() - start,
+            failureReasons: [error.message]
+          };
+        }
+      });
+      
+      const runs = await Promise.all(runPromises);
+      
+      // Calculate consistency
+      const errorCounts = runs.map(r => r.errors.length);
+      const consistencyScore = errorCounts.every(c => c === errorCounts[0]) ? 100 : 
+        calculateConsistencyScore(runs);
+      
+      return {
+        testCase,
+        runs,
+        overallPassed: runs.every(r => r.passed),
+        consistencyScore
+      };
     });
-  }
-  
-  // Calculate metadata
-  const passedTests = results.filter(r => r.overallPassed).length;
-  const categoryStats = calculateCategoryStats(results);
-  
-  return {
+    
+    const results = await Promise.all(testPromises);
+    
+    // Calculate metadata
+    const passedTests = results.filter(r => r.overallPassed).length;
+    const categoryStats = calculateCategoryStats(results);
+    
+    return {
     metadata: {
       timestamp: new Date().toISOString(),
       totalTests: results.length,

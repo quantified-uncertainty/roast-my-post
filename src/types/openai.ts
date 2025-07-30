@@ -1,19 +1,49 @@
-import "dotenv/config";
+// Load environment variables from .env.local first, then .env
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+// Try to load .env.local first
+const envLocalPath = path.join(process.cwd(), ".env.local");
+const localResult = dotenv.config({ path: envLocalPath });
+
+// If .env.local doesn't exist or has errors, try .env
+if (localResult.error) {
+  dotenv.config(); // This loads from default .env
+}
 
 import OpenAI from "openai";
 
 import Anthropic from "@anthropic-ai/sdk";
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const HELICONE_API_KEY = process.env.HELICONE_API_KEY;
-const HELICONE_CACHE_ENABLED = process.env.HELICONE_CACHE_ENABLED === "true";
-const HELICONE_CACHE_MAX_AGE = process.env.HELICONE_CACHE_MAX_AGE || "3600";
-const HELICONE_CACHE_BUCKET_MAX_SIZE = process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || "20";
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// Read environment variables lazily to allow dotenv loading
+function getAnthropicApiKey() {
+  return process.env.ANTHROPIC_API_KEY;
+}
+
+function getHeliconeApiKey() {
+  return process.env.HELICONE_API_KEY;
+}
+
+function isHeliconeEnabled() {
+  return process.env.HELICONE_CACHE_ENABLED === "true";
+}
+
+function getHeliconeMaxAge() {
+  return process.env.HELICONE_CACHE_MAX_AGE || "3600";
+}
+
+function getHeliconeMaxSize() {
+  return process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || "20";
+}
+
+function getOpenRouterApiKey() {
+  return process.env.OPENROUTER_API_KEY;
+}
 
 // Validate API keys only when actually creating clients (not at import time)
 function validateAnthropicKey() {
-  if (!ANTHROPIC_API_KEY) {
+  const key = getAnthropicApiKey();
+  if (!key) {
     throw new Error(
       "❌ Missing Anthropic API key. Set ANTHROPIC_API_KEY in .env"
     );
@@ -21,7 +51,8 @@ function validateAnthropicKey() {
 }
 
 function validateOpenRouterKey() {
-  if (!OPENROUTER_API_KEY) {
+  const key = getOpenRouterApiKey();
+  if (!key) {
     throw new Error(
       "❌ Missing OpenRouter API key. Set OPENROUTER_API_KEY in .env"
     );
@@ -34,16 +65,19 @@ export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-202
 // Lazy Anthropic client factory for analysis tasks with Helicone integration
 export function createAnthropicClient(additionalHeaders?: Record<string, string>): Anthropic {
   validateAnthropicKey();
+  const apiKey = getAnthropicApiKey();
+  const heliconeKey = getHeliconeApiKey();
+  
   return new Anthropic({
-    apiKey: ANTHROPIC_API_KEY,
-    ...(HELICONE_API_KEY && {
+    apiKey: apiKey!,
+    ...(heliconeKey && {
       baseURL: "https://anthropic.helicone.ai",
       defaultHeaders: {
-        "Helicone-Auth": `Bearer ${HELICONE_API_KEY}`,
-        ...(HELICONE_CACHE_ENABLED && {
+        "Helicone-Auth": `Bearer ${heliconeKey}`,
+        ...(isHeliconeEnabled() && {
           "Helicone-Cache-Enabled": "true",
-          "Cache-Control": `max-age=${HELICONE_CACHE_MAX_AGE}`,
-          "Helicone-Cache-Bucket-Max-Size": HELICONE_CACHE_BUCKET_MAX_SIZE,
+          "Cache-Control": `max-age=${getHeliconeMaxAge()}`,
+          "Helicone-Cache-Bucket-Max-Size": getHeliconeMaxSize(),
         }),
         ...additionalHeaders
       }
@@ -61,9 +95,11 @@ export const anthropic = {
 // Lazy OpenAI client factory via OpenRouter for search tasks
 export function createOpenAIClient(): OpenAI {
   validateOpenRouterKey();
+  const apiKey = getOpenRouterApiKey();
+  
   return new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
-    apiKey: OPENROUTER_API_KEY,
+    apiKey: apiKey!,
     defaultHeaders: {
       "HTTP-Referer": "https://github.com/ozziegooen/roast-my-post",
       "X-Title": "roast-my-post",

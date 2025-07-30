@@ -172,7 +172,7 @@ export function renderResults(data: any, filename: string) {
                   </td>
                   <td class="consistency">
                     <span class="consistency-badge ${getConsistencyClass(result.consistencyScore)}">
-                      ${result.consistencyScore}%
+                      ${result.consistencyScore}% consistent
                     </span>
                   </td>
                   <td>
