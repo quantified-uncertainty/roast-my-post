@@ -197,6 +197,7 @@ export class JobModel {
     data: {
       llmThinking: string | null;
       costInCents: number;
+      priceInDollars: number;
       durationInSeconds: number;
       logs: string;
     }
@@ -553,13 +554,17 @@ export class JobModel {
 
       // Try to get accurate cost from Helicone first
       let costInCents: number;
+      let priceInDollars: number;
       
       try {
         const heliconeData = await fetchJobCostWithRetry(job.id, 3, 1000);
         
         if (heliconeData) {
-          costInCents = Math.round(heliconeData.totalCostUSD * 100);
-          logger.info(`Using Helicone cost data for job ${job.id}: $${heliconeData.totalCostUSD}`);
+          // Store exact price in dollars with full precision
+          priceInDollars = heliconeData.totalCostUSD;
+          // Keep costInCents for backward compatibility, but use Math.ceil to avoid 0
+          costInCents = Math.ceil(heliconeData.totalCostUSD * 100);
+          logger.info(`Using Helicone cost data for job ${job.id}: $${priceInDollars} (${costInCents} cents)`);
         } else {
           throw new Error('Helicone data not available');
         }
@@ -574,6 +579,9 @@ export class JobModel {
           },
           mapModelToCostModel(ANALYSIS_MODEL)
         );
+        
+        // Convert cents to dollars for decimal field
+        priceInDollars = costInCents / 100;
       }
 
       // Create log file with timestamp
@@ -605,7 +613,7 @@ ${analysisResult.jobLogString}
 - Total Tokens: ${totalInputTokens + totalOutputTokens}
   * Input Tokens: ${totalInputTokens}
   * Output Tokens: ${totalOutputTokens}
-- Estimated Cost: $${(costInCents / 100).toFixed(6)}
+- Estimated Cost: $${priceInDollars.toFixed(6)}
 - Runtime: [DURATION_PLACEHOLDER]s
 - Status: Success
 ${pluginLogsSection}
@@ -636,6 +644,7 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
       await this.markJobAsCompleted(job.id, {
         llmThinking: evaluationOutputs.thinking,
         costInCents: costInCents,
+        priceInDollars: priceInDollars,
         durationInSeconds: (Date.now() - startTime) / 1000,
         logs: logContent,
       });

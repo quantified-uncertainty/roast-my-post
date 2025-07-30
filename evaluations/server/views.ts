@@ -200,9 +200,52 @@ export function renderResults(data: any, filename: string) {
                       <div class="detail-section">
                         <h4>Run Details</h4>
                         ${result.runs.map((run, i) => html`
-                          <details>
-                            <summary>Run ${i+1} (${run.duration}ms) ${run.passed ? '✅' : '❌'}</summary>
-                            <pre>${JSON.stringify(run.output, null, 2)}</pre>
+                          <details class="run-detail">
+                            <summary>
+                              <span class="run-summary">
+                                Run ${i+1} (${run.duration}ms) ${run.passed ? '✅' : '❌'}
+                                ${run.failureReasons && run.failureReasons.length > 0 ? 
+                                  html`<span class="failure-count">${run.failureReasons.length} issues</span>` : 
+                                  run.errors.length > 0 ? 
+                                  html`<span class="error-count">${run.errors.length} errors found</span>` : 
+                                  ''}
+                              </span>
+                            </summary>
+                            <div class="run-detail-content">
+                              ${run.failureReasons && run.failureReasons.length > 0 ? html`
+                                <div class="failure-reasons">
+                                  <strong>Failure Reasons:</strong>
+                                  <ul>
+                                    ${run.failureReasons.map(reason => html`<li>${reason}</li>`)}
+                                  </ul>
+                                </div>
+                              ` : ''}
+                              
+                              ${run.errors && run.errors.length > 0 ? html`
+                                <div class="errors-found">
+                                  <strong>Errors Found:</strong>
+                                  <ul>
+                                    ${run.errors.map(err => html`
+                                      <li>
+                                        "${err.text}" → "${err.correction}" 
+                                        <span class="error-meta">(${err.type}, importance: ${err.importance})</span>
+                                      </li>
+                                    `)}
+                                  </ul>
+                                </div>
+                              ` : ''}
+                              
+                              ${run.output ? html`
+                                <div class="raw-output">
+                                  <strong>Raw Output:</strong>
+                                  <pre>${JSON.stringify(run.output, null, 2)}</pre>
+                                </div>
+                              ` : run.failureReasons && run.failureReasons.length > 0 ? '' : html`
+                                <div class="no-output">
+                                  <em>No output available - the tool may have encountered an error.</em>
+                                </div>
+                              `}
+                            </div>
                           </details>
                         `)}
                       </div>

@@ -461,3 +461,72 @@ details pre {
   max-height: 400px;
   overflow: auto;
 }
+
+/* Run Details Styling */
+.run-detail {
+  margin: 8px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.run-detail summary {
+  padding: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  list-style: none;
+}
+
+.run-detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.run-detail[open] summary {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.run-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.failure-count {
+  color: #dc2626;
+  font-size: 12px;
+  background: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.error-count {
+  color: #2563eb;
+  font-size: 12px;
+  background: #dbeafe;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.run-detail-content {
+  padding: 16px;
+  background: white;
+}
+
+.failure-reasons, .errors-found, .raw-output, .no-output {
+  margin: 12px 0;
+}
+
+.failure-reasons ul, .errors-found ul {
+  margin: 8px 0 0 20px;
+}
+
+.error-meta {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.no-output {
+  color: #6b7280;
+  font-style: italic;
+}
