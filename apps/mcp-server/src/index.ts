@@ -10,18 +10,16 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import type {
-  Agent,
-  AgentVersion,
-  Document,
-  Evaluation,
-  EvaluationVersion,
-  Job,
-  Prisma,
-} from "../../node_modules/@prisma/client/index.js";
-import { PrismaClient } from "../../node_modules/@prisma/client/index.js";
-
-const prisma = new PrismaClient();
+import {
+  prisma,
+  type Agent,
+  type AgentVersion,
+  type Document,
+  type Evaluation,
+  type EvaluationVersion,
+  type Job,
+  type Prisma,
+} from "@roast/db";
 
 // Type definitions for Prisma queries with includes
 type AgentWithVersions = Agent & {

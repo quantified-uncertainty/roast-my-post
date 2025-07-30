@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.7.0",
-    "@prisma/client": "^6.10.1",
+    "@roast/db": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {
