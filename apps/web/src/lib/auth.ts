@@ -26,7 +26,7 @@ function buildAuthConfig(): NextAuthConfig {
   }
 
   const config: NextAuthConfig = {
-    adapter: PrismaAdapter(prisma),
+    adapter: PrismaAdapter(prisma) as any, // Type mismatch between auth versions
     providers,
     session: {
       strategy: "database",

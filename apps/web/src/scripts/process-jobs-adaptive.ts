@@ -5,8 +5,7 @@ import {
 } from "child_process";
 
 import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
-import { JobStatus } from "@prisma/client";
+import { prisma, JobStatus } from "@/lib/prisma";
 import { getAgentTimeout, formatTimeout } from "@/config/agentTimeouts";
 
 // Configuration with environment variable support

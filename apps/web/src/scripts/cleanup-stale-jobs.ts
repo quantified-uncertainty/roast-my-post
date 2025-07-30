@@ -1,8 +1,7 @@
 #!/usr/bin/env tsx
 
-import { prisma } from "@/lib/prisma";
+import { prisma, JobStatus } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-import { JobStatus } from "@prisma/client";
 
 const STALE_JOB_TIMEOUT_MINUTES = 30;
 

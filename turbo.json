@@ -28,7 +28,7 @@
       "dependsOn": ["^build"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "prisma:generate"]
+      "dependsOn": ["^build", "@roast/db#gen"]
     },
     "test": {
       "dependsOn": ["build"],

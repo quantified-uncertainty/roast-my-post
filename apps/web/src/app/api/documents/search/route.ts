@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import { prisma, Prisma } from "@/lib/prisma";
 import { DocumentModel } from "@/models/Document";
-import { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {

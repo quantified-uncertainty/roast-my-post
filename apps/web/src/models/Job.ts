@@ -1,9 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, Job as PrismaJob, JobStatus } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-import {
-  Job as PrismaJob,
-  JobStatus,
-} from "@prisma/client";
 
 import {
   analyzeDocument,

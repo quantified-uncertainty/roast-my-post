@@ -1,0 +1,28 @@
+
+> @roast/web@0.1.0 typecheck /Users/ozziegooen/Documents/Github/monorepo-migration/apps/web
+> tsc --noEmit
+
+src/lib/__tests__/articleImport.test.ts(6,6): error TS2339: Property 'mock' does not exist on type 'typeof import("/Users/ozziegooen/Documents/Github/monorepo-migration/node_modules/.pnpm/jest@29.7.0_@types+node@20.19.9_ts-node@10.9.2_@types+node@20.19.9_typescript@5.8.3_/node_modules/jest/build/index")'.
+src/lib/__tests__/articleImport.test.ts(24,8): error TS2339: Property 'clearAllMocks' does not exist on type 'typeof import("/Users/ozziegooen/Documents/Github/monorepo-migration/node_modules/.pnpm/jest@29.7.0_@types+node@20.19.9_ts-node@10.9.2_@types+node@20.19.9_typescript@5.8.3_/node_modules/jest/build/index")'.
+src/lib/analysis-plugins/plugins/fact-check/fact-check.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/lib/auth.ts(29,14): error TS2589: Type instantiation is excessively deep and possibly infinite.
+src/lib/auth.ts(29,28): error TS2345: Argument of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to parameter of type 'PrismaClient<PrismaClientOptions, never, DefaultArgs> | DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { ...; }, { ...; }, { ...; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
+  Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type 'DynamicClientExtensionThis<TypeMap<InternalArgs & InternalArgs<{ [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: { [x: string]: unknown; }; }, { [x: string]: unknown; }>, {}>, TypeMapCb<...>, InternalArgs<...>>'.
+    Type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>' is not assignable to type '{ [x: string]: unknown; }'.
+      Index signature for type 'string' is missing in type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/documentAnalysis/linkAnalysis/__tests__/urlExtractor.test.ts(1,28): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/lib/text-location/line-based/lineBasedLocation.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/check-math-hybrid/check-math-hybrid.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/check-math-hybrid/check-math-hybrid.test.ts(10,6): error TS2339: Property 'mock' does not exist on type 'typeof import("/Users/ozziegooen/Documents/Github/monorepo-migration/node_modules/.pnpm/jest@29.7.0_@types+node@20.19.9_ts-node@10.9.2_@types+node@20.19.9_typescript@5.8.3_/node_modules/jest/build/index")'.
+src/tools/check-math-hybrid/check-math-hybrid.test.ts(11,6): error TS2339: Property 'mock' does not exist on type 'typeof import("/Users/ozziegooen/Documents/Github/monorepo-migration/node_modules/.pnpm/jest@29.7.0_@types+node@20.19.9_ts-node@10.9.2_@types+node@20.19.9_typescript@5.8.3_/node_modules/jest/build/index")'.
+src/tools/check-math-hybrid/check-math-hybrid.test.ts(33,10): error TS2339: Property 'clearAllMocks' does not exist on type 'typeof import("/Users/ozziegooen/Documents/Github/monorepo-migration/node_modules/.pnpm/jest@29.7.0_@types+node@20.19.9_ts-node@10.9.2_@types+node@20.19.9_typescript@5.8.3_/node_modules/jest/build/index")'.
+src/tools/check-math-with-mathjs/check-math-with-mathjs.e2e.test.ts(6,3): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/check-math/check-math.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/check-math/errorCategories.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/check-spelling-grammar/check-spelling-grammar.e2e.test.ts(6,3): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/extract-math-expressions/extract-math-expressions.llm.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/extract-math-expressions/extract-math-expressions.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/fuzzy-text-locator/tests/basic-functionality.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/tools/fuzzy-text-locator/tests/comprehensive-search.test.ts(4,3): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+src/utils/safeArrayAccess.test.ts(1,20): error TS2305: Module '"@jest/globals"' has no exported member 'it'.
+ ELIFECYCLE  Command failed with exit code 2.

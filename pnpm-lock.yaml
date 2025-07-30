@@ -201,6 +201,9 @@ importers:
       '@types/diff-match-patch':
         specifier: ^1.0.36
         version: 1.0.36
+      '@types/jest':
+        specifier: ^29.5.14
+        version: 29.5.14
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
