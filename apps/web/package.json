@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate --schema=../../internal-packages/db/prisma/schema.prisma && next build",
+    "build": "pnpm --filter @roast/db run gen:build && next build",
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",
@@ -23,7 +23,7 @@
     "cleanup-stale-jobs": "dotenv -e .env.local -- tsx src/scripts/cleanup-stale-jobs.ts",
     "test-helicone-sessions": "dotenv -e .env.local -- tsx src/scripts/test-helicone-sessions.ts",
     "helicone-cost-report": "dotenv -e .env.local -- tsx src/scripts/helicone-cost-report.ts",
-    "postinstall": "prisma generate --schema=../../internal-packages/db/prisma/schema.prisma"
+    "postinstall": "pnpm --filter @roast/db run gen:build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",

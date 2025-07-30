@@ -7,6 +7,7 @@
   "scripts": {
     "with-env": "dotenv -e ../../apps/web/.env.local --",
     "gen": "pnpm with-env prisma generate",
+    "gen:build": "prisma generate",
     "db:push": "pnpm with-env prisma db push",
     "db:push:safe": "../../dev/scripts/safe-prisma.sh db push",
     "db:migrate": "pnpm with-env prisma migrate dev",

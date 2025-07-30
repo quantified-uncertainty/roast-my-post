@@ -29,7 +29,7 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "@roast/db#gen"],
+      "dependsOn": ["^build", "@roast/db#gen:build"],
       "outputs": ["dist/**", ".next/**", "build/**"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"]
     },
@@ -82,6 +82,10 @@
       "cache": false
     },
     "gen": {
+      "cache": false,
+      "outputs": ["generated/**"]
+    },
+    "gen:build": {
       "cache": false,
       "outputs": ["generated/**"]
     },

@@ -1,15 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @roast/db run gen && turbo run build --filter=@roast/web",
+  "buildCommand": "pnpm turbo run build --filter=@roast/web",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install",
-  "framework": null,
-  "functions": {
-    "apps/web/**/*.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "apps/web/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "installCommand": "pnpm install"
 }
