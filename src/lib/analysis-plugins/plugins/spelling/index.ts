@@ -1,6 +1,7 @@
 import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
 import { checkSpellingGrammarTool } from "@/tools/check-spelling-grammar";
 import type { Comment } from "@/types/documentSchema";
+import type { LanguageConventionOption } from "@/types/languageConvention";
 
 import { logger } from "../../../logger";
 import { TextChunk } from "../../TextChunk";
@@ -153,7 +154,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           {
             text: chunk.text,
             maxErrors: 20, // Limit errors per chunk
-            convention: convention as 'US' | 'UK' | 'auto',
+            convention: convention as LanguageConventionOption,
             strictness: this.strictness,
           },
           {
