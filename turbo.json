@@ -4,10 +4,15 @@
     "DATABASE_URL",
     "ANTHROPIC_API_KEY",
     "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
     "NEXTAUTH_URL",
     "NEXTAUTH_SECRET",
+    "AUTH_SECRET",
+    "AUTH_RESEND_KEY",
+    "EMAIL_FROM",
     "HELICONE_API_KEY",
-    "FIRECRAWL_KEY"
+    "FIRECRAWL_KEY",
+    "NODE_ENV"
   ],
   "globalDependencies": [
     ".env",
@@ -22,6 +27,7 @@
       "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"]
     },
     "dev": {
+      "dependsOn": ["@roast/db#gen"],
       "cache": false,
       "persistent": true
     },

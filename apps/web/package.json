@@ -17,11 +17,11 @@
     "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.'",
     "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.'",
     "test:ci": "pnpm run test:unit",
-    "process-jobs": "tsx src/scripts/process-job.ts",
-    "process-jobs-adaptive": "tsx src/scripts/process-jobs-adaptive.ts",
-    "cleanup-stale-jobs": "tsx src/scripts/cleanup-stale-jobs.ts",
-    "test-helicone-sessions": "tsx src/scripts/test-helicone-sessions.ts",
-    "helicone-cost-report": "tsx src/scripts/helicone-cost-report.ts"
+    "process-jobs": "dotenv -e .env.local -- tsx src/scripts/process-job.ts",
+    "process-jobs-adaptive": "dotenv -e .env.local -- tsx src/scripts/process-jobs-adaptive.ts",
+    "cleanup-stale-jobs": "dotenv -e .env.local -- tsx src/scripts/cleanup-stale-jobs.ts",
+    "test-helicone-sessions": "dotenv -e .env.local -- tsx src/scripts/test-helicone-sessions.ts",
+    "helicone-cost-report": "dotenv -e .env.local -- tsx src/scripts/helicone-cost-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -84,6 +84,7 @@
     "@types/react-dom": "^19",
     "@types/turndown": "^5.0.2",
     "autoprefixer": "^10.4.21",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.3.0",
     "eslint-plugin-react-hooks": "^5.2.0",
