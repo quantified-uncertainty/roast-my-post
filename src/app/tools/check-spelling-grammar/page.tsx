@@ -181,6 +181,9 @@ Previous research have shown similar results, although the methodologies varied 
                     {error.context && (
                       <div className="mt-2 p-2 bg-white bg-opacity-50 rounded text-xs">
                         <span className="font-medium">Context:</span> ...{error.context}...
+                        {error.lineNumber && (
+                          <span className="ml-2 text-gray-600">(Line {error.lineNumber})</span>
+                        )}
                       </div>
                     )}
                     

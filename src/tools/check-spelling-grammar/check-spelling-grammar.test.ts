@@ -320,4 +320,63 @@ describe('CheckSpellingGrammarTool', () => {
     expect(result.errors[0].description).toBe('The subject "team" is singular and requires the singular verb "is", not the plural "are".');
     expect(result.errors[0].confidence).toBe(85);
   });
+
+  it('should include line numbers for multi-line text', async () => {
+    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const mockCallClaude = callClaudeWithTool as any;
+
+    mockCallClaude.mockResolvedValueOnce({
+      toolResult: {
+        errors: [
+          {
+            text: 'teh',
+            correction: 'the',
+            conciseCorrection: 'teh → the',
+            type: 'spelling',
+            context: 'This is teh first line',
+            importance: 15,
+            confidence: 100,
+            description: null,
+            lineNumber: 1
+          },
+          {
+            text: 'recieve',
+            correction: 'receive',
+            conciseCorrection: 'recieve → receive',
+            type: 'spelling',
+            context: 'Third line will recieve data',
+            importance: 20,
+            confidence: 100,
+            description: null,
+            lineNumber: 3
+          }
+        ],
+        totalErrorsFound: 2
+      }
+    });
+
+    const input = {
+      text: `This is teh first line.
+Second line is correct.
+Third line will recieve data.`
+    };
+
+    const result = await checkSpellingGrammarTool.execute(input, {
+      logger: {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        isDevelopment: false,
+        log: jest.fn(),
+        logRequest: jest.fn(),
+        logResponse: jest.fn(),
+        child: jest.fn().mockReturnThis()
+      } as any
+    });
+
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors[0].lineNumber).toBe(1);
+    expect(result.errors[1].lineNumber).toBe(3);
+  });
 });

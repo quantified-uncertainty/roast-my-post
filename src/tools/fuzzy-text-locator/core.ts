@@ -98,6 +98,64 @@ export async function findTextLocation(
   if (!searchText || !documentText) {
     return null;
   }
+  
+  // If we have a line number hint, try searching around that area first
+  if (options.lineNumberHint && options.lineNumberHint > 0) {
+    const lines = documentText.split('\n');
+    const targetLine = options.lineNumberHint - 1; // Convert to 0-based index
+    
+    if (targetLine >= 0 && targetLine < lines.length) {
+      // First, try to find on the exact target line
+      let lineStartOffset = 0;
+      for (let i = 0; i < targetLine; i++) {
+        lineStartOffset += lines[i].length + 1; // +1 for newline
+      }
+      
+      const targetLineText = lines[targetLine];
+      const exactLineResult = exactSearch(searchText, targetLineText);
+      
+      if (exactLineResult) {
+        logger.debug(`Found with exact search on target line ${options.lineNumberHint}`);
+        return {
+          ...exactLineResult,
+          startOffset: exactLineResult.startOffset + lineStartOffset,
+          endOffset: exactLineResult.endOffset + lineStartOffset,
+          strategy: 'exact-line-hint'
+        };
+      }
+      
+      // If not found on exact line, search in a window around it
+      const windowStart = Math.max(0, targetLine - 5);
+      const windowEnd = Math.min(lines.length, targetLine + 6);
+      
+      // Search each line in the window, starting from closest to target
+      for (let distance = 0; distance <= 5; distance++) {
+        // Check lines at this distance from target
+        const linesToCheck = [
+          targetLine - distance,
+          targetLine + distance
+        ].filter(line => line >= windowStart && line < windowEnd && line !== targetLine);
+        
+        for (const lineIndex of linesToCheck) {
+          let lineOffset = 0;
+          for (let i = 0; i < lineIndex; i++) {
+            lineOffset += lines[i].length + 1;
+          }
+          
+          const lineResult = exactSearch(searchText, lines[lineIndex]);
+          if (lineResult) {
+            logger.debug(`Found with exact search in line ${lineIndex + 1} (distance ${distance} from hint)`);
+            return {
+              ...lineResult,
+              startOffset: lineResult.startOffset + lineOffset,
+              endOffset: lineResult.endOffset + lineOffset,
+              strategy: 'exact-line-hint'
+            };
+          }
+        }
+      }
+    }
+  }
 
   // Strategy 1: Try exact match first
   const exactResult = exactSearch(searchText, documentText);

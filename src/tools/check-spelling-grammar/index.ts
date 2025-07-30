@@ -15,6 +15,7 @@ export interface SpellingGrammarError {
   importance: number; // 0-100
   confidence: number; // 0-100
   description?: string; // 0 for obvious, 1-2 sentences for complex
+  lineNumber?: number; // Approximate line number where error occurs
   startIndex?: number; // Position in original text
   endIndex?: number;
 }
@@ -56,6 +57,7 @@ const outputSchema = z.object({
     importance: z.number().min(0).max(100).describe('Importance score (0-100)'),
     confidence: z.number().min(0).max(100).describe('Confidence in this error (0-100)'),
     description: z.string().optional().describe('Explanation for complex cases (0 for obvious, 1-2 sentences otherwise)'),
+    lineNumber: z.number().optional().describe('Approximate line number where error occurs'),
     startIndex: z.number().optional().describe('Starting character index in original text'),
     endIndex: z.number().optional().describe('Ending character index in original text')
   })).describe('List of errors found'),
@@ -257,7 +259,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "I recieved teh package",
       "importance": 30,
       "confidence": 100,
-      "description": null
+      "description": null,
+      "lineNumber": 1
     }
     Error 2:
     {
@@ -268,7 +271,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "recieved teh package yesterday",
       "importance": 15,
       "confidence": 100,
-      "description": null
+      "description": null,
+      "lineNumber": 1
     }
   </example>
   
@@ -283,7 +287,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "engineers are working on",
       "importance": 45,
       "confidence": 85,
-      "description": "The subject 'team' is singular and requires the singular verb 'is', not the plural 'are'."
+      "description": "The subject 'team' is singular and requires the singular verb 'is', not the plural 'are'.",
+      "lineNumber": 1
     }
   </example>
   
@@ -298,7 +303,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "Its a beautiful",
       "importance": 40,
       "confidence": 95,
-      "description": null
+      "description": null,
+      "lineNumber": 1
     }
     Error 2:
     {
@@ -309,7 +315,8 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "cat licked it's paws",
       "importance": 40,
       "confidence": 95,
-      "description": null
+      "description": null,
+      "lineNumber": 1
     }
   </example>
   
@@ -324,10 +331,20 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
       "context": "The data is compelling",
       "importance": 25,
       "confidence": 65,
-      "description": "In formal academic writing, 'data' is traditionally treated as plural, though singular usage is increasingly accepted."
+      "description": "In formal academic writing, 'data' is traditionally treated as plural, though singular usage is increasingly accepted.",
+      "lineNumber": 1
     }
   </example>
 </examples>
+
+<line_number_guidance>
+  To help with location finding:
+  - The input text has line numbers prepended in format "N: text"
+  - Extract the line number from the prepended format
+  - The "text" field should contain the EXACT error text WITHOUT the line number prefix
+  - The "lineNumber" field should contain the extracted line number
+  - If an error spans multiple lines, give the first line number
+</line_number_guidance>
 
 <output_format>
   For each error, provide:
@@ -339,7 +356,15 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
   6. importance: Score from 0-100
   7. confidence: Score from 0-100
   8. description: null for obvious errors, 1-2 sentences for complex cases
+  9. lineNumber: The line number where the error appears (starting from 1)
 </output_format>`;
+
+    // Add line numbers to help LLM identify locations
+    const addLineNumbers = (text: string): string => {
+      return text.split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n');
+    };
+    
+    const textWithLineNumbers = addLineNumbers(input.text);
 
     const userPrompt = `<context>
   ${input.context ? `<document_type>${input.context}</document_type>` : ''}
@@ -348,7 +373,7 @@ export class CheckSpellingGrammarTool extends Tool<CheckSpellingGrammarInput, Ch
 </context>
 
 <text_to_check>
-${input.text}
+${textWithLineNumbers}
 </text_to_check>
 
 <instructions>
@@ -453,6 +478,10 @@ ${input.text}
                 description: {
                   type: "string",
                   description: "Explanation for complex cases (null for obvious errors, 1-2 sentences otherwise)"
+                },
+                lineNumber: {
+                  type: "number",
+                  description: "The line number where the error appears (starting from 1)"
                 }
               },
               required: ["text", "correction", "conciseCorrection", "type", "importance", "confidence"]
