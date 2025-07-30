@@ -5,6 +5,7 @@ import { sessionContext } from '@/lib/helicone/sessionContext';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
 import { generateCacheSeed } from '@/tools/shared/cache-utils';
 import { detectLanguageConventionTool } from '../detect-language-convention';
+import type { LanguageConvention, LanguageConventionOption } from '@/types/languageConvention';
 
 export interface SpellingGrammarError {
   text: string;
@@ -22,7 +23,7 @@ export interface CheckSpellingGrammarInput {
   text: string;
   context?: string;
   maxErrors?: number;
-  convention?: 'US' | 'UK' | 'auto';
+  convention?: LanguageConventionOption;
   strictness?: 'minimal' | 'standard' | 'thorough'; // New option
 }
 
@@ -30,7 +31,7 @@ export interface CheckSpellingGrammarOutput {
   errors: SpellingGrammarError[];
   metadata?: {
     totalErrorsFound: number;
-    convention: 'US' | 'UK' | 'mixed';
+    convention: LanguageConvention | 'mixed';
     processingTime?: number;
   };
 }

@@ -130,7 +130,6 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
                     completedAt: currentJob.completedAt,
                     startedAt: currentJob.startedAt,
                     durationInSeconds: currentJob.durationInSeconds,
-                    costInCents: currentJob.priceInDollars ? Math.round(parseFloat(currentJob.priceInDollars.toString()) * 100) : null,
                     priceInDollars: currentJob.priceInDollars ? parseFloat(currentJob.priceInDollars.toString()) : null,
                     attempts: currentJob.attempts,
                     originalJobId: currentJob.originalJobId,

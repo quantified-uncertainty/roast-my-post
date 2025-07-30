@@ -18,7 +18,7 @@ export interface AgentDocument {
   jobStatus?: string;
   jobCreatedAt?: string;
   jobCompletedAt?: string;
-  costInCents?: number;
+  priceInDollars?: number;
 }
 
 export interface AgentEvaluation {
@@ -38,7 +38,7 @@ export interface AgentEvaluation {
   jobStatus?: string;
   jobCreatedAt?: string;
   jobCompletedAt?: string;
-  costInCents?: number;
+  priceInDollars?: number;
   comments?: Array<{
     id: string;
     title: string;
@@ -97,7 +97,7 @@ export interface Job {
   createdAt: string;
   completedAt?: string;
   durationInSeconds?: number;
-  costInCents?: number;
+  priceInDollars?: number;
   error?: string;
   attempts?: number;
   originalJobId?: string | null;

@@ -128,7 +128,6 @@ export function EvaluationContent({
           agentDescription={agentDescription}
           grade={grade}
           ephemeralBatch={ephemeralBatch}
-          costInCents={costInCents}
           priceInDollars={priceInDollars}
           durationInSeconds={durationInSeconds}
           createdAt={createdAt}

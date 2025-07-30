@@ -17,7 +17,7 @@ export interface RawDocumentReview {
     providesGrades?: boolean;
   };
   comments: Comment[];
-  costInCents: number;
+  priceInDollars: number;
   createdAt: string;
   thinking: string;
   summary: string;

@@ -64,7 +64,7 @@ export function VersionDetails({
       })),
       job: selectedVersion.job ? {
         llmThinking: selectedVersion.job.llmThinking,
-        costInCents: selectedVersion.job.costInCents,
+        priceInDollars: selectedVersion.job.priceInDollars,
         tasks: selectedVersion.job.tasks
       } : null,
       testBatchId: null,
@@ -213,7 +213,7 @@ export function VersionDetails({
               agentDescription={selectedReview?.agent?.description}
               grade={selectedVersion.grade}
               ephemeralBatch={null}
-              costInCents={selectedVersion.job?.costInCents}
+              priceInDollars={selectedVersion.job?.priceInDollars}
               durationInSeconds={selectedVersion.job?.durationInSeconds}
               createdAt={selectedVersion.createdAt}
               isStale={selectedVersion.isStale || false}

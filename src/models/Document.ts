@@ -91,7 +91,7 @@ type DocumentWithRelations = {
       }>;
       job: {
         id: string;
-        costInCents: number | null;
+        priceInDollars: number | null;
         llmThinking: string | null;
         durationInSeconds: number | null;
         logs: string | null;
@@ -244,7 +244,7 @@ export class DocumentModel {
             createdAt: new Date(version.createdAt),
             job: version.job
               ? {
-                  costInCents: version.job.costInCents || 0,
+                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
                   llmThinking: version.job.llmThinking || "",
                   durationInSeconds: version.job.durationInSeconds || undefined,
                   logs: version.job.logs || undefined,
@@ -311,7 +311,7 @@ export class DocumentModel {
           createdAt: new Date(
             evaluation.versions[0]?.createdAt || evaluation.createdAt
           ),
-          costInCents: evaluation.versions[0]?.job?.costInCents || 0,
+          priceInDollars: convertPriceToNumber(evaluation.versions[0]?.job?.priceInDollars) || 0,
           comments:
             evaluation.versions[0]?.comments.map((comment) => ({
               description: comment.description,
@@ -408,7 +408,7 @@ export class DocumentModel {
             createdAt: new Date(version.createdAt),
             job: version.job
               ? {
-                  costInCents: version.job.costInCents || 0,
+                  priceInDollars: convertPriceToNumber(version.job.priceInDollars) || 0,
                   llmThinking: version.job.llmThinking || "",
                   durationInSeconds: version.job.durationInSeconds || undefined,
                   logs: version.job.logs || undefined,
@@ -469,7 +469,7 @@ export class DocumentModel {
           createdAt: new Date(
             evaluation.versions[0]?.createdAt || evaluation.createdAt
           ),
-          costInCents: evaluation.versions[0]?.job?.costInCents || 0,
+          priceInDollars: convertPriceToNumber(evaluation.versions[0]?.job?.priceInDollars) || 0,
           comments:
             evaluation.versions[0]?.comments.map((comment: any) => ({
               description: comment.description,

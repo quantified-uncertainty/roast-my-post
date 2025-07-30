@@ -71,7 +71,7 @@ export function JobsTab({
                 status: job.status,
                 createdAt: job.createdAt,
                 durationInSeconds: job.durationInSeconds,
-                costInCents: job.costInCents,
+                priceInDollars: job.priceInDollars,
                 attempts: job.attempts,
                 originalJobId: job.originalJobId,
                 document: {

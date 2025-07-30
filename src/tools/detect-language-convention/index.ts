@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
+import type { LanguageConvention } from '@/types/languageConvention';
 import { detectLanguageConvention, detectDocumentType } from './conventionDetector';
 
 export interface DetectLanguageConventionInput {
@@ -8,12 +9,12 @@ export interface DetectLanguageConventionInput {
 }
 
 export interface DetectLanguageConventionOutput {
-  convention: 'US' | 'UK';
+  convention: LanguageConvention;
   confidence: number;
   consistency: number;
   evidence: Array<{
     word: string;
-    convention: 'US' | 'UK';
+    convention: LanguageConvention;
     count: number;
   }>;
   documentType?: {
@@ -35,7 +36,7 @@ const outputSchema = z.object({
   consistency: z.number().min(0).max(1).describe('How consistent the document is (0-1)'),
   evidence: z.array(z.object({
     word: z.string().describe('Example word found'),
-    convention: z.enum(['US', 'UK']).describe('Which convention this word belongs to'),
+    convention: z.enum(['US', 'UK'] as const).describe('Which convention this word belongs to'),
     count: z.number().describe('Number of occurrences')
   })).describe('Evidence supporting the detection'),
   documentType: z.object({

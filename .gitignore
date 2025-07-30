@@ -48,6 +48,10 @@ next-env.d.ts
 /logs
 
 # Generated agent JSON files
+
+# Evaluation reports
+spelling-grammar-evaluation-report.html
+*-evaluation-report.html
 src/data/agents/dist/
 
 # MCP configuration (contains sensitive data)

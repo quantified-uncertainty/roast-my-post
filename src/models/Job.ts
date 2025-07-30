@@ -11,7 +11,7 @@ import {
 import { Agent } from "../types/agentSchema";
 import { ANALYSIS_MODEL } from "../types/openai";
 import {
-  calculateApiCost,
+  calculateApiCostInDollars,
   mapModelToCostModel,
 } from "../utils/costCalculator";
 import {
@@ -568,16 +568,13 @@ export class JobModel {
         // Fallback to manual cost calculation
         logger.warn(`Failed to fetch Helicone cost for job ${job.id}, falling back to manual calculation:`, { error: error instanceof Error ? error.message : String(error) });
         
-        const costInCents = calculateApiCost(
+        priceInDollars = calculateApiCostInDollars(
           {
             input_tokens: totalInputTokens,
             output_tokens: totalOutputTokens,
           },
           mapModelToCostModel(ANALYSIS_MODEL)
         );
-        
-        // Convert cents to dollars for decimal field
-        priceInDollars = costInCents / 100;
       }
 
       // Create log file with timestamp

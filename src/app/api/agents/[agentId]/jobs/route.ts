@@ -87,7 +87,6 @@ export async function GET(
       completedAt: job.completedAt,
       startedAt: job.startedAt,
       error: job.error,
-      costInCents: job.priceInDollars ? Math.round(parseFloat(job.priceInDollars.toString()) * 100) : null,
       priceInDollars: job.priceInDollars,
       durationInSeconds: job.durationInSeconds,
       document: {

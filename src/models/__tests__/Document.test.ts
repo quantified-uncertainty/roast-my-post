@@ -97,7 +97,7 @@ describe('DocumentModel', () => {
               comments: [],
               job: {
                 id: 'job-2',
-                costInCents: 120,
+                priceInDollars: 0.0012,
                 llmThinking: 'Updated thinking...',
                 durationInSeconds: 25,
                 logs: null,
@@ -118,7 +118,7 @@ describe('DocumentModel', () => {
               comments: [],
               job: {
                 id: 'job-1',
-                costInCents: 100,
+                priceInDollars: 0.001,
                 llmThinking: 'Thinking...',
                 durationInSeconds: 30,
                 logs: null,

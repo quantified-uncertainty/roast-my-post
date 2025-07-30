@@ -65,7 +65,7 @@ export async function GET(
         if (job.priceInDollars) {
           return sum + (parseFloat(job.priceInDollars.toString()) * 100);
         }
-        return sum + (job.costInCents || 0);
+        return sum;
       }, 0);
       const avgDuration = completedJobs.length > 0 
         ? completedJobs.reduce((sum, job) => sum + (job.durationInSeconds || 0), 0) / completedJobs.length 

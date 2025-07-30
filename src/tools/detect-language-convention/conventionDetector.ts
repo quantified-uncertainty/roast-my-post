@@ -1233,13 +1233,15 @@ const WORD_FREQUENCY_WEIGHTS: Record<string, number> = {
   airplanes: 0.8,
 };
 
+import type { LanguageConvention } from '@/types/languageConvention';
+
 export interface ConventionDetectionResult {
-  convention: "US" | "UK";
+  convention: LanguageConvention;
   confidence: number;
   consistency: number;
   evidence: Array<{
     word: string;
-    convention: "US" | "UK";
+    convention: LanguageConvention;
     count: number;
   }>;
 }

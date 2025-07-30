@@ -46,7 +46,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
         startedAt: new Date('2024-01-01T00:01:00Z'),
         completedAt: new Date('2024-01-01T00:05:00Z'),
         error: null,
-        priceInDollars: '0.10',
+        priceInDollars: 0.10,
         durationInSeconds: 240,
         attempts: 1,
         originalJobId: null,
@@ -115,8 +115,7 @@ describe('GET /api/agents/[agentId]/jobs', () => {
           completedAt: '2024-01-01T00:05:00.000Z',
           startedAt: '2024-01-01T00:01:00.000Z',
           error: null,
-          costInCents: 10,
-          priceInDollars: '0.10',
+          priceInDollars: 0.10,
           durationInSeconds: 240,
           document: {
             id: 'doc-1',
@@ -144,7 +143,6 @@ describe('GET /api/agents/[agentId]/jobs', () => {
           completedAt: null,
           startedAt: null,
           error: null,
-          costInCents: null,
           priceInDollars: null,
           durationInSeconds: null,
           document: {
