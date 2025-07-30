@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { prisma } from "@roast/db";
 import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { checkDocumentOwnership } from "@/lib/document-auth";
+import { serializePrismaResult } from "@/lib/prisma-serializers";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";
@@ -136,7 +137,7 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   }
 
   // Fetch the evaluation with all versions
-  const evaluation = await prisma.evaluation.findFirst({
+  const evaluationRaw = await prisma.evaluation.findFirst({
     where: {
       documentId: docId,
       agentId: agentId,
@@ -144,9 +145,12 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
     include: evaluationWithAllVersions,
   });
 
-  if (!evaluation) {
+  if (!evaluationRaw) {
     notFound();
   }
+
+  // Serialize the evaluation to handle Decimal fields
+  const evaluation = serializePrismaResult(evaluationRaw);
 
   // Find the specific version
   const selectedVersion = evaluation.versions.find(v => v.version === versionNum);

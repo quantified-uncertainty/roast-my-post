@@ -86,7 +86,7 @@ export function DocumentsTab({
 
                     <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
                       {doc.priceInDollars && (
-                        <span>Cost: ${doc.priceInDollars.toFixed(2)}</span>
+                        <span>Cost: ${Number(doc.priceInDollars).toFixed(2)}</span>
                       )}
                       {doc.jobCompletedAt && (
                         <span>Completed: {formatDate(doc.jobCompletedAt)}</span>
