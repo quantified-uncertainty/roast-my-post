@@ -45,11 +45,11 @@
 - Update any references in package.json scripts
 - Test that MCP server still works
 
-### Stage 2: Create Tools Directory
-- Create `/tools` directory
-- Move `/scripts` → `/tools/scripts`
-- Move `/claude` → `/tools/analysis`
-- Move `/docs` → `/tools/docs`
+### Stage 2: Create Dev Directory  
+- Create `/dev` directory
+- Move `/scripts` → `/dev/scripts`
+- Move `/claude` → `/research`
+- Move `/docs` → `/dev/docs`
 
 ### Stage 3: Handle Evaluations
 - Determine if `/evaluations` is:
