@@ -3,7 +3,7 @@
  * Reset a failed job back to pending status
  */
 
-import { prisma } from '../src/lib/prisma';
+import { prisma } from '@roast/db';
 
 const jobId = process.argv[2];
 

@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '@roast/db';
 
 async function listAgents() {
   const agents = await prisma.agent.findMany({

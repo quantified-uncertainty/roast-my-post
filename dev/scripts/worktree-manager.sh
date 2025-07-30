@@ -199,11 +199,11 @@ EOF
         fi
     done
     
-    # Copy mcp-server .env
-    if [ -f "$GIT_ROOT/mcp-server/.env" ]; then
-        mkdir -p "$WORKTREE_PATH/mcp-server"
-        cp "$GIT_ROOT/mcp-server/.env" "$WORKTREE_PATH/mcp-server/.env"
-        echo "  ✓ Copied mcp-server/.env"
+    # Copy MCP server .env
+    if [ -f "$GIT_ROOT/apps/mcp-server/.env" ]; then
+        mkdir -p "$WORKTREE_PATH/apps/mcp-server"
+        cp "$GIT_ROOT/apps/mcp-server/.env" "$WORKTREE_PATH/apps/mcp-server/.env"
+        echo "  ✓ Copied apps/mcp-server/.env"
     fi
     
     # Set up Claude permissions
@@ -217,12 +217,10 @@ EOF
     cd "$WORKTREE_PATH"
     echo ""
     echo -e "${YELLOW}Installing dependencies...${NC}"
-    npm install --silent
-    npx prisma generate
+    pnpm install --silent
+    pnpm --filter @roast/db run gen
     
-    if [ -d "mcp-server" ]; then
-        cd mcp-server && npm install --silent && cd ..
-    fi
+    # MCP server dependencies are handled by workspace root install
     
     echo ""
     echo -e "${GREEN}✅ Worktree created successfully!${NC}"
@@ -266,7 +264,7 @@ start_tmux_session() {
     # Window 0: Dev Server
     tmux send-keys -t "$SESSION:dev" "cd '$WORKTREE_PATH'" C-m
     tmux send-keys -t "$SESSION:dev" "echo '🚀 Starting dev server on port $DEV_PORT...'" C-m
-    tmux send-keys -t "$SESSION:dev" "PORT=$DEV_PORT npm run dev" C-m
+    tmux send-keys -t "$SESSION:dev" "PORT=$DEV_PORT pnpm --filter @roast/web run dev" C-m
     
     # Window 1: Workers
     tmux new-window -t "$SESSION" -n "workers"
@@ -277,7 +275,7 @@ start_tmux_session() {
     tmux send-keys -t "$SESSION:workers" "echo 'job processing should only run from the main repository.'" C-m
     tmux send-keys -t "$SESSION:workers" "echo ''" C-m
     tmux send-keys -t "$SESSION:workers" "echo 'If you need to run jobs manually from this worktree:'" C-m
-    tmux send-keys -t "$SESSION:workers" "echo '  npm run process-jobs-adaptive'" C-m
+    tmux send-keys -t "$SESSION:workers" "echo '  pnpm --filter @roast/web run process-jobs-adaptive'" C-m
     
     # Window 2: Claude Code
     tmux new-window -t "$SESSION" -n "claude"

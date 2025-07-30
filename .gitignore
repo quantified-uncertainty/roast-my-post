@@ -13,6 +13,8 @@
 data/
 # testing
 /coverage
+coverage/
+*/coverage/
 
 # next.js
 /.next/

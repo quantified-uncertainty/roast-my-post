@@ -1,5 +1,5 @@
 #!/usr/bin/env npx tsx
-import { prisma } from "../../src/lib/prisma";
+import { prisma } from '@roast/db';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 

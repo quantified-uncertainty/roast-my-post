@@ -12,7 +12,7 @@ jest.mock('@/lib/auth', () => ({
   isAdmin: jest.fn(),
 }));
 
-jest.mock('@/lib/prisma', () => ({
+jest.mock('@roast/db', () => ({
   prisma: {
     job: { groupBy: jest.fn(), findMany: jest.fn(), aggregate: jest.fn(), count: jest.fn() },
     evaluation: { findMany: jest.fn(), count: jest.fn() },
@@ -50,7 +50,7 @@ describe('Monitor Routes Authentication', () => {
       (isAdmin as jest.Mock).mockResolvedValue(true);
       
       // Mock all the required database calls
-      const { prisma } = require('@/lib/prisma');
+      const { prisma } = require('@roast/db');
       prisma.job.groupBy.mockResolvedValue([]);
       prisma.job.findMany.mockResolvedValue([]);
       prisma.job.aggregate.mockResolvedValue({ _avg: { durationInSeconds: null }, _sum: { costInCents: null } });

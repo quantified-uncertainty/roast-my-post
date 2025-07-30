@@ -1,11 +1,11 @@
 // TODO: This test needs to be moved or the script needs to be moved into the app
 // import { cleanupExpiredBatches } from "../../../../../dev/scripts/maintenance/cleanup-expired-batches";
 const cleanupExpiredBatches = jest.fn();
-import { prisma } from "../../lib/prisma";
+import { prisma } from "@roast/db";
 import { logger } from "../../lib/logger";
 
 // Mock dependencies
-jest.mock("../../lib/prisma", () => ({
+jest.mock("@roast/db", () => ({
   prisma: {
     agentEvalBatch: {
       findMany: jest.fn(),

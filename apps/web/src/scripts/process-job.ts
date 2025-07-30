@@ -3,8 +3,10 @@
 import { config } from "dotenv";
 
 // Load environment variables with proper precedence BEFORE importing Prisma
-config({ path: ".env.local", override: false }); // Development
-config({ path: ".env", override: false });       // Production/fallback
+config({ path: "../../.env.local", override: false }); // Development (workspace root)
+config({ path: "../../.env", override: false });        // Production/fallback (workspace root)
+config({ path: ".env.local", override: false });        // Local override
+config({ path: ".env", override: false });              // Local fallback
 // System environment variables take highest precedence (already loaded)
 
 import { JobModel } from "../models/Job";

@@ -7,8 +7,8 @@
  * - CLEANUP_DRY_RUN (default: false)
  */
 
-import { prisma } from "../../src/lib/prisma";
-import { logger } from "../../src/lib/logger";
+import { prisma } from '@roast/db';
+import { logger } from '@roast/web/src/lib/logger';
 import { cleanupExpiredBatches } from "./cleanup-expired-batches";
 
 // Configuration with validation

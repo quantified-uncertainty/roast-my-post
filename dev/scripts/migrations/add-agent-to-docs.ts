@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 
-import { prisma } from "../../src/lib/prisma";
+import { prisma } from '@roast/db';
 
 async function addAgentToDocuments() {
   const documentIds = [

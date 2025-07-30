@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
-import { prisma } from "../../src/lib/prisma";
-import { logger } from "../../src/lib/logger";
+import { prisma } from '@roast/db';
+import { logger } from '@roast/web/src/lib/logger';
 
 /**
  * Cleanup job for expired ephemeral batches
