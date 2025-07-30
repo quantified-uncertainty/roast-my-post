@@ -14,7 +14,7 @@ import { prisma } from "@roast/db";
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];
 
-  const { AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
+  const { AUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
 
   if (AUTH_RESEND_KEY && EMAIL_FROM) {
     providers.push(
@@ -33,6 +33,7 @@ function buildAuthConfig(): NextAuthConfig {
   const config: NextAuthConfig = {
     adapter: prismaAdapter,
     providers,
+    secret: AUTH_SECRET,
     session: {
       strategy: "database",
     },
