@@ -29,10 +29,8 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
-  // Experimental feature for monorepo file tracing
-  experimental: {
-    outputFileTracingRoot: require('path').join(__dirname, '../../'),
-  },
+  // Monorepo file tracing (moved from experimental in Next.js 15)
+  outputFileTracingRoot: require('path').join(__dirname, '../../'),
   async headers() {
     return [
       {

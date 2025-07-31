@@ -19,12 +19,6 @@ function buildAuthConfig(): NextAuthConfig {
   // Use AUTH_SECRET (v5) with fallback to NEXTAUTH_SECRET (v4 legacy)
   const authSecret = AUTH_SECRET || NEXTAUTH_SECRET;
 
-  // Debug logging (remove after fixing)
-  console.log('AUTH_SECRET exists:', !!AUTH_SECRET);
-  console.log('NEXTAUTH_SECRET exists:', !!NEXTAUTH_SECRET);
-  console.log('authSecret exists:', !!authSecret);
-  console.log('authSecret length:', authSecret?.length);
-
   if (!authSecret) {
     throw new Error('AUTH_SECRET (or legacy NEXTAUTH_SECRET) environment variable is required but not found');
   }
