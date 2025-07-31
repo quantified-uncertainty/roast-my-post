@@ -160,12 +160,14 @@ export function EvaluationsTab({
                         <span className="font-mono text-sm text-gray-900">
                           {evalItem.id.slice(0, 8)}...
                         </span>
-                        {evalItem.grade !== null && evalItem.grade !== undefined ? (
-                          <GradeBadge grade={evalItem.grade} />
-                        ) : (
-                          <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                            No Grade
-                          </span>
+                        {agent.providesGrades && (
+                          evalItem.grade !== null && evalItem.grade !== undefined ? (
+                            <GradeBadge grade={evalItem.grade} />
+                          ) : (
+                            <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                              No Grade
+                            </span>
+                          )
                         )}
                       </div>
                       <StatusIcon status={evalItem.jobStatus || "PENDING"} />
@@ -261,7 +263,7 @@ export function EvaluationsTab({
                   })) || []}
                   agentName={agent.name}
                   agentDescription={agent.description}
-                  grade={selectedEvaluation.grade}
+                  grade={agent.providesGrades ? selectedEvaluation.grade : undefined}
                   ephemeralBatch={null}
                   priceInDollars={selectedEvaluation.priceInDollars}
                   durationInSeconds={null}

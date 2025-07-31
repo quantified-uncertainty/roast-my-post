@@ -64,7 +64,7 @@ export function DocumentsTab({
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {doc.grade !== undefined && (
+                        {agent.providesGrades && doc.grade !== undefined && (
                           <div className="text-right">
                             <div className="text-lg font-semibold text-gray-900">
                               {doc.grade}/100
