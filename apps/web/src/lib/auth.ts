@@ -14,14 +14,19 @@ import { prisma } from "@roast/db";
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];
 
-  const { AUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
+  const { AUTH_SECRET, NEXTAUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
+
+  // Use AUTH_SECRET (v5) with fallback to NEXTAUTH_SECRET (v4 legacy)
+  const authSecret = AUTH_SECRET || NEXTAUTH_SECRET;
 
   // Debug logging (remove after fixing)
   console.log('AUTH_SECRET exists:', !!AUTH_SECRET);
-  console.log('AUTH_SECRET length:', AUTH_SECRET?.length);
+  console.log('NEXTAUTH_SECRET exists:', !!NEXTAUTH_SECRET);
+  console.log('authSecret exists:', !!authSecret);
+  console.log('authSecret length:', authSecret?.length);
 
-  if (!AUTH_SECRET) {
-    throw new Error('AUTH_SECRET environment variable is required but not found');
+  if (!authSecret) {
+    throw new Error('AUTH_SECRET (or legacy NEXTAUTH_SECRET) environment variable is required but not found');
   }
 
   if (AUTH_RESEND_KEY && EMAIL_FROM) {
@@ -41,7 +46,7 @@ function buildAuthConfig(): NextAuthConfig {
   const config: NextAuthConfig = {
     adapter: prismaAdapter,
     providers,
-    secret: AUTH_SECRET, // This will now be guaranteed to exist
+    secret: authSecret, // This will now be guaranteed to exist
     session: {
       strategy: "database",
     },
