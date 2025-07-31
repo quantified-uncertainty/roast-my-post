@@ -434,10 +434,21 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private async createComments(): Promise<void> {
-    // Process both expression comments and hybrid error comments in parallel
+    // Create a set of expressions that have hybrid errors to avoid duplicates
+    const expressionsWithHybridErrors = new Set(
+      this.hybridErrorWrappers.map(wrapper => wrapper.expression.originalText)
+    );
+    
+    // Only create expression comments for expressions that DON'T have hybrid errors
+    // This prevents duplicate comments for the same math error
+    const expressionsWithoutHybridErrors = this.extractedExpressions.filter(
+      expr => !expressionsWithHybridErrors.has(expr.expression.originalText)
+    );
+    
+    // Process both types of comments in parallel
     const [expressionComments, hybridComments] = await Promise.all([
       Promise.all(
-        this.extractedExpressions.map(extractedExpression => extractedExpression.getComment())
+        expressionsWithoutHybridErrors.map(extractedExpression => extractedExpression.getComment())
       ),
       Promise.all(
         this.hybridErrorWrappers.map(errorWrapper => errorWrapper.getComment())
@@ -450,7 +461,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     
     this.comments = [...validExpressionComments, ...validHybridComments];
 
-    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments (${validExpressionComments.length} expressions, ${validHybridComments.length} hybrid errors)`);
+    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments (${validExpressionComments.length} non-error expressions, ${validHybridComments.length} hybrid errors)`);
   }
 
   private generateAnalysis(): void {
