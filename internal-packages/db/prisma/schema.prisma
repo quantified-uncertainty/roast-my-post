@@ -4,12 +4,6 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
-generator webClient {
-  provider      = "prisma-client-js"
-  output        = "../../../apps/web/generated"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

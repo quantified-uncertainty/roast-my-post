@@ -40,10 +40,11 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
-    // Add Prisma monorepo workaround plugin
-    if (isServer) {
-      config.plugins = [...config.plugins, new PrismaPlugin()];
-    }
+    // NOTE: Testing if Next.js 15 + Turbo Pack has built-in Prisma support
+    // If this works, we don't need the workaround plugin
+    // if (isServer) {
+    //   config.plugins = [...config.plugins, new PrismaPlugin()];
+    // }
 
     // Add markdown loader
     config.module.rules.push({
