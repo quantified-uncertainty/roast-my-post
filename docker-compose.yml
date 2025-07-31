@@ -69,7 +69,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["npm", "run", "process-jobs-adaptive"]
+    command: ["pnpm", "--filter", "@roast/web", "run", "process-jobs-adaptive"]
     environment:
       # Same environment as web service
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/roastmypost?schema=public
@@ -92,7 +92,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["npm", "run", "db:deploy"]
+    command: ["pnpm", "--filter", "@roast/db", "run", "db:migrate:deploy"]
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/roastmypost?schema=public
     restart: "no"

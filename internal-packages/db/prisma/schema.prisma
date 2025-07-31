@@ -1,0 +1,295 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated"  
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id               String           @id @default(cuid())
+  name             String?
+  email            String?          @unique
+  emailVerified    DateTime?
+  image            String?
+  role             UserRole         @default(USER)
+  accounts         Account[]
+  agents           Agent[]
+  agentEvalBatches AgentEvalBatch[]
+  apiKeys          ApiKey[]
+  documents        Document[]
+  sessions         Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Document {
+  id               String            @id
+  publishedDate    DateTime
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  submittedById    String
+  ephemeralBatchId String?
+  ephemeralBatch   AgentEvalBatch?   @relation("EphemeralDocuments", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  submittedBy      User              @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  versions         DocumentVersion[]
+  evaluations      Evaluation[]
+
+  @@index([ephemeralBatchId])
+}
+
+model DocumentVersion {
+  id                    String                   @id @default(uuid())
+  version               Int
+  title                 String
+  authors               String[]
+  urls                  String[]
+  platforms             String[]
+  intendedAgents        String[]
+  content               String
+  documentId            String
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  importUrl             String?
+  searchableText        String?                  @default(dbgenerated("lower(((((((((COALESCE(title, ''::text) || ' '::text) || COALESCE(immutable_array_to_string(authors, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(platforms, ' '::text), ''::text)) || ' '::text) || COALESCE(immutable_array_to_string(urls, ' '::text), ''::text)) || ' '::text) || COALESCE(\"importUrl\", ''::text)))"))
+  content_search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"left\"(content, 10000), ''::text))"))
+  contentSearchVector   Unsupported("tsvector")?
+  markdownPrepend       String?
+  document              Document                 @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  evaluationVersions    EvaluationVersion[]
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@index([content_search_vector], map: "idx_document_versions_content_fts", type: Gin)
+  @@index([searchableText], map: "idx_document_versions_searchable_text")
+}
+
+model Evaluation {
+  id         String              @id @default(uuid())
+  createdAt  DateTime            @default(now())
+  documentId String
+  agentId    String
+  agent      Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  document   Document            @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versions   EvaluationVersion[]
+  jobs       Job[]
+
+  @@index([documentId])
+  @@index([agentId])
+  @@index([documentId, agentId])
+}
+
+model EvaluationVersion {
+  id                String              @id @default(uuid())
+  agentId           String
+  createdAt         DateTime            @default(now())
+  summary           String?
+  grade             Int?
+  agentVersionId    String
+  evaluationId      String
+  documentVersionId String
+  analysis          String?
+  selfCritique      String?
+  version           Int                 @default(1)
+  isStale           Boolean             @default(false)
+  comments          EvaluationComment[]
+  agentVersion      AgentVersion        @relation(fields: [agentVersionId], references: [id])
+  documentVersion   DocumentVersion     @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id])
+  job               Job?
+
+  @@unique([evaluationId, version])
+  @@index([evaluationId])
+  @@index([agentVersionId])
+  @@index([documentVersionId])
+  @@index([isStale])
+}
+
+model EvaluationComment {
+  id                  String              @id @default(uuid())
+  description         String
+  importance          Int?
+  grade               Int?
+  evaluationVersionId String
+  highlightId         String              @unique
+  evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
+  highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationVersionId])
+}
+
+model EvaluationHighlight {
+  id          String             @id @default(uuid())
+  startOffset Int
+  endOffset   Int
+  prefix      String?
+  quotedText  String
+  isValid     Boolean            @default(true)
+  error       String?
+  comment     EvaluationComment?
+}
+
+model Agent {
+  id               String           @id
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  submittedById    String
+  ephemeralBatchId String?          @unique
+  ephemeralBatch   AgentEvalBatch?  @relation("EphemeralAgent", fields: [ephemeralBatchId], references: [id], onDelete: Cascade)
+  submittedBy      User             @relation(fields: [submittedById], references: [id], onDelete: Cascade)
+  evalBatches      AgentEvalBatch[]
+  versions         AgentVersion[]
+  evaluations      Evaluation[]
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model AgentVersion {
+  id                       String              @id @default(uuid())
+  version                  Int
+  name                     String
+  description              String
+  agentId                  String
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  extendedCapabilityId     String?
+  readme                   String?
+  selfCritiqueInstructions String?
+  primaryInstructions      String?
+  providesGrades           Boolean             @default(false)
+  agent                    Agent               @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  evaluations              EvaluationVersion[]
+
+  @@unique([agentId, version])
+}
+
+model AgentEvalBatch {
+  id                   String     @id @default(uuid())
+  name                 String?
+  agentId              String
+  createdAt            DateTime   @default(now())
+  targetCount          Int?
+  requestedDocumentIds String[]   @default([])
+  userId               String
+  trackingId           String?
+  description          String?
+  expiresAt            DateTime?
+  isEphemeral          Boolean    @default(false)
+  ephemeralAgent       Agent?     @relation("EphemeralAgent")
+  agent                Agent      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  user                 User       @relation(fields: [userId], references: [id])
+  ephemeralDocuments   Document[] @relation("EphemeralDocuments")
+  jobs                 Job[]
+
+  @@unique([userId, trackingId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Job {
+  id                  String             @id @default(uuid())
+  status              JobStatus          @default(PENDING)
+  attempts            Int                @default(0)
+  error               String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  llmThinking         String?
+  priceInDollars      Decimal?           @db.Decimal(10, 6)
+  durationInSeconds   Int?
+  logs                String?
+  evaluationId        String
+  evaluationVersionId String?            @unique
+  agentEvalBatchId    String?
+  originalJobId       String?
+  agentEvalBatch      AgentEvalBatch?    @relation(fields: [agentEvalBatchId], references: [id])
+  evaluation          Evaluation         @relation(fields: [evaluationId], references: [id])
+  evaluationVersion   EvaluationVersion? @relation(fields: [evaluationVersionId], references: [id])
+  originalJob         Job?               @relation("JobRetries", fields: [originalJobId], references: [id])
+  retryJobs           Job[]              @relation("JobRetries")
+  tasks               Task[]
+
+  @@index([evaluationId])
+  @@index([agentEvalBatchId])
+  @@index([originalJobId])
+}
+
+model Task {
+  id              String   @id @default(uuid())
+  name            String
+  modelName       String
+  priceInDollars  Decimal  @db.Decimal(10, 6)
+  timeInSeconds   Int?
+  log             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  jobId           String
+  llmInteractions Json?
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  key        String    @unique
+  name       String
+  userId     String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([key])
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}

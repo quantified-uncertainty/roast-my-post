@@ -16,18 +16,20 @@ An AI-powered document evaluation platform that provides intelligent analysis, c
 ## Tech Stack
 
 - **Frontend**: Next.js 15.3.2 with App Router, React 19, TypeScript
-- **Database**: PostgreSQL with Prisma ORM v6.10.1
+- **Database**: PostgreSQL with Prisma ORM v6.13.0
 - **Authentication**: NextAuth.js 5.0.0-beta.28
 - **UI Components**: Tailwind CSS, Heroicons, Slate.js editor
 - **AI Integration**: Anthropic Claude API + OpenRouter
 - **Background Jobs**: Custom async job processing with exponential backoff
 - **Content Extraction**: JSDOM, Turndown, Metascraper suite
+- **Monorepo**: pnpm workspaces with Turborepo
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
+- pnpm 9+ (install with `npm install -g pnpm`)
 - PostgreSQL database
 - API keys for Anthropic Claude and/or OpenRouter
 - Resend API key for email authentication (optional)
@@ -42,7 +44,7 @@ cd roast-my-post
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Set up environment variables:
@@ -82,12 +84,12 @@ Prompt caching can significantly reduce API costs for repeated similar requests.
 
 4. Set up the database:
 ```bash
-npm run db:push
+pnpm run db:push
 ```
 
 5. Start the development server:
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see the application.
@@ -96,34 +98,46 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run typecheck` - Run TypeScript type checking
-- `npm run lint` - Run ESLint
-- `npm run test:ci` - Run tests suitable for CI (no external dependencies)
-- `npm run test:fast` - Run unit and integration tests
-- `npm run test:e2e` - Run end-to-end tests (requires API keys)
-- `npm run db:studio` - Open Prisma Studio for database management
-- `npm run process-jobs` - Process evaluation jobs manually
+- `pnpm run dev` - Start development server
+- `pnpm run build` - Build for production
+- `pnpm run typecheck` - Run TypeScript type checking
+- `pnpm run lint` - Run ESLint
+- `pnpm run test:ci` - Run tests suitable for CI (no external dependencies)
+- `pnpm run test:fast` - Run unit and integration tests
+- `pnpm run test:e2e` - Run end-to-end tests (requires API keys)
+- `pnpm run db:studio` - Open Prisma Studio for database management
+- `pnpm run process-jobs` - Process evaluation jobs manually
 
-### Project Structure
+For package-specific commands:
+- `pnpm --filter @roast/web <command>` - Run commands in the web app
+- `pnpm --filter @roast/db <command>` - Run commands in the database package
+- `pnpm --filter @roast/mcp-server <command>` - Run commands in the MCP server
+
+### Project Structure (Monorepo)
 
 ```
-src/
-├── app/              # Next.js app router pages
-├── components/       # React components
-├── lib/             # Core business logic
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-└── scripts/         # CLI scripts for operations
+apps/
+├── web/                    # Next.js web application
+│   ├── src/
+│   │   ├── app/           # Next.js app router pages
+│   │   ├── components/    # React components
+│   │   ├── lib/          # Core business logic
+│   │   ├── types/        # TypeScript type definitions
+│   │   ├── utils/        # Utility functions
+│   │   └── scripts/      # CLI scripts for operations
+│   └── config/           # App-specific configuration
+└── mcp-server/            # Model Context Protocol server
 
-prisma/
-├── schema.prisma    # Database schema
-└── migrations/      # Database migrations
+internal-packages/
+└── db/                    # Shared database package
+    ├── prisma/
+    │   ├── schema.prisma  # Database schema
+    │   └── migrations/    # Database migrations
+    └── src/              # Prisma client exports
 
-mcp-server/          # Model Context Protocol server
-docs/                # Project documentation
-claude/              # Claude Code specific tools and analysis
+dev/                      # Development scripts and tools
+docs/                     # Project documentation
+claude/                   # Claude Code specific tools and analysis
 ```
 
 ### For Claude Code Users
@@ -132,11 +146,10 @@ This project includes an MCP (Model Context Protocol) server that provides insta
 
 To set up the MCP server:
 ```bash
-cd mcp-server
-npm run setup
+pnpm --filter @roast/mcp-server run setup
 ```
 
-Then restart Claude Code. See [/mcp-server/README.md](./mcp-server/README.md) for detailed setup instructions.
+Then restart Claude Code. See [/apps/mcp-server/README.md](./apps/mcp-server/README.md) for detailed setup instructions.
 
 ## Core Concepts
 
@@ -192,9 +205,9 @@ The test suite is organized by dependency requirements:
 
 Run tests with:
 ```bash
-npm run test:fast    # Unit + integration
-npm run test:ci      # CI-safe tests only
-npm run test:e2e     # End-to-end tests
+pnpm run test:fast    # Unit + integration
+pnpm run test:ci      # CI-safe tests only
+pnpm run test:e2e     # End-to-end tests
 ```
 
 ## Database Management
@@ -203,8 +216,8 @@ npm run test:e2e     # End-to-end tests
 
 Always use the safe wrapper scripts for database operations:
 ```bash
-npm run db:push          # Safe schema push
-npm run db:migrate       # Safe migration
+pnpm run db:push          # Safe schema push
+pnpm run db:migrate       # Safe migration
 ```
 
 ### Backup Before Changes
@@ -239,9 +252,9 @@ For Claude-specific development workflows, see [CLAUDE.md](./CLAUDE.md).
 5. Open a Pull Request
 
 Please ensure:
-- All tests pass (`npm run test:fast`)
-- Type checking passes (`npm run typecheck`)
-- Code is linted (`npm run lint`)
+- All tests pass (`pnpm run test:fast`)
+- Type checking passes (`pnpm run typecheck`)
+- Code is linted (`pnpm run lint`)
 
 ## Security
 

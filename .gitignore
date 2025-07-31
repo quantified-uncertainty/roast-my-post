@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -13,6 +14,8 @@
 data/
 # testing
 /coverage
+coverage/
+*/coverage/
 
 # next.js
 /.next/
@@ -41,6 +44,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# turbo
+.turbo/
+*/.turbo/
+**/.turbo/
+
 # Environment variables
 .env
 .env.local
@@ -59,6 +67,7 @@ src/data/agents/dist/
 
 # Claude settings (local to each developer)
 .claude/settings.local.json
+**/.claude/
 
 # MCP server safety - prevent accidental Prisma usage
 mcp-server/prisma/
@@ -73,5 +82,18 @@ backups/
 *.bak
 .env.backup
 .env.bak
+
+# pnpm
+.pnpm-store/
+
+# Prevent npm lock files in pnpm monorepo
+**/package-lock.json
+
+# Monorepo build outputs
+**/dist
+**/build
+**/.next
+**/coverage
+**/*.tsbuildinfo
 # Evaluation results
 evaluations/results/

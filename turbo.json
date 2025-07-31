@@ -1,0 +1,98 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "NEXTAUTH_URL",
+    "AUTH_SECRET",
+    "AUTH_RESEND_KEY",
+    "EMAIL_FROM",
+    "HELICONE_API_KEY",
+    "HELICONE_API_BASE_URL",
+    "FIRECRAWL_KEY",
+    "DIFFBOT_KEY",
+    "NODE_ENV",
+    "NEXT_PUBLIC_API_URL",
+    "CI",
+    "INTEGRATION_TESTS",
+    "RUN_LLM_TESTS",
+    "SHOW_TEST_LOGS"
+  ],
+  "globalDependencies": [
+    ".env",
+    ".env.local",
+    ".env.production",
+    "tsconfig.json"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "@roast/db#gen:build"],
+      "outputs": ["dist/**", ".next/**", "build/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.test.tsx", "!**/*.md"]
+    },
+    "dev": {
+      "dependsOn": ["@roast/db#gen"],
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/eslint*"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "@roast/db#gen"],
+      "outputs": [],
+      "inputs": ["**/*.ts", "**/*.tsx", "**/tsconfig*.json"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "cache": false
+    },
+    "test:unit": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.integration.test.ts", "**/jest.config.*"],
+      "cache": false
+    },
+    "test:ci": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.test.ts", "**/*.test.tsx", "**/jest.config.*"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.e2e.test.ts", "**/jest.config.*"],
+      "cache": false
+    },
+    "test:llm": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "**/*.llm.test.ts", "**/jest.config.*"],
+      "cache": false
+    },
+    "gen": {
+      "cache": false,
+      "outputs": ["generated/**"]
+    },
+    "gen:build": {
+      "cache": false,
+      "outputs": ["generated/**"]
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    }
+  }
+}

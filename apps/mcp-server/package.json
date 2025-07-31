@@ -1,0 +1,27 @@
+{
+  "name": "@roast/mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Roast My Post database operations",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "start:with-env": "DATABASE_URL=\"$DATABASE_URL\" node dist/index.js",
+    "configure": "node configure-claude.js",
+    "setup": "pnpm install && pnpm run build && pnpm run configure"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.7.0",
+    "@roast/db": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

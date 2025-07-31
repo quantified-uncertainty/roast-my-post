@@ -2,6 +2,101 @@
 
 > **Note**: This file contains project-specific technical notes. For Claude Code operations, analysis scripts, and system insights, see `/claude/README.md`
 
+## Monorepo Migration (2025-01-30)
+
+### What Changed
+The project has been successfully migrated to a pnpm workspace monorepo structure following Squiggle repository patterns:
+
+- **Main app** moved from root to `apps/web/`
+- **Database package** extracted to `internal-packages/db/` with shared Prisma client
+- **MCP server** moved to `apps/mcp-server/`
+- **All scripts and tools** moved to `dev/` directory
+- **Documentation** consolidated in `dev/docs/`
+
+### Key Benefits
+- **Shared database package** (`@roast/db`) eliminates import path duplication
+- **Workspace dependencies** ensure consistent versions across packages
+- **Turborepo integration** for coordinated builds and testing
+- **Cleaner separation** between application code and development tools
+
+### Import Path Changes
+- Database imports: `import { prisma } from '@roast/db'`
+- Web app imports: `import { something } from '@roast/web/src/lib/something'`
+- All external scripts now use proper workspace imports
+
+### Command Changes
+All commands now use `pnpm` with workspace filters. See Commands section below for details.
+
+## CRITICAL: Git Safety Protocol for Parallel Claude Sessions (2025-01-30)
+
+### The Problem
+Multiple Claude Code instances working in parallel can accidentally commit unwanted files (node_modules, .claude/, etc.) because they don't coordinate git operations.
+
+### MANDATORY Pre-Commit Protocol
+**EVERY Claude instance MUST follow this checklist before ANY commit:**
+
+1. **ALWAYS run `git status` first**:
+   ```bash
+   git status
+   ```
+   - Check for unexpected files (node_modules, .claude/, *.log, etc.)
+   - Verify only intended changes are staged
+
+2. **NEVER use `git add -A` or `git add .`**:
+   ```bash
+   # ❌ DANGEROUS - commits everything
+   git add -A
+   git add .
+   
+   # ✅ SAFE - specific files only
+   git add src/specific-file.ts
+   git add apps/web/src/components/
+   ```
+
+3. **Use staged commit pattern**:
+   ```bash
+   # 1. Add specific files/directories
+   git add path/to/specific/files
+   
+   # 2. Verify what's staged
+   git status
+   git diff --cached
+   
+   # 3. Commit only if staging looks correct
+   git commit -m "message"
+   ```
+
+4. **Check for these FORBIDDEN files**:
+   - `**/node_modules/**` (symlinks from pnpm)
+   - `**/.claude/**` (Claude settings)
+   - `**/package-lock.json` (npm artifacts in pnpm repo)
+   - `**/*.log` (log files)
+   - `**/.env.local` (environment files)
+
+### Git Safety Commands
+```bash
+# Safe staging commands for monorepo
+git add apps/web/src/           # Specific app directory
+git add internal-packages/db/   # Specific package
+git add CLAUDE.md README.md     # Specific files
+
+# NEVER use these in monorepo:
+# git add -A                    # Stages everything
+# git add .                     # Stages current directory and below
+```
+
+### Emergency Recovery
+If you accidentally commit unwanted files:
+```bash
+# Remove from index but keep local files
+git rm -r --cached path/to/unwanted/files
+
+# Commit the removal
+git commit -m "Remove accidentally committed files"
+```
+
+**Remember**: Future Claude instances will also work in parallel. This protocol protects against accidents.
+
 ## Critical Database Safety Incident (2024-01-23)
 
 ### What Happened
@@ -115,8 +210,8 @@ I used `gh pr merge` to merge a PR directly into main without permission. The br
 1. **MANDATORY: Always run full test suite after ANY structural changes**
    ```bash
    # REQUIRED after any plugin system, API, or architectural changes
-   npm run test:ci
-   npm run test:without-llms  # For broader coverage if time allows
+   pnpm --filter @roast/web run test:ci
+   pnpm --filter @roast/web run test:without-llms  # For broader coverage if time allows
    ```
 
 2. **NEVER claim tests pass without proof**
@@ -127,15 +222,15 @@ I used `gh pr merge` to merge a PR directly into main without permission. The br
 3. **Test-driven refactoring protocol**:
    ```bash
    # 1. Verify baseline
-   npm run test:ci  # Ensure starting point works
+   pnpm --filter @roast/web run test:ci  # Ensure starting point works
    
    # 2. Make changes
    # ... refactor code ...
    
    # 3. Mandatory verification after each major change
-   npm run typecheck  # Types work
-   npm run lint       # Code style
-   npm run test:ci    # Runtime behavior works
+   pnpm --filter @roast/web run typecheck  # Types work
+   pnpm --filter @roast/web run lint       # Code style
+   pnpm --filter @roast/web run test:ci    # Runtime behavior works
    ```
 
 4. **Runtime behavior testing is essential**
@@ -160,10 +255,10 @@ I used `gh pr merge` to merge a PR directly into main without permission. The br
 1. **ALWAYS verify test results with clear, focused output**
    ```bash
    # Get clear test summary only
-   npm run test:ci 2>&1 | grep -E "(PASS|FAIL|Test Suites:|Tests:)" | tail -10
+   pnpm --filter @roast/web run test:ci 2>&1 | grep -E "(PASS|FAIL|Test Suites:|Tests:)" | tail -10
    
    # Or just the final summary
-   npm run test:ci 2>&1 | tail -5
+   pnpm --filter @roast/web run test:ci 2>&1 | tail -5
    ```
 
 2. **If tests fail in CI, they MUST fail locally too (unless environment-specific)**
@@ -259,13 +354,37 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Project Overview
 "RoastMyPost" - AI-powered document annotation and evaluation platform
 
+### Monorepo Structure
+This project is organized as a pnpm workspace monorepo:
+
+```
+/
+├── apps/
+│   ├── web/                  # Next.js application
+│   └── mcp-server/          # MCP server for database access
+├── internal-packages/
+│   └── db/                  # Shared Prisma database package
+├── dev/                     # Development tools and scripts
+│   ├── scripts/            # Database, maintenance, and utility scripts
+│   ├── evaluations/        # LLM evaluation framework
+│   └── docs/              # Comprehensive project documentation
+└── pnpm-workspace.yaml     # Workspace configuration
+```
+
 ### Tech Stack
+- **Package Manager**: pnpm with workspaces
+- **Build System**: Turborepo for coordinated builds
 - **Framework**: Next.js 15.3.2 with App Router, React 19, TypeScript
-- **Database**: PostgreSQL with Prisma ORM v6.8.2
+- **Database**: PostgreSQL with Prisma ORM v6.8.2 (shared via `@roast/db` package)
 - **Authentication**: NextAuth.js 5.0.0-beta.28
 - **UI**: Tailwind CSS, Slate.js editor for document highlighting
 - **AI**: Anthropic Claude API + OpenAI integration
 - **MCP Server**: Fast database access via Model Context Protocol
+
+### Workspace Packages
+- **`@roast/web`**: Main Next.js application (`apps/web/`)
+- **`@roast/db`**: Shared database package with Prisma client (`internal-packages/db/`)
+- **`@roast/mcp-server`**: MCP server for database operations (`apps/mcp-server/`)
 
 ### Core Architecture
 - **Documents**: Content items for analysis (with versioning)
@@ -275,8 +394,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - **Jobs**: Asynchronous processing queue for AI analysis with retry logic
 
 ### Key Components
-- `DocumentWithEvaluations.tsx`: Main split-pane document viewer
-- `SlateEditor.tsx`: Rich text editor with sophisticated highlighting system
+- `apps/web/src/app/docs/[docId]/DocumentWithEvaluations.tsx`: Main split-pane document viewer
+- `apps/web/src/components/SlateEditor.tsx`: Rich text editor with sophisticated highlighting system
 - Highlight system converts between character offsets and line-based positions
 - Agent-based architecture with version control and specialized instruction sets
 
@@ -288,6 +407,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - **Type Safety**: Comprehensive Zod schemas throughout
 
 ### Development Patterns
+- Monorepo with shared packages for database access
 - Async job processing prevents UI blocking
 - Memoized highlight rendering for performance  
 - Runtime validation for LLM outputs
@@ -302,28 +422,87 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - **New Claude Wrapper Pattern**: Centralized all Claude API calls through `@/lib/claude/wrapper` for consistent interaction tracking, error handling, and Helicone integration. See `/docs/development/claude-wrapper-pattern.md` for usage guide.
 
 ## Commands
-- `npm run dev` - Development server
-  - **IMPORTANT**: Always check if dev server is already running on port 3000 first (use `lsof -i :3000` or try http://localhost:3000)
-  - The user often has the dev server already running, so check before starting a new instance
-- `npm run lint` - ESLint for code style and quality
-- `npm run typecheck` - TypeScript type checking
-- `npm run db:push` - Push schema changes (now uses safe wrapper)
-- `npm run process-jobs` - Manual job processing
+
+### Development Server
+```bash
+# Start the web application (from project root)
+cd apps/web && pnpm dev
+# OR using workspace filter from root
+pnpm --filter @roast/web dev
+```
+- **IMPORTANT**: Always check if dev server is already running on port 3000 first (use `lsof -i :3000` or try http://localhost:3000)
+- The user often has the dev server already running, so check before starting a new instance
+
+### Database Operations
+```bash
+# Generate Prisma client (from project root)
+pnpm --filter @roast/db run gen
+
+# Push schema changes to database
+pnpm --filter @roast/db run db:push
+
+# Run database migrations
+pnpm --filter @roast/db run db:migrate
+
+# Open Prisma Studio
+pnpm --filter @roast/db run db:studio
+```
+
+### Code Quality & Testing
+```bash
+# Run linting (from apps/web or project root)
+pnpm --filter @roast/web run lint
+
+# Run TypeScript type checking
+pnpm --filter @roast/web run typecheck
+
+# Run tests (various options)
+pnpm --filter @roast/web run test:ci      # CI-safe unit tests
+pnpm --filter @roast/web run test:unit    # Unit tests only
+pnpm --filter @roast/web run test:fast    # Unit + integration tests
+pnpm --filter @roast/web run test:without-llms  # All except expensive LLM tests
+```
+
+### Job Processing & Utilities
+```bash
+# Process jobs manually
+pnpm --filter @roast/web run process-jobs
+
+# Clean up stale jobs
+pnpm --filter @roast/web run cleanup-stale-jobs
+
+# Generate cost reports
+pnpm --filter @roast/web run helicone-cost-report
+```
+
+### Monorepo Operations
+```bash
+# Install all dependencies
+pnpm install
+
+# Build all packages
+pnpm run build
+
+# Run turbo commands across workspace
+turbo run typecheck    # Type check all packages
+turbo run lint        # Lint all packages
+turbo run test:ci     # Test all packages
+```
 
 ### Code Quality Checks
 **IMPORTANT**: When making code changes, always run BOTH:
-1. `npm run lint` - Checks code style and quality (ESLint)
-2. `npm run typecheck` - Checks TypeScript types
+1. `pnpm --filter @roast/web run lint` - Checks code style and quality (ESLint)
+2. `pnpm --filter @roast/web run typecheck` - Checks TypeScript types
 
 The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does not mean "no TypeScript errors". You must run both commands to ensure code quality.
 
 ### Worktree Management (for parallel development)
-- `./scripts/worktree-manager.sh create <branch>` - Create new worktree with automatic setup
-- `./scripts/worktree-manager.sh start <branch>` - Start all processes in tmux
-- `./scripts/worktree-manager.sh attach <branch>` - Attach to tmux session
-- `./scripts/worktree-manager.sh list` - List all worktrees and their status
-- `./scripts/worktree-manager.sh ports` - Show port allocations
-- See `/docs/development/worktrees.md` for detailed documentation
+- `./dev/scripts/worktree-manager.sh create <branch>` - Create new worktree with automatic setup
+- `./dev/scripts/worktree-manager.sh start <branch>` - Start all processes in tmux
+- `./dev/scripts/worktree-manager.sh attach <branch>` - Attach to tmux session
+- `./dev/scripts/worktree-manager.sh list` - List all worktrees and their status
+- `./dev/scripts/worktree-manager.sh ports` - Show port allocations
+- See `/dev/docs/development/worktrees.md` for detailed documentation
 
 ## Recent Updates (2024-01-24)
 
@@ -332,7 +511,7 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
 - Created `isAdmin()` helper function in auth.ts
 - Protected `/monitor/*` routes with server-side admin check via layout
 - Protected monitor API endpoints with admin checks
-- Added `npm run set-admin <email>` command to grant admin access
+- Added `pnpm --filter @roast/web run set-admin <email>` command to grant admin access
 - Note: Used layout-based protection instead of middleware due to Edge Runtime limitations with Prisma
 
 ## Recent Updates (2024-06-24)
@@ -397,14 +576,16 @@ When these are out of sync, you'll see errors like:
 ## Database Access
 
 ### MCP Server (Recommended for Claude Code)
-We have an MCP server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files. See `/mcp-server/README.md` for setup.
+We have an MCP server that provides instant database access without writing scripts. This is 10-20x faster than creating TypeScript files. See `/apps/mcp-server/README.md` for setup.
 
-**Development Mode**: If you're running the MCP server with `npm run start`, it will automatically pick up code changes without needing to rebuild.
+**Development Mode**: If you're running the MCP server in development mode, it will automatically pick up code changes without needing to rebuild:
+```bash
+cd apps/mcp-server && pnpm dev
+```
 
 **Production Mode**: If you're running the built version, after making any changes to MCP server code, you must rebuild it:
 ```bash
-cd mcp-server
-npm run build
+pnpm --filter @roast/mcp-server run build
 # Then restart Claude Code to use the updated server
 ```
 
@@ -415,24 +596,36 @@ Example usage in Claude:
 - "Import article from URL with agent evaluations"
 
 ### Direct Script Access
-For complex queries, you can still write TypeScript scripts using Prisma. See `/claude/README.md` for examples.
+For complex queries, you can still write TypeScript scripts using the shared database package:
+```typescript
+// Example script using shared database
+import { prisma } from '@roast/db';
+
+async function myScript() {
+  const users = await prisma.user.findMany();
+  console.log(users);
+  await prisma.$disconnect();
+}
+```
+See `/claude/README.md` for more examples.
 
 ## Documentation Structure
 
 ### Organized Documentation
-Project documentation has been reorganized into `/docs/` with clear categories:
+Project documentation has been reorganized into `/dev/docs/` with clear categories:
 
-- **[/docs/README.md](/docs/README.md)** - Documentation navigation and overview
-- **[/docs/development/agents.md](/docs/development/agents.md)** - Current agent system documentation (database/TOML approach)
-- **[/docs/operations/health-checks.md](/docs/operations/health-checks.md)** - Comprehensive codebase health check guide
-- **[/docs/security/authentication.md](/docs/security/authentication.md)** - Authentication systems and security best practices
-- **[/docs/security/pre-commit.md](/docs/security/pre-commit.md)** - Pre-commit security checklist
+- **[/dev/docs/README.md](/dev/docs/README.md)** - Documentation navigation and overview
+- **[/dev/docs/development/agents.md](/dev/docs/development/agents.md)** - Current agent system documentation (database approach)
+- **[/dev/docs/operations/health-checks.md](/dev/docs/operations/health-checks.md)** - Comprehensive codebase health check guide
+- **[/dev/docs/security/authentication.md](/dev/docs/security/authentication.md)** - Authentication systems and security best practices
+- **[/dev/docs/security/pre-commit.md](/dev/docs/security/pre-commit.md)** - Pre-commit security checklist
+- **[/dev/docs/development/worktrees.md](/dev/docs/development/worktrees.md)** - Parallel development with worktrees
 
 ### Migration Notes
 - Old scattered documentation files have been consolidated and updated
-- `AGENTS.md` → `/docs/development/agents.md` (updated with current database approach)
-- `COMPREHENSIVE_HEALTH_CHECKS.md` + `HEALTH_CHECKS.md` → `/docs/operations/health-checks.md`
-- `PRE_COMMIT_INVESTIGATION.md` → `/docs/security/pre-commit.md`
+- `AGENTS.md` → `/dev/docs/development/agents.md` (updated with current database approach)
+- `COMPREHENSIVE_HEALTH_CHECKS.md` + `HEALTH_CHECKS.md` → `/dev/docs/operations/health-checks.md`
+- `PRE_COMMIT_INVESTIGATION.md` → `/dev/docs/security/pre-commit.md`
 - `TODO-CRITICAL-ISSUES.md` → removed (all items completed)
 
 ### Claude Ideation Files
@@ -455,23 +648,23 @@ When creating ideation/analysis files in `/claude/ideation/`, use this naming pa
 
 #### Available Test Scripts:
 ```bash
-npm run test:unit          # Fast unit tests only
-npm run test:integration   # Database/internal API tests
-npm run test:e2e          # External API tests (requires API keys)
-npm run test:llm          # LLM tests (expensive, requires API keys)
-npm run test:fast         # Unit + integration (good for development)
-npm run test:without-llms # Everything except expensive LLM calls
-npm run test:ci           # CI-safe tests (no external deps)
+pnpm --filter @roast/web run test:unit          # Fast unit tests only
+pnpm --filter @roast/web run test:integration   # Database/internal API tests
+pnpm --filter @roast/web run test:e2e          # External API tests (requires API keys)
+pnpm --filter @roast/web run test:llm          # LLM tests (expensive, requires API keys)
+pnpm --filter @roast/web run test:fast         # Unit + integration (good for development)
+pnpm --filter @roast/web run test:without-llms # Everything except expensive LLM calls
+pnpm --filter @roast/web run test:ci           # CI-safe tests (no external deps)
 ```
 
 #### For New Tests:
 - **Writing new tests**: Use appropriate suffix based on dependencies
 - **External APIs**: Add environment guards like `if (!process.env.FIRECRAWL_KEY) return`
 - **LLM tests**: Always use `.llm.test.ts` suffix and API key guards
-- **CI failures**: Use `npm run test:ci` to test what runs in GitHub Actions
+- **CI failures**: Use `pnpm --filter @roast/web run test:ci` to test what runs in GitHub Actions
 
 #### GitHub Actions:
-- Runs `npm run test:ci` (no external dependencies)
+- Runs `pnpm --filter @roast/web run test:ci` (no external dependencies)
 - E2E and LLM tests are excluded from CI to avoid costs and flakiness
 - Developers can run full test suite locally when needed
 

@@ -42,43 +42,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:
           path: |
-            .next/cache
+            apps/web/.next/cache
             node_modules/.cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
             ${{ runner.os }}-nextjs-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: pnpm --filter @roast/db run gen
 
       - name: Run database migrations
-        run: npm run db:deploy
+        run: pnpm --filter @roast/db exec prisma migrate deploy
 
       - name: Run TypeScript type checking
-        run: npm run typecheck
+        run: pnpm turbo run typecheck
 
       - name: Run linting
-        run: npm run lint
+        run: pnpm --filter @roast/web run lint
 
       - name: Run CI tests (unit + integration, no external deps)
-        run: npm run test:ci -- --coverage --coverageReporters=text-summary
+        run: pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
 
       - name: Build application
-        run: npm run build
+        run: pnpm --filter @roast/web run build
 
       - name: Test Docker build
         run: |
