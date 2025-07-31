@@ -1,0 +1,4 @@
+{
+  "buildCommand": "turbo run build --filter=@roast/web",
+  "framework": "nextjs"
+}
