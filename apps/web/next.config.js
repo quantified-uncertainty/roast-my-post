@@ -31,6 +31,8 @@ const nextConfig = {
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
   // Monorepo file tracing (moved from experimental in Next.js 15)
   outputFileTracingRoot: require('path').join(__dirname, '../../'),
+  // Explicitly include Prisma engines in serverless bundle
+  serverComponentsExternalPackages: ['@prisma/client', '@prisma/engines'],
   async headers() {
     return [
       {
