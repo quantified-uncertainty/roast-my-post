@@ -160,7 +160,14 @@ create_worktree() {
     
     # Create git worktree
     echo "Creating git worktree..."
-    git worktree add -b "$BRANCH" "$WORKTREE_PATH" "$COMMIT"
+    # Check if branch exists
+    if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+        # Branch exists, don't create it
+        git worktree add "$WORKTREE_PATH" "$BRANCH"
+    else
+        # Branch doesn't exist, create it
+        git worktree add -b "$BRANCH" "$WORKTREE_PATH" "$COMMIT"
+    fi
     
     # Save configuration
     local CONFIG_FILE="$CONFIG_DIR/$BRANCH.json"
@@ -207,11 +214,20 @@ EOF
     fi
     
     # Set up Claude permissions
-    if [ -f "$GIT_ROOT/.claude/settings.local.json.template" ]; then
+    # Copy actual settings.local.json if it exists, otherwise use template
+    if [ -f "$GIT_ROOT/.claude/settings.local.json" ]; then
+        mkdir -p "$WORKTREE_PATH/.claude"
+        cp "$GIT_ROOT/.claude/settings.local.json" "$WORKTREE_PATH/.claude/settings.local.json"
+        echo "  ✓ Copied Claude permissions from main repo"
+    elif [ -f "$GIT_ROOT/.claude/settings.local.json.template" ]; then
         mkdir -p "$WORKTREE_PATH/.claude"
         cp "$GIT_ROOT/.claude/settings.local.json.template" "$WORKTREE_PATH/.claude/settings.local.json"
-        echo "  ✓ Set up Claude permissions"
+        echo "  ✓ Set up Claude permissions from template"
     fi
+    
+    # Create Claude workspace file to ensure proper recognition
+    echo "$WORKTREE_PATH" > "$WORKTREE_PATH/.claude_workspace"
+    echo "  ✓ Created Claude workspace file"
     
     # Install dependencies
     cd "$WORKTREE_PATH"
@@ -233,6 +249,11 @@ EOF
     echo "Next steps:"
     echo "  $0 start $BRANCH    # Start all processes"
     echo "  $0 attach $BRANCH   # Attach to tmux session"
+    echo ""
+    echo "Claude permissions:"
+    echo "  • Permissions copied from main repo"
+    echo "  • To sync later: ./dev/scripts/sync-claude-permissions.sh"
+    echo "  • For auto-sync: ./dev/scripts/setup-git-hooks.sh"
 }
 
 # Start tmux session
