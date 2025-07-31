@@ -57,7 +57,7 @@ interface Evaluation {
         createdAt: Date;
         llmInteractions: Record<string, unknown>;
       }>;
-      costInCents: number;
+      priceInDollars: number | string;
       llmThinking: string | null;
     };
   }>;
@@ -67,7 +67,7 @@ interface Evaluation {
     createdAt: string;
     completedAt?: string;
     error?: string;
-    costInCents?: number;
+    priceInDollars?: number | string;
     durationInSeconds?: number;
   }>;
 }
@@ -98,9 +98,10 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const formatCost = (costInCents?: number) => {
-  if (!costInCents) return "—";
-  return `$${(costInCents / 100).toFixed(3)}`;
+const formatCost = (priceInDollars?: number | string) => {
+  if (!priceInDollars) return "—";
+  const price = typeof priceInDollars === 'string' ? parseFloat(priceInDollars) : priceInDollars;
+  return `$${price.toFixed(3)}`;
 };
 
 export default function EvaluationsMonitorPage() {
@@ -219,8 +220,8 @@ export default function EvaluationsMonitorPage() {
                       {latestVersion && (
                         <span>{latestVersion.comments.length} comments</span>
                       )}
-                      {latestJob?.costInCents && (
-                        <span>{formatCost(latestJob.costInCents)}</span>
+                      {latestJob?.priceInDollars && (
+                        <span>{formatCost(latestJob.priceInDollars)}</span>
                       )}
                     </div>
                   </div>
@@ -285,7 +286,7 @@ export default function EvaluationsMonitorPage() {
                 agentDescription={undefined}
                 grade={selectedVersion.grade}
                 ephemeralBatch={null}
-                costInCents={selectedVersion.job?.costInCents}
+costInCents={selectedVersion.job?.priceInDollars ? parseFloat(selectedVersion.job.priceInDollars.toString()) * 100 : undefined}
                 durationInSeconds={null}
                 createdAt={selectedVersion.createdAt}
                 isStale={false}

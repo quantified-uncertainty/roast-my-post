@@ -49,7 +49,7 @@ export interface AgentEvaluation {
   job?: {
     status: string;
     llmThinking?: string | null;
-    costInCents?: number | null;
+    priceInDollars?: number | string | null;
     tasks?: Array<{
       id: string;
       name: string;
