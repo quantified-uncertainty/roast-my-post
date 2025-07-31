@@ -16,6 +16,14 @@ function buildAuthConfig(): NextAuthConfig {
 
   const { AUTH_SECRET, AUTH_RESEND_KEY, EMAIL_FROM } = process.env;
 
+  // Debug logging (remove after fixing)
+  console.log('AUTH_SECRET exists:', !!AUTH_SECRET);
+  console.log('AUTH_SECRET length:', AUTH_SECRET?.length);
+
+  if (!AUTH_SECRET) {
+    throw new Error('AUTH_SECRET environment variable is required but not found');
+  }
+
   if (AUTH_RESEND_KEY && EMAIL_FROM) {
     providers.push(
       Resend({
@@ -33,7 +41,7 @@ function buildAuthConfig(): NextAuthConfig {
   const config: NextAuthConfig = {
     adapter: prismaAdapter,
     providers,
-    secret: AUTH_SECRET,
+    secret: AUTH_SECRET, // This will now be guaranteed to exist
     session: {
       strategy: "database",
     },
