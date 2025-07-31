@@ -28,8 +28,10 @@ COPY . .
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
-# Provide dummy DATABASE_URL for build
+# Provide dummy values for build-time validation
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+ENV AUTH_SECRET="dummy-auth-secret-for-build"
+ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
 
 # Build Next.js application
 # Use Docker-specific config to avoid plugin issues
