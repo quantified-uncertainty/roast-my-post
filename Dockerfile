@@ -32,7 +32,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 
 # Build Next.js application
-RUN pnpm --filter @roast/web run build
+# Use Docker-specific config to avoid plugin issues
+RUN mv apps/web/next.config.docker.js apps/web/next.config.js && \
+    pnpm --filter @roast/web run build
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -51,7 +53,10 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy only the standalone build (includes necessary node_modules)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
+# Copy Prisma engines from db package (critical for monorepo deployment)
+COPY --from=builder --chown=nextjs:nodejs /app/internal-packages/db/generated/*.node ./apps/web/generated/
 
 # Copy Prisma schema for reference (migrations handled separately)
 COPY --from=builder --chown=nextjs:nodejs /app/internal-packages/db/prisma ./prisma

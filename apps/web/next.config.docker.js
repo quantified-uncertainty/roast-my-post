@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-// Conditionally load PrismaPlugin only if available (for Docker builds)
-let PrismaPlugin;
-try {
-  PrismaPlugin = require('@prisma/nextjs-monorepo-workaround-plugin').PrismaPlugin;
-} catch (e) {
-  console.warn('PrismaPlugin not available, skipping (Docker build)');
-}
+// Docker-specific Next.js configuration without plugins that require Prisma client
 
 const securityHeaders = [
   {
@@ -48,36 +42,6 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
-    if (isServer) {
-      // CRITICAL: Both plugins are needed for Prisma to work in monorepo on Vercel
-      
-      // 1. Prisma monorepo workaround plugin - handles client resolution (if available)
-      if (PrismaPlugin) {
-        config.plugins = [...config.plugins, new PrismaPlugin()];
-      }
-      
-      // 2. Explicitly copy Prisma engines - ensures .node binaries are available where Vercel expects them
-      //    This is the KEY to making single-client pattern work in monorepo deployments
-      const path = require('path');
-      
-      try {
-        const CopyPlugin = require('copy-webpack-plugin');
-        config.plugins.push(
-          new CopyPlugin({
-            patterns: [
-              {
-                from: path.join(__dirname, '../../internal-packages/db/generated/*.node'),
-                to: 'generated/[name][ext]',
-                noErrorOnMissing: true,
-              },
-            ],
-          })
-        );
-      } catch (e) {
-        console.warn('CopyPlugin not available, skipping engine copy (Docker build)');
-      }
-    }
-
     // Add markdown loader
     config.module.rules.push({
       test: /\.md$/,
@@ -92,6 +56,30 @@ const nextConfig = {
         'canvas': 'commonjs canvas',
         'sharp': 'commonjs sharp',
       });
+      
+      // Explicitly copy Prisma engines for Docker builds
+      const path = require('path');
+      const fs = require('fs');
+      
+      // Manual engine copy during build phase since CopyPlugin doesn't work well in Docker
+      const enginePath = path.join(__dirname, '../../internal-packages/db/generated');
+      const targetPath = path.join(__dirname, 'generated');
+      
+      // Create target directory if it doesn't exist
+      if (!fs.existsSync(targetPath)) {
+        fs.mkdirSync(targetPath, { recursive: true });
+      }
+      
+      // Copy all .node files
+      if (fs.existsSync(enginePath)) {
+        const files = fs.readdirSync(enginePath);
+        files.filter(f => f.endsWith('.node')).forEach(file => {
+          const src = path.join(enginePath, file);
+          const dest = path.join(targetPath, file);
+          fs.copyFileSync(src, dest);
+          console.log(`Copied Prisma engine: ${file}`);
+        });
+      }
     } else {
       // For client-side, completely ignore these modules
       config.resolve.fallback = {

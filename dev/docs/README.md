@@ -21,6 +21,8 @@ Feature documentation and user guides
 Deployment guides and production configuration
 
 - **[production-launch.md](deployment/production-launch.md)** - Production launch procedures
+- **[prisma-monorepo-vercel.md](deployment/prisma-monorepo-vercel.md)** - Lessons learned deploying Prisma in monorepo to Vercel
+- **[monorepo-migration-checklist.md](deployment/monorepo-migration-checklist.md)** - Quick reference for monorepo deployment
 - **[docker/](deployment/docker/)** - Docker containerization documentation
   - **[README.md](deployment/docker/README.md)** - Docker Compose guide and quick start
   - **[ci-cd.md](deployment/docker/ci-cd.md)** - CI/CD pipeline with GitHub Actions
@@ -57,6 +59,7 @@ Security documentation and procedures
 - **Database Safety**: [development/agents.md](development/agents.md#database-storage)
 - **Docker Deployment**: [deployment/docker/](deployment/docker/)
 - **Production Launch**: [deployment/production-launch.md](deployment/production-launch.md)
+- **Vercel Monorepo**: [deployment/prisma-monorepo-vercel.md](deployment/prisma-monorepo-vercel.md)
 
 ### For Security Reviews
 - **Authentication Guide**: [security/authentication.md](security/authentication.md)
