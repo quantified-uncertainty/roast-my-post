@@ -20,13 +20,13 @@
 #   etc.
 #
 # USAGE:
-#   ./scripts/worktree-manager.sh create <branch> [<commit-ish>]
-#   ./scripts/worktree-manager.sh start <branch>
-#   ./scripts/worktree-manager.sh attach <branch>
-#   ./scripts/worktree-manager.sh stop <branch>
-#   ./scripts/worktree-manager.sh list
-#   ./scripts/worktree-manager.sh ports
-#   ./scripts/worktree-manager.sh remove <branch>
+#   ./dev/scripts/worktree-manager.sh create <branch> [<commit-ish>]
+#   ./dev/scripts/worktree-manager.sh start <branch>
+#   ./dev/scripts/worktree-manager.sh attach <branch>
+#   ./dev/scripts/worktree-manager.sh stop <branch>
+#   ./dev/scripts/worktree-manager.sh list
+#   ./dev/scripts/worktree-manager.sh ports
+#   ./dev/scripts/worktree-manager.sh remove <branch>
 
 set -e
 
@@ -192,6 +192,8 @@ EOF
     
     # Copy and update .env files
     echo -e "${YELLOW}Setting up environment...${NC}"
+    
+    # Copy root .env files (for monorepo-wide configs)
     for env_file in "$GIT_ROOT"/.env*; do
         if [ -f "$env_file" ] && [[ ! "$env_file" =~ \.example$ ]]; then
             filename=$(basename "$env_file")
@@ -202,9 +204,26 @@ EOF
                 # macOS compatible sed
                 sed -i '' "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/$filename"
             fi
-            echo "  ✓ Copied and updated $filename"
+            echo "  ✓ Copied and updated root $filename"
         fi
     done
+    
+    # Copy web app .env files
+    if [ -d "$GIT_ROOT/apps/web" ]; then
+        for env_file in "$GIT_ROOT/apps/web"/.env*; do
+            if [ -f "$env_file" ] && [[ ! "$env_file" =~ \.example$ ]]; then
+                filename=$(basename "$env_file")
+                mkdir -p "$WORKTREE_PATH/apps/web"
+                cp "$env_file" "$WORKTREE_PATH/apps/web/$filename"
+                
+                # Update port references
+                if [[ "$filename" =~ ^\.env ]]; then
+                    sed -i '' "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/apps/web/$filename"
+                fi
+                echo "  ✓ Copied and updated apps/web/$filename"
+            fi
+        done
+    fi
     
     # Copy MCP server .env
     if [ -f "$GIT_ROOT/apps/mcp-server/.env" ]; then
