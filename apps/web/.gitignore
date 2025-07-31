@@ -35,6 +35,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma generated client  
+# prisma generated client (not used - kept in shared db package)
 generated/
 prisma-generated/

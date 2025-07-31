@@ -42,11 +42,14 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
-    // Add Prisma monorepo workaround plugin (still needed for monorepos even with serverExternalPackages)
     if (isServer) {
+      // CRITICAL: Both plugins are needed for Prisma to work in monorepo on Vercel
+      
+      // 1. Prisma monorepo workaround plugin - handles client resolution
       config.plugins = [...config.plugins, new PrismaPlugin()];
       
-      // Explicitly copy Prisma engines from monorepo db package
+      // 2. Explicitly copy Prisma engines - ensures .node binaries are available where Vercel expects them
+      //    This is the KEY to making single-client pattern work in monorepo deployments
       const path = require('path');
       const CopyPlugin = require('copy-webpack-plugin');
       
