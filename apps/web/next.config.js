@@ -31,8 +31,8 @@ const nextConfig = {
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
   // Monorepo file tracing (moved from experimental in Next.js 15)
   outputFileTracingRoot: require('path').join(__dirname, '../../'),
-  // Explicitly include Prisma engines in serverless bundle
-  serverComponentsExternalPackages: ['@prisma/client', '@prisma/engines'],
+  // Explicitly include Prisma engines in serverless bundle (Next.js 15 renamed from serverComponentsExternalPackages)
+  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
   async headers() {
     return [
       {
@@ -42,11 +42,10 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
-    // NOTE: Testing if Next.js 15 + Turbo Pack has built-in Prisma support
-    // If this works, we don't need the workaround plugin
-    // if (isServer) {
-    //   config.plugins = [...config.plugins, new PrismaPlugin()];
-    // }
+    // Add Prisma monorepo workaround plugin (still needed for monorepos even with serverExternalPackages)
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()];
+    }
 
     // Add markdown loader
     config.module.rules.push({
