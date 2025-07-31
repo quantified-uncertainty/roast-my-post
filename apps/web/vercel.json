@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx turbo build --filter=@roast/web",
+  "buildCommand": "npx turbo build",
   "framework": "nextjs",
   "ignoreCommand": "npx turbo-ignore"
 }
