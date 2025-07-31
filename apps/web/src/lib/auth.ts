@@ -1,5 +1,8 @@
 import "server-only";
 
+// Validate build environment early
+import "./build-validation";
+
 import { cache } from "react";
 
 import NextAuth, { NextAuthConfig } from "next-auth";
