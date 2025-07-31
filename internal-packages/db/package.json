@@ -15,7 +15,8 @@
     "db:migrate:reset:safe": "../../dev/scripts/safe-prisma.sh migrate reset",
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:studio": "pnpm with-env prisma studio",
-    "clean": "rm -rf generated .turbo"
+    "clean": "rm -rf generated .turbo",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0"
