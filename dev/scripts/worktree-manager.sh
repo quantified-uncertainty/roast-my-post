@@ -20,13 +20,13 @@
 #   etc.
 #
 # USAGE:
-#   ./scripts/worktree-manager.sh create <branch> [<commit-ish>]
-#   ./scripts/worktree-manager.sh start <branch>
-#   ./scripts/worktree-manager.sh attach <branch>
-#   ./scripts/worktree-manager.sh stop <branch>
-#   ./scripts/worktree-manager.sh list
-#   ./scripts/worktree-manager.sh ports
-#   ./scripts/worktree-manager.sh remove <branch>
+#   ./dev/scripts/worktree-manager.sh create <branch> [<commit-ish>]
+#   ./dev/scripts/worktree-manager.sh start <branch>
+#   ./dev/scripts/worktree-manager.sh attach <branch>
+#   ./dev/scripts/worktree-manager.sh stop <branch>
+#   ./dev/scripts/worktree-manager.sh list
+#   ./dev/scripts/worktree-manager.sh ports
+#   ./dev/scripts/worktree-manager.sh remove <branch>
 
 set -e
 
@@ -160,7 +160,14 @@ create_worktree() {
     
     # Create git worktree
     echo "Creating git worktree..."
-    git worktree add -b "$BRANCH" "$WORKTREE_PATH" "$COMMIT"
+    # Check if branch exists
+    if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+        # Branch exists, don't create it
+        git worktree add "$WORKTREE_PATH" "$BRANCH"
+    else
+        # Branch doesn't exist, create it
+        git worktree add -b "$BRANCH" "$WORKTREE_PATH" "$COMMIT"
+    fi
     
     # Save configuration
     local CONFIG_FILE="$CONFIG_DIR/$BRANCH.json"
@@ -185,6 +192,8 @@ EOF
     
     # Copy and update .env files
     echo -e "${YELLOW}Setting up environment...${NC}"
+    
+    # Copy root .env files (for monorepo-wide configs)
     for env_file in "$GIT_ROOT"/.env*; do
         if [ -f "$env_file" ] && [[ ! "$env_file" =~ \.example$ ]]; then
             filename=$(basename "$env_file")
@@ -195,9 +204,26 @@ EOF
                 # macOS compatible sed
                 sed -i '' "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/$filename"
             fi
-            echo "  ✓ Copied and updated $filename"
+            echo "  ✓ Copied and updated root $filename"
         fi
     done
+    
+    # Copy web app .env files
+    if [ -d "$GIT_ROOT/apps/web" ]; then
+        for env_file in "$GIT_ROOT/apps/web"/.env*; do
+            if [ -f "$env_file" ] && [[ ! "$env_file" =~ \.example$ ]]; then
+                filename=$(basename "$env_file")
+                mkdir -p "$WORKTREE_PATH/apps/web"
+                cp "$env_file" "$WORKTREE_PATH/apps/web/$filename"
+                
+                # Update port references
+                if [[ "$filename" =~ ^\.env ]]; then
+                    sed -i '' "s|http://localhost:[0-9]*|http://localhost:$DEV_PORT|g" "$WORKTREE_PATH/apps/web/$filename"
+                fi
+                echo "  ✓ Copied and updated apps/web/$filename"
+            fi
+        done
+    fi
     
     # Copy MCP server .env
     if [ -f "$GIT_ROOT/apps/mcp-server/.env" ]; then
@@ -207,11 +233,20 @@ EOF
     fi
     
     # Set up Claude permissions
-    if [ -f "$GIT_ROOT/.claude/settings.local.json.template" ]; then
+    # Copy actual settings.local.json if it exists, otherwise use template
+    if [ -f "$GIT_ROOT/.claude/settings.local.json" ]; then
+        mkdir -p "$WORKTREE_PATH/.claude"
+        cp "$GIT_ROOT/.claude/settings.local.json" "$WORKTREE_PATH/.claude/settings.local.json"
+        echo "  ✓ Copied Claude permissions from main repo"
+    elif [ -f "$GIT_ROOT/.claude/settings.local.json.template" ]; then
         mkdir -p "$WORKTREE_PATH/.claude"
         cp "$GIT_ROOT/.claude/settings.local.json.template" "$WORKTREE_PATH/.claude/settings.local.json"
-        echo "  ✓ Set up Claude permissions"
+        echo "  ✓ Set up Claude permissions from template"
     fi
+    
+    # Create Claude workspace file to ensure proper recognition
+    echo "$WORKTREE_PATH" > "$WORKTREE_PATH/.claude_workspace"
+    echo "  ✓ Created Claude workspace file"
     
     # Install dependencies
     cd "$WORKTREE_PATH"
@@ -233,6 +268,11 @@ EOF
     echo "Next steps:"
     echo "  $0 start $BRANCH    # Start all processes"
     echo "  $0 attach $BRANCH   # Attach to tmux session"
+    echo ""
+    echo "Claude permissions:"
+    echo "  • Permissions copied from main repo"
+    echo "  • To sync later: ./dev/scripts/sync-claude-permissions.sh"
+    echo "  • For auto-sync: ./dev/scripts/setup-git-hooks.sh"
 }
 
 # Start tmux session
