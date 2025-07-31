@@ -1,6 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @roast/web run build",
-  "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install"
-}
