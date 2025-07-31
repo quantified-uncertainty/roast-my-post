@@ -680,85 +680,42 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
         }
 
         if (slateStartOffset === undefined || slateEndOffset === undefined) {
-          // Fall back to original approach if mapping doesn't exist
+          // Fall back approach - but ONLY highlight if the node contains the expected offset range
           const nodeText = node.text;
           let highlightText = highlight.quotedText || "";
-
-          // Try various transformations of the highlight text to improve matching
-          let found = false;
-
-          // 1. Try direct match
-          if (nodeText && highlightText && nodeText.includes(highlightText)) {
-            found = true;
-            const start = nodeText.indexOf(highlightText);
-            const end = start + highlightText.length;
-
-            ranges.push({
-              anchor: { path, offset: start },
-              focus: { path, offset: end },
-              highlight: true,
-              tag,
-              color: highlight.color || "yellow-200",
-              isActive: tag === activeTag,
-            });
-          }
-
-          // 2. Try without markdown formatting (if not found)
-          if (!found) {
-            const normalizedHighlightText = normalizeText(highlightText);
-
-            if (
-              nodeText &&
-              normalizedHighlightText &&
-              nodeText.includes(normalizedHighlightText)
-            ) {
-              const start = nodeText.indexOf(normalizedHighlightText);
-              const end = start + normalizedHighlightText.length;
-
+          
+          // Calculate the node's position in the overall document
+          const nodeStartInDoc = nodeInfo.start;
+          const nodeEndInDoc = nodeInfo.end;
+          
+          // Check if this highlight's offsets fall within this node
+          if (highlight.startOffset >= nodeStartInDoc && highlight.startOffset < nodeEndInDoc) {
+            // Calculate relative position within this node
+            const relativeStart = highlight.startOffset - nodeStartInDoc;
+            const relativeEnd = Math.min(highlight.endOffset - nodeStartInDoc, nodeText.length);
+            
+            // Verify the text matches at this specific location
+            const textAtLocation = nodeText.substring(relativeStart, relativeEnd);
+            if (textAtLocation && highlightText && textAtLocation.includes(highlightText.substring(0, Math.min(highlightText.length, textAtLocation.length)))) {
               ranges.push({
-                anchor: { path, offset: start },
-                focus: { path, offset: end },
+                anchor: { path, offset: relativeStart },
+                focus: { path, offset: relativeEnd },
                 highlight: true,
                 tag,
                 color: highlight.color || "yellow-200",
                 isActive: tag === activeTag,
               });
-              found = true;
+              continue;
             }
           }
 
-          // 3. Try with partial text matching (if still not found)
-          if (!found && highlightText && nodeText) {
-            const firstChunk = normalizeText(highlightText.split("\n")[0]);
-
-            if (
-              firstChunk &&
-              firstChunk.length > 10 &&
-              nodeText.includes(firstChunk)
-            ) {
-              const start = nodeText.indexOf(firstChunk);
-              const end = start + firstChunk.length;
-
-              ranges.push({
-                anchor: { path, offset: start },
-                focus: { path, offset: end },
-                highlight: true,
-                tag,
-                color: highlight.color || "yellow-200",
-                isActive: tag === activeTag,
-              });
-              found = true;
-            }
-          }
-
-          if (!found) {
-            console.warn(`Failed to render highlight ${highlight.tag}:`, {
-              startOffset: highlight.startOffset,
-              endOffset: highlight.endOffset,
-              quotedText: highlight.quotedText?.substring(0, 50) + '...',
-              reason: 'No text match found in any node'
-            });
-          }
+          // If we can't find it at the expected location, skip this highlight
+          console.warn(`Failed to render highlight ${highlight.tag} at expected location:`, {
+            startOffset: highlight.startOffset,
+            endOffset: highlight.endOffset,
+            quotedText: highlight.quotedText?.substring(0, 50) + '...',
+            reason: 'Text not found at expected offset'
+          });
           continue;
         }
 
