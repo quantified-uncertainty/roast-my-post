@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin');
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -27,6 +29,10 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   transpilePackages: ["react-markdown", "rehype-raw", "remark-gfm"],
+  // Experimental feature for monorepo file tracing
+  experimental: {
+    outputFileTracingRoot: require('path').join(__dirname, '../../'),
+  },
   async headers() {
     return [
       {
@@ -36,6 +42,11 @@ const nextConfig = {
     ];
   },
   webpack: (config, { isServer }) => {
+    // Add Prisma monorepo workaround plugin
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()];
+    }
+
     // Add markdown loader
     config.module.rules.push({
       test: /\.md$/,
