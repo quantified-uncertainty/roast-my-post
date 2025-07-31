@@ -32,7 +32,7 @@ const nextConfig = {
   // Monorepo file tracing (moved from experimental in Next.js 15)
   outputFileTracingRoot: require('path').join(__dirname, '../../'),
   // Explicitly include Prisma engines in serverless bundle (Next.js 15 renamed from serverComponentsExternalPackages)
-  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
+  serverExternalPackages: ['@prisma/client', '@prisma/engines', '@roast/db'],
   async headers() {
     return [
       {
