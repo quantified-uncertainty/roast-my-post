@@ -87,6 +87,7 @@
     "@types/react-dom": "^19",
     "@types/turndown": "^5.0.2",
     "autoprefixer": "^10.4.21",
+    "copy-webpack-plugin": "^13.0.0",
     "dotenv-cli": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.3.0",

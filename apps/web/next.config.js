@@ -45,6 +45,22 @@ const nextConfig = {
     // Add Prisma monorepo workaround plugin (still needed for monorepos even with serverExternalPackages)
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()];
+      
+      // Explicitly copy Prisma engines from monorepo db package
+      const path = require('path');
+      const CopyPlugin = require('copy-webpack-plugin');
+      
+      config.plugins.push(
+        new CopyPlugin({
+          patterns: [
+            {
+              from: path.join(__dirname, '../../internal-packages/db/generated/*.node'),
+              to: 'generated/[name][ext]',
+              noErrorOnMissing: true,
+            },
+          ],
+        })
+      );
     }
 
     // Add markdown loader
