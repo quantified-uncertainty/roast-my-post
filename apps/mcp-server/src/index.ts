@@ -1,5 +1,9 @@
 #!/usr/bin/env node
+import dotenv from 'dotenv';
 import { z } from "zod";
+
+// Load environment variables from root .env.local
+dotenv.config({ path: '../../apps/web/.env.local' });
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
@@ -10,16 +14,32 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import {
-  prisma,
-  type Agent,
-  type AgentVersion,
-  type Document,
-  type Evaluation,
-  type EvaluationVersion,
-  type Job,
-  type Prisma,
-} from "@roast/db";
+import { PrismaClient, Prisma } from "../../../internal-packages/db/generated/index.js";
+import type { 
+  Agent,
+  AgentVersion,
+  Document,
+  Evaluation,
+  EvaluationVersion,
+  Job
+} from "../../../internal-packages/db/generated/index.js";
+
+// Initialize Prisma client directly
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' 
+      ? ['query', 'error', 'warn'] 
+      : ['error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
 
 // Type definitions for Prisma queries with includes
 type AgentWithVersions = Agent & {
