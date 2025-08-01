@@ -13,25 +13,45 @@ This guide explains how to develop and test the Roast My Post MCP (Model Context
 
 ### Key Files
 
-- **Source**: `mcp-server/src/index.ts` (TypeScript source)
-- **Compiled**: `mcp-server/dist/index.js` (What Claude actually runs)
-- **Config**: `.mcp.json` (Tells Claude Code how to start the server)
+- **Source**: `apps/mcp-server/src/index.ts` (TypeScript source)
+- **Compiled**: `apps/mcp-server/dist/index.js` (Optional - we now use tsx directly)
+- **Config**: `~/.../claude_desktop_config.json` (Tells Claude Code how to start the server)
+- **Environment**: `apps/mcp-server/.env` (Local environment variables for testing)
 
 ## Development Setup
 
 ### Initial Setup
 
 ```bash
-cd mcp-server
-npm install
-npm run build  # Creates initial dist/index.js
+# Install dependencies (from project root)
+pnpm install
+
+# Build MCP server (optional - tsx can run TypeScript directly)
+pnpm --filter @roast/mcp-server run build
+
+# Ensure Prisma client is generated
+pnpm --filter @roast/db run gen
 ```
 
 ### Development Mode
 
-```bash
-cd mcp-server
-npm run dev  # Starts TypeScript watcher
+**IMPORTANT**: After monorepo migration and cache issue discovery, we now recommend using tsx directly instead of compilation:
+
+**Current Working Configuration:**
+```json
+{
+  "mcpServers": {
+    "roast-my-post": {
+      "command": "npx",
+      "args": ["tsx", "/full/path/to/apps/mcp-server/src/index.ts"],
+      "env": {
+        "DATABASE_URL": "postgresql://...",
+        "ROAST_MY_POST_MCP_USER_API_KEY": "rmp_...",
+        "ROAST_MY_POST_MCP_API_BASE_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
 ```
 
 This command:
@@ -108,48 +128,121 @@ Runs the compiled server directly (mainly for testing)
 
 ## Common Issues and Solutions
 
+### ⚠ CRITICAL: MCP Server Cache Issue
+
+**The #1 problem**: Claude Code has a persistent cache issue ([GitHub #3095](https://github.com/anthropics/claude-code/issues/3095)). 
+
+**Symptoms**: 
+- Changes don't reflect even after rebuilding
+- Old errors persist (like "costInCents" column errors)
+- Stale file paths or imports
+
+**Solution**: **ALWAYS restart Claude Code completely** after MCP changes. The `/mcp` command is not sufficient.
+
 ### Changes Not Reflecting
 
-1. Ensure `npm run dev` is running and shows "Watching for file changes"
-2. Check for TypeScript compilation errors in the terminal
-3. Verify `dist/index.js` timestamp is recent
-4. Restart Claude Code (required for changes to take effect)
+1. **First check**: Are you using the correct file path in Claude config?
+   ```bash
+   # After monorepo migration, path should be:
+   /full/path/to/apps/mcp-server/src/index.ts  # NOT mcp-server/
+   ```
 
-### Multiple MCP Server Processes
+2. **Kill stale processes**:
+   ```bash
+   ps aux | grep "mcp-server" | grep -v grep
+   pkill -f "old-path/mcp-server"  # Kill old processes
+   ```
 
-- Normal if you have both Claude Desktop and Claude Code open
-- Each Claude instance manages its own MCP server
-- They don't interfere with each other
+3. **Test directly**:
+   ```bash
+   echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx tsx apps/mcp-server/src/index.ts
+   ```
+
+4. **Full restart**: Exit ALL Claude Code instances and restart
+
+### Module Resolution Errors
+
+If you see `"Cannot find module '@roast/db'"` or similar:
+
+1. **Use direct imports** instead of workspace imports:
+   ```typescript
+   // Instead of: import { prisma } from "@roast/db";
+   import { PrismaClient } from "../../../internal-packages/db/generated/index.js";
+   ```
+
+2. **Ensure Prisma client is generated**:
+   ```bash
+   pnpm --filter @roast/db run gen
+   ```
 
 ### Environment Variables Not Working
 
-1. Check `.mcp.json` configuration
-2. Ensure variables are in the `env` section
-3. Restart Claude Code after config changes
+1. **Create local .env file** in MCP server directory:
+   ```bash
+   # apps/mcp-server/.env
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/roast_my_post?schema=public"
+   ROAST_MY_POST_MCP_USER_API_KEY="rmp_..."
+   ROAST_MY_POST_MCP_API_BASE_URL="http://localhost:3000"
+   ```
 
-## Best Practices
+2. **Avoid cross-package dependencies**:
+   ```typescript
+   // BAD: dotenv.config({ path: '../../apps/web/.env.local' });
+   // GOOD: dotenv.config(); // Uses local .env
+   ```
 
-1. **Always run `npm run dev` during development** - It handles compilation automatically
-2. **Test locally first** - Use echo commands before full integration testing
-3. **One change at a time** - Easier to identify what broke if something goes wrong
-4. **Check logs** - MCP server logs can reveal configuration issues
-5. **Commit compiled code** - Include `dist/` in git for easier deployment
+### Multiple MCP Server Processes
 
-## Quick Reference
+- Each Claude instance manages its own MCP server
+- Check for processes from old paths: `ps aux | grep "mcp-server"`
+- Old directories can cause confusion: `rm -rf mcp-server/` (old location)
+
+## Best Practices (Updated 2025-08-01)
+
+1. **Use tsx directly** - Avoid compilation step by running TypeScript source directly
+2. **Self-contained packages** - Each package should have its own environment configuration
+3. **Direct imports** - Avoid workspace imports in MCP servers due to module resolution issues
+4. **Test locally first** - Always test MCP server directly before troubleshooting Claude issues
+5. **Restart Claude completely** - Never assume changes will be picked up without full restart
+6. **Clean up old processes** - Check for and kill stale MCP server processes
+7. **Monitor logs** - MCP server logs reveal the actual errors vs cached errors
+
+## Quick Reference (Updated)
 
 ```bash
-# Start development
-cd mcp-server && npm run dev
+# Test MCP server directly (most important debug step)
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx tsx apps/mcp-server/src/index.ts
 
-# Test without Claude
-echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | node dist/index.js
+# Check for stale processes
+ps aux | grep "mcp-server" | grep -v grep
 
-# Restart Claude Code to load changes
-# (No command - just quit and reopen Claude Code)
+# Emergency reset
+pkill -f "mcp-server" && rm -rf ~/Library/Logs/Claude/mcp-server-roast-my-post.log
 
-# Debug issues
+# Regenerate Prisma after schema changes
+pnpm --filter @roast/db run gen
+
+# View real-time MCP logs
 tail -f ~/Library/Logs/Claude/mcp-server-roast-my-post.log
+
+# Check Claude MCP status (after restart)
+# In Claude Code: /mcp
 ```
+
+## Architecture Decisions
+
+### Why tsx Instead of Compiled JavaScript?
+
+1. **Module Resolution**: Workspace imports work better in tsx environment
+2. **Development Speed**: No build step required for changes
+3. **Error Clarity**: TypeScript errors are more informative than runtime import errors
+4. **Environment Isolation**: Easier to manage environment variables per package
+
+### Why Direct Prisma Imports?
+
+1. **Reliability**: Workspace imports fail unpredictably in compiled environments
+2. **Transparency**: Clear dependency chain from MCP server to generated client
+3. **Monorepo Compatibility**: Works consistently across different execution contexts
 
 ## Important Notes
 
