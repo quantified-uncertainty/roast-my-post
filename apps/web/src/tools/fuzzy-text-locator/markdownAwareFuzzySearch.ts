@@ -15,8 +15,9 @@ export interface MarkdownAwareFuzzyOptions extends UFuzzyOptions {
  * Check if the search failure might be due to markdown links
  */
 function isLikelyMarkdownMismatch(searchText: string, documentText: string): boolean {
-  // Only activate if document contains markdown links
-  if (!documentText.includes('](')) {
+  // Only activate if document contains markdown links (not escaped)
+  const markdownLinkPattern = /(?<!\\)\]\(/;
+  if (!markdownLinkPattern.test(documentText)) {
     return false;
   }
   
@@ -39,13 +40,16 @@ function createPositionMap(markdown: string): {
   let i = 0;
   
   while (i < markdown.length) {
-    // Check for markdown link pattern [text](url)
-    if (markdown[i] === '[') {
+    // Check for markdown link pattern [text](url) - but skip if escaped
+    if (markdown[i] === '[' && (i === 0 || markdown[i - 1] !== '\\')) {
       const linkStart = i;
       let j = i + 1;
       
-      // Find the closing ]
-      while (j < markdown.length && markdown[j] !== ']') {
+      // Find the closing ] (not escaped)
+      while (j < markdown.length) {
+        if (markdown[j] === ']' && markdown[j - 1] !== '\\') {
+          break;
+        }
         j++;
       }
       
@@ -157,11 +161,23 @@ export function markdownAwareFuzzySearch(
   
   // If the actual text contains markdown syntax that would be invisible to the LLM,
   // we should use the original plain text match instead
-  if (actualText.includes('](') && !plainResult.quotedText.includes('](')) {
+  const hasMarkdownSyntax = /(?<!\\)\]\(/.test(actualText);
+  const plainTextHasMarkdown = /(?<!\\)\]\(/.test(plainResult.quotedText);
+  
+  if (hasMarkdownSyntax && !plainTextHasMarkdown) {
     // The mapped result spans markdown boundaries - use the conceptual text instead
     mappedResult.quotedText = plainResult.quotedText;
   } else {
-    mappedResult.quotedText = actualText;
+    // Use exact match or verify it starts with expected text
+    const searchTextLower = searchText.toLowerCase();
+    const actualTextLower = actualText.toLowerCase();
+    
+    if (actualTextLower === searchTextLower || actualTextLower.startsWith(searchTextLower)) {
+      mappedResult.quotedText = actualText;
+    } else {
+      // Fallback to plain text version for better accuracy
+      mappedResult.quotedText = plainResult.quotedText;
+    }
   }
   
   logger.debug(`Markdown-aware match: "${actualText}" at [${mappedResult.startOffset}, ${mappedResult.endOffset}]`);
