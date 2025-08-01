@@ -104,7 +104,7 @@ HELICONE_CACHE_BUCKET_MAX_SIZE=20        # Max cached items (default: 20)
 
 ### Configuration Validation
 
-The package provides configuration validation to ensure your environment is properly set up:
+The package provides strict configuration validation that fails fast on any configuration errors:
 
 ```typescript
 import { validateConfiguration } from '@roast/ai';
@@ -114,10 +114,9 @@ if (!config.isValid) {
   console.error('Configuration errors:', config.errors);
   process.exit(1);
 }
-if (config.warnings.length > 0) {
-  console.warn('Configuration warnings:', config.warnings);
-}
 ```
+
+**Note**: This package enforces strict configuration requirements. All API keys must be properly set, and all numeric values must be valid. This is intentional to catch configuration issues early rather than experiencing runtime failures.
 
 ## Development
 

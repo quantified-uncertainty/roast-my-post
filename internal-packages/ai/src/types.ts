@@ -32,8 +32,8 @@ export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-202
 // Configuration for creating Anthropic client
 export function getAnthropicApiKey(): string | undefined {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey && process.env.NODE_ENV === 'production') {
-    console.error('WARNING: ANTHROPIC_API_KEY is not set in production environment');
+  if (!apiKey) {
+    console.error('ERROR: ANTHROPIC_API_KEY is not set');
   }
   return apiKey;
 }
@@ -83,18 +83,14 @@ export function validateConfiguration(): ConfigValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Check required configurations
+  // Check required configurations - fail fast
   if (!getAnthropicApiKey()) {
-    if (process.env.NODE_ENV === 'production') {
-      errors.push('ANTHROPIC_API_KEY is required in production');
-    } else {
-      warnings.push('ANTHROPIC_API_KEY is not set - AI features will not work');
-    }
+    errors.push('ANTHROPIC_API_KEY is required');
   }
 
-  // Check optional configurations
+  // Check Helicone configuration consistency
   if (isHeliconeEnabled() && !getHeliconeApiKey()) {
-    warnings.push('HELICONE_CACHE_ENABLED is true but HELICONE_API_KEY is not set');
+    errors.push('HELICONE_CACHE_ENABLED is true but HELICONE_API_KEY is not set');
   }
 
   // Validate numeric configurations
@@ -102,7 +98,7 @@ export function validateConfiguration(): ConfigValidationResult {
   if (maxAge) {
     const parsed = parseInt(maxAge, 10);
     if (isNaN(parsed) || parsed <= 0) {
-      warnings.push(`Invalid HELICONE_CACHE_MAX_AGE value: ${maxAge}`);
+      errors.push(`Invalid HELICONE_CACHE_MAX_AGE value: ${maxAge} (must be a positive number)`);
     }
   }
 
@@ -110,7 +106,7 @@ export function validateConfiguration(): ConfigValidationResult {
   if (maxSize) {
     const parsed = parseInt(maxSize, 10);
     if (isNaN(parsed) || parsed <= 0) {
-      warnings.push(`Invalid HELICONE_CACHE_BUCKET_MAX_SIZE value: ${maxSize}`);
+      errors.push(`Invalid HELICONE_CACHE_BUCKET_MAX_SIZE value: ${maxSize} (must be a positive number)`);
     }
   }
 
