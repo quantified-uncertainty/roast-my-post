@@ -11,26 +11,37 @@ jest.mock("../../../lib/logger", () => ({
   }
 }));
 
-// Mock the entire openai module
-jest.mock("../../../types/openai", () => ({
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn().mockResolvedValue({
-        content: [{
-          type: "tool_use",
-          name: "provide_self_critique",
-          input: {
-            selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
-          }
-        }],
-        usage: { input_tokens: 100, output_tokens: 50 }
-      })
-    }
-  })),
-  withTimeout: jest.fn((fn, timeout) => fn)
+// Mock the @roast/ai module
+jest.mock("@roast/ai", () => ({
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
+  createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
+// Mock withTimeout from openai types
+jest.mock("../../../types/openai", () => ({
+  ...jest.requireActual("../../../types/openai"),
+  withTimeout: jest.fn((promise) => promise),
+}));
+
+import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
+
 describe("Self-Critique", () => {
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockHelper: ReturnType<typeof setupClaudeToolMock>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
+  });
+
   it("should generate self-critique for evaluation output", async () => {
     const mockAgent: Agent = {
       id: "test-agent",
@@ -50,6 +61,12 @@ describe("Self-Critique", () => {
         { title: "Could Improve", text: "This needs more detail." }
       ]
     };
+
+    // Mock the self-critique response
+    const mockToolResult = {
+      selfCritique: "Score: 75/100\n\nThis evaluation demonstrates good structure and covers key points. However, the analysis could be more specific about implementation details."
+    };
+    mockHelper.mockToolResponse(mockToolResult);
 
     const result = await generateSelfCritique(mockEvaluation, mockAgent);
 

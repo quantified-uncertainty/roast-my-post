@@ -9,6 +9,7 @@ jest.mock('@roast/ai', () => ({
   sessionContext: {
     getSession: jest.fn().mockReturnValue(null)
   },
+  createHeliconeHeaders: jest.fn(() => ({})),
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));
 import { callClaudeWithTool } from '@roast/ai';

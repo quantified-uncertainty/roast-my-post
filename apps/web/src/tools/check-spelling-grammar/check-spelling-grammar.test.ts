@@ -5,7 +5,8 @@ jest.mock('@roast/ai', () => ({
   callClaudeWithTool: jest.fn(),
   sessionContext: {
     getSession: jest.fn().mockReturnValue(null)
-  }
+  },
+  createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
 // Mock the language convention detection

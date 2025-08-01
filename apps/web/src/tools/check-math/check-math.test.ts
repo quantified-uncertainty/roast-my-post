@@ -7,17 +7,18 @@ import { setupClaudeToolMock } from '@roast/ai';
 // Mock Claude wrapper
 jest.mock('@roast/ai', () => ({
   callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
   sessionContext: {
     getSession: jest.fn().mockReturnValue(null)
   },
+  createHeliconeHeaders: jest.fn(() => ({})),
   createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));
 import { callClaudeWithTool } from '@roast/ai';
-
-// Get the mocked function and setup helper
-const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
-const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
 
 describe('CheckMathTool', () => {
   const mockContext = { 
@@ -25,8 +26,16 @@ describe('CheckMathTool', () => {
     userId: 'test-user'
   };
 
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockToolResponse: ReturnType<typeof setupClaudeToolMock>['mockToolResponse'];
+
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    const mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
+    mockToolResponse = mockHelper.mockToolResponse;
   });
 
   describe('basic functionality', () => {
