@@ -1597,7 +1597,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            const errorMsg = response.status === 404 ? 'Document not found' : 
+                           response.status === 403 ? 'Access denied' :
+                           response.status === 401 ? 'Authentication required' :
+                           'Failed to fetch document';
+            throw new Error(errorMsg);
           }
 
           const data = await response.json();
@@ -1615,7 +1619,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text", 
-                text: `Error fetching document: ${error instanceof Error ? error.message : String(error)}`,
+                text: `Error fetching document: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
               },
             ],
           };
@@ -1631,7 +1635,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            const errorMsg = response.status === 404 ? 'Evaluation not found' : 
+                           response.status === 403 ? 'Access denied' :
+                           response.status === 401 ? 'Authentication required' :
+                           'Failed to fetch evaluation';
+            throw new Error(errorMsg);
           }
 
           const data = await response.json();
@@ -1649,7 +1657,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error fetching evaluation: ${error instanceof Error ? error.message : String(error)}`,
+                text: `Error fetching evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
               },
             ],
           };
@@ -1672,7 +1680,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            const errorMsg = response.status === 404 ? 'Evaluation or agent not found' : 
+                           response.status === 403 ? 'You do not have permission to re-run this evaluation' :
+                           response.status === 401 ? 'Authentication required' :
+                           response.status === 400 ? 'Invalid request' :
+                           'Failed to re-run evaluation';
+            throw new Error(errorMsg);
           }
 
           const data = await response.json();
@@ -1690,7 +1703,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error re-running evaluation: ${error instanceof Error ? error.message : String(error)}`,
+                text: `Error re-running evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
               },
             ],
           };
@@ -1710,7 +1723,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            const errorMsg = response.status === 404 ? 'Document not found' : 
+                           response.status === 403 ? 'Access denied' :
+                           response.status === 401 ? 'Authentication required' :
+                           'Failed to list evaluations';
+            throw new Error(errorMsg);
           }
 
           const data = await response.json();
@@ -1728,7 +1745,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: "text",
-                text: `Error listing evaluations: ${error instanceof Error ? error.message : String(error)}`,
+                text: `Error listing evaluations: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
               },
             ],
           };
