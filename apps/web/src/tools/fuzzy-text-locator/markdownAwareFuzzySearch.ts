@@ -111,53 +111,62 @@ function mapResultToMarkdown(
   }
   
   // Check if we need to expand boundaries to include full markdown syntax
-  // Look for markdown link patterns that might be partially included
+  // Only expand if the text actually spans across markdown boundaries
   
-  // Expand start boundary to include opening bracket if we're inside a link
   let expandedStart = markdownStart;
-  for (let i = markdownStart - 1; i >= Math.max(0, markdownStart - 50); i--) {
-    if (documentText[i] === '[' && (i === 0 || documentText[i - 1] !== '\\')) {
-      // Check if this is the start of a markdown link
-      let j = i + 1;
-      while (j < documentText.length && documentText[j] !== ']') {
-        j++;
-      }
-      
-      if (j < documentText.length && j + 1 < documentText.length && documentText[j + 1] === '(' &&
-          j >= markdownStart) { // The closing ] should be at or after our start position
-        expandedStart = i;
-        break;
-      }
-    } else if (documentText[i] === ' ' || documentText[i] === '\n') {
-      // Stop expanding at word boundaries
-      break;
-    }
-  }
+  let expandedEnd = markdownEnd + 1; // +1 because markdownEnd is the position of the last character
   
-  // Expand end boundary to include closing parenthesis if we're inside a link
-  let expandedEnd = markdownEnd + 1;
-  for (let i = markdownEnd + 1; i < Math.min(documentText.length, markdownEnd + 50); i++) {
-    if (documentText[i] === ')') {
-      // Check if this closes a markdown link that we're spanning
-      let openParenPos = -1;
-      let bracketClosePos = -1;
-      
-      // Look backwards for ]( pattern
-      for (let j = i - 1; j >= expandedStart; j--) {
-        if (documentText[j] === '(' && j > 0 && documentText[j - 1] === ']') {
-          openParenPos = j;
-          bracketClosePos = j - 1;
+  // Check if the original plain text result spans across markdown boundaries
+  // by checking if the actual text contains markdown syntax that wasn't in the plain text
+  const actualText = documentText.slice(markdownStart, markdownEnd + 1);
+  const containsMarkdownSyntax = /\]\(/.test(actualText);
+  
+  // Only expand boundaries if we're actually spanning across markdown
+  if (containsMarkdownSyntax) {
+    // Expand start boundary to include opening bracket if we're spanning from inside a link
+    for (let i = markdownStart - 1; i >= Math.max(0, markdownStart - 50); i--) {
+      if (documentText[i] === '[' && (i === 0 || documentText[i - 1] !== '\\')) {
+        // Check if this is the start of a markdown link
+        let j = i + 1;
+        while (j < documentText.length && documentText[j] !== ']') {
+          j++;
+        }
+        
+        if (j < documentText.length && j + 1 < documentText.length && documentText[j + 1] === '(' &&
+            j >= markdownStart) { // The closing ] should be at or after our start position
+          expandedStart = i;
           break;
         }
-      }
-      
-      if (openParenPos > 0 && bracketClosePos <= markdownEnd) {
-        expandedEnd = i + 1;
+      } else if (documentText[i] === ' ' || documentText[i] === '\n') {
+        // Stop expanding at word boundaries
         break;
       }
-    } else if (documentText[i] === ' ' || documentText[i] === '\n') {
-      // Stop expanding at word boundaries unless we found a closing paren
-      break;
+    }
+    
+    // Expand end boundary to include closing parenthesis if we're spanning into a link
+    for (let i = markdownEnd + 1; i < Math.min(documentText.length, markdownEnd + 50); i++) {
+      if (documentText[i] === ')') {
+        // Check if this closes a markdown link that we're spanning
+        let openParenPos = -1;
+        let bracketClosePos = -1;
+        
+        // Look backwards for ]( pattern
+        for (let j = i - 1; j >= expandedStart; j--) {
+          if (documentText[j] === '(' && j > 0 && documentText[j - 1] === ']') {
+            openParenPos = j;
+            bracketClosePos = j - 1;
+            break;
+          }
+        }
+        
+        if (openParenPos > 0 && bracketClosePos <= markdownEnd) {
+          expandedEnd = i + 1;
+          break;
+        }
+      } else if (documentText[i] === ' ' || documentText[i] === '\n') {
+        // Stop expanding at word boundaries unless we found a closing paren
+        break;
+      }
     }
   }
   
@@ -210,6 +219,15 @@ export function markdownAwareFuzzySearch(
   
   // Verify the mapping worked by extracting the actual text
   const actualText = documentText.slice(mappedResult.startOffset, mappedResult.endOffset);
+  
+  // Debug logging for troubleshooting position mapping issues
+  if (process.env.DEBUG_MARKDOWN_SEARCH) {
+    logger.debug(`Markdown search mapping:
+      Plain text: "${plainResult.quotedText}" at [${plainResult.startOffset}, ${plainResult.endOffset})
+      Mapped markdown positions: [${mappedResult.startOffset}, ${mappedResult.endOffset})
+      Actual text: "${actualText}"
+      Search text: "${searchText}"`);
+  }
   
   // If the actual text contains markdown syntax that would be invisible to the LLM,
   // we should preserve the full markdown text including brackets and URL
