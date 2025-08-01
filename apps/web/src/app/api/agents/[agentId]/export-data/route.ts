@@ -189,10 +189,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ age
           comment_count: evalVersion.comments.length,
           comments: evalVersion.comments.map((comment) => ({
             // New standardized fields
-            header: (comment as any).header || null,
-            level: (comment as any).level || null,
-            source: (comment as any).source || null,
-            metadata: (comment as any).metadata || null,
+            header: 'header' in comment ? comment.header : null,
+            level: 'level' in comment ? comment.level : null,
+            source: 'source' in comment ? comment.source : null,
+            metadata: 'metadata' in comment ? comment.metadata : null,
             // Original fields
             description: comment.description,
             importance: comment.importance,
