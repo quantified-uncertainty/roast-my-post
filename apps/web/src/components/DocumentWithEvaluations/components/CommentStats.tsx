@@ -1,7 +1,7 @@
 import type { Comment } from '@/types/documentSchema';
 
 interface CommentStatsProps {
-  comments: Comment[];
+  comments: (Comment & { agentName?: string })[];
 }
 
 export function CommentStats({ comments }: CommentStatsProps) {

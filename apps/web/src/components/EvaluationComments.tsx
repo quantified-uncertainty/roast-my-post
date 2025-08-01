@@ -15,11 +15,11 @@ type DatabaseComment = {
   grade: number | null;
   evaluationVersionId: string;
   highlightId: string;
-  // New standardized fields
-  header: string | null;
-  level: string | null;
-  source: string | null;
-  metadata: Record<string, any> | null;
+  // New standardized fields (optional for backwards compatibility)
+  header?: string | null;
+  level?: string | null;
+  source?: string | null;
+  metadata?: Record<string, any> | null;
   highlight: {
     id: string;
     startOffset: number;

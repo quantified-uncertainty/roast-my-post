@@ -43,7 +43,11 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     thinking: latestVersion?.job?.llmThinking || undefined,
     selfCritique: latestVersion?.selfCritique || undefined,
     logs: latestVersion?.job?.logs || undefined,
-    comments: latestVersion?.comments || [],
+    comments: latestVersion?.comments?.map(comment => ({
+      ...comment,
+      // Ensure metadata is properly typed as Record<string, any> or null
+      metadata: comment.metadata ? (comment.metadata as Record<string, any>) : null
+    })) || [],
     
     // Agent information
     agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
