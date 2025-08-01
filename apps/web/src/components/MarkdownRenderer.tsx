@@ -43,7 +43,7 @@ function MarkdownRenderer({
 
   return (
     <div className={className}>
-      <Markdown {...markdownProps}>{children}</Markdown>
+      <ReactMarkdown {...markdownProps}>{children}</ReactMarkdown>
     </div>
   );
 }
