@@ -292,8 +292,11 @@ export class DocumentModel {
         }));
 
         // Calculate if the evaluation (latest version) is stale
+        // STALE should only be shown if:
+        // 1. There's an existing eval version
+        // 2. The eval version is for an older document version
         const latestVersion = evaluation.versions[0];
-        const evaluationIsStale = latestVersion?.documentVersion.version !== currentDocumentVersion;
+        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
 
         return {
           id: evaluation.id,
@@ -449,8 +452,11 @@ export class DocumentModel {
         }));
 
         // Calculate if the evaluation (latest version) is stale
+        // STALE should only be shown if:
+        // 1. There's an existing eval version
+        // 2. The eval version is for an older document version
         const latestVersion = evaluation.versions[0];
-        const evaluationIsStale = latestVersion?.documentVersion.version !== currentDocumentVersion;
+        const evaluationIsStale = latestVersion && latestVersion.documentVersion.version !== currentDocumentVersion;
 
         return {
           id: evaluation.id,

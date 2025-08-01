@@ -517,16 +517,39 @@ export class JobModel {
         });
       }
 
-      // Save highlights with highlights
+      // Save highlights with validation
       if (evaluationOutputs.highlights && evaluationOutputs.highlights.length > 0) {
         for (const comment of evaluationOutputs.highlights) {
-          // Create highlight
+          // Validate highlight by checking if quotedText matches document at specified offsets
+          let isValid = true;
+          let error: string | null = null;
+          
+          try {
+            const actualText = documentVersion.content.slice(
+              comment.highlight.startOffset, 
+              comment.highlight.endOffset
+            );
+            
+            if (actualText !== comment.highlight.quotedText) {
+              isValid = false;
+              error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+              logger.warn(`Invalid highlight detected: ${error}`);
+            }
+          } catch (highlightError) {
+            isValid = false;
+            error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+            logger.warn(`Highlight validation failed: ${error}`);
+          }
+
+          // Create highlight with validation status
           const createdHighlight = await prisma.evaluationHighlight.create({
             data: {
               startOffset: comment.highlight.startOffset,
               endOffset: comment.highlight.endOffset,
               quotedText: comment.highlight.quotedText,
               prefix: comment.highlight.prefix || null,
+              isValid,
+              error,
             },
           });
 

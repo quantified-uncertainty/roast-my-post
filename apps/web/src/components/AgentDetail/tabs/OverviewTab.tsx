@@ -166,7 +166,7 @@ export function OverviewTab({
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          {
+                          {agent.providesGrades &&
                            evaluation.grade !== null &&
                            evaluation.grade !== undefined && (
                             <div className="text-lg font-semibold text-gray-900">

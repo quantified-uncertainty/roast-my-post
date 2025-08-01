@@ -7,6 +7,7 @@ export const HighlightSchema = z.object({
   quotedText: z.string(),
   isValid: z.boolean(),
   prefix: z.string().optional(),
+  error: z.string().optional(),
 });
 
 export type Highlight = z.infer<typeof HighlightSchema>;
