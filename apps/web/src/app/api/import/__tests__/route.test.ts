@@ -1,8 +1,4 @@
 import { NextRequest } from "next/server";
-
-// Set up test environment variables before importing modules that depend on them
-process.env.AUTH_SECRET = 'test-secret-key-for-testing-only';
-
 import { POST } from "../route";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { processArticle } from "@/lib/articleImport";

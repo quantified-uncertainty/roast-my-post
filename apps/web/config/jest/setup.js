@@ -1,3 +1,6 @@
+// Set up test environment variables
+process.env.AUTH_SECRET = 'test-secret-key-for-testing-only';
+
 // Suppress console output during tests unless explicitly needed
 const originalConsole = {
   log: console.log,
