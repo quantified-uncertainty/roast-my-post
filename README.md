@@ -181,12 +181,30 @@ Asynchronous processing queue for evaluations with:
 
 ### REST API Endpoints
 
+#### Core Resources
 - `/api/agents` - Agent management
-- `/api/documents` - Document operations
-- `/api/documents/[id]/evaluations` - Evaluation operations
+- `/api/documents` - Document operations  
 - `/api/jobs` - Job processing
 - `/api/monitor` - System monitoring (admin only)
 - `/api/import` - Article import from URLs
+
+#### New Unified API Structure
+The API now follows a clean, intuitive structure that matches web URLs:
+
+**Document Operations:**
+- `GET /api/docs/{docId}` - Get document with all evaluations
+- `PUT /api/docs/{docId}` - Update document (e.g., intended agents)
+
+**Evaluation Operations:**
+- `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details
+- `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation
+- `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation
+- `GET /api/docs/{docId}/evaluations` - List all evaluations for document
+
+**Key Benefits:**
+- Natural identifiers: Use `documentId + agentId` instead of evaluation IDs
+- Perfect URL alignment with web interface (`/docs/{docId}/evals/{agentId}`)
+- Complete evaluation data including comments, highlights, and job information
 
 ### Authentication
 
