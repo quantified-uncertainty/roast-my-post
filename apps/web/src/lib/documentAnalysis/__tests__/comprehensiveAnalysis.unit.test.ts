@@ -4,19 +4,24 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 
-// Mock the Anthropic client
+// Mock the @roast/ai module
 jest.mock("@roast/ai", () => ({
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn(),
-    },
-  })),
-  ANALYSIS_MODEL: "claude-sonnet-test",
-  DEFAULT_TEMPERATURE: 0.1,
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  createHeliconeHeaders: jest.fn(() => ({})),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
+}));
+
+// Mock withTimeout from openai types
+jest.mock("../../../types/openai", () => ({
+  ...jest.requireActual("../../../types/openai"),
   withTimeout: jest.fn((promise) => promise),
 }));
 
-import { createAnthropicClient } from "@roast/ai";
+import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -34,18 +39,15 @@ describe("Comprehensive Analysis Unit Tests", () => {
     providesGrades: true,
   };
 
-  let mockAnthropicCreate: jest.MockedFunction<any>;
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Set up the mock for createAnthropicClient
-    mockAnthropicCreate = jest.fn();
-    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
-      messages: {
-        create: mockAnthropicCreate,
-      },
-    } as any);
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 
   const mockDocument: Document = {
@@ -61,64 +63,39 @@ describe("Comprehensive Analysis Unit Tests", () => {
 
   describe("generateComprehensiveAnalysis", () => {
     it("should generate structured analysis with highlight insights", async () => {
-      const mockResponse = {
-        content: [
-          {
-            type: "tool_use",
-            name: "provide_comprehensive_analysis",
-            input: {
-              summary: "This is a test summary of the document.",
-              analysis: `# Executive Summary
-This is a comprehensive analysis of the test document.
 
-## Overview
-The document presents a simple test case with three lines of content.
+      // Mock the tool response
+      const mockToolResult = {
+        summary: "This is a test summary of the document.",
+        analysis: `# Executive Summary
 
-## Detailed Analysis
-The content is minimal but serves its testing purpose well.
+This document demonstrates effective structure and content organization.
 
 ## Key Insights for Highlightary
 
-### Insight 1: Opening Line Analysis {#insight-1}
-- **Location**: Lines 1
-- **Observation**: The opening line clearly states the document's purpose
-- **Significance**: Sets expectations for the reader
-- **Suggested Highlight**: The opening line effectively establishes context
+### 1. Opening Line Analysis
+The opening line effectively establishes context and draws reader attention appropriately.
 
-### Insight 2: Structure Review {#insight-2}
-- **Location**: Lines 2-3
-- **Observation**: The document maintains consistent structure
-- **Significance**: Easy to follow and understand
-- **Suggested Highlight**: The structural consistency aids readability
+### 2. Structure Review  
+The structural consistency aids readability throughout the document.
 
-## Quality Assessment
-Overall, this is a well-structured test document.
-
-## Grade
-85/100 - Good test document with clear purpose`,
-              grade: 85,
-              highlightInsights: [
-                {
-                  id: "insight-1",
-                  location: "Lines 1",
-                  suggestedHighlight: "Opening Line Analysis. The opening line effectively establishes context",
-                },
-                {
-                  id: "insight-2",
-                  location: "Lines 2-3",
-                  suggestedHighlight: "Structure Review. The structural consistency aids readability",
-                },
-              ],
-            },
+**Overall Grade**: 85/100 - Good test document with clear purpose`,
+        grade: 85,
+        highlightInsights: [
+          {
+            id: "insight-1",
+            location: "Lines 1",
+            suggestedHighlight: "Opening Line Analysis. The opening line effectively establishes context",
+          },
+          {
+            id: "insight-2",
+            location: "Lines 2-3",
+            suggestedHighlight: "Structure Review. The structural consistency aids readability",
           },
         ],
-        usage: {
-          input_tokens: 100,
-          output_tokens: 500,
-        },
       };
 
-      mockAnthropicCreate.mockResolvedValue(mockResponse);
+      mockHelper.mockToolResponse(mockToolResult);
 
       const result = await generateComprehensiveAnalysis(mockDocument, mockAgent, 1000);
 
@@ -201,7 +178,25 @@ Overall, this is a well-structured test document.
         },
       };
 
-      mockAnthropicCreate.mockResolvedValue(mockResponse);
+      // Mock the highlight extraction tool response
+      const mockHighlightToolResult = {
+        highlights: [
+          {
+            id: "extracted-1",
+            description: "Extracted Highlight: This is a test highlight",
+            importance: 8,
+            isValid: true,
+            highlight: {
+              startOffset: 0,
+              endOffset: 12,
+              quotedText: "Test Content",
+              isValid: true,
+            },
+          },
+        ],
+      };
+
+      mockHelper.mockToolResponse(mockHighlightToolResult);
 
       const result = await extractHighlightsFromAnalysis(
         mockDocument,

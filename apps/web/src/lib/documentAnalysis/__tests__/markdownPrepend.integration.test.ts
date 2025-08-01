@@ -5,20 +5,24 @@ import { createTestDocument, getPrependLineCount, adjustLineReferences } from ".
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { Agent } from "../../../types/agentSchema";
 
-// Mock the Anthropic client
+// Mock the @roast/ai module
 jest.mock("@roast/ai", () => ({
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn(),
-    },
-  })),
-  ANALYSIS_MODEL: "claude-sonnet-test",
-  DEFAULT_TEMPERATURE: 0.1,
-  withTimeout: jest.fn((promise) => promise),
-  HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  createHeliconeHeaders: jest.fn(() => ({})),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
 }));
 
-import { createAnthropicClient } from "@roast/ai";
+// Mock withTimeout from openai types
+jest.mock("../../../types/openai", () => ({
+  ...jest.requireActual("../../../types/openai"),
+  withTimeout: jest.fn((promise) => promise),
+}));
+
+import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -52,18 +56,15 @@ describe("markdownPrepend Integration Tests", () => {
     providesGrades: false,
   };
 
-  let mockAnthropicCreate: jest.MockedFunction<any>;
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Set up the mock for createAnthropicClient
-    mockAnthropicCreate = jest.fn();
-    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
-      messages: {
-        create: mockAnthropicCreate,
-      },
-    } as any);
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 
   test("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
@@ -95,33 +96,24 @@ And some more content on the final line.`;
     const adjustedRefs = adjustLineReferences(contentLineRefs, prependLineCount);
 
     // Mock comprehensive analysis response
-    const mockAnalysisResponse = {
-      content: [
+    const mockToolResult = {
+      summary: "Analysis of test document",
+      analysis: "# Analysis\n\nThis document contains important information and a link.",
+      highlightInsights: [
         {
-          type: "tool_use",
-          name: "provide_comprehensive_analysis",
-          input: {
-            summary: "Analysis of test document",
-            analysis: "# Analysis\n\nThis document contains important information and a link.",
-            highlightInsights: [
-              {
-                id: "insight-1",
-                location: adjustedRefs[0], // Dynamically calculated
-                suggestedHighlight: "Good opening statement"
-              },
-              {
-                id: "insight-2",
-                location: adjustedRefs[1], // Dynamically calculated
-                suggestedHighlight: "Link to example.com"
-              },
-            ],
-          },
+          id: "insight-1",
+          location: adjustedRefs[0], // Dynamically calculated
+          suggestedHighlight: "Good opening statement"
+        },
+        {
+          id: "insight-2",
+          location: adjustedRefs[1], // Dynamically calculated
+          suggestedHighlight: "Link to example.com"
         },
       ],
-      usage: { input_tokens: 100, output_tokens: 200 },
     };
 
-    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+    mockHelper.mockToolResponse(mockToolResult);
 
     // Step 1: Generate comprehensive analysis
     const analysisResult = await generateComprehensiveAnalysis(
@@ -155,8 +147,6 @@ And some more content on the final line.`;
   });
 
   test("link analysis workflow correctly handles markdownPrepend", async () => {
-    const { anthropic } = require("@roast/ai");
-
     // Create a document with links and prepend
     const documentContent = `Check out these resources:
 - Main site: https://example.com
@@ -170,32 +160,23 @@ And some more content on the final line.`;
     });
 
     // Mock link analysis response
-    const mockLinkAnalysisResponse = {
-      content: [
+    const mockLinkToolResult = {
+      thinking: "Analyzing links in the document",
+      linkReports: [
         {
-          type: "tool_use",
-          name: "analyze_links",
-          input: {
-            thinking: "Analyzing links in the document",
-            linkReports: [
-              {
-                url: "https://example.com",
-                checkResult: {
-                  isValid: true,
-                  statusCode: 200,
-                  error: null,
-                },
-                analysisNote: "Main website link",
-                hasIssue: false,
-              },
-            ],
+          url: "https://example.com",
+          checkResult: {
+            isValid: true,
+            statusCode: 200,
+            error: null,
           },
+          analysisNote: "Main website link",
+          hasIssue: false,
         },
       ],
-      usage: { input_tokens: 100, output_tokens: 150 },
     };
 
-    mockAnthropicCreate.mockResolvedValueOnce(mockLinkAnalysisResponse);
+    mockHelper.mockToolResponse(mockLinkToolResult);
 
     // Run link analysis workflow
     const result = await analyzeLinkDocument(
