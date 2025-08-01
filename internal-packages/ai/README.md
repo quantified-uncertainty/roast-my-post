@@ -82,18 +82,41 @@ const costs = await client.getCosts({ /* filters */ });
 
 ## Environment Variables
 
-Required environment variables:
+### Required Variables
 
 ```bash
-# Claude API
+# Claude API (required for all AI functionality)
 ANTHROPIC_API_KEY=your-api-key
-ANALYSIS_MODEL=claude-sonnet-4-20250514  # Optional, defaults to this
+```
 
-# Helicone (optional)
-HELICONE_API_KEY=your-helicone-key
-HELICONE_CACHE_ENABLED=true
-HELICONE_CACHE_MAX_AGE=3600
-HELICONE_CACHE_BUCKET_MAX_SIZE=20
+### Optional Variables
+
+```bash
+# Model selection (defaults to claude-sonnet-4-20250514)
+ANALYSIS_MODEL=claude-sonnet-4-20250514
+
+# Helicone integration for cost tracking and caching
+HELICONE_API_KEY=your-helicone-key        # Required if HELICONE_CACHE_ENABLED=true
+HELICONE_CACHE_ENABLED=true               # Enable Helicone caching (default: false)
+HELICONE_CACHE_MAX_AGE=3600              # Cache TTL in seconds (default: 3600)
+HELICONE_CACHE_BUCKET_MAX_SIZE=20        # Max cached items (default: 20)
+```
+
+### Configuration Validation
+
+The package provides configuration validation to ensure your environment is properly set up:
+
+```typescript
+import { validateConfiguration } from '@roast/ai';
+
+const config = validateConfiguration();
+if (!config.isValid) {
+  console.error('Configuration errors:', config.errors);
+  process.exit(1);
+}
+if (config.warnings.length > 0) {
+  console.warn('Configuration warnings:', config.warnings);
+}
 ```
 
 ## Development
