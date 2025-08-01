@@ -1,5 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import { RichLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '../../types';
 import { ClaudeCallOptions, ClaudeCallResult } from '../wrapper';
 
 // Mock implementation of callClaude

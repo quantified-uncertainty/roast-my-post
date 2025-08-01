@@ -1,12 +1,16 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import CheckMathTool from './index';
 import { logger } from '@/lib/logger';
-import { createMockLLMInteraction } from '@/lib/claude/testUtils';
-import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
+import { createMockLLMInteraction } from '@roast/ai';
+import { setupClaudeToolMock } from '@roast/ai';
 
 // Mock Claude wrapper
-jest.mock('@/lib/claude/wrapper');
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
+jest.mock('@roast/ai', () => ({
+  callClaudeWithTool: jest.fn(),
+  createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
+  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
+}));
+import { callClaudeWithTool } from '@roast/ai';
 
 // Get the mocked function and setup helper
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;

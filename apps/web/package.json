@@ -30,6 +30,7 @@
     "@heroicons/react": "^2.2.0",
     "@leeoniya/ufuzzy": "^1.0.18",
     "@prisma/client": "^6.13.0",
+    "@roast/ai": "workspace:*",
     "@roast/db": "workspace:*",
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.10.0",

@@ -5,7 +5,7 @@ import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@roast/db";
 import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
 import type { AgentExportData, EvaluationWhereConditions } from "@/types/api/agent-export";
-import { estimateTokens } from "@/lib/tokenUtils";
+import { estimateTokens } from "@roast/ai";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;

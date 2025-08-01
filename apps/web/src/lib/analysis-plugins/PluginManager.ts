@@ -10,8 +10,8 @@ import type { Comment } from "@/types/documentSchema";
 import type { LLMInteraction } from "./types";
 
 import { getDocumentFullContent } from "../../utils/documentContentHelpers";
-import { sessionContext } from "../helicone/sessionContext";
-import type { HeliconeSessionConfig } from "../helicone/sessions";
+import { sessionContext } from "@roast/ai";
+import type { HeliconeSessionConfig } from "@roast/ai";
 import { logger } from "../logger";
 import {
   type JobLogSummary,

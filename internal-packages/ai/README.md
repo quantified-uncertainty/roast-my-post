@@ -1,0 +1,118 @@
+# @roast/ai
+
+Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management.
+
+## Overview
+
+This internal package provides centralized AI functionality that can be shared across the web application, MCP server, and future worker processes.
+
+## Features
+
+- **Claude API Wrapper**: Centralized Claude API integration with retry logic, caching, and Helicone integration
+- **Token Management**: Accurate token counting and estimation utilities
+- **Helicone Integration**: Cost tracking, session management, and usage analytics
+- **Type Safety**: Full TypeScript support with comprehensive types
+
+## Installation
+
+This is an internal package. Add it to your package dependencies:
+
+```json
+"dependencies": {
+  "@roast/ai": "workspace:*"
+}
+```
+
+## Usage
+
+### Claude API Wrapper
+
+```typescript
+import { callClaude, callClaudeWithTool, MODEL_CONFIG } from '@roast/ai';
+
+// Basic Claude call
+const result = await callClaude({
+  model: MODEL_CONFIG.analysis,
+  system: "You are a helpful assistant",
+  messages: [{ role: "user", content: "Hello!" }],
+  max_tokens: 1000
+});
+
+// Claude with tool use
+const toolResult = await callClaudeWithTool({
+  system: "Extract data from text",
+  messages: [{ role: "user", content: "..." }],
+  toolName: "extract_data",
+  toolDescription: "Extract structured data",
+  toolSchema: { /* Zod schema */ }
+});
+```
+
+### Token Utilities
+
+```typescript
+import { countTokens, estimateTokens, checkTokenLimits } from '@roast/ai';
+
+// Count tokens (uses Anthropic API when available)
+const tokenCount = await countTokens("Your text here");
+
+// Quick estimation (synchronous)
+const estimate = estimateTokens("Your text here");
+
+// Check if within model limits
+const { withinLimit, percentUsed } = checkTokenLimits(tokenCount);
+```
+
+### Helicone Integration
+
+```typescript
+import { HeliconeSessionContext, getHeliconeClient } from '@roast/ai';
+
+// Set session context for tracking
+HeliconeSessionContext.set({
+  sessionId: "unique-session-id",
+  sessionName: "Analysis Session",
+  sessionPath: "/analysis/123"
+});
+
+// Get cost data
+const client = getHeliconeClient();
+const costs = await client.getCosts({ /* filters */ });
+```
+
+## Environment Variables
+
+Required environment variables:
+
+```bash
+# Claude API
+ANTHROPIC_API_KEY=your-api-key
+ANALYSIS_MODEL=claude-sonnet-4-20250514  # Optional, defaults to this
+
+# Helicone (optional)
+HELICONE_API_KEY=your-helicone-key
+HELICONE_CACHE_ENABLED=true
+HELICONE_CACHE_MAX_AGE=3600
+HELICONE_CACHE_BUCKET_MAX_SIZE=20
+```
+
+## Development
+
+Run tests:
+```bash
+pnpm test
+```
+
+Type checking:
+```bash
+pnpm typecheck
+```
+
+## Architecture
+
+The package is organized into:
+
+- `/claude` - Claude API wrapper and utilities
+- `/helicone` - Helicone integration for cost tracking
+- `/utils` - Token counting, logging, and retry utilities
+- `/types.ts` - Shared TypeScript types

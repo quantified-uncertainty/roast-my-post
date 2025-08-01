@@ -7,10 +7,10 @@
 import {
   callClaudeWithTool,
   MODEL_CONFIG,
-} from "@/lib/claude/wrapper";
-import { sessionContext } from "@/lib/helicone/sessionContext";
-import type { HeliconeSessionConfig } from "@/lib/helicone/sessions";
-import { createHeliconeHeaders } from "@/lib/helicone/sessions";
+} from "@roast/ai";
+import { sessionContext } from "@roast/ai";
+import type { HeliconeSessionConfig } from "@roast/ai";
+import { createHeliconeHeaders } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import { LineBasedLocator } from "@/lib/text-location/line-based";
 

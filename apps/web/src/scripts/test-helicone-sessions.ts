@@ -6,7 +6,7 @@
  */
 
 import 'dotenv/config';
-import { heliconeAPI } from '@/lib/helicone/api-client';
+import { heliconeAPI } from '@roast/ai';
 import { logger } from '@/lib/logger';
 import { setupTestCleanup } from './test-cleanup-utils';
 

@@ -1,14 +1,18 @@
 import { z } from "zod";
 
-import { setupClaudeToolMock } from "@/lib/claude/mockHelpers";
-import { createMockLLMInteraction } from "@/lib/claude/testUtils";
-import { callClaudeWithTool } from "@/lib/claude/wrapper";
+import { setupClaudeToolMock } from "@roast/ai";
+import { createMockLLMInteraction } from "@roast/ai";
+import { callClaudeWithTool } from "@roast/ai";
 
 import { ToolContext } from "../base/Tool";
 import { ExtractForecastingClaimsTool } from "./index";
 
 // Mock Claude wrapper
-jest.mock("@/lib/claude/wrapper");
+jest.mock("@roast/ai", () => ({
+  callClaudeWithTool: jest.fn(),
+  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock,
+  createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction
+}));
 
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<
   typeof callClaudeWithTool

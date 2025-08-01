@@ -14,8 +14,8 @@ import {
   createJobSessionConfig,
   heliconeSessionsConfig,
   SESSION_PATHS,
-} from "../lib/helicone/sessions";
-import { fetchJobCostWithRetry } from "../lib/helicone/costFetcher";
+} from "@roast/ai";
+import { fetchJobCostWithRetry } from "@roast/ai";
 
 export class JobModel {
   /**

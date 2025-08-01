@@ -7,7 +7,7 @@ jest.mock('@/lib/claude/wrapper', () => ({
   callClaudeWithTool: jest.fn()
 }));
 
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { callClaudeWithTool } from '@roast/ai';
 
 describe('ExtractFactualClaimsTool', () => {
   const tool = new ExtractFactualClaimsTool();

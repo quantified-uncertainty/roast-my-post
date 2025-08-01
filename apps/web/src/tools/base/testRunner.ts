@@ -3,7 +3,7 @@
  * Handles verification of results that can't be exactly matched
  */
 
-import { callClaudeWithTool, MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { callClaudeWithTool, MODEL_CONFIG } from '@roast/ai';
 
 export interface TestCase<TInput, TExpected> {
   id: string;

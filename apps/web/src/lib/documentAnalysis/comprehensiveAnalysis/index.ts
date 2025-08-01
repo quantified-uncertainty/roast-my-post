@@ -12,9 +12,9 @@ import { getComprehensiveAnalysisPrompts } from "./prompts";
 import { createLogDetails } from "../shared/llmUtils";
 import { shouldIncludeGrade } from "../shared/agentContext";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
-import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
-import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { createHeliconeHeaders } from "../../helicone/sessions";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import type { HeliconeSessionConfig } from "@roast/ai";
+import { createHeliconeHeaders } from "@roast/ai";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
