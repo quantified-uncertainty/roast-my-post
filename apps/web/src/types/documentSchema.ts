@@ -23,6 +23,12 @@ export const CommentSchema = z.object({
   highlight: HighlightSchema,
   isValid: z.boolean(),
   error: z.string().optional(),
+  
+  // New fields for plugin standardization
+  header: z.string().optional(), // Concise summary like "2+2=5 → 2+2=4"
+  level: z.enum(['error', 'warning', 'info', 'success']).optional(),
+  source: z.string().optional(), // Plugin identifier: 'math', 'spelling', etc.
+  metadata: z.record(z.string(), z.any()).optional(), // Plugin-specific data
 });
 
 export type Comment = z.infer<typeof CommentSchema>;

@@ -89,6 +89,17 @@ export class HybridMathErrorWrapper {
         isValid: true,
       },
       importance: this.commentImportanceScore(),
+      
+      // New standardized fields
+      header: this.verificationResult.conciseCorrection || `Math Error: ${this.expression.originalText}`,
+      level: 'error' as const, // HybridMathErrorWrapper only handles errors
+      source: 'math',
+      metadata: {
+        verifiedBy: this.verificationResult.verifiedBy,
+        status: this.verificationResult.status,
+        mathJsResult: this.verificationResult.mathJsResult,
+        contextImportanceScore: this.expression.contextImportanceScore,
+      },
     };
   }
 
@@ -237,6 +248,21 @@ export class ExtractedMathExpression {
         isValid: true,
       },
       importance: this.commentImportanceScore(),
+      
+      // New standardized fields
+      header: this.expression.conciseCorrection || 
+              (this.expression.hasError ? `Math Error: ${this.expression.originalText}` : `Math: ${this.expression.originalText}`),
+      level: this.expression.hasError ? 'error' as const : 
+             (this.expression.verificationStatus === 'verified' ? 'success' as const : 'info' as const),
+      source: 'math',
+      metadata: {
+        errorType: this.expression.errorType,
+        hasError: this.expression.hasError,
+        verificationStatus: this.expression.verificationStatus,
+        complexityScore: this.expression.complexityScore,
+        contextImportanceScore: this.expression.contextImportanceScore,
+        errorSeverityScore: this.expression.errorSeverityScore,
+      },
     };
   }
 }

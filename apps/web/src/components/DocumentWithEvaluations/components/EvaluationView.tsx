@@ -23,6 +23,8 @@ import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
+import { CommentFilters } from "./CommentFilters";
+import { CommentStats } from "./CommentStats";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
@@ -38,6 +40,7 @@ export function EvaluationView({
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
   const [isFullWidth, setIsFullWidth] = useState(false);
+  const [filteredComments, setFilteredComments] = useState<Array<Comment & { agentName: string }>>([]);
 
   // Use the scroll behavior hook
   const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
@@ -52,19 +55,22 @@ export function EvaluationView({
   );
 
   // Merge comments from all selected evaluations
-  const displayComments = useMemo(() => {
-    const allComments: Array<Comment & { agentName: string }> = [];
+  const allComments = useMemo(() => {
+    const comments: Array<Comment & { agentName: string }> = [];
     selectedEvaluations.forEach((evaluation) => {
       evaluation.comments.forEach((comment) => {
-        allComments.push({
+        comments.push({
           ...comment,
           agentName: evaluation.agent.name,
         });
       });
     });
 
-    return getValidAndSortedComments(allComments);
+    return getValidAndSortedComments(comments);
   }, [selectedEvaluations]);
+
+  // Use filtered comments if available, otherwise use all comments
+  const displayComments = filteredComments.length > 0 || allComments.length === 0 ? filteredComments : allComments;
 
   const highlights = useMemo(
     () =>
@@ -155,28 +161,37 @@ export function EvaluationView({
                 />
               </article>
             </div>
-            {/* Comments column with positioned comments */}
-            <CommentsColumn
-              comments={displayComments}
-              contentRef={contentRef}
-              selectedCommentId={evaluationState.expandedCommentId}
-              hoveredCommentId={evaluationState.hoveredCommentId}
-              onCommentHover={(commentId) =>
-                onEvaluationStateChange({
-                  ...evaluationState,
-                  hoveredCommentId: commentId,
-                })
-              }
-              onCommentClick={(commentId) => {
-                onEvaluationStateChange({
-                  ...evaluationState,
-                  expandedCommentId: commentId,
-                });
-              }}
-              document={document}
-              evaluationState={evaluationState}
-              onEvaluationStateChange={onEvaluationStateChange}
-            />
+            {/* Comments column with filters and positioned comments */}
+            <div style={{ width: `${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}>
+              <div className="sticky top-20 z-40 mb-4 space-y-3">
+                <CommentStats comments={allComments} />
+                <CommentFilters 
+                  comments={allComments}
+                  onFilteredCommentsChange={setFilteredComments}
+                />
+              </div>
+              <CommentsColumn
+                comments={displayComments}
+                contentRef={contentRef}
+                selectedCommentId={evaluationState.expandedCommentId}
+                hoveredCommentId={evaluationState.hoveredCommentId}
+                onCommentHover={(commentId) =>
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    hoveredCommentId: commentId,
+                  })
+                }
+                onCommentClick={(commentId) => {
+                  onEvaluationStateChange({
+                    ...evaluationState,
+                    expandedCommentId: commentId,
+                  });
+                }}
+                document={document}
+                evaluationState={evaluationState}
+                onEvaluationStateChange={onEvaluationStateChange}
+              />
+            </div>
           </div>
 
           {/* Evaluation Analysis Section */}

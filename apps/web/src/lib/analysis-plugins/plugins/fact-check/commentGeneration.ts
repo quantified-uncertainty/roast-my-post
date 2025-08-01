@@ -27,7 +27,22 @@ export function generateFactCheckComments(
     title: getCommentTitle(fact),
     observation: getObservation(fact),
     significance: getSignificance(fact),
-    importance: getImportanceScore(fact)
+    importance: getImportanceScore(fact),
+    
+    // New standardized fields
+    header: getHeaderText(fact),
+    level: getFactLevel(fact),
+    source: 'fact-check',
+    metadata: {
+      topic: fact.claim.topic,
+      importanceScore: fact.claim.importanceScore,
+      checkabilityScore: fact.claim.checkabilityScore,
+      truthProbability: fact.claim.truthProbability,
+      verified: !!fact.verification,
+      verdict: fact.verification?.verdict,
+      confidence: fact.verification?.confidence,
+      wasResearched: !!fact.factCheckerOutput?.perplexityData,
+    },
   };
 
   // Add grade for verified false claims
@@ -38,6 +53,47 @@ export function generateFactCheckComments(
   }
 
   return comment;
+}
+
+function getHeaderText(fact: VerifiedFact): string {
+  if (fact.verification) {
+    switch (fact.verification.verdict) {
+      case 'true':
+        return `✓ Verified: ${fact.claim.originalText.substring(0, 50)}${fact.claim.originalText.length > 50 ? '...' : ''}`;
+      case 'false':
+        return `✗ False: ${fact.claim.originalText.substring(0, 50)}${fact.claim.originalText.length > 50 ? '...' : ''}`;
+      case 'partially-true':
+        return `⚠️ Partially True: ${fact.claim.originalText.substring(0, 40)}${fact.claim.originalText.length > 40 ? '...' : ''}`;
+      default:
+        return fact.claim.originalText.substring(0, 60) + (fact.claim.originalText.length > 60 ? '...' : '');
+    }
+  }
+  return fact.claim.originalText.substring(0, 60) + (fact.claim.originalText.length > 60 ? '...' : '');
+}
+
+function getFactLevel(fact: VerifiedFact): 'error' | 'warning' | 'info' | 'success' {
+  if (fact.verification) {
+    switch (fact.verification.verdict) {
+      case 'true':
+        return 'success';
+      case 'false':
+        return 'error';
+      case 'partially-true':
+      case 'outdated':
+        return 'warning';
+      default:
+        return 'info';
+    }
+  }
+  
+  // Unverified claims based on truth probability
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE) {
+    return 'error';
+  }
+  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
+    return 'warning';
+  }
+  return 'info';
 }
 
 function getCommentTitle(fact: VerifiedFact): string {
