@@ -9,7 +9,7 @@ import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/lib/eva
 import { withSecurity } from "@/lib/security-middleware";
 
 const createEvaluationSchema = z.object({
-  reason: z.string().optional(),
+  // Currently no body parameters needed
 });
 
 // GET endpoint is public - matches existing evaluation viewing patterns
@@ -72,7 +72,6 @@ export const POST = withSecurity(
     const { docId, agentId } = params;
     const userId = (await authenticateRequest(req))!;
     const body = (req as any).validatedBody || {};
-    const { reason } = body;
 
     try {
 
@@ -146,7 +145,7 @@ export const POST = withSecurity(
         },
         message: result.created 
           ? "Evaluation created successfully"
-          : `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
+          : "Evaluation re-run initiated",
       });
     } catch (error) {
       logger.error('Error creating evaluation:', error);
@@ -157,9 +156,15 @@ export const POST = withSecurity(
     requireAuth: true,
     validateBody: createEvaluationSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
+      // Extract docId from URL path - matches /api/docs/{docId}/evals/{agentId}
       const url = new URL(request.url);
-      const pathParts = url.pathname.split('/');
-      const docId = pathParts[3];
+      const pathMatch = url.pathname.match(/\/api\/docs\/([^\/]+)\/evals/);
+      const docId = pathMatch?.[1];
+      
+      if (!docId) {
+        return false;
+      }
+      
       const document = await prisma.document.findUnique({
         where: { id: docId },
         select: { submittedById: true }

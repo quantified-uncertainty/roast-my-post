@@ -118,7 +118,6 @@ const GetEvaluationArgsSchema = z.object({
 const RerunEvaluationArgsSchema = z.object({
   documentId: z.string(),
   agentId: z.string(),
-  reason: z.string().optional(),
 });
 
 const ListDocumentEvaluationsArgsSchema = z.object({
@@ -132,6 +131,22 @@ const GetDocumentArgsSchema = z.object({
   documentId: z.string(),
   includeStale: z.boolean().optional().default(false),
 });
+
+// Helper function to handle API errors consistently
+function getErrorMessage(status: number, context: string): string {
+  switch (status) {
+    case 404:
+      return `${context} not found`;
+    case 403:
+      return 'Access denied';
+    case 401:
+      return 'Authentication required';
+    case 400:
+      return 'Invalid request';
+    default:
+      return `Failed to ${context.toLowerCase()}`;
+  }
+}
 
 const server = new Server(
   {
@@ -1597,11 +1612,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            const errorMsg = response.status === 404 ? 'Document not found' : 
-                           response.status === 403 ? 'Access denied' :
-                           response.status === 401 ? 'Authentication required' :
-                           'Failed to fetch document';
-            throw new Error(errorMsg);
+            throw new Error(getErrorMessage(response.status, 'Document'));
           }
 
           const data = await response.json();
@@ -1635,11 +1646,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            const errorMsg = response.status === 404 ? 'Evaluation not found' : 
-                           response.status === 403 ? 'Access denied' :
-                           response.status === 401 ? 'Authentication required' :
-                           'Failed to fetch evaluation';
-            throw new Error(errorMsg);
+            throw new Error(getErrorMessage(response.status, 'Evaluation'));
           }
 
           const data = await response.json();
@@ -1665,7 +1672,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "rerun_evaluation": {
-        const { documentId, agentId, reason } = RerunEvaluationArgsSchema.parse(args);
+        const { documentId, agentId } = RerunEvaluationArgsSchema.parse(args);
 
         try {
           const response = await authenticatedFetch(
@@ -1675,16 +1682,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ reason }),
+              body: JSON.stringify({}),
             }
           );
 
           if (!response.ok) {
-            const errorMsg = response.status === 404 ? 'Evaluation or agent not found' : 
-                           response.status === 403 ? 'You do not have permission to re-run this evaluation' :
-                           response.status === 401 ? 'Authentication required' :
-                           response.status === 400 ? 'Invalid request' :
-                           'Failed to re-run evaluation';
+            const errorMsg = response.status === 403 ? 'You do not have permission to re-run this evaluation' :
+                           getErrorMessage(response.status, 'Evaluation or agent');
             throw new Error(errorMsg);
           }
 
@@ -1723,11 +1727,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           );
 
           if (!response.ok) {
-            const errorMsg = response.status === 404 ? 'Document not found' : 
-                           response.status === 403 ? 'Access denied' :
-                           response.status === 401 ? 'Authentication required' :
-                           'Failed to list evaluations';
-            throw new Error(errorMsg);
+            throw new Error(getErrorMessage(response.status, 'Document'));
           }
 
           const data = await response.json();

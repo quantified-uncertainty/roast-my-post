@@ -8,7 +8,6 @@ import { commonErrors } from "@/lib/api-response-helpers";
 import { withSecurity } from "@/lib/security-middleware";
 
 const rerunEvaluationSchema = z.object({
-  reason: z.string().optional(),
   fromVersion: z.number().optional(), // Re-run from specific version
 });
 
@@ -18,7 +17,7 @@ export const POST = withSecurity(
     const { docId, agentId } = params;
     const userId = (await authenticateRequest(req))!;
     const body = (req as any).validatedBody || {};
-    const { reason, fromVersion } = body;
+    const { fromVersion } = body;
 
     try {
 
@@ -79,7 +78,6 @@ export const POST = withSecurity(
       documentId: docId,
       agentId,
       userId,
-      reason,
       fromVersion,
       jobId: job.id,
     });
@@ -96,9 +94,8 @@ export const POST = withSecurity(
           status: job.status,
           createdAt: job.createdAt,
         },
-        message: `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
+        message: `Evaluation re-run initiated`,
         context: {
-          reason,
           fromVersion,
           previousVersion: evaluation.versions[0]?.version || null,
         }
@@ -112,9 +109,15 @@ export const POST = withSecurity(
     requireAuth: true,
     validateBody: rerunEvaluationSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
+      // Extract docId from URL path - matches /api/docs/{docId}/evals/{agentId}/rerun
       const url = new URL(request.url);
-      const pathParts = url.pathname.split('/');
-      const docId = pathParts[3];
+      const pathMatch = url.pathname.match(/\/api\/docs\/([^\/]+)\/evals/);
+      const docId = pathMatch?.[1];
+      
+      if (!docId) {
+        return false;
+      }
+      
       const document = await prisma.document.findUnique({
         where: { id: docId },
         select: { submittedById: true }

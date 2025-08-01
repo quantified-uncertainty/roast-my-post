@@ -65,8 +65,15 @@ export const PUT = withSecurity(
     requireAuth: true,
     validateBody: updateDocumentSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
+      // Extract docId from URL path - matches /api/docs/{docId}
       const url = new URL(request.url);
-      const docId = url.pathname.split('/')[3];
+      const pathMatch = url.pathname.match(/\/api\/docs\/([^\/]+)/);
+      const docId = pathMatch?.[1];
+      
+      if (!docId) {
+        return false;
+      }
+      
       const document = await prisma.document.findUnique({
         where: { id: docId },
         select: { submittedById: true }
