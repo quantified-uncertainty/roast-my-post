@@ -1,6 +1,9 @@
 import React from "react";
 
 import ReactMarkdown from "react-markdown";
+
+// Type assertion to fix React 19 compatibility
+const Markdown = ReactMarkdown as unknown as React.FC<React.ComponentProps<typeof ReactMarkdown>>;
 import { 
   MARKDOWN_COMPONENTS, 
   INLINE_MARKDOWN_COMPONENTS, 
@@ -36,14 +39,14 @@ function MarkdownRenderer({
   if (isInline) {
     return (
       <span className={className}>
-        <ReactMarkdown {...markdownProps}>{children}</ReactMarkdown>
+        <Markdown {...markdownProps}>{children}</Markdown>
       </span>
     );
   }
 
   return (
     <div className={className}>
-      <ReactMarkdown {...markdownProps}>{children}</ReactMarkdown>
+      <Markdown {...markdownProps}>{children}</Markdown>
     </div>
   );
 }
