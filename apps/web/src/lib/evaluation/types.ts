@@ -14,7 +14,6 @@ export interface EvaluationDisplayData {
     grade: number | null;
     evaluationVersionId: string;
     highlightId: string;
-    // New standardized fields (optional for backwards compatibility)
     header?: string | null;
     level?: string | null;
     source?: string | null;
@@ -73,7 +72,6 @@ export interface EvaluationContentProps {
     grade: number | null;
     evaluationVersionId: string;
     highlightId: string;
-    // New standardized fields (optional for backwards compatibility)
     header?: string | null;
     level?: string | null;
     source?: string | null;
