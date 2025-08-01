@@ -66,8 +66,25 @@ export const fullEvaluationInclude = {
         },
       },
       comments: {
-        include: {
-          highlight: true,
+        select: {
+          id: true,
+          description: true,
+          evaluationVersionId: true,
+          grade: true,
+          importance: true,
+          highlightId: true,
+          metadata: true,
+          highlight: {
+            select: {
+              id: true,
+              startOffset: true,
+              endOffset: true,
+              prefix: true,
+              quotedText: true,
+              isValid: true,
+              error: true,
+            },
+          },
         },
       },
     },

@@ -281,7 +281,7 @@ IMPORTANT:
         
         // Process tool calls
         const toolUses = response.content.filter(
-          (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+          (block: Anthropic.ContentBlock): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
         );
         
         if (toolUses.length === 0) {
