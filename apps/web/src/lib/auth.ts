@@ -38,7 +38,7 @@ function buildAuthConfig(): NextAuthConfig {
 
   // Type compatibility workaround for @auth/prisma-adapter v2.10.0 with Prisma Client v6.13.0
   // The adapter expects a specific Prisma Client type structure. This creates a properly typed wrapper.
-  const prismaAdapter = PrismaAdapter(prisma as Parameters<typeof PrismaAdapter>[0]) as Adapter;
+  const prismaAdapter = PrismaAdapter(prisma as unknown as Parameters<typeof PrismaAdapter>[0]) as Adapter;
   
   const config: NextAuthConfig = {
     adapter: prismaAdapter,

@@ -55,6 +55,23 @@ export async function validateAndConvertHighlights(
       const highlightResult = locator.createHighlight(highlight.highlight);
 
       if (highlightResult && highlightResult.quotedText && highlightResult.quotedText.length > 0) {
+        // Validate the highlight by checking if the quoted text matches the document content
+        let isHighlightValid = true;
+        let highlightError: string | undefined = undefined;
+        
+        try {
+          const actualText = documentContent.slice(highlightResult.startOffset, highlightResult.endOffset);
+          if (actualText !== highlightResult.quotedText) {
+            isHighlightValid = false;
+            highlightError = `Text mismatch: expected "${highlightResult.quotedText}" but found "${actualText}"`;
+            logger.warn(`Invalid highlight: ${highlightError}`);
+          }
+        } catch (error) {
+          isHighlightValid = false;
+          highlightError = `Validation error: ${error instanceof Error ? error.message : String(error)}`;
+          logger.warn(`Highlight validation failed: ${highlightError}`);
+        }
+        
         const processedComment: Comment = {
           description: highlight.description,
           importance: highlight.importance || 5,
@@ -63,10 +80,12 @@ export async function validateAndConvertHighlights(
             startOffset: highlightResult.startOffset,
             endOffset: highlightResult.endOffset,
             quotedText: highlightResult.quotedText,
-            isValid: true,
+            isValid: isHighlightValid,
             prefix: highlightResult.prefix,
+            error: highlightError,
           },
-          isValid: true,
+          isValid: isHighlightValid,
+          error: highlightError,
         };
         validHighlights.push(processedComment);
       } else {
