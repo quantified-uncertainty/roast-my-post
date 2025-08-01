@@ -30,7 +30,7 @@ interface ExportEvaluationButtonProps {
       }>;
       job?: {
         llmThinking?: string | null;
-        costInCents?: number | null;
+        priceInDollars?: number | string | null;
         tasks?: Array<{
           id: string;
           name: string;

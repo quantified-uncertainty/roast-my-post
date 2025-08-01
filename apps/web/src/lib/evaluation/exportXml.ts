@@ -24,7 +24,7 @@ interface ExportEvaluationData {
     }>;
     job?: {
       llmThinking?: string | null;
-      costInCents?: number | null;
+      priceInDollars?: number | string | null;
       tasks?: Array<{
         id: string;
         name: string;
@@ -132,8 +132,9 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
     if (evaluation.job.llmThinking) {
       xml += `    <thinking><![CDATA[${evaluation.job.llmThinking}]]></thinking>\n`;
     }
-    if (evaluation.job.costInCents !== null && evaluation.job.costInCents !== undefined) {
-      xml += `    <costInCents>${evaluation.job.costInCents}</costInCents>\n`;
+    if (evaluation.job.priceInDollars !== null && evaluation.job.priceInDollars !== undefined) {
+      const price = typeof evaluation.job.priceInDollars === 'string' ? parseFloat(evaluation.job.priceInDollars) : evaluation.job.priceInDollars;
+      xml += `    <priceInDollars>${price}</priceInDollars>\n`;
     }
     if (evaluation.job.tasks && evaluation.job.tasks.length > 0) {
       xml += '    <tasks>\n';

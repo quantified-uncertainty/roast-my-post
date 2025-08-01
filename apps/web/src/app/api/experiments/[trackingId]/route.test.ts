@@ -125,7 +125,7 @@ describe("/api/experiments/[trackingId] GET", () => {
           { 
             id: "job-1", 
             status: "COMPLETED",
-            costInCents: 100,
+            priceInDollars: 1.0,
             durationInSeconds: 10,
             evaluation: {
               document: {
@@ -138,7 +138,7 @@ describe("/api/experiments/[trackingId] GET", () => {
           { 
             id: "job-2", 
             status: "RUNNING",
-            costInCents: 0,
+            priceInDollars: 0,
             durationInSeconds: 0,
             evaluation: {
               document: {
@@ -151,7 +151,7 @@ describe("/api/experiments/[trackingId] GET", () => {
           { 
             id: "job-3", 
             status: "FAILED",
-            costInCents: 50,
+            priceInDollars: 0.5,
             durationInSeconds: 5,
             evaluation: {
               document: {
