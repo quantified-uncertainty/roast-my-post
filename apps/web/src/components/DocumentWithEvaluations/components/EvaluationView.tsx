@@ -167,7 +167,13 @@ export function EvaluationView({
                 <CommentStats comments={allComments} />
                 <CommentFilters 
                   comments={allComments}
-                  onFilteredCommentsChange={setFilteredComments}
+                  onFilteredCommentsChange={(comments) => {
+                    // Filter out any comments without agentName for type safety
+                    const validComments = comments.filter((c): c is Comment & { agentName: string } => 
+                      c.agentName !== undefined
+                    );
+                    setFilteredComments(validComments);
+                  }}
                 />
               </div>
               <CommentsColumn
@@ -289,6 +295,11 @@ export function EvaluationView({
                               grade: comment.grade ?? null,
                               evaluationVersionId: evaluation.id || '',
                               highlightId: `${evaluation.agentId}-highlight-${index}`,
+                              // New standardized fields
+                              header: comment.header ?? null,
+                              level: comment.level ?? null,
+                              source: comment.source ?? null,
+                              metadata: comment.metadata ?? null,
                               highlight: {
                                 id: `${evaluation.agentId}-highlight-${index}`,
                                 startOffset: comment.highlight.startOffset,

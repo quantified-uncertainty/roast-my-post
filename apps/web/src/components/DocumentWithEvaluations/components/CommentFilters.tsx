@@ -3,8 +3,8 @@ import type { Comment } from '@/types/documentSchema';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 export interface CommentFiltersProps {
-  comments: Comment[];
-  onFilteredCommentsChange: (comments: Comment[]) => void;
+  comments: (Comment & { agentName?: string })[];
+  onFilteredCommentsChange: (comments: (Comment & { agentName?: string })[]) => void;
 }
 
 export function CommentFilters({ comments, onFilteredCommentsChange }: CommentFiltersProps) {
@@ -14,8 +14,8 @@ export function CommentFilters({ comments, onFilteredCommentsChange }: CommentFi
   const [showFilters, setShowFilters] = useState(false);
   
   // Get unique sources and levels from comments
-  const sources = Array.from(new Set(comments.map(c => c.source).filter(Boolean)));
-  const levels = Array.from(new Set(comments.map(c => c.level).filter(Boolean)));
+  const sources = Array.from(new Set(comments.map(c => c.source).filter(Boolean))) as string[];
+  const levels = Array.from(new Set(comments.map(c => c.level).filter(Boolean))) as string[];
   
   // Apply filters
   const applyFilters = () => {
@@ -71,11 +71,14 @@ export function CommentFilters({ comments, onFilteredCommentsChange }: CommentFi
                 className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="all">All Sources</option>
-                {sources.map(source => (
-                  <option key={source} value={source}>
-                    {source.charAt(0).toUpperCase() + source.slice(1)}
-                  </option>
-                ))}
+                {sources.map(source => {
+                  if (!source) return null;
+                  return (
+                    <option key={source} value={source}>
+                      {source.charAt(0).toUpperCase() + source.slice(1)}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}
@@ -92,11 +95,14 @@ export function CommentFilters({ comments, onFilteredCommentsChange }: CommentFi
                 className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="all">All Levels</option>
-                {levels.map(level => (
-                  <option key={level} value={level}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </option>
-                ))}
+                {levels.map(level => {
+                  if (!level) return null;
+                  return (
+                    <option key={level} value={level}>
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}
