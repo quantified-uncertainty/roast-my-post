@@ -13,6 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/mcp-server/package.json ./apps/mcp-server/
 COPY internal-packages/db/package.json ./internal-packages/db/
+COPY internal-packages/ai/package.json ./internal-packages/ai/
 
 # Copy Prisma schema
 COPY internal-packages/db/prisma ./internal-packages/db/prisma/
