@@ -238,6 +238,85 @@ Create a batch of evaluation jobs for an agent.
 }
 ```
 
+### get_document
+
+Get a document with all its evaluations and metadata.
+
+**Parameters:**
+
+- `documentId` (string, required): Document ID to fetch
+- `includeStale` (boolean, optional): Include stale evaluations (default: false)
+
+**Example:**
+
+```json
+{
+  "documentId": "pqNIG8OIMJ3tBOdF",
+  "includeStale": false
+}
+```
+
+### get_evaluation
+
+Get detailed evaluation data for a specific document and agent with comments, highlights, and job information.
+
+**Parameters:**
+
+- `documentId` (string, required): Document ID
+- `agentId` (string, required): Agent ID
+- `includeAllVersions` (boolean, optional): Include all versions or just latest (default: false)
+
+**Example:**
+
+```json
+{
+  "documentId": "pqNIG8OIMJ3tBOdF",
+  "agentId": "safety-checker",
+  "includeAllVersions": true
+}
+```
+
+### rerun_evaluation
+
+Re-run an evaluation for a specific document and agent.
+
+**Parameters:**
+
+- `documentId` (string, required): Document ID
+- `agentId` (string, required): Agent ID  
+- `reason` (string, optional): Optional reason for re-running
+
+**Example:**
+
+```json
+{
+  "documentId": "pqNIG8OIMJ3tBOdF",
+  "agentId": "safety-checker",
+  "reason": "Updated agent instructions"
+}
+```
+
+### list_document_evaluations
+
+List all evaluations for a document with summary information.
+
+**Parameters:**
+
+- `documentId` (string, required): Document ID
+- `includeStale` (boolean, optional): Include stale evaluations (default: false)
+- `agentIds` (array of strings, optional): Filter by specific agent IDs
+
+**Example:**
+
+```json
+{
+  "documentId": "pqNIG8OIMJ3tBOdF",
+  "includeStale": false,
+  "agentIds": ["safety-checker", "quality-reviewer"]
+}
+```
+
+
 ## Authentication Setup
 
 For write operations, you need to:

@@ -181,12 +181,38 @@ Asynchronous processing queue for evaluations with:
 
 ### REST API Endpoints
 
+#### Core Resources
 - `/api/agents` - Agent management
-- `/api/documents` - Document operations
-- `/api/documents/[id]/evaluations` - Evaluation operations
+- `/api/documents` - Document operations  
 - `/api/jobs` - Job processing
 - `/api/monitor` - System monitoring (admin only)
 - `/api/import` - Article import from URLs
+
+#### New Unified API Structure
+The API now follows a clean, intuitive structure that matches web URLs:
+
+**Document Operations:**
+- `GET /api/docs/{docId}` - Get document with all evaluations (public)
+- `PUT /api/docs/{docId}` - Update document (requires auth + ownership)
+
+**Evaluation Operations:**
+- `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details (public)
+- `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation (requires auth + ownership)
+- `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation (requires auth + ownership)
+- `GET /api/docs/{docId}/evaluations` - List all evaluations for document (public)
+
+**Security Features:**
+- **Authentication**: Required for all write operations (PUT, POST)
+- **Ownership verification**: Document owner-only for modifications
+- **Input validation**: Zod schemas for request body validation
+- **Security headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+- **Consistent error handling**: Standardized error responses
+
+**Key Benefits:**
+- Natural identifiers: Use `documentId + agentId` instead of evaluation IDs
+- Perfect URL alignment with web interface (`/docs/{docId}/evals/{agentId}`)
+- Complete evaluation data including comments, highlights, and job information
+- Consistent security patterns with authentication and validation
 
 ### Authentication
 
