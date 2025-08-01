@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { ToolContext } from '../base/Tool';
 
 // Mock Claude wrapper
-jest.mock('@/lib/claude/wrapper', () => ({
-  callClaudeWithTool: jest.fn()
+jest.mock('@roast/ai', () => ({
+  callClaudeWithTool: jest.fn(),
+  sessionContext: {
+    getSession: jest.fn().mockReturnValue(null)
+  }
 }));
 
 import { callClaudeWithTool } from '@roast/ai';

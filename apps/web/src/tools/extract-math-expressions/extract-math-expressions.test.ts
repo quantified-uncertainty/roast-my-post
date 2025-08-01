@@ -6,6 +6,9 @@ import { setupClaudeToolMock } from '@roast/ai';
 // Mock Claude wrapper
 jest.mock('@roast/ai', () => ({
   callClaudeWithTool: jest.fn(),
+  sessionContext: {
+    getSession: jest.fn().mockReturnValue(null)
+  },
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));
 import { callClaudeWithTool } from '@roast/ai';

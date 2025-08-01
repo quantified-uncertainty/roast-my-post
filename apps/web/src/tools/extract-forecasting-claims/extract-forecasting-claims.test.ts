@@ -10,6 +10,9 @@ import { ExtractForecastingClaimsTool } from "./index";
 // Mock Claude wrapper
 jest.mock("@roast/ai", () => ({
   callClaudeWithTool: jest.fn(),
+  sessionContext: {
+    getSession: jest.fn().mockReturnValue(null)
+  },
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock,
   createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction
 }));
