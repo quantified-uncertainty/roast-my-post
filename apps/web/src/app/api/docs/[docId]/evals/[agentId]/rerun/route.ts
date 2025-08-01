@@ -101,7 +101,6 @@ export const POST = withSecurity(
   },
   {
     requireAuth: true,
-    rateLimit: true,
     validateBody: rerunEvaluationSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
       const url = new URL(request.url);

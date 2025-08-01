@@ -12,31 +12,25 @@ const updateDocumentSchema = z.object({
   intendedAgentIds: z.array(z.string()).optional(),
 });
 
-// GET endpoint remains public but with rate limiting for abuse prevention
-export const GET = withSecurity(
-  async (req: NextRequest, context: { params: Promise<{ docId: string }> }) => {
-    const params = await context.params;
-    const { docId } = params;
+// GET endpoint is public - matches existing document API patterns
+export async function GET(req: NextRequest, context: { params: Promise<{ docId: string }> }) {
+  const params = await context.params;
+  const { docId } = params;
 
-    try {
-      // Use the DocumentModel to get a formatted document
-      const document = await DocumentModel.getDocumentWithEvaluations(docId);
+  try {
+    // Use the DocumentModel to get a formatted document
+    const document = await DocumentModel.getDocumentWithEvaluations(docId);
 
-      if (!document) {
-        return commonErrors.notFound("Document not found");
-      }
-
-      return NextResponse.json({ document });
-    } catch (error) {
-      logger.error('Error fetching document:', error);
-      return commonErrors.serverError();
+    if (!document) {
+      return commonErrors.notFound("Document not found");
     }
-  },
-  {
-    requireAuth: false,  // Public access allowed
-    rateLimit: true,     // But with rate limiting
+
+    return NextResponse.json({ document });
+  } catch (error) {
+    logger.error('Error fetching document:', error);
+    return commonErrors.serverError();
   }
-);
+}
 
 export const PUT = withSecurity(
   async (req: NextRequest, context: { params: Promise<{ docId: string }> }) => {
@@ -69,7 +63,6 @@ export const PUT = withSecurity(
   },
   {
     requireAuth: true,
-    rateLimit: true,
     validateBody: updateDocumentSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
       const url = new URL(request.url);

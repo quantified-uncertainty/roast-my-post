@@ -12,62 +12,59 @@ const createEvaluationSchema = z.object({
   reason: z.string().optional(),
 });
 
-// GET endpoint remains public but with rate limiting
-export const GET = withSecurity(
-  async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
-    const params = await context.params;
-    const { docId, agentId } = params;
+// GET endpoint is public - matches existing evaluation viewing patterns
+export async function GET(
+  req: NextRequest, 
+  context: { params: Promise<{ docId: string; agentId: string }> }
+) {
+  const params = await context.params;
+  const { docId, agentId } = params;
 
-    try {
-      // Get evaluation data using existing query logic
-      const evaluation = await getEvaluationForDisplay(docId, agentId);
+  try {
+    // Get evaluation data using existing query logic
+    const evaluation = await getEvaluationForDisplay(docId, agentId);
 
-      if (!evaluation) {
-        return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
-      }
-
-      // Extract display data
-      const evaluationData = extractEvaluationDisplayData(evaluation);
-
-      return NextResponse.json({
-        evaluation: {
-          id: evaluation.id,
-          documentId: docId,
-          agentId,
-          agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
-          currentVersion: {
-            version: evaluationData.version,
-            grade: evaluationData.grade,
-            summary: evaluationData.summary,
-            analysis: evaluationData.analysis,
-            selfCritique: evaluationData.selfCritique,
-            comments: evaluationData.comments,
-            job: {
-              status: evaluation.versions[0]?.job?.status || "NO_JOB",
-              priceInDollars: evaluation.versions[0]?.job?.priceInDollars || null,
-              durationInSeconds: evaluation.versions[0]?.job?.durationInSeconds || null,
-              tasks: [],
-            },
-            createdAt: evaluationData.createdAt,
-          },
-          isStale: evaluationData.isStale,
-          totalVersions: evaluation.versions.length,
-          document: {
-            title: evaluation.document.versions[0]?.title || "Untitled",
-            id: docId,
-          },
-        }
-      });
-    } catch (error) {
-      logger.error('Error fetching evaluation:', error);
-      return commonErrors.serverError();
+    if (!evaluation) {
+      return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
     }
-  },
-  {
-    requireAuth: false,  // Public access allowed for viewing evaluations
-    rateLimit: true,     // But with rate limiting
+
+    // Extract display data
+    const evaluationData = extractEvaluationDisplayData(evaluation);
+
+    return NextResponse.json({
+      evaluation: {
+        id: evaluation.id,
+        documentId: docId,
+        agentId,
+        agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
+        currentVersion: {
+          version: evaluationData.version,
+          grade: evaluationData.grade,
+          summary: evaluationData.summary,
+          analysis: evaluationData.analysis,
+          selfCritique: evaluationData.selfCritique,
+          comments: evaluationData.comments,
+          job: {
+            status: evaluation.versions[0]?.job?.status || "NO_JOB",
+            priceInDollars: evaluation.versions[0]?.job?.priceInDollars || null,
+            durationInSeconds: evaluation.versions[0]?.job?.durationInSeconds || null,
+            tasks: [],
+          },
+          createdAt: evaluationData.createdAt,
+        },
+        isStale: evaluationData.isStale,
+        totalVersions: evaluation.versions.length,
+        document: {
+          title: evaluation.document.versions[0]?.title || "Untitled",
+          id: docId,
+        },
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching evaluation:', error);
+    return commonErrors.serverError();
   }
-);
+}
 
 export const POST = withSecurity(
   async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
@@ -158,7 +155,6 @@ export const POST = withSecurity(
   },
   {
     requireAuth: true,
-    rateLimit: true,
     validateBody: createEvaluationSchema,
     checkOwnership: async (userId: string, request: NextRequest) => {
       const url = new URL(request.url);
