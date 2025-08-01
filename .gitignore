@@ -97,3 +97,4 @@ backups/
 **/*.tsbuildinfo
 # Evaluation results
 evaluations/results/
+.claude_workspace
