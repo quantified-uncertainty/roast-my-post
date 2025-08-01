@@ -99,19 +99,71 @@ function createPositionMap(markdown: string): {
  */
 function mapResultToMarkdown(
   plainResult: TextLocation,
-  plainToMarkdown: Map<number, number>
+  plainToMarkdown: Map<number, number>,
+  documentText: string
 ): TextLocation | null {
-  const markdownStart = plainToMarkdown.get(plainResult.startOffset);
-  const markdownEnd = plainToMarkdown.get(plainResult.endOffset - 1);
+  let markdownStart = plainToMarkdown.get(plainResult.startOffset);
+  let markdownEnd = plainToMarkdown.get(plainResult.endOffset - 1);
   
   if (markdownStart === undefined || markdownEnd === undefined) {
     logger.warn('Failed to map plain text result back to markdown positions');
     return null;
   }
   
+  // Check if we need to expand boundaries to include full markdown syntax
+  // Look for markdown link patterns that might be partially included
+  
+  // Expand start boundary to include opening bracket if we're inside a link
+  let expandedStart = markdownStart;
+  for (let i = markdownStart - 1; i >= Math.max(0, markdownStart - 50); i--) {
+    if (documentText[i] === '[' && (i === 0 || documentText[i - 1] !== '\\')) {
+      // Check if this is the start of a markdown link
+      let j = i + 1;
+      while (j < documentText.length && documentText[j] !== ']') {
+        j++;
+      }
+      
+      if (j < documentText.length && j + 1 < documentText.length && documentText[j + 1] === '(' &&
+          j >= markdownStart) { // The closing ] should be at or after our start position
+        expandedStart = i;
+        break;
+      }
+    } else if (documentText[i] === ' ' || documentText[i] === '\n') {
+      // Stop expanding at word boundaries
+      break;
+    }
+  }
+  
+  // Expand end boundary to include closing parenthesis if we're inside a link
+  let expandedEnd = markdownEnd + 1;
+  for (let i = markdownEnd + 1; i < Math.min(documentText.length, markdownEnd + 50); i++) {
+    if (documentText[i] === ')') {
+      // Check if this closes a markdown link that we're spanning
+      let openParenPos = -1;
+      let bracketClosePos = -1;
+      
+      // Look backwards for ]( pattern
+      for (let j = i - 1; j >= expandedStart; j--) {
+        if (documentText[j] === '(' && j > 0 && documentText[j - 1] === ']') {
+          openParenPos = j;
+          bracketClosePos = j - 1;
+          break;
+        }
+      }
+      
+      if (openParenPos > 0 && bracketClosePos <= markdownEnd) {
+        expandedEnd = i + 1;
+        break;
+      }
+    } else if (documentText[i] === ' ' || documentText[i] === '\n') {
+      // Stop expanding at word boundaries unless we found a closing paren
+      break;
+    }
+  }
+  
   return {
-    startOffset: markdownStart,
-    endOffset: markdownEnd + 1, // +1 because we mapped the last character position
+    startOffset: expandedStart,
+    endOffset: expandedEnd,
     quotedText: plainResult.quotedText, // Keep the original quoted text
     strategy: 'markdown-aware-fuzzy',
     confidence: Math.max(0.6, plainResult.confidence * 0.95), // Slightly lower confidence due to mapping
@@ -151,7 +203,7 @@ export function markdownAwareFuzzySearch(
   }
   
   // Map the result back to markdown positions
-  const mappedResult = mapResultToMarkdown(plainResult, plainToMarkdown);
+  const mappedResult = mapResultToMarkdown(plainResult, plainToMarkdown, documentText);
   if (!mappedResult) {
     return null;
   }
@@ -160,13 +212,13 @@ export function markdownAwareFuzzySearch(
   const actualText = documentText.slice(mappedResult.startOffset, mappedResult.endOffset);
   
   // If the actual text contains markdown syntax that would be invisible to the LLM,
-  // we should use the original plain text match instead
+  // we should preserve the full markdown text including brackets and URL
   const hasMarkdownSyntax = /(?<!\\)\]\(/.test(actualText);
   const plainTextHasMarkdown = /(?<!\\)\]\(/.test(plainResult.quotedText);
   
   if (hasMarkdownSyntax && !plainTextHasMarkdown) {
-    // The mapped result spans markdown boundaries - use the conceptual text instead
-    mappedResult.quotedText = plainResult.quotedText;
+    // The mapped result spans markdown boundaries - preserve the full markdown text
+    mappedResult.quotedText = actualText;
   } else {
     // Use exact match or verify it starts with expected text
     const searchTextLower = searchText.toLowerCase();
