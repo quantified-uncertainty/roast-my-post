@@ -192,19 +192,28 @@ Asynchronous processing queue for evaluations with:
 The API now follows a clean, intuitive structure that matches web URLs:
 
 **Document Operations:**
-- `GET /api/docs/{docId}` - Get document with all evaluations
-- `PUT /api/docs/{docId}` - Update document (e.g., intended agents)
+- `GET /api/docs/{docId}` - Get document with all evaluations (public, rate-limited)
+- `PUT /api/docs/{docId}` - Update document (requires auth + ownership)
 
 **Evaluation Operations:**
-- `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details
-- `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation
-- `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation
-- `GET /api/docs/{docId}/evaluations` - List all evaluations for document
+- `GET /api/docs/{docId}/evals/{agentId}` - Get specific evaluation with full details (public, rate-limited)
+- `POST /api/docs/{docId}/evals/{agentId}` - Create new evaluation (requires auth + ownership)
+- `POST /api/docs/{docId}/evals/{agentId}/rerun` - Re-run existing evaluation (requires auth + ownership)
+- `GET /api/docs/{docId}/evaluations` - List all evaluations for document (public, rate-limited)
+
+**Security Features:**
+- **Authentication**: Required for all write operations (PUT, POST)
+- **Ownership verification**: Document owner-only for modifications
+- **Rate limiting**: All endpoints protected against abuse
+- **Input validation**: Zod schemas for request body validation
+- **Security headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+- **Consistent error handling**: Standardized error responses
 
 **Key Benefits:**
 - Natural identifiers: Use `documentId + agentId` instead of evaluation IDs
 - Perfect URL alignment with web interface (`/docs/{docId}/evals/{agentId}`)
 - Complete evaluation data including comments, highlights, and job information
+- Enterprise-grade security with rate limiting and validation
 
 ### Authentication
 

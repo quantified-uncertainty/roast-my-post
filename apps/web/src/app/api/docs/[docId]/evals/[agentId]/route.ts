@@ -6,81 +6,78 @@ import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/lib/evaluation/evaluationQueries";
+import { withSecurity } from "@/lib/security-middleware";
 
 const createEvaluationSchema = z.object({
   reason: z.string().optional(),
 });
 
-export async function GET(
-  req: NextRequest, 
-  context: { params: Promise<{ docId: string; agentId: string }> }
-) {
-  const params = await context.params;
-  const { docId, agentId } = params;
+// GET endpoint remains public but with rate limiting
+export const GET = withSecurity(
+  async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
+    const params = await context.params;
+    const { docId, agentId } = params;
 
-  try {
-    // Get evaluation data using existing query logic
-    const evaluation = await getEvaluationForDisplay(docId, agentId);
+    try {
+      // Get evaluation data using existing query logic
+      const evaluation = await getEvaluationForDisplay(docId, agentId);
 
-    if (!evaluation) {
-      return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
-    }
-
-    // Extract display data
-    const evaluationData = extractEvaluationDisplayData(evaluation);
-
-    return NextResponse.json({
-      evaluation: {
-        id: evaluation.id,
-        documentId: docId,
-        agentId,
-        agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
-        currentVersion: {
-          version: evaluationData.version,
-          grade: evaluationData.grade,
-          summary: evaluationData.summary,
-          analysis: evaluationData.analysis,
-          selfCritique: evaluationData.selfCritique,
-          comments: evaluationData.comments,
-          job: {
-            status: evaluation.versions[0]?.job?.status || "NO_JOB",
-            priceInDollars: evaluation.versions[0]?.job?.priceInDollars || null,
-            durationInSeconds: evaluation.versions[0]?.job?.durationInSeconds || null,
-            tasks: [],
-          },
-          createdAt: evaluationData.createdAt,
-        },
-        isStale: evaluationData.isStale,
-        totalVersions: evaluation.versions.length,
-        document: {
-          title: evaluation.document.versions[0]?.title || "Untitled",
-          id: docId,
-        },
+      if (!evaluation) {
+        return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
       }
-    });
-  } catch (error) {
-    logger.error('Error fetching evaluation:', error);
-    return commonErrors.serverError();
-  }
-}
 
-export async function POST(
-  req: NextRequest,
-  context: { params: Promise<{ docId: string; agentId: string }> }
-) {
-  const params = await context.params;
-  const { docId, agentId } = params;
+      // Extract display data
+      const evaluationData = extractEvaluationDisplayData(evaluation);
 
-  try {
-    // Authenticate request
-    const userId = await authenticateRequest(req);
-    if (!userId) {
-      return commonErrors.unauthorized();
+      return NextResponse.json({
+        evaluation: {
+          id: evaluation.id,
+          documentId: docId,
+          agentId,
+          agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
+          currentVersion: {
+            version: evaluationData.version,
+            grade: evaluationData.grade,
+            summary: evaluationData.summary,
+            analysis: evaluationData.analysis,
+            selfCritique: evaluationData.selfCritique,
+            comments: evaluationData.comments,
+            job: {
+              status: evaluation.versions[0]?.job?.status || "NO_JOB",
+              priceInDollars: evaluation.versions[0]?.job?.priceInDollars || null,
+              durationInSeconds: evaluation.versions[0]?.job?.durationInSeconds || null,
+              tasks: [],
+            },
+            createdAt: evaluationData.createdAt,
+          },
+          isStale: evaluationData.isStale,
+          totalVersions: evaluation.versions.length,
+          document: {
+            title: evaluation.document.versions[0]?.title || "Untitled",
+            id: docId,
+          },
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching evaluation:', error);
+      return commonErrors.serverError();
     }
+  },
+  {
+    requireAuth: false,  // Public access allowed for viewing evaluations
+    rateLimit: true,     // But with rate limiting
+  }
+);
 
-    // Parse request body
-    const body = await req.json().catch(() => ({}));
-    const { reason } = createEvaluationSchema.parse(body);
+export const POST = withSecurity(
+  async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
+    const params = await context.params;
+    const { docId, agentId } = params;
+    const userId = (await authenticateRequest(req))!;
+    const body = (req as any).validatedBody || {};
+    const { reason } = body;
+
+    try {
 
     // Verify document exists
     const document = await prisma.document.findUnique({
@@ -138,29 +135,41 @@ export async function POST(
       return { evaluation, job, created: true };
     });
 
-    return NextResponse.json({
-      success: true,
-      evaluation: {
-        id: result.evaluation.id,
-        documentId: docId,
-        agentId,
-        created: result.created,
-      },
-      job: {
-        id: result.job.id,
-        status: result.job.status,
-      },
-      message: result.created 
-        ? "Evaluation created successfully"
-        : `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid request data");
+      return NextResponse.json({
+        success: true,
+        evaluation: {
+          id: result.evaluation.id,
+          documentId: docId,
+          agentId,
+          created: result.created,
+        },
+        job: {
+          id: result.job.id,
+          status: result.job.status,
+        },
+        message: result.created 
+          ? "Evaluation created successfully"
+          : `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
+      });
+    } catch (error) {
+      logger.error('Error creating evaluation:', error);
+      return commonErrors.serverError();
     }
-    
-    logger.error('Error creating evaluation:', error);
-    return commonErrors.serverError();
+  },
+  {
+    requireAuth: true,
+    rateLimit: true,
+    validateBody: createEvaluationSchema,
+    checkOwnership: async (userId: string, request: NextRequest) => {
+      const url = new URL(request.url);
+      const pathParts = url.pathname.split('/');
+      const docId = pathParts[3];
+      const document = await prisma.document.findUnique({
+        where: { id: docId },
+        select: { submittedById: true }
+      });
+      return document?.submittedById === userId;
+    }
   }
-}
+);
 

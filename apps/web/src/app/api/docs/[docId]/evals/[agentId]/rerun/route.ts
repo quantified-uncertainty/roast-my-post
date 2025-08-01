@@ -5,29 +5,22 @@ import { z } from "zod";
 import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
+import { withSecurity } from "@/lib/security-middleware";
 
 const rerunEvaluationSchema = z.object({
   reason: z.string().optional(),
   fromVersion: z.number().optional(), // Re-run from specific version
 });
 
-export async function POST(
-  req: NextRequest,
-  context: { params: Promise<{ docId: string; agentId: string }> }
-) {
-  const params = await context.params;
-  const { docId, agentId } = params;
+export const POST = withSecurity(
+  async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
+    const params = await context.params;
+    const { docId, agentId } = params;
+    const userId = (await authenticateRequest(req))!;
+    const body = (req as any).validatedBody || {};
+    const { reason, fromVersion } = body;
 
-  try {
-    // Authenticate request
-    const userId = await authenticateRequest(req);
-    if (!userId) {
-      return commonErrors.unauthorized();
-    }
-
-    // Parse request body
-    const body = await req.json().catch(() => ({}));
-    const { reason, fromVersion } = rerunEvaluationSchema.parse(body);
+    try {
 
     // Find the evaluation
     const evaluation = await prisma.evaluation.findFirst({
@@ -49,10 +42,7 @@ export async function POST(
       return commonErrors.notFound(`No evaluation found for agent '${agentId}' on document '${docId}'`);
     }
 
-    // Check ownership (optional - might allow any authenticated user to re-run)
-    if (evaluation.document.submittedById !== userId) {
-      return commonErrors.forbidden();
-    }
+    // Ownership check is now handled by withSecurity middleware
 
     // Check if there are any running jobs
     const runningJobs = await prisma.job.findMany({
@@ -85,31 +75,43 @@ export async function POST(
       jobId: job.id,
     });
 
-    return NextResponse.json({
-      success: true,
-      evaluation: {
-        id: evaluation.id,
-        documentId: docId,
-        agentId,
-      },
-      job: {
-        id: job.id,
-        status: job.status,
-        createdAt: job.createdAt,
-      },
-      message: `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
-      context: {
-        reason,
-        fromVersion,
-        previousVersion: evaluation.versions[0]?.version || null,
-      }
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid request data");
+      return NextResponse.json({
+        success: true,
+        evaluation: {
+          id: evaluation.id,
+          documentId: docId,
+          agentId,
+        },
+        job: {
+          id: job.id,
+          status: job.status,
+          createdAt: job.createdAt,
+        },
+        message: `Evaluation re-run initiated${reason ? `: ${reason}` : ""}`,
+        context: {
+          reason,
+          fromVersion,
+          previousVersion: evaluation.versions[0]?.version || null,
+        }
+      });
+    } catch (error) {
+      logger.error('Error re-running evaluation:', error);
+      return commonErrors.serverError();
     }
-    
-    logger.error('Error re-running evaluation:', error);
-    return commonErrors.serverError();
+  },
+  {
+    requireAuth: true,
+    rateLimit: true,
+    validateBody: rerunEvaluationSchema,
+    checkOwnership: async (userId: string, request: NextRequest) => {
+      const url = new URL(request.url);
+      const pathParts = url.pathname.split('/');
+      const docId = pathParts[3];
+      const document = await prisma.document.findUnique({
+        where: { id: docId },
+        select: { submittedById: true }
+      });
+      return document?.submittedById === userId;
+    }
   }
-}
+);
