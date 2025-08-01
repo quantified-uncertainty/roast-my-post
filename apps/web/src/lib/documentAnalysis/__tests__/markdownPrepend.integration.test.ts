@@ -6,7 +6,7 @@ import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { Agent } from "../../../types/agentSchema";
 
 // Mock the Anthropic client
-jest.mock("../../../types/openai", () => ({
+jest.mock("@roast/ai", () => ({
   createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
@@ -18,7 +18,7 @@ jest.mock("../../../types/openai", () => ({
   HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
 }));
 
-import { createAnthropicClient } from "../../../types/openai";
+import { createAnthropicClient } from "@roast/ai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -155,7 +155,7 @@ And some more content on the final line.`;
   });
 
   test("link analysis workflow correctly handles markdownPrepend", async () => {
-    const { anthropic } = require("../../../types/openai");
+    const { anthropic } = require("@roast/ai");
 
     // Create a document with links and prepend
     const documentContent = `Check out these resources:

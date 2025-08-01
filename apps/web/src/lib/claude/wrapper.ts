@@ -1,5 +1,5 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import { createAnthropicClient, ANALYSIS_MODEL } from '@/types/openai';
+import { createAnthropicClient, ANALYSIS_MODEL } from "@roast/ai";
 import { RichLLMInteraction } from '@/types/llm';
 import { withRetry } from '@/lib/documentAnalysis/shared/retryUtils';
 

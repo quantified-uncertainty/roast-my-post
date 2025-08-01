@@ -5,7 +5,7 @@ import {
   analyzeDocument,
 } from "../lib/documentAnalysis";
 import { Agent } from "../types/agentSchema";
-import { ANALYSIS_MODEL } from "../types/openai";
+import { ANALYSIS_MODEL } from "@roast/ai";
 import {
   calculateApiCostInDollars,
   mapModelToCostModel,

@@ -5,7 +5,7 @@ import type { Document } from "../../../types/documents";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 
 // Mock the Anthropic client
-jest.mock("../../../types/openai", () => ({
+jest.mock("@roast/ai", () => ({
   createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
@@ -16,7 +16,7 @@ jest.mock("../../../types/openai", () => ({
   withTimeout: jest.fn((promise) => promise),
 }));
 
-import { createAnthropicClient } from "../../../types/openai";
+import { createAnthropicClient } from "@roast/ai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({

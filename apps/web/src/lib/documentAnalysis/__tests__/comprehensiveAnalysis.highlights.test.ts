@@ -5,7 +5,7 @@ import type { Document } from "../../../types/documents";
 import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
 // Mock the Anthropic client
-jest.mock("../../../types/openai", () => ({
+jest.mock("@roast/ai", () => ({
   createAnthropicClient: jest.fn(() => ({
     messages: {
       create: jest.fn(),
@@ -22,7 +22,7 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
-import { createAnthropicClient } from "../../../types/openai";
+import { createAnthropicClient } from "@roast/ai";
 
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {

@@ -2,10 +2,10 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
 import { RichLLMInteraction } from '@/types/llm';
 import { createMockClaudeError, expectValidLLMInteraction } from './testUtils';
-import { anthropic } from '@/types/openai';
+import { anthropic } from "@roast/ai";
 
 // Mock the createAnthropicClient
-jest.mock('@/types/openai', () => ({
+jest.mock("@roast/ai", () => ({
   createAnthropicClient: jest.fn(),
   ANALYSIS_MODEL: 'claude-sonnet-4-20250514',
   anthropic: {
@@ -16,7 +16,7 @@ jest.mock('@/types/openai', () => ({
   }
 }));
 
-import { createAnthropicClient } from '@/types/openai';
+import { createAnthropicClient } from "@roast/ai";
 
 describe('Claude Wrapper Integration Tests', () => {
   const mockCreateAnthropicClient = createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>;
