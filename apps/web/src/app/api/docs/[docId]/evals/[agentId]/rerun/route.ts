@@ -51,7 +51,7 @@ export async function POST(
 
     // Check ownership (optional - might allow any authenticated user to re-run)
     if (evaluation.document.submittedById !== userId) {
-      return commonErrors.forbidden("You don't have permission to re-run this evaluation");
+      return commonErrors.forbidden();
     }
 
     // Check if there are any running jobs
@@ -106,10 +106,10 @@ export async function POST(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid request data", error.errors);
+      return commonErrors.badRequest("Invalid request data");
     }
     
     logger.error('Error re-running evaluation:', error);
-    return commonErrors.serverError("Failed to re-run evaluation");
+    return commonErrors.serverError();
   }
 }

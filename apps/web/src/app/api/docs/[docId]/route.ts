@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ docId: 
     return NextResponse.json({ document });
   } catch (error) {
     logger.error('Error fetching document:', error);
-    return commonErrors.serverError("Failed to fetch document");
+    return commonErrors.serverError();
   }
 }
 
@@ -60,10 +60,10 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ docId: 
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid request data", error.errors);
+      return commonErrors.badRequest("Invalid request data");
     }
     
     logger.error('Error updating document:', error);
-    return commonErrors.serverError("Failed to update document");
+    return commonErrors.serverError();
   }
 }

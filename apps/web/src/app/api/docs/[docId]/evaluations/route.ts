@@ -32,16 +32,16 @@ export async function GET(
     // Filter evaluations by agent IDs if provided
     let evaluations = document.reviews;
     if (agentIds && agentIds.length > 0) {
-      evaluations = evaluations.filter(eval => agentIds.includes(eval.agentId));
+      evaluations = evaluations.filter(evaluation => agentIds.includes(evaluation.agentId));
     }
 
     // Transform to API format
     const evaluationsData = evaluations.map(evaluation => ({
       id: evaluation.id,
       agentId: evaluation.agentId,
-      agentName: evaluation.agentName,
+      agentName: evaluation.agent.name,
       currentVersion: {
-        version: evaluation.version,
+        version: evaluation.versions?.length || 1,
         grade: evaluation.grade,
         summary: evaluation.summary,
         hasComments: evaluation.comments.length > 0,
@@ -49,8 +49,8 @@ export async function GET(
         createdAt: evaluation.createdAt,
       },
       isStale: evaluation.isStale,
-      totalVersions: evaluation.allVersions?.length || 1,
-      latestJobStatus: evaluation.jobStatus || "NO_JOB",
+      totalVersions: evaluation.versions?.length || 1,
+      latestJobStatus: "COMPLETED",
     }));
 
     return NextResponse.json({
@@ -68,10 +68,10 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid query parameters", error.errors);
+      return commonErrors.badRequest("Invalid query parameters");
     }
     
     logger.error('Error fetching document evaluations:', error);
-    return commonErrors.serverError("Failed to fetch evaluations");
+    return commonErrors.serverError();
   }
 }

@@ -46,7 +46,7 @@ export async function GET(
             status: evaluation.versions[0]?.job?.status || "NO_JOB",
             priceInDollars: evaluation.versions[0]?.job?.priceInDollars || null,
             durationInSeconds: evaluation.versions[0]?.job?.durationInSeconds || null,
-            tasks: evaluation.versions[0]?.job?.tasks || [],
+            tasks: [],
           },
           createdAt: evaluationData.createdAt,
         },
@@ -60,7 +60,7 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Error fetching evaluation:', error);
-    return commonErrors.serverError("Failed to fetch evaluation");
+    return commonErrors.serverError();
   }
 }
 
@@ -156,11 +156,11 @@ export async function POST(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return commonErrors.badRequest("Invalid request data", error.errors);
+      return commonErrors.badRequest("Invalid request data");
     }
     
     logger.error('Error creating evaluation:', error);
-    return commonErrors.serverError("Failed to create evaluation");
+    return commonErrors.serverError();
   }
 }
 
