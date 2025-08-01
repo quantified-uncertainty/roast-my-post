@@ -251,6 +251,11 @@ export function EvaluationsTab({
                     grade: comment.grade ?? null,
                     evaluationVersionId: selectedEvaluation.evaluationId,
                     highlightId: comment.id,
+                    // New standardized fields
+                    header: comment.header ?? null,
+                    level: comment.level ?? null,
+                    source: comment.source ?? null,
+                    metadata: comment.metadata ?? null,
                     highlight: {
                       id: comment.id,
                       startOffset: 0,

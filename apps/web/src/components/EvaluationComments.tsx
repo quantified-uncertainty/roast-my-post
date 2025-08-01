@@ -15,6 +15,11 @@ type DatabaseComment = {
   grade: number | null;
   evaluationVersionId: string;
   highlightId: string;
+  // New standardized fields (optional for backwards compatibility)
+  header?: string | null;
+  level?: string | null;
+  source?: string | null;
+  metadata?: Record<string, any> | null;
   highlight: {
     id: string;
     startOffset: number;
@@ -59,7 +64,7 @@ export function EvaluationComments({
               id={`comment-${index + 1}`}
               className="scroll-mt-4 text-lg font-semibold text-gray-800"
             >
-              Comment {index + 1}
+              {comment.header ? comment.header : `Comment ${index + 1}`}
             </h3>
 
             {/* Info button */}
@@ -108,6 +113,26 @@ export function EvaluationComments({
 
           {/* Comment content with light background */}
           <div className="mb-6">
+            {/* Level and source badges */}
+            <div className="mb-4 flex items-center gap-2">
+              {comment.level && (
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  comment.level === 'error' ? 'bg-red-100 text-red-800' :
+                  comment.level === 'warning' ? 'bg-orange-100 text-orange-800' :
+                  comment.level === 'info' ? 'bg-blue-100 text-blue-800' :
+                  comment.level === 'success' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {comment.level}
+                </span>
+              )}
+              {comment.source && (
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  {comment.source}
+                </span>
+              )}
+            </div>
+            
             {/* Comment description */}
             <div className="prose prose-gray mb-8 max-w-none rounded-lg border border-gray-100 px-4 py-3">
               <ReactMarkdown 

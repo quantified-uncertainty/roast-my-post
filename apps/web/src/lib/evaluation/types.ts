@@ -14,6 +14,11 @@ export interface EvaluationDisplayData {
     grade: number | null;
     evaluationVersionId: string;
     highlightId: string;
+    // New standardized fields (optional for backwards compatibility)
+    header?: string | null;
+    level?: string | null;
+    source?: string | null;
+    metadata?: Record<string, any> | null;
     highlight: {
       id: string;
       startOffset: number;
@@ -68,6 +73,11 @@ export interface EvaluationContentProps {
     grade: number | null;
     evaluationVersionId: string;
     highlightId: string;
+    // New standardized fields (optional for backwards compatibility)
+    header?: string | null;
+    level?: string | null;
+    source?: string | null;
+    metadata?: Record<string, any> | null;
     highlight: {
       id: string;
       startOffset: number;

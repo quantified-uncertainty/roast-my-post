@@ -501,7 +501,17 @@ function evaluationToMarkdown(data: any): string {
   if (evaluation.comments && evaluation.comments.length > 0) {
     md += `## Comments\n\n`;
     evaluation.comments.forEach((comment: any, index: number) => {
-      md += `### Comment ${index + 1}\n\n`;
+      // Use header if available, otherwise use generic title
+      const header = comment.header || `Comment ${index + 1}`;
+      md += `### ${header}\n\n`;
+      
+      // Add level and source badges
+      if (comment.level || comment.source) {
+        if (comment.level) md += `[${comment.level.toUpperCase()}] `;
+        if (comment.source) md += `[${comment.source}] `;
+        md += `\n\n`;
+      }
+      
       if (comment.description) {
         md += `${comment.description}\n\n`;
       }
@@ -510,6 +520,9 @@ function evaluationToMarkdown(data: any): string {
       }
       if (comment.grade) {
         md += `**Grade:** ${comment.grade}\n`;
+      }
+      if (comment.metadata) {
+        md += `**Metadata:** ${JSON.stringify(comment.metadata, null, 2)}\n`;
       }
       md += `\n`;
     });

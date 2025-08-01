@@ -150,6 +150,13 @@ model EvaluationComment {
   grade               Int?
   evaluationVersionId String
   highlightId         String              @unique
+  
+  // New fields for plugin standardization
+  header              String?             // Concise summary like "2+2=5 → 2+2=4"
+  level               String?             // 'error' | 'warning' | 'info' | 'success'
+  source              String?             // Plugin identifier: 'math', 'spelling', etc.
+  metadata            Json?               // Plugin-specific data
+  
   evaluationVersion   EvaluationVersion   @relation(fields: [evaluationVersionId], references: [id], onDelete: Cascade)
   highlight           EvaluationHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
 
