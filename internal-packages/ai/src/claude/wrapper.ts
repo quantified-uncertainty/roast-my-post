@@ -1,7 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import { createAnthropicClient, ANALYSIS_MODEL } from '@/types/openai';
-import { RichLLMInteraction } from '@/types/llm';
-import { withRetry } from '@/lib/documentAnalysis/shared/retryUtils';
+import { createAnthropicClient } from '../utils/anthropic';
+import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
+import { withRetry } from '../utils/retryUtils';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {

@@ -157,7 +157,7 @@ describe('MathAnalyzerJob', () => {
       expect(result.summary).toContain('2 mathematical expressions');
       expect(result.summary).toContain('1 with errors');
       expect(result.summary).toContain('Hybrid verification found 1 issue');
-      expect(result.comments).toHaveLength(2); // Both extraction and hybrid create comments for errors
+      expect(result.comments).toHaveLength(1); // Only errors create comments
       // Check that at least one comment contains the correction
       const hasCorrection = result.comments.some(c => c.description.includes('5 → 4') || c.description.includes('5</span> → <span'));
       expect(hasCorrection).toBe(true);

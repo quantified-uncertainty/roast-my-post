@@ -5,7 +5,7 @@ import {
   analyzeDocument,
 } from "../lib/documentAnalysis";
 import { Agent } from "../types/agentSchema";
-import { ANALYSIS_MODEL } from "../types/openai";
+import { ANALYSIS_MODEL } from "@roast/ai";
 import {
   calculateApiCostInDollars,
   mapModelToCostModel,
@@ -14,8 +14,8 @@ import {
   createJobSessionConfig,
   heliconeSessionsConfig,
   SESSION_PATHS,
-} from "../lib/helicone/sessions";
-import { fetchJobCostWithRetry } from "../lib/helicone/costFetcher";
+} from "@roast/ai";
+import { fetchJobCostWithRetry } from "@roast/ai";
 
 export class JobModel {
   /**

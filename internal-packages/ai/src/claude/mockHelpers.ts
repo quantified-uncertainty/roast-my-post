@@ -1,5 +1,5 @@
-import { RichLLMInteraction } from '@/types/llm';
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { RichLLMInteraction } from '../types';
+import { callClaudeWithTool } from './wrapper';
 
 /**
  * Helper to mock Claude tool responses in tests

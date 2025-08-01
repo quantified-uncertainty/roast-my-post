@@ -9,9 +9,9 @@ import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
 import type { TaskResult } from "../shared/types";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
-import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
-import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { createHeliconeHeaders } from "../../helicone/sessions";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import type { HeliconeSessionConfig } from "@roast/ai";
+import { createHeliconeHeaders } from "@roast/ai";
 
 export interface SelfCritiqueInput {
   summary: string;

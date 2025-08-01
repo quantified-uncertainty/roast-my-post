@@ -4,12 +4,13 @@ import type { Document } from '../../../types/documents';
 import type { Agent } from '../../../types/agentSchema';
 
 // Mock only the external dependencies (LLM calls), not the internal components
-jest.mock('../../../lib/claude/wrapper', () => ({
+jest.mock('@roast/ai', () => ({
   MODEL_CONFIG: {
     analysis: 'claude-sonnet-4-20250514',
     routing: 'claude-3-haiku-20240307',
     forecasting: 'claude-sonnet-4-20250514'
   },
+  createHeliconeHeaders: jest.fn(() => ({})),
   callClaude: jest.fn().mockImplementation(async (messages, options) => {
     // Simulate real Claude responses based on the prompt
     const lastMessage = messages[messages.length - 1].content;
@@ -132,7 +133,7 @@ Some text without math to test routing.`,
 
   it('should handle missing or malformed LLM responses gracefully', async () => {
     // Mock a response with missing usage data
-    const { callClaude } = require('../../../lib/claude/wrapper');
+    const { callClaude } = require('@roast/ai');
     callClaude.mockImplementationOnce(async () => ({
       response: JSON.stringify({
         tool_calls: [{
@@ -156,7 +157,7 @@ Some text without math to test routing.`,
 
   it('should handle plugin failures gracefully', async () => {
     // Mock a plugin that throws an error
-    const { callClaude } = require('../../../lib/claude/wrapper');
+    const { callClaude } = require('@roast/ai');
     callClaude.mockImplementationOnce(async () => {
       throw new Error('LLM service unavailable');
     });
@@ -172,7 +173,7 @@ Some text without math to test routing.`,
 
   it('should correctly calculate costs even with partial data', async () => {
     // Mix of responses with and without usage data
-    const { callClaude } = require('../../../lib/claude/wrapper');
+    const { callClaude } = require('@roast/ai');
     let callCount = 0;
     callClaude.mockImplementation(async () => {
       callCount++;
@@ -244,7 +245,7 @@ describe('Plugin Integration Tests', () => {
     ];
     
     // Mock LLM response for math plugin
-    const { callClaude } = require('../../../lib/claude/wrapper');
+    const { callClaude } = require('@roast/ai');
     callClaude.mockImplementation(async (messages: any[]) => {
       const content = messages[messages.length - 1].content;
       if (content.includes('No math here')) {

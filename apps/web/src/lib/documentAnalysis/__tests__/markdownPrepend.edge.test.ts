@@ -3,20 +3,24 @@ import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
 import type { Agent } from "../../../types/agentSchema";
 
-// Mock the Anthropic client
-jest.mock("../../../types/openai", () => ({
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn(),
-    },
-  })),
-  ANALYSIS_MODEL: "claude-sonnet-test",
-  DEFAULT_TEMPERATURE: 0.1,
-  withTimeout: jest.fn((promise) => promise),
-  HIGHLIGHT_EXTRACTION_TIMEOUT: 30000,
+// Mock the @roast/ai module
+jest.mock("@roast/ai", () => ({
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  createHeliconeHeaders: jest.fn(() => ({})),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
 }));
 
-import { createAnthropicClient } from "../../../types/openai";
+// Mock withTimeout from openai types
+jest.mock("../../../types/openai", () => ({
+  ...jest.requireActual("../../../types/openai"),
+  withTimeout: jest.fn((promise) => promise),
+}));
+
+import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
 jest.mock("../../../utils/costCalculator", () => ({
@@ -34,18 +38,15 @@ describe("markdownPrepend Edge Cases", () => {
     providesGrades: false,
   };
 
-  let mockAnthropicCreate: jest.MockedFunction<any>;
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Set up the mock for createAnthropicClient
-    mockAnthropicCreate = jest.fn();
-    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
-      messages: {
-        create: mockAnthropicCreate,
-      },
-    } as any);
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 
   describe("Highlights spanning prepend/content boundary", () => {
@@ -83,7 +84,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -110,7 +111,7 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles highlight at exact boundary position", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const documentContent = "First content line here.";
       const mockDocument = createTestDocument(documentContent, {
@@ -142,7 +143,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -167,7 +168,7 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Empty and malformed prepend handling", () => {
     test("handles document with empty prepend gracefully", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       // Create document that explicitly has empty prepend
       const mockDocument = {
@@ -192,7 +193,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       // Should not throw
       await expect(
@@ -211,7 +212,7 @@ describe("markdownPrepend Edge Cases", () => {
       };
 
       // The system should handle this gracefully
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const mockAnalysisResponse = {
         content: [
@@ -228,7 +229,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       await expect(
         generateComprehensiveAnalysis(mockDocument, mockAgent, 500, 0)
@@ -238,7 +239,7 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Line number edge cases", () => {
     test("handles single line document", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const singleLineDoc = createTestDocument("Single line only", {
         includePrepend: true
@@ -267,7 +268,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const analysisResult = await generateComprehensiveAnalysis(
         singleLineDoc,
@@ -287,7 +288,7 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles out of bounds line references", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const mockDocument = createTestDocument("Line 1\nLine 2", {
         includePrepend: true
@@ -314,7 +315,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const analysisResult = await generateComprehensiveAnalysis(
         mockDocument,
@@ -337,7 +338,7 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Special characters in prepend", () => {
     test("handles markdown special characters in title", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const specialDoc = createTestDocument("Content", {
         title: "**Bold** and _italic_ and [link](url)",
@@ -360,7 +361,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       // Should handle special characters without breaking
       await expect(
@@ -369,7 +370,7 @@ describe("markdownPrepend Edge Cases", () => {
     });
 
     test("handles unicode and emojis in prepend", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       const unicodeDoc = createTestDocument("Content", {
         title: "Test 测试 🚀 Document",
@@ -401,7 +402,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const analysisResult = await generateComprehensiveAnalysis(
         unicodeDoc,
@@ -423,7 +424,7 @@ describe("markdownPrepend Edge Cases", () => {
 
   describe("Performance with large prepends", () => {
     test("handles very large prepend efficiently", async () => {
-      const { anthropic } = require("../../../types/openai");
+      const { anthropic } = require("@roast/ai");
       
       // Create a document with a very large title
       const largeDoc = createTestDocument("Content", {
@@ -448,7 +449,7 @@ describe("markdownPrepend Edge Cases", () => {
         usage: { input_tokens: 100, output_tokens: 200 }
       };
 
-      mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+      mockHelper.mockToolResponse(mockAnalysisResponse.content[0].input);
 
       const startTime = Date.now();
       

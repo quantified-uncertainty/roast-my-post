@@ -7,11 +7,11 @@ import {
   DEFAULT_TIMEOUT,
   withTimeout,
 } from "@/types/openai";
-import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import { getRandomElement, getPercentile } from "@/utils/safeArrayAccess";
-import { sessionContext } from "@/lib/helicone/sessionContext";
-import { createHeliconeHeaders } from "@/lib/helicone/sessions";
+import { sessionContext } from "@roast/ai";
+import { createHeliconeHeaders } from "@roast/ai";
 
 interface ForecastResponse {
   probability: number;

@@ -4,7 +4,7 @@
  * Provides cleanup mechanisms to prevent test data pollution in production systems
  */
 
-import { HeliconeAPIClient } from '@/lib/helicone/api-client';
+import { HeliconeAPIClient } from '@roast/ai';
 
 export interface TestCleanupConfig {
   dryRun?: boolean;

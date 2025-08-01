@@ -1,4 +1,4 @@
-import { RichLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '../types';
 
 /**
  * Test utilities for working with Claude wrapper in tests

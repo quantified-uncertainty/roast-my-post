@@ -1,16 +1,24 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import CheckMathTool from './index';
 import { logger } from '@/lib/logger';
-import { createMockLLMInteraction } from '@/lib/claude/testUtils';
-import { setupClaudeToolMock } from '@/lib/claude/mockHelpers';
+import { createMockLLMInteraction } from '@roast/ai';
+import { setupClaudeToolMock } from '@roast/ai';
 
 // Mock Claude wrapper
-jest.mock('@/lib/claude/wrapper');
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
-
-// Get the mocked function and setup helper
-const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
-const { mockToolResponse } = setupClaudeToolMock(mockCallClaudeWithTool);
+jest.mock('@roast/ai', () => ({
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  sessionContext: {
+    getSession: jest.fn().mockReturnValue(null)
+  },
+  createHeliconeHeaders: jest.fn(() => ({})),
+  createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
+  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
+}));
+import { callClaudeWithTool } from '@roast/ai';
 
 describe('CheckMathTool', () => {
   const mockContext = { 
@@ -18,8 +26,16 @@ describe('CheckMathTool', () => {
     userId: 'test-user'
   };
 
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockToolResponse: ReturnType<typeof setupClaudeToolMock>['mockToolResponse'];
+
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    const mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
+    mockToolResponse = mockHelper.mockToolResponse;
   });
 
   describe('basic functionality', () => {

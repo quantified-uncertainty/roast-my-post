@@ -5,9 +5,9 @@
 
 import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
-import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
-import { sessionContext } from "@/lib/helicone/sessionContext";
-import type { HeliconeSessionConfig } from "@/lib/helicone/sessions";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import { sessionContext } from "@roast/ai";
+import type { HeliconeSessionConfig } from "@roast/ai";
 
 export interface TextLocation {
   startOffset: number;

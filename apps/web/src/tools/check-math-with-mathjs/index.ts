@@ -2,8 +2,8 @@ import { evaluate, format, parse } from 'mathjs';
 import { Tool } from '../base/Tool';
 import { logger } from '@/lib/logger';
 import type { ToolContext } from '../base/Tool';
-import { callClaude, MODEL_CONFIG } from '@/lib/claude/wrapper';
-import { createAnthropicClient } from '@/types/openai';
+import { callClaude, MODEL_CONFIG } from '@roast/ai';
+import { createAnthropicClient } from "@roast/ai";
 import type { RichLLMInteraction } from '@/types/llm';
 import type { 
   MathVerificationStatus, 
@@ -11,8 +11,8 @@ import type {
   MathVerificationDetails 
 } from '@/tools/shared/math-schemas';
 import { generateCacheSeed } from '@/tools/shared/cache-utils';
-import { sessionContext } from '@/lib/helicone/sessionContext';
-import { createHeliconeHeaders } from '@/lib/helicone/sessions';
+import { sessionContext } from '@roast/ai';
+import { createHeliconeHeaders } from '@roast/ai';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 // Import types and schemas
@@ -273,15 +273,15 @@ IMPORTANT:
         
         // Extract text reasoning
         const textBlocks = response.content.filter(
-          (block): block is Anthropic.TextBlock => block.type === 'text'
+          (block: Anthropic.ContentBlock): block is Anthropic.TextBlock => block.type === 'text'
         );
         if (textBlocks.length > 0) {
-          agentReasoning += (agentReasoning ? '\n' : '') + textBlocks.map(block => block.text).join('\n');
+          agentReasoning += (agentReasoning ? '\n' : '') + textBlocks.map((block: Anthropic.TextBlock) => block.text).join('\n');
         }
         
         // Process tool calls
         const toolUses = response.content.filter(
-          (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+          (block: Anthropic.ContentBlock): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
         );
         
         if (toolUses.length === 0) {

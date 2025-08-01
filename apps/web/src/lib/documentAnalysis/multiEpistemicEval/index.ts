@@ -8,7 +8,7 @@
 import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
-import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import type { HeliconeSessionConfig } from "@roast/ai";
 import { PluginManager, type FullDocumentAnalysisResult } from "../../analysis-plugins/PluginManager";
 import { PluginType } from "../../analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";

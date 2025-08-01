@@ -9,7 +9,7 @@
  */
 
 import 'dotenv/config';
-import { heliconeAPI } from '@/lib/helicone/api-client';
+import { heliconeAPI } from '@roast/ai';
 import { prisma } from '@roast/db';
 
 async function generateCostReport() {

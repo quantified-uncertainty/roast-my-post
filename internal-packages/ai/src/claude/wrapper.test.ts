@@ -1,5 +1,5 @@
 import { callClaude, callClaudeWithTool, MODEL_CONFIG } from './wrapper';
-import { RichLLMInteraction } from '@/types/llm';
+import { RichLLMInteraction } from '../types';
 
 describe('Claude Wrapper', () => {
   // Skip if no API keys or in CI environment
@@ -63,7 +63,7 @@ describe('Claude Wrapper', () => {
   describe('callClaude unit tests', () => {
     it('should use default model when none specified', async () => {
       // Mock the createAnthropicClient to avoid actual API calls
-      jest.mock('@/types/openai', () => ({
+      jest.mock('../utils/anthropic', () => ({
         createAnthropicClient: () => ({
           messages: {
             create: jest.fn().mockResolvedValue({

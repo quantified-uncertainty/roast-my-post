@@ -1,8 +1,12 @@
 import { checkSpellingGrammarTool } from './index';
 
 // Mock the Claude API call to test specific scenarios
-jest.mock('@/lib/claude/wrapper', () => ({
-  callClaudeWithTool: jest.fn()
+jest.mock('@roast/ai', () => ({
+  callClaudeWithTool: jest.fn(),
+  sessionContext: {
+    getSession: jest.fn().mockReturnValue(null)
+  },
+  createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
 // Mock the language convention detection
@@ -18,7 +22,7 @@ jest.mock('../detect-language-convention', () => ({
 
 describe('CheckSpellingGrammarTool', () => {
   it('should not flag informal/colloquial words as errors', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response - no errors for informal words
@@ -54,7 +58,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should flag actual spelling errors', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with spelling errors
@@ -113,7 +117,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should respect strictness levels', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // For minimal strictness - only major errors
@@ -159,7 +163,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should validate that error text exists in input', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     // Mock Claude's response with errors including case mismatches
@@ -234,7 +238,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should add position indices to errors', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockResolvedValueOnce({
@@ -277,7 +281,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should include description for complex grammar errors', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockResolvedValueOnce({
@@ -322,7 +326,7 @@ describe('CheckSpellingGrammarTool', () => {
   });
 
   it('should include line numbers for multi-line text', async () => {
-    const { callClaudeWithTool } = await import('@/lib/claude/wrapper');
+    const { callClaudeWithTool } = await import('@roast/ai');
     const mockCallClaude = callClaudeWithTool as any;
 
     mockCallClaude.mockResolvedValueOnce({

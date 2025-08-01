@@ -9,7 +9,7 @@ import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
-import type { HeliconeSessionConfig } from "../helicone/sessions";
+import type { HeliconeSessionConfig } from "@roast/ai";
 
 export async function analyzeDocument(
   document: Document,

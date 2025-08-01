@@ -4,16 +4,15 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
-// Mock the Anthropic client
-jest.mock("../../../types/openai", () => ({
-  createAnthropicClient: jest.fn(() => ({
-    messages: {
-      create: jest.fn(),
-    },
-  })),
-  ANALYSIS_MODEL: "claude-sonnet-test",
-  DEFAULT_TEMPERATURE: 0.1,
-  withTimeout: jest.fn((promise) => promise),
+// Mock the @roast/ai module
+jest.mock("@roast/ai", () => ({
+  callClaudeWithTool: jest.fn(),
+  MODEL_CONFIG: {
+    analysis: "claude-sonnet-test",
+    routing: "claude-3-haiku-20240307"
+  },
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
+  createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
 // Mock the cost calculator
@@ -22,7 +21,15 @@ jest.mock("../../../utils/costCalculator", () => ({
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));
 
-import { createAnthropicClient } from "../../../types/openai";
+// Mock withTimeout from openai types
+jest.mock("../../../types/openai", () => ({
+  ...jest.requireActual("../../../types/openai"),
+  withTimeout: jest.fn((promise) => promise),
+}));
+
+import { callClaudeWithTool, MODEL_CONFIG, setupClaudeToolMock } from "@roast/ai";
+import type { ClaudeCallResult } from "@roast/ai";
+import { withTimeout } from "../../../types/openai";
 
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {
@@ -34,18 +41,15 @@ describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
     providesGrades: false,
   };
 
-  let mockAnthropicCreate: jest.MockedFunction<any>;
+  let mockCallClaudeWithTool: jest.MockedFunction<typeof callClaudeWithTool>;
+  let mockHelper: ReturnType<typeof setupClaudeToolMock>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Set up the mock for createAnthropicClient
-    mockAnthropicCreate = jest.fn();
-    (createAnthropicClient as jest.MockedFunction<typeof createAnthropicClient>).mockReturnValue({
-      messages: {
-        create: mockAnthropicCreate,
-      },
-    } as any);
+    // Set up the mock helper
+    mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+    mockHelper = setupClaudeToolMock(mockCallClaudeWithTool);
   });
 
   const mockDocumentContent = `This is line 1 with some content.
@@ -82,48 +86,39 @@ Line 5 has the final content.`;
     const adjustedRefs = adjustLineReferences(contentLineRefs, prependLineCount);
     
     // Mock comprehensive analysis response with 5 highlights
-    const mockAnalysisResponse = {
-      content: [
+    const mockToolResult = {
+      summary: "Test summary",
+      analysis: "# Analysis\\n\\n## Overview\\nTest analysis content\\n\\n## Key Highlights\\n\\nHighlights listed below",
+      highlightInsights: [
         {
-          type: "tool_use",
-          name: "provide_comprehensive_analysis",
-          input: {
-            summary: "Test summary",
-            analysis: "# Analysis\\n\\n## Overview\\nTest analysis content\\n\\n## Key Highlights\\n\\nHighlights listed below",
-            highlightInsights: [
-              {
-                id: "insight-1",
-                location: adjustedRefs[0], // Dynamically calculated
-                suggestedHighlight: "Highlight 1 text"
-              },
-              {
-                id: "insight-2", 
-                location: adjustedRefs[1], // Dynamically calculated
-                suggestedHighlight: "Highlight 2 text"
-              },
-              {
-                id: "insight-3",
-                location: adjustedRefs[2], // Dynamically calculated
-                suggestedHighlight: "Highlight 3 text"
-              },
-              {
-                id: "insight-4",
-                location: adjustedRefs[3], // Dynamically calculated
-                suggestedHighlight: "Highlight 4 text"
-              },
-              {
-                id: "insight-5",
-                location: adjustedRefs[4], // Dynamically calculated
-                suggestedHighlight: "Highlight 5 text"
-              }
-            ]
-          }
+          id: "insight-1",
+          location: adjustedRefs[0], // Dynamically calculated
+          suggestedHighlight: "Highlight 1 text"
+        },
+        {
+          id: "insight-2", 
+          location: adjustedRefs[1], // Dynamically calculated
+          suggestedHighlight: "Highlight 2 text"
+        },
+        {
+          id: "insight-3",
+          location: adjustedRefs[2], // Dynamically calculated
+          suggestedHighlight: "Highlight 3 text"
+        },
+        {
+          id: "insight-4",
+          location: adjustedRefs[3], // Dynamically calculated
+          suggestedHighlight: "Highlight 4 text"
+        },
+        {
+          id: "insight-5",
+          location: adjustedRefs[4], // Dynamically calculated
+          suggestedHighlight: "Highlight 5 text"
         }
-      ],
-      usage: { input_tokens: 100, output_tokens: 200 }
+      ]
     };
 
-    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+    mockHelper.mockToolResponse(mockToolResult);
 
     // Step 1: Generate comprehensive analysis with 5 target highlights
     const analysisResult = await generateComprehensiveAnalysis(
@@ -171,33 +166,24 @@ Line 5 has the final content.`;
     ];
     
     // Mock response with intentionally wrong line numbers
-    const mockAnalysisResponse = {
-      content: [
+    const mockToolResult = {
+      summary: "Test summary",
+      analysis: "Test analysis",
+      highlightInsights: [
         {
-          type: "tool_use",
-          name: "provide_comprehensive_analysis",
-          input: {
-            summary: "Test summary",
-            analysis: "Test analysis",
-            highlightInsights: [
-              {
-                id: "insight-1",
-                location: wrongRefs[0], // Dynamically calculated wrong line
-                suggestedHighlight: "Should find 'line 1' text"
-              },
-              {
-                id: "insight-2",
-                location: wrongRefs[1], // Dynamically calculated
-                suggestedHighlight: "Should find 'IMPORTANT' as 'important'"
-              }
-            ]
-          }
+          id: "insight-1",
+          location: wrongRefs[0], // Dynamically calculated wrong line
+          suggestedHighlight: "Should find 'line 1' text"
+        },
+        {
+          id: "insight-2",
+          location: wrongRefs[1], // Dynamically calculated
+          suggestedHighlight: "Should find 'IMPORTANT' as 'important'"
         }
-      ],
-      usage: { input_tokens: 100, output_tokens: 200 }
+      ]
     };
 
-    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+    mockHelper.mockToolResponse(mockToolResult);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,
@@ -220,38 +206,29 @@ Line 5 has the final content.`;
   test("skips invalid highlights gracefully", async () => {
     
     // Mock response with some invalid highlights
-    const mockAnalysisResponse = {
-      content: [
+    const mockToolResult = {
+      summary: "Test summary",
+      analysis: "Test analysis",
+      highlightInsights: [
         {
-          type: "tool_use",
-          name: "provide_comprehensive_analysis",
-          input: {
-            summary: "Test summary",
-            analysis: "Test analysis",
-            highlightInsights: [
-              {
-                id: "insight-1",
-                location: "Line 1",
-                suggestedHighlight: "Good highlight"
-              },
-              {
-                id: "insight-2",
-                location: "Line 999", // Way out of bounds
-                suggestedHighlight: "Bad highlight"
-              },
-              {
-                id: "insight-3",
-                location: "Line 3",
-                suggestedHighlight: "Another good highlight"
-              }
-            ]
-          }
+          id: "insight-1",
+          location: "Line 1",
+          suggestedHighlight: "Good highlight"
+        },
+        {
+          id: "insight-2",
+          location: "Line 999", // Way out of bounds
+          suggestedHighlight: "Bad highlight"
+        },
+        {
+          id: "insight-3",
+          location: "Line 3",
+          suggestedHighlight: "Another good highlight"
         }
-      ],
-      usage: { input_tokens: 100, output_tokens: 200 }
+      ]
     };
 
-    mockAnthropicCreate.mockResolvedValueOnce(mockAnalysisResponse);
+    mockHelper.mockToolResponse(mockToolResult);
 
     const analysisResult = await generateComprehensiveAnalysis(
       mockDocument,

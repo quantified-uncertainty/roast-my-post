@@ -8,7 +8,7 @@ import {
   withTimeout,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
 } from "../../../types/openai";
-import { callClaudeWithTool, MODEL_CONFIG } from "@/lib/claude/wrapper";
+import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
 import type { Anthropic } from '@anthropic-ai/sdk';
 import { calculateLLMCost } from "../shared/costUtils";
 import type { HighlightAnalysisOutputs, TaskResult } from "../shared/types";
@@ -19,8 +19,8 @@ import { validateAndConvertHighlights } from "../highlightGeneration/highlightVa
 import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { findHighlightLocation, type HighlightLocation } from "../shared/pluginLocationWrappers";
-import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { createHeliconeHeaders } from "../../helicone/sessions";
+import type { HeliconeSessionConfig } from "@roast/ai";
+import { createHeliconeHeaders } from "@roast/ai";
 
 /**
  * Extract and format highlights from the comprehensive analysis

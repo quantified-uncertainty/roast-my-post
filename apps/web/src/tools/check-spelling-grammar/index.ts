@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
-import { sessionContext } from '@/lib/helicone/sessionContext';
-import { createHeliconeHeaders, type HeliconeSessionConfig } from '@/lib/helicone/sessions';
+import { callClaudeWithTool } from '@roast/ai';
+import { sessionContext } from '@roast/ai';
+import { createHeliconeHeaders, type HeliconeSessionConfig } from '@roast/ai';
 import { generateCacheSeed } from '@/tools/shared/cache-utils';
 import { detectLanguageConventionTool } from '../detect-language-convention';
 import type { LanguageConvention, LanguageConventionOption } from '@/types/languageConvention';
