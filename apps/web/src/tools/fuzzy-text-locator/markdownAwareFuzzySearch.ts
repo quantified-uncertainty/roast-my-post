@@ -1,0 +1,170 @@
+/**
+ * Markdown-aware fuzzy search that handles text matching when LLM conceptualizes
+ * markdown links as plain text (e.g., "[text](url)" becomes "text")
+ */
+
+import { logger } from "@/lib/logger";
+import { TextLocation } from './types';
+import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
+
+export interface MarkdownAwareFuzzyOptions extends UFuzzyOptions {
+  // Inherits all uFuzzy options
+}
+
+/**
+ * Check if the search failure might be due to markdown links
+ */
+function isLikelyMarkdownMismatch(searchText: string, documentText: string): boolean {
+  // Only activate if document contains markdown links
+  if (!documentText.includes('](')) {
+    return false;
+  }
+  
+  // And if the search text is substantial enough to warrant processing
+  return searchText.length >= 3;
+}
+
+/**
+ * Create a position map from markdown to plain text
+ */
+function createPositionMap(markdown: string): {
+  plainText: string;
+  markdownToPlain: Map<number, number>;
+  plainToMarkdown: Map<number, number>;
+} {
+  const markdownToPlain = new Map<number, number>();
+  const plainToMarkdown = new Map<number, number>();
+  let plainText = '';
+  let plainPos = 0;
+  let i = 0;
+  
+  while (i < markdown.length) {
+    // Check for markdown link pattern [text](url)
+    if (markdown[i] === '[') {
+      const linkStart = i;
+      let j = i + 1;
+      
+      // Find the closing ]
+      while (j < markdown.length && markdown[j] !== ']') {
+        j++;
+      }
+      
+      if (j < markdown.length && j + 1 < markdown.length && markdown[j + 1] === '(') {
+        // This is a link! Find the closing )
+        let k = j + 2;
+        let parenCount = 1;
+        while (k < markdown.length && parenCount > 0) {
+          if (markdown[k] === '(') parenCount++;
+          else if (markdown[k] === ')') parenCount--;
+          k++;
+        }
+        
+        if (parenCount === 0) {
+          // Valid link found
+          const linkText = markdown.slice(i + 1, j);
+          
+          // Add mapping for each character of link text
+          for (let li = 0; li < linkText.length; li++) {
+            const markdownPos = linkStart + 1 + li;
+            markdownToPlain.set(markdownPos, plainPos);
+            plainToMarkdown.set(plainPos, markdownPos);
+            plainPos++;
+          }
+          plainText += linkText;
+          
+          // Skip to end of link
+          i = k;
+          continue;
+        }
+      }
+    }
+    
+    // Regular character - map it directly
+    markdownToPlain.set(i, plainPos);
+    plainToMarkdown.set(plainPos, i);
+    plainText += markdown[i];
+    plainPos++;
+    i++;
+  }
+  
+  return { plainText, markdownToPlain, plainToMarkdown };
+}
+
+/**
+ * Map a TextLocation result from plain text back to markdown positions
+ */
+function mapResultToMarkdown(
+  plainResult: TextLocation,
+  plainToMarkdown: Map<number, number>
+): TextLocation | null {
+  const markdownStart = plainToMarkdown.get(plainResult.startOffset);
+  const markdownEnd = plainToMarkdown.get(plainResult.endOffset - 1);
+  
+  if (markdownStart === undefined || markdownEnd === undefined) {
+    logger.warn('Failed to map plain text result back to markdown positions');
+    return null;
+  }
+  
+  return {
+    startOffset: markdownStart,
+    endOffset: markdownEnd + 1, // +1 because we mapped the last character position
+    quotedText: plainResult.quotedText, // Keep the original quoted text
+    strategy: 'markdown-aware-fuzzy',
+    confidence: Math.max(0.6, plainResult.confidence * 0.95), // Slightly lower confidence due to mapping
+  };
+}
+
+/**
+ * Markdown-aware fuzzy search that strips markdown links before searching,
+ * then maps results back to original positions
+ */
+export function markdownAwareFuzzySearch(
+  searchText: string,
+  documentText: string,
+  options: MarkdownAwareFuzzyOptions = {}
+): TextLocation | null {
+  logger.debug(`Markdown-aware fuzzy search for: "${searchText.slice(0, 50)}..."`);
+  
+  // Quick check - only proceed if this looks like a markdown mismatch
+  if (!isLikelyMarkdownMismatch(searchText, documentText)) {
+    return null;
+  }
+  
+  // Create position map and plain text version
+  const { plainText, plainToMarkdown } = createPositionMap(documentText);
+  
+  // If plain text is same as original, no point in trying
+  if (plainText === documentText) {
+    return null;
+  }
+  
+  logger.debug(`Stripped markdown: "${plainText.slice(0, 100)}..."`);
+  
+  // Run uFuzzy search on the plain text
+  const plainResult = uFuzzySearch(searchText, plainText, options);
+  if (!plainResult) {
+    return null;
+  }
+  
+  // Map the result back to markdown positions
+  const mappedResult = mapResultToMarkdown(plainResult, plainToMarkdown);
+  if (!mappedResult) {
+    return null;
+  }
+  
+  // Verify the mapping worked by extracting the actual text
+  const actualText = documentText.slice(mappedResult.startOffset, mappedResult.endOffset);
+  
+  // If the actual text contains markdown syntax that would be invisible to the LLM,
+  // we should use the original plain text match instead
+  if (actualText.includes('](') && !plainResult.quotedText.includes('](')) {
+    // The mapped result spans markdown boundaries - use the conceptual text instead
+    mappedResult.quotedText = plainResult.quotedText;
+  } else {
+    mappedResult.quotedText = actualText;
+  }
+  
+  logger.debug(`Markdown-aware match: "${actualText}" at [${mappedResult.startOffset}, ${mappedResult.endOffset}]`);
+  
+  return mappedResult;
+}

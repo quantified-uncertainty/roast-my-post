@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { TextLocation, TextLocationOptions } from './types';
 import { exactSearch } from './exactSearch';
 import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
+import { markdownAwareFuzzySearch, MarkdownAwareFuzzyOptions } from './markdownAwareFuzzySearch';
 import { llmSearch, LLMSearchOptions } from './llmSearch';
 
 // Re-export types for backward compatibility
@@ -88,7 +89,8 @@ function normalizeQuotes(text: string): string {
  * 2. Quote-normalized exact match (if enabled)
  * 3. Partial match (if enabled)
  * 4. uFuzzy (handles typos and variations)
- * 5. LLM (handles paraphrasing and complex cases)
+ * 5. Markdown-aware fuzzy (handles LLM conceptualizing markdown as plain text)
+ * 6. LLM (handles paraphrasing and complex cases)
  */
 export async function findTextLocation(
   searchText: string,
@@ -205,7 +207,17 @@ export async function findTextLocation(
     return fuzzyResult;
   }
 
-  // Strategy 5: Try LLM if enabled
+  // Strategy 5: Try markdown-aware fuzzy search
+  const markdownAwareOptions: MarkdownAwareFuzzyOptions = {
+    ...fuzzyOptions, // Inherit all fuzzy options
+  };
+  const markdownResult = markdownAwareFuzzySearch(searchText, documentText, markdownAwareOptions);
+  if (markdownResult) {
+    logger.debug('Found with markdown-aware fuzzy search');
+    return markdownResult;
+  }
+
+  // Strategy 6: Try LLM if enabled
   if (options.useLLMFallback) {
     const llmOptions: LLMSearchOptions = {
       context: options.llmContext,

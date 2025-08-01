@@ -7,6 +7,7 @@ import {
 import { exactSearch } from "../exactSearch";
 import { llmSearch } from "../llmSearch";
 import { uFuzzySearch } from "../uFuzzySearch";
+import { markdownAwareFuzzySearch } from "../markdownAwareFuzzySearch";
 
 interface ComprehensiveTestCase {
   name: string;
@@ -919,6 +920,119 @@ describe("Comprehensive Text Location Search Tests", () => {
 
       expect(result).toBeTruthy();
       expect(duration).toBeLessThan(1000); // Should complete in under 1 second
+    });
+  });
+
+  // Markdown-aware search tests
+  describe("Markdown-Aware Fuzzy Search", () => {
+    it("should find text inside markdown links", () => {
+      const doc = "Check out [This 2016 study](https://example.com/study) for more details.";
+      const query = "This 2016 study";
+
+      // Test that markdown-aware search works
+      const markdownResult = markdownAwareFuzzySearch(query, doc);
+      expect(markdownResult).toBeTruthy();
+      expect(markdownResult?.strategy).toBe('markdown-aware-fuzzy');
+      expect(markdownResult?.quotedText).toBe('This 2016 study');
+      
+      // Verify position mapping worked - should point to the link text, not the brackets
+      const actualText = doc.slice(markdownResult!.startOffset, markdownResult!.endOffset);
+      expect(actualText).toBe('This 2016 study');
+    });
+
+    it("should handle multiple markdown links", () => {
+      const doc = "The [first study](url1) and [second study](url2) both found results.";
+      const query = "second study";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.quotedText).toBe('second study');
+    });
+
+    it("should handle text spanning across markdown boundaries", () => {
+      const doc = "Research shows [important findings](url) are crucial for understanding.";
+      const query = "important findings are crucial";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.quotedText).toContain('important findings');
+    });
+
+    it("should handle complex markdown with nested parentheses in URLs", () => {
+      const doc = "See [this article](https://example.com/path?param=(value)) for details.";
+      const query = "this article";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.quotedText).toBe('this article');
+    });
+
+    it("should return null for documents without markdown links", () => {
+      const doc = "This is just plain text without any links.";
+      const query = "plain text";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeFalsy(); // Should skip processing
+    });
+
+    it("should return null if text is not found even after stripping markdown", () => {
+      const doc = "Check out [Some study](url) for details.";
+      const query = "nonexistent text";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeFalsy();
+    });
+
+    it("should handle the exact problematic case from the investigation", () => {
+      // Simulating the exact scenario from our investigation
+      const doc = `Some earlier content...
+[This 2016 study](https://example.com/bitstreams/6a4499f3-93b2-4eb6-967b-ebf318afec64/content) found that vegan diets could have significant benefits.
+More content follows...`;
+      
+      const query = "This 2016 study";
+
+      // Markdown-aware should succeed
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.quotedText).toBe('This 2016 study');
+      
+      // Verify position mapping worked correctly
+      const actualText = doc.slice(result!.startOffset, result!.endOffset);
+      expect(actualText).toBe('This 2016 study');
+    });
+
+    it("should handle fuzzy matching within markdown-stripped text", () => {
+      const doc = "Read [The 2016 study](url) about climate change.";
+      const query = "2016 study about"; // Query that should match across markdown boundaries
+      
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.strategy).toBe('markdown-aware-fuzzy');
+      // The actual quoted text should span the link and following text
+      expect(result?.quotedText).toContain('2016 study');
+      expect(result?.quotedText).toContain('about');
+    });
+
+    it("should handle cases where regular fuzzy search fails due to markdown disruption", () => {
+      // Create a case where the link URL is very long and might disrupt fuzzy matching
+      const longUrl = "https://example.com/very/long/path/that/might/interfere/with/fuzzy/matching/algorithms/study.pdf";
+      const doc = `Research on [machine learning algorithms](${longUrl}) shows promising results.`;
+      const query = "machine learning algorithms shows";
+
+      // Markdown-aware should handle this by stripping the disruptive URL
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.quotedText).toContain('machine learning algorithms');
+    });
+
+    it("should maintain reasonable confidence scores", () => {
+      const doc = "Check [exact match](url) here.";
+      const query = "exact match";
+
+      const result = markdownAwareFuzzySearch(query, doc);
+      expect(result).toBeTruthy();
+      expect(result?.confidence).toBeGreaterThan(0.6);
+      expect(result?.confidence).toBeLessThan(1.0); // Should be lower than exact match due to mapping
     });
   });
 });
