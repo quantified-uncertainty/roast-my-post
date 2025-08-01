@@ -199,7 +199,6 @@ export function VersionDetails({
                 grade: comment.grade || null,
                 evaluationVersionId: `version-${index}`,
                 highlightId: `highlight-${index}`,
-                // New standardized fields
                 header: comment.header ?? null,
                 level: comment.level ?? null,
                 source: comment.source ?? null,

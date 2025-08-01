@@ -44,7 +44,6 @@ interface Evaluation {
       description: string;
       importance: number | null;
       grade: number | null;
-      // New standardized fields
       header: string | null;
       level: string | null;
       source: string | null;
@@ -277,7 +276,6 @@ export default function EvaluationsMonitorPage() {
                   grade: comment.grade ?? null,
                   evaluationVersionId: selectedVersion.id,
                   highlightId: comment.id,
-                  // New standardized fields
                   header: comment.header ?? null,
                   level: comment.level ?? null,
                   source: comment.source ?? null,

@@ -112,12 +112,10 @@ function documentToYAML(doc: Document): string {
         analysis: review.analysis,
         grade: review.grade,
         comments: review.comments?.map((comment: Comment) => ({
-          // New standardized fields
           header: comment.header,
           level: comment.level,
           source: comment.source,
           metadata: comment.metadata,
-          // Original fields
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,
@@ -167,12 +165,10 @@ function documentToJSON(doc: Document): Record<string, any> {
         grade: review.grade,
         selfCritique: review.selfCritique,
         comments: review.comments?.map((comment: Comment) => ({
-          // New standardized fields
           header: comment.header,
           level: comment.level,
           source: comment.source,
           metadata: comment.metadata,
-          // Original fields
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,

@@ -29,7 +29,6 @@ export function generateFactCheckComments(
     significance: getSignificance(fact),
     importance: getImportanceScore(fact),
     
-    // New standardized fields
     header: getHeaderText(fact),
     level: getFactLevel(fact),
     source: 'fact-check',
