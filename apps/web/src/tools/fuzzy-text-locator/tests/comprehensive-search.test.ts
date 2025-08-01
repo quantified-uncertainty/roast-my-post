@@ -955,7 +955,8 @@ describe("Comprehensive Text Location Search Tests", () => {
 
       const result = markdownAwareFuzzySearch(query, doc);
       expect(result).toBeTruthy();
-      expect(result?.quotedText).toContain('important findings');
+      // When text spans markdown boundaries, we should get the full markdown text
+      expect(result?.quotedText).toBe('[important findings](url) are crucial');
     });
 
     it("should handle complex markdown with nested parentheses in URLs", () => {
