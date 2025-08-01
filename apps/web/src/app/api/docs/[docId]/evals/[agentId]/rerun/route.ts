@@ -22,6 +22,15 @@ export const POST = withSecurity(
 
     try {
 
+    // Verify agent exists first
+    const agent = await prisma.agent.findUnique({
+      where: { id: agentId }
+    });
+
+    if (!agent) {
+      return commonErrors.notFound(`Agent '${agentId}' not found`);
+    }
+
     // Find the evaluation
     const evaluation = await prisma.evaluation.findFirst({
       where: { documentId: docId, agentId },
