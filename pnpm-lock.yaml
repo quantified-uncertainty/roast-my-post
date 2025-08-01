@@ -313,12 +313,18 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
+      mathjs:
+        specifier: ^14.0.1
+        version: 14.6.0
       openai:
         specifier: ^4.77.0
         version: 4.104.0(ws@8.18.3)(zod@3.25.76)
       tiktoken:
         specifier: ^1.0.17
         version: 1.0.21
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -326,6 +332,9 @@ importers:
       '@types/node':
         specifier: ^22.10.6
         version: 22.17.0
+      '@types/uuid':
+        specifier: ^10.0.0
+        version: 10.0.0
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
