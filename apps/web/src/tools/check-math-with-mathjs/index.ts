@@ -276,7 +276,7 @@ IMPORTANT:
           (block: Anthropic.ContentBlock): block is Anthropic.TextBlock => block.type === 'text'
         );
         if (textBlocks.length > 0) {
-          agentReasoning += (agentReasoning ? '\n' : '') + textBlocks.map(block => block.text).join('\n');
+          agentReasoning += (agentReasoning ? '\n' : '') + textBlocks.map((block: Anthropic.TextBlock) => block.text).join('\n');
         }
         
         // Process tool calls
