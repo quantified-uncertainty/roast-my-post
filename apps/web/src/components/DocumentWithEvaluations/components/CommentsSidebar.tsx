@@ -62,12 +62,16 @@ export function CommentsSidebar({
                       <h3
                         className={`font-medium ${expandedTag === tag ? "text-blue-900" : "text-gray-900"}`}
                       >
-                        <MarkdownRenderer className="inline">
-                          {comment.description
-                            .split("\n")
-                            .slice(0, 2)
-                            .join("\n")}
-                        </MarkdownRenderer>
+                        {comment.header ? (
+                          <span className="font-semibold">{comment.header}</span>
+                        ) : (
+                          <MarkdownRenderer className="inline">
+                            {comment.description
+                              .split("\n")
+                              .slice(0, 2)
+                              .join("\n")}
+                          </MarkdownRenderer>
+                        )}
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
                         {hasGradeInstructions && (
@@ -91,7 +95,14 @@ export function CommentsSidebar({
                         />
                       </div>
                     </div>
-                    {expandedTag === tag &&
+                    {expandedTag === tag && comment.header && (
+                      <div className="mt-2 text-gray-800">
+                        <MarkdownRenderer className="text-sm">
+                          {comment.description}
+                        </MarkdownRenderer>
+                      </div>
+                    )}
+                    {expandedTag === tag && !comment.header &&
                       comment.description.split("\n").length > 2 && (
                         <div className="mt-1 text-gray-800">
                           <MarkdownRenderer className="text-sm">
@@ -104,6 +115,11 @@ export function CommentsSidebar({
                       )}
                     {expandedTag === tag && (
                       <div className="mt-2 text-xs text-gray-400">
+                        {comment.source && (
+                          <span className="mr-4">
+                            Source: <span className="font-medium">{comment.source}</span>
+                          </span>
+                        )}
                         {comment.grade !== undefined && (
                           <span className="mr-4">
                             Grade:{" "}

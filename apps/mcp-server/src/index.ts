@@ -1,5 +1,9 @@
 #!/usr/bin/env node
+import dotenv from 'dotenv';
 import { z } from "zod";
+
+// Load environment variables from root .env.local
+dotenv.config({ path: '../../apps/web/.env.local' });
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
@@ -10,16 +14,32 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import {
-  prisma,
-  type Agent,
-  type AgentVersion,
-  type Document,
-  type Evaluation,
-  type EvaluationVersion,
-  type Job,
-  type Prisma,
-} from "@roast/db";
+import { PrismaClient, Prisma } from "../../../internal-packages/db/generated/index.js";
+import type { 
+  Agent,
+  AgentVersion,
+  Document,
+  Evaluation,
+  EvaluationVersion,
+  Job
+} from "../../../internal-packages/db/generated/index.js";
+
+// Initialize Prisma client directly
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' 
+      ? ['query', 'error', 'warn'] 
+      : ['error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
 
 // Type definitions for Prisma queries with includes
 type AgentWithVersions = Agent & {
@@ -107,6 +127,46 @@ const UpdateDocumentArgsSchema = z.object({
   documentId: z.string(),
   intendedAgentIds: z.array(z.string()).optional(),
 });
+
+// New unified API schemas
+const GetEvaluationArgsSchema = z.object({
+  documentId: z.string(),
+  agentId: z.string(),
+  includeAllVersions: z.boolean().optional().default(false),
+});
+
+const RerunEvaluationArgsSchema = z.object({
+  documentId: z.string(),
+  agentId: z.string(),
+});
+
+const ListDocumentEvaluationsArgsSchema = z.object({
+  documentId: z.string(),
+  includeStale: z.boolean().optional().default(false),
+  agentIds: z.array(z.string()).optional(),
+});
+
+
+const GetDocumentArgsSchema = z.object({
+  documentId: z.string(),
+  includeStale: z.boolean().optional().default(false),
+});
+
+// Helper function to handle API errors consistently
+function getErrorMessage(status: number, context: string): string {
+  switch (status) {
+    case 404:
+      return `${context} not found`;
+    case 403:
+      return 'Access denied';
+    case 401:
+      return 'Authentication required';
+    case 400:
+      return 'Invalid request';
+    default:
+      return `Failed to ${context.toLowerCase()}`;
+  }
+}
 
 const server = new Server(
   {
@@ -441,6 +501,93 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               },
               description:
                 "Array of agent IDs that should evaluate this document",
+            },
+          },
+          required: ["documentId"],
+        },
+      },
+      {
+        name: "get_document",
+        description: "Get a document with all its evaluations and metadata",
+        inputSchema: {
+          type: "object",
+          properties: {
+            documentId: {
+              type: "string",
+              description: "Document ID to fetch",
+            },
+            includeStale: {
+              type: "boolean",
+              description: "Include stale evaluations (default: false)",
+            },
+          },
+          required: ["documentId"],
+        },
+      },
+      {
+        name: "get_evaluation",
+        description: "Get detailed evaluation data for a specific document and agent",
+        inputSchema: {
+          type: "object",
+          properties: {
+            documentId: {
+              type: "string",  
+              description: "Document ID",
+            },
+            agentId: {
+              type: "string",
+              description: "Agent ID",
+            },
+            includeAllVersions: {
+              type: "boolean",
+              description: "Include all versions or just latest (default: false)",
+            },
+          },
+          required: ["documentId", "agentId"],
+        },
+      },
+      {
+        name: "rerun_evaluation",
+        description: "Re-run an evaluation for a specific document and agent",
+        inputSchema: {
+          type: "object",
+          properties: {
+            documentId: {
+              type: "string",
+              description: "Document ID",
+            },
+            agentId: {
+              type: "string", 
+              description: "Agent ID",
+            },
+            reason: {
+              type: "string",
+              description: "Optional reason for re-running",
+            },
+          },
+          required: ["documentId", "agentId"],
+        },
+      },
+      {
+        name: "list_document_evaluations",
+        description: "List all evaluations for a document",
+        inputSchema: {
+          type: "object",
+          properties: {
+            documentId: {
+              type: "string",
+              description: "Document ID",
+            },
+            includeStale: {
+              type: "boolean",
+              description: "Include stale evaluations (default: false)",
+            },
+            agentIds: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description: "Optional filter by agent IDs",
             },
           },
           required: ["documentId"],
@@ -1475,6 +1622,156 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
       }
+
+      case "get_document": {
+        const { documentId, includeStale } = GetDocumentArgsSchema.parse(args);
+
+        try {
+          const response = await authenticatedFetch(
+            `/api/docs/${documentId}?includeStale=${includeStale || false}`
+          );
+
+          if (!response.ok) {
+            throw new Error(getErrorMessage(response.status, 'Document'));
+          }
+
+          const data = await response.json();
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(data, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text", 
+                text: `Error fetching document: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+              },
+            ],
+          };
+        }
+      }
+
+      case "get_evaluation": {
+        const { documentId, agentId, includeAllVersions } = GetEvaluationArgsSchema.parse(args);
+
+        try {
+          const response = await authenticatedFetch(
+            `/api/docs/${documentId}/evals/${agentId}?includeAllVersions=${includeAllVersions}`
+          );
+
+          if (!response.ok) {
+            throw new Error(getErrorMessage(response.status, 'Evaluation'));
+          }
+
+          const data = await response.json();
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(data, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error fetching evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+              },
+            ],
+          };
+        }
+      }
+
+      case "rerun_evaluation": {
+        const { documentId, agentId } = RerunEvaluationArgsSchema.parse(args);
+
+        try {
+          const response = await authenticatedFetch(
+            `/api/docs/${documentId}/evals/${agentId}/rerun`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({}),
+            }
+          );
+
+          if (!response.ok) {
+            const errorMsg = response.status === 403 ? 'You do not have permission to re-run this evaluation' :
+                           getErrorMessage(response.status, 'Evaluation or agent');
+            throw new Error(errorMsg);
+          }
+
+          const data = await response.json();
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(data, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error re-running evaluation: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+              },
+            ],
+          };
+        }
+      }
+
+      case "list_document_evaluations": {
+        const { documentId, includeStale, agentIds } = ListDocumentEvaluationsArgsSchema.parse(args);
+
+        try {
+          const queryParams = new URLSearchParams();
+          if (includeStale) queryParams.set('includeStale', 'true');
+          if (agentIds && agentIds.length > 0) queryParams.set('agentIds', agentIds.join(','));
+
+          const response = await authenticatedFetch(
+            `/api/docs/${documentId}/evaluations?${queryParams.toString()}`
+          );
+
+          if (!response.ok) {
+            throw new Error(getErrorMessage(response.status, 'Document'));
+          }
+
+          const data = await response.json();
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(data, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error listing evaluations: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+              },
+            ],
+          };
+        }
+      }
+
 
       case "verify_setup": {
         // Environment variables

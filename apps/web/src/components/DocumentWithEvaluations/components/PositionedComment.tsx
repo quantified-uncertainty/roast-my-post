@@ -45,10 +45,24 @@ export function PositionedComment({
   skipAnimation = false,
 }: PositionedCommentProps) {
   const tag = index.toString();
+  
+  // Use header if available, otherwise fall back to description
+  const displayContent = comment.header || comment.description || "";
   const { text: displayText, isTruncated } = getCommentDisplayText(
-    comment.description || "",
+    displayContent,
     isHovered
   );
+  
+  // Get level styling
+  const levelStyles = {
+    error: { borderColor: '#ef4444', bgColor: '#fef2f2' },
+    warning: { borderColor: '#f59e0b', bgColor: '#fffbeb' },
+    info: { borderColor: '#3b82f6', bgColor: '#eff6ff' },
+    success: { borderColor: '#10b981', bgColor: '#f0fdf4' },
+  };
+  
+  const level = comment.level || 'info'; // Default to info if not set
+  const styles = levelStyles[level as keyof typeof levelStyles] || levelStyles.info;
 
   return (
     <div
@@ -65,9 +79,10 @@ export function PositionedComment({
         zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
         visibility: isVisible ? "visible" : "hidden",
-        backgroundColor: isHovered ? COMMENT_BG_HOVERED : COMMENT_BG_DEFAULT,
+        backgroundColor: isHovered ? styles.bgColor : COMMENT_BG_DEFAULT,
         borderRadius: "8px",
-        border: isHovered ? `1px solid ${COMMENT_BORDER_HOVERED}` : "none",
+        border: isHovered ? `2px solid ${styles.borderColor}` : "none",
+        borderLeft: `3px solid ${styles.borderColor}`,
         boxShadow: isHovered ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
       }}
       onClick={() => onClick(tag)}
@@ -77,19 +92,31 @@ export function PositionedComment({
       <div className="flex items-start">
         {/* Comment text */}
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
-          <div
-            className={`prose prose-sm max-w-none break-words ${!isHovered ? "line-clamp-2" : ""}`}
-          >
-            <ReactMarkdown
-              {...MARKDOWN_PLUGINS}
-              components={MARKDOWN_COMPONENTS}
+          {/* Show header if available */}
+          {comment.header && (
+            <div className="mb-1 font-medium text-gray-900">
+              {comment.header}
+            </div>
+          )}
+          
+          {/* Show full description when expanded or if no header */}
+          {(isHovered || !comment.header) && (
+            <div
+              className={`prose prose-sm max-w-none break-words ${!isHovered && comment.header ? "line-clamp-2" : ""}`}
             >
-              {displayText}
-            </ReactMarkdown>
-          </div>
+              <ReactMarkdown
+                {...MARKDOWN_PLUGINS}
+                components={MARKDOWN_COMPONENTS}
+              >
+                {comment.description}
+              </ReactMarkdown>
+            </div>
+          )}
 
-          {/* Agent name */}
-          <div className="mt-1 text-xs text-gray-400">{agentName}</div>
+          {/* Source and Agent name */}
+          <div className="mt-1 text-xs text-gray-400">
+            {comment.source && `[${comment.source}] `}{agentName}
+          </div>
 
           {/* Additional metadata when expanded */}
           {isHovered && comment.grade !== undefined && (

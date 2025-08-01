@@ -123,6 +123,29 @@ class ExtractedForecast {
   private commentImportanceScore(): number {
     return this.shouldGetOurForecastScore / 10;
   }
+  
+  private getHeaderText(): string {
+    const prediction = this.extractedForecast.rewrittenPredictionText || this.extractedForecast.originalText;
+    const truncated = prediction.length > 60 ? prediction.substring(0, 57) + '...' : prediction;
+    
+    if (this.ourForecast?.probability) {
+      return `📊 Forecast (${Math.round(this.ourForecast.probability)}%): ${truncated}`;
+    }
+    return `📊 Forecast: ${truncated}`;
+  }
+  
+  private getLevel(): 'error' | 'warning' | 'info' | 'success' {
+    // Forecasts are informational by nature
+    const averageScore = this.averageScore;
+    
+    if (averageScore >= 80) {
+      return 'info';
+    } else if (averageScore >= 50) {
+      return 'info';
+    } else {
+      return 'warning'; // Low quality forecasts get warning level
+    }
+  }
 
   public async getComment(): Promise<Comment | null> {
     const location = await this.findLocationInDocument();
@@ -146,6 +169,25 @@ class ExtractedForecast {
         isValid: true,
       },
       importance: this.commentImportanceScore(),
+      
+      // New standardized fields
+      header: this.getHeaderText(),
+      level: this.getLevel(),
+      source: 'forecast',
+      metadata: {
+        predictionText: this.extractedForecast.rewrittenPredictionText,
+        originalText: this.extractedForecast.originalText,
+        importanceScore: this.extractedForecast.importanceScore,
+        precisionScore: this.extractedForecast.precisionScore,
+        verifiabilityScore: this.extractedForecast.verifiabilityScore,
+        robustnessScore: this.extractedForecast.robustnessScore,
+        averageScore: this.averageScore,
+        resolutionDate: this.extractedForecast.resolutionDate,
+        authorProbability: this.extractedForecast.authorProbability,
+        ourPrediction: this.ourForecast?.probability,
+        ourConsensus: this.ourForecast?.consensus,
+        ourDescription: this.ourForecast?.description,
+      },
     };
   }
 

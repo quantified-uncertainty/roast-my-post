@@ -270,6 +270,17 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
         isValid: true,
       },
       importance,
+      
+      // New standardized fields
+      header: error.conciseCorrection || `${error.text} → ${error.correction}`,
+      level: 'error' as const, // Spelling/grammar issues are always errors
+      source: 'spelling',
+      metadata: {
+        errorType: error.type,
+        confidence: error.confidence,
+        context: error.context,
+        lineNumber: error.lineNumber,
+      },
     };
   }
 

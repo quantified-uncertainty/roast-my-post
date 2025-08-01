@@ -21,10 +21,15 @@ interface ExportEvaluationData {
       description: string;
       importance?: number | null;
       grade?: number | null;
+      // New standardized fields
+      header?: string | null;
+      level?: string | null;
+      source?: string | null;
+      metadata?: Record<string, any> | null;
     }>;
     job?: {
       llmThinking?: string | null;
-      costInCents?: number | null;
+      priceInDollars?: number | string | null;
       tasks?: Array<{
         id: string;
         name: string;
@@ -115,11 +120,23 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
       xml += '    <comment>\n';
       xml += `      <id>${comment.id}</id>\n`;
       xml += `      <description><![CDATA[${comment.description}]]></description>\n`;
+      if (comment.header) {
+        xml += `      <header><![CDATA[${comment.header}]]></header>\n`;
+      }
+      if (comment.level) {
+        xml += `      <level>${comment.level}</level>\n`;
+      }
+      if (comment.source) {
+        xml += `      <source>${comment.source}</source>\n`;
+      }
       if (comment.importance !== null && comment.importance !== undefined) {
         xml += `      <importance>${comment.importance}</importance>\n`;
       }
       if (comment.grade !== null && comment.grade !== undefined) {
         xml += `      <grade>${comment.grade}</grade>\n`;
+      }
+      if (comment.metadata) {
+        xml += `      <metadata><![CDATA[${JSON.stringify(comment.metadata, null, 2)}]]></metadata>\n`;
       }
       xml += '    </comment>\n';
     });
@@ -132,8 +149,9 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
     if (evaluation.job.llmThinking) {
       xml += `    <thinking><![CDATA[${evaluation.job.llmThinking}]]></thinking>\n`;
     }
-    if (evaluation.job.costInCents !== null && evaluation.job.costInCents !== undefined) {
-      xml += `    <costInCents>${evaluation.job.costInCents}</costInCents>\n`;
+    if (evaluation.job.priceInDollars !== null && evaluation.job.priceInDollars !== undefined) {
+      const price = typeof evaluation.job.priceInDollars === 'string' ? parseFloat(evaluation.job.priceInDollars) : evaluation.job.priceInDollars;
+      xml += `    <priceInDollars>${price}</priceInDollars>\n`;
     }
     if (evaluation.job.tasks && evaluation.job.tasks.length > 0) {
       xml += '    <tasks>\n';

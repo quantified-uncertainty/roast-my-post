@@ -55,7 +55,19 @@ function documentToMarkdown(doc: Document): string {
       if (review.comments && review.comments.length > 0) {
         evalSection.push("**Comments**:");
         review.comments.forEach((comment: Comment, idx: number) => {
-          evalSection.push(`${idx + 1}. ${comment.description}`);
+          // Use header if available, otherwise use description
+          const header = comment.header || `Comment ${idx + 1}`;
+          evalSection.push(`${idx + 1}. **${header}**`);
+          
+          // Add level and source badges
+          const badges = [];
+          if (comment.level) badges.push(`[${comment.level.toUpperCase()}]`);
+          if (comment.source) badges.push(`[${comment.source}]`);
+          if (badges.length > 0) {
+            evalSection.push(`   ${badges.join(" ")}`);
+          }
+          
+          evalSection.push(`   ${comment.description}`);
           if (comment.highlight?.quotedText) {
             evalSection.push(`   > "${comment.highlight.quotedText}"`);
           }
@@ -100,6 +112,12 @@ function documentToYAML(doc: Document): string {
         analysis: review.analysis,
         grade: review.grade,
         comments: review.comments?.map((comment: Comment) => ({
+          // New standardized fields
+          header: comment.header,
+          level: comment.level,
+          source: comment.source,
+          metadata: comment.metadata,
+          // Original fields
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,
@@ -149,6 +167,12 @@ function documentToJSON(doc: Document): Record<string, any> {
         grade: review.grade,
         selfCritique: review.selfCritique,
         comments: review.comments?.map((comment: Comment) => ({
+          // New standardized fields
+          header: comment.header,
+          level: comment.level,
+          source: comment.source,
+          metadata: comment.metadata,
+          // Original fields
           description: comment.description,
           importance: comment.importance,
           grade: comment.grade,

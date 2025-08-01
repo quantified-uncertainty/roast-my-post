@@ -45,11 +45,15 @@ export interface AgentEvaluation {
     description: string;
     importance?: number | null;
     grade?: number | null;
+    header?: string | null;
+    level?: string | null;
+    source?: string | null;
+    metadata?: any | null;
   }>;
   job?: {
     status: string;
     llmThinking?: string | null;
-    costInCents?: number | null;
+    priceInDollars?: number | string | null;
     tasks?: Array<{
       id: string;
       name: string;

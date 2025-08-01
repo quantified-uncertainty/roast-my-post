@@ -86,8 +86,12 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const isStale = evaluation.isStale || false;
               
               // Calculate stats
-              const totalCost = evaluation.versions?.reduce((sum: number, v: any) => 
-                sum + (v.job?.costInCents || 0), 0) / 100 || 0;
+              const totalCost = evaluation.versions?.reduce((sum: number, v: any) => {
+                const price = v.job?.priceInDollars;
+                if (!price) return sum;
+                const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+                return sum + priceNum;
+              }, 0) || 0;
               const avgDuration = versionCount > 0 
                 ? evaluation.versions.reduce((sum: number, v: any) => 
                     sum + (v.job?.durationInSeconds || 0), 0) / versionCount
