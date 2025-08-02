@@ -64,11 +64,9 @@ export interface Evaluation {
     documentVersion?: {
       version: number;
     };
-    comments?: Array<{
+    comments?: Array<Comment & {
       id: string;
       description: string;
-      importance: number | null;
-      grade: number | null;
       highlight?: {
         id: string;
         startOffset: number;
@@ -78,10 +76,6 @@ export interface Evaluation {
         isValid: boolean;
         error?: string;
       };
-      header?: string | null;
-      level?: string | null;
-      source?: string | null;
-      metadata?: Record<string, any> | null;
     }>;
     job?: {
       id: string;

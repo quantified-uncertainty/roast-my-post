@@ -7,6 +7,7 @@ import {
 import type { Document, Evaluation } from "@/types/databaseTypes";
 import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";
+import { getCommentProperty } from "@/types/commentTypes";
 
 // Helper function to safely convert Decimal to number
 function convertPriceToNumber(price: unknown): number {
@@ -256,7 +257,7 @@ export class DocumentModel {
                     priceInDollars: convertPriceToNumber(task.priceInDollars),
                     timeInSeconds: task.timeInSeconds,
                     log: task.log,
-                    llmInteractions: (task as any).llmInteractions,
+                    llmInteractions: 'llmInteractions' in task ? task.llmInteractions : undefined,
                     createdAt: task.createdAt,
                   })),
                 }
@@ -275,10 +276,10 @@ export class DocumentModel {
                 prefix: comment.highlight.prefix,
                 error: comment.highlight.error,
               },
-              header: (comment as any).header || null,
-              level: (comment as any).level || null,
-              source: (comment as any).source || null,
-              metadata: (comment as any).metadata || null,
+              header: getCommentProperty(comment, 'header', null),
+              level: getCommentProperty(comment, 'level', null),
+              source: getCommentProperty(comment, 'source', null),
+              metadata: getCommentProperty(comment, 'metadata', null),
             })),
             summary: version.summary || "",
             analysis: version.analysis || undefined,
@@ -337,10 +338,10 @@ export class DocumentModel {
                 prefix: comment.highlight.prefix,
                 error: comment.highlight.error,
               },
-              header: (comment as any).header || null,
-              level: (comment as any).level || null,
-              source: (comment as any).source || null,
-              metadata: (comment as any).metadata || null,
+              header: getCommentProperty(comment, 'header', null),
+              level: getCommentProperty(comment, 'level', null),
+              source: getCommentProperty(comment, 'source', null),
+              metadata: getCommentProperty(comment, 'metadata', null),
             })) || [],
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
