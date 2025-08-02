@@ -16,6 +16,7 @@ import {
   SESSION_PATHS,
 } from "@roast/ai";
 import { fetchJobCostWithRetry } from "@roast/ai";
+import { getDocumentFullContent } from "../utils/documentContentHelpers";
 
 export class JobModel {
   /**
@@ -517,6 +518,9 @@ export class JobModel {
         });
       }
 
+      // Get the full content with prepend for validation (same content that was sent to AI)
+      const { content: fullContentForValidation } = getDocumentFullContent(documentForAnalysis);
+      
       // Save highlights with validation
       if (evaluationOutputs.highlights && evaluationOutputs.highlights.length > 0) {
         for (const comment of evaluationOutputs.highlights) {
@@ -529,7 +533,7 @@ export class JobModel {
             error = "Highlight is missing";
           } else {
             try {
-              const actualText = documentVersion.content.slice(
+              const actualText = fullContentForValidation.slice(
                 comment.highlight.startOffset, 
                 comment.highlight.endOffset
               );

@@ -24,8 +24,6 @@ import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";
 import { DocumentMetadata } from "./DocumentMetadata";
 import { EvaluationCardsHeader } from "./EvaluationCardsHeader";
-import { CommentFilters } from "./CommentFilters";
-import { CommentStats } from "./CommentStats";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { MARKDOWN_COMPONENTS } from "../config/markdown";
@@ -41,7 +39,6 @@ export function EvaluationView({
   const contentRef = useRef<HTMLDivElement>(null);
   const evaluationsSectionRef = useRef<HTMLDivElement>(null);
   const [isFullWidth, setIsFullWidth] = useState(false);
-  const [filteredComments, setFilteredComments] = useState<Array<DbComment & { agentName: string }>>([]);
 
   // Use the scroll behavior hook
   const { scrollContainerRef, headerVisible, isLargeMode, setIsLargeMode } =
@@ -70,8 +67,8 @@ export function EvaluationView({
     return getValidAndSortedComments(comments);
   }, [selectedEvaluations]);
 
-  // Use filtered comments if available, otherwise use all comments
-  const displayComments = filteredComments.length > 0 || allComments.length === 0 ? filteredComments : allComments;
+  // Use all comments directly
+  const displayComments = allComments;
 
   const highlights = useMemo(
     () =>
@@ -170,16 +167,6 @@ export function EvaluationView({
             </div>
             {/* Comments column with filters and positioned comments */}
             <div style={{ width: `${UI_LAYOUT.COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}>
-              <div className="sticky top-20 z-40 mb-4 space-y-3">
-                <CommentStats comments={allComments as any} />
-                <CommentFilters 
-                  comments={allComments as any}
-                  onFilteredCommentsChange={(comments) => {
-                    // Cast to work around type mismatch for now
-                    setFilteredComments(comments as any);
-                  }}
-                />
-              </div>
               <CommentsColumn
                 comments={displayComments}
                 contentRef={contentRef}
