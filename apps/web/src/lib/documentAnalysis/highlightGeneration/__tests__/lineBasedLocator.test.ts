@@ -1,6 +1,6 @@
 import {
   LineBasedLocator,
-} from "@/lib/text-location/line-based";
+} from "@roast/ai/text-location/line-based";
 import type { LineBasedHighlight } from "../types";
 
 describe("LineBasedLocator (for highlight generation)", () => {

@@ -24,6 +24,10 @@
     "./analysis-plugins/types/plugin-types": {
       "types": "./src/analysis-plugins/types/plugin-types.ts",
       "default": "./src/analysis-plugins/types/plugin-types.ts"
+    },
+    "./text-location/line-based": {
+      "types": "./src/text-location/line-based/index.ts",
+      "default": "./src/text-location/line-based/index.ts"
     }
   },
   "scripts": {

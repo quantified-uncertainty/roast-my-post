@@ -3,7 +3,7 @@ import { logger } from "@/lib/logger";
 import {
   LineBasedLocator,
   type LineSnippetHighlight,
-} from "@/lib/text-location/line-based";
+} from "@roast/ai/text-location/line-based";
 import type { LineBasedHighlight, RawLLMHighlight } from "./types";
 
 /**
