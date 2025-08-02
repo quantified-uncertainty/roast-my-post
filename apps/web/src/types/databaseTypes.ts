@@ -2,7 +2,7 @@
 import type { Document as BaseDocument, Comment as BaseComment } from "@roast/ai";
 
 // Database Document type that includes all the database fields
-export interface Document extends BaseDocument {
+export interface Document extends Omit<BaseDocument, 'reviews'> {
   createdAt: Date;
   updatedAt: Date;
   submittedById: string;
@@ -14,6 +14,8 @@ export interface Document extends BaseDocument {
   };
   importUrl?: string; // For documents imported from URLs
   ephemeralBatchId?: string;
+  // Override reviews field to use database Evaluation type
+  reviews: Evaluation[];
 }
 
 // Comment type that extends the AI package Comment type with database fields
@@ -87,6 +89,7 @@ export interface Evaluation {
         priceInDollars: number;
         timeInSeconds: number;
         log: string;
+        createdAt: Date;
       }>;
     };
   }>;

@@ -1,4 +1,4 @@
-import type { Evaluation } from "@roast/ai";
+import type { Evaluation } from "@/types/databaseTypes";
 
 export interface AgentWithEvaluation {
   id: string;

@@ -1,5 +1,4 @@
-import type { Evaluation } from "@roast/ai";
-import type { Comment, Document } from "@/types/databaseTypes";
+import type { Comment, Document, Evaluation } from "@/types/databaseTypes";
 
 export interface DocumentWithReviewsProps {
   document: Document;
