@@ -257,7 +257,7 @@ export async function generateForecastWithAggregation(
     try {
       console.log("  📚 Researching with Perplexity...");
       // Dynamic import to avoid circular dependencies
-      const perplexityModule = await import("../perplexity-research/index.js");
+      const perplexityModule = await import("../perplexity-research/index");
       const perplexityTool = perplexityModule.perplexityResearchTool || perplexityModule.default;
       
       const research = await perplexityTool.execute({
