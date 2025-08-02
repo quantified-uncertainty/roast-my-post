@@ -14,6 +14,31 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# Create shared permission fix script
+create_shared_functions() {
+    cat << 'EOF'
+# Shared function to fix permissions
+fix_permissions() {
+    echo "  → Fixing script permissions..."
+    find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+    find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
+    
+    # Fix other common executable files
+    find . -name "*.js" -path "*/bin/*" -exec chmod +x {} \; 2>/dev/null || true
+    find . -name "gradlew" -exec chmod +x {} \; 2>/dev/null || true
+}
+
+# Shared function to sync Claude permissions
+sync_claude_permissions() {
+    SYNC_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/sync-claude-permissions.sh"
+    if [ -f "$SYNC_SCRIPT" ] && [ -x "$SYNC_SCRIPT" ]; then
+        echo "  → Syncing Claude permissions..."
+        "$SYNC_SCRIPT" >/dev/null 2>&1 || true
+    fi
+}
+EOF
+}
+
 # Create post-checkout hook
 create_post_checkout_hook() {
     local HOOK_FILE="$1/.git/hooks/post-checkout"
@@ -29,14 +54,17 @@ CHECKOUT_TYPE=$3
 if [ "$CHECKOUT_TYPE" = "1" ]; then
     echo "🔧 Running post-checkout hooks..."
     
-    # Fix script permissions
-    echo "  → Fixing script permissions..."
-    find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-    find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
-    
-    # Fix other common executable files
-    find . -name "*.js" -path "*/bin/*" -exec chmod +x {} \; 2>/dev/null || true
-    find . -name "gradlew" -exec chmod +x {} \; 2>/dev/null || true
+    # Source the fix-permissions script if available
+    FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-permissions.sh"
+    if [ -f "$FIX_SCRIPT" ] && [ -x "$FIX_SCRIPT" ]; then
+        "$FIX_SCRIPT" >/dev/null 2>&1 || true
+    else
+        # Fallback to inline permission fixing
+        find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+        find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
+        find . -name "*.js" -path "*/bin/*" -exec chmod +x {} \; 2>/dev/null || true
+        find . -name "gradlew" -exec chmod +x {} \; 2>/dev/null || true
+    fi
     
     # Sync Claude permissions
     SYNC_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/sync-claude-permissions.sh"
@@ -63,14 +91,18 @@ create_post_merge_hook() {
 
 echo "🔧 Running post-merge hooks..."
 
-# Fix script permissions
-echo "  → Fixing script permissions..."
-find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
-find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
-
-# Fix other common executable files
-find . -name "*.js" -path "*/bin/*" -exec chmod +x {} \; 2>/dev/null || true
-find . -name "gradlew" -exec chmod +x {} \; 2>/dev/null || true
+# Source the fix-permissions script if available
+FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-permissions.sh"
+if [ -f "$FIX_SCRIPT" ] && [ -x "$FIX_SCRIPT" ]; then
+    "$FIX_SCRIPT" >/dev/null 2>&1 || true
+else
+    # Fallback to inline permission fixing
+    echo "  → Fixing script permissions..."
+    find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+    find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
+    find . -name "*.js" -path "*/bin/*" -exec chmod +x {} \; 2>/dev/null || true
+    find . -name "gradlew" -exec chmod +x {} \; 2>/dev/null || true
+fi
 
 echo "✅ Post-merge hooks completed!"
 EOF
