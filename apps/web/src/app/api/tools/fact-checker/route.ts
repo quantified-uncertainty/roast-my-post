@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import FactCheckerTool from '@/tools/fact-checker';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { factCheckerTool } from '@roast/ai';
 
-export const POST = createToolRoute(FactCheckerTool);
+export const POST = createToolRoute(factCheckerTool);

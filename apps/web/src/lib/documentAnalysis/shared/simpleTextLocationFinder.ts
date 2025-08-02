@@ -3,7 +3,7 @@
  * Based on actual plugin usage patterns
  */
 
-import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
+import { getLineNumberAtPosition, getLineAtPosition } from "@roast/ai/analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
 
 export interface TextLocation {

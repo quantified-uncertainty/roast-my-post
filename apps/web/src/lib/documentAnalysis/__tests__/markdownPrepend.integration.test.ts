@@ -2,8 +2,8 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
-import type { Agent } from "../../../types/agentSchema";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
+import type { Agent } from "@roast/ai";
 
 // Mock the @roast/ai module
 jest.mock("@roast/ai", () => ({
@@ -13,15 +13,12 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
-}));
-
-// Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
   withTimeout: jest.fn((promise) => promise),
 }));
 
+// Mock withTimeout from openai types
+// withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
@@ -139,11 +136,11 @@ And some more content on the final line.`;
     const [comment1, comment2] = commentResult.outputs.highlights;
 
     // First comment should highlight "This is the main content"
-    expect(comment1.highlight.quotedText).toContain("This is the main content");
-    expect(comment1.highlight.startOffset).toBeGreaterThan(0); // Should account for prepend
+    expect(comment1.highlight!.quotedText).toContain("This is the main content");
+    expect(comment1.highlight!.startOffset).toBeGreaterThan(0); // Should account for prepend
 
     // Second comment should highlight the link
-    expect(comment2.highlight.quotedText).toContain("https://example.com");
+    expect(comment2.highlight!.quotedText).toContain("https://example.com");
   });
 
   test("link analysis workflow correctly handles markdownPrepend", async () => {
@@ -194,7 +191,7 @@ And some more content on the final line.`;
       const linkComment = result.highlights[0];
       // The offset should account for the prepend
       const { prependCharCount } = getDocumentFullContent(mockDocument);
-      expect(linkComment.highlight.startOffset).toBeGreaterThanOrEqual(prependCharCount);
+      expect(linkComment.highlight!.startOffset).toBeGreaterThanOrEqual(prependCharCount);
     }
   });
 

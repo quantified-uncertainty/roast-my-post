@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { extractMathExpressionsTool } from '../tools/extract-math-expressions';
+import { extractMathExpressionsTool } from '@roast/ai';
 import { logger } from '../lib/logger';
 
 async function testMathExtraction() {

@@ -1,4 +1,4 @@
-import type { Comment, Evaluation, Highlight } from "../../types/documentSchema";
+import type { Evaluation, Highlight, Comment } from "@/types/databaseTypes";
 
 /**
  * Checks if two highlights overlap
@@ -153,19 +153,19 @@ export function applyHighlightsToContainer(
 
   // Filter valid highlights and sort by start offset
   const validHighlights = highlights
-    .filter((comment) => comment.highlight.isValid && comment.isValid)
-    .sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+    .filter((comment) => comment.highlight?.isValid && comment.isValid)
+    .sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
 
   // Apply valid highlights
 
   for (const comment of validHighlights) {
-    const { quotedText } = comment.highlight;
-    const description = comment.description;
+    const { quotedText } = comment.highlight!;
+    const description = comment.description || 'No description';
     const color = colorMap[description] || "#ffeb3b";
 
     try {
       // Find text nodes that contain our highlight
-      const textNodes = findTextNodes(container, quotedText);
+      const textNodes = findTextNodes(container, quotedText!);
 
       if (textNodes.length === 0) {
         console.warn(`Could not find text "${quotedText}" in container`);
@@ -174,7 +174,7 @@ export function applyHighlightsToContainer(
 
       // Use the first matching text node
       const { node, nodeOffset } = textNodes[0];
-      const highlightLength = quotedText.length;
+      const highlightLength = quotedText!.length;
 
       applyHighlightToNode(
         node,
@@ -234,13 +234,13 @@ export function resetContainer(container: HTMLElement, content?: string): void {
 export function fixOverlappingHighlights(comments: Comment[]): Comment[] {
   // Sort by start offset
   const sorted = [...comments].sort(
-    (a, b) => a.highlight.startOffset - b.highlight.startOffset
+    (a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0)
   );
 
   const fixed: Comment[] = [];
   for (const comment of sorted) {
     const hasOverlap = fixed.some((existing) =>
-      highlightsOverlap(existing.highlight, comment.highlight)
+      highlightsOverlap(existing.highlight!, comment.highlight!)
     );
 
     if (!hasOverlap) {
@@ -263,7 +263,7 @@ export function validateHighlights(review: Evaluation): {
   const errors: string[] = [];
 
   for (const comment of review.comments) {
-    if (!comment.highlight.isValid) {
+    if (comment.highlight && !comment.highlight.isValid) {
       errors.push(`Invalid highlight for comment: ${comment.description}`);
     }
   }
@@ -278,8 +278,8 @@ export function validateHighlights(review: Evaluation): {
  * Validate and fix a document review
  */
 export function validateAndFixDocumentReview(review: Evaluation): Evaluation {
-  const fixedComments = fixOverlappingHighlights(review.comments);
-  return { ...review, comments: fixedComments };
+  const fixedComments = fixOverlappingHighlights(review.comments as Comment[]);
+  return { ...review, comments: fixedComments as any };
 }
 
 /**

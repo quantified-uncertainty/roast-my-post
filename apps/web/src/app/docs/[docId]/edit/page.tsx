@@ -22,7 +22,7 @@ import { WarningDialog } from "@/components/WarningDialog";
 import {
   type DocumentInput,
   documentSchema,
-} from "../../../docs/new/schema";
+} from "@/app/docs/new/schema";
 import { updateDocument } from "./actions";
 
 interface FormFieldConfig {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { DocumentModel } from "@/models/Document";
 import yaml from "js-yaml";
-import type { Document, Evaluation, Comment } from "@/types/documentSchema";
+import type { Document, Comment, Evaluation } from "@/types/databaseTypes";
 
 function documentToMarkdown(doc: Document): string {
   const metadata = [
@@ -86,7 +86,7 @@ function documentToMarkdown(doc: Document): string {
 }
 
 function documentToYAML(doc: Document): string {
-  const exportData: Record<string, any> = {
+  const exportData: Record<string, unknown> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
@@ -136,8 +136,8 @@ function documentToYAML(doc: Document): string {
   });
 }
 
-function documentToJSON(doc: Document): Record<string, any> {
-  const exportData: Record<string, any> = {
+function documentToJSON(doc: Document): Record<string, unknown> {
+  const exportData: Record<string, unknown> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,

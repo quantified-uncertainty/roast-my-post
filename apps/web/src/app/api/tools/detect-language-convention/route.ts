@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import { detectLanguageConventionTool } from '@/tools/detect-language-convention';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { detectLanguageConventionTool } from '@roast/ai';
 
 export const POST = createToolRoute(detectLanguageConventionTool);

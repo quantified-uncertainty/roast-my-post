@@ -1,4 +1,4 @@
-import type { Comment, Document, Evaluation } from "@/types/documentSchema";
+import type { Comment, Document, Evaluation } from "@/types/databaseTypes";
 
 export interface DocumentWithReviewsProps {
   document: Document;

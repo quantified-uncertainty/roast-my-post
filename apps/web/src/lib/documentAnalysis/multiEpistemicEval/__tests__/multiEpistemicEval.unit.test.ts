@@ -1,9 +1,9 @@
 import { analyzeWithMultiEpistemicEval } from '../index';
-import type { Agent } from '../../../../types/agentSchema';
-import type { Document } from '../../../../types/documents';
+import type { Agent } from '@roast/ai';
+import type { Document } from '@roast/ai';
 
 // Mock the plugin system
-jest.mock('../../../analysis-plugins/PluginManager', () => ({
+jest.mock('@roast/ai', () => ({
   PluginManager: jest.fn().mockImplementation(() => ({
     analyzeDocumentSimple: jest.fn().mockResolvedValue({
       summary: 'Analyzed 5 sections with 4 plugins. Found 3 total issues.',
@@ -252,7 +252,7 @@ describe('multiEpistemicEval', () => {
 
     // Check highlights were collected from plugins
     expect(result.highlights).toHaveLength(3);
-    expect(result.highlights[0].description).toBe('Test error 1');
+    expect((result.highlights[0] as any).description).toBe('Test error 1');
     
     // Check tasks are properly recorded
     expect(result.tasks).toHaveLength(1); // Just Plugin analysis now

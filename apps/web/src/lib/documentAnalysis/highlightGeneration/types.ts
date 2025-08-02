@@ -1,6 +1,6 @@
-import type { Comment } from "../../../types/documentSchema";
-import type { LLMUsage } from "../../../types/llm";
-import type { LineSnippetHighlight } from "@/lib/text-location/line-based";
+import type { Comment } from "@roast/ai";
+import type { LLMUsage } from "@roast/ai";
+import type { LineSnippetHighlight } from "@roast/ai/text-location/line-based";
 
 // Response from Anthropic API
 export interface RawLLMHighlight {

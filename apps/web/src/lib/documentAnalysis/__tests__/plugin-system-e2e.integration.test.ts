@@ -1,7 +1,7 @@
 import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
-import { MathPlugin } from '../../analysis-plugins/plugins/math';
-import type { Document } from '../../../types/documents';
-import type { Agent } from '../../../types/agentSchema';
+import { MathPlugin } from '@roast/ai';
+import type { Document } from '@roast/ai';
+import type { Agent } from '@roast/ai';
 
 // Mock only the external dependencies (LLM calls), not the internal components
 jest.mock('@roast/ai', () => ({
@@ -120,8 +120,8 @@ Some text without math to test routing.`,
     if (result.highlights.length > 0) {
       expect(result.highlights[0]).toHaveProperty('description');
       expect(result.highlights[0]).toHaveProperty('highlight');
-      expect(result.highlights[0].highlight).toHaveProperty('startOffset');
-      expect(result.highlights[0].highlight).toHaveProperty('endOffset');
+      expect((result.highlights[0] as any).highlight).toHaveProperty('startOffset');
+      expect((result.highlights[0] as any).highlight).toHaveProperty('endOffset');
     }
     
     // Verify task tracking

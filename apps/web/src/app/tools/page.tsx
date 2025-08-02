@@ -4,7 +4,7 @@
  */
 
 import Link from 'next/link';
-import { toolRegistry } from '@/tools/registry';
+import { toolRegistry } from '@roast/ai';
 import { MagnifyingGlassIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 
 const categoryIcons = {

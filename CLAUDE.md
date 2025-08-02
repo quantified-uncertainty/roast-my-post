@@ -9,18 +9,21 @@ The project has been successfully migrated to a pnpm workspace monorepo structur
 
 - **Main app** moved from root to `apps/web/`
 - **Database package** extracted to `internal-packages/db/` with shared Prisma client
+- **AI package** extracted to `internal-packages/ai/` with shared AI utilities (2025-02-02)
 - **MCP server** moved to `apps/mcp-server/`
 - **All scripts and tools** moved to `dev/` directory
 - **Documentation** consolidated in `dev/docs/`
 
 ### Key Benefits
 - **Shared database package** (`@roast/db`) eliminates import path duplication
+- **Shared AI package** (`@roast/ai`) centralizes Claude API, tools, and analysis plugins
 - **Workspace dependencies** ensure consistent versions across packages
 - **Turborepo integration** for coordinated builds and testing
 - **Cleaner separation** between application code and development tools
 
 ### Import Path Changes
 - Database imports: `import { prisma } from '@roast/db'`
+- AI/Claude imports: `import { callClaude, PluginManager } from '@roast/ai'`
 - Web app imports: `import { something } from '@roast/web/src/lib/something'`
 - All external scripts now use proper workspace imports
 
@@ -419,7 +422,7 @@ This project is organized as a pnpm workspace monorepo:
 - Created shared articleImport library to eliminate duplication between API route and CLI script
 - Replaced OpenAI with Claude + tool use for metadata extraction and content cleaning
 - Fixed JSDOM configuration to prevent CSS/JS spam in console logs
-- **New Claude Wrapper Pattern**: Centralized all Claude API calls through `@/lib/claude/wrapper` for consistent interaction tracking, error handling, and Helicone integration. See `/docs/development/claude-wrapper-pattern.md` for usage guide.
+- **New Claude Wrapper Pattern**: Centralized all Claude API calls through `@roast/ai` package for consistent interaction tracking, error handling, and Helicone integration. See `/dev/docs/development/claude-wrapper-pattern.md` for usage guide.
 
 ## Commands
 
@@ -503,6 +506,26 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
 - `./dev/scripts/worktree-manager.sh list` - List all worktrees and their status
 - `./dev/scripts/worktree-manager.sh ports` - Show port allocations
 - See `/dev/docs/development/worktrees.md` for detailed documentation
+
+## Recent Updates (2025-02-02)
+
+### AI Package Extraction 
+- **Extracted AI functionality** to `internal-packages/ai/` package (`@roast/ai`)
+- **Moved components**:
+  - Claude API wrapper (`/claude/wrapper.ts`)
+  - Helicone integration (`/helicone/`)
+  - Analysis plugins system (`/analysis-plugins/`)
+  - Document analysis workflows (`/document-analysis/`)
+  - AI tools (`/tools/`) - math checker, spell checker, fact checker, etc.
+  - Token utilities and shared types
+- **Benefits**:
+  - Shared AI utilities across web app and MCP server
+  - Independent testing and development
+  - Clean separation of concerns
+  - Foundation for future microservices
+- **Import changes**:
+  - Before: `import { callClaude } from '@/lib/claude/wrapper'`
+  - After: `import { callClaude } from '@roast/ai'`
 
 ## Recent Updates (2024-01-24)
 

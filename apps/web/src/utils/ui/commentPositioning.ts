@@ -1,7 +1,7 @@
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
 
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@/types/databaseTypes";
 
 interface CommentPosition {
   id: string;

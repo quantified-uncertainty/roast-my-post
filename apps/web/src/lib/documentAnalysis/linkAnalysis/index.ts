@@ -1,10 +1,10 @@
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
-import type { Document } from "../../../types/documents";
+import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 export async function generateLinkAnalysis(
   document: Document,

@@ -6,10 +6,7 @@ import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
 
 import { GradeBadge } from "@/components/GradeBadge";
-import {
-  Document,
-  Evaluation,
-} from "@/types/documentSchema";
+import type { Document, Evaluation } from "@/types/databaseTypes";
 import { getValidCommentCount } from "@/utils/ui/commentUtils";
 import {
   formatWordCount,

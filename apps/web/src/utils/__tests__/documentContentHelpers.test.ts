@@ -1,5 +1,5 @@
 import { getDocumentFullContent } from '../documentContentHelpers';
-import type { Document } from '../../types/documents';
+import type { Document } from '@roast/ai';
 import type { DocumentWithVersions } from '../../types/documentWithVersions';
 
 describe('documentContentHelpers', () => {

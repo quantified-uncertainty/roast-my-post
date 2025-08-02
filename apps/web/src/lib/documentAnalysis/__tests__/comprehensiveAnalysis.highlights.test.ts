@@ -1,7 +1,7 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 import { createTestDocument, adjustLineReferences, adjustLineReference, getPrependLineCount } from "../testUtils";
 
 // Mock the @roast/ai module
@@ -12,7 +12,8 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
-  createHeliconeHeaders: jest.fn(() => ({}))
+  createHeliconeHeaders: jest.fn(() => ({})),
+  withTimeout: jest.fn((promise) => promise),
 }));
 
 // Mock the cost calculator
@@ -22,14 +23,10 @@ jest.mock("../../../utils/costCalculator", () => ({
 }));
 
 // Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
-  withTimeout: jest.fn((promise) => promise),
-}));
-
+// withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool, MODEL_CONFIG, setupClaudeToolMock } from "@roast/ai";
 import type { ClaudeCallResult } from "@roast/ai";
-import { withTimeout } from "../../../types/openai";
+import { withTimeout } from "@roast/ai";
 
 describe("Comprehensive Analysis Highlights to Highlights E2E", () => {
   const mockAgent: Agent = {
@@ -146,11 +143,11 @@ Line 5 has the final content.`;
 
     // Verify highlight details
     highlightResult.outputs.highlights.forEach((highlight, index) => {
-      console.log(`Highlight ${index + 1}: "${highlight.description.substring(0, 50)}..."`);
+      console.log(`Highlight ${index + 1}: "${highlight.description?.substring(0, 50) || 'No description'}..."`);
       expect(highlight.description).toBe(analysisResult.outputs.highlightInsights[index].suggestedHighlight);
       expect(highlight.highlight).toBeDefined();
-      expect(highlight.highlight.startOffset).toBeGreaterThanOrEqual(0);
-      expect(highlight.highlight.endOffset).toBeGreaterThan(highlight.highlight.startOffset);
+      expect(highlight.highlight?.startOffset).toBeGreaterThanOrEqual(0);
+      expect(highlight.highlight?.endOffset).toBeGreaterThan(highlight.highlight?.startOffset || 0);
     });
   });
 

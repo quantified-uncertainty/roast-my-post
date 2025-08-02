@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import checkMathHybridTool from '@/tools/check-math-hybrid';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { checkMathHybridTool } from '@roast/ai';
 
 export const POST = createToolRoute(checkMathHybridTool);

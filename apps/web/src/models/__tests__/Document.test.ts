@@ -23,9 +23,9 @@ jest.mock('@roast/db', () => ({
   },
 }));
 
-// Mock DocumentSchema
-jest.mock('@/types/documentSchema', () => ({
-  DocumentSchema: {
+// Mock DocumentValidationSchema
+jest.mock('@/types/validationSchemas', () => ({
+  DocumentValidationSchema: {
     parse: jest.fn((data) => data),
   },
 }));

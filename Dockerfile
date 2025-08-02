@@ -29,15 +29,15 @@ COPY . .
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DOCKER_BUILD=true
 # Provide dummy values for build-time validation
-ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"  
 ENV AUTH_SECRET="dummy-auth-secret-for-build"
 ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
 
 # Build Next.js application
-# Use Docker-specific config to avoid plugin issues
-RUN mv apps/web/next.config.docker.js apps/web/next.config.js && \
-    pnpm --filter @roast/web run build
+# The existing next.config.js already handles Docker builds gracefully
+RUN pnpm --filter @roast/web run build
 
 # Production stage
 FROM node:20-alpine AS runner

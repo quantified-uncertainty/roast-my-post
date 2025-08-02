@@ -1,14 +1,17 @@
 # @roast/ai
 
-Core AI utilities for RoastMyPost - Claude integration, Helicone tracking, and token management.
+Core AI utilities for RoastMyPost - Claude integration, analysis plugins, document analysis tools, and token management.
 
 ## Overview
 
-This internal package provides centralized AI functionality that can be shared across the web application, MCP server, and future worker processes.
+This internal package provides centralized AI functionality that can be shared across the web application, MCP server, and future worker processes. It contains all the AI-powered features extracted from the main web application for better code reuse and modularity.
 
 ## Features
 
 - **Claude API Wrapper**: Centralized Claude API integration with retry logic, caching, and Helicone integration
+- **Analysis Plugins System**: Modular plugin architecture for document analysis (math checking, spell checking, fact checking, forecasting)
+- **Document Analysis Workflows**: Comprehensive analysis, self-critique, highlight extraction, and multi-epistemic evaluation
+- **AI-Powered Tools**: Suite of specialized tools for text analysis, language detection, content extraction
 - **Token Management**: Accurate token counting and estimation utilities
 - **Helicone Integration**: Cost tracking, session management, and usage analytics
 - **Type Safety**: Full TypeScript support with comprehensive types
@@ -63,13 +66,59 @@ const estimate = estimateTokens("Your text here");
 const { withinLimit, percentUsed } = checkTokenLimits(tokenCount);
 ```
 
+### Analysis Plugins
+
+```typescript
+import { PluginManager, MathPlugin, SpellingPlugin, FactCheckPlugin } from '@roast/ai';
+
+// Create plugin manager
+const manager = new PluginManager({
+  sessionConfig: {
+    sessionId: "analysis-123",
+    sessionName: "Document Analysis"
+  }
+});
+
+// Analyze document with all plugins
+const result = await manager.analyzeDocument(document, {
+  targetHighlights: 10
+});
+```
+
+### Document Analysis Tools
+
+```typescript
+import { 
+  documentChunker,
+  extractMathExpressions,
+  checkSpellingGrammar,
+  extractFactualClaims,
+  fuzzyTextLocator 
+} from '@roast/ai';
+
+// Chunk a document intelligently
+const chunks = await documentChunker(text, {
+  maxChunkSize: 1500,
+  preserveContext: true
+});
+
+// Extract and check math
+const mathExpressions = await extractMathExpressions(text);
+const mathResults = await checkMath(mathExpressions);
+
+// Check spelling and grammar
+const spellingErrors = await checkSpellingGrammar(text, {
+  languageConvention: 'US'
+});
+```
+
 ### Helicone Integration
 
 ```typescript
-import { HeliconeSessionContext, getHeliconeClient } from '@roast/ai';
+import { sessionContext, getHeliconeClient } from '@roast/ai';
 
 // Set session context for tracking
-HeliconeSessionContext.set({
+sessionContext.setSession({
   sessionId: "unique-session-id",
   sessionName: "Analysis Session",
   sessionPath: "/analysis/123"
@@ -136,5 +185,36 @@ The package is organized into:
 
 - `/claude` - Claude API wrapper and utilities
 - `/helicone` - Helicone integration for cost tracking
+- `/analysis-plugins` - Plugin system for modular document analysis
+  - `/plugins` - Individual analysis plugins (math, spelling, fact-check, forecast)
+  - `/utils` - Plugin utilities (chunk routing, comment building)
+- `/document-analysis` - High-level document analysis workflows
+  - `/comprehensiveAnalysis` - Full document analysis orchestration
+  - `/selfCritique` - Self-critique generation
+  - `/highlightExtraction` - Extract highlights from analysis
+  - `/linkAnalysis` - Analyze and validate links in documents
+- `/tools` - Individual AI-powered analysis tools
+  - `check-math` - Mathematical expression validation
+  - `check-spelling-grammar` - Spelling and grammar checking
+  - `extract-factual-claims` - Factual claim extraction
+  - `fuzzy-text-locator` - Fuzzy text search and location
+  - `document-chunker` - Intelligent document chunking
+  - And many more...
+- `/shared` - Shared types and utilities
 - `/utils` - Token counting, logging, and retry utilities
-- `/types.ts` - Shared TypeScript types
+- `/types.ts` - Core TypeScript types
+
+## Exports
+
+The package provides both named exports for specific components and namespace exports for convenience:
+
+```typescript
+// Individual imports
+import { callClaude, PluginManager, MathPlugin } from '@roast/ai';
+
+// Tool imports
+import { checkMath, checkSpellingGrammar } from '@roast/ai';
+
+// Type imports
+import type { Comment, DocumentLocation, LanguageConvention } from '@roast/ai';
+```

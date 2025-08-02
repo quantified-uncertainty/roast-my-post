@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 
-import type { Comment, Document } from "@/types/documentSchema";
+import type { Document } from "@roast/ai";
+import type { Comment as AiComment } from "@roast/ai";
+import type { Comment as DbComment } from "@/types/databaseTypes";
+import { dbCommentToAiComment } from "@/lib/typeAdapters";
 import {
   calculateCommentPositions,
   checkHighlightsReady,
@@ -22,7 +25,7 @@ import { PositionedComment } from "./PositionedComment";
 import { CommentErrorBoundary } from "./CommentErrorBoundary";
 
 interface CommentsColumnProps {
-  comments: (Comment & { agentName?: string })[];
+  comments: (DbComment & { agentName?: string })[];
   contentRef: React.RefObject<HTMLDivElement | null>;
   selectedCommentId: string | null;
   hoveredCommentId: string | null;
@@ -53,7 +56,7 @@ export function CommentsColumn({
 
   // Get valid and sorted comments with memoization
   const sortedComments = useMemo(
-    () => getValidAndSortedComments(comments) as (Comment & { agentName?: string })[],
+    () => getValidAndSortedComments(comments) as (DbComment & { agentName?: string })[],
     [comments]
   );
 
@@ -227,12 +230,12 @@ export function CommentsColumn({
             const isHovered = hoveredCommentId === tag;
 
             // Use a stable key based on comment content and agent
-            const stableKey = `${comment.agentName || "default"}-${comment.highlight.startOffset}-${comment.highlight.endOffset}-${index}`;
+            const stableKey = `${comment.agentName || "default"}-${comment.highlight?.startOffset || 0}-${comment.highlight?.endOffset || 0}-${index}`;
 
             return (
               <PositionedComment
                 key={stableKey}
-                comment={comment}
+                comment={dbCommentToAiComment(comment)}
                 index={index}
                 position={position}
                 isVisible={highlightsReady && hasInitialized && position > 0}

@@ -1,11 +1,11 @@
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
-import type { Document } from "../../../types/documents";
+import type { Document } from "@roast/ai";
 import {
   withTimeout,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   DEFAULT_TEMPERATURE,
-} from "../../../types/openai";
+} from "@roast/ai";
 import { calculateLLMCost } from "../shared/costUtils";
 import type { TaskResult } from "../shared/types";
 import { getComprehensiveAnalysisPrompts } from "./prompts";

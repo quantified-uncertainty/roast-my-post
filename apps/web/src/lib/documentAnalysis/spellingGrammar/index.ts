@@ -5,12 +5,14 @@
  * It's used when agentInfo.extendedCapabilityId === "spelling-grammar"
  */
 
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
-import type { Comment } from "../../../types/documentSchema";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
+import type { Comment as AiComment } from "@roast/ai";
+import type { Comment as DbComment } from "@/types/databaseTypes";
 import type { HeliconeSessionConfig } from "@roast/ai";
-import { PluginManager } from "../../analysis-plugins/PluginManager";
-import { PluginType } from "../../analysis-plugins/types/plugin-types";
+import { aiCommentsToDbComments } from "@/lib/typeAdapters";
+import { PluginManager } from "@roast/ai";
+import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
 import { logger } from "../../logger";
 
@@ -43,17 +45,22 @@ export async function analyzeSpellingGrammar(
   });
 
   // Delegate to plugin system
-  const result = await manager.analyzeDocument(document, {
+  const result = await manager.analyzeDocument(document.content, {
     targetHighlights: options.targetHighlights,
   });
 
   // The spelling plugin provides a grade, so we can include it
+  // Filter AI comments and convert to database comments
+  const validAiComments = result.highlights.filter((h): h is AiComment => 
+    !!(h.description && h.highlight && typeof h.isValid === 'boolean')
+  );
+  
   return {
     thinking: result.thinking,
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
-    highlights: result.highlights,
+    highlights: aiCommentsToDbComments(validAiComments) as any,
     tasks: result.tasks,
     jobLogString: result.jobLogString,
   };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma } from "@roast/db";
+import { prisma, type Prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { isAdmin } from "@/lib/auth";
@@ -122,12 +122,12 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the data to match the expected format
-    const evaluations = recentEvaluations.map((evaluation: any) => ({
+    const evaluations = recentEvaluations.map((evaluation) => ({
       id: evaluation.id,
       createdAt: evaluation.createdAt,
       document: evaluation.document,
       agent: evaluation.agent,
-      versions: evaluation.versions.map((version: any) => ({
+      versions: evaluation.versions.map((version) => ({
         id: version.id,
         version: version.version,
         summary: version.summary,

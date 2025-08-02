@@ -61,7 +61,7 @@ const agent = {
 ### Direct API Usage
 
 ```typescript
-import { analyzeWithMultiEpistemicEval } from '@/lib/documentAnalysis/multiEpistemicEval';
+import { analyzeWithMultiEpistemicEval } from '@roast/ai';
 
 const result = await analyzeWithMultiEpistemicEval(document, agent, {
   targetHighlights: 5,

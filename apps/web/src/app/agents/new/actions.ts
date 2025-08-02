@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 
 import { auth } from "@/lib/auth";
 import { AgentModel, agentSchema } from "@/models/Agent";
-import type { Agent, AgentResponse } from "@/types/agentSchema";
+import type { Agent, AgentResponse } from "@roast/ai";
 
 // Setup next-safe-action
 const actionClient = createSafeActionClient();

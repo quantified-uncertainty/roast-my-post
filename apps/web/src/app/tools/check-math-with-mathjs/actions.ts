@@ -1,23 +1,23 @@
 'use server';
 
-import checkMathWithMathJsTool from '@/tools/check-math-with-mathjs';
+import { checkMathWithMathJsTool } from '@roast/ai';
+import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
-export async function checkMathWithMathJs(input: { statement: string; context?: string }) {
+export async function checkMathWithMathJs(text: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error('Not authenticated');
+  }
+
   try {
-    // Use the tool directly server-side with a system context
-    const result = await checkMathWithMathJsTool.run(input, {
-      userId: 'system-ui', // Use a system user for UI operations
-      logger,
-      apiKey: process.env.ROAST_MY_POST_MCP_USER_API_KEY
-    });
-    
-    return { success: true, result };
+    const result = await checkMathWithMathJsTool.execute(
+      { statement: text },
+      { userId: session.user.id, logger }
+    );
+    return result;
   } catch (error) {
-    logger.error('[checkMathWithMathJs] Error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
+    logger.error('Check math with MathJS error:', error);
+    throw error;
   }
 }

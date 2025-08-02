@@ -1,5 +1,5 @@
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 
 export function shouldIncludeGrade(agentInfo: Agent): boolean {
   return agentInfo.providesGrades ?? false;

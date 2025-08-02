@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import extractForecastingClaimsTool from '@/tools/extract-forecasting-claims';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { extractForecastingClaimsTool } from '@roast/ai';
 
 export const POST = createToolRoute(extractForecastingClaimsTool);

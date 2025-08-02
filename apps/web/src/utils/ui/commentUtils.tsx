@@ -1,6 +1,6 @@
 import chroma from "chroma-js";
 
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@/types/databaseTypes";
 
 // Available colors for comments (keeping this for non-evaluation cases)
 export const COMMENT_COLORS = [
@@ -76,7 +76,7 @@ export function sortCommentsByOffset(comments: Comment[]): Comment[] {
  */
 export function getValidAndSortedComments(comments: Comment[]): Comment[] {
   return filterValidComments(comments).sort((a, b) => {
-    return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+    return (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0);
   });
 }
 

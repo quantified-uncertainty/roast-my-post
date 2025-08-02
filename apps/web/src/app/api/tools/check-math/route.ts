@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import CheckMathTool from '@/tools/check-math';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { checkMathTool } from '@roast/ai';
 
-export const POST = createToolRoute(CheckMathTool);
+export const POST = createToolRoute(checkMathTool);

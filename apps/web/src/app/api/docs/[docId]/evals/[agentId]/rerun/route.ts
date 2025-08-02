@@ -16,7 +16,7 @@ export const POST = withSecurity(
     const params = await context.params;
     const { docId, agentId } = params;
     const userId = (await authenticateRequest(req))!;
-    const body = (req as any).validatedBody || {};
+    const body = (req as { validatedBody?: z.infer<typeof rerunEvaluationSchema> }).validatedBody || {};
     const { fromVersion } = body;
 
     try {

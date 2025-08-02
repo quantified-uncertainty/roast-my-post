@@ -2,8 +2,8 @@
 import 'openai/shims/node';
 
 import { analyzeDocument } from "../analyzeDocument";
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 
 // To run: npm test -- --testNamePattern="Comprehensive Analysis E2E"
 describe("Comprehensive Analysis E2E", () => {
@@ -87,13 +87,13 @@ What are your thoughts on AI in education? How can we balance innovation with th
     result.highlights.forEach((highlight, i) => {
       expect(highlight.description).toBeDefined();
       expect(highlight.highlight).toBeDefined();
-      expect(highlight.highlight.startOffset).toBeGreaterThanOrEqual(0);
-      expect(highlight.highlight.endOffset).toBeGreaterThan(highlight.highlight.startOffset);
+      expect(highlight.highlight!.startOffset).toBeGreaterThanOrEqual(0);
+      expect(highlight.highlight!.endOffset).toBeGreaterThan(highlight.highlight!.startOffset);
       
       console.log(`Highlight ${i + 1}: {
-      description: '${highlight.description.slice(0, 50)}...',
+      description: '${highlight.description?.slice(0, 50)}...',
       importance: ${highlight.importance},
-      quotedText: '${highlight.highlight.quotedText.slice(0, 50)}...'
+      quotedText: '${highlight.highlight!.quotedText?.slice(0, 50)}...'
     }`);
     });
 

@@ -1,4 +1,4 @@
-import type { Document } from "./documents";
+import type { Document } from "@roast/ai";
 
 /**
  * Document version information including optional markdownPrepend

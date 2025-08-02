@@ -1,4 +1,4 @@
-import type { Comment, Highlight } from "../../../types/documentSchema";
+import type { Highlight, Comment } from "@/types/databaseTypes";
 import {
   fixOverlappingHighlights,
   highlightsOverlap,
@@ -62,6 +62,7 @@ describe("UI Helper Functions", () => {
       {
         description: "First comment",
         importance: 5,
+        grade: null,
         highlight: {
           startOffset: 10,
           endOffset: 20,
@@ -73,6 +74,7 @@ describe("UI Helper Functions", () => {
       {
         description: "Overlapping comment",
         importance: 5,
+        grade: null,
         highlight: {
           startOffset: 15,
           endOffset: 25,
@@ -84,6 +86,7 @@ describe("UI Helper Functions", () => {
       {
         description: "Separate comment",
         importance: 5,
+        grade: null,
         highlight: {
           startOffset: 30,
           endOffset: 40,

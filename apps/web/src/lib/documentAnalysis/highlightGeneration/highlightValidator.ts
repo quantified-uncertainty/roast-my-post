@@ -1,9 +1,9 @@
-import type { Comment } from "../../../types/documentSchema";
+import type { Comment } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import {
   LineBasedLocator,
   type LineSnippetHighlight,
-} from "@/lib/text-location/line-based";
+} from "@roast/ai/text-location/line-based";
 import type { LineBasedHighlight, RawLLMHighlight } from "./types";
 
 /**
@@ -85,7 +85,6 @@ export async function validateAndConvertHighlights(
             error: highlightError,
           },
           isValid: isHighlightValid,
-          error: highlightError,
         };
         validHighlights.push(processedComment);
       } else {

@@ -4,7 +4,7 @@ import {
   useState,
 } from "react";
 
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import type { AgentReview } from "@/types/evaluationSchema";
 

@@ -111,6 +111,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 For package-specific commands:
 - `pnpm --filter @roast/web <command>` - Run commands in the web app
 - `pnpm --filter @roast/db <command>` - Run commands in the database package
+- `pnpm --filter @roast/ai <command>` - Run commands in the AI package
 - `pnpm --filter @roast/mcp-server <command>` - Run commands in the MCP server
 
 ### Project Structure (Monorepo)
@@ -129,7 +130,16 @@ apps/
 └── mcp-server/            # Model Context Protocol server
 
 internal-packages/
-└── db/                    # Shared database package
+├── ai/                    # Shared AI utilities (@roast/ai)
+│   ├── src/
+│   │   ├── claude/       # Claude API wrapper
+│   │   ├── helicone/     # Cost tracking integration
+│   │   ├── analysis-plugins/ # Plugin system for document analysis
+│   │   ├── document-analysis/ # Analysis workflows
+│   │   ├── tools/        # AI-powered tools (spell check, math check, etc.)
+│   │   └── shared/       # Shared types and utilities
+│   └── package.json
+└── db/                    # Shared database package (@roast/db)
     ├── prisma/
     │   ├── schema.prisma  # Database schema
     │   └── migrations/    # Database migrations

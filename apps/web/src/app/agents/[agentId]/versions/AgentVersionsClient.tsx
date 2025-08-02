@@ -9,7 +9,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/Button";
-import type { Agent, AgentVersion } from "@/types/agentSchema";
+import type { Agent, AgentVersion } from "@roast/ai";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 interface AgentVersionsClientProps {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma } from "@roast/db";
+import { prisma, type Job } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { calculateJobStats } from "@/lib/batch-utils";
 
@@ -61,7 +61,7 @@ export async function GET(
       const jobStats = calculateJobStats(jobs);
       const completedJobs = jobs.filter(job => job.status === "COMPLETED");
       
-      const totalCost = jobs.reduce((sum: number, job: any) => {
+      const totalCost = jobs.reduce((sum: number, job) => {
         if (job.priceInDollars) {
           return sum + (parseFloat(job.priceInDollars.toString()) * 100);
         }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import MarkdownRenderer from "@/components/MarkdownRenderer";
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 import { StatusBadge } from "../components";
 import type { OverviewStats } from "../types";

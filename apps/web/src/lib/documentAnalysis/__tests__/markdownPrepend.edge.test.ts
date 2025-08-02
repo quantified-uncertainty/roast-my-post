@@ -1,7 +1,7 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 // Mock the @roast/ai module
 jest.mock("@roast/ai", () => ({
@@ -11,14 +11,11 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
-}));
-
-// Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
   withTimeout: jest.fn((promise) => promise),
 }));
+
+// withTimeout is now mocked in the main @roast/ai mock above
 
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
@@ -104,10 +101,10 @@ describe("markdownPrepend Edge Cases", () => {
       expect(commentResult.outputs.highlights).toHaveLength(1);
       
       const comment = commentResult.outputs.highlights[0];
-      expect(comment.highlight.isValid).toBe(true);
+      expect(comment.highlight!.isValid).toBe(true);
       
       // The highlight should include content from both prepend and main content
-      expect(comment.highlight.quotedText.length).toBeGreaterThan(0);
+      expect(comment.highlight!.quotedText.length).toBeGreaterThan(0);
     });
 
     test("handles highlight at exact boundary position", async () => {
@@ -162,7 +159,7 @@ describe("markdownPrepend Edge Cases", () => {
       expect(commentResult.outputs.highlights).toHaveLength(1);
       
       const comment = commentResult.outputs.highlights[0];
-      expect(comment.highlight.quotedText).toContain("First content line");
+      expect(comment.highlight!.quotedText).toContain("First content line");
     });
   });
 

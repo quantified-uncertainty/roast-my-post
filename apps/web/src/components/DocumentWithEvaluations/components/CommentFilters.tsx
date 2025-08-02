@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Comment } from '@/types/documentSchema';
+import type { Comment } from '@roast/ai';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 export interface CommentFiltersProps {

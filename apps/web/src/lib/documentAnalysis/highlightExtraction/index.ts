@@ -1,13 +1,13 @@
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
-import type { Document } from "../../../types/documents";
-import type { Comment } from "../../../types/documentSchema";
-import type { LLMMessage } from "../../../types/llm";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@roast/ai";
+import type { LLMMessage } from "@roast/ai";
 import {
   DEFAULT_TEMPERATURE,
   withTimeout,
   HIGHLIGHT_EXTRACTION_TIMEOUT,
-} from "../../../types/openai";
+} from "@roast/ai";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
 import type { Anthropic } from '@anthropic-ai/sdk';
 import { calculateLLMCost } from "../shared/costUtils";

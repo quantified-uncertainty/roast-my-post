@@ -1,11 +1,11 @@
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
-import type { Comment } from "../../../types/documentSchema";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@roast/ai";
 import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
 import { extractUrls } from "./urlExtractor";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 /**
  * Truncate URL for display while keeping it clickable
@@ -254,7 +254,7 @@ function generateLinkHighlights(
   }
 
   // Sort highlights by their position in the document to ensure top-to-bottom order
-  highlights.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+  highlights.sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
 
   // Don't limit highlights - generate one for each analyzed link
   return highlights;

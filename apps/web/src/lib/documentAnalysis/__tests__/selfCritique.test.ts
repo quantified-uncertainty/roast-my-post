@@ -1,5 +1,5 @@
 import { generateSelfCritique } from "../selfCritique";
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 // Mock logger to avoid console output
 jest.mock("../../../lib/logger", () => ({
@@ -19,14 +19,11 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
-  createHeliconeHeaders: jest.fn(() => ({}))
-}));
-
-// Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
+  createHeliconeHeaders: jest.fn(() => ({})),
   withTimeout: jest.fn((promise) => promise),
 }));
+
+// Mock withTimeout - no need to mock the submodule since it's imported from main package
 
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 

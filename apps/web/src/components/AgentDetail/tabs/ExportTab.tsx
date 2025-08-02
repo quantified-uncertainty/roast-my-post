@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/Button";
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 import type { BatchSummary } from "../types";
 

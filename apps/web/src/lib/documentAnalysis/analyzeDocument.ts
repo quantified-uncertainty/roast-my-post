@@ -1,7 +1,7 @@
-import type { Agent } from "../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
-import type { Document } from "../../types/documents";
-import type { Comment } from "../../types/documentSchema";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@roast/ai";
 import { extractHighlightsFromAnalysis } from "./highlightExtraction";
 import { generateComprehensiveAnalysis } from "./comprehensiveAnalysis";
 import { analyzeLinkDocument } from "./linkAnalysis/linkAnalysisWorkflow";
@@ -37,20 +37,22 @@ export async function analyzeDocument(
   // Use dedicated spelling/grammar workflow for spelling-grammar agents
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
     logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
-    return await analyzeSpellingGrammar(document, agentInfo, {
+    const result = await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
       sessionConfig,
       jobId
     });
+    return { ...result, selfCritique: undefined } as any;
   }
   
   if (agentInfo.extendedCapabilityId === "multi-epistemic-eval") {
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
-    return await analyzeWithMultiEpistemicEval(document, agentInfo, {
+    const result = await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
       sessionConfig,
       jobId
     });
+    return { ...result, selfCritique: undefined } as any;
   }
 
   logger.info(
@@ -100,7 +102,7 @@ export async function analyzeDocument(
           highlights: highlightResult.outputs.highlights.map((c) => {
             return {
               title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Highlight",
-              text: c.description,
+              text: c.description || "No description",
             };
           }),
         },

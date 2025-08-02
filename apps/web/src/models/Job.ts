@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import {
   analyzeDocument,
 } from "../lib/documentAnalysis";
-import { Agent } from "../types/agentSchema";
+import { Agent } from "@roast/ai";
 import { ANALYSIS_MODEL } from "@roast/ai";
 import {
   calculateApiCostInDollars,
@@ -524,30 +524,35 @@ export class JobModel {
           let isValid = true;
           let error: string | null = null;
           
-          try {
-            const actualText = documentVersion.content.slice(
-              comment.highlight.startOffset, 
-              comment.highlight.endOffset
-            );
-            
-            if (actualText !== comment.highlight.quotedText) {
-              isValid = false;
-              error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-              logger.warn(`Invalid highlight detected: ${error}`);
-            }
-          } catch (highlightError) {
+          if (!comment.highlight) {
             isValid = false;
-            error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-            logger.warn(`Highlight validation failed: ${error}`);
+            error = "Highlight is missing";
+          } else {
+            try {
+              const actualText = documentVersion.content.slice(
+                comment.highlight.startOffset, 
+                comment.highlight.endOffset
+              );
+              
+              if (actualText !== comment.highlight.quotedText) {
+                isValid = false;
+                error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+                logger.warn(`Invalid highlight detected: ${error}`);
+              }
+            } catch (highlightError) {
+              isValid = false;
+              error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+              logger.warn(`Highlight validation failed: ${error}`);
+            }
           }
 
           // Create highlight with validation status
           const createdHighlight = await prisma.evaluationHighlight.create({
             data: {
-              startOffset: comment.highlight.startOffset,
-              endOffset: comment.highlight.endOffset,
-              quotedText: comment.highlight.quotedText,
-              prefix: comment.highlight.prefix || null,
+              startOffset: comment.highlight!.startOffset,
+              endOffset: comment.highlight!.endOffset,
+              quotedText: comment.highlight!.quotedText,
+              prefix: comment.highlight!.prefix || null,
               isValid,
               error,
             },
@@ -556,7 +561,7 @@ export class JobModel {
           // Create comment linked to highlight
           await prisma.evaluationComment.create({
             data: {
-              description: comment.description,
+              description: comment.description || 'No description',
               importance: comment.importance || null,
               grade: comment.grade || null,
               evaluationVersionId: evaluationVersion.id,

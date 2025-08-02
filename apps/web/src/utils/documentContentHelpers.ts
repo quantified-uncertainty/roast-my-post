@@ -1,4 +1,4 @@
-import type { Document } from "../types/documents";
+import type { Document } from "@roast/ai";
 import type { DocumentWithVersions } from "../types/documentWithVersions";
 import { hasVersions, getMarkdownPrepend } from "../types/documentWithVersions";
 import { generateMarkdownPrepend, countPrependLines, getPrependLength } from "./documentMetadata";

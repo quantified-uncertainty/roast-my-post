@@ -1,7 +1,7 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 
 // Mock the @roast/ai module
@@ -12,15 +12,12 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
-}));
-
-// Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
   withTimeout: jest.fn((promise) => promise),
 }));
 
+// Mock withTimeout from openai types
+// withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
@@ -138,8 +135,8 @@ The structural consistency aids readability throughout the document.
 
       expect(result.outputs.highlights).toHaveLength(2);
       expect(result.outputs.highlights[0].description).toBe("Test Highlight 1. This is the first highlight text");
-      expect(result.outputs.highlights[0].highlight.startOffset).toBeDefined();
-      expect(result.outputs.highlights[0].highlight.endOffset).toBeDefined();
+      expect(result.outputs.highlights[0].highlight!.startOffset).toBeDefined();
+      expect(result.outputs.highlights[0].highlight!.endOffset).toBeDefined();
       expect(result.task.name).toBe("extractHighlightsFromAnalysis");
       expect(result.task.priceInDollars).toBe(0); // Should be free extraction
     });
