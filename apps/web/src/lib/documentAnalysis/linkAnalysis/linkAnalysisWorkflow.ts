@@ -254,7 +254,7 @@ function generateLinkHighlights(
   }
 
   // Sort highlights by their position in the document to ensure top-to-bottom order
-  highlights.sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+  highlights.sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
 
   // Don't limit highlights - generate one for each analyzed link
   return highlights;

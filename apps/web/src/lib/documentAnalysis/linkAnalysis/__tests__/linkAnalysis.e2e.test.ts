@@ -95,7 +95,7 @@ describe("Link Analysis End-to-End Tests", () => {
         // Log comment details
         console.log("💬 Comments with grades:");
         result.highlights.forEach((comment, commentIndex) => {
-          console.log(`  ${commentIndex + 1}. ${comment.description.substring(0, 50)}... (Grade: ${comment.grade}/100)`);
+          console.log(`  ${commentIndex + 1}. ${comment.description?.substring(0, 50)}... (Grade: ${comment.grade}/100)`);
         });
 
         // Grade validation for each comment if we have grade range expectations
@@ -113,9 +113,9 @@ describe("Link Analysis End-to-End Tests", () => {
 
       // Status validation based on expected link status
       if (testCase.expectedLinkStatus === "working") {
-        expect(result.highlights.some(c => c.description.includes("✅"))).toBe(true);
+        expect(result.highlights.some(c => c.description?.includes("✅"))).toBe(true);
       } else if (testCase.expectedLinkStatus === "broken") {
-        expect(result.highlights.some(c => c.description.includes("❌"))).toBe(true);
+        expect(result.highlights.some(c => c.description?.includes("❌"))).toBe(true);
       }
 
       // Document-level grade validation

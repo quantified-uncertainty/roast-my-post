@@ -76,7 +76,7 @@ export function sortCommentsByOffset(comments: Comment[]): Comment[] {
  */
 export function getValidAndSortedComments(comments: Comment[]): Comment[] {
   return filterValidComments(comments).sort((a, b) => {
-    return (a.highlight.startOffset || 0) - (b.highlight.startOffset || 0);
+    return (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0);
   });
 }
 

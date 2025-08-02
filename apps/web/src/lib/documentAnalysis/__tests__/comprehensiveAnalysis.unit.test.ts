@@ -138,8 +138,8 @@ The structural consistency aids readability throughout the document.
 
       expect(result.outputs.highlights).toHaveLength(2);
       expect(result.outputs.highlights[0].description).toBe("Test Highlight 1. This is the first highlight text");
-      expect(result.outputs.highlights[0].highlight.startOffset).toBeDefined();
-      expect(result.outputs.highlights[0].highlight.endOffset).toBeDefined();
+      expect(result.outputs.highlights[0].highlight!.startOffset).toBeDefined();
+      expect(result.outputs.highlights[0].highlight!.endOffset).toBeDefined();
       expect(result.task.name).toBe("extractHighlightsFromAnalysis");
       expect(result.task.priceInDollars).toBe(0); // Should be free extraction
     });

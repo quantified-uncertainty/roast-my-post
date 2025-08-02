@@ -139,11 +139,11 @@ And some more content on the final line.`;
     const [comment1, comment2] = commentResult.outputs.highlights;
 
     // First comment should highlight "This is the main content"
-    expect(comment1.highlight.quotedText).toContain("This is the main content");
-    expect(comment1.highlight.startOffset).toBeGreaterThan(0); // Should account for prepend
+    expect(comment1.highlight!.quotedText).toContain("This is the main content");
+    expect(comment1.highlight!.startOffset).toBeGreaterThan(0); // Should account for prepend
 
     // Second comment should highlight the link
-    expect(comment2.highlight.quotedText).toContain("https://example.com");
+    expect(comment2.highlight!.quotedText).toContain("https://example.com");
   });
 
   test("link analysis workflow correctly handles markdownPrepend", async () => {

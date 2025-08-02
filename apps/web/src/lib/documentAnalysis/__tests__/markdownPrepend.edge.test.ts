@@ -104,10 +104,10 @@ describe("markdownPrepend Edge Cases", () => {
       expect(commentResult.outputs.highlights).toHaveLength(1);
       
       const comment = commentResult.outputs.highlights[0];
-      expect(comment.highlight.isValid).toBe(true);
+      expect(comment.highlight!.isValid).toBe(true);
       
       // The highlight should include content from both prepend and main content
-      expect(comment.highlight.quotedText.length).toBeGreaterThan(0);
+      expect(comment.highlight!.quotedText!.length).toBeGreaterThan(0);
     });
 
     test("handles highlight at exact boundary position", async () => {

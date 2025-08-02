@@ -154,14 +154,14 @@ export function applyHighlightsToContainer(
 
   // Filter valid highlights and sort by start offset
   const validHighlights = highlights
-    .filter((comment) => comment.highlight.isValid && comment.isValid)
-    .sort((a, b) => a.highlight.startOffset - b.highlight.startOffset);
+    .filter((comment) => comment.highlight?.isValid && comment.isValid)
+    .sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
 
   // Apply valid highlights
 
   for (const comment of validHighlights) {
-    const { quotedText } = comment.highlight;
-    const description = comment.description;
+    const { quotedText } = comment.highlight!;
+    const description = comment.description || 'No description';
     const color = colorMap[description] || "#ffeb3b";
 
     try {
