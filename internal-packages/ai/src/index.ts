@@ -12,6 +12,9 @@ export * from './utils/anthropic';
 export * from './utils/retryUtils';
 export * from './types';
 
+// Configuration
+export { initializeAI, type AIConfig } from './config';
+
 // Tools system
 export * from './tools';
 

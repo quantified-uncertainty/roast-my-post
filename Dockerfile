@@ -29,8 +29,9 @@ COPY . .
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DOCKER_BUILD=true
 # Provide dummy values for build-time validation
-ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"  
 ENV AUTH_SECRET="dummy-auth-secret-for-build"
 ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
 

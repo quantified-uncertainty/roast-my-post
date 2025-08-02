@@ -1,11 +1,13 @@
 /** @type {import('next').NextConfig} */
 
-// Conditionally load PrismaPlugin only if available (for Docker builds)
+// Conditionally load PrismaPlugin only if not in Docker build
 let PrismaPlugin;
-try {
-  PrismaPlugin = require('@prisma/nextjs-monorepo-workaround-plugin').PrismaPlugin;
-} catch (e) {
-  console.warn('PrismaPlugin not available, skipping (Docker build)');
+if (process.env.DOCKER_BUILD !== 'true') {
+  try {
+    PrismaPlugin = require('@prisma/nextjs-monorepo-workaround-plugin').PrismaPlugin;
+  } catch (e) {
+    console.warn('PrismaPlugin not available, skipping');
+  }
 }
 
 const securityHeaders = [

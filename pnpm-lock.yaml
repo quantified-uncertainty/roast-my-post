@@ -316,9 +316,6 @@ importers:
       '@roast/db':
         specifier: workspace:*
         version: link:../db
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
       mathjs:
         specifier: ^14.0.1
         version: 14.6.0

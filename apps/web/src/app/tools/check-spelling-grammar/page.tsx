@@ -4,12 +4,18 @@ import { useState } from 'react';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import { checkSpellingGrammarTool } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import type { SpellingError } from '@/types/toolResults';
 
 const checkToolPath = checkSpellingGrammarTool.config.path;
 
 export default function CheckSpellingGrammarPage() {
   const [text, setText] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{
+    errors: SpellingError[];
+    grade?: { overallGrade: string; errorCount: number; wordCount: number; reasoning?: string };
+    summary?: string;
+    comments?: Array<{ text: string }>;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

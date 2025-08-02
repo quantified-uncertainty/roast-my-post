@@ -1,43 +1,47 @@
-// Load environment variables from .env.local first, then .env
-import * as dotenv from "dotenv";
-import * as path from "path";
-
-// Try to load .env.local first
-const envLocalPath = path.join(process.cwd(), ".env.local");
-const localResult = dotenv.config({ path: envLocalPath });
-
-// If .env.local doesn't exist or has errors, try .env
-if (localResult.error) {
-  dotenv.config(); // This loads from default .env
-}
-
 import OpenAI from "openai";
-
 import Anthropic from "@anthropic-ai/sdk";
+import { 
+  getRequiredConfig, 
+  getOptionalConfig,
+  DEFAULT_HELICONE_MAX_AGE,
+  DEFAULT_HELICONE_MAX_SIZE,
+  DEFAULT_SEARCH_MODEL,
+  DEFAULT_ANALYSIS_MODEL
+} from "../config";
 
-// Read environment variables lazily to allow dotenv loading
+// Configuration accessors using the centralized config
 function getAnthropicApiKey() {
-  return process.env.ANTHROPIC_API_KEY;
+  try {
+    return getRequiredConfig('anthropicApiKey');
+  } catch {
+    // For backwards compatibility, fall back to env var if config not initialized
+    return process.env.ANTHROPIC_API_KEY;
+  }
 }
 
 function getHeliconeApiKey() {
-  return process.env.HELICONE_API_KEY;
+  return getOptionalConfig('heliconeApiKey', process.env.HELICONE_API_KEY);
 }
 
 function isHeliconeEnabled() {
-  return process.env.HELICONE_CACHE_ENABLED === "true";
+  return getOptionalConfig('heliconeEnabled', process.env.HELICONE_CACHE_ENABLED === "true");
 }
 
 function getHeliconeMaxAge() {
-  return process.env.HELICONE_CACHE_MAX_AGE || "3600";
+  return getOptionalConfig('heliconeMaxAge', process.env.HELICONE_CACHE_MAX_AGE || DEFAULT_HELICONE_MAX_AGE);
 }
 
 function getHeliconeMaxSize() {
-  return process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || "20";
+  return getOptionalConfig('heliconeMaxSize', process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || DEFAULT_HELICONE_MAX_SIZE);
 }
 
 function getOpenRouterApiKey() {
-  return process.env.OPENROUTER_API_KEY;
+  try {
+    return getRequiredConfig('openRouterApiKey');
+  } catch {
+    // For backwards compatibility, fall back to env var if config not initialized
+    return process.env.OPENROUTER_API_KEY;
+  }
 }
 
 // Validate API keys only when actually creating clients (not at import time)
@@ -59,8 +63,8 @@ function validateOpenRouterKey() {
   }
 }
 
-export const SEARCH_MODEL = process.env.SEARCH_MODEL || "openai/gpt-4.1"; // For search tasks still using OpenRouter
-export const ANALYSIS_MODEL = process.env.ANALYSIS_MODEL || "claude-sonnet-4-20250514"; // Using Anthropic directly
+export const SEARCH_MODEL = getOptionalConfig('searchModel', process.env.SEARCH_MODEL || DEFAULT_SEARCH_MODEL);
+export const ANALYSIS_MODEL = getOptionalConfig('analysisModel', process.env.ANALYSIS_MODEL || DEFAULT_ANALYSIS_MODEL);
 
 // Lazy Anthropic client factory for analysis tasks with Helicone integration
 export function createAnthropicClient(additionalHeaders?: Record<string, string>): Anthropic {
