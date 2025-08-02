@@ -120,8 +120,8 @@ Some text without math to test routing.`,
     if (result.highlights.length > 0) {
       expect(result.highlights[0]).toHaveProperty('description');
       expect(result.highlights[0]).toHaveProperty('highlight');
-      expect(result.highlights[0].highlight).toHaveProperty('startOffset');
-      expect(result.highlights[0].highlight).toHaveProperty('endOffset');
+      expect((result.highlights[0] as any).highlight).toHaveProperty('startOffset');
+      expect((result.highlights[0] as any).highlight).toHaveProperty('endOffset');
     }
     
     // Verify task tracking

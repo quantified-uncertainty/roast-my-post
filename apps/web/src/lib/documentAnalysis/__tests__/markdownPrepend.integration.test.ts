@@ -13,15 +13,12 @@ jest.mock("@roast/ai", () => ({
     routing: "claude-3-haiku-20240307"
   },
   createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock
-}));
-
-// Mock withTimeout from openai types
-jest.mock("../../../types/openai", () => ({
-  ...jest.requireActual("../../../types/openai"),
+  setupClaudeToolMock: jest.requireActual("@roast/ai").setupClaudeToolMock,
   withTimeout: jest.fn((promise) => promise),
 }));
 
+// Mock withTimeout from openai types
+// withTimeout is now mocked in the main @roast/ai mock
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator

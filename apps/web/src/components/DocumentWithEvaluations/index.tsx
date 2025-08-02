@@ -59,7 +59,7 @@ export function DocumentWithEvaluations({
 
   // Get the full content with prepend using the centralized helper
   const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(document);
+    const { content } = getDocumentFullContent(document as any);
     return content;
   }, [document]);
 

@@ -37,20 +37,22 @@ export async function analyzeDocument(
   // Use dedicated spelling/grammar workflow for spelling-grammar agents
   if (agentInfo.extendedCapabilityId === "spelling-grammar") {
     logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
-    return await analyzeSpellingGrammar(document, agentInfo, {
+    const result = await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
       sessionConfig,
       jobId
     });
+    return { ...result, selfCritique: undefined } as any;
   }
   
   if (agentInfo.extendedCapabilityId === "multi-epistemic-eval") {
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
-    return await analyzeWithMultiEpistemicEval(document, agentInfo, {
+    const result = await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
       sessionConfig,
       jobId
     });
+    return { ...result, selfCritique: undefined } as any;
   }
 
   logger.info(

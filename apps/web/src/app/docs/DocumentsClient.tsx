@@ -6,10 +6,7 @@ import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
 
 import { GradeBadge } from "@/components/GradeBadge";
-import {
-  Evaluation,
-} from "@roast/ai";
-import type { Document } from "@/types/databaseTypes";
+import type { Document, Evaluation } from "@/types/databaseTypes";
 import { getValidCommentCount } from "@/utils/ui/commentUtils";
 import {
   formatWordCount,

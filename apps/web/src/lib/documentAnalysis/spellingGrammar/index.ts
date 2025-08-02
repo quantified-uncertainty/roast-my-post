@@ -7,8 +7,10 @@
 
 import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
-import type { Comment } from "@/types/databaseTypes";
+import type { Comment as AiComment } from "@roast/ai";
+import type { Comment as DbComment } from "@/types/databaseTypes";
 import type { HeliconeSessionConfig } from "@roast/ai";
+import { aiCommentsToDbComments } from "@/lib/typeAdapters";
 import { PluginManager } from "@roast/ai";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
@@ -48,14 +50,17 @@ export async function analyzeSpellingGrammar(
   });
 
   // The spelling plugin provides a grade, so we can include it
+  // Filter AI comments and convert to database comments
+  const validAiComments = result.highlights.filter((h): h is AiComment => 
+    !!(h.description && h.highlight && typeof h.isValid === 'boolean')
+  );
+  
   return {
     thinking: result.thinking,
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
-    highlights: result.highlights.filter((h): h is Comment => 
-      !!(h.description && h.highlight && typeof h.isValid === 'boolean')
-    ),
+    highlights: aiCommentsToDbComments(validAiComments) as any,
     tasks: result.tasks,
     jobLogString: result.jobLogString,
   };

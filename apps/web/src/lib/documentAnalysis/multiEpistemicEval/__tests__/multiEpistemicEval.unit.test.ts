@@ -252,7 +252,7 @@ describe('multiEpistemicEval', () => {
 
     // Check highlights were collected from plugins
     expect(result.highlights).toHaveLength(3);
-    expect(result.highlights[0].description).toBe('Test error 1');
+    expect((result.highlights[0] as any).description).toBe('Test error 1');
     
     // Check tasks are properly recorded
     expect(result.tasks).toHaveLength(1); // Just Plugin analysis now

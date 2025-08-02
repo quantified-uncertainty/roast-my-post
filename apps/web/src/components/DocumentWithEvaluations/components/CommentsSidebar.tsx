@@ -78,11 +78,13 @@ export function CommentsSidebar({
                       <div className="flex shrink-0 items-center gap-2">
                         {hasGradeInstructions && (
                           <>
-                            {comment.grade !== undefined &&
+                            {comment.grade !== null &&
+                              comment.grade !== undefined &&
                               comment.grade > 70 && (
                                 <CheckCircleIcon className="h-5 w-5 text-green-500 opacity-40" />
                               )}
-                            {comment.grade !== undefined &&
+                            {comment.grade !== null &&
+                              comment.grade !== undefined &&
                               comment.grade < 30 && (
                                 <XCircleIcon className="h-5 w-5 text-red-500 opacity-40" />
                               )}
@@ -122,7 +124,7 @@ export function CommentsSidebar({
                             Source: <span className="font-medium">{comment.source}</span>
                           </span>
                         )}
-                        {comment.grade !== undefined && (
+                        {comment.grade != null && (
                           <span className="mr-4">
                             Grade:{" "}
                             <GradeBadge
@@ -132,7 +134,7 @@ export function CommentsSidebar({
                             />
                           </span>
                         )}
-                        {comment.importance !== undefined && (
+                        {comment.importance != null && (
                           <span>
                             Importance:{" "}
                             <span>
