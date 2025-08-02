@@ -162,7 +162,7 @@ describe("markdownPrepend Edge Cases", () => {
       expect(commentResult.outputs.highlights).toHaveLength(1);
       
       const comment = commentResult.outputs.highlights[0];
-      expect(comment.highlight.quotedText).toContain("First content line");
+      expect(comment.highlight!.quotedText).toContain("First content line");
     });
   });
 

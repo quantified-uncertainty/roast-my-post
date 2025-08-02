@@ -47,9 +47,9 @@ export class StandardCommentBuilder {
       description,
       isValid: true,
       highlight: {
-        startOffset: location.startOffset,
-        endOffset: location.endOffset,
-        quotedText: location.quotedText,
+        startOffset: location.startOffset ?? 0,
+        endOffset: location.endOffset ?? 0,
+        quotedText: location.quotedText ?? '',
         isValid: true,
         prefix: (location as any).prefix,
       },

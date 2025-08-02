@@ -88,7 +88,7 @@ What are your thoughts on AI in education? How can we balance innovation with th
       expect(highlight.description).toBeDefined();
       expect(highlight.highlight).toBeDefined();
       expect(highlight.highlight!.startOffset).toBeGreaterThanOrEqual(0);
-      expect(highlight.highlight!.endOffset).toBeGreaterThan(highlight.highlight!.startOffset);
+      expect(highlight.highlight!.endOffset!).toBeGreaterThan(highlight.highlight!.startOffset!);
       
       console.log(`Highlight ${i + 1}: {
       description: '${highlight.description?.slice(0, 50)}...',

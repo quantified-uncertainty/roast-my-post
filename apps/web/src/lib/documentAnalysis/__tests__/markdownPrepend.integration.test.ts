@@ -194,7 +194,7 @@ And some more content on the final line.`;
       const linkComment = result.highlights[0];
       // The offset should account for the prepend
       const { prependCharCount } = getDocumentFullContent(mockDocument);
-      expect(linkComment.highlight.startOffset).toBeGreaterThanOrEqual(prependCharCount);
+      expect(linkComment.highlight!.startOffset).toBeGreaterThanOrEqual(prependCharCount);
     }
   });
 

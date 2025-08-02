@@ -37,10 +37,10 @@ export interface Comment {
     endLine?: number;
     startChar?: number;
     endChar?: number;
-    startOffset?: number;
-    endOffset?: number;
-    quotedText?: string;
-    isValid?: boolean;
+    startOffset: number;      // Required to match database schema
+    endOffset: number;        // Required to match database schema
+    quotedText: string;       // Required to match database schema
+    isValid: boolean;         // Required to match database schema
     prefix?: string;
     error?: string;
   };

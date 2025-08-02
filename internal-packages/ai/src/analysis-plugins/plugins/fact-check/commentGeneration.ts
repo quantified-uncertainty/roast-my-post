@@ -18,8 +18,8 @@ export function generateFactCheckComments(
   const comment: Comment = {
     description: content,
     highlight: {
-      startOffset: location.startOffset,
-      endOffset: location.endOffset,
+      startOffset: location.startOffset ?? 0,
+      endOffset: location.endOffset ?? 0,
       quotedText: fact.originalText,
       isValid: true
     },
