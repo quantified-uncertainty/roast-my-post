@@ -2,8 +2,8 @@ import { nanoid } from "nanoid";
 
 import { prisma } from "@roast/db";
 import {
-  DocumentSchema,
-} from "@roast/ai";
+  DocumentValidationSchema,
+} from "@/types/validationSchemas";
 import type { Document } from "@/types/databaseTypes";
 import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";

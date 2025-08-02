@@ -35,13 +35,13 @@ export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManage
 
 // Document and agent types (avoid conflicts with existing exports)
 export * from './types/agentSchema';
-export * from './types/documentSchema';
 export type { 
   Document, 
   DocumentsCollection,
   RawDocument, 
   RawDocumentReview,
   RawDocumentsCollection,
+  Evaluation,
   transformDocument,
   transformDocumentsCollection
 } from './types/documents';

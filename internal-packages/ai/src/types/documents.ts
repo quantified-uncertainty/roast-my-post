@@ -1,8 +1,29 @@
 // Document type definitions
 import type {
   Comment,
-  Evaluation,
-} from "./documentSchema";
+} from "../shared/types";
+
+// Domain evaluation type (without database-specific fields)
+export interface Evaluation {
+  agentId: string;
+  agent: {
+    id: string;
+    name: string;
+    version: string;
+    description: string;
+    primaryInstructions?: string;
+    selfCritiqueInstructions?: string;
+    providesGrades?: boolean;
+  };
+  comments: Comment[];
+  priceInDollars: number;
+  createdAt: Date;
+  thinking: string;
+  summary: string;
+  grade: number | null;
+  analysis?: string;
+  selfCritique?: string;
+}
 
 // Raw types (matching JSON structure)
 export interface RawDocumentReview {

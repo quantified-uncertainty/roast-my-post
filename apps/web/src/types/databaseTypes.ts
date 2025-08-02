@@ -25,3 +25,95 @@ export interface Comment extends BaseComment {
   agentId?: string;
   reasoning?: string;
 }
+
+// Database Evaluation type that includes all the database-specific fields
+export interface Evaluation {
+  id: string;
+  agentId: string;
+  agent: {
+    id: string;
+    name: string;
+    version: string;
+    description: string;
+    primaryInstructions?: string;
+    selfCritiqueInstructions?: string;
+    providesGrades?: boolean;
+  };
+  comments: Comment[];
+  priceInDollars: number;
+  createdAt: Date;
+  thinking: string;
+  summary: string;
+  grade: number | null;
+  analysis?: string;
+  selfCritique?: string;
+  // Database-specific fields
+  versions?: Array<{
+    id: string;
+    version: number;
+    summary: string;
+    analysis?: string;
+    grade?: number;
+    selfCritique?: string;
+    createdAt: Date;
+    comments?: Array<{
+      id: string;
+      description: string;
+      importance: number | null;
+      grade: number | null;
+      highlight?: {
+        id: string;
+        startOffset: number;
+        endOffset: number;
+        quotedText: string;
+        prefix?: string;
+        isValid: boolean;
+        error?: string;
+      };
+      header?: string | null;
+      level?: string | null;
+      source?: string | null;
+      metadata?: Record<string, any> | null;
+    }>;
+    job?: {
+      id: string;
+      status: string;
+      priceInDollars: number;
+      durationInSeconds?: number;
+      tasks?: Array<{
+        id: string;
+        name: string;
+        modelName: string;
+        priceInDollars: number;
+        timeInSeconds: number;
+        log: string;
+      }>;
+    };
+  }>;
+  jobs?: Array<{
+    id: string;
+    status: string;
+    createdAt: Date;
+    startedAt?: Date;
+    completedAt?: Date;
+    priceInDollars?: number;
+    durationInSeconds?: number;
+    error?: string;
+  }>;
+  isStale?: boolean;
+}
+
+// Database Highlight type
+export interface Highlight {
+  id?: string;
+  startLine?: number;
+  endLine?: number;
+  startChar?: number;
+  endChar?: number;
+  startOffset: number;
+  endOffset: number;
+  quotedText: string;
+  isValid: boolean;
+  prefix?: string;
+  error?: string;
+}
