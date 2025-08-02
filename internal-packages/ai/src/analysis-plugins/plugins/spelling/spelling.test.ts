@@ -1,16 +1,16 @@
 // Jest test file
 import { SpellingAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
-import { checkSpellingGrammarTool } from '@/tools/check-spelling-grammar';
-import * as conventionDetector from '@/tools/detect-language-convention/conventionDetector';
-import * as grading from '@/tools/check-spelling-grammar/grading';
+import { checkSpellingGrammarTool } from '../../../tools/check-spelling-grammar';
+import * as conventionDetector from '../../../tools/detect-language-convention/conventionDetector';
+import * as grading from '../../../tools/check-spelling-grammar/grading';
 
-jest.mock('@/tools/check-spelling-grammar', () => ({
+jest.mock('../../../tools/check-spelling-grammar', () => ({
   checkSpellingGrammarTool: {
     execute: jest.fn()
   }
 }));
-jest.mock('@/lib/logger', () => ({
+jest.mock('../../../shared/logger', () => ({
   logger: {
     info: jest.fn(),
     debug: jest.fn(),
@@ -20,8 +20,8 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // Mock convention detector and grading modules
-jest.mock('@/tools/detect-language-convention/conventionDetector');
-jest.mock('@/tools/check-spelling-grammar/grading');
+jest.mock('../../../tools/detect-language-convention/conventionDetector');
+jest.mock('../../../tools/check-spelling-grammar/grading');
 
 describe('SpellingAnalyzerJob', () => {
   beforeEach(() => {

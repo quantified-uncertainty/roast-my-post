@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { extractMathExpressionsTool } from './index';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 import { setupClaudeToolMock } from '@roast/ai';
 
 // Mock Claude wrapper

@@ -1233,7 +1233,7 @@ const WORD_FREQUENCY_WEIGHTS: Record<string, number> = {
   airplanes: 0.8,
 };
 
-import type { LanguageConvention } from '@/types/languageConvention';
+import type { LanguageConvention } from '../../shared/types';
 
 export interface ConventionDetectionResult {
   convention: LanguageConvention;

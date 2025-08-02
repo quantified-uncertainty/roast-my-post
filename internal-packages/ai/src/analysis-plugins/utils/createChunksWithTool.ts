@@ -2,11 +2,11 @@
  * Wrapper to use the document-chunker tool for creating chunks in the plugin system
  */
 
-import documentChunkerTool from '@/tools/document-chunker';
-import type { DocumentChunkerInput } from '@/tools/document-chunker';
+import documentChunkerTool from '../../tools/document-chunker';
+import type { DocumentChunkerInput } from '../../tools/document-chunker';
 import { TextChunk } from '../TextChunk';
-import { LocationUtils } from '../../documentAnalysis/utils/LocationUtils';
-import { logger } from '../../logger';
+import { LocationUtils } from '../../utils/LocationUtils';
+import { logger } from '../../shared/logger';
 
 export interface ChunkingOptions {
   maxChunkSize?: number;
@@ -69,7 +69,7 @@ export async function createChunksWithTool(
     logger.error('Failed to create chunks with tool, falling back to simple chunking', error);
     
     // Fallback to the original simple chunking
-    const { createChunks } = await import('../TextChunk');
+    const { createChunks } = await import('../TextChunk.js');
     return createChunks(text, {
       chunkSize: options.chunkSize || options.maxChunkSize,
       chunkByParagraphs: options.chunkByParagraphs,

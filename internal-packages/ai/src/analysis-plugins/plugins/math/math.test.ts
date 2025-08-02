@@ -1,22 +1,22 @@
 // Jest test file
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
-import { extractMathExpressionsTool } from '@/tools/extract-math-expressions';
-import { checkMathHybridTool } from '@/tools/check-math-hybrid';
+import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';
+import { checkMathHybridTool } from '../../../tools/check-math-hybrid';
 
-jest.mock('@/tools/extract-math-expressions', () => ({
+jest.mock('../../../tools/extract-math-expressions', () => ({
   extractMathExpressionsTool: {
     execute: jest.fn()
   }
 }));
 
-jest.mock('@/tools/check-math-hybrid', () => ({
+jest.mock('../../../tools/check-math-hybrid', () => ({
   checkMathHybridTool: {
     execute: jest.fn()
   }
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock('../../../shared/logger', () => ({
   logger: {
     info: jest.fn(),
     debug: jest.fn(),
@@ -159,7 +159,7 @@ describe('MathAnalyzerJob', () => {
       expect(result.summary).toContain('Hybrid verification found 1 issue');
       expect(result.comments).toHaveLength(1); // Only errors create comments
       // Check that at least one comment contains the correction
-      const hasCorrection = result.comments.some(c => c.description.includes('5 → 4') || c.description.includes('5</span> → <span'));
+      const hasCorrection = result.comments.some(c => (c.description || '').includes('5 → 4') || (c.description || '').includes('5</span> → <span'));
       expect(hasCorrection).toBe(true);
       expect(result.cost).toBe(0); // No cost tracking without llmInteraction
     }, 10000); // Increase timeout

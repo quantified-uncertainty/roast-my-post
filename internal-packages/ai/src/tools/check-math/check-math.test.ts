@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import CheckMathTool from './index';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 import { createMockLLMInteraction } from '@roast/ai';
 import { setupClaudeToolMock } from '@roast/ai';
 

@@ -72,7 +72,7 @@ In conclusion, always proofread you're work before submitting it.
     expect(result.comments.length).toBeGreaterThan(0);
 
     // Should identify some of the obvious errors
-    const commentTexts = result.comments.map(c => c.description.toLowerCase());
+    const commentTexts = result.comments.map(c => (c.description || '').toLowerCase());
     
     // Check for some specific errors we know are in the text
     const hasSpellingErrors = commentTexts.some(text => 

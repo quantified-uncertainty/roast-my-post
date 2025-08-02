@@ -2,7 +2,7 @@
  * Enhanced error categorization for mathematical errors
  */
 
-import type { MathErrorType, MathSeverity } from '@/tools/shared/math-schemas';
+import type { MathErrorType, MathSeverity } from '../shared/math-schemas';
 
 export interface ErrorPattern {
   pattern: RegExp | string[];

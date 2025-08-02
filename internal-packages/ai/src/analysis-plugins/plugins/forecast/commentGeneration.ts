@@ -1,6 +1,6 @@
-import type { ExtractedForecast } from "@/tools/extract-forecasting-claims";
+import type { ExtractedForecast } from "../../../tools/extract-forecasting-claims";
 
-import type { ForecasterOutput } from "@/tools/forecaster";
+import type { ForecasterOutput } from "../../../tools/forecaster";
 import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from "../../utils/comment-styles";
 
 interface ForecastWithPrediction {

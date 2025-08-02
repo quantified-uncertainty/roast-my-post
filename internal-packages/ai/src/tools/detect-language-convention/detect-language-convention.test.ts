@@ -1,5 +1,5 @@
 import { detectLanguageConventionTool } from './index';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 
 describe('DetectLanguageConventionTool', () => {
   const mockContext = {

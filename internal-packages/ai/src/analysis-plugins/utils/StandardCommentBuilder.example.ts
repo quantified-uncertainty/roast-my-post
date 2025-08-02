@@ -3,7 +3,7 @@
  */
 
 import { StandardCommentBuilder } from './StandardCommentBuilder';
-import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { DocumentLocation } from '../../shared/types';
 
 // Example 1: Spelling Plugin
 function createSpellingComment(error: any, location: DocumentLocation) {

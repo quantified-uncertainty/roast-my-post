@@ -3,8 +3,8 @@ import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '@roast/ai';
 import { sessionContext } from '@roast/ai';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@roast/ai';
-import { generateCacheSeed } from '@/tools/shared/cache-utils';
-import type { MathErrorType, MathSeverity } from '@/tools/shared/math-schemas';
+import { generateCacheSeed } from '../shared/cache-utils';
+import type { MathErrorType, MathSeverity } from '../shared/math-schemas';
 
 export interface ExtractedMathExpression {
   originalText: string;

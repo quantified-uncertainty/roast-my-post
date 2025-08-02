@@ -4,7 +4,7 @@
 
 import { Finding } from '../types';
 import { TextChunk } from '../TextChunk';
-import { LocationUtils } from '../../documentAnalysis/utils/LocationUtils';
+import { LocationUtils } from '../../utils/LocationUtils';
 
 export class FindingBuilder {
   private finding: Partial<Finding> = {};

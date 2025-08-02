@@ -3,9 +3,9 @@ import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '@roast/ai';
 import { sessionContext } from '@roast/ai';
 import { createHeliconeHeaders, type HeliconeSessionConfig } from '@roast/ai';
-import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import { generateCacheSeed } from '../shared/cache-utils';
 import { detectLanguageConventionTool } from '../detect-language-convention';
-import type { LanguageConvention, LanguageConventionOption } from '@/types/languageConvention';
+import type { LanguageConvention, LanguageConventionOption } from '../../shared/types';
 
 export interface SpellingGrammarError {
   text: string;

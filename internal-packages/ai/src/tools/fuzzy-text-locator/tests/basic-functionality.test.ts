@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import textLocationFinderTool from '../index';
 import type { TextLocationFinderInput } from '../index';
-import { logger } from '@/lib/logger';
+import { logger } from '../../../shared/logger';
 import { exactSearch } from '../exactSearch';
 import { uFuzzySearch } from '../uFuzzySearch';
 import { convertLLMResultToLocation, generateLLMSearchPrompts } from "../llmSearch";
-import { LineBasedLocator } from "@/lib/text-location/line-based";
+import { LineBasedLocator } from "../../../text-location/line-based";
 
 describe('Fuzzy Text Locator - Basic Functionality', () => {
   const context = { userId: 'test-user', logger };

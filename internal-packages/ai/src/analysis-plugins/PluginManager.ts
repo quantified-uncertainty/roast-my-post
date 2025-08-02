@@ -7,6 +7,7 @@
 
 // Document and Comment types are passed as parameters to avoid circular dependencies
 import type { LLMInteraction } from "./types";
+import type { Comment } from "../shared/types";
 import { sessionContext } from "@roast/ai";
 import type { HeliconeSessionConfig } from "@roast/ai";
 import { logger } from "../shared/logger";
@@ -627,9 +628,13 @@ export class PluginManager {
   private deduplicateHighlights(highlights: Comment[]): Comment[] {
     if (highlights.length <= 1) return highlights;
 
+    // Filter out comments without highlights first
+    const withHighlights = highlights.filter(h => h.highlight && h.highlight.startOffset !== undefined);
+    if (withHighlights.length <= 1) return withHighlights;
+
     // Sort by start offset
-    const sorted = [...highlights].sort(
-      (a, b) => a.highlight.startOffset - b.highlight.startOffset
+    const sorted = [...withHighlights].sort(
+      (a, b) => (a.highlight!.startOffset!) - (b.highlight!.startOffset!)
     );
 
     const unique: Comment[] = [];
@@ -637,10 +642,10 @@ export class PluginManager {
     for (const highlight of sorted) {
       // Check if this highlight overlaps with any existing unique highlight
       const overlaps = unique.some((existing) => {
-        const existingStart = existing.highlight.startOffset;
-        const existingEnd = existing.highlight.endOffset;
-        const currentStart = highlight.highlight.startOffset;
-        const currentEnd = highlight.highlight.endOffset;
+        const existingStart = existing.highlight!.startOffset!;
+        const existingEnd = existing.highlight!.endOffset!;
+        const currentStart = highlight.highlight!.startOffset!;
+        const currentEnd = highlight.highlight!.endOffset!;
 
         // Check for overlap (fixed off-by-one error)
         return (

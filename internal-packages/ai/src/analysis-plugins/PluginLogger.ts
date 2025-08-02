@@ -5,7 +5,7 @@
  * with the Job system to persist logs for debugging and monitoring.
  */
 
-import { logger, type LogContext } from "../logger";
+import { logger, type LogContext } from "../shared/logger";
 
 export interface PluginLogEntry {
   timestamp: string;

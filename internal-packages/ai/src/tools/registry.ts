@@ -1,16 +1,16 @@
 import { Tool } from './base/Tool';
-import ForecasterTool from './forecaster';
-import FactCheckerTool from './fact-checker';
-import CheckMathTool from './check-math';
-import CheckMathWithMathJsTool from './check-math-with-mathjs';
-import CheckMathHybridTool from './check-math-hybrid';
-import ExtractForecastingClaimsTool from './extract-forecasting-claims';
-import PerplexityResearchTool from './perplexity-research';
-import ExtractFactualClaimsTool from './extract-factual-claims';
-import CheckSpellingGrammarTool from './check-spelling-grammar';
-import ExtractMathExpressionsTool from './extract-math-expressions';
-import DocumentChunkerTool from './document-chunker';
-import FuzzyTextLocatorTool from './fuzzy-text-locator';
+import forecasterTool from './forecaster';
+import factCheckerTool from './fact-checker';
+import checkMathTool from './check-math';
+import checkMathWithMathJsTool from './check-math-with-mathjs';
+import checkMathHybridTool from './check-math-hybrid';
+import extractForecastingClaimsTool from './extract-forecasting-claims';
+import perplexityResearchTool from './perplexity-research';
+import extractFactualClaimsTool from './extract-factual-claims';
+import checkSpellingGrammarTool from './check-spelling-grammar';
+import extractMathExpressionsTool from './extract-math-expressions';
+import documentChunkerTool from './document-chunker';
+import fuzzyTextLocatorTool from './fuzzy-text-locator';
 import { detectLanguageConventionTool } from './detect-language-convention';
 
 // Tool registry to manage all available tools
@@ -19,18 +19,18 @@ export class ToolRegistry {
   
   constructor() {
     // Register all available tools
-    this.register(ForecasterTool);
-    this.register(FactCheckerTool);
-    this.register(CheckMathTool);
-    this.register(CheckMathWithMathJsTool);
-    this.register(CheckMathHybridTool);
-    this.register(ExtractForecastingClaimsTool);
-    this.register(PerplexityResearchTool);
-    this.register(ExtractFactualClaimsTool);
-    this.register(CheckSpellingGrammarTool);
-    this.register(ExtractMathExpressionsTool);
-    this.register(DocumentChunkerTool);
-    this.register(FuzzyTextLocatorTool);
+    this.register(forecasterTool);
+    this.register(factCheckerTool);
+    this.register(checkMathTool);
+    this.register(checkMathWithMathJsTool);
+    this.register(checkMathHybridTool);
+    this.register(extractForecastingClaimsTool);
+    this.register(perplexityResearchTool);
+    this.register(extractFactualClaimsTool);
+    this.register(checkSpellingGrammarTool);
+    this.register(extractMathExpressionsTool);
+    this.register(documentChunkerTool);
+    this.register(fuzzyTextLocatorTool);
     this.register(detectLanguageConventionTool);
   }
   

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { richLLMInteractionSchema } from '@/types/llmSchema';
+import { richLLMInteractionSchema } from '../../types/llmSchema';
 
 // Input schema - single mathematical statement
 export const inputSchema = z.object({

@@ -1,5 +1,5 @@
-import type { Comment } from '@/types/documentSchema';
-import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { Comment } from '../../shared/types';
+import type { DocumentLocation } from '../../shared/types';
 
 export interface StandardCommentOptions {
   // Required fields

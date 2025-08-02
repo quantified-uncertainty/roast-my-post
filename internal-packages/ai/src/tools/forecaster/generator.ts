@@ -6,10 +6,10 @@
 import {
   DEFAULT_TIMEOUT,
   withTimeout,
-} from "@/types/openai";
+} from "../../shared/types";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import { logger } from "@/lib/logger";
-import { getRandomElement, getPercentile } from "@/utils/safeArrayAccess";
+import { logger } from "../../shared/logger";
+import { getRandomElement, getPercentileNumber } from "../../shared/types";
 import { sessionContext } from "@roast/ai";
 import { createHeliconeHeaders } from "@roast/ai";
 
@@ -160,11 +160,11 @@ function removeOutliers(forecasts: ForecastResponse[]): {
   const probabilities = forecasts.map((f) => f.probability);
   const sorted = [...probabilities].sort((a, b) => a - b);
 
-  const q1 = getPercentile(sorted, 0.25);
-  const q3 = getPercentile(sorted, 0.75);
+  const q1 = getPercentileNumber(sorted, 0.25);
+  const q3 = getPercentileNumber(sorted, 0.75);
   
   // If we couldn't calculate quartiles, return all forecasts
-  if (isNaN(q1) || isNaN(q3)) {
+  if (q1 === undefined || q3 === undefined || isNaN(q1) || isNaN(q3)) {
     return { cleaned: forecasts, outliers: [] };
   }
   const iqr = q3 - q1;
@@ -257,7 +257,8 @@ export async function generateForecastWithAggregation(
     try {
       console.log("  📚 Researching with Perplexity...");
       // Dynamic import to avoid circular dependencies
-      const { default: perplexityTool } = await import("../perplexity-research");
+      const perplexityModule = await import("../perplexity-research/index.js");
+      const perplexityTool = perplexityModule.perplexityResearchTool || perplexityModule.default;
       
       const research = await perplexityTool.execute({
         query: options.question,
@@ -269,13 +270,13 @@ export async function generateForecastWithAggregation(
       
       
       // Extract sources for perplexityResults
-      perplexityResults = research.sources.map(source => ({
+      perplexityResults = research.sources.map((source: any) => ({
         title: source.title,
         url: source.url
       }));
       
       const additionalContext = research.forecastingContext || 
-        `Summary: ${research.summary}\n\nKey findings:\n${research.keyFindings.map(f => `- ${f}`).join('\n')}`;
+        `Summary: ${research.summary}\n\nKey findings:\n${research.keyFindings.map((f: any) => `- ${f}`).join('\n')}`;
 
       enhancedOptions = {
         ...options,

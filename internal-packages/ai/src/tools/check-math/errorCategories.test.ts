@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
-import type { MathErrorType } from '@/tools/shared/math-schemas';
+import type { MathErrorType } from '../shared/math-schemas';
 
 describe('errorCategories', () => {
   describe('categorizeErrorAdvanced', () => {

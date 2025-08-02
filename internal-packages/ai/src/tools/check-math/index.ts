@@ -4,7 +4,7 @@ import { callClaudeWithTool, MODEL_CONFIG } from '@roast/ai';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
 import { sessionContext } from '@roast/ai';
 import { createHeliconeHeaders } from '@roast/ai';
-import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import { generateCacheSeed } from '../shared/cache-utils';
 import { 
   mathStatusSchema, 
   mathExplanationSchema, 
@@ -12,7 +12,7 @@ import {
   mathErrorDetailsSchema,
   MathVerificationStatus,
   MathErrorDetails
-} from '@/tools/shared/math-schemas';
+} from '../shared/math-schemas';
 
 export interface CheckMathInput {
   statement: string;

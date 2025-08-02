@@ -82,8 +82,21 @@ export interface InvestigatedFinding {
 }
 
 
-import type { Comment } from '@/types/documentSchema';
-import type { LLMMessage, LLMUsage } from '@/types/llm';
+import type { Comment } from '../shared/types';
+
+// LLM-related types for analysis plugins
+export interface LLMMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface LLMUsage {
+  prompt_tokens: number;
+  completion_tokens: number;  
+  total_tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+}
 
 // Local LLMInteraction type for analysis plugins
 export interface LLMInteraction {

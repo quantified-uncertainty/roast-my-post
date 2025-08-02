@@ -5,8 +5,8 @@
  * preventing overlap and ensuring appropriate plugin selection.
  */
 
-import { callClaudeWithTool } from '@roast/ai';
-import { logger } from '@/lib/logger';
+import { callClaudeWithTool } from '../../claude/wrapper';
+import { logger } from '../../shared/logger';
 import type { TextChunk } from '../TextChunk';
 import type { SimpleAnalysisPlugin, RoutingExample } from '../types';
 

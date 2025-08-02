@@ -3,8 +3,8 @@ import {
   MathVerificationStatus, 
   MathErrorDetails, 
   MathVerificationDetails 
-} from '@/tools/shared/math-schemas';
-import { RichLLMInteraction } from '@/types/llm';
+} from '../shared/math-schemas';
+import { RichLLMInteraction } from '../../types';
 
 export interface CheckMathAgenticInput {
   statement: string;

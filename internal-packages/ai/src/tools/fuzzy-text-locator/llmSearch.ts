@@ -11,8 +11,8 @@ import {
 import { sessionContext } from "@roast/ai";
 import type { HeliconeSessionConfig } from "@roast/ai";
 import { createHeliconeHeaders } from "@roast/ai";
-import { logger } from "@/lib/logger";
-import { LineBasedLocator } from "@/lib/text-location/line-based";
+import { logger } from "../../shared/logger";
+import { LineBasedLocator } from "../../text-location/line-based";
 
 import { TextLocation } from "./types";
 

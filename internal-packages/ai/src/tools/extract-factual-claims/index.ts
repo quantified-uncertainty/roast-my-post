@@ -3,7 +3,7 @@ import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '@roast/ai';
 import { sessionContext } from '@roast/ai';
 import { createHeliconeHeaders } from '@roast/ai';
-import { generateCacheSeed } from '@/tools/shared/cache-utils';
+import { generateCacheSeed } from '../shared/cache-utils';
 
 // Claim schema
 const extractedFactualClaimSchema = z.object({

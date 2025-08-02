@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import type { LanguageConvention } from '@/types/languageConvention';
+import type { LanguageConvention } from '../../shared/types';
 import { detectLanguageConvention, detectDocumentType } from './conventionDetector';
 
 export interface DetectLanguageConventionInput {

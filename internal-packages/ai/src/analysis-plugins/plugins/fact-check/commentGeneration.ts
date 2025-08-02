@@ -1,6 +1,6 @@
-import type { Comment } from '@/types/documentSchema';
+import type { Comment } from '../../../shared/types';
 import type { VerifiedFact } from './index';
-import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { DocumentLocation } from '../../../shared/types';
 import { THRESHOLDS, FORMATTING } from './constants';
 import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from '../../utils/comment-styles';
 
@@ -320,3 +320,4 @@ function formatVerdict(verdict: string): string {
     default: return verdict;
   }
 }
+

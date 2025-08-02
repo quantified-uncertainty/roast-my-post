@@ -16,7 +16,7 @@ import {
   type ForecastExtractionExpected,
   type ForecastGenerationExpected
 } from './forecastingTestCases';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 
 /**
  * Run forecast extraction analysis

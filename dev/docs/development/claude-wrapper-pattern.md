@@ -4,6 +4,8 @@
 
 The Claude wrapper pattern provides a centralized, consistent way to interact with the Anthropic Claude API across the codebase. It handles Helicone integration, LLM interaction tracking, token counting, and error handling automatically.
 
+**Note**: As of February 2025, the Claude wrapper has been extracted to the `@roast/ai` package for better code reuse across the monorepo.
+
 ## Core Benefits
 
 1. **Centralized Configuration**: All model configuration in one place
@@ -18,7 +20,7 @@ The Claude wrapper pattern provides a centralized, consistent way to interact wi
 ### Simple Text Completion
 
 ```typescript
-import { callClaude } from '@/lib/claude/wrapper';
+import { callClaude } from '@roast/ai';
 
 const { response, interaction } = await callClaude({
   messages: [{
@@ -40,7 +42,7 @@ console.log(`Used ${interaction.tokensUsed.total} tokens`);
 ### Using Tools (Structured Output)
 
 ```typescript
-import { callClaudeWithTool } from '@/lib/claude/wrapper';
+import { callClaudeWithTool } from '@roast/ai';
 import { z } from 'zod';
 
 // Define your expected output structure
@@ -191,7 +193,7 @@ const errors = result.toolResult.errors; // Type-safe!
 Choose the right model for the task:
 
 ```typescript
-import { MODEL_CONFIG } from '@/lib/claude/wrapper';
+import { MODEL_CONFIG } from '@roast/ai';
 
 // Fast, simple decisions
 await callClaude({
@@ -230,9 +232,9 @@ Mock the wrapper for unit tests:
 
 ```typescript
 // In your test file
-jest.mock('@/lib/claude/wrapper');
+jest.mock('@roast/ai');
 
-import { callClaude } from '@/lib/claude/wrapper';
+import { callClaude } from '@roast/ai';
 const mockCallClaude = callClaude as jest.MockedFunction<typeof callClaude>;
 
 // In your test

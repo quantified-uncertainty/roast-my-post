@@ -1,21 +1,25 @@
 import { z } from "zod";
 
-import { setupClaudeToolMock } from "@roast/ai";
-import { createMockLLMInteraction } from "@roast/ai";
-import { callClaudeWithTool } from "@roast/ai";
+import { setupClaudeToolMock } from "../../claude/mockHelpers";
+import { createMockLLMInteraction } from "../../claude/testUtils";
+import { callClaudeWithTool } from "../../claude/wrapper";
 
 import { ToolContext } from "../base/Tool";
 import { ExtractForecastingClaimsTool } from "./index";
 
 // Mock Claude wrapper
-jest.mock("@roast/ai", () => ({
+jest.mock("../../claude/wrapper", () => ({
   callClaudeWithTool: jest.fn(),
+}));
+
+jest.mock("../../helicone/sessionContext", () => ({
   sessionContext: {
     getSession: jest.fn().mockReturnValue(null)
-  },
-  createHeliconeHeaders: jest.fn(() => ({})),
-  setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock,
-  createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction
+  }
+}));
+
+jest.mock("../../helicone/sessions", () => ({
+  createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<
@@ -257,13 +261,10 @@ describe("ExtractForecastingClaimsTool (updated for single-stage)", () => {
 
       // Mock malformed response (no tool use)
       mockCallClaudeWithTool.mockResolvedValueOnce({
-        response: {
-          content: [{ type: "text", text: "Not a tool use" }],
-          usage: { input_tokens: 100, output_tokens: 50 },
-        } as any,
+        response: {} as any,
         interaction: createMockLLMInteraction(),
-        toolResult: {},
-      });
+        toolResult: {}
+      } as any);
 
       const result = await tool.execute(input, mockContext);
 

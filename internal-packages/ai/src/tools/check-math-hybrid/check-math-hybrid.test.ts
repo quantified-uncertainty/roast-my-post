@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { checkMathHybridTool } from './index';
 import { checkMathWithMathJsTool } from '../check-math-with-mathjs';
 import { checkMathTool } from '../check-math';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 import type { CheckMathAgenticOutput } from '../check-math-with-mathjs/types';
 import type { CheckMathOutput } from '../check-math/index';
 

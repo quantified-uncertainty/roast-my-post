@@ -4,7 +4,7 @@
  */
 
 import uFuzzy from '@leeoniya/ufuzzy';
-import { logger } from "@/lib/logger";
+import { logger } from "../../shared/logger";
 import { TextLocation } from './types';
 
 export interface UFuzzyOptions {

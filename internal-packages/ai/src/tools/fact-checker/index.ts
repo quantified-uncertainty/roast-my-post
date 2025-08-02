@@ -4,7 +4,7 @@ import { callClaudeWithTool } from "@roast/ai";
 import { sessionContext } from "@roast/ai";
 import { createHeliconeHeaders } from "@roast/ai";
 import { perplexityResearchTool } from "../perplexity-research";
-import { generateCacheSeed } from "@/tools/shared/cache-utils";
+import { generateCacheSeed } from "../shared/cache-utils";
 
 import {
   Tool,

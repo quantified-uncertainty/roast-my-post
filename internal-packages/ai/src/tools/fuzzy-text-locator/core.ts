@@ -2,7 +2,7 @@
  * Core text location finding logic with fallback strategies
  */
 
-import { logger } from "@/lib/logger";
+import { logger } from "../../shared/logger";
 import { TextLocation, TextLocationOptions } from './types';
 import { exactSearch } from './exactSearch';
 import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';

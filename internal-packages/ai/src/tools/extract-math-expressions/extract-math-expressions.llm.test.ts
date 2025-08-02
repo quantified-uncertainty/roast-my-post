@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
 import { extractMathExpressionsTool } from './index';
-import { logger } from '@/lib/logger';
+import { logger } from '../../shared/logger';
 
 // Skip these tests in CI or when no API key is available
 const describeIfApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.trim() !== '' ? describe : describe.skip;

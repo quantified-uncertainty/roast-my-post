@@ -5,15 +5,15 @@ import type {
   SimpleAnalysisPlugin
 } from '../../types';
 import { TextChunk } from '../../TextChunk';
-import type { Comment } from '@/types/documentSchema';
-import type { DocumentLocation } from '@/tools/fuzzy-text-locator';
+import type { Comment } from '../../../shared/types';
+import type { DocumentLocation } from '../../../shared/types';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
-import extractFactualClaimsTool from '@/tools/extract-factual-claims';
-import type { ExtractedFactualClaim } from '@/tools/extract-factual-claims';
-import factCheckerTool from '@/tools/fact-checker';
-import type { FactCheckResult } from '@/tools/fact-checker';
-import { logger } from '../../../logger';
+import extractFactualClaimsTool from '../../../tools/extract-factual-claims';
+import type { ExtractedFactualClaim } from '../../../tools/extract-factual-claims';
+import factCheckerTool from '../../../tools/fact-checker';
+import type { FactCheckResult } from '../../../tools/fact-checker';
+import { logger } from '../../../shared/logger';
 
 // Domain model for fact with verification
 export class VerifiedFact {
@@ -373,7 +373,10 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       ],
       usage: {
         input_tokens: rich.tokensUsed?.prompt || 0,
-        output_tokens: rich.tokensUsed?.completion || 0
+        output_tokens: rich.tokensUsed?.completion || 0,
+        prompt_tokens: rich.tokensUsed?.prompt || 0,
+        completion_tokens: rich.tokensUsed?.completion || 0,
+        total_tokens: rich.tokensUsed?.total || 0
       }
     };
   }

@@ -1,7 +1,7 @@
 // Analysis plugins system exports
 export * from './PluginManager';
 export * from './PluginLogger';
-export * from './TextChunk';
+export { TextChunk } from './TextChunk';
 export * from './types';
 
 // Plugin builders
@@ -16,7 +16,7 @@ export * from './plugins/forecast';
 // Utilities
 export * from './utils/ChunkRouter';
 export * from './utils/StandardCommentBuilder';
-export * from './utils/createChunksWithTool';
+export { createChunks } from './utils/createChunksWithTool';
 export * from './utils/errorBoundary';
 export * from './utils/findingHelpers';
 export * from './utils/textHelpers';

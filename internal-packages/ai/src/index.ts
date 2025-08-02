@@ -15,11 +15,34 @@ export * from './types';
 // Tools system
 export * from './tools';
 
-// Analysis plugins
-export * from './analysis-plugins';
-
-// Document analysis workflows
-export * from './document-analysis';
+// Analysis plugins - excluding conflicting types
+export { 
+  PluginManager,
+  PluginLogger,
+  TextChunk,
+  StandardCommentBuilder,
+  ChunkRouter,
+  createChunks,
+  FactCheckPlugin,
+  ForecastPlugin,
+  MathPlugin,
+  SpellingPlugin
+} from './analysis-plugins';
 
 // Shared utilities
 export * from './shared/logger';
+export type { 
+  Comment,
+  DocumentLocation,
+  LanguageConvention,
+  LanguageConventionOption
+} from './shared/types';
+
+export {
+  DEFAULT_TIMEOUT,
+  withTimeout,
+  getRandomElement,
+  getPercentile,
+  getPercentileNumber,
+  countWords
+} from './shared/types';

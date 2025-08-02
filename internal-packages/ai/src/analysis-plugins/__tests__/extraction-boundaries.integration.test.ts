@@ -3,13 +3,22 @@
  * and don't overlap with each other's domains
  */
 
-import extractForecastingClaimsTool from '@/tools/extract-forecasting-claims';
-import extractFactualClaimsTool from '@/tools/extract-factual-claims';
-import extractMathExpressionsTool from '@/tools/extract-math-expressions';
-import { logger } from '@/lib/logger';
+import extractForecastingClaimsTool from '../../tools/extract-forecasting-claims';
+import extractFactualClaimsTool from '../../tools/extract-factual-claims';
+import extractMathExpressionsTool from '../../tools/extract-math-expressions';
+import { logger } from '../../shared/logger';
+
+// Check if we have an API key
+const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
 
 describe('Extraction Tool Boundaries', () => {
   const mockContext = { logger, userId: 'test-user' };
+
+  // Skip these tests if no API key is available
+  if (!hasApiKey) {
+    it.skip('requires ANTHROPIC_API_KEY to run', () => {});
+    return;
+  }
 
   describe('Math vs Fact-check vs Forecast boundaries', () => {
     it('should properly separate math errors from factual claims', async () => {

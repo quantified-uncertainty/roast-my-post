@@ -1,7 +1,8 @@
 // Jest integration test file
 import { MathAnalyzerJob } from './index';
 import { TextChunk } from '../../TextChunk';
-import { extractMathExpressionsTool } from '@/tools/extract-math-expressions';
+// Test file uses real tool integration - no mocking needed for this import
+import { extractMathExpressionsTool } from '../../../tools/extract-math-expressions';
 
 // Skip these tests in CI or when no API key is available
 const describeIfApiKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.trim() !== '' ? describe : describe.skip;
@@ -77,8 +78,8 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
     
     // Should identify the error
     expect(result.comments.some(c => 
-      c.description.includes('25,000') || 
-      c.description.includes('error')
+      (c.description || '').includes('25,000') || 
+      (c.description || '').includes('error')
     )).toBe(true);
 
     // Analysis should mention both correct and incorrect calculations

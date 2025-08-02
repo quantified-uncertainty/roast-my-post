@@ -2,19 +2,19 @@ import {
   type ForecastWithPrediction,
   generateDocumentSummary,
   generateForecastComment,
-} from "@/lib/analysis-plugins/plugins/forecast/commentGeneration";
+} from "./commentGeneration";
 import type {
   ExtractedForecast as ExtractedForecastToolType,
-} from "@/tools/extract-forecasting-claims";
+} from "../../../tools/extract-forecasting-claims";
 import {
   extractForecastingClaimsTool,
-} from "@/tools/extract-forecasting-claims";
-import type { ForecasterOutput } from "@/tools/forecaster";
-import forecasterTool from "@/tools/forecaster";
-import type { Comment } from "@/types/documentSchema";
+} from "../../../tools/extract-forecasting-claims";
+import type { ForecasterOutput } from "../../../tools/forecaster";
+import forecasterTool from "../../../tools/forecaster";
+import type { Comment } from "../../../shared/types";
 import { sessionContext } from "@roast/ai";
 
-import { logger } from "../../../logger";
+import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,

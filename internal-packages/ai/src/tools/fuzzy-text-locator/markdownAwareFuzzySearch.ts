@@ -3,7 +3,7 @@
  * markdown links as plain text (e.g., "[text](url)" becomes "text")
  */
 
-import { logger } from "@/lib/logger";
+import { logger } from "../../shared/logger";
 import { TextLocation } from './types';
 import { uFuzzySearch, UFuzzyOptions } from './uFuzzySearch';
 

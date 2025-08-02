@@ -10,6 +10,13 @@ export interface Logger {
   debug: (message: string, ...args: any[]) => void;
 }
 
+export interface LogContext {
+  pluginId?: string;
+  documentId?: string;
+  userId?: string;
+  sessionId?: string;
+}
+
 export const logger: Logger = {
   info: (message: string, ...args: any[]) => {
     console.log(`[AI-INFO] ${message}`, ...args);

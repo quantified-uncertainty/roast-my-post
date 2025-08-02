@@ -1,18 +1,18 @@
-import type { SpellingGrammarError } from "@/tools/check-spelling-grammar";
-import { checkSpellingGrammarTool } from "@/tools/check-spelling-grammar";
-import type { Comment } from "@/types/documentSchema";
-import type { LanguageConventionOption } from "@/types/languageConvention";
+import type { SpellingGrammarError } from "../../../tools/check-spelling-grammar";
+import { checkSpellingGrammarTool } from "../../../tools/check-spelling-grammar";
+import type { Comment } from "../../../shared/types";
+import type { LanguageConventionOption } from "../../../shared/types";
 
-import { logger } from "../../../logger";
+import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,
   RoutingExample,
   SimpleAnalysisPlugin,
 } from "../../types";
-import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation as ToolSpellingErrorWithLocation } from "@/tools/check-spelling-grammar/commentGeneration";
-import { detectLanguageConvention, getConventionExamples } from "@/tools/detect-language-convention/conventionDetector";
-import { calculateGrade, countWords, generateGradeSummary } from "@/tools/check-spelling-grammar/grading";
+import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation as ToolSpellingErrorWithLocation } from "../../../tools/check-spelling-grammar/commentGeneration";
+import { detectLanguageConvention, getConventionExamples } from "../../../tools/detect-language-convention/conventionDetector";
+import { calculateGrade, countWords, generateGradeSummary } from "../../../tools/check-spelling-grammar/grading";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;

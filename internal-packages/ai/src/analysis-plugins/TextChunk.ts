@@ -3,9 +3,9 @@
  */
 
 import { TextChunk as ITextChunk } from './types';
-import { LocationUtils } from '../documentAnalysis/utils/LocationUtils';
-import { findTextLocation, type SimpleLocationOptions, type EnhancedLocationOptions } from '@/tools/fuzzy-text-locator';
-import { logger } from '@/lib/logger';
+import { LocationUtils } from '../utils/LocationUtils';
+import { findTextLocation, type SimpleLocationOptions, type EnhancedLocationOptions } from '../tools/fuzzy-text-locator';
+import { logger } from '../shared/logger';
 
 export interface DocumentLocation {
   startOffset: number;

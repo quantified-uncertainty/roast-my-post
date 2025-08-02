@@ -2,6 +2,14 @@ import { ChunkRouter } from './ChunkRouter';
 import { TextChunk } from '../TextChunk';
 import { SimpleAnalysisPlugin, AnalysisResult } from '../types';
 
+// Mock the Claude wrapper
+jest.mock('../../claude/wrapper', () => ({
+  callClaudeWithTool: jest.fn()
+}));
+
+import { callClaudeWithTool } from '../../claude/wrapper';
+const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;
+
 // Mock plugin
 class MockPlugin implements SimpleAnalysisPlugin {
   constructor(
@@ -37,7 +45,35 @@ class MockPlugin implements SimpleAnalysisPlugin {
 }
 
 describe('ChunkRouter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should route chunks to appropriate plugins based on content', async () => {
+    // Mock the Claude API response for routing
+    mockCallClaudeWithTool.mockResolvedValueOnce({
+      response: {} as any,
+      interaction: {} as any,
+      toolResult: {
+        decisions: [
+          {
+            chunkId: 'chunk1',
+            plugins: ['MATH', 'FACT_CHECK'],
+            reasoning: 'Contains mathematical calculation and historical fact'
+          },
+          {
+            chunkId: 'chunk2',
+            plugins: ['FORECAST', 'MATH'],
+            reasoning: 'Contains future prediction with mathematical calculation'
+          },
+          {
+            chunkId: 'chunk3',
+            plugins: ['FACT_CHECK'],
+            reasoning: 'Contains verifiable historical fact'
+          }
+        ]
+      }
+    } as any);
     // Create test plugins
     const mathPlugin = new MockPlugin(
       'MATH',
@@ -99,9 +135,10 @@ describe('ChunkRouter', () => {
     expect(chunk1Plugins).toContain('FACT_CHECK');
     expect(chunk1Plugins).not.toContain('FORECAST');
     
-    // Chunk 2 should go to FORECAST (future prediction)
+    // Chunk 2 should go to FORECAST (future prediction) and MATH (calculation)
     const chunk2Plugins = result.routingDecisions.get('chunk2');
     expect(chunk2Plugins).toContain('FORECAST');
+    expect(chunk2Plugins).toContain('MATH'); // Contains calculation ($37.5M)
     expect(chunk2Plugins).not.toContain('FACT_CHECK'); // It's a prediction, not a fact
     
     // Chunk 3 should go to FACT_CHECK (verifiable fact)
@@ -112,6 +149,21 @@ describe('ChunkRouter', () => {
   });
   
   it('should handle plugins with no routing examples', async () => {
+    // Mock the Claude API response
+    mockCallClaudeWithTool.mockResolvedValueOnce({
+      response: {} as any,
+      interaction: {} as any,
+      toolResult: {
+        decisions: [
+          {
+            chunkId: 'chunk1',
+            plugins: ['TEST'],
+            reasoning: 'Default routing when no examples provided'
+          }
+        ]
+      }
+    } as any);
+
     const plugin = new MockPlugin('TEST', 'Test plugin', []);
     const router = new ChunkRouter([plugin]);
     
@@ -128,6 +180,7 @@ describe('ChunkRouter', () => {
   });
   
   it('should handle empty chunks array', async () => {
+    // No mock needed - ChunkRouter should return early for empty chunks
     const plugin = new MockPlugin('TEST', 'Test plugin', []);
     const router = new ChunkRouter([plugin]);
     

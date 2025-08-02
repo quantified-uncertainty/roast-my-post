@@ -1,14 +1,14 @@
 import type {
   ExtractedMathExpression as ExtractedMathExpressionToolType,
-} from "@/tools/extract-math-expressions";
+} from "../../../tools/extract-math-expressions";
 import {
   extractMathExpressionsTool,
-} from "@/tools/extract-math-expressions";
-import { checkMathHybridTool } from "@/tools/check-math-hybrid";
-import type { CheckMathHybridOutput } from "@/tools/check-math-hybrid/types";
-import type { Comment } from "@/types/documentSchema";
+} from "../../../tools/extract-math-expressions";
+import { checkMathHybridTool } from "../../../tools/check-math-hybrid";
+import type { CheckMathHybridOutput } from "../../../tools/check-math-hybrid/types";
+import type { Comment } from "../../../shared/types";
 
-import { logger } from "../../../logger";
+import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
 import {
   AnalysisResult,

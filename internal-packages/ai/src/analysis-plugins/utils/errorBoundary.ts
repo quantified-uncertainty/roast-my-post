@@ -2,7 +2,7 @@
  * Error boundary utilities for plugin operations
  */
 
-import { logger } from '../../logger';
+import { logger } from '../../shared/logger';
 
 export interface ErrorBoundaryResult<T> {
   success: boolean;
