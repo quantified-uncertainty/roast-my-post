@@ -248,8 +248,36 @@ EOF
     echo "$WORKTREE_PATH" > "$WORKTREE_PATH/.claude_workspace"
     echo "  ✓ Created Claude workspace file"
     
-    # Install dependencies
+    # Fix script permissions
+    echo -e "${YELLOW}Fixing script permissions...${NC}"
     cd "$WORKTREE_PATH"
+    find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+    find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
+    echo "  ✓ Script permissions fixed"
+    
+    # Install Git hooks in worktree
+    echo -e "${YELLOW}Installing Git hooks...${NC}"
+    # Worktrees share hooks with main repo, but we'll create symlinks for clarity
+    MAIN_HOOKS_DIR="$GIT_ROOT/.git/hooks"
+    WORKTREE_HOOKS_DIR="$GIT_ROOT/.git/worktrees/$BRANCH/hooks"
+    
+    # Create hooks directory for worktree
+    mkdir -p "$WORKTREE_HOOKS_DIR"
+    
+    # Copy hooks from main repo if they exist
+    if [ -f "$MAIN_HOOKS_DIR/post-checkout" ]; then
+        cp "$MAIN_HOOKS_DIR/post-checkout" "$WORKTREE_HOOKS_DIR/post-checkout"
+        chmod +x "$WORKTREE_HOOKS_DIR/post-checkout"
+        echo "  ✓ Installed post-checkout hook"
+    fi
+    
+    if [ -f "$MAIN_HOOKS_DIR/post-merge" ]; then
+        cp "$MAIN_HOOKS_DIR/post-merge" "$WORKTREE_HOOKS_DIR/post-merge"
+        chmod +x "$WORKTREE_HOOKS_DIR/post-merge"
+        echo "  ✓ Installed post-merge hook"
+    fi
+    
+    # Install dependencies
     echo ""
     echo -e "${YELLOW}Installing dependencies...${NC}"
     pnpm install --silent
