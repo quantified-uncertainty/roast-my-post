@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# fix-permissions.sh - Manually fix all script permissions
+# fix-script-permissions.sh - Fix executable permissions for shell scripts
 #
-# This script can be run manually to fix permissions if needed.
-# However, permissions should be automatically fixed by Git hooks.
+# This script fixes Unix file permissions (chmod +x) for shell scripts.
+# It does NOT affect Claude Code permissions (those are in .claude/settings.local.json).
 #
-# Usage: ./dev/scripts/fix-permissions.sh
+# Usage: ./dev/scripts/fix-script-permissions.sh
 
 set -e
 

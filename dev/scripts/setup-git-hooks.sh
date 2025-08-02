@@ -54,8 +54,8 @@ CHECKOUT_TYPE=$3
 if [ "$CHECKOUT_TYPE" = "1" ]; then
     echo "🔧 Running post-checkout hooks..."
     
-    # Source the fix-permissions script if available
-    FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-permissions.sh"
+    # Source the fix-script-permissions script if available
+    FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-script-permissions.sh"
     if [ -f "$FIX_SCRIPT" ] && [ -x "$FIX_SCRIPT" ]; then
         "$FIX_SCRIPT" >/dev/null 2>&1 || true
     else
@@ -91,8 +91,8 @@ create_post_merge_hook() {
 
 echo "🔧 Running post-merge hooks..."
 
-# Source the fix-permissions script if available
-FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-permissions.sh"
+# Source the fix-script-permissions script if available
+FIX_SCRIPT="$(git rev-parse --show-toplevel)/dev/scripts/fix-script-permissions.sh"
 if [ -f "$FIX_SCRIPT" ] && [ -x "$FIX_SCRIPT" ]; then
     "$FIX_SCRIPT" >/dev/null 2>&1 || true
 else
@@ -145,8 +145,8 @@ main() {
     echo "  • post-merge - runs after git pull/merge"
     echo ""
     echo "You can also manually run:"
-    echo "  • ./dev/scripts/sync-claude-permissions.sh - sync Claude settings"
-    echo "  • chmod +x dev/scripts/*.sh - fix script permissions"
+    echo "  • ./dev/scripts/sync-claude-permissions.sh - sync Claude Code settings"
+    echo "  • ./dev/scripts/fix-script-permissions.sh - fix shell script execute permissions"
 }
 
 # Check if we're in a git repository

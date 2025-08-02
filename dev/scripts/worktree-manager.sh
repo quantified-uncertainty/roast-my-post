@@ -248,12 +248,12 @@ EOF
     echo "$WORKTREE_PATH" > "$WORKTREE_PATH/.claude_workspace"
     echo "  ✓ Created Claude workspace file"
     
-    # Fix script permissions
-    echo -e "${YELLOW}Fixing script permissions...${NC}"
+    # Fix executable permissions for shell scripts
+    echo -e "${YELLOW}Fixing shell script permissions...${NC}"
     cd "$WORKTREE_PATH"
     find dev/scripts/ -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
     find dev/scripts/ -name "*.py" -exec chmod +x {} \; 2>/dev/null || true
-    echo "  ✓ Script permissions fixed"
+    echo "  ✓ Shell script permissions fixed"
     
     # Install Git hooks in worktree
     echo -e "${YELLOW}Installing Git hooks...${NC}"
