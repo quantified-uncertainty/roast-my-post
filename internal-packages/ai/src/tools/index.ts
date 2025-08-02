@@ -26,3 +26,13 @@ export { default as perplexityResearchTool } from './perplexity-research';
 // Export tool-specific types
 export type { DocumentChunkerOutput } from './document-chunker';
 export type { TextLocationFinderOutput } from './fuzzy-text-locator';
+export type { CheckMathOutput } from './check-math';
+export type { CheckMathAgenticOutput as CheckMathWithMathJSOutput } from './check-math-with-mathjs/types';
+export type { CheckSpellingGrammarOutput, SpellingGrammarError } from './check-spelling-grammar';
+export type { ExtractFactualClaimsOutput, ExtractedFactualClaim } from './extract-factual-claims';
+export type { ExtractForecastingClaimsOutput, ExtractedForecast } from './extract-forecasting-claims';
+export type { ExtractMathExpressionsOutput, ExtractedMathExpression } from './extract-math-expressions';
+export type { DetectLanguageConventionOutput } from './detect-language-convention';
+
+// Re-export shared math types
+export type { MathErrorDetails, MathVerificationStatus } from './shared/math-schemas';
