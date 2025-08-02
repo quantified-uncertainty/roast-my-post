@@ -67,43 +67,11 @@ export interface Evaluation {
     comments?: Array<Comment & {
       id: string;
       description: string;
-      highlight?: {
-        id: string;
-        startOffset: number;
-        endOffset: number;
-        quotedText: string;
-        prefix?: string;
-        isValid: boolean;
-        error?: string;
-      };
+      highlight?: Highlight;
     }>;
-    job?: {
-      id: string;
-      status: string;
-      priceInDollars: number;
-      durationInSeconds?: number;
-      llmThinking?: string | null;
-      tasks?: Array<{
-        id: string;
-        name: string;
-        modelName: string;
-        priceInDollars: number;
-        timeInSeconds: number;
-        log: string;
-        createdAt: Date;
-      }>;
-    };
+    job?: Job;
   }>;
-  jobs?: Array<{
-    id: string;
-    status: string;
-    createdAt: Date;
-    startedAt?: Date;
-    completedAt?: Date;
-    priceInDollars?: number;
-    durationInSeconds?: number;
-    error?: string;
-  }>;
+  jobs?: JobSummary[];
   isStale?: boolean;
 }
 
@@ -115,5 +83,38 @@ export interface Highlight {
   quotedText: string;
   isValid: boolean;
   prefix?: string;
+  error?: string;
+}
+
+// Database Task type
+export interface Task {
+  id: string;
+  name: string;
+  modelName: string;
+  priceInDollars: number;
+  timeInSeconds: number;
+  log: string;
+  createdAt: Date;
+}
+
+// Database Job type
+export interface Job {
+  id: string;
+  status: string;
+  priceInDollars: number;
+  durationInSeconds?: number;
+  llmThinking?: string | null;
+  tasks?: Task[];
+}
+
+// Simplified job summary type
+export interface JobSummary {
+  id: string;
+  status: string;
+  createdAt: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  priceInDollars?: number;
+  durationInSeconds?: number;
   error?: string;
 }
