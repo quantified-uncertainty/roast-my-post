@@ -42,6 +42,7 @@ export interface Comment {
     quotedText?: string;
     isValid?: boolean;
     prefix?: string;
+    error?: string;
   };
 }
 

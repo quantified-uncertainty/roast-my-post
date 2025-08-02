@@ -100,7 +100,7 @@ export async function analyzeDocument(
           highlights: highlightResult.outputs.highlights.map((c) => {
             return {
               title: c.description || c.highlight?.quotedText?.substring(0, 50) || "Highlight",
-              text: c.description,
+              text: c.description || "No description",
             };
           }),
         },

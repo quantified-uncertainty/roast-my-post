@@ -85,7 +85,6 @@ export async function validateAndConvertHighlights(
             error: highlightError,
           },
           isValid: isHighlightValid,
-          error: highlightError,
         };
         validHighlights.push(processedComment);
       } else {

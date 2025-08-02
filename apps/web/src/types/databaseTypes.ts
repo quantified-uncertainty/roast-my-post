@@ -10,6 +10,7 @@ export interface Document extends BaseDocument {
     id: string;
     name?: string | null;
     email?: string | null;
+    image?: string | null; // Add image field that exists in database
   };
   importUrl?: string; // For documents imported from URLs
   ephemeralBatchId?: string;

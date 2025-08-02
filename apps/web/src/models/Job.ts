@@ -524,21 +524,26 @@ export class JobModel {
           let isValid = true;
           let error: string | null = null;
           
-          try {
-            const actualText = documentVersion.content.slice(
-              comment.highlight.startOffset, 
-              comment.highlight.endOffset
-            );
-            
-            if (actualText !== comment.highlight.quotedText) {
-              isValid = false;
-              error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
-              logger.warn(`Invalid highlight detected: ${error}`);
-            }
-          } catch (highlightError) {
+          if (!comment.highlight) {
             isValid = false;
-            error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
-            logger.warn(`Highlight validation failed: ${error}`);
+            error = "Highlight is missing";
+          } else {
+            try {
+              const actualText = documentVersion.content.slice(
+                comment.highlight.startOffset, 
+                comment.highlight.endOffset
+              );
+              
+              if (actualText !== comment.highlight.quotedText) {
+                isValid = false;
+                error = `Text mismatch: expected "${comment.highlight.quotedText}" but found "${actualText}" at offsets ${comment.highlight.startOffset}-${comment.highlight.endOffset}`;
+                logger.warn(`Invalid highlight detected: ${error}`);
+              }
+            } catch (highlightError) {
+              isValid = false;
+              error = `Validation error: ${highlightError instanceof Error ? highlightError.message : String(highlightError)}`;
+              logger.warn(`Highlight validation failed: ${error}`);
+            }
           }
 
           // Create highlight with validation status
