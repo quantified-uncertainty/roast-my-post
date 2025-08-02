@@ -4,7 +4,7 @@ import { prisma } from "@roast/db";
 import {
   DocumentValidationSchema,
 } from "@/types/validationSchemas";
-import type { Document } from "@/types/databaseTypes";
+import type { Document, Evaluation } from "@/types/databaseTypes";
 import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 import { getPublicUserFields } from "@/lib/user-permissions";
 
@@ -240,7 +240,8 @@ export class DocumentModel {
           const isStale = version.documentVersion.version !== currentDocumentVersion;
           
           return {
-            version: version.version,
+            id: version.id,
+            version: version.version || 1,
             createdAt: new Date(version.createdAt),
             job: version.job
               ? {
@@ -261,21 +262,27 @@ export class DocumentModel {
                 }
               : undefined,
             comments: version.comments.map((comment) => ({
+              id: comment.id,
               description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
+              importance: comment.importance || null,
+              grade: comment.grade || null,
               highlight: {
+                id: comment.highlight.id,
                 startOffset: comment.highlight.startOffset,
                 endOffset: comment.highlight.endOffset,
                 quotedText: comment.highlight.quotedText,
                 isValid: comment.highlight.isValid,
+                prefix: comment.highlight.prefix,
+                error: comment.highlight.error,
               },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid ? undefined : "Invalid highlight",
+              header: (comment as any).header || null,
+              level: (comment as any).level || null,
+              source: (comment as any).source || null,
+              metadata: (comment as any).metadata || null,
             })),
             summary: version.summary || "",
             analysis: version.analysis || undefined,
-            grade: version.grade ?? undefined,
+            grade: version.grade ?? null,
             selfCritique: version.selfCritique || undefined,
             documentVersion: {
               version: version.documentVersion.version,
@@ -317,24 +324,28 @@ export class DocumentModel {
           priceInDollars: convertPriceToNumber(evaluation.versions[0]?.job?.priceInDollars) || 0,
           comments:
             evaluation.versions[0]?.comments.map((comment) => ({
+              id: comment.id,
               description: comment.description,
-              importance: comment.importance || undefined,
-              grade: comment.grade || undefined,
+              importance: comment.importance || null,
+              grade: comment.grade || null,
               highlight: {
+                id: comment.highlight.id,
                 startOffset: comment.highlight.startOffset,
                 endOffset: comment.highlight.endOffset,
                 quotedText: comment.highlight.quotedText,
                 isValid: comment.highlight.isValid,
+                prefix: comment.highlight.prefix,
+                error: comment.highlight.error,
               },
-              isValid: comment.highlight.isValid,
-              error: comment.highlight.isValid
-                ? undefined
-                : "Invalid highlight",
+              header: (comment as any).header || null,
+              level: (comment as any).level || null,
+              source: (comment as any).source || null,
+              metadata: (comment as any).metadata || null,
             })) || [],
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
           analysis: evaluation.versions[0]?.analysis || "",
-          grade: evaluation.versions[0]?.grade ?? undefined,
+          grade: evaluation.versions[0]?.grade ?? null,
           selfCritique: evaluation.versions[0]?.selfCritique || undefined,
           versions: evaluationVersions,
           jobs,
@@ -408,6 +419,8 @@ export class DocumentModel {
           const isStale = version.documentVersion.version !== currentDocumentVersion;
           
           return {
+            id: version.id,
+            version: version.version || 1,
             createdAt: new Date(version.createdAt),
             job: version.job
               ? {
@@ -435,7 +448,7 @@ export class DocumentModel {
             })),
             summary: version.summary || "",
             analysis: version.analysis || undefined,
-            grade: version.grade ?? undefined,
+            grade: version.grade ?? null,
             selfCritique: version.selfCritique || undefined,
             documentVersion: {
               version: version.documentVersion.version,
@@ -495,7 +508,7 @@ export class DocumentModel {
           thinking: evaluation.versions[0]?.job?.llmThinking || "",
           summary: evaluation.versions[0]?.summary || "",
           analysis: evaluation.versions[0]?.analysis || "",
-          grade: evaluation.versions[0]?.grade ?? undefined,
+          grade: evaluation.versions[0]?.grade ?? null,
           selfCritique: evaluation.versions[0]?.selfCritique || undefined,
           versions: evaluationVersions,
           jobs,

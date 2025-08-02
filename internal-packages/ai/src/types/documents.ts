@@ -102,7 +102,7 @@ export function transformDocument(raw: RawDocument): Document {
         return {
           ...review,
           createdAt: createdAt, // Assign the parsed or fallback date
-          grade: review.grade ?? undefined, // Convert null to undefined for optional field
+          grade: review.grade, // Keep null as null for consistency
         };
       }),
   };

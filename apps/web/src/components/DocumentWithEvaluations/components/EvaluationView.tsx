@@ -296,7 +296,7 @@ export function EvaluationView({
                           <EvaluationComments 
                             comments={evaluation.comments.map((comment, index) => ({
                               id: `${evaluation.agentId}-comment-${index}`,
-                              description: comment.description,
+                              description: comment.description || '',
                               importance: comment.importance ?? null,
                               grade: comment.grade ?? null,
                               evaluationVersionId: evaluation.id || '',
@@ -307,12 +307,12 @@ export function EvaluationView({
                               metadata: comment.metadata ?? null,
                               highlight: {
                                 id: `${evaluation.agentId}-highlight-${index}`,
-                                startOffset: comment.highlight.startOffset,
-                                endOffset: comment.highlight.endOffset,
-                                quotedText: comment.highlight.quotedText,
-                                isValid: comment.highlight.isValid,
-                                prefix: comment.highlight.prefix ?? null,
-                                error: comment.error ?? null,
+                                startOffset: comment.highlight?.startOffset || 0,
+                                endOffset: comment.highlight?.endOffset || 0,
+                                quotedText: comment.highlight?.quotedText || '',
+                                isValid: comment.highlight?.isValid || true,
+                                prefix: comment.highlight?.prefix ?? null,
+                                error: comment.highlight?.error ?? null,
                               }
                             }))} 
                           />

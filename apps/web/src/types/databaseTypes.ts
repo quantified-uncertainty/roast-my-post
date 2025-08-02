@@ -19,13 +19,15 @@ export interface Document extends Omit<BaseDocument, 'reviews'> {
 }
 
 // Comment type that extends the AI package Comment type with database fields
-export interface Comment extends BaseComment {
+export interface Comment extends Omit<BaseComment, 'importance' | 'grade'> {
   id?: string;
   evaluationId?: string;
   createdAt?: Date;
   updatedAt?: Date;
   agentId?: string;
   reasoning?: string;
+  importance: number | null;
+  grade: number | null;
 }
 
 // Database Evaluation type that includes all the database-specific fields
@@ -55,15 +57,12 @@ export interface Evaluation {
     version: number;
     summary: string;
     analysis?: string;
-    grade?: number;
+    grade: number | null;
     selfCritique?: string;
     createdAt: Date;
     isStale?: boolean;
     documentVersion?: {
-      id: string;
       version: number;
-      title: string;
-      content: string;
     };
     comments?: Array<{
       id: string;

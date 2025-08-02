@@ -56,12 +56,12 @@ export function VersionDetails({
       summary: selectedVersion.summary,
       analysis: selectedVersion.analysis,
       selfCritique: selectedVersion.selfCritique,
-      comments: selectedVersion.comments.map((comment, index) => ({
+      comments: selectedVersion.comments?.map((comment, index) => ({
         id: `comment-${index}`,
         description: comment.description,
         importance: comment.importance || null,
         grade: comment.grade || null,
-      })),
+      })) || [],
       job: selectedVersion.job ? {
         llmThinking: selectedVersion.job.llmThinking,
         priceInDollars: selectedVersion.job.priceInDollars,
@@ -82,7 +82,7 @@ export function VersionDetails({
               Evaluation Details
             </h3>
             <p className="text-sm text-gray-500">
-              Document Version: {selectedVersion.documentVersion.version}
+              Document Version: {selectedVersion.documentVersion?.version || 'Unknown'}
               {selectedVersion.version && (
                 <> • Evaluation Version: {selectedVersion.version}</>
               )}
@@ -190,9 +190,9 @@ export function VersionDetails({
             <EvaluationContent
               summary={selectedVersion.summary}
               analysis={selectedVersion.analysis || ""}
-              thinking={selectedVersion.job?.llmThinking}
+              thinking={selectedVersion.job?.llmThinking || undefined}
               selfCritique={selectedVersion.selfCritique}
-              comments={selectedVersion.comments.map((comment, index) => ({
+              comments={selectedVersion.comments?.map((comment, index) => ({
                 id: `comment-${index}`,
                 description: comment.description,
                 importance: comment.importance || null,
@@ -212,7 +212,7 @@ export function VersionDetails({
                   error: null,
                   isValid: comment.highlight?.isValid || true
                 }
-              }))}
+              })) || []}
               agentName={selectedReview?.agent?.name || "Unknown Agent"}
               agentDescription={selectedReview?.agent?.description}
               grade={selectedVersion.grade}

@@ -263,7 +263,7 @@ export function validateHighlights(review: Evaluation): {
   const errors: string[] = [];
 
   for (const comment of review.comments) {
-    if (!comment.highlight.isValid) {
+    if (comment.highlight && !comment.highlight.isValid) {
       errors.push(`Invalid highlight for comment: ${comment.description}`);
     }
   }
