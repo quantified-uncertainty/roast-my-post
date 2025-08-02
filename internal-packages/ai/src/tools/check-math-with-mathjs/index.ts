@@ -2,17 +2,17 @@ import { evaluate, format, parse } from 'mathjs';
 import { Tool } from '../base/Tool';
 import { logger } from '../../shared/logger';
 import type { ToolContext } from '../base/Tool';
-import { callClaude, MODEL_CONFIG } from '@roast/ai';
-import { createAnthropicClient } from "@roast/ai";
-import type { RichLLMInteraction } from '@roast/ai';
+import { callClaude, MODEL_CONFIG } from '../../claude/wrapper';
+import { createAnthropicClient } from '../../utils/anthropic';
+import type { RichLLMInteraction } from '../../types';
 import type { 
   MathVerificationStatus, 
   MathErrorDetails, 
   MathVerificationDetails 
 } from '../shared/math-schemas';
 import { generateCacheSeed } from '../shared/cache-utils';
-import { sessionContext } from '@roast/ai';
-import { createHeliconeHeaders } from '@roast/ai';
+import { sessionContext } from '../../helicone/sessionContext';
+import { createHeliconeHeaders } from '../../helicone/sessions';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 // Import types and schemas

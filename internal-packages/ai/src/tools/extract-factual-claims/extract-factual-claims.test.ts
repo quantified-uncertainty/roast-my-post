@@ -11,7 +11,7 @@ jest.mock('@roast/ai', () => ({
   createHeliconeHeaders: jest.fn(() => ({}))
 }));
 
-import { callClaudeWithTool } from '@roast/ai';
+import { callClaudeWithTool } from '../../claude/wrapper';
 
 describe('ExtractFactualClaimsTool', () => {
   const tool = new ExtractFactualClaimsTool();

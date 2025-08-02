@@ -7,11 +7,12 @@ import {
   DEFAULT_TIMEOUT,
   withTimeout,
 } from "../../shared/types";
-import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
+import { callClaudeWithTool } from "../../claude/wrapper";
+import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
 import { getRandomElement, getPercentileNumber } from "../../shared/types";
-import { sessionContext } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
+import { sessionContext } from "../../helicone/sessionContext";
+import { createHeliconeHeaders } from "../../helicone/sessions";
 import { perplexityResearchTool } from "../perplexity-research/index";
 
 interface ForecastResponse {

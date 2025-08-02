@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { extractMathExpressionsTool } from './index';
 import { logger } from '../../shared/logger';
-import { setupClaudeToolMock } from '@roast/ai';
+import { setupClaudeToolMock } from '../../claude/mockHelpers';
 
 // Mock Claude wrapper
 jest.mock('@roast/ai', () => ({
@@ -12,7 +12,7 @@ jest.mock('@roast/ai', () => ({
   createHeliconeHeaders: jest.fn(() => ({})),
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));
-import { callClaudeWithTool } from '@roast/ai';
+import { callClaudeWithTool } from '../../claude/wrapper';
 
 // Get the mocked function and setup helper
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<typeof callClaudeWithTool>;

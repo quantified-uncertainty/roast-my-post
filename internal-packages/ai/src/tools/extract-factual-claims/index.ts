@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '@roast/ai';
-import { sessionContext } from '@roast/ai';
-import { createHeliconeHeaders } from '@roast/ai';
+import { callClaudeWithTool } from '../../claude/wrapper';
+import { sessionContext } from '../../helicone/sessionContext';
+import { createHeliconeHeaders } from '../../helicone/sessions';
 import { generateCacheSeed } from '../shared/cache-utils';
 
 // Claim schema

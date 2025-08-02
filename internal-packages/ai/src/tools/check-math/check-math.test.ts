@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import CheckMathTool from './index';
 import { logger } from '../../shared/logger';
-import { createMockLLMInteraction } from '@roast/ai';
-import { setupClaudeToolMock } from '@roast/ai';
+import { createMockLLMInteraction } from '../../claude/testUtils';
+import { setupClaudeToolMock } from '../../claude/mockHelpers';
 
 // Mock Claude wrapper
 jest.mock('@roast/ai', () => ({
@@ -18,7 +18,7 @@ jest.mock('@roast/ai', () => ({
   createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));
-import { callClaudeWithTool } from '@roast/ai';
+import { callClaudeWithTool } from '../../claude/wrapper';
 
 describe('CheckMathTool', () => {
   const mockContext = { 

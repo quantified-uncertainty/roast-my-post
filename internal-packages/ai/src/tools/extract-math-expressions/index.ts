@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
-import { callClaudeWithTool } from '@roast/ai';
-import { sessionContext } from '@roast/ai';
-import { createHeliconeHeaders, type HeliconeSessionConfig } from '@roast/ai';
+import { callClaudeWithTool } from '../../claude/wrapper';
+import { sessionContext } from '../../helicone/sessionContext';
+import { createHeliconeHeaders } from '../../helicone/sessions';
+import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { generateCacheSeed } from '../shared/cache-utils';
 import type { MathErrorType, MathSeverity } from '../shared/math-schemas';
 
