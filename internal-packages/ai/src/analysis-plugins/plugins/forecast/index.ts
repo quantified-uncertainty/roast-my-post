@@ -170,7 +170,6 @@ class ExtractedForecast {
       },
       importance: this.commentImportanceScore(),
       
-      // New standardized fields
       header: this.getHeaderText(),
       level: this.getLevel(),
       source: 'forecast',

@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# sync-claude-permissions.sh - Sync Claude permissions across worktrees and branches
+# sync-claude-permissions.sh - Sync Claude Code settings across worktrees
 #
-# This script helps maintain consistent Claude Code permissions when:
-# 1. Creating new branches in worktrees
-# 2. Switching between branches
-# 3. Updating permissions across all worktrees
+# This script syncs Claude Code's allowed/denied commands (.claude/settings.local.json)
+# from the main repository to worktrees. This is NOT about Unix file permissions!
+#
+# What this script does:
+# - Copies .claude/settings.local.json from main repo to worktrees
+# - Ensures all worktrees have the same Claude Code command permissions
 #
 # Usage:
 #   ./dev/scripts/sync-claude-permissions.sh               # Sync to current directory
@@ -28,8 +30,12 @@ find_main_repo() {
         if [ -f "$current/.git" ]; then
             # This is a worktree, get the main repo
             local gitdir=$(cat "$current/.git" | grep "gitdir:" | cut -d' ' -f2)
+            # Convert relative path to absolute if needed
+            if [[ "$gitdir" != /* ]]; then
+                gitdir="$current/$gitdir"
+            fi
             # Navigate from .git/worktrees/branch to main repo
-            echo "$(cd "$current/$(dirname "$gitdir")/../.." && pwd)"
+            echo "$(cd "$(dirname "$gitdir")/../.." && pwd)"
             return
         elif [ -d "$current/.git" ]; then
             # This is the main repo

@@ -295,7 +295,6 @@ export function EvaluationView({
                               grade: comment.grade ?? null,
                               evaluationVersionId: evaluation.id || '',
                               highlightId: `${evaluation.agentId}-highlight-${index}`,
-                              // New standardized fields
                               header: comment.header ?? null,
                               level: comment.level ?? null,
                               source: comment.source ?? null,

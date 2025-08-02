@@ -90,7 +90,6 @@ export class HybridMathErrorWrapper {
       },
       importance: this.commentImportanceScore(),
       
-      // New standardized fields
       header: this.verificationResult.conciseCorrection || `Math Error: ${this.expression.originalText}`,
       level: 'error' as const, // HybridMathErrorWrapper only handles errors
       source: 'math',
@@ -249,7 +248,6 @@ export class ExtractedMathExpression {
       },
       importance: this.commentImportanceScore(),
       
-      // New standardized fields
       header: this.expression.conciseCorrection || 
               (this.expression.hasError ? `Math Error: ${this.expression.originalText}` : `Math: ${this.expression.originalText}`),
       level: this.expression.hasError ? 'error' as const : 

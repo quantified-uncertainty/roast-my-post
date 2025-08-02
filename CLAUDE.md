@@ -548,6 +548,114 @@ The linter (ESLint) does NOT catch TypeScript type errors. "Lint passing" does n
   - Configure script now supports both ROAST_MY_POST_MCP_DATABASE_URL and DATABASE_URL
   - No longer requires separate prisma:generate step
 
+## MCP Server Troubleshooting Guide (2025-08-01)
+
+### The Persistent Cache Problem
+
+**CRITICAL**: Claude Code has a known caching issue with MCP servers ([GitHub Issue #3095](https://github.com/anthropics/claude-code/issues/3095)). When you rebuild an MCP server, Claude Code "hangs onto some kind of cache of the MCP server that prevents it from seeing the updates despite the server restarting."
+
+#### Symptoms of MCP Cache Issues:
+- MCP tools show old errors even after fixes are applied
+- Server appears to start but uses stale code
+- Database schema errors persist despite Prisma regeneration (e.g., "costInCents" column errors)
+- Tools reference old file paths or outdated imports
+
+#### Root Causes We've Encountered:
+1. **Stale Configuration Paths**: After monorepo migration, Claude config still pointed to old `/mcp-server/` instead of `/apps/mcp-server/`
+2. **Stale Process Detection**: Old MCP server processes from previous paths continue running
+3. **Module Resolution Issues**: Workspace imports failing in compiled environments
+4. **Environment Variable Coupling**: Cross-package dependencies breaking isolation
+
+### MCP Server Debug Protocol
+
+#### Step 1: Check Running Processes
+```bash
+# Find ALL MCP server processes
+ps aux | grep "mcp-server" | grep -v grep
+
+# Kill stale processes if found
+pkill -f "old-path/mcp-server"
+```
+
+#### Step 2: Verify Configuration Path
+```bash
+# Check Claude config file
+cat "$HOME/Library/Application Support/Claude/claude_desktop_config.json" | grep -A10 "roast-my-post"
+```
+
+**Current correct configuration:**
+```json
+"roast-my-post": {
+  "command": "npx",
+  "args": ["tsx", "/full/path/to/apps/mcp-server/src/index.ts"],
+  "env": {
+    "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/roast_my_post?schema=public",
+    "ROAST_MY_POST_MCP_API_BASE_URL": "http://localhost:3000", 
+    "ROAST_MY_POST_MCP_USER_API_KEY": "rmp_..."
+  }
+}
+```
+
+#### Step 3: Test MCP Server Directly
+```bash
+# Test without Claude to isolate issues
+echo '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}' | npx tsx apps/mcp-server/src/index.ts
+```
+
+**Expected Success Output:**
+- Server starts with green checkmarks ✅
+- Returns JSON with tools list
+- Shows correct API key (masked)
+- No database connection errors
+
+#### Step 4: Check MCP Logs
+```bash
+# View recent MCP server logs
+tail -n 50 ~/Library/Logs/Claude/mcp-server-roast-my-post.log
+
+# Look for specific errors:
+# - EPIPE errors (connection issues)  
+# - "costInCents" column errors (stale Prisma client)
+# - Module resolution errors (import path issues)
+```
+
+#### Step 5: Full Cache Clear Protocol
+```bash
+# 1. Kill all MCP processes
+pkill -f "mcp-server"
+
+# 2. Remove old directories if they exist
+rm -rf mcp-server/  # Old location
+
+# 3. Regenerate Prisma client
+pnpm --filter @roast/db run gen
+
+# 4. RESTART Claude Code completely (essential!)
+# Exit all Claude Code instances and restart
+```
+
+### Quick Reference Commands
+
+```bash
+# Emergency MCP reset (nuclear option)
+pkill -f "mcp-server" && rm -rf ~/Library/Logs/Claude/mcp-server-roast-my-post.log
+
+# Test MCP server health
+echo '{"jsonrpc": "2.0", "method": "verify_setup", "id": 1}' | npx tsx apps/mcp-server/src/index.ts
+
+# Check Claude MCP status (after restart)
+# Open Claude Code and run: /mcp
+
+# View real-time MCP logs
+tail -f ~/Library/Logs/Claude/mcp-server-roast-my-post.log
+```
+
+### Key Insight: The Cache Is Real
+
+The MCP server cache issue is not a configuration problem—it's a fundamental limitation of how Claude Code manages MCP servers. **Always restart Claude Code completely** after any MCP-related changes. The `/mcp` command and configuration refreshes are not sufficient to clear the cache.
+
+**Remember**: This problem will recur every time you make significant changes to the MCP server code or configuration. Build the restart step into your development workflow.
+
 ## Critical Prisma/Database Debugging Guide (2024-06-25)
 
 ### Common Prisma Issues and Solutions

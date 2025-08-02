@@ -21,7 +21,6 @@ interface ExportEvaluationData {
       description: string;
       importance?: number | null;
       grade?: number | null;
-      // New standardized fields
       header?: string | null;
       level?: string | null;
       source?: string | null;

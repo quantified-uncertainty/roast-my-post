@@ -271,7 +271,6 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       },
       importance,
       
-      // New standardized fields
       header: error.conciseCorrection || `${error.text} → ${error.correction}`,
       level: 'error' as const, // Spelling/grammar issues are always errors
       source: 'spelling',
