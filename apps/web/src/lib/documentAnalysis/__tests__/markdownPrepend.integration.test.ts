@@ -2,7 +2,7 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import type { Agent } from "@roast/ai";
 
 // Mock the @roast/ai module

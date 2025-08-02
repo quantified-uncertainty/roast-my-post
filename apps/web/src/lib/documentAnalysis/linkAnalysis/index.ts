@@ -4,7 +4,7 @@ import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 export async function generateLinkAnalysis(
   document: Document,

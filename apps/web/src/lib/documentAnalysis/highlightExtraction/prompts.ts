@@ -2,7 +2,7 @@ import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedLocator } from "@roast/ai/text-location/line-based";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 const documentInformationSection = (document: Document) => {
   // Get the full content with prepend using the centralized helper

@@ -1,4 +1,4 @@
-import { validateUrl, UrlValidationInput } from "../../../urlValidator/index";
+import { validateUrl, UrlValidationInput } from "@/lib/urlValidator/index";
 
 // Mock fetch globally
 global.fetch = jest.fn();

@@ -5,7 +5,7 @@ import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
 import { extractUrls } from "./urlExtractor";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 /**
  * Truncate URL for display while keeping it clickable

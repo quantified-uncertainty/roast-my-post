@@ -549,9 +549,9 @@ export class JobModel {
           // Create highlight with validation status
           const createdHighlight = await prisma.evaluationHighlight.create({
             data: {
-              startOffset: comment.highlight!.startOffset!,
-              endOffset: comment.highlight!.endOffset!,
-              quotedText: comment.highlight!.quotedText!,
+              startOffset: comment.highlight!.startOffset,
+              endOffset: comment.highlight!.endOffset,
+              quotedText: comment.highlight!.quotedText,
               prefix: comment.highlight!.prefix || null,
               isValid,
               error,

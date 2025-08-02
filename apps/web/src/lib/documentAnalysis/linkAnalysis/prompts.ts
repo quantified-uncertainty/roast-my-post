@@ -1,6 +1,6 @@
 import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
+import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 export function getLinkAnalysisPrompts(
   agentInfo: Agent,

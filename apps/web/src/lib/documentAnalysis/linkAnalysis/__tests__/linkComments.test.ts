@@ -1,4 +1,4 @@
-import type { LinkAnalysis } from "../../../urlValidator";
+import type { LinkAnalysis } from "@/lib/urlValidator";
 import type { Document } from "@roast/ai";
 
 // Mock the internal comment generation function since it's not exported
