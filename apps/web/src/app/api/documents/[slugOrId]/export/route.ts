@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { DocumentModel } from "@/models/Document";
 import yaml from "js-yaml";
-import type { Document, Evaluation, Comment } from "@/types/documentSchema";
+import type { Evaluation } from "@roast/ai";
+import type { Document, Comment } from "@/types/databaseTypes";
 
 function documentToMarkdown(doc: Document): string {
   const metadata = [

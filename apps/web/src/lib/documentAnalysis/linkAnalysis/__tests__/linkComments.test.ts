@@ -1,5 +1,5 @@
 import type { LinkAnalysis } from "../../../urlValidator";
-import type { Document } from "../../../../types/documents";
+import type { Document } from "@roast/ai";
 
 // Mock the internal comment generation function since it's not exported
 // We'll test this via the main workflow instead

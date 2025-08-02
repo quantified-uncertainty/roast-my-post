@@ -3,7 +3,7 @@
 import { Bot } from "lucide-react";
 import Link from "next/link";
 
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 interface AgentsListProps {
   agents: Agent[];

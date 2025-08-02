@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@roast/ai";
 import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
 
 import {
@@ -100,7 +100,7 @@ export function PositionedComment({
           )}
           
           {/* Show full description when expanded or if no header */}
-          {(isHovered || !comment.header) && (
+          {(isHovered || !comment.header) && comment.description && (
             <div
               className={`prose prose-sm max-w-none break-words ${!isHovered && comment.header ? "line-clamp-2" : ""}`}
             >

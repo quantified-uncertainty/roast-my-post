@@ -1,4 +1,5 @@
-import type { Comment, Evaluation, Highlight } from "../../types/documentSchema";
+import type { Evaluation, Highlight } from "@roast/ai";
+import type { Comment } from "@/types/databaseTypes";
 
 /**
  * Checks if two highlights overlap

@@ -1,6 +1,6 @@
 import chroma from "chroma-js";
 
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@/types/databaseTypes";
 
 // Available colors for comments (keeping this for non-evaluation cases)
 export const COMMENT_COLORS = [

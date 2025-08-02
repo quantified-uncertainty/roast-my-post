@@ -1,5 +1,5 @@
 import { generateSelfCritique } from "../selfCritique";
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 // Mock logger to avoid console output
 jest.mock("../../../lib/logger", () => ({

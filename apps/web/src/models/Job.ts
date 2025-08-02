@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import {
   analyzeDocument,
 } from "../lib/documentAnalysis";
-import { Agent } from "../types/agentSchema";
+import { Agent } from "@roast/ai";
 import { ANALYSIS_MODEL } from "@roast/ai";
 import {
   calculateApiCostInDollars,

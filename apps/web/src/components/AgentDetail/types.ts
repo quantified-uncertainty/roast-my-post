@@ -1,4 +1,4 @@
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 export interface AgentDetailProps {
   agent: Agent;

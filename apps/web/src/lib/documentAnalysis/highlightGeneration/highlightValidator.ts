@@ -1,4 +1,4 @@
-import type { Comment } from "../../../types/documentSchema";
+import type { Comment } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import {
   LineBasedLocator,

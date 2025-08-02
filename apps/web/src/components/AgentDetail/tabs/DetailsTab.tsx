@@ -1,5 +1,5 @@
 import MarkdownRenderer from "@/components/MarkdownRenderer";
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 interface DetailsTabProps {
   agent: Agent;

@@ -1,5 +1,5 @@
 import { GradeBadge } from "@/components/GradeBadge";
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@/types/databaseTypes";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
@@ -64,13 +64,15 @@ export function CommentsSidebar({
                       >
                         {comment.header ? (
                           <span className="font-semibold">{comment.header}</span>
-                        ) : (
+                        ) : comment.description ? (
                           <MarkdownRenderer className="inline">
                             {comment.description
                               .split("\n")
                               .slice(0, 2)
                               .join("\n")}
                           </MarkdownRenderer>
+                        ) : (
+                          <span className="text-gray-500">No description</span>
                         )}
                       </h3>
                       <div className="flex shrink-0 items-center gap-2">
@@ -95,14 +97,14 @@ export function CommentsSidebar({
                         />
                       </div>
                     </div>
-                    {expandedTag === tag && comment.header && (
+                    {expandedTag === tag && comment.header && comment.description && (
                       <div className="mt-2 text-gray-800">
                         <MarkdownRenderer className="text-sm">
                           {comment.description}
                         </MarkdownRenderer>
                       </div>
                     )}
-                    {expandedTag === tag && !comment.header &&
+                    {expandedTag === tag && !comment.header && comment.description &&
                       comment.description.split("\n").length > 2 && (
                         <div className="mt-1 text-gray-800">
                           <MarkdownRenderer className="text-sm">

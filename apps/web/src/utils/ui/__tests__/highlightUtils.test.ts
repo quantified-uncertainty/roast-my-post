@@ -1,4 +1,5 @@
-import type { Comment, Highlight } from "../../../types/documentSchema";
+import type { Highlight } from "@roast/ai";
+import type { Comment } from "@/types/databaseTypes";
 import {
   fixOverlappingHighlights,
   highlightsOverlap,

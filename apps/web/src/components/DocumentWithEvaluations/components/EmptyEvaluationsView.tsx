@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import SlateEditor from "@/components/SlateEditor";
 import { InformationCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import type { Document } from "@/types/documentSchema";
+import type { Document } from "@/types/databaseTypes";
 
 import { DocumentMetadata } from "./DocumentMetadata";
 

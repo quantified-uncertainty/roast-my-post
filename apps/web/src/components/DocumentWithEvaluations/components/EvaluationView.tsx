@@ -16,7 +16,7 @@ import {
 } from "@/components/DocumentWithEvaluations/components/CommentsColumn";
 import { GradeBadge } from "@/components/GradeBadge";
 import SlateEditor from "@/components/SlateEditor";
-import type { Comment } from "@/types/documentSchema";
+import type { Comment } from "@roast/ai";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
 
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
@@ -74,13 +74,19 @@ export function EvaluationView({
 
   const highlights = useMemo(
     () =>
-      displayComments.map((comment, index) => ({
-        startOffset: comment.highlight.startOffset,
-        endOffset: comment.highlight.endOffset,
-        quotedText: comment.highlight.quotedText,
-        tag: index.toString(),
-        color: "#3b82f6",
-      })),
+      displayComments
+        .filter((comment): comment is typeof comment & { highlight: NonNullable<typeof comment.highlight> } => 
+          comment.highlight != null && 
+          comment.highlight.startOffset != null && 
+          comment.highlight.endOffset != null
+        )
+        .map((comment, index) => ({
+          startOffset: comment.highlight.startOffset!,
+          endOffset: comment.highlight.endOffset!,
+          quotedText: comment.highlight.quotedText || "",
+          tag: index.toString(),
+          color: "#3b82f6",
+        })),
     [displayComments]
   );
 

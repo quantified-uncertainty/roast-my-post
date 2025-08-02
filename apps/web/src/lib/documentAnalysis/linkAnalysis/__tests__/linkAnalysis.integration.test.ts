@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { generateLinkAnalysis } from "../index";
-import type { Agent } from "../../../../types/agentSchema";
-import type { Document } from "../../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 
 // Integration test for the link analysis step (mocked LLM calls)
 describe("Link Analysis Integration", () => {

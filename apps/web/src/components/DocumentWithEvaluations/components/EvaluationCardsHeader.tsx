@@ -9,7 +9,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { GradeBadge } from "../../GradeBadge";
-import type { Document } from "@/types/documentSchema";
+import type { Document } from "@roast/ai";
 import type { EvaluationState } from "../types";
 import { TRANSITION_DURATION, TRANSITION_DURATION_SLOW, CARDS_GRID_MAX_HEIGHT } from "../constants";
 

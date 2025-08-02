@@ -1,4 +1,4 @@
-import type { Comment } from '@/types/documentSchema';
+import type { Comment } from '@roast/ai';
 
 interface CommentStatsProps {
   comments: (Comment & { agentName?: string })[];

@@ -1,15 +1,15 @@
 import { nanoid } from "nanoid";
 
 import { prisma } from "@roast/db";
-import type { Agent, AgentInput } from "@/types/agentSchema";
+import type { Agent, AgentInput } from "@roast/ai";
 import {
   AgentInputSchema,
   AgentSchema,
   AgentVersionSchema,
-} from "@/types/agentSchema";
+} from "@roast/ai";
 import type { AgentReview } from "@/types/evaluationSchema";
 import { AgentReviewSchema } from "@/types/evaluationSchema";
-import type { AgentVersion } from "@/types/agentSchema";
+import type { AgentVersion } from "@roast/ai";
 
 export { AgentInputSchema as agentSchema };
 export type { AgentInput };

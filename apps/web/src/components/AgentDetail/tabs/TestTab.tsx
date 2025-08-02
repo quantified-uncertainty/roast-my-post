@@ -3,7 +3,7 @@ import { Play } from "lucide-react";
 import { logger } from "@/lib/logger";
 
 import { Button } from "@/components/Button";
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { DocumentSelector } from "./DocumentSelector";
 
 import type { ActiveTab } from "../types";

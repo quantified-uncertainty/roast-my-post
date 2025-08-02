@@ -7,9 +7,9 @@ import { PageLayout } from "@/components/PageLayout";
 
 import { GradeBadge } from "@/components/GradeBadge";
 import {
-  Document,
   Evaluation,
-} from "@/types/documentSchema";
+} from "@roast/ai";
+import type { Document } from "@/types/databaseTypes";
 import { getValidCommentCount } from "@/utils/ui/commentUtils";
 import {
   formatWordCount,

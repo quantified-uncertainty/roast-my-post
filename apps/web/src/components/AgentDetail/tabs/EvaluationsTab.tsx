@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationContent } from "@/components/evaluation";
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 import { StatusIcon } from "../components";
 import type {

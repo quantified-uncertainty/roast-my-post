@@ -5,9 +5,9 @@
  * The main logic has been moved to PluginManager.analyzeDocument()
  */
 
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
-import type { Comment } from "../../../types/documentSchema";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@/types/databaseTypes";
 import type { HeliconeSessionConfig } from "@roast/ai";
 import { PluginManager } from "@roast/ai";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
@@ -50,7 +50,9 @@ export async function analyzeWithMultiEpistemicEval(
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
-    highlights: result.highlights as Comment[],
+    highlights: result.highlights.filter((h): h is Comment => 
+      !!(h.description && h.highlight && typeof h.isValid === 'boolean')
+    ),
     tasks: result.tasks, // TaskResult interface is compatible
     jobLogString: result.jobLogString, // Include centralized plugin logs
   };

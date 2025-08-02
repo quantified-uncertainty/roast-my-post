@@ -1,5 +1,5 @@
 // Shared types used across documentAnalysis modules
-import type { Comment } from "../../../types/documentSchema";
+import type { Comment } from "@roast/ai";
 
 export interface TaskResult {
   name: string;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useCallback } from "react";
 
-import type { Document } from "@/types/documentSchema";
+import type { Document } from "@/types/databaseTypes";
 import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
@@ -99,7 +99,7 @@ export function DocumentMetadata({
         </Link>
         {(document.importUrl || document.url) && (
           <Link
-            href={document.importUrl || document.url}
+            href={document.importUrl || document.url || ""}
             target="_blank"
             className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300"
           >

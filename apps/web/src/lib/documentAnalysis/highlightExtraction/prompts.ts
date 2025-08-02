@@ -1,5 +1,5 @@
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedLocator } from "@roast/ai/text-location/line-based";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";

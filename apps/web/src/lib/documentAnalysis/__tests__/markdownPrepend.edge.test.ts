@@ -1,7 +1,7 @@
 import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { createTestDocument, getPrependLineCount } from "../testUtils";
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 // Mock the @roast/ai module
 jest.mock("@roast/ai", () => ({

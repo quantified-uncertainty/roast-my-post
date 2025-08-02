@@ -1,7 +1,7 @@
 import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
 import { MathPlugin } from '@roast/ai';
-import type { Document } from '../../../types/documents';
-import type { Agent } from '../../../types/agentSchema';
+import type { Document } from '@roast/ai';
+import type { Agent } from '@roast/ai';
 
 // Mock only the external dependencies (LLM calls), not the internal components
 jest.mock('@roast/ai', () => ({

@@ -2,8 +2,8 @@
 import 'openai/shims/node';
 
 import { analyzeDocument } from "../analyzeDocument";
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
 
 // To run: npm test -- --testNamePattern="Comprehensive Analysis E2E"
 describe("Comprehensive Analysis E2E", () => {

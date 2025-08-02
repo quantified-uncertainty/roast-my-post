@@ -33,6 +33,26 @@ export {
 export type { Finding } from './analysis-plugins/types';
 export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
 
+// Document and agent types (avoid conflicts with existing exports)
+export * from './types/agentSchema';
+export * from './types/documentSchema';
+export type { 
+  Document, 
+  DocumentsCollection,
+  RawDocument, 
+  RawDocumentReview,
+  RawDocumentsCollection,
+  transformDocument,
+  transformDocumentsCollection
+} from './types/documents';
+export * from './types/llmSchema';
+export {
+  DEFAULT_TEMPERATURE,
+  COMPREHENSIVE_ANALYSIS_TIMEOUT,
+  HIGHLIGHT_EXTRACTION_TIMEOUT,
+  withTimeout
+} from './types/openai';
+
 // Shared utilities
 export * from './shared/logger';
 export type { 
@@ -44,7 +64,6 @@ export type {
 
 export {
   DEFAULT_TIMEOUT,
-  withTimeout,
   getRandomElement,
   getPercentile,
   getPercentileNumber,

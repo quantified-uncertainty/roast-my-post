@@ -1,6 +1,6 @@
 import { ExportEvaluationButton } from "@/components/ExportEvaluationButton";
 import { EvaluationContent } from "@/components/evaluation";
-import type { Evaluation } from "@/types/documentSchema";
+import type { Evaluation } from "@roast/ai";
 import Link from "next/link";
 import {
   ChatBubbleLeftIcon,

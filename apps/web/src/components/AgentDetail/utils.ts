@@ -1,7 +1,7 @@
 import * as yaml from "js-yaml";
 import { logger } from "@/lib/logger";
 
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { formatRelativeTime, formatDateTime } from "@/utils/dateUtils";
 
 import type { ExportType } from "./types";

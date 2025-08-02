@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { Agent } from "@/types/agentSchema";
+import type { Agent } from "@roast/ai";
 
 import { StatusBadge } from "../components";
 import type { AgentDocument } from "../types";

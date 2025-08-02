@@ -1,10 +1,10 @@
-import type { Agent } from "../../../types/agentSchema";
+import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
 import {
   DEFAULT_TEMPERATURE,
   withTimeout,
   SELF_CRITIQUE_TIMEOUT,
-} from "../../../types/openai";
+} from "@roast/ai";
 import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
 import type { TaskResult } from "../shared/types";

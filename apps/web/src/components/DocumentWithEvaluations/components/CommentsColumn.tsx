@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 
-import type { Comment, Document } from "@/types/documentSchema";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@/types/databaseTypes";
 import {
   calculateCommentPositions,
   checkHighlightsReady,
@@ -227,7 +228,7 @@ export function CommentsColumn({
             const isHovered = hoveredCommentId === tag;
 
             // Use a stable key based on comment content and agent
-            const stableKey = `${comment.agentName || "default"}-${comment.highlight.startOffset}-${comment.highlight.endOffset}-${index}`;
+            const stableKey = `${comment.agentName || "default"}-${comment.highlight?.startOffset || 0}-${comment.highlight?.endOffset || 0}-${index}`;
 
             return (
               <PositionedComment

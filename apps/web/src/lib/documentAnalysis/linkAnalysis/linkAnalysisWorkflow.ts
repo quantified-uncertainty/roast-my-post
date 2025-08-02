@@ -1,6 +1,6 @@
-import type { Agent } from "../../../types/agentSchema";
-import type { Document } from "../../../types/documents";
-import type { Comment } from "../../../types/documentSchema";
+import type { Agent } from "@roast/ai";
+import type { Document } from "@roast/ai";
+import type { Comment } from "@roast/ai";
 import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
