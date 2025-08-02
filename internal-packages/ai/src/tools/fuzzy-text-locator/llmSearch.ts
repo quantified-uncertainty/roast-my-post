@@ -6,11 +6,11 @@
 
 import {
   callClaudeWithTool,
-  MODEL_CONFIG,
-} from "@roast/ai";
-import { sessionContext } from "@roast/ai";
-import type { HeliconeSessionConfig } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
+} from "../../claude/wrapper";
+import { MODEL_CONFIG } from "../../shared/types";
+import { sessionContext } from "../../helicone/sessionContext";
+import type { HeliconeSessionConfig } from "../../helicone/sessions";
+import { createHeliconeHeaders } from "../../helicone/sessions";
 import { logger } from "../../shared/logger";
 import { LineBasedLocator } from "../../text-location/line-based";
 

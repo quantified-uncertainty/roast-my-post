@@ -8,8 +8,8 @@
 // Document and Comment types are passed as parameters to avoid circular dependencies
 import type { LLMInteraction } from "./types";
 import type { Comment } from "../shared/types";
-import { sessionContext } from "@roast/ai";
-import type { HeliconeSessionConfig } from "@roast/ai";
+import { sessionContext } from "../helicone/sessionContext";
+import type { HeliconeSessionConfig } from "../helicone/sessions";
 import { logger } from "../shared/logger";
 import {
   type JobLogSummary,

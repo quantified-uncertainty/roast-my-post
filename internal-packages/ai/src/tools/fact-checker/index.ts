@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { callClaudeWithTool } from "@roast/ai";
-import { sessionContext } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
+import { callClaudeWithTool } from "../../claude/wrapper";
+import { sessionContext } from "../../helicone/sessionContext";
+import { createHeliconeHeaders } from "../../helicone/sessions";
 import { perplexityResearchTool } from "../perplexity-research";
 import { generateCacheSeed } from "../shared/cache-utils";
 

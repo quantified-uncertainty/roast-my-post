@@ -12,7 +12,7 @@ import {
 import type { ForecasterOutput } from "../../../tools/forecaster";
 import forecasterTool from "../../../tools/forecaster";
 import type { Comment } from "../../../shared/types";
-import { sessionContext } from "@roast/ai";
+import { sessionContext } from "../../../helicone/sessionContext";
 
 import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
