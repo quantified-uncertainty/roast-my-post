@@ -7,7 +7,7 @@
 import {
   callClaudeWithTool,
 } from "../../claude/wrapper";
-import { MODEL_CONFIG } from "../../shared/types";
+import { MODEL_CONFIG } from "../../claude/wrapper";
 import { sessionContext } from "../../helicone/sessionContext";
 import type { HeliconeSessionConfig } from "../../helicone/sessions";
 import { createHeliconeHeaders } from "../../helicone/sessions";

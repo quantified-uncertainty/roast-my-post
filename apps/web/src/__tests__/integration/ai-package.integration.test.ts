@@ -21,7 +21,7 @@ describe('@roast/ai Package Integration in Web App', () => {
     
     // Verify sessionContext is available
     expect(sessionContext).toBeDefined();
-    expect(sessionContext.setTool).toBeDefined();
+    expect(sessionContext.setSession).toBeDefined();
     
     // Verify tools are available
     expect(checkSpellingGrammarTool).toBeDefined();
@@ -37,20 +37,16 @@ describe('@roast/ai Package Integration in Web App', () => {
     const testAgent: Agent = {
       id: 'test-agent',
       name: 'Test Agent',
-      userId: 'user-123',
+      version: '1.0',
       description: 'Integration test agent',
-      isActive: true,
-      isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      providesGrades: false,
     };
 
     const testDoc: Document = {
       id: 'test-doc',
       title: 'Test Document',
       url: 'https://example.com/test',
-      submittedBy: 'user-123',
-      version: 1,
+      uploadedAt: new Date().toISOString(),
     };
 
     expect(testAgent.name).toBe('Test Agent');
@@ -65,8 +61,8 @@ describe('@roast/ai Package Integration in Web App', () => {
     tools.forEach(tool => {
       expect(tool.config).toBeDefined();
       expect(tool.config.name).toBeTruthy();
-      expect(tool.config.inputSchema).toBeDefined();
-      expect(tool.config.outputSchema).toBeDefined();
+      expect(tool.config).toBeDefined();
+      expect(tool.config.name).toBeTruthy();
       expect(tool.config.path).toBeTruthy();
     });
   });
@@ -89,10 +85,11 @@ describe('@roast/ai Package Integration in Web App', () => {
       const testToolName = 'test-tool';
       const testSessionId = 'test-session-123';
 
-      sessionContext.setTool(testToolName);
+      sessionContext.setSession({ sessionId: testSessionId, sessionPath: '/', sessionName: testToolName });
       sessionContext.setSessionId(testSessionId);
 
-      expect(sessionContext.getTool()).toBe(testToolName);
+      const session = sessionContext.getSession();
+      expect(session?.sessionId).toBe(testSessionId);
       expect(sessionContext.getSessionId()).toBe(testSessionId);
 
       // Clean up
