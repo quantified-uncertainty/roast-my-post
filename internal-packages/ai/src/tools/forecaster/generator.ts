@@ -12,6 +12,7 @@ import { logger } from "../../shared/logger";
 import { getRandomElement, getPercentileNumber } from "../../shared/types";
 import { sessionContext } from "@roast/ai";
 import { createHeliconeHeaders } from "@roast/ai";
+import { perplexityResearchTool } from "../perplexity-research/index";
 
 interface ForecastResponse {
   probability: number;
@@ -256,11 +257,8 @@ export async function generateForecastWithAggregation(
   if (options.usePerplexity) {
     try {
       console.log("  📚 Researching with Perplexity...");
-      // Dynamic import to avoid circular dependencies
-      const perplexityModule = await import("../perplexity-research/index");
-      const perplexityTool = perplexityModule.perplexityResearchTool || perplexityModule.default;
       
-      const research = await perplexityTool.execute({
+      const research = await perplexityResearchTool.execute({
         query: options.question,
         includeForecastingContext: true
       }, {
