@@ -107,13 +107,9 @@ export interface Evaluation {
   isStale?: boolean;
 }
 
-// Database Highlight type
+// Database Highlight type - matches EvaluationHighlight model in Prisma schema
 export interface Highlight {
   id?: string;
-  startLine?: number;
-  endLine?: number;
-  startChar?: number;
-  endChar?: number;
   startOffset: number;
   endOffset: number;
   quotedText: string;
