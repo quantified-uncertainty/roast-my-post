@@ -21,7 +21,7 @@ export default function FuzzyTextLocatorPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, { 
+      const response = await runToolWithAuth<{ documentText: string; searchText: string }, TextLocationFinderOutput>(checkToolPath, { 
         documentText,
         searchText: targetText 
       });

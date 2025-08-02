@@ -20,7 +20,7 @@ export default function DocumentChunkerPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, { text });
+      const response = await runToolWithAuth<{ text: string }, DocumentChunkerOutput>(checkToolPath, { text });
       setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

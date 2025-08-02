@@ -87,7 +87,7 @@ function documentToMarkdown(doc: Document): string {
 }
 
 function documentToYAML(doc: Document): string {
-  const exportData: Record<string, any> = {
+  const exportData: Record<string, unknown> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,
@@ -137,8 +137,8 @@ function documentToYAML(doc: Document): string {
   });
 }
 
-function documentToJSON(doc: Document): Record<string, any> {
-  const exportData: Record<string, any> = {
+function documentToJSON(doc: Document): Record<string, unknown> {
+  const exportData: Record<string, unknown> = {
     id: doc.id,
     title: doc.title,
     publishedDate: doc.publishedDate,

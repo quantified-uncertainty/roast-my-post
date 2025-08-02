@@ -1,4 +1,7 @@
-export async function runToolWithAuth(toolPath: string, data: any) {
+export async function runToolWithAuth<TData = unknown, TResult = unknown>(
+  toolPath: string, 
+  data: TData
+): Promise<TResult> {
   const response = await fetch(toolPath, {
     method: 'POST',
     headers: {
