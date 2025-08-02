@@ -310,9 +310,15 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.54.0
         version: 0.54.0
+      '@leeoniya/ufuzzy':
+        specifier: ^1.0.18
+        version: 1.0.18
       '@roast/db':
         specifier: workspace:*
         version: link:../db
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       mathjs:
         specifier: ^14.0.1
         version: 14.6.0

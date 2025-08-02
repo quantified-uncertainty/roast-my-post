@@ -35,9 +35,8 @@ ENV AUTH_SECRET="dummy-auth-secret-for-build"
 ENV ANTHROPIC_API_KEY="dummy-anthropic-key-for-build"
 
 # Build Next.js application
-# Use Docker-specific config to avoid plugin issues
-RUN mv apps/web/next.config.docker.js apps/web/next.config.js && \
-    pnpm --filter @roast/web run build
+# The existing next.config.js already handles Docker builds gracefully
+RUN pnpm --filter @roast/web run build
 
 # Production stage
 FROM node:20-alpine AS runner
