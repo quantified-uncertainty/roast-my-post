@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import ExtractFactualClaimsTool from '@/tools/extract-factual-claims';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { extractFactualClaimsTool } from '@roast/ai';
 
-export const POST = createToolRoute(ExtractFactualClaimsTool);
+export const POST = createToolRoute(extractFactualClaimsTool);

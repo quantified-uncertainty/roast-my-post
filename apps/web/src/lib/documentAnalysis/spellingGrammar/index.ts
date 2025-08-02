@@ -9,8 +9,8 @@ import type { Agent } from "../../../types/agentSchema";
 import type { Document } from "../../../types/documents";
 import type { Comment } from "../../../types/documentSchema";
 import type { HeliconeSessionConfig } from "@roast/ai";
-import { PluginManager } from "../../analysis-plugins/PluginManager";
-import { PluginType } from "../../analysis-plugins/types/plugin-types";
+import { PluginManager } from "@roast/ai";
+import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
 import { logger } from "../../logger";
 
@@ -43,7 +43,7 @@ export async function analyzeSpellingGrammar(
   });
 
   // Delegate to plugin system
-  const result = await manager.analyzeDocument(document, {
+  const result = await manager.analyzeDocument(document.content, {
     targetHighlights: options.targetHighlights,
   });
 
@@ -53,7 +53,7 @@ export async function analyzeSpellingGrammar(
     analysis: result.analysis,
     summary: result.summary,
     grade: result.grade,
-    highlights: result.highlights,
+    highlights: result.highlights as Comment[],
     tasks: result.tasks,
     jobLogString: result.jobLogString,
   };

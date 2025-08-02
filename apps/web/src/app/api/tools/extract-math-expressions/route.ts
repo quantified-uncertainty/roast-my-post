@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import ExtractMathExpressionsTool from '@/tools/extract-math-expressions';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { extractMathExpressionsTool } from '@roast/ai';
 
-export const POST = createToolRoute(ExtractMathExpressionsTool);
+export const POST = createToolRoute(extractMathExpressionsTool);

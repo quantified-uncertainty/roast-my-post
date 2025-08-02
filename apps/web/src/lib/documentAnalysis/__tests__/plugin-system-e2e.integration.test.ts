@@ -1,5 +1,5 @@
 import { analyzeWithMultiEpistemicEval } from '../multiEpistemicEval';
-import { MathPlugin } from '../../analysis-plugins/plugins/math';
+import { MathPlugin } from '@roast/ai';
 import type { Document } from '../../../types/documents';
 import type { Agent } from '../../../types/agentSchema';
 

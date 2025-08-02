@@ -29,6 +29,10 @@ export {
   SpellingPlugin
 } from './analysis-plugins';
 
+// Analysis plugin types
+export type { Finding } from './analysis-plugins/types';
+export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
+
 // Shared utilities
 export * from './shared/logger';
 export type { 

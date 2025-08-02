@@ -3,8 +3,8 @@
  * These maintain compatibility with existing plugin interfaces
  */
 
-import { findTextLocation, type TextLocationOptions } from '@/tools/fuzzy-text-locator/core';
-import { getLineNumberAtPosition, getLineAtPosition } from '../../analysis-plugins/utils/textHelpers';
+import { findTextLocation, type TextLocationOptions } from '@roast/ai/tools/fuzzy-text-locator/core';
+import { getLineNumberAtPosition, getLineAtPosition } from '@roast/ai/analysis-plugins/utils/textHelpers';
 import { processLocationsInParallel } from './parallelLocationUtils';
 
 // Forecast plugin wrapper

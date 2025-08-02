@@ -1,259 +1,167 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckMathAgenticInput, CheckMathAgenticOutput } from '@/tools/check-math-with-mathjs/types';
-import { CalculatorIcon, CheckCircleIcon, XCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
-import { checkMathWithMathJs } from './actions';
+import { checkMathWithMathJsTool } from '@roast/ai';
+import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+
+const checkToolPath = checkMathWithMathJsTool.config.path;
 
 const statusConfig = {
   verified_true: {
-    icon: CheckCircleIcon,
+    icon: CheckIcon,
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
-    label: 'Verified True',
+    label: 'Verified Correct'
   },
   verified_false: {
-    icon: XCircleIcon,
-    color: 'text-red-600',
+    icon: XMarkIcon,
+    color: 'text-red-600', 
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
-    label: 'Verified False',
+    label: 'Incorrect'
   },
   cannot_verify: {
     icon: QuestionMarkCircleIcon,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    label: 'Cannot Verify',
-  },
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    label: 'Cannot Verify'
+  }
 };
 
-export default function CheckMathAgenticPage() {
-  const [input, setInput] = useState('');
+export default function CheckMathWithMathJsPage() {
+  const [statement, setStatement] = useState('');
   const [context, setContext] = useState('');
-  const [result, setResult] = useState<CheckMathAgenticOutput | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleCheck = async () => {
+    if (!statement.trim()) return;
 
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const payload: CheckMathAgenticInput = {
-        statement: input.trim(),
-        ...(context.trim() && { context: context.trim() }),
-      };
-
-      const response = await checkMathWithMathJs(payload);
-      
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to verify statement');
-      }
-
-      setResult(response.result || null);
+      const response = await runToolWithAuth(checkToolPath, { 
+        statement,
+        ...(context.trim() && { context }) 
+      });
+      setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const exampleStatements = [
-    '2 + 2 = 4',
-    'The binomial coefficient "10 choose 3" equals 120',
-    'Converting 100 fahrenheit to celsius gives 37.78 degrees',
-    '10% of 50 is 10',
-    'sqrt(144) = 12',
-    'log(1000, 10) = 3',
-    'The derivative of x³ is 3x²',
-    '5 km + 3000 m = 8 km',
-  ];
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <CalculatorIcon className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Math Verification Agent</h1>
-        </div>
-        <p className="text-gray-600 mb-2">
-          Verify mathematical statements using Claude with MathJS tools. This agentic approach uses
-          Claude to intelligently choose and use appropriate MathJS functions.
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Check Math with MathJS</h1>
+        <p className="text-gray-600">
+          Verify mathematical statements using the MathJS library and AI reasoning.
         </p>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> This tool uses numerical computation (MathJS), not symbolic math.
-            It cannot verify symbolic equations, theorems, or perform algebraic manipulations.
-          </p>
-        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 mb-8">
+      <div className="space-y-6">
         <div>
           <label htmlFor="statement" className="block text-sm font-medium text-gray-700 mb-2">
             Mathematical Statement
           </label>
           <textarea
             id="statement"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter a mathematical statement to verify..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             rows={3}
-            required
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Enter a mathematical statement to verify (e.g., '2 + 2 = 4', 'The square root of 16 is 4')"
+            value={statement}
+            onChange={(e) => setStatement(e.target.value)}
           />
         </div>
 
         <div>
           <label htmlFor="context" className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Context (Optional)
+            Context (Optional)
           </label>
           <textarea
             id="context"
+            rows={2}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            placeholder="Provide any additional context if needed..."
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="Provide any additional context if needed..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={2}
           />
         </div>
 
         <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          onClick={handleCheck}
+          disabled={isLoading || !statement.trim()}
+          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {loading ? 'Verifying...' : 'Verify Statement'}
+          {isLoading ? 'Checking...' : 'Check Statement'}
         </button>
-      </form>
 
-      {/* Example Statements */}
-      <div className="mb-8">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Try these examples:</h3>
-        <div className="flex flex-wrap gap-2">
-          {exampleStatements.map((statement, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setInput(statement);
-                setContext('');
-              }}
-              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-            >
-              {statement}
-            </button>
-          ))}
-        </div>
-      </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
-          <p className="text-red-800">{error}</p>
-        </div>
-      )}
-
-      {result && (
-        <div className="space-y-6">
-          {/* Status Card */}
-          <div className={`p-6 rounded-lg border-2 ${statusConfig[result.status].bgColor} ${statusConfig[result.status].borderColor}`}>
-            <div className="flex items-start gap-4">
-              {(() => {
-                const StatusIcon = statusConfig[result.status].icon;
-                return <StatusIcon className={`h-8 w-8 ${statusConfig[result.status].color} flex-shrink-0`} />;
-              })()}
-              <div className="flex-1">
-                <h2 className={`text-xl font-semibold mb-2 ${statusConfig[result.status].color}`}>
-                  {statusConfig[result.status].label}
-                </h2>
-                <p className="text-gray-800">{result.explanation}</p>
+        {result && (
+          <div className="space-y-6">
+            <div className={`rounded-lg border p-6 ${statusConfig[result.status as keyof typeof statusConfig]?.bgColor} ${statusConfig[result.status as keyof typeof statusConfig]?.borderColor}`}>
+              <div className="flex items-start space-x-3">
+                {(() => {
+                  const config = statusConfig[result.status as keyof typeof statusConfig];
+                  const Icon = config?.icon || QuestionMarkCircleIcon;
+                  return <Icon className={`h-5 w-5 mt-0.5 ${config?.color}`} />;
+                })()}
+                <div className="flex-1">
+                  <h3 className={`text-lg font-medium ${statusConfig[result.status as keyof typeof statusConfig]?.color}`}>
+                    {statusConfig[result.status as keyof typeof statusConfig]?.label || result.status}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-700">{result.explanation}</p>
+                  
+                  {result.verificationDetails && (
+                    <div className="mt-4 space-y-2">
+                      {result.verificationDetails.simplifiedExpression && (
+                        <p className="text-sm">
+                          <span className="font-medium">Simplified:</span> <code className="bg-white px-2 py-1 rounded">{result.verificationDetails.simplifiedExpression}</code>
+                        </p>
+                      )}
+                      {result.verificationDetails.calculatedResult !== undefined && (
+                        <p className="text-sm">
+                          <span className="font-medium">Calculated:</span> <code className="bg-white px-2 py-1 rounded">{result.verificationDetails.calculatedResult}</code>
+                        </p>
+                      )}
+                      {result.verificationDetails.expectedResult !== undefined && (
+                        <p className="text-sm">
+                          <span className="font-medium">Expected:</span> <code className="bg-white px-2 py-1 rounded">{result.verificationDetails.expectedResult}</code>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {result.errorDetails && (
+                    <div className="mt-4 bg-red-100 rounded p-3">
+                      <p className="text-sm font-medium text-red-800">{result.errorDetails.type}</p>
+                      <p className="text-sm text-red-700 mt-1">{result.errorDetails.description}</p>
+                      {result.errorDetails.suggestion && (
+                        <p className="text-sm text-red-600 mt-2">
+                          <span className="font-medium">Suggestion:</span> {result.errorDetails.suggestion}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Verification Details */}
-          {result.verificationDetails && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 className="font-semibold text-blue-900 mb-2">Verification Details</h3>
-              {result.verificationDetails.mathJsExpression && (
-                <div className="mb-2">
-                  <span className="text-sm text-blue-700">Expression:</span>
-                  <code className="ml-2 px-2 py-1 bg-blue-100 rounded text-sm">
-                    {result.verificationDetails.mathJsExpression}
-                  </code>
-                </div>
-              )}
-              {result.verificationDetails.computedValue && (
-                <div>
-                  <span className="text-sm text-blue-700">Result:</span>
-                  <code className="ml-2 px-2 py-1 bg-blue-100 rounded text-sm">
-                    {result.verificationDetails.computedValue}
-                  </code>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Error Details */}
-          {result.errorDetails && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="font-semibold text-red-900 mb-2">Error Details</h3>
-              <div className="space-y-1 text-sm">
-                <div>
-                  <span className="text-red-700">Type:</span> 
-                  <span className="ml-2 font-medium">{result.errorDetails.errorType}</span>
-                </div>
-                <div>
-                  <span className="text-red-700">Severity:</span> 
-                  <span className="ml-2 font-medium">{result.errorDetails.severity}</span>
-                </div>
-                {result.errorDetails.conciseCorrection && (
-                  <div>
-                    <span className="text-red-700">Correction:</span> 
-                    <code className="ml-2 px-2 py-1 bg-red-100 rounded">
-                      {result.errorDetails.conciseCorrection}
-                    </code>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Technical Error */}
-          {result.error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="font-semibold text-red-900 mb-2">Technical Error</h3>
-              <p className="text-sm text-red-800">{result.error}</p>
-            </div>
-          )}
-
-          {/* LLM Token Usage */}
-          {result.llmInteraction && (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Token Usage</h3>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Prompt:</span>
-                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.prompt}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Completion:</span>
-                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.completion}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Total:</span>
-                  <span className="ml-2 font-medium">{result.llmInteraction.tokensUsed.total}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

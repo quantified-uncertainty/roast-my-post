@@ -1,4 +1,4 @@
-import { createToolRoute } from '@/tools/base/createToolRoute';
-import CheckSpellingGrammarTool from '@/tools/check-spelling-grammar';
+import { createToolRoute } from '@/lib/tools/createToolRoute';
+import { checkSpellingGrammarTool } from '@roast/ai';
 
-export const POST = createToolRoute(CheckSpellingGrammarTool);
+export const POST = createToolRoute(checkSpellingGrammarTool);

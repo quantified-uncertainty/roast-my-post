@@ -3,12 +3,12 @@
  * These tests verify that tools work correctly by testing their core logic
  */
 
-import { checkMathTool } from '../../tools/check-math';
-import { forecasterTool } from '../../tools/forecaster';
-import { factCheckerTool } from '../../tools/fact-checker';
-import { extractForecastingClaimsTool } from '../../tools/extract-forecasting-claims';
-import { extractFactualClaimsTool } from '../../tools/extract-factual-claims';
-import { checkSpellingGrammarTool } from '../../tools/check-spelling-grammar';
+import { checkMathTool } from '@roast/ai';
+import { forecasterTool } from '@roast/ai';
+import { factCheckerTool } from '@roast/ai';
+import { extractForecastingClaimsTool } from '@roast/ai';
+import { extractFactualClaimsTool } from '@roast/ai';
+import { checkSpellingGrammarTool } from '@roast/ai';
 import { logger } from '../../lib/logger';
 
 // Test context

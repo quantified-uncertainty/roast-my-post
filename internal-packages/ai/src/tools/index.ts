@@ -2,7 +2,7 @@
 export * from './base/Tool';
 export * from './base/types';
 export * from './base/testRunner';
-// Note: registry is not exported to prevent automatic initialization during imports
+export { toolRegistry } from './registry';
 
 // Shared utilities
 export * from './shared/cache-utils';
@@ -16,3 +16,13 @@ export { default as factCheckerTool } from './fact-checker';
 export { default as forecasterTool } from './forecaster';
 export { default as fuzzyTextLocatorTool } from './fuzzy-text-locator';
 export { default as documentChunkerTool } from './document-chunker';
+export { default as extractForecastingClaimsTool } from './extract-forecasting-claims';
+export { default as extractFactualClaimsTool } from './extract-factual-claims';
+export { default as checkSpellingGrammarTool } from './check-spelling-grammar';
+export { default as extractMathExpressionsTool } from './extract-math-expressions';
+export { detectLanguageConventionTool } from './detect-language-convention';
+export { default as perplexityResearchTool } from './perplexity-research';
+
+// Export tool-specific types
+export type { DocumentChunkerOutput } from './document-chunker';
+export type { TextLocationFinderOutput } from './fuzzy-text-locator';

@@ -3,9 +3,9 @@
  * This is now a wrapper around the fuzzy-text-locator tool
  */
 
-import { getLineNumberAtPosition, getLineAtPosition } from "../../analysis-plugins/utils/textHelpers";
+import { getLineNumberAtPosition, getLineAtPosition } from "@roast/ai/analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
-import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "@/tools/fuzzy-text-locator/core";
+import { findTextLocation as findTextLocationCore, type TextLocationOptions as CoreOptions } from "@roast/ai/tools/fuzzy-text-locator/core";
 import { processTextLocationsInParallel } from "./parallelLocationUtils";
 
 /**
