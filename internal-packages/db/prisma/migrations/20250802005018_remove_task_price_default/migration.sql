@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "public"."Task" ALTER COLUMN "priceInDollars" DROP DEFAULT;
+ALTER TABLE "Task" ALTER COLUMN "priceInDollars" DROP DEFAULT;
