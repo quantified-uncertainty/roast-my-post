@@ -27,7 +27,15 @@ export default function CheckSpellingGrammarPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, {
+      const response = await runToolWithAuth<
+        { text: string; generateComments: boolean; gradeDocument: boolean },
+        {
+          errors: SpellingError[];
+          grade?: { overallGrade: string; errorCount: number; wordCount: number; reasoning?: string };
+          summary?: string;
+          comments?: Array<{ text: string }>;
+        }
+      >(checkToolPath, {
         text,
         generateComments: true,
         gradeDocument: true

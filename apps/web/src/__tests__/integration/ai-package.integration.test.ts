@@ -44,9 +44,15 @@ describe('@roast/ai Package Integration in Web App', () => {
 
     const testDoc: Document = {
       id: 'test-doc',
+      slug: 'test-doc',
       title: 'Test Document',
+      content: 'Test content',
+      author: 'Test Author',
+      publishedDate: new Date().toISOString(),
       url: 'https://example.com/test',
-      uploadedAt: new Date().toISOString(),
+      platforms: [],
+      reviews: [],
+      intendedAgents: [],
     };
 
     expect(testAgent.name).toBe('Test Agent');
@@ -71,13 +77,12 @@ describe('@roast/ai Package Integration in Web App', () => {
     const pluginManager = new PluginManager();
     const mathPlugin = new MathPlugin();
 
-    expect(() => {
-      pluginManager.registerPlugin(mathPlugin);
-    }).not.toThrow();
+    // PluginManager doesn't have registerPlugin method - it uses plugins as constructor args
+    expect(pluginManager).toBeDefined();
 
     // Verify the plugin manager has expected methods
-    expect(pluginManager.processDocument).toBeDefined();
-    expect(pluginManager.analyzeSimple).toBeDefined();
+    expect(pluginManager.analyzeDocument).toBeDefined();
+    expect(pluginManager.analyzeDocumentSimple).toBeDefined();
   });
 
   describe('Session Context Usage', () => {
@@ -86,11 +91,9 @@ describe('@roast/ai Package Integration in Web App', () => {
       const testSessionId = 'test-session-123';
 
       sessionContext.setSession({ sessionId: testSessionId, sessionPath: '/', sessionName: testToolName });
-      sessionContext.setSessionId(testSessionId);
 
       const session = sessionContext.getSession();
       expect(session?.sessionId).toBe(testSessionId);
-      expect(sessionContext.getSessionId()).toBe(testSessionId);
 
       // Clean up
       sessionContext.clear();
