@@ -58,6 +58,13 @@ export interface Evaluation {
     grade?: number;
     selfCritique?: string;
     createdAt: Date;
+    isStale?: boolean;
+    documentVersion?: {
+      id: string;
+      version: number;
+      title: string;
+      content: string;
+    };
     comments?: Array<{
       id: string;
       description: string;
@@ -82,6 +89,7 @@ export interface Evaluation {
       status: string;
       priceInDollars: number;
       durationInSeconds?: number;
+      llmThinking?: string | null;
       tasks?: Array<{
         id: string;
         name: string;
