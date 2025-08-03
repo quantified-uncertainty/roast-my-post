@@ -1,27 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 
 import type { Document } from "@roast/ai";
 import type { Comment as DbComment } from "@/types/databaseTypes";
 import { dbCommentToAiComment } from "@/lib/typeAdapters";
-import {
-  calculateCommentPositions,
-  checkHighlightsReady,
-} from "@/utils/ui/commentPositioning";
 import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
-import {
-  COMMENT_MIN_GAP,
-  COMMENT_COLUMN_WIDTH,
-  HIGHLIGHT_CHECK_INTERVAL,
-  HIGHLIGHT_CHECK_MAX_ATTEMPTS,
-  RESIZE_DEBOUNCE_DELAY,
-  INITIALIZATION_DELAY,
-} from "../constants";
+import { COMMENT_COLUMN_WIDTH } from "../constants";
 import type { EvaluationState } from "../types";
 
 import { PositionedComment } from "./PositionedComment";
 import { CommentErrorBoundary } from "./CommentErrorBoundary";
+import { useVirtualScrolling } from "../hooks/comments/useVirtualScrolling";
+import { useHighlightDetection } from "../hooks/comments/useHighlightDetection";
+import { useCommentPositions } from "../hooks/comments/useCommentPositions";
 
 interface CommentsColumnProps {
   comments: (DbComment & { agentName?: string })[];
@@ -36,6 +28,10 @@ interface CommentsColumnProps {
   onEvaluationStateChange?: (newState: EvaluationState) => void;
 }
 
+// Virtual scrolling constants
+const VIRTUAL_OVERSCAN = 5; // Render 5 comments above/below viewport
+const VIRTUAL_ITEM_HEIGHT_ESTIMATE = 80; // Estimated height for initial render
+
 export function CommentsColumn({
   comments,
   contentRef,
@@ -43,15 +39,11 @@ export function CommentsColumn({
   hoveredCommentId,
   onCommentHover,
   onCommentClick,
-  document,
-  evaluationState,
-  onEvaluationStateChange,
+  document: _document,
+  evaluationState: _evaluationState,
+  onEvaluationStateChange: _onEvaluationStateChange,
 }: CommentsColumnProps) {
-  const [commentPositions, setCommentPositions] = useState<
-    Record<string, number>
-  >({});
-  const [highlightsReady, setHighlightsReady] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const columnRef = useRef<HTMLDivElement>(null);
 
   // Get valid and sorted comments with memoization
   const sortedComments = useMemo(
@@ -59,93 +51,44 @@ export function CommentsColumn({
     [comments]
   );
 
-  // Calculate comment positions
-  const calculatePositions = useCallback(() => {
-    if (!contentRef.current) return;
+  // Use custom hooks for highlight detection and positioning
+  const { highlightsReady, hasInitialized, highlightCache } = useHighlightDetection(
+    contentRef,
+    sortedComments.length
+  );
 
-    const positions = calculateCommentPositions(
-      sortedComments,
-      contentRef.current,
-      {
-        hoveredCommentId: hoveredCommentId,
-        minGap: COMMENT_MIN_GAP,
-      }
-    );
-
-    setCommentPositions(positions);
-  }, [sortedComments, contentRef, hoveredCommentId]);
-
-  // Check if highlights are ready using polling
-  useEffect(() => {
-    if (!contentRef.current || sortedComments.length === 0) {
-      setHighlightsReady(true); // No comments means we're ready
-      return;
+  const { positions: commentPositions } = useCommentPositions(
+    sortedComments,
+    contentRef,
+    {
+      hoveredCommentId,
+      highlightCache,
+      enabled: highlightsReady,
     }
+  );
 
-    // Reset states when comments change
-    setHighlightsReady(false);
-    setHasInitialized(false);
-
-    let attempts = 0;
-    const maxAttempts = HIGHLIGHT_CHECK_MAX_ATTEMPTS;
-    
-    const checkHighlights = () => {
-      if (!contentRef.current) return;
-      
-      attempts++;
-      const ready = checkHighlightsReady(
-        contentRef.current,
-        sortedComments.length
-      );
-      
-      if (ready || attempts >= maxAttempts) {
-        setHighlightsReady(true);
-      } else {
-        // Continue checking
-        setTimeout(checkHighlights, HIGHLIGHT_CHECK_INTERVAL);
-      }
-    };
-    
-    // Initial check
-    setTimeout(checkHighlights, 100);
-    
-  }, [sortedComments.length, contentRef]);
-
-  // Calculate positions when highlights are ready
-  useEffect(() => {
-    if (highlightsReady) {
-      calculatePositions();
-      // Mark as initialized after first position calculation
-      if (!hasInitialized) {
-        setTimeout(() => setHasInitialized(true), INITIALIZATION_DELAY);
-      }
+  // Use virtual scrolling hook
+  const { visibleItems: visibleComments, startSpacer, endSpacer } = useVirtualScrolling(
+    sortedComments,
+    columnRef,
+    {
+      itemHeight: VIRTUAL_ITEM_HEIGHT_ESTIMATE,
+      overscan: VIRTUAL_OVERSCAN,
+      enabled: highlightsReady,
     }
-  }, [highlightsReady, calculatePositions, hasInitialized]);
+  );
 
-  // Handle resize events
-  useEffect(() => {
-    if (!highlightsReady || !contentRef.current) return;
-
-    let resizeTimeout: NodeJS.Timeout;
-
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        calculatePositions();
-      }, RESIZE_DEBOUNCE_DELAY);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(resizeTimeout);
-    };
-  }, [highlightsReady, calculatePositions, contentRef]);
+  // Memoize comment conversion to avoid repeated conversions
+  const convertedComments = useMemo(() => {
+    return visibleComments.map(({ item }) => dbCommentToAiComment(item));
+  }, [visibleComments]);
 
   return (
     <CommentErrorBoundary>
-      <div style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}>
+      <div 
+        ref={columnRef}
+        style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}
+      >
         <div className="relative" style={{ minHeight: "100%" }}>
           {!highlightsReady && sortedComments.length > 0 && (
             <div className="flex flex-col items-center justify-center py-12">
@@ -153,17 +96,23 @@ export function CommentsColumn({
               <div className="text-sm text-gray-500">Loading comments...</div>
             </div>
           )}
-          {sortedComments.map((comment, index) => {
-            const tag = index.toString();
+          
+          {/* Virtual spacer for comments above visible range */}
+          {startSpacer > 0 && (
+            <div style={{ height: `${startSpacer}px` }} />
+          )}
+          
+          {visibleComments.map(({ item: comment, originalIndex }, idx) => {
+            const tag = originalIndex.toString();
             const position = commentPositions[tag] || 0;
             const isSelected = selectedCommentId === tag;
             const isHovered = hoveredCommentId === tag;
 
             return (
               <PositionedComment
-                key={comment.id || `${comment.agentName || "default"}-${index}`}
-                comment={dbCommentToAiComment(comment)}
-                index={index}
+                key={comment.id || `${comment.agentName || "default"}-${originalIndex}`}
+                comment={convertedComments[idx]}
+                index={originalIndex}
                 position={position}
                 isVisible={highlightsReady && hasInitialized && position > 0}
                 isSelected={isSelected}
@@ -175,6 +124,11 @@ export function CommentsColumn({
               />
             );
           })}
+          
+          {/* Virtual spacer for comments below visible range */}
+          {endSpacer > 0 && (
+            <div style={{ height: `${endSpacer}px` }} />
+          )}
         </div>
       </div>
     </CommentErrorBoundary>
