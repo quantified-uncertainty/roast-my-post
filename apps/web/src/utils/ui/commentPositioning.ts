@@ -313,11 +313,14 @@ export function getCommentDisplayText(
   }
 }
 
-// Clear truncation cache periodically to prevent memory leaks
-if (typeof window !== 'undefined') {
-  setInterval(() => {
-    if (truncationCache.size > 1000) {
-      truncationCache.clear();
-    }
-  }, 300000); // Clear every 5 minutes if cache grows too large
+// Export cache management functions for components to use
+export function clearTruncationCache() {
+  truncationCache.clear();
 }
+
+export function getTruncationCacheSize() {
+  return truncationCache.size;
+}
+
+// Let components manage cache cleanup in their useEffect cleanup
+// This prevents memory leaks from global intervals
