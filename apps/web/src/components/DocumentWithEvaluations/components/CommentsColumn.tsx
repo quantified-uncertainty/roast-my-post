@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 
 import type { Document } from "@roast/ai";
 import type { Comment as AiComment } from "@roast/ai";
@@ -53,6 +53,10 @@ export function CommentsColumn({
   >({});
   const [highlightsReady, setHighlightsReady] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+  
+  // Debouncing refs
+  const rafRef = useRef<number>(0);
+  const mutationDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Get valid and sorted comments with memoization
   const sortedComments = useMemo(
@@ -60,26 +64,36 @@ export function CommentsColumn({
     [comments]
   );
 
-  // Calculate comment positions
+  // Calculate comment positions with RAF for smooth updates
   const calculatePositions = useCallback(
     (currentHoveredId?: string | null) => {
       if (!contentRef.current) return;
 
-      const positions = calculateCommentPositions(
-        sortedComments,
-        contentRef.current,
-        {
-          hoveredCommentId: currentHoveredId,
-          minGap: COMMENT_MIN_GAP,
-        }
-      );
+      // Cancel any pending animation frame
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      
+      // Use requestAnimationFrame for smooth updates
+      rafRef.current = requestAnimationFrame(() => {
+        if (!contentRef.current) return;
+        
+        const positions = calculateCommentPositions(
+          sortedComments,
+          contentRef.current,
+          {
+            hoveredCommentId: currentHoveredId,
+            minGap: COMMENT_MIN_GAP,
+          }
+        );
 
-      setCommentPositions(positions);
+        setCommentPositions(positions);
+      });
     },
     [sortedComments, contentRef]
   );
 
-  // Check if highlights are ready using MutationObserver
+  // Check if highlights are ready using MutationObserver with debouncing
   useEffect(() => {
     if (!contentRef.current || sortedComments.length === 0) {
       setHighlightsReady(true); // No comments means we're ready
@@ -90,52 +104,50 @@ export function CommentsColumn({
     setHighlightsReady(false);
     setHasInitialized(false);
 
+    let isSubscribed = true;
     let attempts = 0;
     const maxAttempts = HIGHLIGHT_CHECK_MAX_ATTEMPTS;
-    let checkInterval: NodeJS.Timeout;
-
-    const checkHighlights = () => {
-      if (!contentRef.current) return;
-
-      attempts++;
-      const isReady = checkHighlightsReady(
-        contentRef.current,
-        sortedComments.length
-      );
-
-      if (isReady) {
-        setHighlightsReady(true);
-        if (checkInterval) clearInterval(checkInterval);
-      } else if (attempts >= maxAttempts) {
-        // Fallback: assume ready after max attempts to prevent infinite loading
-        console.warn('Max attempts reached for highlight detection');
-        setHighlightsReady(true);
-        if (checkInterval) clearInterval(checkInterval);
-      }
+    
+    const debouncedCheck = () => {
+      clearTimeout(mutationDebounceRef.current);
+      mutationDebounceRef.current = setTimeout(() => {
+        if (!isSubscribed || !contentRef.current) return;
+        
+        attempts++;
+        const ready = checkHighlightsReady(
+          contentRef.current,
+          sortedComments.length
+        );
+        
+        if (ready) {
+          setHighlightsReady(true);
+        } else if (attempts >= maxAttempts) {
+          // Fallback: assume ready after max attempts
+          console.warn('Max attempts reached for highlight detection');
+          setHighlightsReady(true);
+        }
+      }, 100);
     };
 
-    // Use MutationObserver to detect DOM changes
-    const observer = new MutationObserver(() => {
-      checkHighlights();
-    });
-
-    // Observe the content container for changes
+    // More targeted observer for better performance
+    const observer = new MutationObserver(debouncedCheck);
+    
+    // Observe with more targeted options
     observer.observe(contentRef.current, {
       childList: true,
-      subtree: true,
+      subtree: true, // We need subtree to catch highlight elements
       attributes: true,
       attributeFilter: ['data-tag']
     });
-
-    // Also check periodically as a fallback
-    checkInterval = setInterval(checkHighlights, HIGHLIGHT_CHECK_INTERVAL);
-
-    // Initial check after a short delay
-    setTimeout(checkHighlights, 100);
-
+    
+    // Initial check
+    setTimeout(debouncedCheck, 100);
+    
     return () => {
+      isSubscribed = false;
       observer.disconnect();
-      if (checkInterval) clearInterval(checkInterval);
+      clearTimeout(mutationDebounceRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [sortedComments.length, contentRef]);
 

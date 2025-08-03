@@ -12,15 +12,6 @@ export interface EvaluationState {
   expandedCommentId: string | null;
 }
 
-export interface CommentsSidebarProps {
-  comments: Comment[];
-  expandedTag: string | null;
-  onCommentHover: (tag: string | null) => void;
-  onCommentClick: (tag: string | null) => void;
-  evaluation: Evaluation;
-  commentColorMap: Record<number, { background: string; color: string }>;
-}
-
 export interface EvaluationSelectorProps {
   document: Document;
   activeEvaluationIndex: number | null;

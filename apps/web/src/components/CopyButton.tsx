@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { UI_TIMING } from "@/components/DocumentWithEvaluations/constants/uiConstants";
+import { TIMING } from "@/components/DocumentWithEvaluations/constants";
 
 interface CopyButtonProps {
   text: string;
@@ -17,11 +17,11 @@ export function CopyButton({ text, className = "" }: CopyButtonProps) {
       await navigator.clipboard.writeText(text);
       setIsCopied(true);
       setHasError(false);
-      setTimeout(() => setIsCopied(false), UI_TIMING.COPY_FEEDBACK_DURATION);
+      setTimeout(() => setIsCopied(false), TIMING.COPY_FEEDBACK_DURATION);
     } catch (err) {
       console.error("Failed to copy text:", err);
       setHasError(true);
-      setTimeout(() => setHasError(false), UI_TIMING.COPY_ERROR_DURATION);
+      setTimeout(() => setHasError(false), TIMING.COPY_ERROR_DURATION);
     }
   };
 

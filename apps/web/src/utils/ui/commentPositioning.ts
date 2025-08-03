@@ -1,5 +1,6 @@
 // @ts-expect-error - No types available for markdown-truncate
 import truncateMarkdown from "markdown-truncate";
+import { COMMENT_POSITIONING, TEXT_PROCESSING, LAYOUT, LIMITS } from '@/components/DocumentWithEvaluations/constants';
 
 import type { Comment } from "@/types/databaseTypes";
 
@@ -25,11 +26,11 @@ export function calculateCommentPositions(
   options: PositionCalculationOptions = {}
 ): Record<string, number> {
   const {
-    minGap = 5,
+    minGap = LAYOUT.COMMENT_MIN_GAP,
     hoveredCommentId = null,
-    baseHeight = 20,
-    charsPerLine = 50,
-    lineHeight = 14,
+    baseHeight = COMMENT_POSITIONING.BASE_HEIGHT,
+    charsPerLine = COMMENT_POSITIONING.CHARS_PER_LINE,
+    lineHeight = COMMENT_POSITIONING.LINE_HEIGHT,
   } = options;
 
   const containerRect = container.getBoundingClientRect();
@@ -47,10 +48,8 @@ export function calculateCommentPositions(
       // Adjust to align with the vertical center of the highlight
       const relativeTop = rect.top - containerRect.top + container.scrollTop;
       const highlightCenter = relativeTop + rect.height / 2;
-      // Offset slightly up to better align with the highlighted text
       // Offset to better align comment with highlighted text
-      const HIGHLIGHT_ALIGNMENT_OFFSET = 15;
-      const adjustedPosition = highlightCenter - HIGHLIGHT_ALIGNMENT_OFFSET;
+      const adjustedPosition = highlightCenter - COMMENT_POSITIONING.HIGHLIGHT_ALIGNMENT_OFFSET;
       newPositions[tag] = Math.max(0, adjustedPosition);
     } else {
       // Fallback position if highlight not found
@@ -88,10 +87,10 @@ export function calculateCommentPositions(
       } else {
         // Last resort: spread them out more evenly
         const spacing = Math.max(
-          150,
+          COMMENT_POSITIONING.FALLBACK_SPACING_MIN,
           containerRect.height / Math.max(comments.length, 5)
         );
-        newPositions[tag] = 100 + index * spacing;
+        newPositions[tag] = COMMENT_POSITIONING.FALLBACK_COMMENT_BOTTOM_MARGIN + index * spacing;
       }
     }
   });
@@ -113,17 +112,16 @@ export function calculateCommentPositions(
     const text = comment.description || "";
 
     // For short comments, use a more compact calculation
-    if (text.length < 100) {
-      return baseHeight + 20; // baseHeight + agent name
+    if (text.length < COMMENT_POSITIONING.COMPACT_COMMENT_THRESHOLD) {
+      return baseHeight + COMMENT_POSITIONING.AGENT_NAME_HEIGHT;
     }
 
     const displayLength = !isExpanded && text.length > 120 ? 120 : text.length;
     const lines = Math.ceil(displayLength / charsPerLine);
-    const extraHeight = isExpanded ? 30 : 0; // Extra height when expanded
-    const agentNameHeight = 20; // Additional height for agent name
+    const extraHeight = isExpanded ? COMMENT_POSITIONING.EXPANDED_EXTRA_HEIGHT : 0;
 
     return (
-      baseHeight + (lines - 1) * lineHeight + extraHeight + agentNameHeight
+      baseHeight + (lines - 1) * lineHeight + extraHeight + COMMENT_POSITIONING.AGENT_NAME_HEIGHT
     );
   };
 
@@ -169,7 +167,7 @@ export function checkHighlightsReady(
   // Check if we have enough unique tags for the comments
   // Note: Multiple comments can share the same highlight position,
   // so we check if unique tags >= half of expected count as a heuristic
-  return uniqueTags.size >= Math.ceil(expectedCount / 2);
+  return uniqueTags.size >= Math.ceil(expectedCount * LIMITS.MIN_UNIQUE_TAGS_RATIO);
 }
 
 /**
@@ -178,7 +176,7 @@ export function checkHighlightsReady(
 export function getCommentDisplayText(
   text: string,
   isHovered: boolean,
-  maxLength: number = 250
+  maxLength: number = TEXT_PROCESSING.MAX_COMMENT_PREVIEW_LENGTH
 ): { text: string; isTruncated: boolean } {
   if (!text) return { text: "", isTruncated: false };
 
@@ -189,12 +187,12 @@ export function getCommentDisplayText(
 
   // First, handle line limits
   const lines = text.split("\n");
-  const needsLineTruncation = lines.length > 2;
+  const needsLineTruncation = lines.length > TEXT_PROCESSING.MAX_PREVIEW_LINES;
 
-  // If we only need line truncation and the first 2 lines are short enough
-  if (needsLineTruncation && lines.slice(0, 2).join("\n").length <= maxLength) {
+  // If we only need line truncation and the first N lines are short enough
+  if (needsLineTruncation && lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n").length <= maxLength) {
     return {
-      text: lines.slice(0, 2).join("\n") + "...",
+      text: lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n") + "...",
       isTruncated: true,
     };
   }
@@ -207,26 +205,26 @@ export function getCommentDisplayText(
       ellipsis: true,
     });
 
-    // Check if we still need to enforce 2-line limit after smart truncation
+    // Check if we still need to enforce line limit after smart truncation
     const truncatedLines = truncated.split("\n");
-    if (truncatedLines.length > 2) {
-      // Try a shorter limit to fit within 2 lines
+    if (truncatedLines.length > TEXT_PROCESSING.MAX_PREVIEW_LINES) {
+      // Try a shorter limit to fit within line limit
       const shorterTruncated = truncateMarkdown(text, {
-        limit: Math.floor(maxLength * 0.6),
+        limit: Math.floor(maxLength * TEXT_PROCESSING.TRUNCATION_SHORT_RATIO),
         ellipsis: true,
       });
 
       const shorterLines = shorterTruncated.split("\n");
-      if (shorterLines.length <= 2) {
+      if (shorterLines.length <= TEXT_PROCESSING.MAX_PREVIEW_LINES) {
         return {
           text: shorterTruncated,
           isTruncated: true,
         };
       }
 
-      // Last resort: just take first 2 lines of the truncated text
+      // Last resort: just take first N lines of the truncated text
       return {
-        text: truncatedLines.slice(0, 2).join("\n") + "...",
+        text: truncatedLines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n") + "...",
         isTruncated: true,
       };
     }
@@ -238,7 +236,7 @@ export function getCommentDisplayText(
   } catch (error) {
     // Fallback if markdown-truncate fails
     console.error("Markdown truncation failed:", error);
-    const fallbackText = lines.slice(0, 2).join("\n");
+    const fallbackText = lines.slice(0, TEXT_PROCESSING.MAX_PREVIEW_LINES).join("\n");
     return {
       text:
         fallbackText.length > maxLength

@@ -64,8 +64,11 @@ export function VersionDetails({
       })) || [],
       job: selectedVersion.job ? {
         llmThinking: selectedVersion.job.llmThinking,
-        priceInDollars: selectedVersion.job.priceInDollars,
-        tasks: selectedVersion.job.tasks
+        priceInDollars: selectedVersion.job.priceInDollars ? Number(selectedVersion.job.priceInDollars) : null,
+        tasks: selectedVersion.job.tasks?.map(task => ({
+          ...task,
+          priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0
+        })) || []
       } : null,
       testBatchId: null,
       testBatchName: null
