@@ -71,7 +71,10 @@ export default async function EvaluationPage({
             thinking={evaluationData.thinking}
             selfCritique={evaluationData.selfCritique}
             logs={evaluationData.logs}
-            comments={evaluationData.comments}
+            comments={evaluationData.comments.map(comment => ({
+              ...comment,
+              metadata: comment.metadata as Record<string, any> | null || null
+            }))}
             agentName={evaluationData.agentName}
             agentDescription={evaluationData.agentDescription}
             grade={evaluationData.grade}
@@ -84,10 +87,9 @@ export default async function EvaluationPage({
             compact={false}
             maxWidth="4xl"
             evaluationData={{
-              ...serializePrismaResult(evaluation), 
               agentId: evaluationData.agentId,
-              // Ensure nested dates are serialized
-              createdAt: evaluation.createdAt.toISOString(),
+              documentId: evaluationData.documentId,
+              evaluationId: evaluationData.evaluationId,
             }}
             isOnEvalPage={true}
             isOwner={isOwner}

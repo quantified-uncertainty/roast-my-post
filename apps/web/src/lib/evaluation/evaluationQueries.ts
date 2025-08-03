@@ -44,11 +44,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     thinking: latestVersion?.job?.llmThinking || undefined,
     selfCritique: latestVersion?.selfCritique || undefined,
     logs: latestVersion?.job?.logs || undefined,
-    comments: latestVersion?.comments?.map(comment => ({
-      ...comment,
-      // Ensure metadata is properly typed as Record<string, any> or null
-      metadata: comment.metadata ? (comment.metadata as Record<string, any>) : null
-    })) || [],
+    comments: latestVersion?.comments || [],
     
     // Agent information
     agentName: evaluation.agent.versions[0]?.name || "Unknown Agent",
@@ -74,7 +70,26 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     // Additional metadata
     version: latestVersion?.version || 1,
     evaluationId: evaluation.id,
-    allEvaluations: serializePrismaResult(evaluation.document.evaluations || []),
+    allEvaluations: (evaluation.document.evaluations || []).map(ev => ({
+      id: ev.id,
+      agentId: ev.agentId,
+      agent: ev.agent ? {
+        name: ev.agent.versions?.[0]?.name,
+        versions: ev.agent.versions?.map(v => ({
+          name: v.name,
+        })),
+      } : undefined,
+      versions: ev.versions?.map(v => ({
+        grade: v.grade,
+        job: v.job ? {
+          status: v.job.status,
+        } : null,
+      })),
+      jobs: ev.jobs?.map(j => ({
+        status: j.status,
+      })),
+      grade: ev.versions?.[0]?.grade ?? null,
+    })),
   };
 }
 
