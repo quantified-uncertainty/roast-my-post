@@ -432,7 +432,7 @@ export class AgentModel {
           jobStatus: evalVersion.job?.status,
           jobCreatedAt: evalVersion.job?.createdAt,
           jobCompletedAt: evalVersion.job?.completedAt,
-          priceInDollars: evalVersion.job?.priceInDollars,
+          priceInDollars: evalVersion.job?.priceInDollars?.toString() || null,
           comments: evalVersion.comments,
           job: evalVersion.job,
         };

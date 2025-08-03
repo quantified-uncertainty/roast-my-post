@@ -7,6 +7,7 @@ import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { EvaluationContent } from "@/components/evaluation";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/lib/evaluation/evaluationQueries";
+import { serializePrismaResult } from "@/lib/prisma-serializers";
 
 
 
@@ -82,7 +83,7 @@ export default async function EvaluationPage({
             showNavigation={true}
             compact={false}
             maxWidth="4xl"
-            evaluationData={{ ...evaluation, agentId: evaluationData.agentId }}
+            evaluationData={{ ...serializePrismaResult(evaluation), agentId: evaluationData.agentId }}
             isOnEvalPage={true}
             isOwner={isOwner}
           />

@@ -1,9 +1,10 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 
-import { getCommentDisplayText } from "@/utils/ui/commentPositioning";
 import type { Comment } from "@roast/ai";
+import { commentToYaml } from "@/utils/commentToYaml";
 
 import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
 import {
@@ -32,7 +33,7 @@ export function PositionedComment({
   index,
   position,
   isVisible,
-  isSelected,
+  isSelected: _isSelected,
   isHovered,
   onHover,
   onClick,
@@ -41,12 +42,7 @@ export function PositionedComment({
 }: PositionedCommentProps) {
   const tag = index.toString();
 
-  // Use header if available, otherwise fall back to description
-  const displayContent = comment.header || comment.description || "";
-  const { text: displayText, isTruncated } = getCommentDisplayText(
-    displayContent,
-    isHovered
-  );
+  // Note: We show header if available, otherwise description is shown inline
 
   // Get level styling
   const levelStyles = {
@@ -132,6 +128,23 @@ export function PositionedComment({
                   {comment.highlight.quotedText}
                 </pre>
               </div>
+            </div>
+          )}
+
+          {/* Copy button - only visible when hovered */}
+          {isHovered && (
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering comment click
+                  navigator.clipboard.writeText(commentToYaml(comment, agentName));
+                }}
+                className="group flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                title="Copy comment as YAML"
+              >
+                <DocumentDuplicateIcon className="h-3 w-3" />
+                <span>Copy as YAML</span>
+              </button>
             </div>
           )}
         </div>
