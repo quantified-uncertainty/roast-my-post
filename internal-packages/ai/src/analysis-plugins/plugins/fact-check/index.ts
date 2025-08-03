@@ -5,7 +5,7 @@ import type {
   SimpleAnalysisPlugin
 } from '../../types';
 import { TextChunk } from '../../TextChunk';
-import type { Comment } from '../../../shared/types';
+import type { Comment, ToolChainResult } from '../../../shared/types';
 import type { DocumentLocation } from '../../../shared/types';
 import { generateFactCheckComments } from './commentGeneration';
 import { THRESHOLDS, LIMITS, COSTS } from './constants';
@@ -14,6 +14,7 @@ import type { ExtractedFactualClaim } from '../../../tools/extract-factual-claim
 import factCheckerTool from '../../../tools/fact-checker';
 import type { FactCheckResult } from '../../../tools/fact-checker';
 import { logger } from '../../../shared/logger';
+import { CommentBuilder } from '../../utils/CommentBuilder';
 
 // Domain model for fact with verification
 export class VerifiedFact {
@@ -21,10 +22,12 @@ export class VerifiedFact {
   private chunk: TextChunk;
   public verification?: FactCheckResult;
   public factCheckerOutput?: any; // Store full fact-checker output including Perplexity data
+  private processingStartTime: number;
 
-  constructor(claim: ExtractedFactualClaim, chunk: TextChunk) {
+  constructor(claim: ExtractedFactualClaim, chunk: TextChunk, processingStartTime: number) {
     this.claim = claim;
     this.chunk = chunk;
+    this.processingStartTime = processingStartTime;
   }
 
   get text(): string {
@@ -78,9 +81,119 @@ export class VerifiedFact {
   async toComment(documentText: string): Promise<Comment | null> {
     const location = await this.findLocation(documentText);
     if (!location) return null;
-
-    // generateFactCheckComments now returns null if the description would be empty
-    return generateFactCheckComments(this, location);
+    
+    // Build tool chain results
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractCheckableClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 30).toISOString(),
+        result: this.claim
+      }
+    ];
+    
+    // Add fact checking tool results if verification was done
+    if (this.factCheckerOutput) {
+      toolChain.push({
+        toolName: 'factCheckWithPerplexity',
+        stage: 'verification',
+        timestamp: new Date(this.processingStartTime + 500).toISOString(),
+        result: this.factCheckerOutput
+      });
+    }
+    
+    if (this.verification) {
+      toolChain.push({
+        toolName: 'verifyClaimWithLLM',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: this.verification
+      });
+    }
+    
+    return CommentBuilder.build({
+      plugin: 'fact-check',
+      location,
+      chunkId: this.chunk.id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      // Clean semantic description - include sources if available
+      description: this.buildDescription(),
+      
+      // Structured content
+      header: this.buildTitle(),
+      level: this.getLevel(),
+      observation: this.buildObservation(),
+      significance: this.buildSignificance(),
+      grade: this.buildGrade()
+    });
+  }
+  
+  private buildDescription(): string {
+    let description = this.verification?.explanation || `Fact-check analysis of: ${this.claim.topic}`;
+    
+    // Add sources if available from Perplexity research
+    if (this.verification?.sources && this.verification.sources.length > 0) {
+      description += '\n\nSources:';
+      this.verification.sources.forEach((source, index) => {
+        description += `\n${index + 1}. ${source.title || 'Source'} - ${source.url}`;
+      });
+    }
+    
+    return description;
+  }
+  
+  private buildTitle(): string {
+    const verdict = this.verification?.verdict;
+    const verdictLabel = verdict === 'false' ? 'False' : 
+                        verdict === 'partially-true' ? 'Partially true' :
+                        verdict === 'true' ? 'Verified' : 'Unverified';
+    return `${verdictLabel}: ${this.claim.topic}`;
+  }
+  
+  private getLevel(): 'error' | 'warning' | 'info' | 'success' {
+    const verdict = this.verification?.verdict;
+    if (verdict === 'false') return 'error';
+    if (verdict === 'partially-true') return 'warning';
+    if (verdict === 'true') return 'success';
+    return 'info';
+  }
+  
+  private buildObservation(): string | undefined {
+    if (this.verification) {
+      return this.verification.explanation;
+    }
+    if (this.claim.truthProbability <= 50) {
+      return `This claim appears questionable (${this.claim.truthProbability}% truth probability)`;
+    }
+    return undefined;
+  }
+  
+  private buildSignificance(): string | undefined {
+    if (this.verification?.verdict === 'false' && this.claim.importanceScore >= 8) {
+      return "High-importance false claim";
+    }
+    if (this.verification?.verdict === 'false') {
+      return "False claim identified";
+    }
+    if (this.verification?.verdict === 'partially-true') {
+      return "Claim with missing context or nuances";
+    }
+    if (this.claim.importanceScore >= 8 && !this.verification) {
+      return "This is a key claim that should be verified with credible sources";
+    }
+    return undefined;
+  }
+  
+  private buildGrade(): number | undefined {
+    if (this.verification?.verdict === 'false') {
+      return 0.2; // Low grade for false claims
+    } 
+    if (this.verification?.verdict === 'true' && this.verification.confidence === 'high') {
+      return 0.9; // High grade for verified true claims
+    }
+    return undefined;
   }
 }
 
@@ -94,6 +207,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private analysis: string = "";
   private llmInteractions: LLMInteraction[] = [];
   private totalCost: number = 0;
+  private processingStartTime: number = 0;
 
   constructor() {
     // Initialize empty values - they'll be set in analyze()
@@ -131,6 +245,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Store the inputs
+    this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
     
@@ -255,7 +370,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         logger
       });
 
-      const facts = result.claims.map(claim => new VerifiedFact(claim, chunk));
+      const facts = result.claims.map(claim => new VerifiedFact(claim, chunk, this.processingStartTime));
       
       return {
         facts,
@@ -294,9 +409,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
   private shouldUsePerplexityResearch(fact: VerifiedFact): boolean {
     // Use Perplexity research for high-priority claims that need verification
-    return false; // Disabled for now
-    /*
-    // Use Perplexity research for high-priority claims that need verification
     
     // 1. High importance claims (likely core to the document's argument)
     const isHighImportance = fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH;
@@ -327,7 +439,6 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     });
     
     return shouldResearch;
-    */
   }
 
   private async verifySingleFact(fact: VerifiedFact): Promise<void> {

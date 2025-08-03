@@ -5,45 +5,65 @@
  */
 
 /**
- * Basic comment structure for document annotations
+ * Tool result in the analysis chain
+ */
+export interface ToolChainResult {
+  toolName: string;
+  stage: 'extraction' | 'verification' | 'enhancement' | 'generation';
+  timestamp: string;
+  result: any;  // Complete, unmodified tool output
+}
+
+/**
+ * Comment metadata structure with complete tool chain
+ */
+export interface CommentMetadata {
+  // Base processing metadata
+  pluginName: string;
+  timestamp: string;
+  chunkId: string;
+  processingTimeMs: number;
+  
+  // Complete tool results in order of execution
+  toolChain: ToolChainResult[];
+  
+  // Computed summary fields for quick access
+  confidence?: number;
+  severity?: 'critical' | 'high' | 'medium' | 'low';
+  primaryFinding?: string;
+  verified?: boolean;
+  
+  // Additional quick access fields (plugin-specific)
+  [key: string]: any;
+}
+
+/**
+ * Comment structure that matches EvaluationComment database schema
+ * Used by all plugins for generating document annotations
  */
 export interface Comment {
-  id?: string;
-  content?: string;
-  description?: string; // Alternative to content
-  startLine?: number;
-  endLine?: number;
-  startChar?: number;
-  endChar?: number;
-  agentId?: string;
-  type?: 'suggestion' | 'error' | 'info' | 'warning' | 'success';
-  category?: string;
-  severity?: 'low' | 'medium' | 'high' | 'critical';
-  metadata?: Record<string, any>;
+  // Required fields 
+  description: string;               // Full explanation/analysis text
+  header: string;                    // Brief summary (always provided by plugins)
+  level: 'error' | 'warning' | 'info' | 'success';  // Always provided by plugins
+  source: string;                    // Plugin name (always provided by plugins)
   
-  // Plugin-specific properties
-  importance?: number;
-  grade?: number;
-  isValid?: boolean;
-  header?: string;
-  level?: 'error' | 'warning' | 'info' | 'suggestion' | 'success';
-  source?: string;
-  title?: string;
-  observation?: string;
-  significance?: string;
+  // Optional fields  
+  importance?: number;               // Importance score (integer in DB)
+  grade?: number;                    // Quality/confidence score (integer in DB)
   
-  highlight?: {
-    startLine?: number;
-    endLine?: number;
-    startChar?: number;
-    endChar?: number;
-    startOffset: number;      // Required to match database schema
-    endOffset: number;        // Required to match database schema
-    quotedText: string;       // Required to match database schema
-    isValid: boolean;         // Required to match database schema
+  // Location data (will be stored in separate EvaluationHighlight table)
+  highlight: {
+    startOffset: number;
+    endOffset: number;
+    quotedText: string;
+    isValid: boolean;                // Always true for valid comments
     prefix?: string;
     error?: string;
   };
+  
+  // Complete tool chain metadata (JSON in database)
+  metadata?: CommentMetadata;
 }
 
 /**

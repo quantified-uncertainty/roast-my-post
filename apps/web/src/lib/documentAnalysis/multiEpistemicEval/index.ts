@@ -49,7 +49,7 @@ export async function analyzeWithMultiEpistemicEval(
 
   // Filter AI comments and convert to database comments
   const validAiComments = result.highlights.filter((h): h is AiComment => 
-    !!(h.description && h.highlight && typeof h.isValid === 'boolean')
+    !!(h.description && h.highlight && typeof h.highlight?.isValid === 'boolean')
   );
 
   return {

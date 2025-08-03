@@ -7,7 +7,7 @@ import { styleHeader, CommentSeverity, formatDiff, SEVERITY_STYLES } from '../..
 export function generateFactCheckComments(
   fact: VerifiedFact,
   location: DocumentLocation
-): Comment | null {
+): { description: string } | null {
   const content = generateCommentContent(fact, location);
   
   // Don't create a comment if the content is empty
@@ -15,43 +15,9 @@ export function generateFactCheckComments(
     return null;
   }
   
-  const comment: Comment = {
-    description: content,
-    highlight: {
-      startOffset: location.startOffset ?? 0,
-      endOffset: location.endOffset ?? 0,
-      quotedText: fact.originalText,
-      isValid: true
-    },
-    isValid: true,
-    title: getCommentTitle(fact),
-    observation: getObservation(fact),
-    significance: getSignificance(fact),
-    importance: getImportanceScore(fact),
-    
-    header: getHeaderText(fact),
-    level: getFactLevel(fact),
-    source: 'fact-check',
-    metadata: {
-      topic: fact.claim.topic,
-      importanceScore: fact.claim.importanceScore,
-      checkabilityScore: fact.claim.checkabilityScore,
-      truthProbability: fact.claim.truthProbability,
-      verified: !!fact.verification,
-      verdict: fact.verification?.verdict,
-      confidence: fact.verification?.confidence,
-      wasResearched: !!fact.factCheckerOutput?.perplexityData,
-    },
+  return {
+    description: content
   };
-
-  // Add grade for verified false claims
-  if (fact.verification?.verdict === 'false') {
-    comment.grade = 0.2; // Low grade for false claims
-  } else if (fact.verification?.verdict === 'true' && fact.verification.confidence === 'high') {
-    comment.grade = 0.9; // High grade for verified true claims
-  }
-
-  return comment;
 }
 
 function getHeaderText(fact: VerifiedFact): string {
@@ -142,7 +108,7 @@ function getObservation(fact: VerifiedFact): string | undefined {
 function getSignificance(fact: VerifiedFact): string | undefined {
   if (fact.verification) {
     if (fact.verification.verdict === 'false') {
-      return fact.verification.corrections || 'This claim appears to be inaccurate and should be corrected.';
+      return 'This claim appears to be inaccurate.';
     }
     if (fact.verification.verdict === 'partially-true') {
       return 'This claim contains some truth but important details are incorrect or missing.';
@@ -198,16 +164,7 @@ function generateCommentContent(fact: VerifiedFact, location?: DocumentLocation)
         if (fact.verification.conciseCorrection) {
           headerContent = fact.verification.conciseCorrection;
         } 
-        // Otherwise try to extract from corrections
-        else if (fact.verification.corrections) {
-          // Extract the correction from the text (often in format "X should be Y" or "Actually Y")
-          const correctionMatch = fact.verification.corrections.match(/(?:should be|actually|is)\s+(.+)/i);
-          if (correctionMatch && correctionMatch[1]) {
-            headerContent = formatDiff(fact.claim.topic, correctionMatch[1].trim());
-          } else {
-            headerContent = 'Incorrect';
-          }
-        } else {
+        else {
           headerContent = 'Incorrect';
         }
         break;

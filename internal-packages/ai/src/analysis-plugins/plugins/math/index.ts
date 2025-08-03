@@ -6,7 +6,7 @@ import {
 } from "../../../tools/extract-math-expressions";
 import { checkMathHybridTool } from "../../../tools/check-math-hybrid";
 import type { CheckMathHybridOutput } from "../../../tools/check-math-hybrid/types";
-import type { Comment } from "../../../shared/types";
+import type { Comment, ToolChainResult } from "../../../shared/types";
 
 import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
@@ -16,6 +16,7 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { generateMathComment, generateDocumentSummary } from "./commentGeneration";
+import { CommentBuilder } from "../../utils/CommentBuilder";
 
 export interface MathExpressionWithComment {
   expression: ExtractedMathExpressionToolType;
@@ -26,11 +27,21 @@ export class HybridMathErrorWrapper {
   public verificationResult: CheckMathHybridOutput;
   public expression: ExtractedMathExpressionToolType;
   private documentText: string;
+  private chunkId: string;
+  private processingStartTime: number;
 
-  constructor(verificationResult: CheckMathHybridOutput, expression: ExtractedMathExpressionToolType, documentText: string) {
+  constructor(
+    verificationResult: CheckMathHybridOutput, 
+    expression: ExtractedMathExpressionToolType, 
+    documentText: string,
+    chunkId: string,
+    processingStartTime: number
+  ) {
     this.verificationResult = verificationResult;
     this.expression = expression;
     this.documentText = documentText;
+    this.chunkId = chunkId;
+    this.processingStartTime = processingStartTime;
   }
 
   get originalText(): string {
@@ -73,33 +84,68 @@ export class HybridMathErrorWrapper {
     }
 
     const endOffset = startOffset + this.expression.originalText.length;
-    const message = this.generateEnhancedComment();
     
-    if (!message) {
-      return null;
-    }
-
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
+    // Build tool chain results
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 20).toISOString(),
+        result: this.expression
+      },
+      {
+        toolName: this.verificationResult.verifiedBy === 'mathjs' ? 'checkMathWithMathJS' : 'checkMathWithLLM',
+        stage: 'verification',
+        timestamp: new Date().toISOString(),
+        result: this.verificationResult
+      }
+    ];
+    
+    // Keep formatted description for backwards compatibility
+    const formattedDescription = this.generateEnhancedComment();
+    
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
         startOffset,
         endOffset,
-        quotedText: this.expression.originalText,
-        isValid: true,
+        quotedText: this.expression.originalText
       },
-      importance: this.commentImportanceScore(),
+      chunkId: this.chunkId,
+      processingStartTime: this.processingStartTime,
+      toolChain,
       
-      header: this.verificationResult.conciseCorrection || `Math Error: ${this.expression.originalText}`,
-      level: 'error' as const, // HybridMathErrorWrapper only handles errors
-      source: 'math',
-      metadata: {
-        verifiedBy: this.verificationResult.verifiedBy,
-        status: this.verificationResult.status,
-        mathJsResult: this.verificationResult.mathJsResult,
-        contextImportanceScore: this.expression.contextImportanceScore,
-      },
-    };
+      // Custom description (keeps existing formatting)
+      description: formattedDescription,
+      
+      // Structured content
+      header: this.verificationResult.conciseCorrection || `Math error: ${this.expression.originalText}`,
+      level: 'error', // Always error since we only generate comments for errors
+      observation: this.buildObservation(),
+      significance: this.buildSignificance()
+    });
+  }
+  
+  private buildObservation(): string {
+    if (this.verificationResult.mathJsResult?.error) {
+      return `Calculation error: ${this.verificationResult.mathJsResult.error}`;
+    }
+    if (this.verificationResult.llmResult?.explanation) {
+      return this.verificationResult.llmResult.explanation;
+    }
+    return "Mathematical expression contains an error";
+  }
+  
+  private buildSignificance(): string | undefined {
+    const severity = this.verificationResult.llmResult?.severity;
+    if (severity === 'critical') {
+      return "Critical error that fundamentally undermines the argument or conclusion";
+    } else if (severity === 'major') {
+      return "Significant error that affects the validity of related claims";
+    } else if (severity === 'minor') {
+      return "Minor error that should be corrected for accuracy";
+    }
+    return undefined;
   }
 
   private findTextOffsetInDocument(text: string): number {
@@ -188,6 +234,10 @@ export class ExtractedMathExpression {
     );
   }
 
+  getChunkId(): string {
+    return this.chunk.id;
+  }
+
   public async findLocationInDocument(): Promise<{
     startOffset: number;
     endOffset: number;
@@ -237,31 +287,35 @@ export class ExtractedMathExpression {
       return null;
     }
 
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
+    // Build tool chain for ExtractedMathExpression (basic expression analysis)
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date().toISOString(),
+        result: this.expression
+      }
+    ];
+    
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
         startOffset: location.startOffset,
         endOffset: location.endOffset,
-        quotedText: location.quotedText,
-        isValid: true,
+        quotedText: location.quotedText
       },
-      importance: this.commentImportanceScore(),
+      chunkId: this.chunk.id,
+      processingStartTime: Date.now(),
+      toolChain,
       
+      // Custom overrides
       header: this.expression.conciseCorrection || 
               (this.expression.hasError ? `Math Error: ${this.expression.originalText}` : `Math: ${this.expression.originalText}`),
       level: this.expression.hasError ? 'error' as const : 
              (this.expression.verificationStatus === 'verified' ? 'success' as const : 'info' as const),
-      source: 'math',
-      metadata: {
-        errorType: this.expression.errorType,
-        hasError: this.expression.hasError,
-        verificationStatus: this.expression.verificationStatus,
-        complexityScore: this.expression.complexityScore,
-        contextImportanceScore: this.expression.contextImportanceScore,
-        errorSeverityScore: this.expression.errorSeverityScore,
-      },
-    };
+      description: message,
+      importance: this.commentImportanceScore()
+    });
   }
 }
 
@@ -275,6 +329,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private totalCost: number = 0;
   private extractedExpressions: ExtractedMathExpression[] = [];
   private hybridErrorWrappers: HybridMathErrorWrapper[] = [];
+  private processingStartTime: number = 0;
 
   name(): string {
     return "MATH";
@@ -321,6 +376,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
 
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Store the inputs
+    this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
     
@@ -440,7 +496,13 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
 
         // Only create wrapper if there's an error (status is verified_false)
         if (result.status === 'verified_false') {
-          const errorWrapper = new HybridMathErrorWrapper(result, extractedExpr.expression, this.documentText);
+          const errorWrapper = new HybridMathErrorWrapper(
+            result, 
+            extractedExpr.expression, 
+            this.documentText,
+            extractedExpr.getChunkId(),
+            this.processingStartTime
+          );
           this.hybridErrorWrappers.push(errorWrapper);
         }
       } catch (error) {

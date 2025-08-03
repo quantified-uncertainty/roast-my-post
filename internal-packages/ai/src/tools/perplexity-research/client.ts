@@ -4,6 +4,7 @@
  */
 
 import { OpenAI } from 'openai';
+import { getConfig } from '../../config';
 
 export interface PerplexityOptions {
   model?: 'perplexity/sonar' | 'perplexity/sonar-pro';
@@ -16,12 +17,13 @@ export class PerplexityClient {
   private client: OpenAI;
   
   constructor(apiKey?: string) {
-    const key = apiKey || process.env.OPENROUTER_API_KEY || '';
+    const config = getConfig();
+    const key = apiKey || config.openRouterApiKey || process.env.OPENROUTER_API_KEY || '';
     if (!key) {
       throw new Error('OpenRouter API key is required for Perplexity integration');
     }
     
-    const heliconeKey = process.env.HELICONE_API_KEY;
+    const heliconeKey = config.heliconeApiKey || process.env.HELICONE_API_KEY;
     
     // Use Helicone proxy if available, otherwise direct OpenRouter
     if (heliconeKey) {

@@ -23,7 +23,7 @@ export {
   PluginManager,
   PluginLogger,
   TextChunk,
-  StandardCommentBuilder,
+  CommentBuilder,
   ChunkRouter,
   createChunks,
   FactCheckPlugin,
@@ -61,6 +61,8 @@ export {
 export * from './shared/logger';
 export type { 
   Comment,
+  CommentMetadata,
+  ToolChainResult,
   DocumentLocation,
   LanguageConvention,
   LanguageConventionOption

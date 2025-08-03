@@ -25,7 +25,7 @@ export const THRESHOLDS = {
 // Limits and counts
 export const LIMITS = {
   // Maximum facts to verify per analysis
-  MAX_FACTS_TO_VERIFY: 10,
+  MAX_FACTS_TO_VERIFY: 25,
   
   // Maximum claims to extract per chunk
   MAX_CLAIMS_PER_CHUNK: 10,

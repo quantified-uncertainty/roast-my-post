@@ -16,13 +16,18 @@ import type { Comment as DbComment, Evaluation as DbEvaluation } from '@/types/d
 export function dbCommentToAiComment(dbComment: DbComment): AiComment {
   return {
     ...dbComment,
-    importance: dbComment.importance ?? undefined,
+    importance: dbComment.importance ?? 0,
     grade: dbComment.grade ?? undefined,
     highlight: dbComment.highlight ? {
       ...dbComment.highlight,
       prefix: dbComment.highlight.prefix ?? undefined,
       error: dbComment.highlight.error ?? undefined,
-    } : undefined
+    } : {
+      startOffset: 0,
+      endOffset: 0,
+      quotedText: '',
+      isValid: false
+    }
   };
 }
 

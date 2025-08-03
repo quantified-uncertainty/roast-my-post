@@ -245,7 +245,18 @@ function generateLinkHighlights(
           highlight: urlPosition,
           importance,
           grade,
-          isValid: true,
+          
+          // Required fields for new Comment interface  
+          header: url.length > 50 ? url.substring(0, 47) + '...' : url,
+          level: grade > 0.7 ? 'success' : grade > 0.3 ? 'warning' : 'error',
+          source: 'link-analysis',
+          metadata: {
+            pluginName: 'link-analysis',
+            timestamp: new Date().toISOString(),
+            chunkId: 'unknown',
+            processingTimeMs: 0,
+            toolChain: []
+          }
         });
 
       // Mark this position as processed

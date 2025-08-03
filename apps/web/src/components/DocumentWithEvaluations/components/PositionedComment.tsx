@@ -1,7 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { 
+  DocumentDuplicateIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  XCircleIcon,
+  CheckCircleIcon
+} from "@heroicons/react/24/outline";
 
 import type { Comment } from "@roast/ai";
 import { commentToYaml } from "@/utils/commentToYaml";
@@ -41,20 +50,37 @@ export function PositionedComment({
   skipAnimation = false,
 }: PositionedCommentProps) {
   const tag = index.toString();
+  const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
 
   // Note: We show header if available, otherwise description is shown inline
 
   // Get level styling
   const levelStyles = {
-    error: { borderColor: "#ef4444", bgColor: "#fef2f2" },
-    warning: { borderColor: "#f59e0b", bgColor: "#fffbeb" },
-    info: { borderColor: "#3b82f6", bgColor: "#eff6ff" },
-    success: { borderColor: "#10b981", bgColor: "#f0fdf4" },
+    error: { bgColor: "#fef2f2" },
+    warning: { bgColor: "#fffbeb" },
+    info: { bgColor: "#eff6ff" },
+    success: { bgColor: "#f0fdf4" },
   };
 
   const level = comment.level || "info"; // Default to info if not set
   const styles =
     levelStyles[level as keyof typeof levelStyles] || levelStyles.info;
+
+  // Get level icon
+  const getLevelIcon = (level: string) => {
+    const iconClass = "h-4 w-4 flex-shrink-0";
+    switch (level) {
+      case 'error':
+        return <XCircleIcon className={`${iconClass} text-red-500`} />;
+      case 'warning':
+        return <ExclamationTriangleIcon className={`${iconClass} text-amber-500`} />;
+      case 'success':
+        return <CheckCircleIcon className={`${iconClass} text-green-500`} />;
+      case 'info':
+      default:
+        return <InformationCircleIcon className={`${iconClass} text-blue-500`} />;
+    }
+  };
 
   return (
     <div
@@ -84,7 +110,8 @@ export function PositionedComment({
         <div className="min-w-0 flex-1 select-text text-sm leading-relaxed text-gray-700">
           {/* Show header if available */}
           {comment.header && (
-            <div className="mb-1 font-medium text-gray-900">
+            <div className="mb-1 flex items-center gap-2 font-medium text-gray-900">
+              {getLevelIcon(level)}
               {comment.header}
             </div>
           )}
@@ -128,6 +155,34 @@ export function PositionedComment({
                   {comment.highlight.quotedText}
                 </pre>
               </div>
+            </div>
+          )}
+
+          {/* Metadata viewer when expanded */}
+          {isHovered && comment.metadata && (
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMetadataExpanded(!isMetadataExpanded);
+                }}
+                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+              >
+                {isMetadataExpanded ? (
+                  <ChevronDownIcon className="h-3 w-3" />
+                ) : (
+                  <ChevronRightIcon className="h-3 w-3" />
+                )}
+                <span>Metadata</span>
+              </button>
+              
+              {isMetadataExpanded && (
+                <div className="mt-2 rounded border bg-gray-50 p-3">
+                  <pre className="overflow-x-auto text-xs text-gray-600">
+                    {JSON.stringify(comment.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
 

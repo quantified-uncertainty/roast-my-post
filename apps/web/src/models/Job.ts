@@ -426,11 +426,16 @@ export class JobModel {
       }
 
       // Prepare document for analysis
+      // Include markdownPrepend in content to ensure consistent text positions
+      const fullContent = documentVersion.markdownPrepend 
+        ? documentVersion.markdownPrepend + documentVersion.content 
+        : documentVersion.content;
+      
       const documentForAnalysis = {
         id: job.evaluation.document.id,
         slug: job.evaluation.document.id,
         title: documentVersion.title,
-        content: documentVersion.content,
+        content: fullContent,
         author: documentVersion.authors.join(", "),
         publishedDate: job.evaluation.document.publishedDate.toISOString(),
         url: documentVersion.urls[0],
@@ -518,8 +523,9 @@ export class JobModel {
         });
       }
 
-      // Get the full content with prepend for validation (same content that was sent to AI)
-      const { content: fullContentForValidation } = getDocumentFullContent(documentForAnalysis);
+      // Use the same content that was sent to AI for validation
+      // documentForAnalysis.content already includes the prepend
+      const fullContentForValidation = documentForAnalysis.content;
       
       // Save highlights with validation
       if (evaluationOutputs.highlights && evaluationOutputs.highlights.length > 0) {
@@ -568,6 +574,10 @@ export class JobModel {
               description: comment.description || 'No description',
               importance: comment.importance || null,
               grade: comment.grade || null,
+              header: comment.header || null,
+              level: comment.level || null,
+              source: comment.source || null,
+              metadata: comment.metadata || null,
               evaluationVersionId: evaluationVersion.id,
               highlightId: createdHighlight.id,
             },
