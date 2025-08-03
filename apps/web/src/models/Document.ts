@@ -429,7 +429,16 @@ export class DocumentModel {
                   llmThinking: version.job.llmThinking || "",
                   durationInSeconds: version.job.durationInSeconds || undefined,
                   logs: version.job.logs || undefined,
-                  tasks: version.job.tasks || [],
+                  tasks: version.job.tasks?.map((task: any) => ({
+                    id: task.id,
+                    name: task.name,
+                    modelName: task.modelName,
+                    priceInDollars: convertPriceToNumber(task.priceInDollars),
+                    timeInSeconds: task.timeInSeconds,
+                    log: task.log,
+                    llmInteractions: task.llmInteractions ? JSON.parse(JSON.stringify(task.llmInteractions)) : undefined,
+                    createdAt: task.createdAt,
+                  })) || [],
                 }
               : undefined,
             comments: version.comments.map((comment: any) => ({
