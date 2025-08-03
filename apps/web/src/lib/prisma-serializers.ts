@@ -85,10 +85,10 @@ export function serializeJobNumeric(job: any) {
   return {
     ...job,
     priceInDollars: job.priceInDollars ? Number(job.priceInDollars) : null,
-    tasks: job.tasks?.map((task: any) => ({
+    tasks: job.tasks ? job.tasks.map((task: any) => ({
       ...task,
       priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0,
-    })),
+    })) : null,
   };
 }
 

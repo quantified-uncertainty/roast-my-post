@@ -67,7 +67,7 @@ export function VersionDetails({
         priceInDollars: selectedVersion.job.priceInDollars ? Number(selectedVersion.job.priceInDollars) : null,
         tasks: selectedVersion.job.tasks?.map(task => ({
           ...task,
-          priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0
+          priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : null
         })) || []
       } : null,
       testBatchId: null,
