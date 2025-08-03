@@ -4,6 +4,7 @@ import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { isAdmin } from "@/lib/auth";
+import { serializeJobsNumeric } from "@/lib/prisma-serializers";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequest(request);
@@ -80,7 +81,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ jobs });
+    // Convert Decimal fields to numbers for client compatibility
+    const serializedJobs = serializeJobsNumeric(jobs);
+
+    return NextResponse.json({ jobs: serializedJobs });
   } catch (error) {
     logger.error('Error fetching jobs:', error);
     return commonErrors.serverError("Failed to fetch jobs");

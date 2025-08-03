@@ -11,13 +11,13 @@ export function createAnthropicClient(additionalHeaders?: Record<string, string>
   }
 
   const heliconeKey = getHeliconeApiKey();
-  const enableHelicone = isHeliconeEnabled() && heliconeKey;
+  const enableHelicone = isHeliconeEnabled() && !!heliconeKey;
 
   if (enableHelicone) {
     // Use Helicone proxy with caching
     return new Anthropic({
       apiKey,
-      baseURL: "https://api.helicone.ai/v1",
+      baseURL: "https://anthropic.helicone.ai",
       defaultHeaders: {
         "Helicone-Auth": `Bearer ${heliconeKey}`,
         "Helicone-Cache-Enabled": "true",

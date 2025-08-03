@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import { prisma, type Prisma } from "@roast/db";
+import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { isAdmin } from "@/lib/auth";
+import { serializeJobNumeric } from "@/lib/prisma-serializers";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequest(request);
@@ -137,9 +138,9 @@ export async function GET(request: NextRequest) {
         createdAt: version.createdAt,
         agentVersion: version.agentVersion,
         comments: version.comments,
-        job: version.job,
+        job: version.job ? serializeJobNumeric(version.job) : null,
       })),
-      jobs: evaluation.jobs,
+      jobs: evaluation.jobs.map(serializeJobNumeric),
     }));
 
     return NextResponse.json({ evaluations });

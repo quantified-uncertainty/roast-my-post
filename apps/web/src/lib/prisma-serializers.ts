@@ -35,7 +35,37 @@ export function serializeDecimal<T>(obj: T): T {
 }
 
 /**
- * Serialize a single Job object
+ * Serialize Prisma Decimal fields to numbers for numeric operations
+ * Use this when you need to perform calculations on the client side
+ */
+export function serializeDecimalToNumber<T>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (obj instanceof Prisma.Decimal) {
+    return Number(obj) as any;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(serializeDecimalToNumber) as any;
+  }
+
+  if (typeof obj === 'object' && !(obj instanceof Date)) {
+    const serialized: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        serialized[key] = serializeDecimalToNumber(obj[key]);
+      }
+    }
+    return serialized;
+  }
+
+  return obj;
+}
+
+/**
+ * Serialize a single Job object (converts Decimal to string)
  */
 export function serializeJob(job: any) {
   return {
@@ -46,6 +76,27 @@ export function serializeJob(job: any) {
     startedAt: job.startedAt ? job.startedAt.toISOString() : null,
     completedAt: job.completedAt ? job.completedAt.toISOString() : null,
   };
+}
+
+/**
+ * Serialize a Job with numeric price (for calculations)
+ */
+export function serializeJobNumeric(job: any) {
+  return {
+    ...job,
+    priceInDollars: job.priceInDollars ? Number(job.priceInDollars) : null,
+    tasks: job.tasks?.map((task: any) => ({
+      ...task,
+      priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0,
+    })),
+  };
+}
+
+/**
+ * Serialize multiple jobs with numeric prices
+ */
+export function serializeJobsNumeric(jobs: any[]) {
+  return jobs.map(serializeJobNumeric);
 }
 
 /**

@@ -1,0 +1,13 @@
+{
+  "extends": "./apps/web/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./apps/web/src/*"],
+      "@roast/db": ["./internal-packages/db/src/index.ts"],
+      "@roast/ai": ["./internal-packages/ai/src/index.ts"]
+    }
+  },
+  "include": ["apps/web/src/**/*"],
+  "exclude": ["node_modules"]
+}

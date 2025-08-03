@@ -33,7 +33,7 @@ import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
 import { readerFontFamily } from "@/lib/fonts";
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
-import { UI_LAYOUT, TEXT_PROCESSING, ANIMATION } from "@/components/DocumentWithEvaluations/constants/uiConstants";
+import { LAYOUT, TEXT_PROCESSING, TIMING } from "@/components/DocumentWithEvaluations/constants";
 
 // Define custom element types for Slate
 type CustomText = { text: string };
@@ -326,9 +326,9 @@ const renderLeaf = ({
           transformOrigin: "center",
           padding: "0 1px",
           margin: "0 -1px",
-          scrollMarginTop: `${UI_LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
+          scrollMarginTop: `${LAYOUT.SCROLL_MARGIN_TOP}px`, // Add scroll margin to prevent the highlight from being hidden under the header
         }}
-        className={`group cursor-pointer transition-all duration-[${ANIMATION.HIGHLIGHT_TRANSITION}ms] ease-out hover:bg-opacity-60 ${
+        className={`group cursor-pointer transition-all duration-[${TIMING.HIGHLIGHT_TRANSITION}ms] ease-out hover:bg-opacity-60 ${
           isActive ? "relative z-10" : ""
         }`}
         onClick={(e) => {
