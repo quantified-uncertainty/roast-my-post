@@ -70,7 +70,7 @@ export function PositionedComment({
         padding: `2px 8px`,
         transition: skipAnimation
           ? "none"
-          : "opacity 0.2s ease-out, background-color 0.2s ease-out",
+          : "opacity 0.2s ease-out, background-color 0.2s ease-out, top 0.3s ease-out",
         cursor: "pointer",
         zIndex: isHovered ? Z_INDEX_COMMENT_HOVERED : Z_INDEX_COMMENT,
         opacity: isVisible ? 1 : 0,
