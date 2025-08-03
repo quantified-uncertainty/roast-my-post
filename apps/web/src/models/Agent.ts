@@ -317,7 +317,7 @@ export class AgentModel {
           jobStatus: latestEvaluationVersion?.job?.status,
           jobCreatedAt: latestEvaluationVersion?.job?.createdAt,
           jobCompletedAt: latestEvaluationVersion?.job?.completedAt,
-          priceInDollars: latestEvaluationVersion?.job?.priceInDollars,
+          priceInDollars: latestEvaluationVersion?.job?.priceInDollars?.toString() || null,
         };
       });
     } finally {

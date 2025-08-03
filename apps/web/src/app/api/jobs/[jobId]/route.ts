@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
+import { serializeJobNumeric } from "@/lib/prisma-serializers";
 
 export async function GET(
   req: NextRequest,
@@ -62,7 +63,9 @@ export async function GET(
       },
     });
     
-    return new Response(JSON.stringify(job), { status: 200 });
+    // Serialize Decimal fields before returning
+    const serializedJob = serializeJobNumeric(job);
+    return new Response(JSON.stringify(serializedJob), { status: 200 });
   } catch (error) {
     logger.error('Error fetching job:', error);
     return commonErrors.serverError("Failed to fetch job");
