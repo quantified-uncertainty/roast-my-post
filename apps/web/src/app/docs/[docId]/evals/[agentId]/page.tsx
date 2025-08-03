@@ -78,12 +78,17 @@ export default async function EvaluationPage({
             ephemeralBatch={evaluationData.ephemeralBatch}
             costInCents={evaluationData.priceInDollars ? Math.round(parseFloat(evaluationData.priceInDollars.toString()) * 100) : undefined}
             durationInSeconds={evaluationData.durationInSeconds}
-            createdAt={evaluationData.createdAt}
+            createdAt={evaluationData.createdAt.toISOString()}
             isStale={evaluationData.isStale}
             showNavigation={true}
             compact={false}
             maxWidth="4xl"
-            evaluationData={{ ...serializePrismaResult(evaluation), agentId: evaluationData.agentId }}
+            evaluationData={{
+              ...serializePrismaResult(evaluation), 
+              agentId: evaluationData.agentId,
+              // Ensure nested dates are serialized
+              createdAt: evaluation.createdAt.toISOString(),
+            }}
             isOnEvalPage={true}
             isOwner={isOwner}
           />
