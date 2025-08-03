@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint . --config ./config/eslint/.eslintrc.json",
     "typecheck": "tsc --noEmit",
+    "check": "pnpm run typecheck && pnpm run lint",
     "test": "jest --config ./config/jest/jest.config.cjs",
     "test:unit": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.'",
     "test:integration": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.integration.test.ts'",
