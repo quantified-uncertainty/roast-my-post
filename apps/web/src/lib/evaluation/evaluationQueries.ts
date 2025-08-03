@@ -1,5 +1,6 @@
 import { prisma } from "@roast/db";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
+import { serializePrismaResult } from "@/lib/prisma-serializers";
 
 /**
  * Shared query pattern for getting evaluation data for display
@@ -58,7 +59,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
       : null,
     
     // Run stats
-    priceInDollars: latestVersion?.job?.priceInDollars,
+    priceInDollars: latestVersion?.job?.priceInDollars ? Number(latestVersion.job.priceInDollars) : undefined,
     durationInSeconds: latestVersion?.job?.durationInSeconds,
     createdAt: latestVersion?.createdAt || new Date(),
     
@@ -73,7 +74,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
     // Additional metadata
     version: latestVersion?.version || 1,
     evaluationId: evaluation.id,
-    allEvaluations: evaluation.document.evaluations || [],
+    allEvaluations: serializePrismaResult(evaluation.document.evaluations || []),
   };
 }
 
