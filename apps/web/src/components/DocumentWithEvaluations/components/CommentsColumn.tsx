@@ -54,9 +54,20 @@ export function CommentsColumn({
   const [highlightsReady, setHighlightsReady] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   
-  // Debouncing refs
+  // Refs for cleanup
   const rafRef = useRef<number>(0);
   const mutationDebounceRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const observerRef = useRef<MutationObserver | null>(null);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Position cache to avoid recalculating unchanged positions
+  const positionCacheRef = useRef<{
+    hoveredId: string | null;
+    positions: Record<string, number>;
+    commentCount: number;
+  }>({ hoveredId: null, positions: {}, commentCount: 0 });
 
   // Get valid and sorted comments with memoization
   const sortedComments = useMemo(
@@ -65,33 +76,48 @@ export function CommentsColumn({
   );
 
   // Calculate comment positions with RAF for smooth updates
-  const calculatePositions = useCallback(
-    (currentHoveredId?: string | null) => {
-      if (!contentRef.current) return;
+  const calculatePositions = useCallback(() => {
+    if (!contentRef.current) return;
 
-      // Cancel any pending animation frame
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
+    // Cancel any pending animation frame
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    
+    // Use requestAnimationFrame for smooth updates
+    rafRef.current = requestAnimationFrame(() => {
+      if (!contentRef.current) return;
+      
+      // Check if we need to recalculate
+      const cache = positionCacheRef.current;
+      if (
+        cache.hoveredId === hoveredCommentId &&
+        cache.commentCount === sortedComments.length &&
+        Object.keys(cache.positions).length === sortedComments.length
+      ) {
+        // Positions haven't changed, use cached values
+        return;
       }
       
-      // Use requestAnimationFrame for smooth updates
-      rafRef.current = requestAnimationFrame(() => {
-        if (!contentRef.current) return;
-        
-        const positions = calculateCommentPositions(
-          sortedComments,
-          contentRef.current,
-          {
-            hoveredCommentId: currentHoveredId,
-            minGap: COMMENT_MIN_GAP,
-          }
-        );
+      const positions = calculateCommentPositions(
+        sortedComments,
+        contentRef.current,
+        {
+          hoveredCommentId: hoveredCommentId,
+          minGap: COMMENT_MIN_GAP,
+        }
+      );
 
-        setCommentPositions(positions);
-      });
-    },
-    [sortedComments, contentRef]
-  );
+      // Update cache
+      positionCacheRef.current = {
+        hoveredId: hoveredCommentId,
+        positions,
+        commentCount: sortedComments.length,
+      };
+      
+      setCommentPositions(positions);
+    });
+  }, [sortedComments, contentRef, hoveredCommentId]);
 
   // Check if highlights are ready using MutationObserver with debouncing
   useEffect(() => {
@@ -103,6 +129,7 @@ export function CommentsColumn({
     // Reset states when comments change
     setHighlightsReady(false);
     setHasInitialized(false);
+    positionCacheRef.current = { hoveredId: null, positions: {}, commentCount: 0 };
 
     let isSubscribed = true;
     let attempts = 0;
@@ -130,10 +157,10 @@ export function CommentsColumn({
     };
 
     // More targeted observer for better performance
-    const observer = new MutationObserver(debouncedCheck);
+    observerRef.current = new MutationObserver(debouncedCheck);
     
     // Observe with more targeted options
-    observer.observe(contentRef.current, {
+    observerRef.current.observe(contentRef.current, {
       childList: true,
       subtree: true, // We need subtree to catch highlight elements
       attributes: true,
@@ -141,27 +168,46 @@ export function CommentsColumn({
     });
     
     // Initial check
-    setTimeout(debouncedCheck, 100);
+    checkTimeoutRef.current = setTimeout(debouncedCheck, 100);
     
     return () => {
       isSubscribed = false;
-      observer.disconnect();
-      clearTimeout(mutationDebounceRef.current);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      if (mutationDebounceRef.current) {
+        clearTimeout(mutationDebounceRef.current);
+        mutationDebounceRef.current = undefined;
+      }
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+        checkTimeoutRef.current = null;
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
     };
   }, [sortedComments.length, contentRef]);
 
-  // Calculate positions when highlights are ready
+  // Calculate positions when highlights are ready or hover changes
   useEffect(() => {
     if (highlightsReady) {
-      calculatePositions(hoveredCommentId);
+      calculatePositions();
       // Mark as initialized after first position calculation
       if (!hasInitialized) {
-        setTimeout(() => setHasInitialized(true), INITIALIZATION_DELAY);
+        initTimeoutRef.current = setTimeout(() => setHasInitialized(true), INITIALIZATION_DELAY);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlightsReady, sortedComments.length]);
+    
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+        initTimeoutRef.current = null;
+      }
+    };
+  }, [highlightsReady, hasInitialized, calculatePositions]);
 
   // Handle scroll events to recalculate if needed
   useEffect(() => {
@@ -181,7 +227,6 @@ export function CommentsColumn({
   useEffect(() => {
     if (!highlightsReady || !contentRef.current) return;
 
-    let resizeTimeout: NodeJS.Timeout;
     let lastWidth = 0;
     let lastHeight = 0;
 
@@ -191,15 +236,19 @@ export function CommentsColumn({
 
       const { width, height } = entry.contentRect;
       
-      // Only recalculate if size actually changed (avoids sub-pixel thrashing)
-      if (Math.abs(width - lastWidth) > 1 || Math.abs(height - lastHeight) > 1) {
+      // Only recalculate if size changed significantly (5px threshold)
+      if (Math.abs(width - lastWidth) > 5 || Math.abs(height - lastHeight) > 5) {
         lastWidth = width;
         lastHeight = height;
         
         // Debounce resize events
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          calculatePositions(hoveredCommentId);
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+        resizeTimeoutRef.current = setTimeout(() => {
+          // Invalidate cache on resize
+          positionCacheRef.current = { hoveredId: null, positions: {}, commentCount: 0 };
+          calculatePositions();
         }, RESIZE_DEBOUNCE_DELAY);
       }
     };
@@ -210,9 +259,13 @@ export function CommentsColumn({
 
     // Also observe window resize for zoom detection
     const handleWindowResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        calculatePositions(hoveredCommentId);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      resizeTimeoutRef.current = setTimeout(() => {
+        // Invalidate cache on window resize
+        positionCacheRef.current = { hoveredId: null, positions: {}, commentCount: 0 };
+        calculatePositions();
       }, RESIZE_DEBOUNCE_DELAY);
     };
 
@@ -221,9 +274,12 @@ export function CommentsColumn({
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", handleWindowResize);
-      clearTimeout(resizeTimeout);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+        resizeTimeoutRef.current = null;
+      }
     };
-  }, [highlightsReady, calculatePositions, hoveredCommentId, contentRef]);
+  }, [highlightsReady, calculatePositions, contentRef]);
 
   return (
     <CommentErrorBoundary>
@@ -241,8 +297,8 @@ export function CommentsColumn({
             const isSelected = selectedCommentId === tag;
             const isHovered = hoveredCommentId === tag;
 
-            // Use a stable key based on comment content and agent
-            const stableKey = `${comment.agentName || "default"}-${comment.highlight?.startOffset || 0}-${comment.highlight?.endOffset || 0}-${index}`;
+            // Use comment.id for stable key when available
+            const stableKey = comment.id || `${comment.agentName || "default"}-${comment.highlight?.startOffset || 0}-${comment.highlight?.endOffset || 0}-${index}`;
 
             return (
               <PositionedComment
