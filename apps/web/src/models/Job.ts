@@ -577,7 +577,7 @@ export class JobModel {
               header: comment.header || null,
               level: comment.level || null,
               source: comment.source || null,
-              metadata: comment.metadata || null,
+              metadata: comment.metadata as any || null,
               evaluationVersionId: evaluationVersion.id,
               highlightId: createdHighlight.id,
             },
