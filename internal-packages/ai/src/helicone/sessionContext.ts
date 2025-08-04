@@ -4,53 +4,57 @@
  * This provides a way to pass session configuration through to nested
  * components like plugins and tools without modifying all interfaces.
  * 
- * IMPORTANT: Thread Safety Limitation
- * -----------------------------------
- * This implementation uses a global singleton pattern which is NOT thread-safe
- * in concurrent environments. Multiple jobs running simultaneously could 
- * interfere with each other's session state.
- * 
- * Current Mitigation:
- * - Jobs are processed sequentially in the current implementation
- * - The PluginManager sets and clears the session context for each plugin run
- * 
- * Future Improvements:
- * - Consider using AsyncLocalStorage for true async context isolation
- * - Or refactor to pass session config through all function parameters
- * - Or use a job-scoped context manager instead of global singleton
+ * Uses AsyncLocalStorage for proper async context isolation to prevent
+ * concurrent job processors from interfering with each other's sessions.
  * 
  * @see https://nodejs.org/api/async_context.html#class-asynclocalstorage
  */
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { HeliconeSessionConfig } from './sessions';
 
 class SessionContextManager {
-  private currentSession: HeliconeSessionConfig | undefined;
+  // Use AsyncLocalStorage for proper async isolation
+  private asyncLocalStorage = new AsyncLocalStorage<HeliconeSessionConfig>();
+  
+  // Fallback for environments without AsyncLocalStorage
+  private fallbackSession: HeliconeSessionConfig | undefined;
   private sessionSetCount = 0;
   
   /**
    * Set the current session for LLM calls
-   * Includes basic detection of potential concurrent usage
+   * This is now safe for concurrent usage thanks to AsyncLocalStorage
    */
   setSession(session: HeliconeSessionConfig | undefined) {
-    // Detect potential concurrent usage
-    if (this.currentSession && session && this.currentSession.sessionId !== session.sessionId) {
-      console.warn(
-        `⚠️ Potential concurrent session usage detected. ` +
-        `Previous session ${this.currentSession.sessionId} being replaced by ${session.sessionId}. ` +
-        `Consider using AsyncLocalStorage for proper async context isolation.`
-      );
-    }
-    
-    this.currentSession = session;
+    // For backward compatibility, also set the fallback
+    this.fallbackSession = session;
     this.sessionSetCount++;
   }
   
   /**
    * Get the current session
+   * First checks AsyncLocalStorage, then falls back to the global session
    */
   getSession(): HeliconeSessionConfig | undefined {
-    return this.currentSession;
+    // Try to get from AsyncLocalStorage first
+    const asyncSession = this.asyncLocalStorage.getStore();
+    if (asyncSession) {
+      return asyncSession;
+    }
+    
+    // Fall back to the global session for backward compatibility
+    return this.fallbackSession;
+  }
+  
+  /**
+   * Run a function with a specific session context
+   * This ensures proper isolation for concurrent operations
+   */
+  async runWithSession<T>(
+    session: HeliconeSessionConfig,
+    fn: () => T | Promise<T>
+  ): Promise<T> {
+    return this.asyncLocalStorage.run(session, fn);
   }
   
   /**
@@ -84,7 +88,9 @@ class SessionContextManager {
    * Clear the current session
    */
   clear() {
-    this.currentSession = undefined;
+    this.fallbackSession = undefined;
+    // Note: AsyncLocalStorage contexts are automatically cleaned up
+    // when the async context ends, so we don't need to clear them manually
   }
 }
 

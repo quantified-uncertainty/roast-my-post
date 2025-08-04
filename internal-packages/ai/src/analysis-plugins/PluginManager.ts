@@ -96,12 +96,9 @@ export class PluginManager {
   ): Promise<SimpleDocumentAnalysisResult> {
     this.startTime = Date.now();
 
-    // Set session context if available
-    if (this.sessionConfig) {
-      sessionContext.setSession(this.sessionConfig);
-    }
-
-    try {
+    // Use runWithSession for proper isolation if session config is available
+    const runAnalysis = async () => {
+      try {
       // Log chunking phase
       this.pluginLogger.log({
         level: "info",
@@ -433,11 +430,16 @@ export class PluginManager {
         logSummary,
         jobLogString,
       };
-    } finally {
-      // Clear session context
-      if (this.sessionConfig) {
-        sessionContext.clear();
+      } finally {
+        // Session context is automatically cleaned up by AsyncLocalStorage
       }
+    };
+
+    // Run the analysis with or without session isolation
+    if (this.sessionConfig) {
+      return sessionContext.runWithSession(this.sessionConfig, runAnalysis);
+    } else {
+      return runAnalysis();
     }
   }
 

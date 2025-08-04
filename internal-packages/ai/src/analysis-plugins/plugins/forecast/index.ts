@@ -205,15 +205,32 @@ class ExtractedForecast {
   }
   
   private buildTitle(): string {
-    const avgScore = this.averageScore;
-    const qualityLabel = avgScore >= 7 ? 'High-quality' : 
-                        avgScore >= 5 ? 'Moderate-quality' : 'Low-quality';
+    // Use concise description from comment generation
+    const hasAuthorProb = this.extractedForecast.authorProbability !== undefined;
+    const gap = hasAuthorProb && this.ourForecast ? 
+      Math.abs(this.extractedForecast.authorProbability! - this.ourForecast.probability) : 0;
     
-    const truncated = this.extractedForecast.rewrittenPredictionText.length > 80 ? 
-                     this.extractedForecast.rewrittenPredictionText.substring(0, 77) + '...' :
-                     this.extractedForecast.rewrittenPredictionText;
-    
-    return `${qualityLabel} forecast: ${truncated}`;
+    if (hasAuthorProb && this.ourForecast) {
+      // Show the probability change
+      let header = `${this.extractedForecast.authorProbability}% → ${this.ourForecast.probability}%`;
+      
+      // Add context for large gaps
+      if (gap >= 40) {
+        header += ' (extreme overconfidence)';
+      } else if (gap >= 25) {
+        header += ' (overconfident)';
+      }
+      
+      return header;
+    } else if (this.ourForecast) {
+      // No author probability, just show our estimate
+      return `Our estimate: ${this.ourForecast.probability}%`;
+    } else {
+      // No prediction available
+      return this.extractedForecast.authorProbability ? 
+        `${this.extractedForecast.authorProbability}% prediction` : 
+        'Prediction identified';
+    }
   }
   
   private buildObservation(): string | undefined {
