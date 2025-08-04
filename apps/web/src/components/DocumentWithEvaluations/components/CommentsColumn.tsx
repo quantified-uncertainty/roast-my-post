@@ -143,7 +143,7 @@ export function CommentsColumn({
                   <div className="mb-3 text-2xl text-orange-500">⚠️</div>
                   <div className="text-sm font-medium text-gray-700">Unable to position comments</div>
                   <div className="mt-2 max-w-xs text-center text-xs text-gray-500">
-                    Some comments couldn't be linked to their text locations. They'll appear at the top of the document instead.
+                    The highlighted text couldn't be found at the expected positions in the document. Comments will be shown without highlights.
                   </div>
                   <button
                     onClick={() => setLoadingState('ready')}
@@ -164,7 +164,7 @@ export function CommentsColumn({
                 <div className="text-xs text-orange-800">
                   <p className="font-medium">Comments shown without highlights</p>
                   <p className="mt-1 text-orange-700">
-                    {sortedComments.length} comment{sortedComments.length !== 1 ? 's' : ''} couldn't be linked to their text locations due to overlapping highlights.
+                    The text positions don't match the current document. This might happen if the document was modified after analysis.
                   </p>
                 </div>
               </div>
