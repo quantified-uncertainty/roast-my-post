@@ -226,7 +226,10 @@ export class DocumentModel {
       id: dbDoc.id,
       slug: dbDoc.id,
       title: latestVersion.title,
-      content: latestVersion.content,
+      // Include prepend in content for display (matches what was used during analysis)
+      content: latestVersion.markdownPrepend 
+        ? latestVersion.markdownPrepend + latestVersion.content 
+        : latestVersion.content,
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -405,7 +408,10 @@ export class DocumentModel {
       id: dbDoc.id,
       slug: dbDoc.id,
       title: latestVersion.title,
-      content: latestVersion.content,
+      // Include prepend in content for display (matches what was used during analysis)
+      content: latestVersion.markdownPrepend 
+        ? latestVersion.markdownPrepend + latestVersion.content 
+        : latestVersion.content,
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -690,7 +696,10 @@ export class DocumentModel {
         id: dbDoc.id,
         slug: dbDoc.id,
         title: latestVersion.title,
-        content: latestVersion.content,
+        // Include prepend in content for display (matches what was used during analysis)
+      content: latestVersion.markdownPrepend 
+        ? latestVersion.markdownPrepend + latestVersion.content 
+        : latestVersion.content,
         author: latestVersion.authors.join(", "),
         publishedDate: dbDoc.publishedDate.toISOString(),
         url: latestVersion.urls[0] || "",

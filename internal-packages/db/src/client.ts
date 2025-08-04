@@ -39,15 +39,6 @@ function createExtendedClient() {
             return prepend + documentVersion.content;
           },
         },
-        
-        // Additional computed field for prepend line count
-        prependLineCount: {
-          needs: { markdownPrepend: true },
-          compute(documentVersion) {
-            if (!documentVersion.markdownPrepend) return 0;
-            return documentVersion.markdownPrepend.split('\n').length;
-          },
-        },
       },
     },
   });

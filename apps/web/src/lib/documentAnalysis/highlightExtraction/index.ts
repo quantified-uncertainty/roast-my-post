@@ -9,7 +9,6 @@ import {
   withTimeout,
 } from "@roast/ai";
 
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
 import type { LineBasedHighlight } from "../highlightGeneration/types";
@@ -42,9 +41,8 @@ export async function extractHighlightsFromAnalysis(
     const highlights: Comment[] = [];
     const lineBasedHighlights: LineBasedHighlight[] = [];
 
-    // Get the full content with prepend (same as what was shown to the LLM)
-    const { content: fullContent } = getDocumentFullContent(document);
-    const lines = fullContent.split("\n");
+    // Document content already includes prepend from Job.ts
+    const lines = document.content.split("\n");
 
     // Take up to targetHighlights insights
     // Use all insights provided by the comprehensive analysis
@@ -66,7 +64,7 @@ export async function extractHighlightsFromAnalysis(
       // Use unified location finder for more robust highlighting
       const location = await findHighlightLocation(
         insight.suggestedHighlight,
-        fullContent,
+        document.content,
         {
           lineNumber: startLine,
           contextBefore: lines[startLine - 2] || "",
@@ -74,18 +72,33 @@ export async function extractHighlightsFromAnalysis(
         }
       );
 
-      // Create the highlight either from location finder results or fallback
-      const lineBasedHighlight = location
-        ? createHighlightFromLocation(location, insight)
-        : createFallbackHighlight(lines, startLine, endLine, insight);
-
-      lineBasedHighlights.push(lineBasedHighlight);
+      if (location) {
+        // Successfully found the text
+        const lineBasedHighlight = createHighlightFromLocation(location, insight);
+        lineBasedHighlights.push(lineBasedHighlight);
+      } else {
+        // Location finder failed - try fuzzy text search without line context
+        const fuzzyLocation = await findHighlightLocation(
+          insight.suggestedHighlight,
+          document.content,
+          {} // No line context - pure text search
+        );
+        
+        if (fuzzyLocation) {
+          // Found via fuzzy search
+          const lineBasedHighlight = createHighlightFromLocation(fuzzyLocation, insight);
+          lineBasedHighlights.push(lineBasedHighlight);
+        } else {
+          // Complete failure - skip this highlight
+          logger.warn(`Could not find text anywhere in document: "${insight.suggestedHighlight.substring(0, 100)}..."`);
+        }
+      }
     }
 
-    // Convert to character-based highlights using the full content (with prepend)
+    // Convert to character-based highlights using document content (already has prepend)
     const convertedHighlights = await validateAndConvertHighlights(
       lineBasedHighlights,
-      fullContent
+      document.content
     );
     highlights.push(...convertedHighlights);
 
@@ -241,11 +254,10 @@ export async function extractHighlightsFromAnalysis(
     interaction = result.interaction;
 
     // Convert line-based to character-based highlights
-    // Get the full content with prepend (same as what was shown to the LLM)
-    const { content: fullContent } = getDocumentFullContent(document);
+    // Document content already includes prepend from Job.ts
     highlights = await validateAndConvertHighlights(
       result.toolResult.highlights,
-      fullContent
+      document.content
     );
   } catch (error: unknown) {
     logger.error("Error in highlight extraction:", error);

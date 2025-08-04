@@ -5,7 +5,6 @@ import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./index";
 import { extractUrls } from "./urlExtractor";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 /**
  * Truncate URL for display while keeping it clickable
@@ -72,16 +71,15 @@ export async function analyzeLinkDocument(
   );
 
   // Step 3: Generate highlights from link issues (no LLM needed)
-  // Get the full content with prepend for URL extraction
-  const { content: fullContent } = getDocumentFullContent(document);
-  const urls = extractUrls(fullContent);
+  // Document content already includes prepend from Job.ts
+  const urls = extractUrls(document.content);
   
   const highlights = generateLinkHighlights(
     document,
     linkAnalysisResult.linkAnalysisResults,
     targetHighlights,
     urls,
-    fullContent // Pass the full content for correct position finding
+    document.content // Document content already has prepend
   );
 
   return {

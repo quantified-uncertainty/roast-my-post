@@ -115,13 +115,13 @@ The structural consistency aids readability throughout the document.
         highlightInsights: [
           {
             id: "insight-1",
-            location: "Lines 11", // Line 11 is where the actual content starts after prepend
-            suggestedHighlight: "Test Highlight 1. This is the first highlight text",
+            location: "Line 1", // Line 1 contains "Line 1: This is a test document."
+            suggestedHighlight: "Line 1: This is a test document.",
           },
           {
             id: "insight-2",
-            location: "Lines 12-13", // Lines 12-13 contain the actual document content
-            suggestedHighlight: "Test Highlight 2. This is the second highlight text",
+            location: "Lines 2-3", // Lines 2-3 contain the remaining content
+            suggestedHighlight: "Line 2: It has multiple lines.\nLine 3: For testing purposes.",
           },
         ],
       };
@@ -134,7 +134,7 @@ The structural consistency aids readability throughout the document.
       );
 
       expect(result.outputs.highlights).toHaveLength(2);
-      expect(result.outputs.highlights[0].description).toBe("Test Highlight 1. This is the first highlight text");
+      expect(result.outputs.highlights[0].description).toBe("Line 1: This is a test document.");
       expect(result.outputs.highlights[0].highlight!.startOffset).toBeDefined();
       expect(result.outputs.highlights[0].highlight!.endOffset).toBeDefined();
       expect(result.task.name).toBe("extractHighlightsFromAnalysis");

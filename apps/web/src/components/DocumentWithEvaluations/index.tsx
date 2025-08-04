@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react";
 
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { clearTruncationCache, getTruncationCacheSize } from "@/utils/ui/commentPositioning";
 
@@ -58,15 +57,10 @@ export function DocumentWithEvaluations({
       : null
   );
 
-  // Get the full content with prepend using the centralized helper
-  // IMPORTANT: Only use stored prepend, don't generate one if missing
-  // This ensures display matches what was used during analysis
+  // Document content already includes prepend from the database query
+  // The Document model now uses fullContent computed field
   const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(document as any, {
-      includePrepend: true,
-      generateIfMissing: false  // Don't generate - only use if stored
-    });
-    return content;
+    return document.content;
   }, [document]);
 
   // Manage truncation cache cleanup

@@ -4,7 +4,6 @@ import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
 import { extractUrls } from "./urlExtractor";
 import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 export async function generateLinkAnalysis(
   document: Document,
@@ -13,9 +12,8 @@ export async function generateLinkAnalysis(
   const startTime = Date.now();
   
   // Step 1: Extract URLs from document
-  // Get the full content with prepend for URL extraction
-  const { content: fullContent } = getDocumentFullContent(document);
-  const urls = extractUrls(fullContent);
+  // Document content already includes prepend from Job.ts
+  const urls = extractUrls(document.content);
   if (urls.length === 0) {
     // If no URLs found, return a simple analysis
     const noLinksThinking = `# Link Analysis Report

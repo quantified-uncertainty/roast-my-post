@@ -25,7 +25,7 @@ export async function analyzeSpellingGrammar(
   analysis: string;
   summary: string;
   grade?: number;
-  highlights: Comment[];
+  highlights: AiComment[];
   tasks: TaskResult[];
   jobLogString?: string;
 }> {

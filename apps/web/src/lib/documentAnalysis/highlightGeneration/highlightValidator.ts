@@ -84,11 +84,6 @@ export async function validateAndConvertHighlights(
             prefix: highlightResult.prefix,
             error: highlightError,
           },
-          
-          // Required fields for new Comment interface
-          header: highlight.description.substring(0, 60) + (highlight.description.length > 60 ? '...' : ''),
-          level: isHighlightValid ? 'info' : 'error',
-          source: 'highlight-validator',
           metadata: {
             pluginName: 'highlight-validator',
             timestamp: new Date().toISOString(),
