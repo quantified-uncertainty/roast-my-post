@@ -98,21 +98,24 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     let sessionConfig: HeliconeSessionConfig | undefined = undefined;
     
     if (currentSession) {
-      // First create a new config with the updated path
-      sessionConfig = sessionContext.withPath('/plugins/math/extract-math-expressions');
+      // Extend the existing session path
+      sessionConfig = sessionContext.withPath('/tools/extract-math-expressions');
       
-      // Then add properties to the new config (not the original context)
+      // Add tool-specific properties
       if (sessionConfig) {
-        sessionConfig = {
-          ...sessionConfig,
-          customProperties: {
-            ...sessionConfig.customProperties,
-            plugin: 'math',
-            operation: 'extract-expressions',
-            tool: 'extract-math-expressions'
-          }
-        };
+        sessionConfig = sessionContext.withProperties({
+          plugin: 'math',
+          operation: 'extract-expressions',
+          tool: 'extract-math-expressions'
+        });
       }
+    } else {
+      // Create standalone session config if no parent session
+      sessionConfig = {
+        sessionId: `extract-math-${Date.now()}`,
+        sessionName: 'Extract Math Expressions (Standalone)',
+        sessionPath: '/tools/extract-math-expressions'
+      };
     }
     
     const heliconeHeaders = sessionConfig ? 

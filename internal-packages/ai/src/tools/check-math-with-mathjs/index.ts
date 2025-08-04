@@ -13,6 +13,7 @@ import type {
 import { generateCacheSeed } from '../shared/cache-utils';
 import { sessionContext } from '../../helicone/sessionContext';
 import { createHeliconeHeaders } from '../../helicone/sessions';
+import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 // Import types and schemas
@@ -437,16 +438,8 @@ IMPORTANT:
         }
       };
     } finally {
-      // Only clear the session if we created it
-      try {
-        if (createdNewSession) {
-          sessionContext.clear();
-        }
-        // Otherwise, leave the plugin's session intact
-      } catch (sessionError) {
-        // Log session restoration error but don't throw
-        context.logger.warn('[CheckMathWithMathJsTool] Failed to restore session context:', { error: sessionError });
-      }
+      // No need to clean up session since we're not setting it anymore
+      // The original plugin session remains intact
     }
   }
   
