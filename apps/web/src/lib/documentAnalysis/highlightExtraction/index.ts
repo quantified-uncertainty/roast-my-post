@@ -19,8 +19,6 @@ import { validateAndConvertHighlights } from "../highlightGeneration/highlightVa
 import type { LineBasedHighlight } from "../highlightGeneration/types";
 import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import { findHighlightLocation, type HighlightLocation } from "../shared/pluginLocationWrappers";
-import type { HeliconeSessionConfig } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
 
 /**
  * Extract and format highlights from the comprehensive analysis
@@ -29,8 +27,7 @@ export async function extractHighlightsFromAnalysis(
   document: Document,
   agentInfo: Agent,
   analysisData: ComprehensiveAnalysisOutputs,
-  targetHighlights: number = 5,
-  sessionConfig?: HeliconeSessionConfig
+  targetHighlights: number = 5
 ): Promise<{ task: TaskResult; outputs: HighlightAnalysisOutputs }> {
   const startTime = Date.now();
   
@@ -194,7 +191,7 @@ export async function extractHighlightsFromAnalysis(
     };
 
     // Prepare helicone headers if session config is provided
-    const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+    // Helicone headers are now handled globally by the session manager
 
     const result = await withTimeout(
       callClaudeWithTool<{ highlights: LineBasedHighlight[] }>({
@@ -211,7 +208,6 @@ export async function extractHighlightsFromAnalysis(
         toolName: "provide_highlights",
         toolDescription: "Extract and format highlights based on the comprehensive analysis",
         toolSchema,
-        heliconeHeaders,
         enablePromptCaching: true // Enable caching for highlight extraction system prompt and tools
       }),
       HIGHLIGHT_EXTRACTION_TIMEOUT,

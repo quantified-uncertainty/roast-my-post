@@ -9,14 +9,13 @@ import { analyzeWithMultiEpistemicEval } from "./multiEpistemicEval";
 import { analyzeSpellingGrammar } from "./spellingGrammar";
 import { generateSelfCritique } from "./selfCritique";
 import type { TaskResult } from "./shared/types";
-import type { HeliconeSessionConfig } from "@roast/ai";
 
 export async function analyzeDocument(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 500,
   targetHighlights: number = 5,
-  sessionConfig?: HeliconeSessionConfig,
+  _sessionConfig?: any, // Kept for backward compatibility, not used
   jobId?: string
 ): Promise<{
   thinking: string;
@@ -39,7 +38,6 @@ export async function analyzeDocument(
     logger.info(`Using dedicated spelling/grammar workflow for agent ${agentInfo.name}`);
     const result = await analyzeSpellingGrammar(document, agentInfo, {
       targetHighlights,
-      sessionConfig,
       jobId
     });
     return { ...result, selfCritique: undefined } as any;
@@ -49,7 +47,6 @@ export async function analyzeDocument(
     logger.info(`Using multi-epistemic evaluation workflow for agent ${agentInfo.name}`);
     const result = await analyzeWithMultiEpistemicEval(document, agentInfo, {
       targetHighlights,
-      sessionConfig,
       jobId
     });
     return { ...result, selfCritique: undefined } as any;
@@ -68,8 +65,7 @@ export async function analyzeDocument(
       document,
       agentInfo,
       targetWordCount,
-      targetHighlights,
-      sessionConfig
+      targetHighlights
     );
     logger.info(
       `Comprehensive analysis generated, length: ${analysisResult.outputs.analysis.length}, insights: ${analysisResult.outputs.highlightInsights.length}`
@@ -82,8 +78,7 @@ export async function analyzeDocument(
       document,
       agentInfo,
       analysisResult.outputs,
-      targetHighlights,
-      sessionConfig
+      targetHighlights
     );
     logger.info(
       `Extracted ${highlightResult.outputs.highlights.length} highlights`
@@ -106,8 +101,7 @@ export async function analyzeDocument(
             };
           }),
         },
-        agentInfo,
-        sessionConfig
+        agentInfo
       );
       logger.info(`Generated self-critique`);
       selfCritique = critiqueResult.outputs.selfCritique;

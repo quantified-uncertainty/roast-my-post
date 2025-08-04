@@ -9,7 +9,6 @@ import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
 import type { Comment as AiComment } from "@roast/ai";
 import type { Comment as DbComment } from "@/types/databaseTypes";
-import type { HeliconeSessionConfig } from "@roast/ai";
 import { aiCommentsToDbComments } from "@/lib/typeAdapters";
 import { PluginManager } from "@roast/ai/server";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
@@ -20,7 +19,6 @@ export async function analyzeWithMultiEpistemicEval(
   agentInfo: Agent,
   options: {
     targetHighlights?: number;
-    sessionConfig?: HeliconeSessionConfig;
     jobId?: string; // For logging integration
   } = {}
 ): Promise<{

@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '../../claude/wrapper';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
-import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { generateCacheSeed } from '../shared/cache-utils';
 import type { MathErrorType, MathSeverity } from '../shared/math-schemas';
 
@@ -93,34 +90,7 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    let sessionConfig: HeliconeSessionConfig | undefined = undefined;
-    
-    if (currentSession) {
-      // Extend the existing session path
-      sessionConfig = sessionContext.withPath('/tools/extract-math-expressions');
-      
-      // Add tool-specific properties
-      if (sessionConfig) {
-        sessionConfig = sessionContext.withProperties({
-          plugin: 'math',
-          operation: 'extract-expressions',
-          tool: 'extract-math-expressions'
-        });
-      }
-    } else {
-      // Create standalone session config if no parent session
-      sessionConfig = {
-        sessionId: `extract-math-${Date.now()}`,
-        sessionName: 'Extract Math Expressions (Standalone)',
-        sessionPath: '/tools/extract-math-expressions'
-      };
-    }
-    
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
+    // Session tracking is now handled globally by the session manager
 
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed('math-extract', [
@@ -141,7 +111,6 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
       toolDescription: "Extract ONLY mathematical expressions that appear to contain errors",
       toolSchema: this.getMathExtractionToolSchema(),
       enablePromptCaching: true,
-      heliconeHeaders,
       cacheSeed
     });
 

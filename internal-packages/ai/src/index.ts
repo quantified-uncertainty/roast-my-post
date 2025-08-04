@@ -12,9 +12,6 @@ export {
   getCurrentHeliconeHeaders,
   type SimpleSessionConfig
 } from './helicone/simpleSessionManager';
-// Keep legacy exports for backward compatibility temporarily
-export type { HeliconeSessionConfig } from './helicone/sessions';
-export * from './helicone/sessions';
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';

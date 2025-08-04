@@ -7,7 +7,11 @@
  * - Query request data
  */
 
-import { heliconeSessionsConfig } from './sessions';
+// Session configuration
+const heliconeSessionsConfig = {
+  enabled: true, // Helicone session tracking is enabled
+  properties: ['userId']
+};
 
 export interface HeliconeRequest {
   request_id?: string;

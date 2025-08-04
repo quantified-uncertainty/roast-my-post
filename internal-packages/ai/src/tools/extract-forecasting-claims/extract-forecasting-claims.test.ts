@@ -12,15 +12,7 @@ jest.mock("../../claude/wrapper", () => ({
   callClaudeWithTool: jest.fn(),
 }));
 
-jest.mock("../../helicone/sessionContext", () => ({
-  sessionContext: {
-    getSession: jest.fn().mockReturnValue(null)
-  }
-}));
-
-jest.mock("../../helicone/sessions", () => ({
-  createHeliconeHeaders: jest.fn(() => ({}))
-}));
+// Session tracking is now handled globally by the session manager
 
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<
   typeof callClaudeWithTool

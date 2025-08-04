@@ -6,8 +6,6 @@
 import { getLineNumberAtPosition, getLineAtPosition } from "@roast/ai/analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import { sessionContext } from "@roast/ai/server";
-import type { HeliconeSessionConfig } from "@roast/ai";
 
 export interface TextLocation {
   startOffset: number;
@@ -26,8 +24,7 @@ export interface EnhancedLocationOptions {
   context?: string;
   // LLM fallback
   useLLMFallback?: boolean;
-  // Session tracking
-  sessionConfig?: HeliconeSessionConfig;
+  // Plugin metadata
   pluginName?: string; // For metadata
 }
 
@@ -198,10 +195,7 @@ export async function findTextLocation(
     return null;
   }
 
-  // Set session context if provided
-  if (options.sessionConfig) {
-    sessionContext.setSession(options.sessionConfig);
-  }
+  // Session tracking is now handled globally by the session manager
 
   try {
     let foundOffset = -1;
@@ -328,9 +322,6 @@ export async function findTextLocation(
 
     return location;
   } finally {
-    // Clear session context
-    if (options.sessionConfig) {
-      sessionContext.clear();
-    }
+    // Session cleanup is handled automatically by the global session manager
   }
 }

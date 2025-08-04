@@ -13,8 +13,6 @@ import { createLogDetails } from "../shared/llmUtils";
 import { shouldIncludeGrade } from "../shared/agentContext";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import type { HeliconeSessionConfig } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
@@ -33,8 +31,7 @@ export async function generateComprehensiveAnalysis(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 2000,
-  targetHighlights: number = 5,
-  sessionConfig?: HeliconeSessionConfig
+  targetHighlights: number = 5
 ): Promise<{ task: TaskResult; outputs: ComprehensiveAnalysisOutputs }> {
   const startTime = Date.now();
   const { systemMessage, userMessage } = getComprehensiveAnalysisPrompts(
@@ -83,7 +80,7 @@ export async function generateComprehensiveAnalysis(
 
   try {
     // Prepare helicone headers if session config is provided
-    const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+    // Helicone headers are now handled globally by the session manager
     
     const result = await withTimeout(
       callClaudeWithTool<ComprehensiveAnalysisOutputs>({
@@ -99,7 +96,6 @@ export async function generateComprehensiveAnalysis(
           properties: analysisProperties,
           required: ["summary", "analysis", "highlightInsights"],
         },
-        heliconeHeaders,
         enablePromptCaching: true // Enable caching for comprehensive analysis system prompt and tools
       }),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,

@@ -13,7 +13,7 @@ import {
   toolRegistry
 } from '../../index';
 import { PluginManager } from '../../server';
-import { sessionContext, checkSpellingGrammarTool } from '../../server';
+import { checkSpellingGrammarTool } from '../../server';
 
 describe('@roast/ai Package Integration', () => {
   describe('Configuration', () => {
@@ -35,11 +35,7 @@ describe('@roast/ai Package Integration', () => {
       expect(typeof callClaudeWithTool).toBe('function');
     });
 
-    it('should export sessionContext', () => {
-      expect(sessionContext).toBeDefined();
-      expect(typeof sessionContext.setSession).toBe('function');
-      expect(typeof sessionContext.getSession).toBe('function');
-    });
+    // Session tracking is now handled globally by the session manager
 
     it('should export PluginManager', () => {
       expect(PluginManager).toBeDefined();

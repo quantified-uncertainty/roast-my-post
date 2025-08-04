@@ -2,11 +2,7 @@ import { checkSpellingGrammarTool } from './index';
 
 // Mock the Claude API call to test specific scenarios
 jest.mock('@roast/ai', () => ({
-  callClaudeWithTool: jest.fn(),
-  sessionContext: {
-    getSession: jest.fn().mockReturnValue(null)
-  },
-  createHeliconeHeaders: jest.fn(() => ({}))
+  callClaudeWithTool: jest.fn()
 }));
 
 // Mock the language convention detection

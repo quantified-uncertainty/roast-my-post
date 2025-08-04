@@ -12,7 +12,6 @@ import {
 import type { ForecasterOutput } from "../../../tools/forecaster";
 import forecasterTool from "../../../tools/forecaster";
 import type { Comment, ToolChainResult } from "../../../shared/types";
-import { sessionContext } from "../../../helicone/sessionContext";
 
 import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
@@ -80,9 +79,8 @@ class ExtractedForecast {
 
   public async generateOurForecast(): Promise<void> {
     try {
-      // Get current session context for proper user tracking
-      const currentSession = sessionContext.getSession();
-      const userId = currentSession?.userId || "forecast-plugin";
+      // Session tracking is now handled globally by the session manager
+      const userId = "forecast-plugin";
       
       const result = await forecasterTool.execute(
         {
@@ -384,9 +382,8 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       `ForecastAnalyzer: Extracting from ${this.chunks.length} chunks in parallel`
     );
 
-    // Get current session context for proper user tracking
-    const currentSession = sessionContext.getSession();
-    const userId = currentSession?.userId || "forecast-plugin";
+    // Session tracking is now handled globally by the session manager
+    const userId = "forecast-plugin";
 
     // Process all chunks in parallel
     const chunkResults = await Promise.allSettled(

@@ -1,7 +1,6 @@
 import { checkSpellingGrammarTool } from '../../../apps/web/src/tools/check-spelling-grammar';
 import { logger } from '../../../apps/web/src/lib/logger';
 import type { TestCase } from '../data/test-cases';
-import { sessionContext } from '../../../apps/web/src/lib/helicone/sessionContext';
 import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables
@@ -81,19 +80,7 @@ export async function runEvaluation(
   console.log(`Running ${testCases.length} tests with ${runsPerTest} runs each...`);
   console.log(`Helicone Session ID: ${sessionId}`);
   
-  // Set up session context
-  sessionContext.setSession({
-    sessionId,
-    sessionName: 'spelling-grammar-evaluation',
-    sessionPath: '/evaluations/spelling-grammar',
-    customProperties: {
-      evaluationId,
-      testCount: testCases.length.toString(),
-      runsPerTest: runsPerTest.toString(),
-      timestamp: new Date().toISOString(),
-      tags: 'evaluation,spelling-grammar'
-    }
-  });
+  // Session tracking is now handled globally by the session manager
   
   try {
     // Run all tests in parallel
@@ -176,8 +163,7 @@ export async function runEvaluation(
     console.error('Error running evaluation:', error);
     throw error;
   } finally {
-    // Clear session context when done
-    sessionContext.clear();
+    // Session cleanup is handled automatically by the global session manager
   }
 }
 

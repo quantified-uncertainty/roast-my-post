@@ -10,7 +10,7 @@ import {
   type Document
 } from '@roast/ai';
 import { PluginManager } from '@roast/ai/server';
-import { sessionContext, checkSpellingGrammarTool } from '@roast/ai/server';
+import { checkSpellingGrammarTool } from '@roast/ai/server';
 
 describe('@roast/ai Package Integration in Web App', () => {
   it('should import and use AI package exports', () => {
@@ -18,9 +18,7 @@ describe('@roast/ai Package Integration in Web App', () => {
     expect(callClaude).toBeDefined();
     expect(typeof callClaude).toBe('function');
     
-    // Verify sessionContext is available
-    expect(sessionContext).toBeDefined();
-    expect(sessionContext.setSession).toBeDefined();
+    // Session tracking is now handled globally by the session manager
     
     // Verify tools are available
     expect(checkSpellingGrammarTool).toBeDefined();
@@ -84,18 +82,5 @@ describe('@roast/ai Package Integration in Web App', () => {
     expect(pluginManager.analyzeDocumentSimple).toBeDefined();
   });
 
-  describe('Session Context Usage', () => {
-    it('should set and get tool context', () => {
-      const testToolName = 'test-tool';
-      const testSessionId = 'test-session-123';
-
-      sessionContext.setSession({ sessionId: testSessionId, sessionPath: '/', sessionName: testToolName });
-
-      const session = sessionContext.getSession();
-      expect(session?.sessionId).toBe(testSessionId);
-
-      // Clean up
-      sessionContext.clear();
-    });
-  });
+  // Session context tests removed - session tracking is now handled globally
 });
