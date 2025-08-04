@@ -414,6 +414,7 @@ export class JobModel {
     } catch (error) {
       console.warn('⚠️ Failed to create Helicone session manager:', error);
       // Continue without session tracking rather than failing the job
+      sessionManager = undefined;
     }
     
     try {

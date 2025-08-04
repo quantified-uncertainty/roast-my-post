@@ -35,8 +35,8 @@ export class HeliconeSessionManager {
     properties: Record<string, string> | undefined,
     fn: () => Promise<T>
   ): Promise<T> {
-    // Validate path format
-    if (!/^\/[\w\/\-]*$/.test(path)) {
+    // Validate path format - must start with /, contain only alphanumeric/hyphen/underscore, no double slashes
+    if (!/^\/[\w\-]+(\/[\w\-]+)*$/.test(path) && path !== '/') {
       throw new Error(`Invalid path format: ${path}`);
     }
     
