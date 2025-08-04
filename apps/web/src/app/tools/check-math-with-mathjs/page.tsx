@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { checkMathWithMathJsTool } from '@roast/ai';
+import { toolConfigs } from '@roast/ai';
 import { CheckIcon, XMarkIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
-const checkToolPath = checkMathWithMathJsTool.config.path;
+const checkToolPath = toolConfigs.checkMathWithMathJs.path;
 
 const statusConfig = {
   verified_true: {

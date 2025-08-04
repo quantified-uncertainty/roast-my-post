@@ -15,8 +15,30 @@ export * from './types';
 // Configuration
 export { initializeAI, type AIConfig } from './config';
 
-// Tools system
-export * from './tools';
+// Tools system - types and configs only (implementations in server.ts)
+export { toolConfigs } from './tools/configs';
+export type { 
+  Tool,
+  ToolContext,
+  ToolConfig
+} from './tools/base/Tool';
+export type { 
+  DocumentChunkerOutput,
+  TextLocationFinderOutput,
+  CheckMathOutput,
+  CheckMathWithMathJSOutput,
+  CheckSpellingGrammarOutput,
+  SpellingGrammarError,
+  ExtractFactualClaimsOutput,
+  ExtractedFactualClaim,
+  ExtractForecastingClaimsOutput,
+  ExtractedForecast,
+  ExtractMathExpressionsOutput,
+  ExtractedMathExpression,
+  DetectLanguageConventionOutput,
+  MathErrorDetails,
+  MathVerificationStatus
+} from './tools/index';
 
 // Analysis plugins - excluding conflicting types
 export { 

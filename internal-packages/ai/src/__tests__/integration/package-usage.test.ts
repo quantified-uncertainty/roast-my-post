@@ -11,9 +11,9 @@ import {
   callClaudeWithTool,
   PluginManager,
   MathPlugin,
-  checkSpellingGrammarTool
+  toolConfigs
 } from '../../index';
-import { sessionContext } from '../../server';
+import { sessionContext, checkSpellingGrammarTool } from '../../server';
 
 describe('@roast/ai Package Integration', () => {
   describe('Configuration', () => {
