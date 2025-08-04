@@ -116,7 +116,6 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
       }
     }
 
-    // Session tracking is now handled globally by the session manager
 
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed("fact-check", [

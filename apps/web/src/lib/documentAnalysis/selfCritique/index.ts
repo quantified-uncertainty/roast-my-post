@@ -1,15 +1,17 @@
-import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
+import type { Agent } from "@roast/ai";
 import {
+  callClaudeWithTool,
   DEFAULT_TEMPERATURE,
-  withTimeout,
+  MODEL_CONFIG,
   SELF_CRITIQUE_TIMEOUT,
+  withTimeout,
 } from "@roast/ai";
+
 import { calculateLLMCost } from "../shared/costUtils";
 import { createLogDetails } from "../shared/llmUtils";
 import type { TaskResult } from "../shared/types";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
-import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
 
 export interface SelfCritiqueInput {
   summary: string;
@@ -68,9 +70,6 @@ ${evaluationText}`;
   let validationResult;
   let interaction;
 
-  // Prepare helicone headers if session config is provided
-  // Helicone headers are now handled globally by the session manager
-
   try {
     const result = await withTimeout(
       callClaudeWithTool<SelfCritiqueOutput>({
@@ -91,7 +90,7 @@ ${evaluationText}`;
             },
           },
           required: ["selfCritique"],
-        }
+        },
       }),
       SELF_CRITIQUE_TIMEOUT,
       `Anthropic API request timed out after ${SELF_CRITIQUE_TIMEOUT / 60000} minutes`
@@ -101,7 +100,7 @@ ${evaluationText}`;
     interaction = result.interaction;
     validationResult = result.toolResult;
   } catch (error: unknown) {
-    logger.error('❌ Anthropic API error in self-critique generation:', error);
+    logger.error("❌ Anthropic API error in self-critique generation:", error);
     handleAnthropicError(error);
   }
 
@@ -110,9 +109,7 @@ ${evaluationText}`;
     !validationResult.selfCritique ||
     validationResult.selfCritique.trim().length === 0
   ) {
-    throw new Error(
-      "Anthropic response missing or empty 'selfCritique' field"
-    );
+    throw new Error("Anthropic response missing or empty 'selfCritique' field");
   }
 
   // Fix formatting issues from JSON tool use

@@ -153,7 +153,6 @@ ${text}
   </requirements>
 </task>`;
 
-    // Session tracking is now handled globally by the session manager
 
     // Generate cache seed for consistent responses
     const cacheSeed = generateCacheSeed('forecast-extract', [

@@ -129,7 +129,6 @@ export class ChunkRouter {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(chunks);
 
-    // Session tracking is now handled globally by the session manager
     
     const result = await callClaudeWithTool<{ decisions: RoutingDecision[] }>({
       system: systemPrompt,

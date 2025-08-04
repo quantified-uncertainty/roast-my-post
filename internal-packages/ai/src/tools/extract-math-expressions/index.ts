@@ -90,7 +90,6 @@ export class ExtractMathExpressionsTool extends Tool<ExtractMathExpressionsInput
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(input);
 
-    // Session tracking is now handled globally by the session manager
 
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed('math-extract', [

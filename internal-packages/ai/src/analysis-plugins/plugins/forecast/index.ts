@@ -79,8 +79,7 @@ class ExtractedForecast {
 
   public async generateOurForecast(): Promise<void> {
     try {
-      // Session tracking is now handled globally by the session manager
-      const userId = "forecast-plugin";
+        const userId = "forecast-plugin";
       
       const result = await forecasterTool.execute(
         {
@@ -382,7 +381,6 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
       `ForecastAnalyzer: Extracting from ${this.chunks.length} chunks in parallel`
     );
 
-    // Session tracking is now handled globally by the session manager
     const userId = "forecast-plugin";
 
     // Process all chunks in parallel

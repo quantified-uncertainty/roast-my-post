@@ -130,7 +130,6 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     let currentPrompt = '';
     
     try {
-      // Session tracking is now handled globally by the session manager
       context.logger.info(`[CheckMathWithMathJsTool] Starting verification with session: ${sessionId}`);
       
       // Simplified system prompt

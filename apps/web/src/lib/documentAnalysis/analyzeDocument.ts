@@ -15,7 +15,6 @@ export async function analyzeDocument(
   agentInfo: Agent,
   targetWordCount: number = 500,
   targetHighlights: number = 5,
-  _sessionConfig?: any, // Kept for backward compatibility, not used
   jobId?: string
 ): Promise<{
   thinking: string;

@@ -73,10 +73,7 @@ import { PluginManager, MathPlugin, SpellingPlugin, FactCheckPlugin } from '@roa
 
 // Create plugin manager
 const manager = new PluginManager({
-  sessionConfig: {
-    sessionId: "analysis-123",
-    sessionName: "Document Analysis"
-  }
+  jobId: "analysis-123"
 });
 
 // Analyze document with all plugins

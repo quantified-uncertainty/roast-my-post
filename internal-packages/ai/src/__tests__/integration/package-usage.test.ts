@@ -35,7 +35,6 @@ describe('@roast/ai Package Integration', () => {
       expect(typeof callClaudeWithTool).toBe('function');
     });
 
-    // Session tracking is now handled globally by the session manager
 
     it('should export PluginManager', () => {
       expect(PluginManager).toBeDefined();

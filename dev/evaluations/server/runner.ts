@@ -1,22 +1,22 @@
-import { checkSpellingGrammarTool } from '../../../apps/web/src/tools/check-spelling-grammar';
-import { logger } from '../../../apps/web/src/lib/logger';
-import type { TestCase } from '../data/test-cases';
-import { v4 as uuidv4 } from 'uuid';
-
 // Load environment variables
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { v4 as uuidv4 } from "uuid";
+
+import { logger } from "../../../apps/web/src/lib/logger";
+import { checkSpellingGrammarTool } from "../../../apps/web/src/tools/check-spelling-grammar";
+import type { TestCase } from "../data/test-cases";
 
 // Try multiple paths to find .env
 const envPaths = [
-  path.join(process.cwd(), '.env.local'),
-  path.join(process.cwd(), '..', '.env.local'),
-  path.join(__dirname, '..', '..', '.env.local'),
-  path.join(__dirname, '..', '..', '..', '.env.local'),
-  path.join(process.cwd(), '.env'),
-  path.join(process.cwd(), '..', '.env'),
-  path.join(__dirname, '..', '..', '.env'),
-  path.join(__dirname, '..', '..', '..', '.env'),
+  path.join(process.cwd(), ".env.local"),
+  path.join(process.cwd(), "..", ".env.local"),
+  path.join(__dirname, "..", "..", ".env.local"),
+  path.join(__dirname, "..", "..", "..", ".env.local"),
+  path.join(process.cwd(), ".env"),
+  path.join(process.cwd(), "..", ".env"),
+  path.join(__dirname, "..", "..", ".env"),
+  path.join(__dirname, "..", "..", "..", ".env"),
 ];
 
 let envLoaded = false;
@@ -30,14 +30,16 @@ for (const envPath of envPaths) {
 }
 
 if (!envLoaded) {
-  console.warn('[Runner] Warning: Could not load .env file from any of the expected paths');
+  console.warn(
+    "[Runner] Warning: Could not load .env file from any of the expected paths"
+  );
 }
 
 // Check if API key is loaded
 if (!process.env.ANTHROPIC_API_KEY) {
-  console.warn('[Runner] Warning: ANTHROPIC_API_KEY not found in environment');
+  console.warn("[Runner] Warning: ANTHROPIC_API_KEY not found in environment");
 } else {
-  console.log('[Runner] ANTHROPIC_API_KEY loaded successfully');
+  console.log("[Runner] ANTHROPIC_API_KEY loaded successfully");
 }
 
 export interface RunResult {
@@ -76,41 +78,47 @@ export async function runEvaluation(
   // Create a single Helicone session for the entire evaluation
   const evaluationId = uuidv4();
   const sessionId = `evaluation-${evaluationId}`;
-  
-  console.log(`Running ${testCases.length} tests with ${runsPerTest} runs each...`);
+
+  console.log(
+    `Running ${testCases.length} tests with ${runsPerTest} runs each...`
+  );
   console.log(`Helicone Session ID: ${sessionId}`);
-  
-  // Session tracking is now handled globally by the session manager
-  
+
   try {
     // Run all tests in parallel
     const testPromises = testCases.map(async (testCase) => {
       console.log(`Testing: ${testCase.name}`);
-      
+
       // Run all runs for this test in parallel
       const runPromises = Array.from({ length: runsPerTest }, async (_, i) => {
         const start = Date.now();
-        
+
         try {
           // Create a context with the session
-          const contextWithSession = { 
-            logger, 
-            userId: 'test-evaluation',
-            sessionId // This ensures the tool uses the same session
+          const contextWithSession = {
+            logger,
+            userId: "test-evaluation",
+            sessionId, // This ensures the tool uses the same session
           };
-          
-          const output = await checkSpellingGrammarTool.run(testCase.input, contextWithSession);
+
+          const output = await checkSpellingGrammarTool.run(
+            testCase.input,
+            contextWithSession
+          );
           const duration = Date.now() - start;
-          
+
           // Check expectations
-          const { passed, reasons } = checkExpectations(output, testCase.expectations);
-          
+          const { passed, reasons } = checkExpectations(
+            output,
+            testCase.expectations
+          );
+
           return {
             passed,
             errors: output.errors,
             output,
             duration,
-            failureReasons: reasons
+            failureReasons: reasons,
           };
         } catch (error: any) {
           return {
@@ -118,32 +126,33 @@ export async function runEvaluation(
             errors: [],
             output: null,
             duration: Date.now() - start,
-            failureReasons: [error.message]
+            failureReasons: [error.message],
           };
         }
       });
-      
+
       const runs = await Promise.all(runPromises);
-      
+
       // Calculate consistency
-      const errorCounts = runs.map(r => r.errors.length);
-      const consistencyScore = errorCounts.every(c => c === errorCounts[0]) ? 100 : 
-        calculateConsistencyScore(runs);
-      
+      const errorCounts = runs.map((r) => r.errors.length);
+      const consistencyScore = errorCounts.every((c) => c === errorCounts[0])
+        ? 100
+        : calculateConsistencyScore(runs);
+
       return {
         testCase,
         runs,
-        overallPassed: runs.every(r => r.passed),
-        consistencyScore
+        overallPassed: runs.every((r) => r.passed),
+        consistencyScore,
       };
     });
-    
+
     const results = await Promise.all(testPromises);
-    
+
     // Calculate metadata
-    const passedTests = results.filter(r => r.overallPassed).length;
+    const passedTests = results.filter((r) => r.overallPassed).length;
     const categoryStats = calculateCategoryStats(results);
-    
+
     return {
       metadata: {
         timestamp: new Date().toISOString(),
@@ -152,72 +161,90 @@ export async function runEvaluation(
         failedTests: results.length - passedTests,
         passRate: Math.round((passedTests / results.length) * 100),
         avgConsistency: Math.round(
-          results.reduce((sum, r) => sum + r.consistencyScore, 0) / results.length
+          results.reduce((sum, r) => sum + r.consistencyScore, 0) /
+            results.length
         ),
-        inconsistentTests: results.filter(r => r.consistencyScore < 100).length,
-        categoryStats
+        inconsistentTests: results.filter((r) => r.consistencyScore < 100)
+          .length,
+        categoryStats,
       },
-      results
+      results,
     };
   } catch (error) {
-    console.error('Error running evaluation:', error);
+    console.error("Error running evaluation:", error);
     throw error;
-  } finally {
-    // Session cleanup is handled automatically by the global session manager
   }
 }
 
-function checkExpectations(output: any, expectations: TestCase['expectations']) {
+function checkExpectations(
+  output: any,
+  expectations: TestCase["expectations"]
+) {
   const reasons: string[] = [];
-  
+
   // Check error count
   if (expectations.shouldFindErrors && output.errors.length === 0) {
-    reasons.push('Expected errors but found none');
+    reasons.push("Expected errors but found none");
   }
   if (!expectations.shouldFindErrors && output.errors.length > 0) {
     reasons.push(`Expected no errors but found ${output.errors.length}`);
   }
-  
+
   // Check min/max errors
   if (expectations.minErrors && output.errors.length < expectations.minErrors) {
-    reasons.push(`Expected at least ${expectations.minErrors} errors but found ${output.errors.length}`);
+    reasons.push(
+      `Expected at least ${expectations.minErrors} errors but found ${output.errors.length}`
+    );
   }
   if (expectations.maxErrors && output.errors.length > expectations.maxErrors) {
-    reasons.push(`Expected at most ${expectations.maxErrors} errors but found ${output.errors.length}`);
+    reasons.push(
+      `Expected at most ${expectations.maxErrors} errors but found ${output.errors.length}`
+    );
   }
-  
+
   // Check must find
   if (expectations.mustFind) {
     for (const must of expectations.mustFind) {
       const found = output.errors.find((e: any) => {
-        const textMatch = !must.text || 
-          e.text?.toLowerCase() === must.text.toLowerCase();
-        const correctionMatch = !must.correction || 
+        const textMatch =
+          !must.text || e.text?.toLowerCase() === must.text.toLowerCase();
+        const correctionMatch =
+          !must.correction ||
           e.correction?.toLowerCase() === must.correction.toLowerCase();
         const typeMatch = !must.type || e.type === must.type;
-        const minImpMatch = !must.minImportance || e.importance >= must.minImportance;
-        const maxImpMatch = !must.maxImportance || e.importance <= must.maxImportance;
-        
-        return textMatch && correctionMatch && typeMatch && minImpMatch && maxImpMatch;
+        const minImpMatch =
+          !must.minImportance || e.importance >= must.minImportance;
+        const maxImpMatch =
+          !must.maxImportance || e.importance <= must.maxImportance;
+
+        return (
+          textMatch &&
+          correctionMatch &&
+          typeMatch &&
+          minImpMatch &&
+          maxImpMatch
+        );
       });
-      
+
       if (!found) {
-        reasons.push(`Expected to find error: ${must.text}${must.correction ? ' → ' + must.correction : ''}`);
+        reasons.push(
+          `Expected to find error: ${must.text}${must.correction ? " → " + must.correction : ""}`
+        );
       }
     }
   }
-  
+
   return {
     passed: reasons.length === 0,
-    reasons
+    reasons,
   };
 }
 
 function calculateConsistencyScore(runs: RunResult[]): number {
   // Simple consistency: what percentage of runs had the same error count
-  const errorCounts = runs.map(r => r.errors.length);
+  const errorCounts = runs.map((r) => r.errors.length);
   const mode = getMostFrequent(errorCounts);
-  const consistent = errorCounts.filter(c => c === mode).length;
+  const consistent = errorCounts.filter((c) => c === mode).length;
   return Math.round((consistent / runs.length) * 100);
 }
 
@@ -239,7 +266,7 @@ function getMostFrequent<T>(arr: T[]): T {
 
 function calculateCategoryStats(results: TestResult[]) {
   const stats: Record<string, { total: number; passed: number }> = {};
-  
+
   for (const result of results) {
     const category = result.testCase.category;
     if (!stats[category]) {
@@ -250,6 +277,6 @@ function calculateCategoryStats(results: TestResult[]) {
       stats[category].passed++;
     }
   }
-  
+
   return stats;
 }

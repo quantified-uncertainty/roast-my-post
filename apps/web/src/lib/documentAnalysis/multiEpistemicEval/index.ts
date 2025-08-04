@@ -1,17 +1,15 @@
 /**
  * Multi-Epistemic Evaluation workflow for document analysis
- * 
+ *
  * This is now a simple wrapper around the plugin system.
  * The main logic has been moved to PluginManager.analyzeDocument()
  */
 
-import type { Agent } from "@roast/ai";
-import type { Document } from "@roast/ai";
-import type { Comment as AiComment } from "@roast/ai";
-import type { Comment as DbComment } from "@/types/databaseTypes";
 import { aiCommentsToDbComments } from "@/lib/typeAdapters";
-import { PluginManager } from "@roast/ai/server";
+import type { Agent, Comment as AiComment, Document } from "@roast/ai";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
+import { PluginManager } from "@roast/ai/server";
+
 import type { TaskResult } from "../shared/types";
 
 export async function analyzeWithMultiEpistemicEval(
@@ -33,7 +31,6 @@ export async function analyzeWithMultiEpistemicEval(
   // Create plugin manager with default plugin selection for multi-epistemic eval
   // By default, exclude spelling plugin for multi-epistemic eval
   const manager = new PluginManager({
-    // Session tracking is now handled globally via setGlobalSessionManager
     jobId: options.jobId,
     pluginSelection: {
       exclude: [PluginType.SPELLING],
@@ -46,8 +43,13 @@ export async function analyzeWithMultiEpistemicEval(
   });
 
   // Filter AI comments and convert to database comments
-  const validAiComments = result.highlights.filter((h): h is AiComment => 
-    !!(h.description && h.highlight && typeof h.highlight?.isValid === 'boolean')
+  const validAiComments = result.highlights.filter(
+    (h): h is AiComment =>
+      !!(
+        h.description &&
+        h.highlight &&
+        typeof h.highlight?.isValid === "boolean"
+      )
   );
 
   return {
@@ -60,4 +62,3 @@ export async function analyzeWithMultiEpistemicEval(
     jobLogString: result.jobLogString, // Include centralized plugin logs
   };
 }
-

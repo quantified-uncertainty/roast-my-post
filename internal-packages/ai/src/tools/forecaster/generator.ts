@@ -78,7 +78,6 @@ ${options.question}
   </requirements>
 </task>`;
 
-  // Session tracking is now handled globally by the session manager
 
   const result = await withTimeout(
     callClaudeWithTool<ForecastResponse>({

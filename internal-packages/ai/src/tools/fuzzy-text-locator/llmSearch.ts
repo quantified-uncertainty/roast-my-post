@@ -277,7 +277,6 @@ export async function llmSearch(
       options.context
     );
 
-    // Session tracking is now handled globally by the session manager
 
     const result = await callClaudeWithTool<LineBasedMatch>(
       {

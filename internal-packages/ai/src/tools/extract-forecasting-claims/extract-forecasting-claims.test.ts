@@ -12,7 +12,6 @@ jest.mock("../../claude/wrapper", () => ({
   callClaudeWithTool: jest.fn(),
 }));
 
-// Session tracking is now handled globally by the session manager
 
 const mockCallClaudeWithTool = callClaudeWithTool as jest.MockedFunction<
   typeof callClaudeWithTool
