@@ -59,8 +59,13 @@ export function DocumentWithEvaluations({
   );
 
   // Get the full content with prepend using the centralized helper
+  // IMPORTANT: Only use stored prepend, don't generate one if missing
+  // This ensures display matches what was used during analysis
   const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(document as any);
+    const { content } = getDocumentFullContent(document as any, {
+      includePrepend: true,
+      generateIfMissing: false  // Don't generate - only use if stored
+    });
     return content;
   }, [document]);
 

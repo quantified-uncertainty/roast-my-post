@@ -16,7 +16,7 @@ export * from './types';
 export { initializeAI, type AIConfig } from './config';
 
 // Tools system - types and configs only (implementations in server.ts)
-export { toolConfigs } from './tools/configs';
+export * from './tools/configs';
 export type { 
   Tool,
   ToolContext,
