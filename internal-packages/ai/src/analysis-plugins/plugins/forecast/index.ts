@@ -11,7 +11,7 @@ import {
 } from "../../../tools/extract-forecasting-claims";
 import type { ForecasterOutput } from "../../../tools/forecaster";
 import forecasterTool from "../../../tools/forecaster";
-import type { Comment } from "../../../shared/types";
+import type { Comment, ToolChainResult } from "../../../shared/types";
 import { sessionContext } from "../../../helicone/sessionContext";
 
 import { logger } from "../../../shared/logger";
@@ -23,6 +23,7 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { withErrorBoundary, withErrorBoundaryBatch } from "../../utils/errorBoundary";
+import { CommentBuilder } from "../../utils/CommentBuilder";
 
 // Keep this for backward compatibility
 export interface ForecastToolResult {
@@ -35,11 +36,18 @@ class ExtractedForecast {
   private chunk: TextChunk;
   private documentText: string;
   private ourForecast: ForecasterOutput | null = null;
+  private processingStartTime: number;
 
-  constructor(extractedForecast: ExtractedForecastToolType, chunk: TextChunk, documentText: string) {
+  constructor(
+    extractedForecast: ExtractedForecastToolType, 
+    chunk: TextChunk, 
+    documentText: string, 
+    processingStartTime: number
+  ) {
     this.extractedForecast = extractedForecast;
     this.chunk = chunk;
     this.documentText = documentText;
+    this.processingStartTime = processingStartTime;
   }
 
   get originalText(): string {
@@ -151,43 +159,114 @@ class ExtractedForecast {
     const location = await this.findLocationInDocument();
     if (!location) return null;
 
-    // Use the new comment generation system
+    // Build tool chain results
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractForecastingClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 40).toISOString(),
+        result: this.extractedForecast
+      }
+    ];
+    
+    // Add our forecast generation if available
+    if (this.ourForecast) {
+      toolChain.push({
+        toolName: 'generateProbabilityForecast',
+        stage: 'verification',
+        timestamp: new Date().toISOString(),
+        result: this.ourForecast
+      });
+    }
+
+    // Keep formatted description for backwards compatibility
     const forecastWithPrediction: ForecastWithPrediction = {
       forecast: this.extractedForecast,
       prediction: this.ourForecast || undefined,
     };
+    const formattedDescription = generateForecastComment(forecastWithPrediction);
 
-    const message = generateForecastComment(forecastWithPrediction);
-
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
-        startOffset: location.startOffset,
-        endOffset: location.endOffset,
-        quotedText: location.quotedText,
-        isValid: true,
-      },
-      importance: this.commentImportanceScore(),
+    return CommentBuilder.build({
+      plugin: 'forecast',
+      location,
+      chunkId: this.chunk.id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
       
-      header: this.getHeaderText(),
-      level: this.getLevel(),
-      source: 'forecast',
-      metadata: {
-        predictionText: this.extractedForecast.rewrittenPredictionText,
-        originalText: this.extractedForecast.originalText,
-        importanceScore: this.extractedForecast.importanceScore,
-        precisionScore: this.extractedForecast.precisionScore,
-        verifiabilityScore: this.extractedForecast.verifiabilityScore,
-        robustnessScore: this.extractedForecast.robustnessScore,
-        averageScore: this.averageScore,
-        resolutionDate: this.extractedForecast.resolutionDate,
-        authorProbability: this.extractedForecast.authorProbability,
-        ourPrediction: this.ourForecast?.probability,
-        ourConsensus: this.ourForecast?.consensus,
-        ourDescription: this.ourForecast?.description,
-      },
-    };
+      // Required fields
+      description: formattedDescription,
+      header: this.buildTitle(),
+      level: this.averageScore >= 7 ? 'success' : this.averageScore >= 5 ? 'info' : 'warning',
+      
+      // Additional structured content
+      observation: this.buildObservation(),
+      significance: this.buildSignificance()
+    });
+  }
+  
+  private buildTitle(): string {
+    // Use concise description from comment generation
+    const hasAuthorProb = this.extractedForecast.authorProbability !== undefined;
+    const gap = hasAuthorProb && this.ourForecast ? 
+      Math.abs(this.extractedForecast.authorProbability! - this.ourForecast.probability) : 0;
+    
+    if (hasAuthorProb && this.ourForecast) {
+      // Show the probability change
+      let header = `${this.extractedForecast.authorProbability}% → ${this.ourForecast.probability}%`;
+      
+      // Add context for large gaps
+      if (gap >= 40) {
+        header += ' (extreme overconfidence)';
+      } else if (gap >= 25) {
+        header += ' (overconfident)';
+      }
+      
+      return header;
+    } else if (this.ourForecast) {
+      // No author probability, just show our estimate
+      return `Our estimate: ${this.ourForecast.probability}%`;
+    } else {
+      // No prediction available
+      return this.extractedForecast.authorProbability ? 
+        `${this.extractedForecast.authorProbability}% prediction` : 
+        'Prediction identified';
+    }
+  }
+  
+  private buildObservation(): string | undefined {
+    const issues: string[] = [];
+    
+    if (this.extractedForecast.precisionScore < 5) {
+      issues.push("vague or imprecise prediction");
+    }
+    if (this.extractedForecast.verifiabilityScore < 5) {
+      issues.push("difficult to verify outcome");
+    }
+    if (this.extractedForecast.robustnessScore < 5) {
+      issues.push("sensitive to interpretation");
+    }
+    
+    if (issues.length > 0) {
+      return `Issues: ${issues.join(", ")}`;
+    }
+    
+    if (this.ourForecast && this.extractedForecast.authorProbability && 
+        Math.abs(this.ourForecast.probability - this.extractedForecast.authorProbability) > 30) {
+      return `Significant disagreement with author's assessment (${this.extractedForecast.authorProbability}% vs our ${this.ourForecast.probability}%)`;
+    }
+    
+    return undefined;
+  }
+  
+  private buildSignificance(): string | undefined {
+    if (this.extractedForecast.importanceScore >= 8) {
+      return "This is a critical prediction that significantly affects the document's conclusions";
+    } else if (this.extractedForecast.importanceScore >= 6) {
+      return "This forecast impacts key arguments in the document";
+    } else if (this.averageScore < 3) {
+      return "Poor forecast quality undermines the credibility of predictions";
+    }
+    return undefined;
   }
 
   // Removed - now using generateForecastComment from commentGeneration.ts
@@ -203,6 +282,7 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
   private llmInteractions: LLMInteraction[] = [];
   private totalCost: number = 0;
   private extractedForecasts: ExtractedForecast[] = [];
+  private processingStartTime: number = 0;
 
   name(): string {
     return "FORECAST";
@@ -248,6 +328,7 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
 
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Store the inputs
+    this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
     if (this.hasRun) {
@@ -343,7 +424,8 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
           const extractedForecast = new ExtractedForecast(
             forecastingClaim,
             chunk,
-            this.documentText
+            this.documentText,
+            this.processingStartTime
           );
           this.extractedForecasts.push(extractedForecast);
         }

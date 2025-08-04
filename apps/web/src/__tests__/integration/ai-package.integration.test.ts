@@ -5,13 +5,12 @@
 
 import { 
   callClaude,
-  sessionContext,
-  checkSpellingGrammarTool,
-  PluginManager,
   MathPlugin,
   type Agent,
   type Document
 } from '@roast/ai';
+import { PluginManager } from '@roast/ai/server';
+import { sessionContext, checkSpellingGrammarTool } from '@roast/ai/server';
 
 describe('@roast/ai Package Integration in Web App', () => {
   it('should import and use AI package exports', () => {

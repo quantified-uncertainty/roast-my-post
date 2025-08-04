@@ -714,7 +714,9 @@ const SlateEditor: React.FC<SlateEditorProps> = ({
             startOffset: highlight.startOffset,
             endOffset: highlight.endOffset,
             quotedText: highlight.quotedText?.substring(0, 50) + '...',
-            reason: 'Text not found at expected offset'
+            reason: 'Text not found at expected offset',
+            nodeTextPreview: node.text.substring(0, 100) + '...',
+            nodeInfo: nodeInfo
           });
           continue;
         }

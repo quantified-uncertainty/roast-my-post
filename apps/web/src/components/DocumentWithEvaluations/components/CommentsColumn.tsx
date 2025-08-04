@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 
 import type { Document } from "@roast/ai";
 import type { Comment as DbComment } from "@/types/databaseTypes";
@@ -83,6 +83,36 @@ export function CommentsColumn({
     return visibleComments.map(({ item }) => dbCommentToAiComment(item));
   }, [visibleComments]);
 
+  // Add timeout to show error state if highlights fail
+  const [loadingState, setLoadingState] = useState<'loading' | 'error' | 'ready'>('loading');
+  const [loadingStartTime] = useState(Date.now());
+  
+  useEffect(() => {
+    if (highlightsReady || sortedComments.length === 0) {
+      setLoadingState('ready');
+    } else if (!highlightsReady && sortedComments.length > 0) {
+      // Check if we've been loading for too long
+      const checkTimeout = setInterval(() => {
+        const elapsed = Date.now() - loadingStartTime;
+        if (elapsed > 5000) { // 5 seconds
+          console.warn('Highlights not ready after timeout, showing error state');
+          console.warn('Debug info:', {
+            highlightsReady,
+            hasInitialized,
+            commentCount: sortedComments.length,
+            highlightCacheSize: highlightCache.size
+          });
+          setLoadingState('error');
+          clearInterval(checkTimeout);
+        }
+      }, 500); // Check every 500ms
+      
+      return () => clearInterval(checkTimeout);
+    }
+  }, [highlightsReady, sortedComments.length, loadingStartTime, hasInitialized, highlightCache.size]);
+
+  const shouldShowComments = highlightsReady || loadingState === 'error';
+
   return (
     <CommentErrorBoundary>
       <div 
@@ -90,10 +120,54 @@ export function CommentsColumn({
         style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}
       >
         <div className="relative" style={{ minHeight: "100%" }}>
-          {!highlightsReady && sortedComments.length > 0 && (
+          {/* No comments message */}
+          {sortedComments.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="mb-3 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-500"></div>
-              <div className="text-sm text-gray-500">Loading comments...</div>
+              <div className="mb-3 text-2xl text-gray-400">💬</div>
+              <div className="text-sm text-gray-500">No comments available</div>
+              <div className="mt-2 text-xs text-gray-400">
+                Run an evaluation to generate comments
+              </div>
+            </div>
+          )}
+          
+          {!shouldShowComments && sortedComments.length > 0 && (
+            <div className="flex flex-col items-center justify-center py-12">
+              {loadingState === 'loading' ? (
+                <>
+                  <div className="mb-3 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-500"></div>
+                  <div className="text-sm text-gray-500">Loading comments...</div>
+                </>
+              ) : (
+                <>
+                  <div className="mb-3 text-2xl text-orange-500">⚠️</div>
+                  <div className="text-sm font-medium text-gray-700">Unable to position comments</div>
+                  <div className="mt-2 max-w-xs text-center text-xs text-gray-500">
+                    The highlighted text couldn't be found at the expected positions in the document. Comments will be shown without highlights.
+                  </div>
+                  <button
+                    onClick={() => setLoadingState('ready')}
+                    className="mt-4 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                  >
+                    Show comments anyway
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* Show warning if comments are displayed without proper positioning */}
+          {shouldShowComments && loadingState === 'error' && sortedComments.length > 0 && (
+            <div className="mb-4 rounded-md bg-orange-50 border border-orange-200 p-3">
+              <div className="flex items-start">
+                <span className="text-orange-600 mr-2">⚠️</span>
+                <div className="text-xs text-orange-800">
+                  <p className="font-medium">Comments shown without highlights</p>
+                  <p className="mt-1 text-orange-700">
+                    The text positions don't match the current document. This might happen if the document was modified after analysis.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
           
@@ -114,7 +188,7 @@ export function CommentsColumn({
                 comment={convertedComments[idx]}
                 index={originalIndex}
                 position={position}
-                isVisible={highlightsReady && hasInitialized && position > 0}
+                isVisible={shouldShowComments && hasInitialized && (position > 0 || loadingState === 'error')}
                 isSelected={isSelected}
                 isHovered={isHovered}
                 onHover={onCommentHover}

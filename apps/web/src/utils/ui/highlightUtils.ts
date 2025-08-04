@@ -153,7 +153,7 @@ export function applyHighlightsToContainer(
 
   // Filter valid highlights and sort by start offset
   const validHighlights = highlights
-    .filter((comment) => comment.highlight?.isValid && comment.isValid)
+    .filter((comment) => comment.highlight?.isValid)
     .sort((a, b) => (a.highlight?.startOffset || 0) - (b.highlight?.startOffset || 0));
 
   // Apply valid highlights

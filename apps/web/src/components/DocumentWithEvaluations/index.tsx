@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
+import { clearTruncationCache, getTruncationCacheSize } from "@/utils/ui/commentPositioning";
 
 import { EvaluationView } from "./components";
 import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";
@@ -58,10 +59,32 @@ export function DocumentWithEvaluations({
   );
 
   // Get the full content with prepend using the centralized helper
+  // IMPORTANT: Only use stored prepend, don't generate one if missing
+  // This ensures display matches what was used during analysis
   const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(document as any);
+    const { content } = getDocumentFullContent(document as any, {
+      includePrepend: true,
+      generateIfMissing: false  // Don't generate - only use if stored
+    });
     return content;
   }, [document]);
+
+  // Manage truncation cache cleanup
+  useEffect(() => {
+    // Clear cache periodically to prevent memory leaks
+    const interval = setInterval(() => {
+      if (getTruncationCacheSize() > 1000) {
+        clearTruncationCache();
+      }
+    }, 300000); // Clear every 5 minutes if cache grows too large
+
+    // Clean up on unmount
+    return () => {
+      clearInterval(interval);
+      // Clear cache when component unmounts to free memory
+      clearTruncationCache();
+    };
+  }, []);
 
   return (
     <div

@@ -1,6 +1,6 @@
 'use server';
 
-import { checkMathWithMathJsTool } from '@roast/ai';
+import { checkMathWithMathJsTool } from '@roast/ai/server';
 import { auth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 

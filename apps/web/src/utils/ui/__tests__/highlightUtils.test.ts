@@ -69,7 +69,16 @@ describe("UI Helper Functions", () => {
           quotedText: "first",
           isValid: true,
         },
-        isValid: true,
+        header: "First comment",
+        level: "info",
+        source: "test",
+        metadata: {
+          pluginName: "test",
+          timestamp: new Date().toISOString(),
+          chunkId: "test",
+          processingTimeMs: 0,
+          toolChain: []
+        }
       },
       {
         description: "Overlapping comment",
@@ -81,7 +90,16 @@ describe("UI Helper Functions", () => {
           quotedText: "overlap",
           isValid: true,
         },
-        isValid: true,
+        header: "Overlapping comment",
+        level: "info",
+        source: "test",
+        metadata: {
+          pluginName: "test",
+          timestamp: new Date().toISOString(),
+          chunkId: "test",
+          processingTimeMs: 0,
+          toolChain: []
+        }
       },
       {
         description: "Separate comment",
@@ -93,7 +111,16 @@ describe("UI Helper Functions", () => {
           quotedText: "separate",
           isValid: true,
         },
-        isValid: true,
+        header: "Separate comment",
+        level: "info",
+        source: "test",
+        metadata: {
+          pluginName: "test",
+          timestamp: new Date().toISOString(),
+          chunkId: "test",
+          processingTimeMs: 0,
+          toolChain: []
+        }
       },
     ];
 

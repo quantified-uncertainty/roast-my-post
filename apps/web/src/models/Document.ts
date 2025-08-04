@@ -179,7 +179,17 @@ export class DocumentModel {
               include: {
                 comments: {
                   include: {
-                    highlight: true,
+                    highlight: {
+                      select: {
+                        id: true,
+                        startOffset: true,
+                        endOffset: true,
+                        prefix: true,
+                        quotedText: true,
+                        isValid: true,
+                        error: true,
+                      },
+                    },
                   },
                 },
                 job: {
@@ -429,7 +439,16 @@ export class DocumentModel {
                   llmThinking: version.job.llmThinking || "",
                   durationInSeconds: version.job.durationInSeconds || undefined,
                   logs: version.job.logs || undefined,
-                  tasks: version.job.tasks || [],
+                  tasks: version.job.tasks?.map((task: any) => ({
+                    id: task.id,
+                    name: task.name,
+                    modelName: task.modelName,
+                    priceInDollars: convertPriceToNumber(task.priceInDollars),
+                    timeInSeconds: task.timeInSeconds,
+                    log: task.log,
+                    llmInteractions: task.llmInteractions ? JSON.parse(JSON.stringify(task.llmInteractions)) : undefined,
+                    createdAt: task.createdAt,
+                  })) || [],
                 }
               : undefined,
             comments: version.comments.map((comment: any) => ({
@@ -553,7 +572,17 @@ export class DocumentModel {
               include: {
                 comments: {
                   include: {
-                    highlight: true,
+                    highlight: {
+                      select: {
+                        id: true,
+                        startOffset: true,
+                        endOffset: true,
+                        prefix: true,
+                        quotedText: true,
+                        isValid: true,
+                        error: true,
+                      },
+                    },
                   },
                 },
                 job: {
@@ -584,35 +613,45 @@ export class DocumentModel {
       take: limit,
       orderBy: { publishedDate: "desc" },
       include: {
-        versions: true,
-        // Don't include submittedBy - not needed for document listings
+        versions: {
+          orderBy: { version: "desc" },
+          take: 1,
+        },
         evaluations: {
           include: {
-            jobs: {
-              orderBy: {
-                createdAt: "desc",
-              },
-            },
             agent: {
               include: {
                 versions: {
-                  orderBy: {
-                    version: "desc",
-                  },
+                  orderBy: { version: "desc" },
                   take: 1,
                 },
               },
             },
             versions: {
-              include: {
+              select: {
+                id: true,
+                version: true,
+                createdAt: true,
+                grade: true,
+                summary: true,
+                analysis: true,
+                selfCritique: true,
+                // Minimal comment data for count only
                 comments: {
-                  include: {
-                    highlight: true,
-                  },
-                },
-                job: {
-                  include: {
-                    tasks: true,
+                  select: {
+                    id: true,
+                    description: true,
+                    importance: true,
+                    grade: true,
+                    highlight: {
+                      select: {
+                        id: true,
+                        startOffset: true,
+                        endOffset: true,
+                        quotedText: true,
+                        isValid: true,
+                      },
+                    },
                   },
                 },
                 documentVersion: {
@@ -624,13 +663,88 @@ export class DocumentModel {
               orderBy: {
                 createdAt: "desc",
               },
+              take: 1, // Limit to one version for performance in listings
+            },
+            jobs: {
+              select: {
+                id: true,
+                status: true,
+                createdAt: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 1,
             },
           },
         },
       },
     });
 
-    return dbDocs.map((dbDoc) => DocumentModel.formatDocumentFromDB(dbDoc));
+    // Simplified document formatting for listings
+    return dbDocs.map((dbDoc) => {
+      const latestVersion = dbDoc.versions[0];
+      const currentDocumentVersion = latestVersion.version;
+
+      return {
+        id: dbDoc.id,
+        slug: dbDoc.id,
+        title: latestVersion.title,
+        content: latestVersion.content,
+        author: latestVersion.authors.join(", "),
+        publishedDate: dbDoc.publishedDate.toISOString(),
+        url: latestVersion.urls[0] || "",
+        importUrl: latestVersion.importUrl || undefined,
+        platforms: latestVersion.platforms,
+        intendedAgents: latestVersion.intendedAgents,
+        submittedById: dbDoc.submittedById,
+        submittedBy: undefined, // Not needed for listings
+        createdAt: dbDoc.createdAt,
+        updatedAt: dbDoc.updatedAt,
+        reviews: dbDoc.evaluations.map((evaluation: any) => {
+          const latestEvalVersion = evaluation.versions[0];
+          const isStale = latestEvalVersion && latestEvalVersion.documentVersion.version !== currentDocumentVersion;
+
+          return {
+            id: evaluation.id,
+            agentId: evaluation.agent.id,
+            agent: {
+              id: evaluation.agent.id,
+              name: evaluation.agent.versions[0].name,
+              version: evaluation.agent.versions[0].version.toString(),
+              description: evaluation.agent.versions[0].description,
+              primaryInstructions: evaluation.agent.versions[0].primaryInstructions,
+              selfCritiqueInstructions: evaluation.agent.versions[0].selfCritiqueInstructions || undefined,
+            },
+            createdAt: new Date(latestEvalVersion?.createdAt || evaluation.createdAt),
+            priceInDollars: 0, // Not needed for listings
+            comments: latestEvalVersion?.comments?.map((comment: any) => ({
+              id: comment.id,
+              description: comment.description,
+              importance: comment.importance || null,
+              grade: comment.grade || null,
+              highlight: {
+                id: comment.highlight.id,
+                startOffset: comment.highlight.startOffset,
+                endOffset: comment.highlight.endOffset,
+                quotedText: comment.highlight.quotedText,
+                isValid: comment.highlight.isValid,
+                prefix: null,
+                error: null,
+              },
+            })) || [],
+            thinking: "",
+            summary: latestEvalVersion?.summary || "",
+            analysis: latestEvalVersion?.analysis || "",
+            grade: latestEvalVersion?.grade ?? null,
+            selfCritique: latestEvalVersion?.selfCritique || undefined,
+            versions: [], // Not needed for listings
+            jobs: evaluation.jobs || [],
+            isStale,
+          };
+        }),
+      } as Document;
+    });
   }
 
   static async getAllDocumentsWithEvaluations(): Promise<Document[]> {
@@ -659,7 +773,17 @@ export class DocumentModel {
               include: {
                 comments: {
                   include: {
-                    highlight: true,
+                    highlight: {
+                      select: {
+                        id: true,
+                        startOffset: true,
+                        endOffset: true,
+                        prefix: true,
+                        quotedText: true,
+                        isValid: true,
+                        error: true,
+                      },
+                    },
                   },
                 },
                 job: {

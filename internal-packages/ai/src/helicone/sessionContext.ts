@@ -4,64 +4,100 @@
  * This provides a way to pass session configuration through to nested
  * components like plugins and tools without modifying all interfaces.
  * 
- * IMPORTANT: Thread Safety Limitation
- * -----------------------------------
- * This implementation uses a global singleton pattern which is NOT thread-safe
- * in concurrent environments. Multiple jobs running simultaneously could 
- * interfere with each other's session state.
- * 
- * Current Mitigation:
- * - Jobs are processed sequentially in the current implementation
- * - The PluginManager sets and clears the session context for each plugin run
- * 
- * Future Improvements:
- * - Consider using AsyncLocalStorage for true async context isolation
- * - Or refactor to pass session config through all function parameters
- * - Or use a job-scoped context manager instead of global singleton
+ * Uses AsyncLocalStorage for proper async context isolation to prevent
+ * concurrent job processors from interfering with each other's sessions.
  * 
  * @see https://nodejs.org/api/async_context.html#class-asynclocalstorage
  */
 
 import type { HeliconeSessionConfig } from './sessions';
 
+// Dynamic import to handle both Node.js and browser environments
+let AsyncLocalStorage: typeof import('node:async_hooks').AsyncLocalStorage | undefined;
+
+// Only load AsyncLocalStorage in Node.js environments
+if (typeof window === 'undefined') {
+  try {
+    AsyncLocalStorage = require('node:async_hooks').AsyncLocalStorage;
+  } catch {
+    // Ignore errors in environments without async_hooks
+  }
+}
+
 class SessionContextManager {
-  private currentSession: HeliconeSessionConfig | undefined;
+  // Use AsyncLocalStorage for proper async isolation (Node.js only)
+  private asyncLocalStorage: any | undefined;
+  
+  // Fallback for environments without AsyncLocalStorage
+  private fallbackSession: HeliconeSessionConfig | undefined;
   private sessionSetCount = 0;
+  
+  constructor() {
+    // Only initialize AsyncLocalStorage if available
+    if (AsyncLocalStorage) {
+      this.asyncLocalStorage = new AsyncLocalStorage<HeliconeSessionConfig>();
+    }
+  }
   
   /**
    * Set the current session for LLM calls
-   * Includes basic detection of potential concurrent usage
+   * This is now safe for concurrent usage thanks to AsyncLocalStorage
    */
   setSession(session: HeliconeSessionConfig | undefined) {
-    // Detect potential concurrent usage
-    if (this.currentSession && session && this.currentSession.sessionId !== session.sessionId) {
-      console.warn(
-        `⚠️ Potential concurrent session usage detected. ` +
-        `Previous session ${this.currentSession.sessionId} being replaced by ${session.sessionId}. ` +
-        `Consider using AsyncLocalStorage for proper async context isolation.`
-      );
-    }
-    
-    this.currentSession = session;
+    // For backward compatibility, also set the fallback
+    this.fallbackSession = session;
     this.sessionSetCount++;
   }
   
   /**
    * Get the current session
+   * First checks AsyncLocalStorage, then falls back to the global session
    */
   getSession(): HeliconeSessionConfig | undefined {
-    return this.currentSession;
+    // Try to get from AsyncLocalStorage first
+    if (this.asyncLocalStorage) {
+      const asyncSession = this.asyncLocalStorage.getStore();
+      if (asyncSession) {
+        return asyncSession;
+      }
+    }
+    
+    // Fall back to the global session for backward compatibility
+    return this.fallbackSession;
+  }
+  
+  /**
+   * Run a function with a specific session context
+   * This ensures proper isolation for concurrent operations
+   */
+  async runWithSession<T>(
+    session: HeliconeSessionConfig,
+    fn: () => T | Promise<T>
+  ): Promise<T> {
+    if (this.asyncLocalStorage) {
+      return this.asyncLocalStorage.run(session, fn);
+    }
+    
+    // Fallback: temporarily set the session and run the function
+    const previousSession = this.fallbackSession;
+    this.fallbackSession = session;
+    try {
+      return await fn();
+    } finally {
+      this.fallbackSession = previousSession;
+    }
   }
   
   /**
    * Create a scoped session with a modified path
    */
   withPath(pathSuffix: string): HeliconeSessionConfig | undefined {
-    if (!this.currentSession) return undefined;
+    const currentSession = this.getSession();
+    if (!currentSession) return undefined;
     
     return {
-      ...this.currentSession,
-      sessionPath: `${this.currentSession.sessionPath}${pathSuffix}`
+      ...currentSession,
+      sessionPath: `${currentSession.sessionPath}${pathSuffix}`
     };
   }
   
@@ -69,12 +105,13 @@ class SessionContextManager {
    * Create a scoped session with additional properties
    */
   withProperties(properties: Record<string, string>): HeliconeSessionConfig | undefined {
-    if (!this.currentSession) return undefined;
+    const currentSession = this.getSession();
+    if (!currentSession) return undefined;
     
     return {
-      ...this.currentSession,
+      ...currentSession,
       customProperties: {
-        ...this.currentSession.customProperties,
+        ...currentSession.customProperties,
         ...properties
       }
     };
@@ -84,7 +121,9 @@ class SessionContextManager {
    * Clear the current session
    */
   clear() {
-    this.currentSession = undefined;
+    this.fallbackSession = undefined;
+    // Note: AsyncLocalStorage contexts are automatically cleaned up
+    // when the async context ends, so we don't need to clear them manually
   }
 }
 

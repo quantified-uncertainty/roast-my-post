@@ -9,6 +9,10 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
+    },
     "./tools/fuzzy-text-locator/core": {
       "types": "./src/tools/fuzzy-text-locator/core.ts",
       "default": "./src/tools/fuzzy-text-locator/core.ts"

@@ -13,6 +13,7 @@ import type {
 import { generateCacheSeed } from '../shared/cache-utils';
 import { sessionContext } from '../../helicone/sessionContext';
 import { createHeliconeHeaders } from '../../helicone/sessions';
+import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { Anthropic } from '@anthropic-ai/sdk';
 
 // Import types and schemas
@@ -123,25 +124,49 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     const startTime = Date.now();
     context.logger.info(`[CheckMathWithMathJsTool] Analyzing statement: "${input.statement}"`);
     
-    // Store the previous session to restore later
-    const previousSession = sessionContext.getSession();
     let sessionId = '';
     let currentPrompt = '';
+    let createdNewSession = false;
     
     try {
-      // Always create a new session for each tool execution
-      sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      const newSession = {
-        sessionId,
-        sessionName: `Math Agentic Tool - ${input.statement.substring(0, 50)}${input.statement.length > 50 ? '...' : ''}`,
-        sessionPath: '/tools/check-math-with-mathjs'
-      };
+      // Get or extend existing session
+      let sessionConfig: HeliconeSessionConfig | undefined;
       
-      // Set our new session
-      sessionContext.setSession(newSession);
-      context.logger.info(`[CheckMathWithMathJsTool] Created new session: ${sessionId}`);
+      const existingSession = sessionContext.getSession();
+      if (existingSession) {
+        // EXTEND the existing session path
+        sessionConfig = sessionContext.withPath('/tools/check-math-with-mathjs');
+        
+        // Add tool-specific properties
+        if (sessionConfig) {
+          sessionConfig = sessionContext.withProperties({
+            tool: 'check-math-with-mathjs',
+            operation: 'verify-calculation',
+            statement: input.statement.substring(0, 100)
+          });
+        }
+        
+        sessionId = sessionConfig?.sessionId || '';
+        context.logger.info(`[CheckMathWithMathJsTool] Using existing session: ${sessionId}`);
+      } else {
+        // Create session for standalone execution
+        sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        sessionConfig = {
+          sessionId,
+          sessionName: `Math Agentic Tool - ${input.statement.substring(0, 50)}${input.statement.length > 50 ? '...' : ''}`,
+          sessionPath: '/tools/check-math-with-mathjs',
+          customProperties: {
+            tool: 'check-math-with-mathjs',
+            operation: 'verify-calculation'
+          }
+        };
+        
+        // DON'T call setSession here - just use the config for headers
+        context.logger.info(`[CheckMathWithMathJsTool] Created standalone session: ${sessionId}`);
+        createdNewSession = true;
+      }
       
-      const sessionConfig = sessionContext.withPath('/tools/check-math-with-mathjs');
+      // Use the session config for Helicone headers
       const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
       
       // Simplified system prompt
@@ -413,18 +438,8 @@ IMPORTANT:
         }
       };
     } finally {
-      // Safely restore the previous session context
-      try {
-        if (previousSession) {
-          sessionContext.setSession(previousSession);
-        } else {
-          // Clear the session if there was no previous one
-          sessionContext.setSession(undefined);
-        }
-      } catch (sessionError) {
-        // Log session restoration error but don't throw
-        context.logger.warn('[CheckMathWithMathJsTool] Failed to restore session context:', { error: sessionError });
-      }
+      // No need to clean up session since we're not setting it anymore
+      // The original plugin session remains intact
     }
   }
   

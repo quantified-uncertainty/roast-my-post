@@ -33,7 +33,7 @@ interface ExportEvaluationData {
         id: string;
         name: string;
         modelName: string;
-        priceInDollars: number;
+        priceInDollars: number | null;
         timeInSeconds?: number | null;
         log?: string | null;
         createdAt: Date | string;
@@ -159,7 +159,9 @@ export function exportEvaluationToXml(data: ExportEvaluationData): string {
         xml += `        <id>${task.id}</id>\n`;
         xml += `        <name>${escapeXml(task.name)}</name>\n`;
         xml += `        <model>${escapeXml(task.modelName)}</model>\n`;
-        xml += `        <costInDollars>${task.priceInDollars}</costInDollars>\n`;
+        if (task.priceInDollars !== null && task.priceInDollars !== undefined) {
+          xml += `        <costInDollars>${task.priceInDollars}</costInDollars>\n`;
+        }
         if (task.timeInSeconds !== null && task.timeInSeconds !== undefined) {
           xml += `        <durationSeconds>${task.timeInSeconds}</durationSeconds>\n`;
         }

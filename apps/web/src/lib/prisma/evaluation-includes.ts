@@ -73,6 +73,9 @@ export const fullEvaluationInclude = {
           grade: true,
           importance: true,
           highlightId: true,
+          header: true,
+          level: true,
+          source: true,
           metadata: true,
           highlight: {
             select: {

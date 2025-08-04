@@ -1,6 +1,38 @@
 import { Prisma } from "@roast/db";
 
 /**
+ * Safely convert a Prisma Decimal to number with proper handling
+ * @param decimal - The Prisma Decimal object or any value that might be a price
+ * @returns The numeric value or null if conversion fails
+ */
+export function decimalToNumber(decimal: unknown): number | null {
+  if (decimal === null || decimal === undefined) return null;
+  
+  // Already a number
+  if (typeof decimal === 'number') return decimal;
+  
+  // String representation
+  if (typeof decimal === 'string') {
+    const parsed = parseFloat(decimal);
+    return isNaN(parsed) ? null : parsed;
+  }
+  
+  // Prisma Decimal object
+  if (decimal instanceof Prisma.Decimal) {
+    return decimal.toNumber();
+  }
+  
+  // Object with toNumber method (duck typing for Decimal-like objects)
+  if (typeof decimal === 'object' && decimal && 'toNumber' in decimal && typeof (decimal as any).toNumber === 'function') {
+    return (decimal as any).toNumber();
+  }
+  
+  // Last resort: try converting to number
+  const converted = Number(decimal);
+  return isNaN(converted) ? null : converted;
+}
+
+/**
  * Serialize Prisma Decimal fields to strings for Next.js Server Component compatibility
  * This prevents "Decimal objects are not supported" errors when passing data to Client Components
  */
@@ -84,11 +116,11 @@ export function serializeJob(job: any) {
 export function serializeJobNumeric(job: any) {
   return {
     ...job,
-    priceInDollars: job.priceInDollars ? Number(job.priceInDollars) : null,
-    tasks: job.tasks?.map((task: any) => ({
+    priceInDollars: decimalToNumber(job.priceInDollars),
+    tasks: job.tasks ? job.tasks.map((task: any) => ({
       ...task,
-      priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0,
-    })),
+      priceInDollars: decimalToNumber(task.priceInDollars) ?? 0,
+    })) : null,
   };
 }
 

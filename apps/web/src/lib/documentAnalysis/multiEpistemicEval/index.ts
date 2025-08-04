@@ -11,7 +11,7 @@ import type { Comment as AiComment } from "@roast/ai";
 import type { Comment as DbComment } from "@/types/databaseTypes";
 import type { HeliconeSessionConfig } from "@roast/ai";
 import { aiCommentsToDbComments } from "@/lib/typeAdapters";
-import { PluginManager } from "@roast/ai";
+import { PluginManager } from "@roast/ai/server";
 import { PluginType } from "@roast/ai/analysis-plugins/types/plugin-types";
 import type { TaskResult } from "../shared/types";
 
@@ -49,7 +49,7 @@ export async function analyzeWithMultiEpistemicEval(
 
   // Filter AI comments and convert to database comments
   const validAiComments = result.highlights.filter((h): h is AiComment => 
-    !!(h.description && h.highlight && typeof h.isValid === 'boolean')
+    !!(h.description && h.highlight && typeof h.highlight?.isValid === 'boolean')
   );
 
   return {

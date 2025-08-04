@@ -84,7 +84,18 @@ export async function validateAndConvertHighlights(
             prefix: highlightResult.prefix,
             error: highlightError,
           },
-          isValid: isHighlightValid,
+          
+          // Required fields for new Comment interface
+          header: highlight.description.substring(0, 60) + (highlight.description.length > 60 ? '...' : ''),
+          level: isHighlightValid ? 'info' : 'error',
+          source: 'highlight-validator',
+          metadata: {
+            pluginName: 'highlight-validator',
+            timestamp: new Date().toISOString(),
+            chunkId: 'unknown',
+            processingTimeMs: 0,
+            toolChain: []
+          }
         };
         validHighlights.push(processedComment);
       } else {

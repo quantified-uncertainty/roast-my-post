@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { TaskLogs } from "./TaskLogs";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 interface VersionDetailsProps {
   selectedVersion: NonNullable<Evaluation["versions"]>[number] | null;
@@ -64,10 +65,10 @@ export function VersionDetails({
       })) || [],
       job: selectedVersion.job ? {
         llmThinking: selectedVersion.job.llmThinking,
-        priceInDollars: selectedVersion.job.priceInDollars ? Number(selectedVersion.job.priceInDollars) : null,
+        priceInDollars: decimalToNumber(selectedVersion.job.priceInDollars),
         tasks: selectedVersion.job.tasks?.map(task => ({
           ...task,
-          priceInDollars: task.priceInDollars ? Number(task.priceInDollars) : 0
+          priceInDollars: decimalToNumber(task.priceInDollars)
         })) || []
       } : null,
       testBatchId: null,

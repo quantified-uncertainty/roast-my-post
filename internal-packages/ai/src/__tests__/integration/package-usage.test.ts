@@ -9,11 +9,11 @@ import {
   initializeAI,
   callClaude,
   callClaudeWithTool,
-  sessionContext,
-  PluginManager,
   MathPlugin,
-  checkSpellingGrammarTool
+  toolRegistry
 } from '../../index';
+import { PluginManager } from '../../server';
+import { sessionContext, checkSpellingGrammarTool } from '../../server';
 
 describe('@roast/ai Package Integration', () => {
   describe('Configuration', () => {
@@ -51,7 +51,14 @@ describe('@roast/ai Package Integration', () => {
       expect(typeof MathPlugin).toBe('function');
     });
 
-    it('should export tools', () => {
+    it('should export tool registry', () => {
+      expect(toolRegistry).toBeDefined();
+      expect(toolRegistry['check-spelling-grammar']).toBeDefined();
+      expect(toolRegistry['check-spelling-grammar'].config).toBeDefined();
+      expect(toolRegistry['check-spelling-grammar'].config.name).toBe('Check Spelling & Grammar');
+    });
+
+    it('should export server-side tools', () => {
       expect(checkSpellingGrammarTool).toBeDefined();
       expect(checkSpellingGrammarTool.config).toBeDefined();
       expect(checkSpellingGrammarTool.config.name).toBe('check-spelling-grammar');

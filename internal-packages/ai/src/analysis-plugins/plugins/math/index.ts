@@ -6,7 +6,7 @@ import {
 } from "../../../tools/extract-math-expressions";
 import { checkMathHybridTool } from "../../../tools/check-math-hybrid";
 import type { CheckMathHybridOutput } from "../../../tools/check-math-hybrid/types";
-import type { Comment } from "../../../shared/types";
+import type { Comment, ToolChainResult } from "../../../shared/types";
 
 import { logger } from "../../../shared/logger";
 import { TextChunk } from "../../TextChunk";
@@ -16,6 +16,7 @@ import {
   SimpleAnalysisPlugin,
 } from "../../types";
 import { generateMathComment, generateDocumentSummary } from "./commentGeneration";
+import { CommentBuilder } from "../../utils/CommentBuilder";
 
 export interface MathExpressionWithComment {
   expression: ExtractedMathExpressionToolType;
@@ -26,11 +27,21 @@ export class HybridMathErrorWrapper {
   public verificationResult: CheckMathHybridOutput;
   public expression: ExtractedMathExpressionToolType;
   private documentText: string;
+  private chunkId: string;
+  private processingStartTime: number;
 
-  constructor(verificationResult: CheckMathHybridOutput, expression: ExtractedMathExpressionToolType, documentText: string) {
+  constructor(
+    verificationResult: CheckMathHybridOutput, 
+    expression: ExtractedMathExpressionToolType, 
+    documentText: string,
+    chunkId: string,
+    processingStartTime: number
+  ) {
     this.verificationResult = verificationResult;
     this.expression = expression;
     this.documentText = documentText;
+    this.chunkId = chunkId;
+    this.processingStartTime = processingStartTime;
   }
 
   get originalText(): string {
@@ -55,15 +66,16 @@ export class HybridMathErrorWrapper {
       const severityBonus = severity === 'critical' ? 2 : 
                            severity === 'major' ? 1 : 0;
       return Math.min(10, baseScore + severityBonus);
+    } else if (this.verificationResult.status === 'verified_true') {
+      // Lower importance for successful verifications
+      return 3;
     }
     return 0;
   }
 
   public async getComment(): Promise<Comment | null> {
-    // Only generate comments for errors
-    if (this.verificationResult.status !== 'verified_false') {
-      return null;
-    }
+    // Generate comments for all verification results
+    // (We can filter later if we only want errors)
     
     // Use the expression text to find location
     const startOffset = this.findTextOffsetInDocument(this.expression.originalText);
@@ -73,33 +85,90 @@ export class HybridMathErrorWrapper {
     }
 
     const endOffset = startOffset + this.expression.originalText.length;
-    const message = this.generateEnhancedComment();
     
-    if (!message) {
-      return null;
-    }
-
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
+    // Build tool chain results
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 20).toISOString(),
+        result: this.expression
+      },
+      {
+        toolName: 'check-math-hybrid',
+        stage: 'verification', 
+        timestamp: new Date().toISOString(),
+        result: this.verificationResult
+      }
+    ];
+    
+    // Keep formatted description for backwards compatibility
+    const formattedDescription = this.generateEnhancedComment();
+    
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
         startOffset,
         endOffset,
-        quotedText: this.expression.originalText,
-        isValid: true,
+        quotedText: this.expression.originalText
       },
-      importance: this.commentImportanceScore(),
+      chunkId: this.chunkId,
+      processingStartTime: this.processingStartTime,
+      toolChain,
       
-      header: this.verificationResult.conciseCorrection || `Math Error: ${this.expression.originalText}`,
-      level: 'error' as const, // HybridMathErrorWrapper only handles errors
-      source: 'math',
-      metadata: {
-        verifiedBy: this.verificationResult.verifiedBy,
-        status: this.verificationResult.status,
-        mathJsResult: this.verificationResult.mathJsResult,
-        contextImportanceScore: this.expression.contextImportanceScore,
-      },
-    };
+      // Custom description (keeps existing formatting)
+      description: formattedDescription,
+      
+      // Structured content
+      header: this.buildHeader(),
+      level: this.getLevel(),
+      observation: this.buildObservation(),
+      significance: this.buildSignificance()
+    });
+  }
+  
+  private buildHeader(): string {
+    if (this.verificationResult.status === 'verified_true') {
+      return `✓ Verified correct`;
+    } else if (this.verificationResult.status === 'verified_false' && this.verificationResult.conciseCorrection) {
+      return this.verificationResult.conciseCorrection;
+    } else if (this.verificationResult.status === 'verified_false') {
+      return `Math error: ${this.expression.originalText}`;
+    } else {
+      return `Cannot verify: ${this.expression.originalText}`;
+    }
+  }
+  
+  private getLevel(): 'error' | 'warning' | 'info' | 'success' {
+    if (this.verificationResult.status === 'verified_true') {
+      return 'success';
+    } else if (this.verificationResult.status === 'verified_false') {
+      return 'error';
+    } else {
+      return 'info';
+    }
+  }
+  
+  private buildObservation(): string {
+    if (this.verificationResult.mathJsResult?.error) {
+      return `Calculation error: ${this.verificationResult.mathJsResult.error}`;
+    }
+    if (this.verificationResult.llmResult?.explanation) {
+      return this.verificationResult.llmResult.explanation;
+    }
+    return "Mathematical expression contains an error";
+  }
+  
+  private buildSignificance(): string | undefined {
+    const severity = this.verificationResult.llmResult?.severity;
+    if (severity === 'critical') {
+      return "Critical error that fundamentally undermines the argument or conclusion";
+    } else if (severity === 'major') {
+      return "Significant error that affects the validity of related claims";
+    } else if (severity === 'minor') {
+      return "Minor error that should be corrected for accuracy";
+    }
+    return undefined;
   }
 
   private findTextOffsetInDocument(text: string): number {
@@ -110,20 +179,25 @@ export class HybridMathErrorWrapper {
   private generateEnhancedComment(): string {
     const { verificationResult: result, expression } = this;
     
-    // Only generate comments for errors
-    if (result.status !== 'verified_false') {
-      return '';
+    // Generate comments for both successful and failed verifications
+    let comment = '';
+    
+    if (result.status === 'verified_true') {
+      // For successful verifications, just show the explanation
+      comment = result.explanation || '✓ Mathematical expression verified as correct';
+    } else if (result.status === 'verified_false') {
+      // For errors, show the explanation WITHOUT the concise correction (it's in the header)
+      comment = result.explanation || 'Mathematical expression contains an error';
+      
+      // Remove any "Quick Fix:" line if it exists at the start
+      if (comment.startsWith('Quick Fix:')) {
+        const lines = comment.split('\n');
+        comment = lines.slice(1).join('\n').trim();
+      }
+    } else {
+      // For unverifiable expressions
+      comment = result.explanation || 'Mathematical expression could not be verified';
     }
-    
-    let comment = `🧮 **Math ${result.verifiedBy === 'mathjs' ? 'Verification' : 'Analysis'}**\n\n`;
-    
-    // Show concise correction prominently if available
-    if (result.conciseCorrection) {
-      comment += `**📝 Quick Fix:** \`${result.conciseCorrection}\`\n\n`;
-    }
-    
-    // Error explanation
-    comment += result.explanation;
     
     // MathJS-specific enhancements
     if (result.verifiedBy === 'mathjs' && result.mathJsResult) {
@@ -138,7 +212,7 @@ export class HybridMathErrorWrapper {
       }
       
       // Actual result
-      if (mjResult.computedValue) {
+      if (mjResult.computedValue && result.status === 'verified_false') {
         comment += `\n\n**✅ Correct result:** \`${mjResult.computedValue}\``;
       }
       
@@ -186,6 +260,10 @@ export class ExtractedMathExpression {
         this.expression.errorSeverityScore) /
       3
     );
+  }
+
+  getChunkId(): string {
+    return this.chunk.id;
   }
 
   public async findLocationInDocument(): Promise<{
@@ -237,31 +315,35 @@ export class ExtractedMathExpression {
       return null;
     }
 
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
+    // Build tool chain for ExtractedMathExpression (basic expression analysis)
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date().toISOString(),
+        result: this.expression
+      }
+    ];
+    
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
         startOffset: location.startOffset,
         endOffset: location.endOffset,
-        quotedText: location.quotedText,
-        isValid: true,
+        quotedText: location.quotedText
       },
-      importance: this.commentImportanceScore(),
+      chunkId: this.chunk.id,
+      processingStartTime: Date.now(),
+      toolChain,
       
+      // Custom overrides
       header: this.expression.conciseCorrection || 
               (this.expression.hasError ? `Math Error: ${this.expression.originalText}` : `Math: ${this.expression.originalText}`),
       level: this.expression.hasError ? 'error' as const : 
              (this.expression.verificationStatus === 'verified' ? 'success' as const : 'info' as const),
-      source: 'math',
-      metadata: {
-        errorType: this.expression.errorType,
-        hasError: this.expression.hasError,
-        verificationStatus: this.expression.verificationStatus,
-        complexityScore: this.expression.complexityScore,
-        contextImportanceScore: this.expression.contextImportanceScore,
-        errorSeverityScore: this.expression.errorSeverityScore,
-      },
-    };
+      description: message,
+      importance: this.commentImportanceScore()
+    });
   }
 }
 
@@ -275,6 +357,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private totalCost: number = 0;
   private extractedExpressions: ExtractedMathExpression[] = [];
   private hybridErrorWrappers: HybridMathErrorWrapper[] = [];
+  private processingStartTime: number = 0;
 
   name(): string {
     return "MATH";
@@ -321,6 +404,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
 
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Store the inputs
+    this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
     
@@ -438,9 +522,16 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
           }
         );
 
-        // Only create wrapper if there's an error (status is verified_false)
-        if (result.status === 'verified_false') {
-          const errorWrapper = new HybridMathErrorWrapper(result, extractedExpr.expression, this.documentText);
+        // Create wrapper for ALL verification results (not just errors)
+        // This allows us to show successful verifications too
+        if (result.status === 'verified_false' || result.status === 'verified_true') {
+          const errorWrapper = new HybridMathErrorWrapper(
+            result, 
+            extractedExpr.expression, 
+            this.documentText,
+            extractedExpr.getChunkId(),
+            this.processingStartTime
+          );
           this.hybridErrorWrappers.push(errorWrapper);
         }
       } catch (error) {
@@ -453,7 +544,7 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     }
     
     logger.debug(
-      `MathAnalyzer: Hybrid check found ${this.hybridErrorWrappers.length} errors`
+      `MathAnalyzer: Hybrid check found ${this.hybridErrorWrappers.length} verification results`
     );
   }
 
@@ -491,8 +582,8 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private generateAnalysis(): void {
     const totalExpressions = this.extractedExpressions.length;
     const totalHybridErrors = this.hybridErrorWrappers.length;
-    const mathJsErrors = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'mathjs').length;
-    const llmErrors = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'llm').length;
+    const mathJsVerified = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'mathjs').length;
+    const llmVerified = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'llm').length;
 
     if (totalExpressions === 0 && totalHybridErrors === 0) {
       this.summary = "No mathematical content found.";
@@ -508,28 +599,42 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
 
     // Add hybrid analysis
     if (totalHybridErrors > 0) {
+      const verifiedTrue = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_true').length;
+      const verifiedFalse = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false').length;
+      
       if (analysis) analysis += "\n\n";
       analysis += `**Hybrid Math Verification Results:**\n\n`;
-      analysis += `Found ${totalHybridErrors} mathematical issue${totalHybridErrors !== 1 ? 's' : ''}:\n`;
-      if (mathJsErrors > 0) {
-        analysis += `- ${mathJsErrors} computationally verified error${mathJsErrors !== 1 ? 's' : ''} (using MathJS)\n`;
+      analysis += `Verified ${totalHybridErrors} mathematical expression${totalHybridErrors !== 1 ? 's' : ''}:\n`;
+      
+      if (verifiedTrue > 0) {
+        analysis += `- ${verifiedTrue} verified as correct ✓\n`;
       }
-      if (llmErrors > 0) {
-        analysis += `- ${llmErrors} conceptual error${llmErrors !== 1 ? 's' : ''} (using LLM analysis)\n`;
+      if (verifiedFalse > 0) {
+        analysis += `- ${verifiedFalse} error${verifiedFalse !== 1 ? 's' : ''} found\n`;
       }
       
-      // Add severity breakdown
-      const critical = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'critical').length;
-      const major = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'major').length;
-      const minor = this.hybridErrorWrappers.filter(w => w.verificationResult.llmResult?.severity === 'minor').length;
+      // Break down by verification method
+      if (mathJsVerified > 0) {
+        analysis += `- ${mathJsVerified} verified computationally (using MathJS)\n`;
+      }
+      if (llmVerified > 0) {
+        analysis += `- ${llmVerified} verified conceptually (using LLM analysis)\n`;
+      }
       
-      if (critical > 0 || major > 0 || minor > 0) {
-        analysis += `\nSeverity breakdown: `;
-        const severities = [];
-        if (critical > 0) severities.push(`${critical} critical`);
-        if (major > 0) severities.push(`${major} major`);
-        if (minor > 0) severities.push(`${minor} minor`);
-        analysis += severities.join(', ');
+      // Add severity breakdown for errors only
+      if (verifiedFalse > 0) {
+        const critical = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'critical').length;
+        const major = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'major').length;
+        const minor = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'minor').length;
+        
+        if (critical > 0 || major > 0 || minor > 0) {
+          analysis += `\nError severity: `;
+          const severities = [];
+          if (critical > 0) severities.push(`${critical} critical`);
+          if (major > 0) severities.push(`${major} major`);
+          if (minor > 0) severities.push(`${minor} minor`);
+          analysis += severities.join(', ');
+        }
       }
     }
 
@@ -555,10 +660,17 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     }
 
     if (totalHybridErrors > 0) {
+      const verifiedTrue = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_true').length;
+      const verifiedFalse = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false').length;
+      
       if (summary) summary += " ";
-      summary += `Hybrid verification found ${totalHybridErrors} issue${totalHybridErrors !== 1 ? 's' : ''}`;
-      if (mathJsErrors > 0) {
-        summary += ` (${mathJsErrors} verified computationally)`;
+      summary += `Hybrid verification: ${totalHybridErrors} checked`;
+      if (verifiedTrue > 0 && verifiedFalse > 0) {
+        summary += ` (${verifiedTrue} correct, ${verifiedFalse} error${verifiedFalse !== 1 ? 's' : ''})`;
+      } else if (verifiedTrue > 0) {
+        summary += ` (all correct)`;
+      } else if (verifiedFalse > 0) {
+        summary += ` (${verifiedFalse} error${verifiedFalse !== 1 ? 's' : ''} found)`;
       }
       summary += ".";
     }

@@ -5,6 +5,7 @@ import { commonErrors } from "@/lib/api-response-helpers";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { estimateTokens } from "@roast/ai";
 import { prisma, type Prisma } from "@roast/db";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export async function GET(
   request: NextRequest,
@@ -150,7 +151,7 @@ export async function GET(
               .reduce((sum, e) => {
                 const job = e.job!;
                 return (
-                  sum + (job.priceInDollars ? Number(job.priceInDollars) : 0)
+                  sum + (decimalToNumber(job.priceInDollars) ?? 0)
                 );
               }, 0) / evaluations.filter((e) => e.job?.priceInDollars).length
           : null,
@@ -254,9 +255,7 @@ export async function GET(
               status: evalVersion.job.status,
               created_at: evalVersion.job.createdAt.toISOString(),
               completed_at: evalVersion.job.completedAt?.toISOString(),
-              cost_in_dollars: evalVersion.job.priceInDollars
-                ? Number(evalVersion.job.priceInDollars)
-                : null,
+              cost_in_dollars: decimalToNumber(evalVersion.job.priceInDollars),
               attempts: evalVersion.job.attempts,
               error: evalVersion.job.error,
               tasks:
@@ -271,7 +270,7 @@ export async function GET(
                   } = {
                     name: task.name,
                     model: task.modelName,
-                    price_in_dollars: Number(task.priceInDollars),
+                    price_in_dollars: decimalToNumber(task.priceInDollars) ?? 0,
                     time_in_seconds: task.timeInSeconds,
                     log: task.log
                       ? (() => {

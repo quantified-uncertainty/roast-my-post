@@ -17,6 +17,7 @@ export interface ExtendedComment extends Partial<Omit<AIComment, 'metadata' | 'h
   id?: string;
   commentText?: string;
   commentType?: string;
+  agentId?: string;
   
   // Optional fields that may come from AI (override to allow null)
   header?: string | null;
@@ -53,7 +54,7 @@ export function aiCommentToDatabaseComment(
 ): DatabaseComment {
   // Handle different text field names
   const description = 
-    comment.content || 
+    (comment as ExtendedComment).content || 
     comment.description || 
     (comment as any).text || 
     (comment as any).commentText ||
@@ -72,7 +73,7 @@ export function aiCommentToDatabaseComment(
   return {
     id: defaults.id,
     evaluationId: defaults.evaluationId,
-    agentId: comment.agentId,
+    agentId: (comment as ExtendedComment).agentId || null,
     description,
     importance: comment.importance ?? null,
     grade: comment.grade ?? null,

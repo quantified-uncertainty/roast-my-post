@@ -11,12 +11,11 @@ import type { Comment as DBComment } from "@/types/databaseTypes";
 export function isValidDBComment(comment: AIComment): comment is AIComment & {
   description: string;
   highlight: NonNullable<AIComment['highlight']>;
-  isValid: boolean;
 } {
   return !!(
     comment.description &&
     comment.highlight &&
-    typeof comment.isValid === 'boolean'
+    typeof comment.highlight.isValid === 'boolean'
   );
 }
 
@@ -25,14 +24,13 @@ export function isValidDBComment(comment: AIComment): comment is AIComment & {
  */
 export function convertToDBComment(aiComment: AIComment, agentId?: string): DBComment {
   if (!isValidDBComment(aiComment)) {
-    throw new Error(`Invalid comment structure: missing required fields (description, highlight, isValid)`);
+    throw new Error(`Invalid comment structure: missing required fields (description, highlight, or highlight.isValid)`);
   }
 
   return {
     ...aiComment,
     description: aiComment.description,
     highlight: aiComment.highlight,
-    isValid: aiComment.isValid,
     agentId,
   } as DBComment;
 }

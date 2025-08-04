@@ -1,6 +1,6 @@
 import type { SpellingGrammarError } from "../../../tools/check-spelling-grammar";
 import { checkSpellingGrammarTool } from "../../../tools/check-spelling-grammar";
-import type { Comment } from "../../../shared/types";
+import type { Comment, ToolChainResult } from "../../../shared/types";
 import type { LanguageConventionOption } from "../../../shared/types";
 
 import { logger } from "../../../shared/logger";
@@ -13,6 +13,7 @@ import {
 import { generateSpellingComment, generateDocumentSummary, type SpellingErrorWithLocation as ToolSpellingErrorWithLocation } from "../../../tools/check-spelling-grammar/commentGeneration";
 import { detectLanguageConvention, getConventionExamples } from "../../../tools/detect-language-convention/conventionDetector";
 import { calculateGrade, countWords, generateGradeSummary } from "../../../tools/check-spelling-grammar/grading";
+import { CommentBuilder } from "../../utils/CommentBuilder";
 
 export interface SpellingErrorWithLocation {
   error: SpellingGrammarError;
@@ -36,6 +37,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private languageConvention?: ReturnType<typeof detectLanguageConvention>;
   private gradeResult?: ReturnType<typeof calculateGrade>;
   private strictness: 'minimal' | 'standard' | 'thorough' = 'standard';
+  private processingStartTime: number = 0;
 
   name(): string {
     return "SPELLING";
@@ -78,6 +80,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
 
   async analyze(chunks: TextChunk[], documentText: string): Promise<AnalysisResult> {
     // Store the inputs
+    this.processingStartTime = Date.now();
     this.documentText = documentText;
     this.chunks = chunks;
     if (this.hasRun) {
@@ -253,34 +256,51 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
 
 
   private createComment(errorWithLocation: SpellingErrorWithLocation): Comment | null {
-    const { error, location } = errorWithLocation;
+    const { error, chunk, location } = errorWithLocation;
     
     if (!location) return null;
-
-    const message = generateSpellingComment(error);
-    const importance = this.calculateImportance(error);
-
-    return {
-      description: message,
-      isValid: true,
-      highlight: {
-        startOffset: location.startOffset,
-        endOffset: location.endOffset,
-        quotedText: location.quotedText,
-        isValid: true,
-      },
-      importance,
+    
+    // Build tool chain results
+    const toolChain: ToolChainResult[] = [];
+    
+    // Add language convention detection if available
+    if (this.languageConvention) {
+      toolChain.push({
+        toolName: 'detectLanguageConvention',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 10).toISOString(),
+        result: this.languageConvention
+      });
+    }
+    
+    // Add spelling/grammar check result
+    toolChain.push({
+      toolName: 'checkSpellingGrammar',
+      stage: 'verification',
+      timestamp: new Date().toISOString(),
+      result: error
+    });
+    
+    // Keep formatted description for backwards compatibility
+    const formattedDescription = generateSpellingComment(error);
+    
+    return CommentBuilder.build({
+      plugin: 'spelling',
+      location,
+      chunkId: chunk.id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
       
+      // Custom description (keeps existing formatting)
+      description: formattedDescription,
+      
+      // Structured content
       header: error.conciseCorrection || `${error.text} → ${error.correction}`,
-      level: 'error' as const, // Spelling/grammar issues are always errors
-      source: 'spelling',
-      metadata: {
-        errorType: error.type,
-        confidence: error.confidence,
-        context: error.context,
-        lineNumber: error.lineNumber,
-      },
-    };
+      level: error.type === 'grammar' ? 'warning' : 'info',
+      observation: `${error.type === 'spelling' ? 'Misspelling' : 'Grammar error'}: "${error.text}"`,
+      significance: error.importance >= 50 ? 
+                   "Affects readability and professionalism" : undefined
+    });
   }
 
   private calculateImportance(error: SpellingGrammarError): number {

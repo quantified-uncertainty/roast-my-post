@@ -71,19 +71,26 @@ export default async function EvaluationPage({
             thinking={evaluationData.thinking}
             selfCritique={evaluationData.selfCritique}
             logs={evaluationData.logs}
-            comments={evaluationData.comments}
+            comments={evaluationData.comments.map(comment => ({
+              ...comment,
+              metadata: comment.metadata as Record<string, any> | null || null
+            }))}
             agentName={evaluationData.agentName}
             agentDescription={evaluationData.agentDescription}
             grade={evaluationData.grade}
             ephemeralBatch={evaluationData.ephemeralBatch}
             costInCents={evaluationData.priceInDollars ? Math.round(parseFloat(evaluationData.priceInDollars.toString()) * 100) : undefined}
             durationInSeconds={evaluationData.durationInSeconds}
-            createdAt={evaluationData.createdAt}
+            createdAt={evaluationData.createdAt.toISOString()}
             isStale={evaluationData.isStale}
             showNavigation={true}
             compact={false}
             maxWidth="4xl"
-            evaluationData={{ ...serializePrismaResult(evaluation), agentId: evaluationData.agentId }}
+            evaluationData={{
+              agentId: evaluationData.agentId,
+              documentId: evaluationData.documentId,
+              evaluationId: evaluationData.evaluationId,
+            }}
             isOnEvalPage={true}
             isOwner={isOwner}
           />

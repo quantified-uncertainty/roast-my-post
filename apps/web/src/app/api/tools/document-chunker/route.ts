@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { documentChunkerTool } from '@roast/ai';
+import { documentChunkerTool } from '@roast/ai/server';
 import { logger } from '@/lib/logger';
 import { auth } from '@/lib/auth';
 

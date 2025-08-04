@@ -3,18 +3,21 @@
 import { config } from "dotenv";
 
 // Load environment variables with proper precedence BEFORE importing Prisma
+// Note: When run via npm script from apps/web, we need to go up to root
 config({ path: "../../.env.local", override: false }); // Development (workspace root)
 config({ path: "../../.env", override: false });        // Production/fallback (workspace root)
-config({ path: ".env.local", override: false });        // Local override
-config({ path: ".env", override: false });              // Local fallback
 // System environment variables take highest precedence (already loaded)
 
 import { JobModel } from "../models/Job";
 import { logger } from "@/lib/logger";
+import { initializeAIPackage } from "../lib/ai-init";
 
 async function main() {
   const startTime = Date.now();
   logger.info('🚀 Starting job processor...');
+  
+  // Initialize AI package with environment variables
+  initializeAIPackage();
   
   const jobProcessor = new JobModel();
   let hasProcessedJob = false;
