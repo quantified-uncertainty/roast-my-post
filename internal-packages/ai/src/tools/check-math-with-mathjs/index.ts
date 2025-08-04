@@ -149,7 +149,7 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
         sessionId = sessionConfig?.sessionId || '';
         context.logger.info(`[CheckMathWithMathJsTool] Using existing session: ${sessionId}`);
       } else {
-        // Only create new session if running standalone
+        // Create session for standalone execution
         sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         sessionConfig = {
           sessionId,

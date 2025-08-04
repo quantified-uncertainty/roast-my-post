@@ -663,7 +663,7 @@ export class DocumentModel {
               orderBy: {
                 createdAt: "desc",
               },
-              take: 1, // Only latest version for listings
+              take: 1, // Limit to one version for performance in listings
             },
             jobs: {
               select: {
