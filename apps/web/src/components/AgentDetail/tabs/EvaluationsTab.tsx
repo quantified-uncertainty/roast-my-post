@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvaluationContent } from "@/components/evaluation";
 import type { Agent } from "@roast/ai";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 import { StatusIcon } from "../components";
 import type {
@@ -186,7 +187,7 @@ export function EvaluationsTab({
                       <span>{formatDateWithTime(evalItem.createdAt)}</span>
                       <div className="flex space-x-3">
                         {evalItem.priceInDollars !== undefined && evalItem.priceInDollars !== null && (
-                          <span>${Number(evalItem.priceInDollars).toFixed(2)}</span>
+                          <span>${(decimalToNumber(evalItem.priceInDollars) ?? 0).toFixed(2)}</span>
                         )}
                         <span
                           className={`rounded px-1.5 py-0.5 text-xs ${

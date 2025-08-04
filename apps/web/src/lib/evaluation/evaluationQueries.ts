@@ -1,6 +1,6 @@
 import { prisma } from "@roast/db";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
-import { serializePrismaResult } from "@/lib/prisma-serializers";
+import { serializePrismaResult, decimalToNumber } from "@/lib/prisma-serializers";
 
 /**
  * Shared query pattern for getting evaluation data for display
@@ -55,7 +55,7 @@ export function extractEvaluationDisplayData(evaluation: NonNullable<Awaited<Ret
       : null,
     
     // Run stats
-    priceInDollars: latestVersion?.job?.priceInDollars ? Number(latestVersion.job.priceInDollars) : undefined,
+    priceInDollars: latestVersion?.job?.priceInDollars ? decimalToNumber(latestVersion.job.priceInDollars) ?? undefined : undefined,
     durationInSeconds: latestVersion?.job?.durationInSeconds,
     createdAt: latestVersion?.createdAt || new Date(),
     

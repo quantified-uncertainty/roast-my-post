@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { JobCard, JobSummary, TaskDisplay } from "@/components/job";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 interface Job {
   id: string;
@@ -171,7 +172,7 @@ export default function JobsMonitorPage() {
                   <TaskDisplay 
                     tasks={selectedJob.tasks.map(task => ({
                       ...task,
-                      priceInDollars: Number(task.priceInDollars)
+                      priceInDollars: decimalToNumber(task.priceInDollars) ?? 0
                     }))}
                   />
                 </div>
