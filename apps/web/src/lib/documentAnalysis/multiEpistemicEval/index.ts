@@ -35,7 +35,7 @@ export async function analyzeWithMultiEpistemicEval(
   // Create plugin manager with default plugin selection for multi-epistemic eval
   // By default, exclude spelling plugin for multi-epistemic eval
   const manager = new PluginManager({
-    sessionConfig: options.sessionConfig,
+    // Session tracking is now handled globally via setGlobalSessionManager
     jobId: options.jobId,
     pluginSelection: {
       exclude: [PluginType.SPELLING],

@@ -37,7 +37,7 @@ export async function analyzeSpellingGrammar(
   
   // Create plugin manager with only the spelling plugin
   const manager = new PluginManager({
-    sessionConfig: options.sessionConfig,
+    // Session tracking is now handled globally via setGlobalSessionManager
     jobId: options.jobId,
     pluginSelection: {
       include: [PluginType.SPELLING], // Only use spelling/grammar plugin

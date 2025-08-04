@@ -95,17 +95,21 @@ export class PluginManager {
   ): Promise<SimpleDocumentAnalysisResult> {
     this.startTime = Date.now();
 
-    // Wrap analysis in session tracking if available
-    if (this.sessionManager) {
-      return this.sessionManager.trackAnalysis('plugins', async () => {
-        return this._runAnalysis(text, plugins);
-      });
-    } else {
-      return this._runAnalysis(text, plugins);
-    }
+    // Wrap in session tracking if available
+    const runAnalysis = async () => {
+      if (this.sessionManager) {
+        return this.sessionManager.trackAnalysis('plugins', async () => {
+          return this._runPluginAnalysis(text, plugins);
+        });
+      } else {
+        return this._runPluginAnalysis(text, plugins);
+      }
+    };
+
+    return runAnalysis();
   }
 
-  private async _runAnalysis(
+  private async _runPluginAnalysis(
     text: string,
     plugins: SimpleAnalysisPlugin[]
   ): Promise<SimpleDocumentAnalysisResult> {
@@ -456,7 +460,6 @@ export class PluginManager {
         // Cleanup if needed
       }
     }
-  }
 
   /**
    * High-level document analysis using all available plugins
