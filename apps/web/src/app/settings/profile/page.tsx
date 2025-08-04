@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 
 import { ProfileForm } from "./ProfileForm";
 

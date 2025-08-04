@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { evaluationWithCurrentJob } from "@/lib/prisma/evaluation-includes";
 import { checkDocumentOwnership } from "@/lib/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
@@ -8,6 +8,7 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import { PageHeader } from "@/components/PageHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { JobSummary, TaskDisplay } from "@/components/job";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 interface PageProps {
   params: Promise<{ 
@@ -130,7 +131,7 @@ export default async function EvaluationLogsPage({ params }: PageProps) {
                     completedAt: currentJob.completedAt,
                     startedAt: currentJob.startedAt,
                     durationInSeconds: currentJob.durationInSeconds,
-                    priceInDollars: currentJob.priceInDollars ? parseFloat(currentJob.priceInDollars.toString()) : null,
+                    priceInDollars: decimalToNumber(currentJob.priceInDollars),
                     attempts: currentJob.attempts,
                     originalJobId: currentJob.originalJobId,
                     error: currentJob.error,

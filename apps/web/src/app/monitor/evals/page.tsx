@@ -294,7 +294,7 @@ export default function EvaluationsMonitorPage() {
                 agentDescription={undefined}
                 grade={selectedVersion.grade}
                 ephemeralBatch={null}
-costInCents={selectedVersion.job?.priceInDollars ? parseFloat(selectedVersion.job.priceInDollars.toString()) * 100 : undefined}
+costInCents={selectedVersion.job?.priceInDollars ? parseFloat(String(selectedVersion.job.priceInDollars)) * 100 : undefined}
                 durationInSeconds={null}
                 createdAt={selectedVersion.createdAt}
                 isStale={false}

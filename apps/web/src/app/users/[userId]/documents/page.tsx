@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import DocumentsClient from "@/app/docs/DocumentsClient";
 import { DocumentModel } from "@/models/Document";
 import { USER_DISPLAY } from "@/lib/constants";

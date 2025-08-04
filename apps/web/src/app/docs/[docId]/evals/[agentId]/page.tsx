@@ -79,7 +79,7 @@ export default async function EvaluationPage({
             agentDescription={evaluationData.agentDescription}
             grade={evaluationData.grade}
             ephemeralBatch={evaluationData.ephemeralBatch}
-            costInCents={evaluationData.priceInDollars ? Math.round(parseFloat(evaluationData.priceInDollars.toString()) * 100) : undefined}
+            costInCents={evaluationData.priceInDollars ? Math.round(evaluationData.priceInDollars * 100) : undefined}
             durationInSeconds={evaluationData.durationInSeconds}
             createdAt={evaluationData.createdAt.toISOString()}
             isStale={evaluationData.isStale}

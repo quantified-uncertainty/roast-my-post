@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { prisma, type Job } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { calculateJobStats } from "@/lib/batch-utils";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export async function GET(
   request: NextRequest,
@@ -62,8 +63,9 @@ export async function GET(
       const completedJobs = jobs.filter(job => job.status === "COMPLETED");
       
       const totalCost = jobs.reduce((sum: number, job) => {
-        if (job.priceInDollars) {
-          return sum + (parseFloat(job.priceInDollars.toString()) * 100);
+        const price = decimalToNumber(job.priceInDollars);
+        if (price) {
+          return sum + (price * 100);
         }
         return sum;
       }, 0);

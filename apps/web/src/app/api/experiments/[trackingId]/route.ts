@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { calculateJobStats, calculateSuccessRate } from "@/lib/batch-utils";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export async function GET(
   request: NextRequest,
@@ -108,8 +109,9 @@ export async function GET(
         ? grades.reduce((sum, g) => sum + g, 0) / grades.length 
         : null,
       totalCost: batch.jobs.reduce((sum, j) => {
-        if (j.priceInDollars) {
-          return sum + Math.round(parseFloat(j.priceInDollars.toString()) * 100);
+        const price = decimalToNumber(j.priceInDollars);
+        if (price) {
+          return sum + Math.round(price * 100);
         }
         return sum;
       }, 0),
@@ -130,7 +132,7 @@ export async function GET(
         highlightCount: job.evaluation.versions[0].comments.length,
       } : null,
       processingTime: job.durationInSeconds,
-      cost: job.priceInDollars ? Math.round(parseFloat(job.priceInDollars.toString()) * 100) : null,
+      cost: job.priceInDollars ? Math.round((decimalToNumber(job.priceInDollars) || 0) * 100) : null,
     }));
 
     // Format response

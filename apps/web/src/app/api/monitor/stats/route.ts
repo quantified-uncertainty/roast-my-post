@@ -5,6 +5,7 @@ import { JobStatus } from "@roast/db";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { commonErrors } from "@/lib/api-response-helpers";
 import { isAdmin } from "@/lib/auth";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export async function GET(request: NextRequest) {
   const userId = await authenticateRequest(request);
@@ -176,8 +177,9 @@ export async function GET(request: NextRequest) {
       if (job.status === JobStatus.COMPLETED) {
         jobsTodayByStatus.completed++;
         // Use priceInDollars if available
-        if (job.priceInDollars) {
-          jobsTodayByStatus.totalCost += parseFloat(job.priceInDollars.toString()) * 100; // Convert to cents for consistency
+        const price = decimalToNumber(job.priceInDollars);
+        if (price) {
+          jobsTodayByStatus.totalCost += price * 100; // Convert to cents for consistency
         }
       } else if (job.status === JobStatus.FAILED) {
         jobsTodayByStatus.failed++;
@@ -205,7 +207,7 @@ export async function GET(request: NextRequest) {
         failedToday: jobsTodayByStatus.failed,
         successRate24h,
         avgDurationMinutes,
-        totalCostToday: totalCostToday._sum.priceInDollars ? parseFloat(totalCostToday._sum.priceInDollars.toString()) * 100 : 0,
+        totalCostToday: totalCostToday._sum.priceInDollars ? (decimalToNumber(totalCostToday._sum.priceInDollars) || 0) * 100 : 0,
       },
       evaluations: {
         total: evaluationStats,
