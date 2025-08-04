@@ -11,9 +11,8 @@ import {
   mapModelToCostModel,
 } from "../utils/costCalculator";
 import {
-  createJobSessionConfig,
-  heliconeSessionsConfig,
-  SESSION_PATHS,
+  HeliconeSessionManager,
+  setGlobalSessionManager,
 } from "@roast/ai";
 import { fetchJobCostWithRetry } from "@roast/ai";
 import { getDocumentFullContent } from "../utils/documentContentHelpers";
@@ -382,34 +381,39 @@ export class JobModel {
   ) {
     const startTime = Date.now(); // Start timing immediately
     
-    // Create session configuration for Helicone tracking
-    let sessionConfig = null;
-    if (heliconeSessionsConfig.enabled && heliconeSessionsConfig.features.jobSessions) {
-      try {
-        const documentVersion = job.evaluation.document.versions[0];
-        const agentVersion = job.evaluation.agent.versions[0];
+    // Create session manager for Helicone tracking
+    let sessionManager: HeliconeSessionManager | undefined;
+    try {
+      const documentVersion = job.evaluation.document.versions[0];
+      const agentVersion = job.evaluation.agent.versions[0];
+      
+      if (documentVersion && agentVersion) {
+        // Use originalJobId for retries to group them under the same session
+        const sessionId = job.originalJobId || job.id;
+        const truncatedTitle = documentVersion.title.length > 50 
+          ? documentVersion.title.slice(0, 50) + "..." 
+          : documentVersion.title;
         
-        if (documentVersion && agentVersion) {
-          sessionConfig = createJobSessionConfig(
-            job.id,
-            job.originalJobId,
-            agentVersion.name,
-            documentVersion.title,
-            SESSION_PATHS.JOB_START,
-            {
-              DocumentId: job.evaluation.document.id,
-              AgentId: job.evaluation.agent.id,
-              AgentVersion: agentVersion.version.toString(),
-              EvaluationId: job.evaluation.id,
-            },
-            job.evaluation.agent.submittedBy?.id
-          );
-          
-        }
-      } catch (error) {
-        console.warn('⚠️ Failed to create Helicone session config:', error);
-        // Continue without session tracking rather than failing the job
+        sessionManager = HeliconeSessionManager.forJob(
+          sessionId,
+          `${agentVersion.name} evaluating ${truncatedTitle}`,
+          {
+            JobId: job.id,
+            JobAttempt: job.originalJobId ? "retry" : "initial",
+            DocumentId: job.evaluation.document.id,
+            AgentId: job.evaluation.agent.id,
+            AgentVersion: agentVersion.version.toString(),
+            EvaluationId: job.evaluation.id,
+            UserId: job.evaluation.agent.submittedBy?.id || 'anonymous',
+          }
+        );
+        
+        // Set as global for automatic header propagation
+        setGlobalSessionManager(sessionManager);
       }
+    } catch (error) {
+      console.warn('⚠️ Failed to create Helicone session manager:', error);
+      // Continue without session tracking rather than failing the job
     }
     
     try {
@@ -458,22 +462,12 @@ export class JobModel {
 
       // Analyze document
       
-      // Update session path for analysis phase based on agent type
-      let analysisPath: string = SESSION_PATHS.ANALYSIS_COMPREHENSIVE;
-      if (agentVersion.extendedCapabilityId === "simple-link-verifier") {
-        analysisPath = SESSION_PATHS.ANALYSIS_LINK_VERIFICATION;
-      } else if (agentVersion.extendedCapabilityId === "spelling-grammar") {
-        analysisPath = SESSION_PATHS.ANALYSIS_SPELLING_GRAMMAR;
-      } else if (agentVersion.extendedCapabilityId === "multi-epistemic-eval") {
-        analysisPath = SESSION_PATHS.ANALYSIS_PLUGINS;
-      }
-      
-      const analysisSessionConfig = sessionConfig ? {
-        ...sessionConfig,
-        sessionPath: analysisPath,
-      } : undefined;
-      
-      const analysisResult = await analyzeDocument(documentForAnalysis, agent, 500, 5, analysisSessionConfig, job.id);
+      // Track the analysis phase with session manager
+      const analysisResult = await (sessionManager 
+        ? sessionManager.trackAnalysis('document', async () => {
+            return analyzeDocument(documentForAnalysis, agent, 500, 5, undefined, job.id);
+          })
+        : analyzeDocument(documentForAnalysis, agent, 500, 5, undefined, job.id));
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
@@ -679,9 +673,8 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         logs: logContent,
       });
 
-      // Log successful completion to session
-      if (sessionConfig) {
-      }
+      // Clear the global session manager on completion
+      setGlobalSessionManager(undefined);
 
       return {
         job,
@@ -689,9 +682,8 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         logContent,
       };
     } catch (error) {
-      // Log failure to session
-      if (sessionConfig) {
-      }
+      // Clear the global session manager on error
+      setGlobalSessionManager(undefined);
       
       await this.markJobAsFailed(job.id, error);
       throw error;
