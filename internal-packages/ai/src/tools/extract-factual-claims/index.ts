@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '../../claude/wrapper';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
 import { generateCacheSeed } from '../shared/cache-utils';
 
 // Claim schema
@@ -143,14 +141,6 @@ ${input.text}
   </requirements>
 </task>`;
     
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/fact-check/extract-factual-claims') : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
     
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed('fact-extract', [
@@ -206,7 +196,6 @@ ${input.text}
         required: ["claims"]
       },
       enablePromptCaching: true,
-      heliconeHeaders,
       cacheSeed
     });
 

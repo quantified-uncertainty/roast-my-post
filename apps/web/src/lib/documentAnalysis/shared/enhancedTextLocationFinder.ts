@@ -3,11 +3,12 @@
  * Includes Helicone session tracking for plugins
  */
 
-import { getLineNumberAtPosition, getLineAtPosition } from "@roast/ai/analysis-plugins/utils/textHelpers";
 import { logger } from "@/lib/logger";
 import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import { sessionContext } from "@roast/ai/server";
-import type { HeliconeSessionConfig } from "@roast/ai";
+import {
+  getLineAtPosition,
+  getLineNumberAtPosition,
+} from "@roast/ai/analysis-plugins/utils/textHelpers";
 
 export interface TextLocation {
   startOffset: number;
@@ -26,8 +27,7 @@ export interface EnhancedLocationOptions {
   context?: string;
   // LLM fallback
   useLLMFallback?: boolean;
-  // Session tracking
-  sessionConfig?: HeliconeSessionConfig;
+  // Plugin metadata
   pluginName?: string; // For metadata
 }
 
@@ -35,10 +35,7 @@ export interface EnhancedLocationOptions {
  * Normalize quotes for comparison (apostrophes, smart quotes, etc)
  */
 function normalizeQuotes(text: string): string {
-  return text
-    .replace(/[""]/g, '"')
-    .replace(/[''ʼ]/g, "'")
-    .replace(/'/g, "'");
+  return text.replace(/[""]/g, '"').replace(/[''ʼ]/g, "'").replace(/'/g, "'");
 }
 
 /**
@@ -54,27 +51,33 @@ async function findWithLLM(
     const schema = {
       properties: {
         found: {
-          type: 'boolean',
-          description: 'Whether the text was found in the document'
+          type: "boolean",
+          description: "Whether the text was found in the document",
         },
         matchedText: {
-          type: 'string',
-          description: 'The actual text found in the document'
+          type: "string",
+          description: "The actual text found in the document",
         },
         startOffset: {
-          type: 'number',
-          description: 'The character position where the matched text starts'
+          type: "number",
+          description: "The character position where the matched text starts",
         },
         endOffset: {
-          type: 'number',
-          description: 'The character position where the matched text ends'
+          type: "number",
+          description: "The character position where the matched text ends",
         },
         confidence: {
-          type: 'number',
-          description: 'Confidence score between 0 and 1'
-        }
+          type: "number",
+          description: "Confidence score between 0 and 1",
+        },
       },
-      required: ['found', 'matchedText', 'startOffset', 'endOffset', 'confidence']
+      required: [
+        "found",
+        "matchedText",
+        "startOffset",
+        "endOffset",
+        "confidence",
+      ],
     };
 
     const prompt = `Find this text in the document. The text might not match exactly due to:
@@ -87,7 +90,7 @@ async function findWithLLM(
 - Paraphrasing or reordering of words
 
 Search text: "${searchText}"
-${context ? `Context: ${context}` : ''}
+${context ? `Context: ${context}` : ""}
 
 Look for the SEMANTIC MEANING, not just exact text. The document might express the same idea with different words.
 
@@ -98,14 +101,14 @@ Find the best match based on meaning. Return the actual text from the document t
 
     const { toolResult } = await callClaudeWithTool({
       model: MODEL_CONFIG.routing, // Use fast model for text finding
-      messages: [{ role: 'user', content: prompt }],
-      toolName: 'find_text_location',
-      toolDescription: 'Find the location of text in a document',
-      toolSchema: { type: 'object', ...schema },
+      messages: [{ role: "user", content: prompt }],
+      toolName: "find_text_location",
+      toolDescription: "Find the location of text in a document",
+      toolSchema: { type: "object", ...schema },
       heliconeHeaders: {
-        'Helicone-Property-Plugin': pluginName,
-        'Helicone-Property-Task': 'text-location-fallback'
-      }
+        "Helicone-Property-Plugin": pluginName,
+        "Helicone-Property-Task": "text-location-fallback",
+      },
     });
 
     const result = toolResult as {
@@ -116,37 +119,43 @@ Find the best match based on meaning. Return the actual text from the document t
       confidence: number;
     };
 
-    logger.debug('LLM fallback result', {
+    logger.debug("LLM fallback result", {
       found: result.found,
       matchedText: result.matchedText?.slice(0, 50),
       confidence: result.confidence,
-      plugin: pluginName
+      plugin: pluginName,
     });
 
     if (result.found && result.matchedText) {
       // Validate the result isn't truncated or partial
       const searchWords = searchText.trim().split(/\s+/);
       const matchWords = result.matchedText.trim().split(/\s+/);
-      
+
       // Check if the match is suspiciously truncated
       if (matchWords.length > 0) {
         const lastMatchWord = matchWords[matchWords.length - 1];
         const lastSearchWord = searchWords[searchWords.length - 1];
-        
+
         // If the last word is truncated (unless search text is also truncated)
-        if (lastMatchWord.length < 3 && lastSearchWord.length >= 3 && 
-            !lastSearchWord.startsWith(lastMatchWord)) {
-          logger.debug('LLM returned truncated match, rejecting', {
+        if (
+          lastMatchWord.length < 3 &&
+          lastSearchWord.length >= 3 &&
+          !lastSearchWord.startsWith(lastMatchWord)
+        ) {
+          logger.debug("LLM returned truncated match, rejecting", {
             searchText: searchText.slice(0, 50),
             matchedText: result.matchedText.slice(0, 50),
-            plugin: pluginName
+            plugin: pluginName,
           });
           return null;
         }
       }
-      
+
       // Verify the offsets
-      const verifiedText = documentText.substring(result.startOffset, result.endOffset);
+      const verifiedText = documentText.substring(
+        result.startOffset,
+        result.endOffset
+      );
       if (verifiedText !== result.matchedText) {
         // Try to find the actual position
         const actualPos = documentText.indexOf(result.matchedText);
@@ -155,9 +164,9 @@ Find the best match based on meaning. Return the actual text from the document t
           result.endOffset = actualPos + result.matchedText.length;
         } else {
           // Match text not found in document at all
-          logger.debug('LLM match not found in document', {
+          logger.debug("LLM match not found in document", {
             matchedText: result.matchedText.slice(0, 50),
-            plugin: pluginName
+            plugin: pluginName,
           });
           return null;
         }
@@ -169,18 +178,18 @@ Find the best match based on meaning. Return the actual text from the document t
         quotedText: result.matchedText,
         lineNumber: getLineNumberAtPosition(documentText, result.startOffset),
         lineText: getLineAtPosition(documentText, result.startOffset),
-        strategy: 'llm',
-        confidence: Math.max(0.7, result.confidence * 0.9)
+        strategy: "llm",
+        confidence: Math.max(0.7, result.confidence * 0.9),
       };
     }
 
-    logger.debug('LLM fallback: text not found', {
+    logger.debug("LLM fallback: text not found", {
       searchText: searchText.slice(0, 50),
-      plugin: pluginName
+      plugin: pluginName,
     });
     return null;
   } catch (error) {
-    logger.error('LLM fallback failed:', error);
+    logger.error("LLM fallback failed:", error);
     return null;
   }
 }
@@ -198,139 +207,135 @@ export async function findTextLocation(
     return null;
   }
 
-  // Set session context if provided
-  if (options.sessionConfig) {
-    sessionContext.setSession(options.sessionConfig);
+  let foundOffset = -1;
+  let matchedText = searchText;
+  let strategy = "exact";
+  let confidence = 1.0;
+
+  // Strategy 1: Exact match
+  foundOffset = documentText.indexOf(searchText);
+
+  // DEBUG: Log exact match attempt
+  if (foundOffset === -1) {
+    logger.info(`❌ Text search: EXACT MATCH FAILED`, {
+      searchText: searchText.slice(0, 50),
+      documentLength: documentText.length,
+      documentPreview: documentText.slice(0, 100),
+      plugin: options.pluginName,
+    });
   }
 
-  try {
-    let foundOffset = -1;
-    let matchedText = searchText;
-    let strategy = 'exact';
-    let confidence = 1.0;
-
-    // Strategy 1: Exact match
-    foundOffset = documentText.indexOf(searchText);
-    
-    // DEBUG: Log exact match attempt
-    if (foundOffset === -1) {
-      logger.info(`❌ Text search: EXACT MATCH FAILED`, {
-        searchText: searchText.slice(0, 50),
-        documentLength: documentText.length,
-        documentPreview: documentText.slice(0, 100),
-        plugin: options.pluginName
-      });
+  // Strategy 2: Normalized quotes (for spelling errors with apostrophes)
+  if (foundOffset === -1 && options.normalizeQuotes) {
+    const normalizedSearch = normalizeQuotes(searchText);
+    const normalizedDoc = normalizeQuotes(documentText);
+    foundOffset = normalizedDoc.indexOf(normalizedSearch);
+    if (foundOffset !== -1) {
+      strategy = "quotes";
+      confidence = 0.95;
+      matchedText = documentText.slice(
+        foundOffset,
+        foundOffset + searchText.length
+      );
     }
-    
-    // Strategy 2: Normalized quotes (for spelling errors with apostrophes)
-    if (foundOffset === -1 && options.normalizeQuotes) {
-      const normalizedSearch = normalizeQuotes(searchText);
-      const normalizedDoc = normalizeQuotes(documentText);
-      foundOffset = normalizedDoc.indexOf(normalizedSearch);
-      if (foundOffset !== -1) {
-        strategy = 'quotes';
-        confidence = 0.95;
-        matchedText = documentText.slice(foundOffset, foundOffset + searchText.length);
-      }
-    }
+  }
 
-    // Strategy 3: Case insensitive (always useful for spelling)
-    if (foundOffset === -1) {
-      const searchLower = searchText.toLowerCase();
-      const docLower = documentText.toLowerCase();
-      foundOffset = docLower.indexOf(searchLower);
-      if (foundOffset !== -1) {
-        strategy = 'case';
-        confidence = 0.9;
-        matchedText = documentText.slice(foundOffset, foundOffset + searchText.length);
-      }
+  // Strategy 3: Case insensitive (always useful for spelling)
+  if (foundOffset === -1) {
+    const searchLower = searchText.toLowerCase();
+    const docLower = documentText.toLowerCase();
+    foundOffset = docLower.indexOf(searchLower);
+    if (foundOffset !== -1) {
+      strategy = "case";
+      confidence = 0.9;
+      matchedText = documentText.slice(
+        foundOffset,
+        foundOffset + searchText.length
+      );
     }
+  }
 
-    // Strategy 4: Partial match (for long quotes)
-    if (foundOffset === -1 && options.partialMatch && searchText.length > 50) {
-      const partial = searchText.slice(0, 50);
-      foundOffset = documentText.indexOf(partial);
-      if (foundOffset !== -1) {
-        strategy = 'partial';
-        confidence = 0.7;
-        matchedText = partial;
-      }
+  // Strategy 4: Partial match (for long quotes)
+  if (foundOffset === -1 && options.partialMatch && searchText.length > 50) {
+    const partial = searchText.slice(0, 50);
+    foundOffset = documentText.indexOf(partial);
+    if (foundOffset !== -1) {
+      strategy = "partial";
+      confidence = 0.7;
+      matchedText = partial;
     }
+  }
 
-    // Strategy 5: Context-based (for spelling errors)
-    if (foundOffset === -1 && options.context) {
-      const contextLower = options.context.toLowerCase();
-      const searchLower = searchText.toLowerCase();
-      const searchIndex = contextLower.indexOf(searchLower);
-      
-      if (searchIndex !== -1) {
-        const beforeText = options.context.substring(Math.max(0, searchIndex - 20), searchIndex).trim();
-        const beforeWords = beforeText.split(/\s+/).slice(-2).join(' ');
-        
-        if (beforeWords) {
-          const pattern = beforeWords + ' ' + searchText;
-          foundOffset = documentText.indexOf(pattern);
-          if (foundOffset !== -1) {
-            foundOffset += beforeWords.length + 1;
-            strategy = 'context';
-            confidence = 0.8;
-          }
+  // Strategy 5: Context-based (for spelling errors)
+  if (foundOffset === -1 && options.context) {
+    const contextLower = options.context.toLowerCase();
+    const searchLower = searchText.toLowerCase();
+    const searchIndex = contextLower.indexOf(searchLower);
+
+    if (searchIndex !== -1) {
+      const beforeText = options.context
+        .substring(Math.max(0, searchIndex - 20), searchIndex)
+        .trim();
+      const beforeWords = beforeText.split(/\s+/).slice(-2).join(" ");
+
+      if (beforeWords) {
+        const pattern = beforeWords + " " + searchText;
+        foundOffset = documentText.indexOf(pattern);
+        if (foundOffset !== -1) {
+          foundOffset += beforeWords.length + 1;
+          strategy = "context";
+          confidence = 0.8;
         }
       }
     }
+  }
 
-    // If traditional methods failed and LLM fallback is enabled
-    if (foundOffset === -1 && options.useLLMFallback) {
-      logger.debug('Traditional methods failed, trying LLM fallback', {
-        searchText: searchText.slice(0, 50),
-        plugin: options.pluginName
-      });
-      
-      const llmResult = await findWithLLM(
-        searchText, 
-        documentText, 
-        options.context,
-        options.pluginName || 'unknown'
-      );
-      
-      if (llmResult) {
-        return llmResult;
-      }
-    }
-
-    // If nothing found, return null
-    if (foundOffset === -1) {
-      logger.debug('Text not found', { 
-        searchText: searchText.slice(0, 50),
-        strategy: 'none',
-        plugin: options.pluginName
-      });
-      return null;
-    }
-
-    // Create the location result
-    const location: TextLocation = {
-      startOffset: foundOffset,
-      endOffset: foundOffset + matchedText.length,
-      quotedText: matchedText,
-      lineNumber: getLineNumberAtPosition(documentText, foundOffset),
-      lineText: getLineAtPosition(documentText, foundOffset),
-      strategy,
-      confidence
-    };
-
-    logger.debug('Text found', {
-      strategy,
-      confidence,
-      preview: matchedText.slice(0, 50),
-      plugin: options.pluginName
+  // If traditional methods failed and LLM fallback is enabled
+  if (foundOffset === -1 && options.useLLMFallback) {
+    logger.debug("Traditional methods failed, trying LLM fallback", {
+      searchText: searchText.slice(0, 50),
+      plugin: options.pluginName,
     });
 
-    return location;
-  } finally {
-    // Clear session context
-    if (options.sessionConfig) {
-      sessionContext.clear();
+    const llmResult = await findWithLLM(
+      searchText,
+      documentText,
+      options.context,
+      options.pluginName || "unknown"
+    );
+
+    if (llmResult) {
+      return llmResult;
     }
   }
+
+  // If nothing found, return null
+  if (foundOffset === -1) {
+    logger.debug("Text not found", {
+      searchText: searchText.slice(0, 50),
+      strategy: "none",
+      plugin: options.pluginName,
+    });
+    return null;
+  }
+
+  // Create the location result
+  const location: TextLocation = {
+    startOffset: foundOffset,
+    endOffset: foundOffset + matchedText.length,
+    quotedText: matchedText,
+    lineNumber: getLineNumberAtPosition(documentText, foundOffset),
+    lineText: getLineAtPosition(documentText, foundOffset),
+    strategy,
+    confidence,
+  };
+
+  logger.debug("Text found", {
+    strategy,
+    confidence,
+    preview: matchedText.slice(0, 50),
+    plugin: options.pluginName,
+  });
+
+  return location;
 }

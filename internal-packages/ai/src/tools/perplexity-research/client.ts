@@ -5,6 +5,7 @@
 
 import { OpenAI } from 'openai';
 import { getConfig } from '../../config';
+import { getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 
 export interface PerplexityOptions {
   model?: 'perplexity/sonar' | 'perplexity/sonar-pro';
@@ -81,12 +82,17 @@ export class PerplexityClient {
     });
 
     try {
+      // Get current session headers for tracking
+      const sessionHeaders = getCurrentHeliconeHeaders();
+      
       const completion = await this.client.chat.completions.create({
         model,
         messages,
         max_tokens: maxTokens,
         temperature,
         stream: false
+      }, {
+        headers: sessionHeaders
       });
       
       if (!completion.choices || completion.choices.length === 0) {

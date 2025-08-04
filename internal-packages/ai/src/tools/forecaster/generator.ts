@@ -11,8 +11,6 @@ import { callClaudeWithTool } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
 import { logger } from "../../shared/logger";
 import { getRandomElement, getPercentileNumber } from "../../shared/types";
-import { sessionContext } from "../../helicone/sessionContext";
-import { createHeliconeHeaders } from "../../helicone/sessions";
 import { perplexityResearchTool } from "../perplexity-research/index";
 
 interface ForecastResponse {
@@ -80,14 +78,6 @@ ${options.question}
   </requirements>
 </task>`;
 
-  // Get session context if available
-  const currentSession = sessionContext.getSession();
-  const sessionConfig = currentSession ? 
-    sessionContext.withPath(`/plugins/forecast/forecaster-generate-${callNumber}`) : 
-    undefined;
-  const heliconeHeaders = sessionConfig ? 
-    createHeliconeHeaders(sessionConfig) : 
-    undefined;
 
   const result = await withTimeout(
     callClaudeWithTool<ForecastResponse>({
@@ -115,8 +105,7 @@ ${options.question}
           },
         },
         required: ["probability", "reasoning"],
-      },
-      heliconeHeaders
+      }
     }),
     DEFAULT_TIMEOUT,
     `Forecast generation timed out after ${DEFAULT_TIMEOUT / 60000} minutes`

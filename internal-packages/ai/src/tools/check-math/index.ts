@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool, MODEL_CONFIG } from '../../claude/wrapper';
 import { categorizeErrorAdvanced, determineSeverityAdvanced } from './errorCategories';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
+// Session management is now automatic through the global session manager
 import { generateCacheSeed } from '../shared/cache-utils';
 import { 
   mathStatusSchema, 
@@ -81,15 +80,6 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
   }
 
   private async analyzeMathStatement(input: CheckMathInput, context: ToolContext): Promise<CheckMathOutput> {
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/math/check-math-statement') : 
-      undefined;
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
-
     // Generate cache seed for consistent responses
     const cacheSeed = generateCacheSeed('math-statement-check', [
       input.statement,
@@ -126,7 +116,7 @@ export class CheckMathTool extends Tool<CheckMathInput, CheckMathOutput> {
         required: ["status", "explanation", "reasoning"]
       },
       enablePromptCaching: true,
-      heliconeHeaders,
+      // Session headers are now added automatically by the wrapper
       cacheSeed
     });
 

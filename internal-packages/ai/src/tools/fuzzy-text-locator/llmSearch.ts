@@ -8,9 +8,6 @@ import {
   callClaudeWithTool,
 } from "../../claude/wrapper";
 import { MODEL_CONFIG } from "../../claude/wrapper";
-import { sessionContext } from "../../helicone/sessionContext";
-import type { HeliconeSessionConfig } from "../../helicone/sessions";
-import { createHeliconeHeaders } from "../../helicone/sessions";
 import { logger } from "../../shared/logger";
 import { LineBasedLocator } from "../../text-location/line-based";
 
@@ -18,7 +15,6 @@ import { TextLocation } from "./types";
 
 export interface LLMSearchOptions {
   context?: string;
-  sessionConfig?: HeliconeSessionConfig;
   pluginName?: string;
 }
 
@@ -281,14 +277,6 @@ export async function llmSearch(
       options.context
     );
 
-    // Set up session tracking if available
-    const sessionConfig = options.sessionConfig || sessionContext.getSession();
-    const heliconeHeaders = sessionConfig
-      ? createHeliconeHeaders({
-          ...sessionConfig,
-          sessionPath: `${sessionConfig.sessionPath}/llm-text-search`,
-        })
-      : undefined;
 
     const result = await callClaudeWithTool<LineBasedMatch>(
       {
@@ -343,7 +331,6 @@ export async function llmSearch(
             "confidence",
           ],
         },
-        heliconeHeaders,
       },
       []
     );

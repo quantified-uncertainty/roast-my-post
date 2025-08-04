@@ -36,7 +36,6 @@ import { ForecastPlugin } from './plugins/forecast';
 
 // Create plugin manager - intelligent chunking is always enabled
 const manager = new PluginManager({
-  sessionConfig: mySessionConfig,  // Optional Helicone session config
   jobId: myJobId,                  // Optional job ID for logging
 });
 

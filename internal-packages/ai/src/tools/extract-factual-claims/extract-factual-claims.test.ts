@@ -4,11 +4,7 @@ import { ToolContext } from '../base/Tool';
 
 // Mock Claude wrapper
 jest.mock('@roast/ai', () => ({
-  callClaudeWithTool: jest.fn(),
-  sessionContext: {
-    getSession: jest.fn().mockReturnValue(null)
-  },
-  createHeliconeHeaders: jest.fn(() => ({}))
+  callClaudeWithTool: jest.fn()
 }));
 
 import { callClaudeWithTool } from '../../claude/wrapper';

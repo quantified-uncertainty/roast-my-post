@@ -1,20 +1,19 @@
-import type { Agent } from "@roast/ai";
 import { logger } from "@/lib/logger";
-import type { Document } from "@roast/ai";
+import type { Agent, Document } from "@roast/ai";
 import {
-  withTimeout,
+  callClaudeWithTool,
   COMPREHENSIVE_ANALYSIS_TIMEOUT,
   DEFAULT_TEMPERATURE,
+  MODEL_CONFIG,
+  withTimeout,
 } from "@roast/ai";
-import { calculateLLMCost } from "../shared/costUtils";
-import type { TaskResult } from "../shared/types";
-import { getComprehensiveAnalysisPrompts } from "./prompts";
-import { createLogDetails } from "../shared/llmUtils";
+
 import { shouldIncludeGrade } from "../shared/agentContext";
+import { calculateLLMCost } from "../shared/costUtils";
+import { createLogDetails } from "../shared/llmUtils";
+import type { TaskResult } from "../shared/types";
 import { handleAnthropicError } from "../utils/anthropicErrorHandler";
-import { callClaudeWithTool, MODEL_CONFIG } from "@roast/ai";
-import type { HeliconeSessionConfig } from "@roast/ai";
-import { createHeliconeHeaders } from "@roast/ai";
+import { getComprehensiveAnalysisPrompts } from "./prompts";
 
 export interface ComprehensiveAnalysisOutputs {
   summary: string;
@@ -33,8 +32,7 @@ export async function generateComprehensiveAnalysis(
   document: Document,
   agentInfo: Agent,
   targetWordCount: number = 2000,
-  targetHighlights: number = 5,
-  sessionConfig?: HeliconeSessionConfig
+  targetHighlights: number = 5
 ): Promise<{ task: TaskResult; outputs: ComprehensiveAnalysisOutputs }> {
   const startTime = Date.now();
   const { systemMessage, userMessage } = getComprehensiveAnalysisPrompts(
@@ -45,7 +43,6 @@ export async function generateComprehensiveAnalysis(
   );
 
   let validationResult: ComprehensiveAnalysisOutputs;
-  let response;
   let interaction;
 
   // Build properties dynamically
@@ -64,13 +61,22 @@ export async function generateComprehensiveAnalysis(
       items: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Unique identifier like 'insight-1'" },
-          location: { type: "string", description: "Line numbers like 'Lines 45-52' or 'Line 78'" },
-          suggestedHighlight: { type: "string", description: "Draft highlight text" }
+          id: {
+            type: "string",
+            description: "Unique identifier like 'insight-1'",
+          },
+          location: {
+            type: "string",
+            description: "Line numbers like 'Lines 45-52' or 'Line 78'",
+          },
+          suggestedHighlight: {
+            type: "string",
+            description: "Draft highlight text",
+          },
         },
-        required: ["id", "location", "suggestedHighlight"]
-      }
-    }
+        required: ["id", "location", "suggestedHighlight"],
+      },
+    },
   };
 
   // Only include grade field for agents that should provide grades
@@ -82,9 +88,6 @@ export async function generateComprehensiveAnalysis(
   }
 
   try {
-    // Prepare helicone headers if session config is provided
-    const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
-    
     const result = await withTimeout(
       callClaudeWithTool<ComprehensiveAnalysisOutputs>({
         model: MODEL_CONFIG.analysis,
@@ -93,20 +96,19 @@ export async function generateComprehensiveAnalysis(
         max_tokens: 8000,
         temperature: DEFAULT_TEMPERATURE,
         toolName: "provide_comprehensive_analysis",
-        toolDescription: "Provide your complete response including summary, main content document, and structured highlight insights",
+        toolDescription:
+          "Provide your complete response including summary, main content document, and structured highlight insights",
         toolSchema: {
           type: "object",
           properties: analysisProperties,
           required: ["summary", "analysis", "highlightInsights"],
         },
-        heliconeHeaders,
-        enablePromptCaching: true // Enable caching for comprehensive analysis system prompt and tools
+        enablePromptCaching: true, // Enable caching for comprehensive analysis system prompt and tools
       }),
       COMPREHENSIVE_ANALYSIS_TIMEOUT,
       `Anthropic API request timed out after ${COMPREHENSIVE_ANALYSIS_TIMEOUT / 60000} minutes`
     );
 
-    response = result.response;
     interaction = result.interaction;
     validationResult = result.toolResult;
   } catch (error: unknown) {
@@ -134,7 +136,9 @@ export async function generateComprehensiveAnalysis(
     !validationResult.highlightInsights ||
     !Array.isArray(validationResult.highlightInsights)
   ) {
-    throw new Error("Anthropic response missing or invalid 'highlightInsights' field");
+    throw new Error(
+      "Anthropic response missing or invalid 'highlightInsights' field"
+    );
   }
 
   // Post-process to fix formatting issues from JSON tool use
@@ -148,31 +152,37 @@ export async function generateComprehensiveAnalysis(
 
   validationResult.summary = fixFormatting(validationResult.summary);
   validationResult.analysis = fixFormatting(validationResult.analysis);
-  
+
   // Fix formatting in highlight insights
-  validationResult.highlightInsights = validationResult.highlightInsights.map(insight => ({
-    ...insight,
-    suggestedHighlight: fixFormatting(insight.suggestedHighlight),
-  }));
-  
+  validationResult.highlightInsights = validationResult.highlightInsights.map(
+    (insight) => ({
+      ...insight,
+      suggestedHighlight: fixFormatting(insight.suggestedHighlight),
+    })
+  );
+
   // Validate highlight count
   if (validationResult.highlightInsights.length < targetHighlights - 1) {
     logger.warn(
       `⚠️ Generated ${validationResult.highlightInsights.length} highlights but requested ${targetHighlights}. ` +
-      `Agent may have found fewer noteworthy points.`
+        `Agent may have found fewer noteworthy points.`
     );
-    
+
     // If we got significantly fewer highlights, consider retrying with stronger instructions
-    if (validationResult.highlightInsights.length < Math.max(1, targetHighlights * 0.6)) {
+    if (
+      validationResult.highlightInsights.length <
+      Math.max(1, targetHighlights * 0.6)
+    ) {
       logger.info(
         `🔄 Attempting retry due to low highlight count (${validationResult.highlightInsights.length}/${targetHighlights})`
       );
-      
+
       // Add a retry flag to track this
-      const retryMessage = `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
+      const retryMessage =
+        `Please ensure you generate exactly ${targetHighlights} highlight insights. ` +
         `Each highlight should reference a specific part of the document. ` +
         `If you cannot find ${targetHighlights} distinct points, create highlights for the most important sections.`;
-      
+
       // For now, just log this - full retry implementation would require restructuring
       logger.info(`Retry message would be: ${retryMessage}`);
     }

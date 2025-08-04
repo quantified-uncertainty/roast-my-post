@@ -11,10 +11,8 @@ import type {
   MathVerificationDetails 
 } from '../shared/math-schemas';
 import { generateCacheSeed } from '../shared/cache-utils';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
-import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { Anthropic } from '@anthropic-ai/sdk';
+import { getGlobalSessionManager, getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 
 // Import types and schemas
 import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
@@ -124,50 +122,15 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     const startTime = Date.now();
     context.logger.info(`[CheckMathWithMathJsTool] Analyzing statement: "${input.statement}"`);
     
-    let sessionId = '';
+    // Check for global session manager
+    const globalManager = getGlobalSessionManager();
+    const currentHeaders = getCurrentHeliconeHeaders();
+    const sessionId = currentHeaders['Helicone-Session-Id'] || `math-standalone-${Date.now()}`;
+    
     let currentPrompt = '';
-    let createdNewSession = false;
     
     try {
-      // Get or extend existing session
-      let sessionConfig: HeliconeSessionConfig | undefined;
-      
-      const existingSession = sessionContext.getSession();
-      if (existingSession) {
-        // EXTEND the existing session path
-        sessionConfig = sessionContext.withPath('/tools/check-math-with-mathjs');
-        
-        // Add tool-specific properties
-        if (sessionConfig) {
-          sessionConfig = sessionContext.withProperties({
-            tool: 'check-math-with-mathjs',
-            operation: 'verify-calculation',
-            statement: input.statement.substring(0, 100)
-          });
-        }
-        
-        sessionId = sessionConfig?.sessionId || '';
-        context.logger.info(`[CheckMathWithMathJsTool] Using existing session: ${sessionId}`);
-      } else {
-        // Create session for standalone execution
-        sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        sessionConfig = {
-          sessionId,
-          sessionName: `Math Agentic Tool - ${input.statement.substring(0, 50)}${input.statement.length > 50 ? '...' : ''}`,
-          sessionPath: '/tools/check-math-with-mathjs',
-          customProperties: {
-            tool: 'check-math-with-mathjs',
-            operation: 'verify-calculation'
-          }
-        };
-        
-        // DON'T call setSession here - just use the config for headers
-        context.logger.info(`[CheckMathWithMathJsTool] Created standalone session: ${sessionId}`);
-        createdNewSession = true;
-      }
-      
-      // Use the session config for Helicone headers
-      const heliconeHeaders = sessionConfig ? createHeliconeHeaders(sessionConfig) : undefined;
+      context.logger.info(`[CheckMathWithMathJsTool] Starting verification with session: ${sessionId}`);
       
       // Simplified system prompt
       const systemPrompt = `You are a mathematical verification agent. Verify if mathematical statements are true, false, or cannot be verified.
@@ -283,8 +246,6 @@ IMPORTANT:
           tool_choice: { type: 'auto' },
           max_tokens: 2000,
           temperature: 0
-        }, {
-          headers: heliconeHeaders
         });
         
         lastResponse = response;
@@ -438,8 +399,7 @@ IMPORTANT:
         }
       };
     } finally {
-      // No need to clean up session since we're not setting it anymore
-      // The original plugin session remains intact
+      // Session cleanup is handled automatically by the global session manager
     }
   }
   

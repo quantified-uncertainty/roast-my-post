@@ -11,10 +11,6 @@ jest.mock('@roast/ai', () => ({
     analysis: "claude-sonnet-test",
     routing: "claude-3-haiku-20240307"
   },
-  sessionContext: {
-    getSession: jest.fn().mockReturnValue(null)
-  },
-  createHeliconeHeaders: jest.fn(() => ({})),
   createMockLLMInteraction: jest.requireActual('@roast/ai').createMockLLMInteraction,
   setupClaudeToolMock: jest.requireActual('@roast/ai').setupClaudeToolMock
 }));

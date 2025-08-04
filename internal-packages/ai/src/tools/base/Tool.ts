@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { logger as defaultLogger } from '../../shared/logger';
+import { getGlobalSessionManager } from '../../helicone/simpleSessionManager';
 
 export interface ToolConfig {
   id: string;
@@ -44,10 +45,25 @@ export abstract class Tool<TInput = any, TOutput = any> {
       throw new Error('Access denied');
     }
     
-    // Execute with hooks
-    await this.beforeExecute(validatedInput, context);
-    const output = await this.execute(validatedInput, context);
-    await this.afterExecute(output, context);
+    // Get global session manager for tracking
+    const sessionManager = getGlobalSessionManager();
+    
+    // Wrap execution in session tracking if available
+    const executeWithTracking = async () => {
+      await this.beforeExecute(validatedInput, context);
+      const output = await this.execute(validatedInput, context);
+      await this.afterExecute(output, context);
+      return output;
+    };
+    
+    let output: TOutput;
+    if (sessionManager) {
+      // Track tool execution in session hierarchy
+      output = await sessionManager.trackTool(this.config.id, executeWithTracking);
+    } else {
+      // Execute without tracking
+      output = await executeWithTracking();
+    }
     
     // Validate output
     return this.outputSchema.parse(output);

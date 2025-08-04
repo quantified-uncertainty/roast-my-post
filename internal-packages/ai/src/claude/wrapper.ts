@@ -2,6 +2,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { createAnthropicClient } from '../utils/anthropic';
 import { ANALYSIS_MODEL, RichLLMInteraction } from '../types';
 import { withRetry } from '../utils/retryUtils';
+import { getCurrentHeliconeHeaders } from '../helicone/simpleSessionManager';
 
 // Centralized model configuration
 export const MODEL_CONFIG = {
@@ -76,11 +77,19 @@ export async function callClaude(
 ): Promise<ClaudeCallResult> {
   const startTime = Date.now();
   
+  // Merge provided headers with global session headers
+  // Priority: provided headers > global session headers
+  const globalHeaders = getCurrentHeliconeHeaders();
+  const baseHeaders = {
+    ...globalHeaders,
+    ...options.heliconeHeaders
+  };
+  
   // If a cache seed is provided, add it to the headers
   const heliconeHeaders = options.cacheSeed ? {
-    ...options.heliconeHeaders,
+    ...baseHeaders,
     'Helicone-Cache-Seed': options.cacheSeed
-  } : options.heliconeHeaders;
+  } : baseHeaders;
   
   const anthropic = createAnthropicClient(heliconeHeaders);
   

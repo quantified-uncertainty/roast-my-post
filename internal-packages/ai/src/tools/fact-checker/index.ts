@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
-import { sessionContext } from "../../helicone/sessionContext";
-import { createHeliconeHeaders } from "../../helicone/sessions";
 import { perplexityResearchTool } from "../perplexity-research";
 import { generateCacheSeed } from "../shared/cache-utils";
 
@@ -118,14 +116,6 @@ export class FactCheckerTool extends Tool<FactCheckerInput, FactCheckerOutput> {
       }
     }
 
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    const sessionConfig = currentSession
-      ? sessionContext.withPath("/plugins/fact-check/fact-checker-verify")
-      : undefined;
-    const heliconeHeaders = sessionConfig
-      ? createHeliconeHeaders(sessionConfig)
-      : undefined;
 
     // Generate cache seed based on content for consistent caching
     const cacheSeed = generateCacheSeed("fact-check", [
@@ -299,7 +289,6 @@ ${input.claim}
         },
         required: ["verdict", "confidence", "explanation"],
       },
-      heliconeHeaders,
       enablePromptCaching: true,
       cacheSeed,
     });

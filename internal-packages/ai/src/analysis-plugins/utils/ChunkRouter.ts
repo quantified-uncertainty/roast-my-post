@@ -9,8 +9,6 @@ import { callClaudeWithTool } from '../../claude/wrapper';
 import { logger } from '../../shared/logger';
 import type { TextChunk } from '../TextChunk';
 import type { SimpleAnalysisPlugin, RoutingExample } from '../types';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
 
 export interface RoutingDecision {
   chunkId: string;
@@ -131,9 +129,6 @@ export class ChunkRouter {
     const systemPrompt = this.buildSystemPrompt();
     const userPrompt = this.buildUserPrompt(chunks);
 
-    // Get session context and create helicone headers
-    const currentSession = sessionContext.getSession();
-    const heliconeHeaders = currentSession ? createHeliconeHeaders(currentSession) : undefined;
     
     const result = await callClaudeWithTool<{ decisions: RoutingDecision[] }>({
       system: systemPrompt,
@@ -143,7 +138,6 @@ export class ChunkRouter {
       }],
       max_tokens: 1000,
       temperature: 0,
-      heliconeHeaders,
       toolName: 'route_chunks',
       toolDescription: 'Decide which plugins should process each text chunk',
       toolSchema: {

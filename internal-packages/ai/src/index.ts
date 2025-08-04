@@ -4,9 +4,14 @@ export * from './claude/testUtils';
 export * from './claude/mockHelpers';
 export * from './helicone/api-client';
 export * from './helicone/costFetcher';
-// Export sessionContext types but not the implementation (uses Node.js built-ins)
-export type { HeliconeSessionConfig } from './helicone/sessions';
-export * from './helicone/sessions';
+// Export the new simple session manager
+export { 
+  HeliconeSessionManager,
+  setGlobalSessionManager,
+  getGlobalSessionManager,
+  getCurrentHeliconeHeaders,
+  type SimpleSessionConfig
+} from './helicone/simpleSessionManager';
 export * from './utils/tokenUtils';
 export * from './utils/anthropic';
 export * from './utils/retryUtils';

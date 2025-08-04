@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 import { callClaudeWithTool } from "../../claude/wrapper";
-import { sessionContext } from "../../helicone/sessionContext";
-import { createHeliconeHeaders } from "../../helicone/sessions";
 import { logger } from "../../shared/logger";
 import { generateCacheSeed } from "../shared/cache-utils";
 
@@ -155,31 +153,6 @@ ${text}
   </requirements>
 </task>`;
 
-    // Get session context if available (should include userId from PluginManager)
-    const currentSession = sessionContext.getSession();
-    let sessionConfig = currentSession ? 
-      sessionContext.withPath('/plugins/forecast/extract-forecasting-claims') : 
-      undefined;
-    
-    // Create fallback session if no current session exists
-    // In production, sessionConfig should always exist with userId from PluginManager
-    if (!sessionConfig && context?.userId) {
-      sessionConfig = { 
-        userId: context.userId, 
-        sessionId: `extract-forecasting-claims-${Date.now()}`, 
-        sessionName: `Extract Forecasting Claims`,
-        sessionPath: `/plugins/forecast/extract-forecasting-claims` 
-      };
-    }
-    
-    // Log warning if no session config (indicates missing userId in production)
-    if (!sessionConfig) {
-      logger.warn('ExtractForecastingClaims: No session config available - Helicone tracking will be disabled');
-    }
-    
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
 
     // Generate cache seed for consistent responses
     const cacheSeed = generateCacheSeed('forecast-extract', [
@@ -204,7 +177,6 @@ ${text}
         toolName: "extract_and_score_forecasts",
         toolDescription:
           "Extract forecast statements and score them for analysis priority",
-        heliconeHeaders,
         cacheSeed,
         toolSchema: {
           type: "object",

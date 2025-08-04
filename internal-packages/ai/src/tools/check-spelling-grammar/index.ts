@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import { Tool, ToolContext } from '../base/Tool';
 import { callClaudeWithTool } from '../../claude/wrapper';
-import { sessionContext } from '../../helicone/sessionContext';
-import { createHeliconeHeaders } from '../../helicone/sessions';
-import type { HeliconeSessionConfig } from '../../helicone/sessions';
 import { generateCacheSeed } from '../shared/cache-utils';
 import { detectLanguageConventionTool } from '../detect-language-convention';
 import type { LanguageConvention, LanguageConventionOption } from '../../shared/types';
@@ -382,32 +379,6 @@ ${textWithLineNumbers}
   6. Remember: ONLY report text that actually exists in the input
 </instructions>`;
 
-    // Get session context if available
-    const currentSession = sessionContext.getSession();
-    let sessionConfig: HeliconeSessionConfig | undefined = undefined;
-    
-    if (currentSession) {
-      // First create a new config with the updated path
-      sessionConfig = sessionContext.withPath('/plugins/spelling/check-spelling-grammar');
-      
-      // Then add properties to the new config (not the original context)
-      if (sessionConfig) {
-        sessionConfig = {
-          ...sessionConfig,
-          customProperties: {
-            ...sessionConfig.customProperties,
-            plugin: 'spelling',
-            operation: 'check-errors',
-            tool: 'check-spelling-grammar',
-            strictness: input.strictness || 'standard'
-          }
-        };
-      }
-    }
-    
-    const heliconeHeaders = sessionConfig ? 
-      createHeliconeHeaders(sessionConfig) : 
-      undefined;
     
     // Generate cache seed
     const cacheSeed = generateCacheSeed('spelling-v2', [
@@ -492,7 +463,6 @@ ${textWithLineNumbers}
         required: ["errors"]
       },
       enablePromptCaching: true,
-      heliconeHeaders,
       cacheSeed
     });
 

@@ -8,8 +8,7 @@
 // Document and Comment types are passed as parameters to avoid circular dependencies
 import type { LLMInteraction } from "./types";
 import type { Comment } from "../shared/types";
-import { sessionContext } from "../helicone/sessionContext";
-import type { HeliconeSessionConfig } from "../helicone/sessions";
+import { HeliconeSessionManager, getGlobalSessionManager } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
 import {
   type JobLogSummary,
@@ -30,7 +29,7 @@ import { FactCheckPlugin } from "./plugins/fact-check";
 import { ForecastPlugin } from "./plugins/forecast";
 
 export interface PluginManagerConfig {
-  sessionConfig?: HeliconeSessionConfig;
+  sessionManager?: HeliconeSessionManager;
   jobId?: string; // For logging integration
   pluginSelection?: PluginSelection; // Optional plugin selection configuration
 }
@@ -74,14 +73,15 @@ export interface FullDocumentAnalysisResult {
 }
 
 export class PluginManager {
-  private sessionConfig?: HeliconeSessionConfig;
+  private sessionManager?: HeliconeSessionManager;
   private startTime: number = 0;
   private pluginLogger: PluginLogger;
   private pluginSelection?: PluginSelection;
   private allPlugins?: Map<PluginType, SimpleAnalysisPlugin>;
 
   constructor(config: PluginManagerConfig = {}) {
-    this.sessionConfig = config.sessionConfig;
+    // Use provided session manager, or fall back to global if available
+    this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
   }
@@ -96,8 +96,24 @@ export class PluginManager {
   ): Promise<SimpleDocumentAnalysisResult> {
     this.startTime = Date.now();
 
-    // Use runWithSession for proper isolation if session config is available
+    // Wrap in session tracking if available
     const runAnalysis = async () => {
+      if (this.sessionManager) {
+        return this.sessionManager.withPath('/plugins', undefined, async () => {
+          return this._runPluginAnalysis(text, plugins);
+        });
+      } else {
+        return this._runPluginAnalysis(text, plugins);
+      }
+    };
+
+    return runAnalysis();
+  }
+
+  private async _runPluginAnalysis(
+    text: string,
+    plugins: SimpleAnalysisPlugin[]
+  ): Promise<SimpleDocumentAnalysisResult> {
       try {
       // Log chunking phase
       this.pluginLogger.log({
@@ -297,8 +313,20 @@ export class PluginManager {
               );
             });
 
+            // Wrap plugin execution in session tracking
+            const executePlugin = async () => {
+              if (this.sessionManager) {
+                // Use withPath instead of trackPlugin since we're already inside /plugins
+                return this.sessionManager.withPath(`/${pluginName}`, { plugin: pluginName }, async () => {
+                  return plugin.analyze(assignedChunks, text);
+                });
+              } else {
+                return plugin.analyze(assignedChunks, text);
+              }
+            };
+
             const result = await Promise.race([
-              plugin.analyze(assignedChunks, text),
+              executePlugin(),
               timeoutPromise,
             ]);
 
@@ -431,17 +459,9 @@ export class PluginManager {
         jobLogString,
       };
       } finally {
-        // Session context is automatically cleaned up by AsyncLocalStorage
+        // Cleanup if needed
       }
-    };
-
-    // Run the analysis with or without session isolation
-    if (this.sessionConfig) {
-      return sessionContext.runWithSession(this.sessionConfig, runAnalysis);
-    } else {
-      return runAnalysis();
     }
-  }
 
   /**
    * High-level document analysis using all available plugins
