@@ -152,9 +152,9 @@ Line 16: More content here.`,
   });
 
   test("handles empty highlightInsights array", async () => {
-    // Skip this test if no API key is available since it requires LLM fallback
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log("Skipping LLM fallback test - no API key available");
+    // Skip this test if no valid API key is available since it requires LLM fallback
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'dummy-key-for-ci') {
+      console.log("Skipping LLM fallback test - no valid API key available");
       return;
     }
 
