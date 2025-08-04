@@ -1094,6 +1094,21 @@ export class DocumentModel {
       const currentVersion = document.versions[0]?.version || 0;
       const newVersion = currentVersion + 1;
 
+      // Parse arrays from strings
+      const authors = data.authors.split(",").map((a) => a.trim());
+      const platforms = data.platforms
+        ? data.platforms.split(",").map((p) => p.trim())
+        : [];
+      const urls = data.urls ? data.urls.split(",").map((u) => u.trim()) : [];
+
+      // Generate markdownPrepend for the new version
+      const markdownPrepend = generateMarkdownPrepend({
+        title: data.title,
+        author: authors[0],
+        platforms,
+        publishedDate: document.publishedDate?.toISOString()
+      });
+
       // Update the document by creating a new version
       const updatedDocument = await tx.document.update({
         where: { id: docId },
@@ -1102,16 +1117,15 @@ export class DocumentModel {
             create: {
               version: newVersion,
               title: data.title,
-              authors: data.authors.split(",").map((a) => a.trim()),
-              urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
-              platforms: data.platforms
-                ? data.platforms.split(",").map((p) => p.trim())
-                : [],
+              authors,
+              urls,
+              platforms,
               intendedAgents: data.intendedAgents
                 ? data.intendedAgents.split(",").map((a) => a.trim())
                 : [],
               content: data.content,
               importUrl: data.importUrl || null,
+              markdownPrepend,
             },
           },
         },
