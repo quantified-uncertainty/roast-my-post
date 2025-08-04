@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 
 interface PageProps {
   params: Promise<{ 

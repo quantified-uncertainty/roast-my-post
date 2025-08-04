@@ -89,7 +89,7 @@ export function EvaluationManagement({ docId, evaluations, availableAgents, isOw
               const totalCost = evaluation.versions?.reduce((sum: number, v: any) => {
                 const price = v.job?.priceInDollars;
                 if (!price) return sum;
-                const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+                const priceNum = typeof price === 'string' ? parseFloat(price) : Number(price);
                 return sum + priceNum;
               }, 0) || 0;
               const avgDuration = versionCount > 0 

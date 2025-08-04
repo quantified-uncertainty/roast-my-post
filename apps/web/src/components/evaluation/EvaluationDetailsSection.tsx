@@ -449,7 +449,8 @@ function evaluationToMarkdown(data: any): string {
       md += `**Status:** ${job.status}\n`;
     }
     if (job.priceInDollars !== null && job.priceInDollars !== undefined) {
-      md += `**Cost:** $${parseFloat(job.priceInDollars.toString()).toFixed(4)}\n`;
+      const price = typeof job.priceInDollars === 'string' ? parseFloat(job.priceInDollars) : job.priceInDollars;
+      md += `**Cost:** $${price.toFixed(4)}\n`;
     }
     if (job.durationInSeconds !== null && job.durationInSeconds !== undefined) {
       md += `**Duration:** ${job.durationInSeconds}s\n`;

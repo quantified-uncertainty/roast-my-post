@@ -1,4 +1,4 @@
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 export async function updateDocumentWithAgents(

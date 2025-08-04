@@ -8,9 +8,21 @@ import Anthropic from '@anthropic-ai/sdk';
  * Accurate token counting using Anthropic's built-in tokenizer
  */
 export class TokenCounter {
-  private static anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder'
-  });
+  private static anthropic: Anthropic | null = null;
+
+  private static getAnthropicClient(): Anthropic {
+    // Only initialize when running on server
+    if (typeof window !== 'undefined') {
+      throw new Error('TokenCounter cannot be used in browser environment');
+    }
+    
+    if (!this.anthropic) {
+      this.anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder'
+      });
+    }
+    return this.anthropic;
+  }
 
   /**
    * Count tokens in text using Anthropic's tokenizer
@@ -19,8 +31,9 @@ export class TokenCounter {
   static async countTokens(text: string, model: string = 'claude-3-sonnet-20240229'): Promise<number> {
     try {
       // Check if the SDK has the beta.messages.countTokens method
-      if (this.anthropic.beta?.messages?.countTokens) {
-        const result = await this.anthropic.beta.messages.countTokens({
+      const anthropic = this.getAnthropicClient();
+      if (anthropic.beta?.messages?.countTokens) {
+        const result = await anthropic.beta.messages.countTokens({
           model: model as any,
           messages: [{ role: 'user', content: text }]
         });

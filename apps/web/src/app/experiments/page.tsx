@@ -56,13 +56,16 @@ export default function ExperimentsPage() {
       );
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please log in to view experiments');
+        }
         throw new Error('Failed to fetch experiments');
       }
       
       const data: ExperimentsResponse = await response.json();
       setExperiments(data.batches);
-    } catch {
-      setError('An error occurred');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,8 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { EvaluationTabs } from "./EvaluationTabs";
-import { RerunButton } from "./RerunButton";
+import { RerunButtonClient } from "./RerunButtonClient";
 import { JobStatusIndicator } from "./JobStatusIndicator";
-import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
 
 interface EvaluationTabsWrapperProps {
   docId: string;
@@ -59,13 +58,11 @@ export async function EvaluationTabsWrapper({
             {isOwner && latestJobStatus && latestJobStatus !== "COMPLETED" && (
               <JobStatusIndicator status={latestJobStatus} size="md" showLabel />
             )}
-            <RerunButton 
+            <RerunButtonClient 
               agentId={agentId}
               documentId={docId}
               isOwner={isOwner}
               hasExistingEvaluation={hasExistingEvaluation}
-              rerunAction={rerunEvaluation}
-              createOrRerunAction={createOrRerunEvaluation}
             />
           </div>
         </div>

@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
 import { checkDocumentOwnership } from "@/lib/document-auth";
 import { serializePrismaResult } from "@/lib/prisma-serializers";
@@ -170,7 +170,8 @@ export default async function EvaluationVersionPage({ params }: PageProps) {
   const agentName = evaluation.agent.versions[0]?.name || "Unknown Agent";
   const agentDescription = evaluation.agent.versions[0]?.description || "";
   const documentTitle = evaluation.document.versions[0]?.title || "Untitled Document";
-  const costInCents = selectedVersion.job?.priceInDollars ? Math.round(parseFloat(selectedVersion.job.priceInDollars.toString()) * 100) : null;
+  const priceString = selectedVersion.job?.priceInDollars as string | null;
+  const costInCents = priceString ? Math.round(parseFloat(priceString) * 100) : null;
   const priceInDollars = selectedVersion.job?.priceInDollars;
   const durationInSeconds = selectedVersion.job?.durationInSeconds;
   

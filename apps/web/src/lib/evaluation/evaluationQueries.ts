@@ -1,4 +1,4 @@
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { fullEvaluationInclude } from "@/lib/prisma/evaluation-includes";
 import { serializePrismaResult, decimalToNumber } from "@/lib/prisma-serializers";
 

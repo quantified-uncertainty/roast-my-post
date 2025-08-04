@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export async function GET(
   request: NextRequest,
@@ -120,8 +121,8 @@ export async function GET(
     const stats = {
       totalEvaluations,
       averageGrade: gradesResult._avg.grade,
-      totalCost: costsResult._sum.priceInDollars ? Math.round(parseFloat(costsResult._sum.priceInDollars.toString()) * 100) : 0,
-      averageCost: costsResult._avg.priceInDollars ? Math.round(parseFloat(costsResult._avg.priceInDollars.toString()) * 100) : 0,
+      totalCost: costsResult._sum.priceInDollars ? Math.round((decimalToNumber(costsResult._sum.priceInDollars) || 0) * 100) : 0,
+      averageCost: costsResult._avg.priceInDollars ? Math.round((decimalToNumber(costsResult._avg.priceInDollars) || 0) * 100) : 0,
       averageTime: timeResult._avg.durationInSeconds || 0,
       successRate,
       uniqueDocuments: uniqueDocuments.length,

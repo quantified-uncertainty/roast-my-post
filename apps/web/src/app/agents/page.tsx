@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import AgentsList from "@/components/AgentsList";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { PageLayout } from "@/components/PageLayout";
 
 export const dynamic = 'force-dynamic';
