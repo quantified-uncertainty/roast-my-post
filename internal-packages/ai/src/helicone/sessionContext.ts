@@ -61,11 +61,12 @@ class SessionContextManager {
    * Create a scoped session with a modified path
    */
   withPath(pathSuffix: string): HeliconeSessionConfig | undefined {
-    if (!this.currentSession) return undefined;
+    const currentSession = this.getSession();
+    if (!currentSession) return undefined;
     
     return {
-      ...this.currentSession,
-      sessionPath: `${this.currentSession.sessionPath}${pathSuffix}`
+      ...currentSession,
+      sessionPath: `${currentSession.sessionPath}${pathSuffix}`
     };
   }
   
@@ -73,12 +74,13 @@ class SessionContextManager {
    * Create a scoped session with additional properties
    */
   withProperties(properties: Record<string, string>): HeliconeSessionConfig | undefined {
-    if (!this.currentSession) return undefined;
+    const currentSession = this.getSession();
+    if (!currentSession) return undefined;
     
     return {
-      ...this.currentSession,
+      ...currentSession,
       customProperties: {
-        ...this.currentSession.customProperties,
+        ...currentSession.customProperties,
         ...properties
       }
     };

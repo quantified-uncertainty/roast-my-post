@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 
 import type { Document } from "@roast/ai";
 import type { Comment as DbComment } from "@/types/databaseTypes";
@@ -83,6 +83,21 @@ export function CommentsColumn({
     return visibleComments.map(({ item }) => dbCommentToAiComment(item));
   }, [visibleComments]);
 
+  // Add timeout to show comments even if highlights fail
+  const [showCommentsAnyway, setShowCommentsAnyway] = useState(false);
+  useEffect(() => {
+    if (!highlightsReady && sortedComments.length > 0 && hasInitialized) {
+      // If highlights haven't loaded after initialization, show comments anyway
+      const timeout = setTimeout(() => {
+        console.warn('Highlights not ready after timeout, showing comments anyway');
+        setShowCommentsAnyway(true);
+      }, 3000); // 3 second timeout
+      return () => clearTimeout(timeout);
+    }
+  }, [highlightsReady, sortedComments.length, hasInitialized]);
+
+  const shouldShowComments = highlightsReady || showCommentsAnyway;
+
   return (
     <CommentErrorBoundary>
       <div 
@@ -90,10 +105,15 @@ export function CommentsColumn({
         style={{ width: `${COMMENT_COLUMN_WIDTH}px`, flexShrink: 0 }}
       >
         <div className="relative" style={{ minHeight: "100%" }}>
-          {!highlightsReady && sortedComments.length > 0 && (
+          {!shouldShowComments && sortedComments.length > 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="mb-3 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-500"></div>
               <div className="text-sm text-gray-500">Loading comments...</div>
+              {showCommentsAnyway && (
+                <div className="mt-2 text-xs text-orange-600">
+                  Some highlights may not be positioned correctly
+                </div>
+              )}
             </div>
           )}
           
@@ -114,7 +134,7 @@ export function CommentsColumn({
                 comment={convertedComments[idx]}
                 index={originalIndex}
                 position={position}
-                isVisible={highlightsReady && hasInitialized && position > 0}
+                isVisible={shouldShowComments && hasInitialized && (position > 0 || showCommentsAnyway)}
                 isSelected={isSelected}
                 isHovered={isHovered}
                 onHover={onCommentHover}

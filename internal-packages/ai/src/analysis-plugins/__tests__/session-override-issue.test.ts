@@ -37,66 +37,41 @@ describe('Session ID Override Issue', () => {
         capturedSessionIds.push(sessionId);
       }
 
-      // Mock response for math extraction
-      if (params.messages?.[0]?.content?.includes('extract')) {
-        return {
-          response: {
-            id: 'test-id',
-            type: 'message' as const,
-            role: 'assistant' as const,
-            content: [{
-              type: 'text' as const,
-              text: JSON.stringify({
-                expressions: [{
-                  originalText: '2 + 2 = 4',
-                  hasError: false,
-                  explanation: 'Simple addition'
-                }]
-              })
-            }],
-            model: 'claude-3',
-            stop_reason: 'end_turn' as const,
-            stop_sequence: null,
-            usage: { input_tokens: 100, output_tokens: 50 }
-          },
-          interaction: {
-            id: 'test-interaction',
-            prompt: '',
-            response: '',
-            tokensUsed: { prompt: 100, completion: 50, total: 150 },
-            model: 'claude-3',
-            toolsUsed: []
-          }
-        };
-      }
-
-      // Mock response for math checking
+      // Return a minimal valid response
       return {
         response: {
-          id: 'test-id-2',
+          id: 'test-id',
           type: 'message' as const,
           role: 'assistant' as const,
           content: [{
             type: 'text' as const,
             text: JSON.stringify({
-              verification: {
-                status: 'verified_true',
-                explanation: 'Correct calculation'
-              }
-            })
+              expressions: [{ originalText: '2 + 2 = 4', hasError: false }],
+              verification: { status: 'verified_true' }
+            }),
+            citations: null
           }],
           model: 'claude-3',
           stop_reason: 'end_turn' as const,
           stop_sequence: null,
-          usage: { input_tokens: 100, output_tokens: 50 }
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            cache_creation_input_tokens: null,
+            cache_read_input_tokens: null,
+            server_tool_use: null,
+            service_tier: null
+          }
         },
         interaction: {
-          id: 'test-interaction-2',
+          id: 'test-interaction',
           prompt: '',
           response: '',
           tokensUsed: { prompt: 100, completion: 50, total: 150 },
           model: 'claude-3',
-          toolsUsed: []
+          toolsUsed: [],
+          timestamp: new Date(),
+          duration: 100
         }
       };
     });
@@ -173,12 +148,20 @@ describe('Session ID Override Issue', () => {
           role: 'assistant' as const,
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({ result: 'ok' })
+            text: JSON.stringify({ result: 'ok' }),
+            citations: null
           }],
           model: 'claude-3',
           stop_reason: 'end_turn' as const,
           stop_sequence: null,
-          usage: { input_tokens: 100, output_tokens: 50 }
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            cache_creation_input_tokens: null,
+            cache_read_input_tokens: null,
+            server_tool_use: null,
+            service_tier: null
+          }
         },
         interaction: {
           id: 'test-interaction',
@@ -186,7 +169,9 @@ describe('Session ID Override Issue', () => {
           response: '',
           tokensUsed: { prompt: 100, completion: 50, total: 150 },
           model: 'claude-3',
-          toolsUsed: []
+          toolsUsed: [],
+          timestamp: new Date(),
+          duration: 100
         }
       };
     });
