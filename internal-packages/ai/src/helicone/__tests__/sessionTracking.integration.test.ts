@@ -7,7 +7,6 @@ import {
 } from '../simpleSessionManager';
 import { PluginManager } from '../../analysis-plugins/PluginManager';
 import { callClaude } from '../../claude/wrapper';
-
 // Mock the claude wrapper to capture API calls
 jest.mock('../../claude/wrapper');
 const mockedCallClaude = jest.mocked(callClaude);
@@ -38,24 +37,8 @@ describe('Helicone Session Tracking Integration', () => {
         timestamp: Date.now()
       });
       
-      // Return mock response based on the call
-      if (options.messages?.[0]?.content?.includes('chunk')) {
-        // Mock response for chunk routing
-        return {
-          content: JSON.stringify({
-            decisions: [
-              { chunkId: 'chunk-1', plugins: ['math', 'fact-check'] },
-              { chunkId: 'chunk-2', plugins: ['fact-check'] }
-            ]
-          })
-        };
-      }
-      
-      // Default mock response
-      return {
-        content: 'Mock response',
-        usage: { total_tokens: 100 }
-      };
+      // Return minimal mock response
+      return {} as any;
     });
   });
   
@@ -236,4 +219,5 @@ The equation 2 + 2 = 5 is incorrect.
     expect(firstCall.headers['Helicone-Session-Id']).toBeUndefined();
     expect(firstCall.path).toBe('/');
   });
+
 });
