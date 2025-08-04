@@ -95,8 +95,8 @@ export class HybridMathErrorWrapper {
         result: this.expression
       },
       {
-        toolName: this.verificationResult.verifiedBy === 'mathjs' ? 'checkMathWithMathJS' : 'checkMathWithLLM',
-        stage: 'verification',
+        toolName: 'check-math-hybrid',
+        stage: 'verification', 
         timestamp: new Date().toISOString(),
         result: this.verificationResult
       }

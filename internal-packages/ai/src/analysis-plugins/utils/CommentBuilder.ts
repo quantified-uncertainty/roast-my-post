@@ -101,11 +101,11 @@ export class CommentBuilder {
         
       case 'math':
         const mathExtract = toolChain.find(t => t.toolName === 'extractMath')?.result;
-        const mathLLM = toolChain.find(t => t.toolName === 'checkMathWithLLM')?.result;
+        const hybridResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
         return {
           ...baseFields,
-          verificationMethod: mathLLM ? 'hybrid' : 'computational',
-          errorType: mathLLM?.errorType,
+          verificationMethod: hybridResult ? 'hybrid' : 'computational',
+          errorType: hybridResult?.llmResult?.errorType,
           complexityScore: mathExtract?.complexityScore
         };
         
@@ -141,9 +141,9 @@ export class CommentBuilder {
       case 'spelling':
         return toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result?.confidence || 100;
       case 'math':
-        const mathLLM = toolChain.find(t => t.toolName === 'checkMathWithLLM')?.result;
-        const mathJS = toolChain.find(t => t.toolName === 'checkMathWithMathJS')?.result;
-        return mathJS ? 95 : (mathLLM?.confidence || 80);
+        const hybridMathResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
+        // High confidence if MathJS verified, medium if LLM only
+        return hybridMathResult?.verifiedBy === 'mathjs' ? 95 : 80;
       case 'forecast':
         return 70; // Medium confidence for forecast analysis
       case 'fact-check':
@@ -160,7 +160,8 @@ export class CommentBuilder {
         const spellingImportance = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result?.importance || 0;
         return spellingImportance >= 80 ? 'high' : spellingImportance >= 50 ? 'medium' : 'low';
       case 'math':
-        const mathSeverity = toolChain.find(t => t.toolName === 'checkMathWithLLM')?.result?.severity;
+        const hybridSeverityResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
+        const mathSeverity = hybridSeverityResult?.llmResult?.severity;
         return mathSeverity === 'critical' ? 'critical' : 
                mathSeverity === 'major' ? 'high' : 
                mathSeverity === 'minor' ? 'medium' : 'low';
@@ -184,8 +185,9 @@ export class CommentBuilder {
         const spell = toolChain.find(t => t.toolName === 'checkSpellingGrammar')?.result;
         return spell?.conciseCorrection || `${spell?.text} → ${spell?.correction}`;
       case 'math':
-        const math = toolChain.find(t => t.toolName === 'extractMath')?.result;
-        return `Math expression: ${math?.originalText}`;
+        const mathExtractResult = toolChain.find(t => t.toolName === 'extractMath')?.result;
+        const hybridVerifyResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
+        return hybridVerifyResult?.statement || `Math expression: ${mathExtractResult?.originalText}`;
       case 'forecast':
         const forecast = toolChain.find(t => t.toolName === 'extractForecastingClaims')?.result;
         return forecast?.rewrittenPredictionText || forecast?.originalText;
@@ -200,12 +202,20 @@ export class CommentBuilder {
   private static extractVerified(toolChain: ToolChainResult[], plugin: string): boolean {
     switch (plugin) {
       case 'math':
-        return !!(toolChain.find(t => t.toolName === 'checkMathWithLLM') || 
-                 toolChain.find(t => t.toolName === 'checkMathWithMathJS'));
+        // Check the actual verification status, not just if tools were called
+        const mathLLMResult = toolChain.find(t => t.toolName === 'checkMathWithLLM')?.result;
+        const mathJSResult = toolChain.find(t => t.toolName === 'checkMathWithMathJS')?.result;
+        const hybridResult = toolChain.find(t => t.toolName === 'check-math-hybrid')?.result;
+        
+        // Check if any verification shows verified_true
+        return mathLLMResult?.status === 'verified_true' || 
+               mathJSResult?.status === 'verified_true' ||
+               hybridResult?.status === 'verified_true';
       case 'forecast':
         return !!toolChain.find(t => t.toolName === 'generateProbabilityForecast');
       case 'fact-check':
-        return !!toolChain.find(t => t.toolName === 'verifyClaimWithLLM');
+        const factResult = toolChain.find(t => t.toolName === 'verifyClaimWithLLM')?.result;
+        return factResult?.verdict === 'true';
       default:
         return false;
     }
