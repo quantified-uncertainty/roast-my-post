@@ -9,10 +9,10 @@ import {
   initializeAI,
   callClaude,
   callClaudeWithTool,
-  PluginManager,
   MathPlugin,
   toolRegistry
 } from '../../index';
+import { PluginManager } from '../../server';
 import { sessionContext, checkSpellingGrammarTool } from '../../server';
 
 describe('@roast/ai Package Integration', () => {

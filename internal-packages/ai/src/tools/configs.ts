@@ -119,6 +119,23 @@ export const perplexityResearchTool = {
   }
 };
 
+// Tool metadata for the tools page
+const toolMetadata = [
+  { ...checkMathTool.config, category: 'analysis', status: 'stable' },
+  { ...checkMathWithMathJsTool.config, category: 'analysis', status: 'beta' },
+  { ...checkMathHybridTool.config, category: 'analysis', status: 'experimental' },
+  { ...factCheckerTool.config, category: 'research', status: 'beta' },
+  { ...forecasterTool.config, category: 'research', status: 'beta' },
+  { ...fuzzyTextLocatorTool.config, category: 'utility', status: 'stable' },
+  { ...documentChunkerTool.config, category: 'utility', status: 'stable' },
+  { ...extractForecastingClaimsTool.config, category: 'analysis', status: 'beta' },
+  { ...extractFactualClaimsTool.config, category: 'analysis', status: 'beta' },
+  { ...checkSpellingGrammarTool.config, category: 'analysis', status: 'stable' },
+  { ...extractMathExpressionsTool.config, category: 'analysis', status: 'beta' },
+  { ...detectLanguageConventionTool.config, category: 'analysis', status: 'beta' },
+  { ...perplexityResearchTool.config, category: 'research', status: 'beta' }
+];
+
 // Tool registry for client-side use
 export const toolRegistry = {
   'check-math': checkMathTool,
@@ -133,5 +150,8 @@ export const toolRegistry = {
   'check-spelling-grammar': checkSpellingGrammarTool,
   'extract-math-expressions': extractMathExpressionsTool,
   'detect-language-convention': detectLanguageConventionTool,
-  'perplexity-research': perplexityResearchTool
+  'perplexity-research': perplexityResearchTool,
+  
+  // Method to get metadata for tools page
+  getMetadata: () => toolMetadata
 };

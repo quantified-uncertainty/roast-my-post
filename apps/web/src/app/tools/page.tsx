@@ -60,7 +60,7 @@ export default function ToolsIndexPage() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {categoryTools.map(tool => {
                   const toolPath = tool.path || `/tools/${tool.id}`;
-                  const toolStatus = tool.status || 'experimental';
+                  const toolStatus = (tool.status as keyof typeof statusColors) || 'experimental';
                   
                   return (
                     <Link

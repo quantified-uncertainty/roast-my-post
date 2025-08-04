@@ -40,9 +40,11 @@ export type {
   MathVerificationStatus
 } from './tools/index';
 
-// Analysis plugins - excluding conflicting types
+// Analysis plugins - types only (implementations use sessionContext)
+export type { 
+  FullDocumentAnalysisResult 
+} from './analysis-plugins/PluginManager';
 export { 
-  PluginManager,
   PluginLogger,
   TextChunk,
   CommentBuilder,
@@ -56,7 +58,6 @@ export {
 
 // Analysis plugin types
 export type { Finding } from './analysis-plugins/types';
-export type { FullDocumentAnalysisResult } from './analysis-plugins/PluginManager';
 
 // Document and agent types (avoid conflicts with existing exports)
 export * from './types/agentSchema';

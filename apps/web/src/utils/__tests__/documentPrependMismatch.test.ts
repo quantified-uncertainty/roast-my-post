@@ -19,7 +19,7 @@ describe('Document Prepend Mismatch Issue', () => {
     title: 'Test Document',
     content: 'This is the actual document content.',
     author: 'Test Author',
-    publishedDate: new Date('2023-01-01'),
+    publishedDate: '2023-01-01T00:00:00.000Z',
     // No markdownPrepend stored
   };
 
@@ -43,7 +43,7 @@ describe('Document Prepend Mismatch Issue', () => {
     expect(displayResult.prependWasGenerated).toBe(true);
     expect(displayResult.prependCharCount).toBeGreaterThan(0);
     
-    console.log('Analysis content length:', analysisContent.length);
+    console.log('Analysis content length:', analysisContent?.length);
     console.log('Display content length:', displayResult.content.length);
     console.log('Prepend char count:', displayResult.prependCharCount);
     console.log('Mismatch offset:', displayResult.prependCharCount);

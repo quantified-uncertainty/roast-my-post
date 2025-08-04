@@ -5,3 +5,6 @@ export * from './helicone/sessionContext';
 
 // Tools system - full implementations (use sessionContext)
 export * from './tools';
+
+// Analysis plugins that use sessionContext
+export { PluginManager } from './analysis-plugins';
