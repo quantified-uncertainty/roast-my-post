@@ -162,15 +162,15 @@ export class VerifiedFact {
     // Use concise verdict with emoji
     let header = "";
     if (verdict === "false") {
-      header = "✗ False";
+      header = "False";
     } else if (verdict === "partially-true") {
-      header = "⚠️ Partially true";
+      header = "Partially true";
     } else if (verdict === "true") {
-      header = "✓ Verified";
+      header = "Verified";
     } else if (verdict === "unverifiable") {
-      header = "❓ Unverifiable";
+      header = "Unverifiable";
     } else {
-      header = "🔍 Needs verification";
+      header = "Needs verification";
     }
 
     // Add confidence if available
