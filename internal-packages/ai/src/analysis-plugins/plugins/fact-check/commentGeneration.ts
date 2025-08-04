@@ -1,6 +1,6 @@
 import type { DocumentLocation } from "../../../shared/types";
 import { CommentSeverity, SEVERITY_STYLES } from "../../utils/comment-styles";
-import { FORMATTING, THRESHOLDS } from "./constants";
+import { THRESHOLDS } from "./constants";
 import type { VerifiedFact } from "./index";
 
 export function generateFactCheckComments(
@@ -17,137 +17,6 @@ export function generateFactCheckComments(
   return {
     description: content,
   };
-}
-
-function getFactLevel(
-  fact: VerifiedFact
-): "error" | "warning" | "info" | "success" {
-  if (fact.verification) {
-    switch (fact.verification.verdict) {
-      case "true":
-        return "success";
-      case "false":
-        return "error";
-      case "partially-true":
-      case "outdated":
-        return "warning";
-      default:
-        return "info";
-    }
-  }
-
-  // Unverified claims based on truth probability
-  if (
-    fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE
-  ) {
-    return "error";
-  }
-  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
-    return "warning";
-  }
-  return "info";
-}
-
-function getCommentTitle(fact: VerifiedFact): string {
-  const wasResearched = fact.factCheckerOutput?.perplexityData ? " 🔍" : "";
-
-  if (fact.verification) {
-    switch (fact.verification.verdict) {
-      case "true":
-        return `Verified${wasResearched}`;
-      case "false":
-        return `False Claim${wasResearched}`;
-      case "partially-true":
-        return `Partially True${wasResearched}`;
-      case "unverifiable":
-        return `Unverifiable${wasResearched}`;
-      case "outdated":
-        return `Outdated${wasResearched}`;
-    }
-  }
-
-  // Unverified claims - show estimated truth probability
-  if (
-    fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE
-  ) {
-    return `🚨 Likely False`;
-  }
-  if (fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LOW) {
-    return `⚠️ Questionable`;
-  }
-  if (fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH) {
-    return `📌 Key Claim`;
-  }
-  return `📊 Factual Claim`;
-}
-
-function getObservation(fact: VerifiedFact): string | undefined {
-  if (fact.verification) {
-    return fact.verification.explanation;
-  }
-
-  // For unverified claims, show truth probability estimate
-  if (
-    !fact.verification &&
-    fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_MEDIUM
-  ) {
-    return `Estimated ${fact.claim.truthProbability}% probability of being true based on initial assessment.`;
-  }
-
-  return undefined;
-}
-
-function getSignificance(fact: VerifiedFact): string | undefined {
-  if (fact.verification) {
-    if (fact.verification.verdict === "false") {
-      return "This claim appears to be inaccurate.";
-    }
-    if (fact.verification.verdict === "partially-true") {
-      return "This claim contains some truth but important details are incorrect or missing.";
-    }
-    if (fact.verification.verdict === "outdated") {
-      return "This information was accurate in the past but is no longer current.";
-    }
-  }
-
-  // For unverified but important claims
-  if (
-    fact.claim.importanceScore >= THRESHOLDS.IMPORTANCE_HIGH &&
-    !fact.verification
-  ) {
-    return "This is a key claim that would benefit from verification or citation.";
-  }
-  if (
-    fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_LIKELY_FALSE &&
-    !fact.verification
-  ) {
-    return "This claim appears questionable and should be carefully reviewed.";
-  }
-
-  return undefined;
-}
-
-function getImportanceScore(fact: VerifiedFact): number {
-  // Base importance from claim scores
-  let importance = fact.claim.importanceScore / FORMATTING.MAX_SCORE;
-
-  // Boost importance for verified false claims
-  if (fact.verification?.verdict === "false") {
-    importance = Math.min(1, importance + 0.3);
-  }
-  // Boost for partially true claims that need clarification
-  else if (fact.verification?.verdict === "partially-true") {
-    importance = Math.min(1, importance + 0.2);
-  }
-  // Boost for likely false unverified claims
-  else if (
-    !fact.verification &&
-    fact.claim.truthProbability <= THRESHOLDS.TRUTH_PROBABILITY_VERY_LOW
-  ) {
-    importance = Math.min(1, importance + 0.2);
-  }
-
-  return importance;
 }
 
 function generateCommentContent(
@@ -277,21 +146,4 @@ function generateCommentContent(
   }
 
   return content;
-}
-
-function formatVerdict(verdict: string): string {
-  switch (verdict) {
-    case "true":
-      return "✓ True";
-    case "false":
-      return "✗ False";
-    case "partially-true":
-      return "⚠️ Partially True";
-    case "unverifiable":
-      return "? Unverifiable";
-    case "outdated":
-      return "⏰ Outdated";
-    default:
-      return verdict;
-  }
 }
