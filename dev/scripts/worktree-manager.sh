@@ -283,7 +283,18 @@ EOF
     pnpm install --silent
     pnpm --filter @roast/db run gen
     
-    # MCP server dependencies are handled by workspace root install
+    # Build MCP server for worktree
+    echo -e "${YELLOW}Building MCP server...${NC}"
+    pnpm --filter @roast/mcp-server run build
+    
+    # Configure MCP servers for this worktree
+    echo -e "${YELLOW}Configuring MCP servers for worktree...${NC}"
+    if [ -f "./dev/scripts/configure-mcp-for-worktree.sh" ]; then
+        ./dev/scripts/configure-mcp-for-worktree.sh "$BRANCH"
+        echo "  ✓ MCP servers configured for worktree"
+    else
+        echo "  ⚠️  MCP configuration script not found"
+    fi
     
     echo ""
     echo -e "${GREEN}✅ Worktree created successfully!${NC}"
@@ -297,10 +308,13 @@ EOF
     echo "  $0 start $BRANCH    # Start all processes"
     echo "  $0 attach $BRANCH   # Attach to tmux session"
     echo ""
-    echo "Claude permissions:"
+    echo "Claude setup:"
     echo "  • Permissions copied from main repo"
-    echo "  • To sync later: ./dev/scripts/sync-claude-permissions.sh"
-    echo "  • For auto-sync: ./dev/scripts/setup-git-hooks.sh"
+    echo "  • MCP servers configured for this worktree"
+    echo "  • ⚠️  RESTART Claude Desktop to see MCP servers"
+    echo ""
+    echo "To restore original MCP config later:"
+    echo "  ./dev/scripts/configure-mcp-for-worktree.sh --restore"
 }
 
 # Start tmux session
