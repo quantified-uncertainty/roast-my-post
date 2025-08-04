@@ -1,4 +1,4 @@
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 import { hashApiKey } from "@/lib/crypto";
 

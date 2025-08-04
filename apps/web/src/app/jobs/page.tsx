@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@roast/db";
 import { formatDistanceToNow } from "date-fns";
+import { serializeJob } from "@/lib/prisma-serializers";
 
 export const dynamic = 'force-dynamic';
 
 export default async function JobsPage() {
-  const jobs = await prisma.job.findMany({
+  const rawJobs = await prisma.job.findMany({
     take: 50, // Reasonable limit for jobs list
     include: {
       evaluation: {
@@ -28,6 +29,9 @@ export default async function JobsPage() {
       createdAt: "desc",
     },
   });
+
+  // Serialize jobs to handle Decimal values
+  const jobs = rawJobs.map(serializeJob);
 
   return (
     <div className="space-y-8">
@@ -113,7 +117,7 @@ export default async function JobsPage() {
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   {job.priceInDollars
-                    ? `$${parseFloat(job.priceInDollars.toString()).toFixed(4)}`
+                    ? `$${Number(job.priceInDollars).toFixed(4)}`
                     : "N/A"}
                 </td>
               </tr>

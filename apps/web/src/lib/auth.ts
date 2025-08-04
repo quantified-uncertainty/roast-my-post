@@ -12,7 +12,7 @@ import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 
 function buildAuthConfig(): NextAuthConfig {
   const providers: Provider[] = [];

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCost } from "@/utils/costCalculator";
 import { prisma } from "@roast/db";
+import { decimalToNumber } from "@/lib/prisma-serializers";
 
 export const dynamic = 'force-dynamic';
 
@@ -51,10 +52,10 @@ async function getDailySpending(userId: string, days: number = 30) {
     const dateKey = job.createdAt.toISOString().split('T')[0];
     const existing = dailySpending.get(dateKey) || { priceInDollars: 0, evaluationCount: 0 };
     
-    // Use priceInDollars if available, otherwise fall back to priceInDollars
+    // Convert Decimal to number and then to cents
     const priceInDollars = job.priceInDollars 
-      ? Math.round(parseFloat(job.priceInDollars.toString()) * 100)
-      : (job.priceInDollars || 0);
+      ? Math.round((decimalToNumber(job.priceInDollars) || 0) * 100)
+      : 0;
     
     existing.priceInDollars += priceInDollars;
     existing.evaluationCount += 1;

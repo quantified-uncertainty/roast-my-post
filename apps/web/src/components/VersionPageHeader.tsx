@@ -1,8 +1,7 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@roast/db";
+import { prisma } from "@/lib/prisma";
 import { PageHeader } from "./PageHeader";
-import { RerunButton } from "./RerunButton";
-import { rerunEvaluation, createOrRerunEvaluation } from "@/app/docs/[docId]/evaluations/actions";
+import { RerunButtonClient } from "./RerunButtonClient";
 
 interface VersionPageHeaderProps {
   title: string;
@@ -39,13 +38,11 @@ export async function VersionPageHeader({
 
   return (
     <PageHeader title={title} layout={layout}>
-      <RerunButton 
+      <RerunButtonClient 
         agentId={agentId}
         documentId={docId}
         isOwner={isOwner}
         hasExistingEvaluation={hasExistingEvaluation}
-        rerunAction={rerunEvaluation}
-        createOrRerunAction={createOrRerunEvaluation}
       />
     </PageHeader>
   );
