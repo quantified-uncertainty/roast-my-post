@@ -85,18 +85,31 @@ export function CommentsColumn({
 
   // Add timeout to show error state if highlights fail
   const [loadingState, setLoadingState] = useState<'loading' | 'error' | 'ready'>('loading');
+  const [loadingStartTime] = useState(Date.now());
+  
   useEffect(() => {
     if (highlightsReady || sortedComments.length === 0) {
       setLoadingState('ready');
-    } else if (!highlightsReady && sortedComments.length > 0 && hasInitialized) {
-      // If highlights haven't loaded after initialization, show error state
-      const timeout = setTimeout(() => {
-        console.warn('Highlights not ready after timeout, showing error state');
-        setLoadingState('error');
-      }, 5000); // 5 second timeout
-      return () => clearTimeout(timeout);
+    } else if (!highlightsReady && sortedComments.length > 0) {
+      // Check if we've been loading for too long
+      const checkTimeout = setInterval(() => {
+        const elapsed = Date.now() - loadingStartTime;
+        if (elapsed > 5000) { // 5 seconds
+          console.warn('Highlights not ready after timeout, showing error state');
+          console.warn('Debug info:', {
+            highlightsReady,
+            hasInitialized,
+            commentCount: sortedComments.length,
+            highlightCacheSize: highlightCache.size
+          });
+          setLoadingState('error');
+          clearInterval(checkTimeout);
+        }
+      }, 500); // Check every 500ms
+      
+      return () => clearInterval(checkTimeout);
     }
-  }, [highlightsReady, sortedComments.length, hasInitialized]);
+  }, [highlightsReady, sortedComments.length, loadingStartTime, hasInitialized, highlightCache.size]);
 
   const shouldShowComments = highlightsReady || loadingState === 'error';
 
