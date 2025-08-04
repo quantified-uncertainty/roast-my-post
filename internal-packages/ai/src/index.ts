@@ -48,7 +48,6 @@ export {
   PluginLogger,
   TextChunk,
   CommentBuilder,
-  ChunkRouter,
   createChunks,
   FactCheckPlugin,
   ForecastPlugin,

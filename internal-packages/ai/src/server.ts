@@ -8,3 +8,4 @@ export * from './tools';
 
 // Analysis plugins that use sessionContext
 export { PluginManager } from './analysis-plugins';
+export { ChunkRouter } from './analysis-plugins';

@@ -14,7 +14,7 @@ export * from './plugins/fact-check';
 export * from './plugins/forecast';
 
 // Utilities
-export * from './utils/ChunkRouter';
+// ChunkRouter moved to server exports (uses sessionContext)
 export * from './utils/CommentBuilder';
 export { createChunks } from './utils/createChunksWithTool';
 export * from './utils/errorBoundary';
