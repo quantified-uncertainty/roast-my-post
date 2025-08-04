@@ -12,6 +12,7 @@ import type {
 } from '../shared/math-schemas';
 import { generateCacheSeed } from '../shared/cache-utils';
 import { Anthropic } from '@anthropic-ai/sdk';
+import { getGlobalSessionManager, getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 
 // Import types and schemas
 import { CheckMathAgenticInput, CheckMathAgenticOutput } from './types';
@@ -121,7 +122,11 @@ export class CheckMathWithMathJsTool extends Tool<CheckMathAgenticInput, CheckMa
     const startTime = Date.now();
     context.logger.info(`[CheckMathWithMathJsTool] Analyzing statement: "${input.statement}"`);
     
-    const sessionId = `math-agentic-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Check for global session manager
+    const globalManager = getGlobalSessionManager();
+    const currentHeaders = getCurrentHeliconeHeaders();
+    const sessionId = currentHeaders['Helicone-Session-Id'] || `math-standalone-${Date.now()}`;
+    
     let currentPrompt = '';
     
     try {
