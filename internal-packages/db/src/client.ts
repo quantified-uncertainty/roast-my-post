@@ -1,5 +1,4 @@
 import { PrismaClient } from '../generated';
-import { generateMarkdownPrepend } from './utils/documentMetadata';
 
 // Extended client type
 function createExtendedClient() {
@@ -16,27 +15,15 @@ function createExtendedClient() {
         fullContent: {
           needs: { 
             content: true, 
-            markdownPrepend: true,
-            title: true,
-            authors: true,
-            platforms: true,
-            createdAt: true
+            markdownPrepend: true
           },
           compute(documentVersion) {
-            // If markdownPrepend exists, use it
+            // Use prepend + content if prepend exists, otherwise just content
             if (documentVersion.markdownPrepend) {
               return documentVersion.markdownPrepend + documentVersion.content;
             }
             
-            // Otherwise generate it for backward compatibility
-            const prepend = generateMarkdownPrepend({
-              title: documentVersion.title,
-              author: documentVersion.authors?.[0],
-              platforms: documentVersion.platforms,
-              publishedDate: documentVersion.createdAt?.toISOString()
-            });
-            
-            return prepend + documentVersion.content;
+            return documentVersion.content;
           },
         },
       },
