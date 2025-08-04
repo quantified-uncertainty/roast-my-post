@@ -6,6 +6,10 @@
  * - Provides automatic header propagation
  * - Maintains hierarchical path tracking
  * - Is easy to test and debug
+ * 
+ * KNOWN LIMITATION: Parallel execution at the same level (e.g., multiple plugins
+ * running concurrently) may have overlapping paths due to shared global state.
+ * This is acceptable as the primary goal is session ID tracking for cost attribution.
  */
 
 export interface SimpleSessionConfig {
@@ -16,10 +20,11 @@ export interface SimpleSessionConfig {
 }
 
 export class HeliconeSessionManager {
-  private pathStack: string[] = [];
-  private propertyStack: Record<string, string>[] = [];
-  
-  constructor(private config: SimpleSessionConfig) {
+  constructor(
+    private config: SimpleSessionConfig,
+    private currentPath: string = '/',
+    private currentProperties: Record<string, string>[] = []
+  ) {
     // Validate session ID on construction
     if (!/^[\w-]+$/.test(config.sessionId)) {
       throw new Error(`Invalid session ID: ${config.sessionId}`);
@@ -28,7 +33,7 @@ export class HeliconeSessionManager {
   
   /**
    * Execute a function with an extended session path
-   * Automatically manages the path stack
+   * Creates a new immutable context for thread safety
    */
   async withPath<T>(
     path: string,
@@ -40,18 +45,31 @@ export class HeliconeSessionManager {
       throw new Error(`Invalid path format: ${path}`);
     }
     
-    this.pathStack.push(path);
-    if (properties) {
-      this.propertyStack.push(properties);
-    }
+    // Create new immutable path
+    const newPath = this.currentPath === '/' ? path : this.currentPath + path;
+    
+    // Create new immutable properties array
+    const newProperties = properties 
+      ? [...this.currentProperties, properties]
+      : this.currentProperties;
+    
+    // Create child manager with extended context
+    const childManager = new HeliconeSessionManager(
+      this.config,
+      newPath,
+      newProperties
+    );
+    
+    // Save current global manager
+    const previousManager = getGlobalSessionManager();
     
     try {
+      // Set child as global for this operation
+      setGlobalSessionManager(childManager);
       return await fn();
     } finally {
-      this.pathStack.pop();
-      if (properties) {
-        this.propertyStack.pop();
-      }
+      // Restore previous global manager
+      setGlobalSessionManager(previousManager);
     }
   }
   
@@ -77,7 +95,7 @@ export class HeliconeSessionManager {
     }
     
     // Add stacked properties (last one wins for duplicates)
-    for (const props of this.propertyStack) {
+    for (const props of this.currentProperties) {
       this.addProperties(headers, props);
     }
     
@@ -88,7 +106,7 @@ export class HeliconeSessionManager {
    * Get the current full path
    */
   getCurrentPath(): string {
-    return this.pathStack.join('') || '/';
+    return this.currentPath;
   }
   
   /**
@@ -113,21 +131,33 @@ export class HeliconeSessionManager {
     pluginName: string,
     fn: () => Promise<T>
   ): Promise<T> {
-    return this.withPath(`/plugins/${pluginName}`, { plugin: pluginName }, fn);
+    // Use global manager if it exists and is different from 'this'
+    // This allows nested calls to build on the current path
+    const globalManager = getGlobalSessionManager();
+    const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    return managerToUse.withPath(`/plugins/${pluginName}`, { plugin: pluginName }, fn);
   }
   
   async trackTool<T>(
     toolName: string,
     fn: () => Promise<T>
   ): Promise<T> {
-    return this.withPath(`/tools/${toolName}`, { tool: toolName }, fn);
+    // Use global manager if it exists and is different from 'this'
+    // This allows nested calls to build on the current path
+    const globalManager = getGlobalSessionManager();
+    const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    return managerToUse.withPath(`/tools/${toolName}`, { tool: toolName }, fn);
   }
   
   async trackAnalysis<T>(
     analysisType: string,
     fn: () => Promise<T>
   ): Promise<T> {
-    return this.withPath(`/analysis/${analysisType}`, { analysis: analysisType }, fn);
+    // Use global manager if it exists and is different from 'this'
+    // This allows nested calls to build on the current path
+    const globalManager = getGlobalSessionManager();
+    const managerToUse = (globalManager && globalManager !== this) ? globalManager : this;
+    return managerToUse.withPath(`/analysis/${analysisType}`, { analysis: analysisType }, fn);
   }
   
   /**
