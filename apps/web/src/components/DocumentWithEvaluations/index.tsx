@@ -57,11 +57,7 @@ export function DocumentWithEvaluations({
       : null
   );
 
-  // Document content already includes prepend from the database query
-  // The Document model now uses fullContent computed field
-  const contentWithMetadata = useMemo(() => {
-    return document.content;
-  }, [document]);
+  // Document content already includes prepend from the database query via fullContent computed field
 
   // Manage truncation cache cleanup
   useEffect(() => {
@@ -90,12 +86,12 @@ export function DocumentWithEvaluations({
           evaluationState={evaluationState}
           onEvaluationStateChange={setEvaluationState}
           document={document}
-          contentWithMetadataPrepend={contentWithMetadata}
+          contentWithMetadataPrepend={document.content}
         />
       ) : (
         <EmptyEvaluationsView
           document={document}
-          contentWithMetadataPrepend={contentWithMetadata}
+          contentWithMetadataPrepend={document.content}
           isOwner={isOwner}
           hasPendingJobs={hasPendingJobs}
           failedJobs={failedJobs}

@@ -24,6 +24,13 @@ function convertPriceToNumber(price: unknown): number {
   return isNaN(converted) ? 0 : converted;
 }
 
+// Helper function to combine markdownPrepend with content (matches Prisma fullContent computed field)
+function getFullContent(version: { markdownPrepend: string | null; content: string }): string {
+  return version.markdownPrepend 
+    ? version.markdownPrepend + version.content 
+    : version.content;
+}
+
 type DocumentWithRelations = {
   id: string;
   publishedDate: Date;
@@ -227,9 +234,7 @@ export class DocumentModel {
       slug: dbDoc.id,
       title: latestVersion.title,
       // Include prepend in content for display (matches what was used during analysis)
-      content: latestVersion.markdownPrepend 
-        ? latestVersion.markdownPrepend + latestVersion.content 
-        : latestVersion.content,
+      content: getFullContent(latestVersion),
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -409,9 +414,7 @@ export class DocumentModel {
       slug: dbDoc.id,
       title: latestVersion.title,
       // Include prepend in content for display (matches what was used during analysis)
-      content: latestVersion.markdownPrepend 
-        ? latestVersion.markdownPrepend + latestVersion.content 
-        : latestVersion.content,
+      content: getFullContent(latestVersion),
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -697,9 +700,7 @@ export class DocumentModel {
         slug: dbDoc.id,
         title: latestVersion.title,
         // Include prepend in content for display (matches what was used during analysis)
-      content: latestVersion.markdownPrepend 
-        ? latestVersion.markdownPrepend + latestVersion.content 
-        : latestVersion.content,
+        content: getFullContent(latestVersion),
         author: latestVersion.authors.join(", "),
         publishedDate: dbDoc.publishedDate.toISOString(),
         url: latestVersion.urls[0] || "",
