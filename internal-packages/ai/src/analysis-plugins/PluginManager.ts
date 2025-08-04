@@ -8,7 +8,7 @@
 // Document and Comment types are passed as parameters to avoid circular dependencies
 import type { LLMInteraction } from "./types";
 import type { Comment } from "../shared/types";
-import { HeliconeSessionManager } from "../helicone/simpleSessionManager";
+import { HeliconeSessionManager, getGlobalSessionManager } from "../helicone/simpleSessionManager";
 import { logger } from "../shared/logger";
 import {
   type JobLogSummary,
@@ -80,7 +80,8 @@ export class PluginManager {
   private allPlugins?: Map<PluginType, SimpleAnalysisPlugin>;
 
   constructor(config: PluginManagerConfig = {}) {
-    this.sessionManager = config.sessionManager;
+    // Use provided session manager, or fall back to global if available
+    this.sessionManager = config.sessionManager || getGlobalSessionManager();
     this.pluginLogger = new PluginLogger(config.jobId);
     this.pluginSelection = config.pluginSelection;
   }
@@ -98,7 +99,7 @@ export class PluginManager {
     // Wrap in session tracking if available
     const runAnalysis = async () => {
       if (this.sessionManager) {
-        return this.sessionManager.trackAnalysis('plugins', async () => {
+        return this.sessionManager.withPath('/plugins', undefined, async () => {
           return this._runPluginAnalysis(text, plugins);
         });
       } else {
@@ -315,7 +316,8 @@ export class PluginManager {
             // Wrap plugin execution in session tracking
             const executePlugin = async () => {
               if (this.sessionManager) {
-                return this.sessionManager.trackPlugin(pluginName, async () => {
+                // Use withPath instead of trackPlugin since we're already inside /plugins
+                return this.sessionManager.withPath(`/${pluginName}`, { plugin: pluginName }, async () => {
                   return plugin.analyze(assignedChunks, text);
                 });
               } else {
