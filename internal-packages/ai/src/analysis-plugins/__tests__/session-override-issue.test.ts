@@ -108,8 +108,8 @@ describe('Session ID Override Issue', () => {
     const expectedSessionId = pluginSessionId;
     const allUsePluginSession = capturedSessionIds.every(id => id === expectedSessionId);
     
-    // This test will FAIL, demonstrating the issue
-    expect(allUsePluginSession).toBe(false); // Currently fails!
+    // This test now PASSES because we fixed the issue!
+    expect(allUsePluginSession).toBe(true); // Fixed!
     
     // What actually happens:
     // - Some IDs might be 'plugin-session-123' (if context is preserved)
