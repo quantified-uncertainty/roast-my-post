@@ -673,20 +673,17 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
         logs: logContent,
       });
 
-      // Clear the global session manager on completion
-      setGlobalSessionManager(undefined);
-
       return {
         job,
         logFilename,
         logContent,
       };
     } catch (error) {
-      // Clear the global session manager on error
-      setGlobalSessionManager(undefined);
-      
       await this.markJobAsFailed(job.id, error);
       throw error;
+    } finally {
+      // Clear the global session manager after job completion
+      setGlobalSessionManager(undefined);
     }
   }
 
