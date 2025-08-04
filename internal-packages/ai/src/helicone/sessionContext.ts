@@ -10,16 +10,34 @@
  * @see https://nodejs.org/api/async_context.html#class-asynclocalstorage
  */
 
-import { AsyncLocalStorage } from 'node:async_hooks';
 import type { HeliconeSessionConfig } from './sessions';
 
+// Dynamic import to handle both Node.js and browser environments
+let AsyncLocalStorage: typeof import('node:async_hooks').AsyncLocalStorage | undefined;
+
+// Only load AsyncLocalStorage in Node.js environments
+if (typeof window === 'undefined') {
+  try {
+    AsyncLocalStorage = require('node:async_hooks').AsyncLocalStorage;
+  } catch {
+    // Ignore errors in environments without async_hooks
+  }
+}
+
 class SessionContextManager {
-  // Use AsyncLocalStorage for proper async isolation
-  private asyncLocalStorage = new AsyncLocalStorage<HeliconeSessionConfig>();
+  // Use AsyncLocalStorage for proper async isolation (Node.js only)
+  private asyncLocalStorage: InstanceType<typeof import('node:async_hooks').AsyncLocalStorage> | undefined;
   
   // Fallback for environments without AsyncLocalStorage
   private fallbackSession: HeliconeSessionConfig | undefined;
   private sessionSetCount = 0;
+  
+  constructor() {
+    // Only initialize AsyncLocalStorage if available
+    if (AsyncLocalStorage) {
+      this.asyncLocalStorage = new AsyncLocalStorage<HeliconeSessionConfig>();
+    }
+  }
   
   /**
    * Set the current session for LLM calls
@@ -37,9 +55,11 @@ class SessionContextManager {
    */
   getSession(): HeliconeSessionConfig | undefined {
     // Try to get from AsyncLocalStorage first
-    const asyncSession = this.asyncLocalStorage.getStore();
-    if (asyncSession) {
-      return asyncSession;
+    if (this.asyncLocalStorage) {
+      const asyncSession = this.asyncLocalStorage.getStore();
+      if (asyncSession) {
+        return asyncSession;
+      }
     }
     
     // Fall back to the global session for backward compatibility
@@ -54,7 +74,18 @@ class SessionContextManager {
     session: HeliconeSessionConfig,
     fn: () => T | Promise<T>
   ): Promise<T> {
-    return this.asyncLocalStorage.run(session, fn);
+    if (this.asyncLocalStorage) {
+      return this.asyncLocalStorage.run(session, fn);
+    }
+    
+    // Fallback: temporarily set the session and run the function
+    const previousSession = this.fallbackSession;
+    this.fallbackSession = session;
+    try {
+      return await fn();
+    } finally {
+      this.fallbackSession = previousSession;
+    }
   }
   
   /**
