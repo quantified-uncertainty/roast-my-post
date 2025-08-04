@@ -26,7 +26,7 @@ if (typeof window === 'undefined') {
 
 class SessionContextManager {
   // Use AsyncLocalStorage for proper async isolation (Node.js only)
-  private asyncLocalStorage: InstanceType<typeof import('node:async_hooks').AsyncLocalStorage> | undefined;
+  private asyncLocalStorage: any | undefined;
   
   // Fallback for environments without AsyncLocalStorage
   private fallbackSession: HeliconeSessionConfig | undefined;
