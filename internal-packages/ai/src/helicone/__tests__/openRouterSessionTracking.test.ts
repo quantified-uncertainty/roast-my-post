@@ -4,6 +4,7 @@ import {
   setGlobalSessionManager,
   getCurrentHeliconeHeaders 
 } from '../simpleSessionManager';
+import { PerplexityClient } from '../../tools/perplexity-research/client';
 
 // Mock OpenAI to capture API calls with headers
 const mockOpenAICreate = jest.fn();
@@ -70,8 +71,6 @@ describe('OpenRouter Session Tracking', () => {
   });
 
   test('PerplexityClient passes session headers to OpenRouter API calls', async () => {
-    // Import PerplexityClient after mocks are set up
-    const { PerplexityClient } = await import('../../tools/perplexity-research/client');
     
     // Set up session manager
     const sessionManager = HeliconeSessionManager.forJob(
@@ -126,7 +125,6 @@ describe('OpenRouter Session Tracking', () => {
   });
 
   test('PerplexityClient works without session manager', async () => {
-    const { PerplexityClient } = await import('../../tools/perplexity-research/client');
     
     // No session manager set
     setGlobalSessionManager(undefined);
@@ -162,7 +160,6 @@ describe('OpenRouter Session Tracking', () => {
         expect(headers['Helicone-Property-JobId']).toBe('header-test-456');
         
         // Simulate what PerplexityClient does - get headers and pass to API
-        const { PerplexityClient } = await import('../../tools/perplexity-research/client');
         const client = new PerplexityClient();
         await client.query('Test with headers');
       });

@@ -466,9 +466,9 @@ export class JobModel {
       // Track the analysis phase with session manager
       const analysisResult = await (sessionManager 
         ? sessionManager.trackAnalysis('document', async () => {
-            return analyzeDocument(documentForAnalysis, agent, 500, 5, undefined, job.id);
+            return analyzeDocument(documentForAnalysis, agent, 500, 5, job.id);
           })
-        : analyzeDocument(documentForAnalysis, agent, 500, 5, undefined, job.id));
+        : analyzeDocument(documentForAnalysis, agent, 500, 5, job.id));
 
       // Extract the outputs and tasks
       const { tasks, ...evaluationOutputs } = analysisResult;
