@@ -25,7 +25,7 @@ export function validateBuildEnvironment() {
 
   // Docker builds use dummy values during build time
   // Real values are injected at runtime in Kubernetes
-  if (process.env.DOCKER_BUILD) {
+  if (process.env.DOCKER_BUILD === 'true' || process.env.DOCKER_BUILD === '1') {
     console.log('📦 Skipping environment validation for Docker build');
     return;
   }
@@ -70,6 +70,6 @@ export function validateBuildEnvironment() {
 
 // Run validation immediately when this module is imported
 // Skip validation during Docker builds since env vars are injected at runtime
-if (process.env.NODE_ENV !== 'test' && !process.env.DOCKER_BUILD) {
+if (process.env.NODE_ENV !== 'test' && process.env.DOCKER_BUILD !== 'true' && process.env.DOCKER_BUILD !== '1') {
   validateBuildEnvironment();
 }
