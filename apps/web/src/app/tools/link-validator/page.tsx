@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, LinkIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
-import { linkValidator } from '@roast/ai/server';
+import { linkValidator, generateLinkAnalysisAndSummary, type LinkAnalysis } from '@roast/ai/server';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const linkValidatorPath = linkValidator.config.path;
@@ -11,6 +11,7 @@ const linkValidatorPath = linkValidator.config.path;
 interface LinkValidation {
   url: string;
   finalUrl?: string;
+  timestamp: Date;
   accessible: boolean;
   error?: {
     type: string;
@@ -75,6 +76,7 @@ export default function LinkValidatorPage() {
       errorBreakdown: Record<string, number>;
     };
   } | null>(null);
+  const [analysis, setAnalysis] = useState<{ analysis: string; summary: string; grade: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,6 +86,7 @@ export default function LinkValidatorPage() {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setAnalysis(null);
 
     try {
       const response = await runToolWithAuth<
@@ -94,6 +97,26 @@ export default function LinkValidatorPage() {
         maxUrls: 50
       });
       setResult(response);
+
+      // Convert validations to LinkAnalysis format for the analysis generator
+      const linkAnalysisResults: LinkAnalysis[] = response!.validations.map(validation => ({
+        url: validation.url,
+        finalUrl: validation.finalUrl,
+        timestamp: new Date(validation.timestamp),
+        accessError: validation.error ? {
+          type: validation.error.type as any,
+          ...(validation.error.message && { message: validation.error.message }),
+          ...(validation.error.statusCode && { statusCode: validation.error.statusCode }),
+        } : undefined,
+        linkDetails: validation.details ? {
+          contentType: validation.details.contentType,
+          statusCode: validation.details.statusCode,
+        } : undefined,
+      }));
+
+      // Generate the analysis and summary
+      const analysisResult = generateLinkAnalysisAndSummary(linkAnalysisResults, "Document");
+      setAnalysis(analysisResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -272,63 +295,38 @@ export default function LinkValidatorPage() {
             )}
 
             {/* Analysis Output Section */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-medium text-gray-900">Analysis Output</h2>
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="prose prose-sm max-w-none">
-                  <h3 className="text-base font-semibold mb-3">Link Analysis Report</h3>
-                  
-                  <div className="mb-4">
-                    <p className="font-medium">Summary:</p>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li>Total URLs found: {result.summary.totalLinks}</li>
-                      <li>Working links: {result.summary.workingLinks} ({result.summary.totalLinks > 0 ? Math.round((result.summary.workingLinks / result.summary.totalLinks) * 100) : 0}%)</li>
-                      <li>Broken links: {result.summary.brokenLinks} ({result.summary.totalLinks > 0 ? Math.round((result.summary.brokenLinks / result.summary.totalLinks) * 100) : 0}%)</li>
-                    </ul>
-                  </div>
+            {analysis && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-medium text-gray-900">Analysis Output</h2>
+                
+                {/* Summary */}
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">Summary</h3>
+                  <p className="text-sm text-blue-800">{analysis.summary}</p>
+                </div>
 
-                  {result.summary.brokenLinks > 0 && (
-                    <div className="mb-4">
-                      <p className="font-medium">Error Types:</p>
-                      <ul className="list-disc list-inside ml-4 space-y-1">
-                        {Object.entries(result.summary.errorBreakdown).map(([type, count]) => (
-                          <li key={type}>
-                            {type}: {count} {count === 1 ? 'link' : 'links'}
-                          </li>
-                        ))}
-                      </ul>
+                {/* Grade */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Document Reliability Score</h3>
+                    <div className={`text-2xl font-bold ${
+                      analysis.grade >= 80 ? 'text-green-600' : 
+                      analysis.grade >= 60 ? 'text-yellow-600' : 
+                      'text-red-600'
+                    }`}>
+                      {analysis.grade}%
                     </div>
-                  )}
-
-                  <div className="mt-4 p-4 bg-white rounded border">
-                    {result.summary.brokenLinks === 0 && result.summary.totalLinks > 0 ? (
-                      <p className="text-green-700 font-medium">✅ All links are working correctly!</p>
-                    ) : result.summary.brokenLinks > 0 ? (
-                      <>
-                        {result.summary.errorBreakdown.Forbidden > result.summary.brokenLinks / 2 ? (
-                          <p className="text-orange-700">
-                            <span className="font-medium">🚫 Access Restrictions Detected:</span> Many links are blocked by access restrictions. 
-                            These sites may be working but block automated validation tools.
-                          </p>
-                        ) : result.summary.errorBreakdown.NotFound > result.summary.brokenLinks / 2 ? (
-                          <p className="text-red-700">
-                            <span className="font-medium">❌ Broken Links Found:</span> Several links appear to be broken or no longer exist. 
-                            These should be updated or removed.
-                          </p>
-                        ) : (
-                          <p className="text-yellow-700">
-                            <span className="font-medium">⚠️ Link Issues Detected:</span> Found various issues with links including 
-                            network errors, timeouts, and access problems.
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-gray-600">No links were found to validate.</p>
-                    )}
                   </div>
                 </div>
+
+                {/* Full Analysis */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ 
+                    __html: analysis.analysis.replace(/\n/g, '<br />').replace(/##/g, '<h3 class="text-base font-semibold mt-4 mb-2">').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  }} />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Raw JSON Output Section */}
             <div className="space-y-4">
