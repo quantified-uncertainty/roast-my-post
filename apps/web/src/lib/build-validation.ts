@@ -23,6 +23,13 @@ export function validateBuildEnvironment() {
   const missing: string[] = [];
   const warnings: string[] = [];
 
+  // Docker builds use dummy values during build time
+  // Real values are injected at runtime in Kubernetes
+  if (process.env.DOCKER_BUILD) {
+    console.log('📦 Skipping environment validation for Docker build');
+    return;
+  }
+
   // Check required variables
   for (const envVar of REQUIRED_ENV_VARS) {
     if (!process.env[envVar]) {
@@ -62,6 +69,7 @@ export function validateBuildEnvironment() {
 }
 
 // Run validation immediately when this module is imported
-if (process.env.NODE_ENV !== 'test') {
+// Skip validation during Docker builds since env vars are injected at runtime
+if (process.env.NODE_ENV !== 'test' && !process.env.DOCKER_BUILD) {
   validateBuildEnvironment();
 }
