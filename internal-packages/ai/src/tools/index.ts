@@ -24,6 +24,14 @@ export { detectLanguageConventionTool } from './detect-language-convention';
 export { default as perplexityResearchTool } from './perplexity-research';
 export { linkValidator } from './link-validator';
 
+// Export link validator utilities and types
+export { 
+  generateLinkHighlights,
+  generateLinkAnalysisAndSummary,
+  generateLinkAnalysisReport,
+  type LinkAnalysis 
+} from './link-validator';
+
 // Export tool-specific types
 export type { DocumentChunkerOutput } from './document-chunker';
 export type { TextLocationFinderOutput } from './fuzzy-text-locator';

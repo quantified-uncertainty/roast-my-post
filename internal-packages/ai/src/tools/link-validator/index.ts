@@ -134,3 +134,19 @@ export const linkValidator = new LinkValidatorTool();
 
 // Also export as default for consistency with other tools
 export default linkValidator;
+
+// Export utility functions for advanced usage
+export { extractUrls } from './urlExtractor';
+export { validateUrl, validateUrls, type LinkAnalysis, type AccessError } from './urlValidator';
+export { 
+  generateLinkHighlights, 
+  findUrlPosition, 
+  formatUrlForDisplay 
+} from './linkHighlightGenerator';
+export { 
+  generateLinkAnalysisAndSummary,
+  generateLinkAnalysisReport,
+  calculateLinkMetrics,
+  calculateLinkGradeFromMetrics,
+  type LinkMetrics
+} from './linkAnalysisReporter';
