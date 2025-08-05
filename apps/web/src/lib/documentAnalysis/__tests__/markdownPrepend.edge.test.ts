@@ -72,7 +72,7 @@ describe("markdownPrepend Edge Cases", () => {
                 {
                   id: "insight-1",
                   location: `Lines ${prependLineCount - 1}-${prependLineCount + 1}`, // Spans boundary
-                  suggestedHighlight: "Comment spanning boundary"
+                  suggestedHighlight: "This is the first line of actual content."
                 }
               ]
             }
@@ -131,7 +131,7 @@ describe("markdownPrepend Edge Cases", () => {
                 {
                   id: "insight-1",
                   location: `Line ${prependLineCount + 1}`, // First line of content
-                  suggestedHighlight: "Boundary comment"
+                  suggestedHighlight: "First content line here."
                 }
               ]
             }
@@ -256,7 +256,7 @@ describe("markdownPrepend Edge Cases", () => {
                 {
                   id: "insight-1",
                   location: `Line ${prependLineCount + 1}`,
-                  suggestedHighlight: "Comment"
+                  suggestedHighlight: "Single line only"
                 }
               ]
             }
@@ -390,7 +390,7 @@ describe("markdownPrepend Edge Cases", () => {
                 {
                   id: "insight-1",
                   location: `Line ${prependLineCount + 1}`,
-                  suggestedHighlight: "Unicode handling"
+                  suggestedHighlight: "Content"
                 }
               ]
             }

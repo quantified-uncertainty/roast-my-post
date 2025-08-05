@@ -44,9 +44,11 @@ export interface CommentMetadata {
 export interface Comment {
   // Required fields 
   description: string;               // Full explanation/analysis text
-  header: string;                    // Brief summary (always provided by plugins)
-  level: 'error' | 'warning' | 'info' | 'success';  // Always provided by plugins
-  source: string;                    // Plugin name (always provided by plugins)
+  
+  // Optional fields for plugin-based comments
+  header?: string;                   // Brief summary (provided by plugins)
+  level?: 'error' | 'warning' | 'info' | 'success';  // Severity level (provided by plugins)
+  source?: string;                   // Plugin name (provided by plugins)
   
   // Optional fields  
   importance?: number;               // Importance score (integer in DB)

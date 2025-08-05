@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react";
 
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
 import { clearTruncationCache, getTruncationCacheSize } from "@/utils/ui/commentPositioning";
 
@@ -58,16 +57,7 @@ export function DocumentWithEvaluations({
       : null
   );
 
-  // Get the full content with prepend using the centralized helper
-  // IMPORTANT: Only use stored prepend, don't generate one if missing
-  // This ensures display matches what was used during analysis
-  const contentWithMetadata = useMemo(() => {
-    const { content } = getDocumentFullContent(document as any, {
-      includePrepend: true,
-      generateIfMissing: false  // Don't generate - only use if stored
-    });
-    return content;
-  }, [document]);
+  // Document content already includes prepend from the database query via fullContent computed field
 
   // Manage truncation cache cleanup
   useEffect(() => {
@@ -96,12 +86,12 @@ export function DocumentWithEvaluations({
           evaluationState={evaluationState}
           onEvaluationStateChange={setEvaluationState}
           document={document}
-          contentWithMetadataPrepend={contentWithMetadata}
+          contentWithMetadataPrepend={document.content}
         />
       ) : (
         <EmptyEvaluationsView
           document={document}
-          contentWithMetadataPrepend={contentWithMetadata}
+          contentWithMetadataPrepend={document.content}
           isOwner={isOwner}
           hasPendingJobs={hasPendingJobs}
           failedJobs={failedJobs}

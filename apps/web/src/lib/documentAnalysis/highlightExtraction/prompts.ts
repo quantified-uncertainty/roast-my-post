@@ -2,13 +2,10 @@ import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { LineBasedLocator } from "@roast/ai/text-location/line-based";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 const documentInformationSection = (document: Document) => {
-  // Get the full content with prepend using the centralized helper
-  const { content: fullContent } = getDocumentFullContent(document);
-  
-  const locator = new LineBasedLocator(fullContent);
+  // Document content already includes prepend from Job.ts
+  const locator = new LineBasedLocator(document.content);
   return `<document>
   <metadata>
     <title>${document.title}</title>

@@ -1,6 +1,5 @@
 import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 export function getLinkAnalysisPrompts(
   agentInfo: Agent,
@@ -22,13 +21,11 @@ For each numbered link:
 
 The analysis focuses on understanding authorial intent and identifying genuine references.`;
 
-  // Get the full content with prepend using the centralized helper
-  const { content: fullContent } = getDocumentFullContent(document);
-
+  // Document content already includes prepend from Job.ts
   const userMessage = `Please analyze the links found in this document:
 
 **Document Content:**
-${fullContent}
+${document.content}
 
 **Links Found (numbered for reference):**
 ${urls.map((url, index) => `${index + 1}. ${url}`).join('\n')}

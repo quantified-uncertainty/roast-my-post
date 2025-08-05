@@ -203,13 +203,6 @@ jest.mock('@roast/ai/server', () => ({
 }));
 
 
-// Mock document content helpers
-jest.mock('../../../../utils/documentContentHelpers', () => ({
-  getDocumentFullContent: jest.fn(doc => ({
-    content: doc.content,
-    prependLineCount: 0
-  }))
-}));
 
 describe('multiEpistemicEval', () => {
   const mockDocument: Document = {
