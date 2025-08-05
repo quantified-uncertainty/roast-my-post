@@ -7,7 +7,7 @@ import {
   generateLinkAnalysisAndSummary
 } from "@roast/ai/server";
 import type { TaskResult } from "../shared/types";
-import { generateLinkAnalysis } from "./generateLinkAnalysisWithTool";
+import { generateLinkAnalysis } from "./";
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 /**
