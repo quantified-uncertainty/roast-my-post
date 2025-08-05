@@ -1,8 +1,9 @@
 import { analyzeDocument } from "../../analyzeDocument";
 import type { Agent, Document } from "@roast/ai";
 
-// Skip these tests if no API key is available
-const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
+// Skip these tests if no API key is available or if using dummy key
+const hasApiKey = !!process.env.ANTHROPIC_API_KEY && 
+  process.env.ANTHROPIC_API_KEY !== 'dummy-key-for-ci';
 
 describe("Comprehensive Analysis Integration Test", () => {
   if (!hasApiKey) {
