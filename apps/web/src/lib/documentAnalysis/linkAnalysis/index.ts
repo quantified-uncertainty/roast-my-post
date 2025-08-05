@@ -24,7 +24,7 @@ export async function generateLinkAnalysis(
     });
     
     // Convert tool results back to LinkAnalysis format for compatibility
-    const linkAnalysisResults: LinkAnalysis[] = toolResult.validations.map((validation: any) => ({
+    const linkAnalysisResults: LinkAnalysis[] = toolResult!.validations.map((validation: any) => ({
       url: validation.url,
       finalUrl: validation.finalUrl,
       timestamp: validation.timestamp,

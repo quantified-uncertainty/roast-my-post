@@ -9,7 +9,6 @@ import {
   withTimeout,
 } from "@roast/ai";
 
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 import type { ComprehensiveAnalysisOutputs } from "../comprehensiveAnalysis";
 import { validateAndConvertHighlights } from "../highlightGeneration/highlightValidator";
 import type { LineBasedHighlight } from "../highlightGeneration/types";
@@ -42,9 +41,8 @@ export async function extractHighlightsFromAnalysis(
     const highlights: Comment[] = [];
     const lineBasedHighlights: LineBasedHighlight[] = [];
 
-    // Get the full content with prepend (same as what was shown to the LLM)
-    const { content: fullContent } = getDocumentFullContent(document);
-    const lines = fullContent.split("\n");
+    // Document content already includes prepend from Job.ts
+    const lines = document.content.split("\n");
 
     // Take up to targetHighlights insights
     // Use all insights provided by the comprehensive analysis
@@ -66,7 +64,7 @@ export async function extractHighlightsFromAnalysis(
       // Use unified location finder for more robust highlighting
       const location = await findHighlightLocation(
         insight.suggestedHighlight,
-        fullContent,
+        document.content,
         {
           lineNumber: startLine,
           contextBefore: lines[startLine - 2] || "",
@@ -74,18 +72,33 @@ export async function extractHighlightsFromAnalysis(
         }
       );
 
-      // Create the highlight either from location finder results or fallback
-      const lineBasedHighlight = location
-        ? createHighlightFromLocation(location, insight)
-        : createFallbackHighlight(lines, startLine, endLine, insight);
-
-      lineBasedHighlights.push(lineBasedHighlight);
+      if (location) {
+        // Successfully found the text
+        const lineBasedHighlight = createHighlightFromLocation(location, insight);
+        lineBasedHighlights.push(lineBasedHighlight);
+      } else {
+        // Location finder failed - try fuzzy text search without line context
+        const fuzzyLocation = await findHighlightLocation(
+          insight.suggestedHighlight,
+          document.content,
+          {} // No line context - pure text search
+        );
+        
+        if (fuzzyLocation) {
+          // Found via fuzzy search
+          const lineBasedHighlight = createHighlightFromLocation(fuzzyLocation, insight);
+          lineBasedHighlights.push(lineBasedHighlight);
+        } else {
+          // Complete failure - skip this highlight
+          logger.warn(`Could not find text anywhere in document: "${insight.suggestedHighlight.substring(0, 100)}..."`);
+        }
+      }
     }
 
-    // Convert to character-based highlights using the full content (with prepend)
+    // Convert to character-based highlights using document content (already has prepend)
     const convertedHighlights = await validateAndConvertHighlights(
       lineBasedHighlights,
-      fullContent
+      document.content
     );
     highlights.push(...convertedHighlights);
 
@@ -241,11 +254,10 @@ export async function extractHighlightsFromAnalysis(
     interaction = result.interaction;
 
     // Convert line-based to character-based highlights
-    // Get the full content with prepend (same as what was shown to the LLM)
-    const { content: fullContent } = getDocumentFullContent(document);
+    // Document content already includes prepend from Job.ts
     highlights = await validateAndConvertHighlights(
       result.toolResult.highlights,
-      fullContent
+      document.content
     );
   } catch (error: unknown) {
     logger.error("Error in highlight extraction:", error);
@@ -312,66 +324,3 @@ function createHighlightFromLocation(
   };
 }
 
-/**
- * Creates a fallback LineBasedHighlight when location finder fails
- *
- * This fallback is necessary because:
- * 1. The location finder might fail on edge cases (e.g., very short text)
- * 2. The LLM-provided line numbers might point to valid content that the fuzzy finder misses
- * 3. We want to preserve all insights from the analysis, even if imperfect
- *
- * The fallback uses the first 10 chars of start line and last 10 chars of end line
- * as anchor points for the highlight validator to work with.
- */
-function createFallbackHighlight(
-  lines: string[],
-  startLine: number,
-  endLine: number,
-  insight: { suggestedHighlight: string }
-): LineBasedHighlight {
-  logger.debug(
-    `Location finder failed for: "${insight.suggestedHighlight}" near line ${startLine}, using fallback`
-  );
-
-  // Get the actual line content (convert from 1-based to 0-based index)
-  const startLineContent = lines[startLine - 1] || "";
-  const endLineContent = lines[endLine - 1] || "";
-
-  // Extract character snippets that will help the validator find the highlight
-  // We use the first 10 chars of start line and last 10 chars of end line
-  const startCharacters = extractStartCharacters(startLineContent);
-  const endCharacters = extractEndCharacters(endLineContent);
-
-  return {
-    description: insight.suggestedHighlight,
-    importance: 5, // Default importance
-    highlight: {
-      startLineIndex: startLine - 1, // Convert to 0-based
-      endLineIndex: endLine - 1,
-      startCharacters,
-      endCharacters,
-    },
-  };
-}
-
-/**
- * Extracts the starting characters from a line for highlight anchoring
- * Returns "..." if the line is empty or only whitespace
- */
-function extractStartCharacters(lineContent: string): string {
-  const trimmed = lineContent.slice(0, 10).trim();
-  return trimmed || "...";
-}
-
-/**
- * Extracts the ending characters from a line for highlight anchoring
- * Returns "..." if the line is empty or only whitespace
- */
-function extractEndCharacters(lineContent: string): string {
-  if (lineContent.length > 10) {
-    const trimmed = lineContent.slice(-10).trim();
-    return trimmed || "...";
-  }
-  const trimmed = lineContent.trim();
-  return trimmed || "...";
-}

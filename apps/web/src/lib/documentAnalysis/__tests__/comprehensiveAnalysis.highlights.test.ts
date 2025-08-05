@@ -90,27 +90,27 @@ Line 5 has the final content.`;
         {
           id: "insight-1",
           location: adjustedRefs[0], // Dynamically calculated
-          suggestedHighlight: "Highlight 1 text"
+          suggestedHighlight: "This is line 1 with some content."
         },
         {
           id: "insight-2", 
           location: adjustedRefs[1], // Dynamically calculated
-          suggestedHighlight: "Highlight 2 text"
+          suggestedHighlight: "Line 2 has different text here.\nLine 3 contains important information."
         },
         {
           id: "insight-3",
           location: adjustedRefs[2], // Dynamically calculated
-          suggestedHighlight: "Highlight 3 text"
+          suggestedHighlight: "Line 3 contains important information."
         },
         {
           id: "insight-4",
           location: adjustedRefs[3], // Dynamically calculated
-          suggestedHighlight: "Highlight 4 text"
+          suggestedHighlight: "Line 4 is just filler text."
         },
         {
           id: "insight-5",
           location: adjustedRefs[4], // Dynamically calculated
-          suggestedHighlight: "Highlight 5 text"
+          suggestedHighlight: "Line 5 has the final content."
         }
       ]
     };
@@ -170,12 +170,12 @@ Line 5 has the final content.`;
         {
           id: "insight-1",
           location: wrongRefs[0], // Dynamically calculated wrong line
-          suggestedHighlight: "Should find 'line 1' text"
+          suggestedHighlight: "This is line 1 with some content."
         },
         {
           id: "insight-2",
           location: wrongRefs[1], // Dynamically calculated
-          suggestedHighlight: "Should find 'IMPORTANT' as 'important'"
+          suggestedHighlight: "Line 3 contains important information."
         }
       ]
     };
@@ -210,17 +210,17 @@ Line 5 has the final content.`;
         {
           id: "insight-1",
           location: "Line 1",
-          suggestedHighlight: "Good highlight"
+          suggestedHighlight: "This is line 1 with some content."
         },
         {
           id: "insight-2",
           location: "Line 999", // Way out of bounds
-          suggestedHighlight: "Bad highlight"
+          suggestedHighlight: "This text does not exist anywhere"
         },
         {
           id: "insight-3",
           location: "Line 3",
-          suggestedHighlight: "Another good highlight"
+          suggestedHighlight: "Line 3 contains important information."
         }
       ]
     };
@@ -245,7 +245,7 @@ Line 5 has the final content.`;
 
     // Should get 2 valid highlights, skipping the invalid one
     expect(highlightResult.outputs.highlights).toHaveLength(2);
-    expect(highlightResult.outputs.highlights[0].description).toBe("Good highlight");
-    expect(highlightResult.outputs.highlights[1].description).toBe("Another good highlight");
+    expect(highlightResult.outputs.highlights[0].description).toBe("This is line 1 with some content.");
+    expect(highlightResult.outputs.highlights[1].description).toBe("Line 3 contains important information.");
   });
 });

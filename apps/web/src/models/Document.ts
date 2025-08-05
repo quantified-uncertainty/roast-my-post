@@ -24,6 +24,13 @@ function convertPriceToNumber(price: unknown): number {
   return isNaN(converted) ? 0 : converted;
 }
 
+// Helper function to combine markdownPrepend with content (matches Prisma fullContent computed field)
+function getFullContent(version: { markdownPrepend: string | null; content: string }): string {
+  return version.markdownPrepend 
+    ? version.markdownPrepend + version.content 
+    : version.content;
+}
+
 type DocumentWithRelations = {
   id: string;
   publishedDate: Date;
@@ -226,7 +233,8 @@ export class DocumentModel {
       id: dbDoc.id,
       slug: dbDoc.id,
       title: latestVersion.title,
-      content: latestVersion.content,
+      // Include prepend in content for display (matches what was used during analysis)
+      content: getFullContent(latestVersion),
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -405,7 +413,8 @@ export class DocumentModel {
       id: dbDoc.id,
       slug: dbDoc.id,
       title: latestVersion.title,
-      content: latestVersion.content,
+      // Include prepend in content for display (matches what was used during analysis)
+      content: getFullContent(latestVersion),
       author: latestVersion.authors.join(", "),
       publishedDate: dbDoc.publishedDate.toISOString(),
       url: latestVersion.urls[0] || "", // Provide empty string as fallback
@@ -690,7 +699,8 @@ export class DocumentModel {
         id: dbDoc.id,
         slug: dbDoc.id,
         title: latestVersion.title,
-        content: latestVersion.content,
+        // Include prepend in content for display (matches what was used during analysis)
+        content: getFullContent(latestVersion),
         author: latestVersion.authors.join(", "),
         publishedDate: dbDoc.publishedDate.toISOString(),
         url: latestVersion.urls[0] || "",
@@ -1085,6 +1095,21 @@ export class DocumentModel {
       const currentVersion = document.versions[0]?.version || 0;
       const newVersion = currentVersion + 1;
 
+      // Parse arrays from strings
+      const authors = data.authors.split(",").map((a) => a.trim());
+      const platforms = data.platforms
+        ? data.platforms.split(",").map((p) => p.trim())
+        : [];
+      const urls = data.urls ? data.urls.split(",").map((u) => u.trim()) : [];
+
+      // Generate markdownPrepend for the new version
+      const markdownPrepend = generateMarkdownPrepend({
+        title: data.title,
+        author: authors[0],
+        platforms,
+        publishedDate: document.publishedDate?.toISOString()
+      });
+
       // Update the document by creating a new version
       const updatedDocument = await tx.document.update({
         where: { id: docId },
@@ -1093,16 +1118,15 @@ export class DocumentModel {
             create: {
               version: newVersion,
               title: data.title,
-              authors: data.authors.split(",").map((a) => a.trim()),
-              urls: data.urls ? data.urls.split(",").map((u) => u.trim()) : [],
-              platforms: data.platforms
-                ? data.platforms.split(",").map((p) => p.trim())
-                : [],
+              authors,
+              urls,
+              platforms,
               intendedAgents: data.intendedAgents
                 ? data.intendedAgents.split(",").map((a) => a.trim())
                 : [],
               content: data.content,
               importUrl: data.importUrl || null,
+              markdownPrepend,
             },
           },
         },
