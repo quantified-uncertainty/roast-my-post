@@ -67,6 +67,19 @@ export async function analyzeLinkDocument(
     fullContent, // Pass the full content for correct position finding
     targetHighlights
   );
+  
+  // Only adjust highlight offsets if the document content doesn't already include prepend
+  // Check if document.content starts with the same content as fullContent (indicating prepend is already included)
+  const needsOffsetAdjustment = prepend.length > 0 && !document.content.startsWith(prepend);
+  
+  const adjustedHighlights = needsOffsetAdjustment ? highlights.map(highlight => ({
+    ...highlight,
+    highlight: highlight.highlight ? {
+      ...highlight.highlight,
+      startOffset: highlight.highlight.startOffset - prepend.length,
+      endOffset: highlight.highlight.endOffset - prepend.length
+    } : undefined
+  })) : highlights;
 
   return {
     thinking: linkAnalysisResult.outputs.thinking,
@@ -74,7 +87,7 @@ export async function analyzeLinkDocument(
     summary,
     grade,
     selfCritique: undefined, // Link analysis doesn't generate selfCritique
-    highlights,
+    highlights: adjustedHighlights,
     tasks,
   };
 }
