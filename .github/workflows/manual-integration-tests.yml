@@ -88,6 +88,21 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: roast_my_post_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -119,6 +134,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate Prisma Client
+        run: pnpm --filter @roast/db run gen
+
+      - name: Push database schema
+        run: pnpm --filter @roast/db run db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
+
       - name: Start test run notification
         run: |
           echo "🧪 **Starting Test Run**" >> $GITHUB_STEP_SUMMARY
@@ -134,9 +157,14 @@ jobs:
           echo "Executing: ${{ needs.setup.outputs.test-command }}"
           
           # Set up environment variables
-          export DATABASE_URL="${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/roast_my_post?schema=public' }}"
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/roast_my_post_test"
+          export AUTH_SECRET="test-secret-for-ci-only"
+          export NEXTAUTH_URL="http://localhost:3000"
           
-          # Only set API key for LLM tests
+          # Set dummy API key for build-time validation (overridden for LLM tests)
+          export ANTHROPIC_API_KEY="dummy-key-for-ci"
+          
+          # Only set real API key for LLM tests
           if [[ "${{ github.event.inputs.test_suite }}" == "llm" || "${{ github.event.inputs.test_suite }}" == "all" ]]; then
             if [[ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]]; then
               echo "❌ ANTHROPIC_API_KEY not set - cannot run LLM tests"
