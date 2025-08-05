@@ -72,14 +72,18 @@ export async function analyzeLinkDocument(
   // Check if document.content starts with the same content as fullContent (indicating prepend is already included)
   const needsOffsetAdjustment = prepend.length > 0 && !document.content.startsWith(prepend);
   
-  const adjustedHighlights = needsOffsetAdjustment ? highlights.map(highlight => ({
-    ...highlight,
-    highlight: highlight.highlight ? {
-      ...highlight.highlight,
-      startOffset: highlight.highlight.startOffset - prepend.length,
-      endOffset: highlight.highlight.endOffset - prepend.length
-    } : undefined
-  })) : highlights;
+  const adjustedHighlights = needsOffsetAdjustment 
+    ? highlights
+        .filter(highlight => highlight.highlight) // Only keep highlights with valid highlight data
+        .map(highlight => ({
+          ...highlight,
+          highlight: {
+            ...highlight.highlight!,
+            startOffset: highlight.highlight!.startOffset - prepend.length,
+            endOffset: highlight.highlight!.endOffset - prepend.length
+          }
+        }))
+    : highlights.filter(highlight => highlight.highlight); // Also filter for consistency
 
   return {
     thinking: linkAnalysisResult.outputs.thinking,
