@@ -38,6 +38,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
   private gradeResult?: ReturnType<typeof calculateGrade>;
   private strictness: 'minimal' | 'standard' | 'thorough' = 'standard';
   private processingStartTime: number = 0;
+  private llmCallCount: number = 0;
 
   name(): string {
     return "SPELLING";
@@ -165,6 +166,8 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
           }
         );
 
+        // Track that we made an LLM call
+        this.llmCallCount++;
 
         logger.info(`SpellingAnalyzer: Chunk ${chunk.id} returned ${result.errors.length} errors`);
 
@@ -342,7 +345,8 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
     
     logger.info("SpellingAnalyzer: Detected conventions", {
       language: this.languageConvention.convention,
-      languageConfidence: this.languageConvention.confidence
+      languageConfidence: this.languageConvention.confidence,
+      consistency: this.languageConvention.consistency
     });
   }
 
@@ -423,7 +427,7 @@ export class SpellingAnalyzerJob implements SimpleAnalysisPlugin {
       errorsCount: this.errors.length,
       commentsCount: this.comments.length,
       totalCost: this.totalCost,
-      llmInteractionsCount: 0,
+      llmInteractionsCount: this.llmCallCount,
     };
   }
 }

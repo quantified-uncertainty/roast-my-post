@@ -99,12 +99,12 @@ And some more content on the final line.`;
         {
           id: "insight-1",
           location: adjustedRefs[0], // Dynamically calculated
-          suggestedHighlight: "Good opening statement"
+          suggestedHighlight: "This is the main content"
         },
         {
           id: "insight-2",
           location: adjustedRefs[1], // Dynamically calculated
-          suggestedHighlight: "Link to example.com"
+          suggestedHighlight: "https://example.com"
         },
       ],
     };

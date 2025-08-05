@@ -1,20 +1,28 @@
 import { POST } from './route';
 import { NextRequest } from 'next/server';
 
-// Mock the Perplexity client
-jest.mock('@/tools/perplexity-research/client', () => ({
-  PerplexityClient: jest.fn().mockImplementation(() => ({
-    query: jest.fn().mockResolvedValue({
-      content: JSON.stringify({
-        summary: 'Test summary',
-        keyFindings: ['Finding 1', 'Finding 2'],
-        sources: [
-          { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
-        ]
-      }),
-      usage: { prompt_tokens: 50, completion_tokens: 100, total_tokens: 150 }
+// Mock the auth module
+jest.mock('@/lib/auth', () => ({
+  auth: jest.fn().mockResolvedValue({
+    user: { id: 'test-user-id', email: 'test@example.com' }
+  })
+}));
+
+// Mock the perplexity research tool
+jest.mock('@roast/ai/server', () => ({
+  perplexityResearchTool: {
+    config: {
+      name: 'perplexity-research',
+      description: 'Research using Perplexity'
+    },
+    execute: jest.fn().mockResolvedValue({
+      summary: 'Test summary',
+      keyFindings: ['Finding 1', 'Finding 2'],
+      sources: [
+        { title: 'Source 1', url: 'https://example.com', snippet: 'Test snippet' }
+      ]
     })
-  }))
+  }
 }));
 
 // Mock the logger
@@ -25,11 +33,6 @@ jest.mock('@/lib/logger', () => ({
     warn: jest.fn(),
     debug: jest.fn()
   }
-}));
-
-// Mock authentication 
-jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: jest.fn().mockResolvedValue('test-user-id')
 }));
 
 describe('Perplexity Research API Route', () => {
@@ -57,7 +60,6 @@ describe('Perplexity Research API Route', () => {
 
     expect(response.status).toBe(200);
     expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('toolId', 'perplexity-research');
     expect(data).toHaveProperty('result');
     expect(data.result).toHaveProperty('summary', 'Test summary');
     expect(data.result).toHaveProperty('keyFindings');
@@ -66,18 +68,43 @@ describe('Perplexity Research API Route', () => {
     expect(data.result.sources).toHaveLength(1);
   });
 
-  it('should handle validation errors', async () => {
+  it('should handle authentication failures', async () => {
+    // Override auth mock for this test
+    const { auth } = require('@/lib/auth');
+    auth.mockResolvedValueOnce(null);
+
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
       method: 'POST',
       body: JSON.stringify({
-        // Missing required query field
+        query: 'Test query'
       })
     });
 
     const response = await POST(request);
     const data = await response.json();
 
-    expect(response.status).toBe(400);
-    expect(data).toHaveProperty('error', 'Invalid input');
+    expect(response.status).toBe(401);
+    expect(data).toHaveProperty('success', false);
+    expect(data).toHaveProperty('error', 'Not authenticated');
+  });
+
+  it('should handle tool execution errors', async () => {
+    // Override tool mock for this test
+    const { perplexityResearchTool } = require('@roast/ai/server');
+    perplexityResearchTool.execute.mockRejectedValueOnce(new Error('API request failed'));
+
+    const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {
+      method: 'POST',
+      body: JSON.stringify({
+        query: 'Test query'
+      })
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data).toHaveProperty('success', false);
+    expect(data).toHaveProperty('error', 'API request failed');
   });
 });

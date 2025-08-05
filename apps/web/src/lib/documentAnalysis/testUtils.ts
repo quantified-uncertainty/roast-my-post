@@ -43,6 +43,9 @@ export function createTestDocument(
       publishedDate: doc.publishedDate
     });
     
+    // Add prepend to the actual content
+    extendedDoc.content = prepend + content;
+    
     extendedDoc.versions = [{
       markdownPrepend: prepend
     }];

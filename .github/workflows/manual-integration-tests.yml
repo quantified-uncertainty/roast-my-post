@@ -1,0 +1,211 @@
+name: Manual Integration Tests
+
+# Manual trigger only - you control when this runs
+on:
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which test suite to run'
+        required: true
+        default: 'integration'
+        type: choice
+        options:
+          - 'integration'
+          - 'llm'
+          - 'all'
+      test_pattern:
+        description: 'Test pattern (optional - leave empty for all)'
+        required: false
+        type: string
+        default: ''
+      max_cost_dollars:
+        description: 'Maximum cost limit in dollars'
+        required: false
+        type: string
+        default: '2.00'
+      send_slack_notification:
+        description: 'Send Slack notification when complete'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      test-command: ${{ steps.build-command.outputs.command }}
+      estimated-cost: ${{ steps.estimate.outputs.cost }}
+      estimated-time: ${{ steps.estimate.outputs.time }}
+    steps:
+      - name: Build Test Command
+        id: build-command
+        run: |
+          case "${{ github.event.inputs.test_suite }}" in
+            "integration")
+              if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                COMMAND="pnpm --filter @roast/web run test:integration --testNamePattern='${{ github.event.inputs.test_pattern }}'"
+              else
+                COMMAND="pnpm --filter @roast/web run test:integration"
+              fi
+              ;;
+            "llm")
+              if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                COMMAND="pnpm --filter @roast/web run test:llm --testNamePattern='${{ github.event.inputs.test_pattern }}'"
+              else
+                COMMAND="pnpm --filter @roast/web run test:llm"
+              fi
+              ;;
+            "all")
+              COMMAND="pnpm --filter @roast/web run test:without-llms && pnpm --filter @roast/web run test:llm"
+              ;;
+          esac
+          echo "command=$COMMAND" >> $GITHUB_OUTPUT
+
+      - name: Estimate Cost and Time
+        id: estimate
+        run: |
+          case "${{ github.event.inputs.test_suite }}" in
+            "integration")
+              echo "cost=0.00" >> $GITHUB_OUTPUT
+              echo "time=10" >> $GITHUB_OUTPUT
+              ;;
+            "llm")
+              if [[ -n "${{ github.event.inputs.test_pattern }}" ]]; then
+                echo "cost=0.50" >> $GITHUB_OUTPUT
+                echo "time=15" >> $GITHUB_OUTPUT
+              else
+                echo "cost=1.50" >> $GITHUB_OUTPUT
+                echo "time=30" >> $GITHUB_OUTPUT
+              fi
+              ;;
+            "all")
+              echo "cost=1.50" >> $GITHUB_OUTPUT
+              echo "time=40" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+  run-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Start test run notification
+        run: |
+          echo "🧪 **Starting Test Run**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Suite**: ${{ github.event.inputs.test_suite }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pattern**: ${{ github.event.inputs.test_pattern || 'All tests' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Estimated Cost**: \$${{ needs.setup.outputs.estimated-cost }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Estimated Time**: ${{ needs.setup.outputs.estimated-time }} minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Started**: $(date)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Tests
+        id: run-tests
+        run: |
+          echo "Executing: ${{ needs.setup.outputs.test-command }}"
+          
+          # Set up environment variables
+          export DATABASE_URL="${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/roast_my_post?schema=public' }}"
+          
+          # Only set API key for LLM tests
+          if [[ "${{ github.event.inputs.test_suite }}" == "llm" || "${{ github.event.inputs.test_suite }}" == "all" ]]; then
+            if [[ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]]; then
+              echo "❌ ANTHROPIC_API_KEY not set - cannot run LLM tests"
+              exit 1
+            fi
+            export ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}"
+          fi
+          
+          # Record start time
+          START_TIME=$(date +%s)
+          
+          # Run the tests with timeout protection
+          timeout 2400 bash -c '${{ needs.setup.outputs.test-command }}' || TEST_EXIT_CODE=$?
+          
+          # Record end time and calculate duration
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+          echo "exit_code=${TEST_EXIT_CODE:-0}" >> $GITHUB_OUTPUT
+
+      - name: Generate Test Report
+        if: always()
+        run: |
+          EXIT_CODE="${{ steps.run-tests.outputs.exit_code }}"
+          DURATION="${{ steps.run-tests.outputs.duration }}"
+          
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "$EXIT_CODE" == "0" ]]; then
+            echo "✅ **Status**: All tests passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status**: Tests failed (exit code: $EXIT_CODE)" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "⏱️ **Duration**: ${DURATION} seconds ($((DURATION/60)) minutes)" >> $GITHUB_STEP_SUMMARY
+          echo "💰 **Estimated Cost**: \$${{ needs.setup.outputs.estimated-cost }}" >> $GITHUB_STEP_SUMMARY
+          echo "🔧 **Suite**: ${{ github.event.inputs.test_suite }}" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 **Pattern**: ${{ github.event.inputs.test_pattern || 'All tests' }}" >> $GITHUB_STEP_SUMMARY
+          echo "📅 **Completed**: $(date)" >> $GITHUB_STEP_SUMMARY
+          
+          # Add link to logs
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[📋 View detailed logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send Slack Notification
+        if: always() && github.event.inputs.send_slack_notification == 'true'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          custom_payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} Integration Tests ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Integration Test Results*\n• Suite: ${{ github.event.inputs.test_suite }}\n• Duration: ${{ steps.run-tests.outputs.duration }} seconds\n• Cost: ~$${{ needs.setup.outputs.estimated-cost }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.event.inputs.test_suite }}-${{ github.run_number }}
+          path: |
+            apps/web/coverage/
+            apps/web/test-results/
+            apps/web/*.log
+          retention-days: 7
+
+  cleanup:
+    needs: [setup, run-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log test completion
+        run: |
+          echo "Manual test run completed:"
+          echo "- Suite: ${{ github.event.inputs.test_suite }}"
+          echo "- Exit Code: ${{ needs.run-tests.outputs.exit_code || 'N/A' }}"
+          echo "- Duration: ${{ needs.run-tests.outputs.duration || 'N/A' }} seconds"
+          echo "- Triggered by: ${{ github.actor }}"

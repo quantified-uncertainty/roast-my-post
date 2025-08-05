@@ -5,6 +5,7 @@ import type { Agent } from '@roast/ai';
 
 // Mock only the external dependencies (LLM calls), not the internal components
 jest.mock('@roast/ai', () => ({
+  ...jest.requireActual('@roast/ai'), // Keep all actual exports
   MODEL_CONFIG: {
     analysis: 'claude-sonnet-4-20250514',
     routing: 'claude-3-haiku-20240307',

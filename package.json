@@ -28,6 +28,7 @@
     "db:studio": "pnpm --filter @roast/db db:studio",
     "process-jobs": "pnpm --filter @roast/web run process-jobs",
     "process-jobs-adaptive": "pnpm --filter @roast/web run process-jobs-adaptive",
+    "test:manual": "dotenv -e apps/web/.env.local -- node scripts/run-integration-tests.js",
     "cleanup-stale-jobs": "pnpm --filter @roast/web run cleanup-stale-jobs",
     "test-helicone-sessions": "pnpm --filter @roast/web run test-helicone-sessions",
     "helicone-cost-report": "pnpm --filter @roast/web run helicone-cost-report",

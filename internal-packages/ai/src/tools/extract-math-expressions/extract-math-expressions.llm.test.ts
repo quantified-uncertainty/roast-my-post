@@ -189,7 +189,7 @@ But if we miscalculate: 1000 × 1.08 × 10 = $10,800 (wrong method!)
         e.originalText.includes('10,800') || e.originalText.includes('1.08 × 10')
       );
       expect(compoundError?.hasError).toBe(true);
-      expect(compoundError?.errorType).toContain('Error');
+      expect(compoundError?.errorType).toBe('conceptual');
       expect(compoundError?.conciseCorrection).toBeTruthy();
     });
 
