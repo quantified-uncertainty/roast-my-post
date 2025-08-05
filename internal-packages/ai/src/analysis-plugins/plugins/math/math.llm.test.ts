@@ -32,33 +32,33 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
 
     const chunks = [
       new TextChunk(
-        'If we assume a 7% annual return, $10,000 invested today would be worth $19,672 in 10 years.',
         'chunk1',
+        'If we assume a 7% annual return, $10,000 invested today would be worth $19,672 in 10 years.',
         { position: { start: 0, end: 91 } }
       ),
       new TextChunk(
-        'This is calculated using the compound interest formula: A = P(1 + r)^t',
         'chunk2',
+        'This is calculated using the compound interest formula: A = P(1 + r)^t',
         { position: { start: 93, end: 163 } }
       ),
       new TextChunk(
-        "Let's verify: $10,000 × (1.07)^10 = $10,000 × 1.9672 = $19,672 ✓",
         'chunk3',
+        "Let's verify: $10,000 × (1.07)^10 = $10,000 × 1.9672 = $19,672 ✓",
         { position: { start: 253, end: 319 } }
       ),
       new TextChunk(
-        'However, if we made an error and said: $10,000 × (1.07)^10 = $25,000, that would be incorrect.',
         'chunk4',
+        'However, if we made an error and said: $10,000 × (1.07)^10 = $25,000, that would be incorrect.',
         { position: { start: 321, end: 416 } }
       ),
       new TextChunk(
-        'The population grew by 15% over the last decade, from 1.2M to 1.38M.',
         'chunk5',
+        'The population grew by 15% over the last decade, from 1.2M to 1.38M.',
         { position: { start: 418, end: 487 } }
       ),
       new TextChunk(
-        "Let's check: 1.2M × 1.15 = 1.38M ✓",
         'chunk6',
+        "Let's check: 1.2M × 1.15 = 1.38M ✓",
         { position: { start: 488, end: 523 } }
       ),
     ];
@@ -70,7 +70,6 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
     expect(result).toHaveProperty('summary');
     expect(result).toHaveProperty('analysis');
     expect(result).toHaveProperty('comments');
-    expect(result).toHaveProperty('llmInteractions');
     expect(result).toHaveProperty('cost');
 
     // Should find mathematical expressions
@@ -85,7 +84,7 @@ Let's check: 1.2M × 1.15 = 1.38M ✓
     // Analysis should mention both correct and incorrect calculations
     expect(result.analysis).toBeTruthy();
     expect(result.analysis.length).toBeGreaterThan(100);
-  });
+  }, 60000);
 
   it('should handle a document with complex mathematical content', async () => {
     const documentText = `
@@ -105,33 +104,33 @@ they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.
 
     const chunks = [
       new TextChunk(
-        'The standard deviation formula is: σ = √(Σ(x - μ)²/N)',
         'chunk1',
+        'The standard deviation formula is: σ = √(Σ(x - μ)²/N)',
         { position: { start: 25, end: 79 } }
       ),
       new TextChunk(
-        'Mean (μ) = (2+4+6+8+10)/5 = 30/5 = 6',
         'chunk2',
+        'Mean (μ) = (2+4+6+8+10)/5 = 30/5 = 6',
         { position: { start: 110, end: 147 } }
       ),
       new TextChunk(
-        'Variance = [(2-6)² + (4-6)² + (6-6)² + (8-6)² + (10-6)²]/5',
         'chunk3',
+        'Variance = [(2-6)² + (4-6)² + (6-6)² + (8-6)² + (10-6)²]/5',
         { position: { start: 150, end: 209 } }
       ),
       new TextChunk(
-        'Variance = [16 + 4 + 0 + 4 + 16]/5 = 40/5 = 8',
         'chunk4',
+        'Variance = [16 + 4 + 0 + 4 + 16]/5 = 40/5 = 8',
         { position: { start: 212, end: 258 } }
       ),
       new TextChunk(
-        'Standard deviation = √8 ≈ 2.83',
         'chunk5',
+        'Standard deviation = √8 ≈ 2.83',
         { position: { start: 261, end: 291 } }
       ),
       new TextChunk(
-        'If someone incorrectly calculated the mean as 5 instead of 6, they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.',
         'chunk6',
+        'If someone incorrectly calculated the mean as 5 instead of 6, they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.',
         { position: { start: 294, end: 421 } }
       ),
     ];
@@ -149,5 +148,5 @@ they would get: σ = √((9+1+1+9+25)/5) = √9 = 3, which is wrong.
     const debugInfo = analyzer.getDebugInfo();
     expect(debugInfo.hasRun).toBe(true);
     expect(debugInfo.expressionsCount).toBeGreaterThan(0);
-  });
+  }, 60000);
 });

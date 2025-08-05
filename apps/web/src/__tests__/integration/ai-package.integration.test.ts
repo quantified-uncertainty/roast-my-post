@@ -15,7 +15,7 @@ describe("@roast/ai Package Integration in Web App", () => {
 
     // Verify tools are available
     expect(checkSpellingGrammarTool).toBeDefined();
-    expect(checkSpellingGrammarTool.config.name).toBe("check-spelling-grammar");
+    expect(checkSpellingGrammarTool.config.name).toBe("Check Spelling & Grammar");
 
     // Verify plugin system is available
     expect(PluginManager).toBeDefined();
