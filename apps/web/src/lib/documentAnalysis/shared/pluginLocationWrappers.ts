@@ -158,6 +158,8 @@ export async function findHighlightLocation(
   let searchOptions: TextLocationOptions = {
     caseSensitive: false,
     normalizeQuotes: true,
+    maxTypos: 3,           // Allow up to 3 character differences
+    partialMatch: true,    // Allow partial matches for long text
     pluginName: 'highlight'
   };
   

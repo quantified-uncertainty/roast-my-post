@@ -1,4 +1,4 @@
-import { validateUrl, UrlValidationInput } from "@/lib/urlValidator/index";
+import { validateUrl, UrlValidationInput } from "./urlValidator";
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -153,6 +153,127 @@ describe("urlValidator", () => {
       if (result.accessError?.type === "Timeout") {
         expect(result.accessError.duration).toBeGreaterThanOrEqual(0);
       }
+    });
+
+    it("should handle SSL/TLS certificate errors", async () => {
+      // Mock SSL error
+      (global.fetch as jest.Mock).mockRejectedValue(new Error("CERT_HAS_EXPIRED"));
+
+      const input: UrlValidationInput = {
+        url: "https://expired-cert.example.com",
+      };
+
+      const result = await validateUrl(input);
+
+      expect(result.url).toBe("https://expired-cert.example.com");
+      expect(result.accessError).toBeDefined();
+      expect(result.accessError?.type).toBe("NetworkError");
+      if (result.accessError?.type === "NetworkError") {
+        expect(result.accessError.message).toBe("SSL/TLS certificate error");
+        expect(result.accessError.retryable).toBe(false);
+      }
+    });
+
+    it("should handle 403 Forbidden errors", async () => {
+      // Mock 403 response
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 403,
+        headers: {
+          get: jest.fn().mockReturnValue("text/html"),
+        },
+      });
+
+      const input: UrlValidationInput = {
+        url: "https://example.com/protected",
+      };
+
+      const result = await validateUrl(input);
+
+      expect(result.url).toBe("https://example.com/protected");
+      expect(result.accessError).toBeDefined();
+      expect(result.accessError?.type).toBe("Forbidden");
+      if (result.accessError?.type === "Forbidden") {
+        expect(result.accessError.statusCode).toBe(403);
+      }
+    });
+
+    it("should handle rate limiting (429) errors", async () => {
+      // Mock 429 response
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: {
+          get: jest.fn((header) => {
+            if (header === "x-ratelimit-reset") return "1700000000";
+            return null;
+          }),
+        },
+      });
+
+      const input: UrlValidationInput = {
+        url: "https://api.example.com/endpoint",
+      };
+
+      const result = await validateUrl(input);
+
+      expect(result.url).toBe("https://api.example.com/endpoint");
+      expect(result.accessError).toBeDefined();
+      expect(result.accessError?.type).toBe("RateLimited");
+      if (result.accessError?.type === "RateLimited") {
+        expect(result.accessError.resetTime).toBe(1700000000);
+      }
+    });
+
+    it("should handle server errors (5xx)", async () => {
+      // Mock 500 response
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: {
+          get: jest.fn().mockReturnValue("text/html"),
+        },
+      });
+
+      const input: UrlValidationInput = {
+        url: "https://example.com/broken",
+      };
+
+      const result = await validateUrl(input);
+
+      expect(result.url).toBe("https://example.com/broken");
+      expect(result.accessError).toBeDefined();
+      expect(result.accessError?.type).toBe("ServerError");
+      if (result.accessError?.type === "ServerError") {
+        expect(result.accessError.statusCode).toBe(500);
+      }
+    });
+
+    it("should try multiple strategies before giving up", async () => {
+      // Mock failures for first two strategies, success on third
+      (global.fetch as jest.Mock)
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          url: "https://example.com",
+          headers: {
+            get: jest.fn().mockReturnValue("text/html"),
+          },
+        });
+
+      const input: UrlValidationInput = {
+        url: "https://example.com",
+      };
+
+      const result = await validateUrl(input);
+
+      expect(result.url).toBe("https://example.com");
+      expect(result.accessError).toBeUndefined();
+      expect(result.linkDetails).toBeDefined();
+      expect(global.fetch).toHaveBeenCalledTimes(3);
     });
   });
 });

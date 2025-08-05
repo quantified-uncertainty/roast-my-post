@@ -15,7 +15,6 @@ import {
   setGlobalSessionManager,
 } from "@roast/ai";
 import { fetchJobCostWithRetry } from "@roast/ai";
-import { getDocumentFullContent } from "../utils/documentContentHelpers";
 
 export class JobModel {
   /**
@@ -430,17 +429,12 @@ export class JobModel {
         throw new Error("Agent version not found");
       }
 
-      // Prepare document for analysis
-      // Include markdownPrepend in content to ensure consistent text positions
-      const fullContent = documentVersion.markdownPrepend 
-        ? documentVersion.markdownPrepend + documentVersion.content 
-        : documentVersion.content;
-      
+      // Prepare document for analysis using Prisma's computed fullContent field
       const documentForAnalysis = {
         id: job.evaluation.document.id,
         slug: job.evaluation.document.id,
         title: documentVersion.title,
-        content: fullContent,
+        content: documentVersion.fullContent, // Use computed field directly
         author: documentVersion.authors.join(", "),
         publishedDate: job.evaluation.document.publishedDate.toISOString(),
         url: documentVersion.urls[0],

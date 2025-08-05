@@ -1,9 +1,8 @@
 /**
  * Extracts URLs from document content using regex patterns
  * Filters out images and email addresses
- * Limits to 20 URLs maximum
  */
-export function extractUrls(content: string): string[] {
+export function extractUrls(content: string, maxUrls: number = 20): string[] {
   // Use an array to collect URLs with their positions to maintain document order
   const urlsWithPositions: { url: string; position: number }[] = [];
   const seenUrls = new Set<string>();
@@ -78,8 +77,8 @@ export function extractUrls(content: string): string[] {
     .map(item => item.url)
     .filter(url => isValidLinkUrl(url));
   
-  // Limit to 20 URLs
-  return filteredUrls.slice(0, 20);
+  // Limit to maxUrls
+  return filteredUrls.slice(0, maxUrls);
 }
 
 /**

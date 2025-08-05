@@ -1,6 +1,5 @@
 import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
-import { getDocumentFullContent } from "../../../utils/documentContentHelpers";
 
 export function getComprehensiveAnalysisPrompts(
   agentInfo: Agent,
@@ -43,11 +42,9 @@ Important formatting notes:
 
 ${agentInfo.providesGrades ? "\nInclude a grade (0-100) with justification based on your grading criteria." : ""}`;
 
-  // Get the full content with prepend using the centralized helper
-  const { content: fullContent } = getDocumentFullContent(document);
-
+  // Document content already includes prepend from Job.ts
   // Number the lines exactly like in highlight extraction
-  const numberedContent = fullContent
+  const numberedContent = document.content
     .split("\n")
     .map((line, i) => `${(i + 1).toString().padStart(4, " ")} ${line}`)
     .join("\n");

@@ -12,6 +12,7 @@ import extractMathExpressionsTool from './extract-math-expressions';
 import documentChunkerTool from './document-chunker';
 import fuzzyTextLocatorTool from './fuzzy-text-locator';
 import { detectLanguageConventionTool } from './detect-language-convention';
+import { linkValidator } from './link-validator';
 
 // Tool registry to manage all available tools
 export class ToolRegistry {
@@ -32,6 +33,7 @@ export class ToolRegistry {
     this.register(documentChunkerTool);
     this.register(fuzzyTextLocatorTool);
     this.register(detectLanguageConventionTool);
+    this.register(linkValidator);
   }
   
   register(tool: Tool): void {

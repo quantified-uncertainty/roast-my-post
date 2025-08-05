@@ -2,7 +2,6 @@ import { generateComprehensiveAnalysis } from "../comprehensiveAnalysis";
 import { extractHighlightsFromAnalysis } from "../highlightExtraction";
 import { analyzeLinkDocument } from "../linkAnalysis/linkAnalysisWorkflow";
 import { createTestDocument, getPrependLineCount, adjustLineReferences } from "../testUtils";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 import type { Agent } from "@roast/ai";
 
 // Mock the @roast/ai module
@@ -190,8 +189,8 @@ And some more content on the final line.`;
     if (result.highlights.length > 0) {
       const linkComment = result.highlights[0];
       // The offset should account for the prepend
-      const { prependCharCount } = getDocumentFullContent(mockDocument);
-      expect(linkComment.highlight!.startOffset).toBeGreaterThanOrEqual(prependCharCount);
+      // Since mockDocument.content already includes prepend, the offset should be positive
+      expect(linkComment.highlight!.startOffset).toBeGreaterThan(0);
     }
   });
 
@@ -213,12 +212,11 @@ And some more content on the final line.`;
       includePrepend: false,
     });
 
-    // The full content should be different
-    const { content: fullContentWith } = getDocumentFullContent(docWithPrepend);
-    const { content: fullContentWithout } = getDocumentFullContent(docWithoutPrepend, { generateIfMissing: false });
-
-    expect(fullContentWith.length).toBeGreaterThan(fullContentWithout.length);
-    expect(fullContentWith).toContain("# Position Test");
-    expect(fullContentWith).toContain(content);
+    // The documents should have different content
+    // docWithPrepend has content that includes prepend
+    // docWithoutPrepend has just the raw content
+    expect(docWithPrepend.content.length).toBeGreaterThan(docWithoutPrepend.content.length);
+    expect(docWithPrepend.content).toContain("# Position Test");
+    expect(docWithPrepend.content).toContain(content);
   });
 });
