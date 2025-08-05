@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, LinkIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
+import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, LinkIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
 import { linkValidator } from '@roast/ai/server';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
@@ -21,6 +22,46 @@ interface LinkValidation {
     statusCode: number;
   };
 }
+
+const exampleTexts = [
+  {
+    title: 'Blog post with mixed links',
+    content: `# My Blog Post
+
+Check out the official [React documentation](https://react.dev) for more information.
+
+I found this interesting article at https://example.com/article and also referenced some research from https://arxiv.org/abs/2301.12345.
+
+Here's a broken link: [Old tutorial](https://outdated-site-12345.com/tutorial)
+
+And here's an image reference: ![Screenshot](https://github.com/user/repo/blob/main/image.png)`
+  },
+  {
+    title: 'Academic paper excerpt',
+    content: `Recent studies (Smith et al., 2023) have shown significant improvements in model performance. The dataset is available at https://huggingface.co/datasets/example/dataset.
+
+For implementation details, see the official repository: [https://github.com/research-lab/model](https://github.com/research-lab/model)
+
+Additional resources:
+- Training code: https://colab.research.google.com/drive/1234567890
+- Paper: [https://arxiv.org/abs/2312.00001](https://arxiv.org/abs/2312.00001)
+- Demo: https://demo-site-that-might-not-exist.com`
+  },
+  {
+    title: 'Documentation with various link types',
+    content: `## Installation Guide
+
+Download the latest version from our [releases page](https://github.com/myproject/releases).
+
+### Quick Links
+- Documentation: <https://docs.myproject.com>
+- API Reference: https://api.myproject.com/v1/docs
+- Community Forum: [Join our discussion](https://forum.myproject.com)
+- Status Page: https://status.myproject.com
+
+For support, visit https://support.myproject.com or email support@myproject.com (not a link).`
+  }
+];
 
 export default function LinkValidatorPage() {
   const [text, setText] = useState('');
@@ -97,6 +138,11 @@ export default function LinkValidatorPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <Link href="/tools" className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
+        <ChevronLeftIcon className="h-4 w-4 mr-1" />
+        Back to Tools
+      </Link>
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Link Validator</h1>
         <p className="text-gray-600">
@@ -118,6 +164,21 @@ export default function LinkValidatorPage() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-gray-600">Try an example:</p>
+            <div className="flex flex-wrap gap-2">
+              {exampleTexts.map((example, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setText(example.content)}
+                  className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md border border-gray-300 transition-colors"
+                >
+                  {example.title}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <button
