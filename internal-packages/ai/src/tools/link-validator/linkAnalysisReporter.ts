@@ -236,6 +236,19 @@ export function generateLinkAnalysisReport(
 }
 
 /**
+ * Generates a report when no links are found in the document
+ */
+export function generateNoLinksReport(documentTitle?: string): string {
+  return `# Link Analysis Report
+
+${documentTitle ? `**Document:** ${documentTitle}\n\n` : ''}## Summary
+
+No URLs were found in this document. This analysis focuses on link validation, so there is nothing to validate.
+
+*Note: This document may contain valuable content, but it does not include any external links that need verification.*`;
+}
+
+/**
  * Generates analysis and summary from link validation results
  */
 export function generateLinkAnalysisAndSummary(

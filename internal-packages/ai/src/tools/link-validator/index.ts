@@ -146,6 +146,7 @@ export {
 export { 
   generateLinkAnalysisAndSummary,
   generateLinkAnalysisReport,
+  generateNoLinksReport,
   calculateLinkMetrics,
   calculateLinkGradeFromMetrics,
   type LinkMetrics

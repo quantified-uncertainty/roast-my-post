@@ -1,5 +1,5 @@
 import type { Agent } from "@roast/ai";
-import { linkValidator, generateLinkAnalysisReport, type LinkAnalysis } from "@roast/ai/server";
+import { linkValidator, generateLinkAnalysisReport, generateNoLinksReport, type LinkAnalysis } from "@roast/ai/server";
 import { logger } from "@/lib/logger";
 import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
@@ -102,12 +102,3 @@ An error occurred during link analysis: ${error instanceof Error ? error.message
   }
 }
 
-function generateNoLinksReport(documentTitle?: string): string {
-  return `# Link Analysis Report
-
-${documentTitle ? `**Document:** ${documentTitle}\n\n` : ''}## Summary
-
-No URLs were found in this document. This analysis focuses on link validation, so there is nothing to validate.
-
-*Note: This document may contain valuable content, but it does not include any external links that need verification.*`;
-}

@@ -29,6 +29,7 @@ export {
   generateLinkHighlights,
   generateLinkAnalysisAndSummary,
   generateLinkAnalysisReport,
+  generateNoLinksReport,
   type LinkAnalysis 
 } from './link-validator';
 
