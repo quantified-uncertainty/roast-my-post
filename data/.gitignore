@@ -1,9 +1,0 @@
-# Ignore all data files by default
-*
-
-# But track this .gitignore file
-!.gitignore
-
-# And track README files
-!README.md
-!*/README.md

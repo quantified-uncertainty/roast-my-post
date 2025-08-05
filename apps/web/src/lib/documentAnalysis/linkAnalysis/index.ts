@@ -1,9 +1,9 @@
 import type { Agent } from "@roast/ai";
+import { linkValidator, generateLinkAnalysisReport, generateNoLinksReport, type LinkAnalysis } from "@roast/ai/server";
 import { logger } from "@/lib/logger";
 import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
-import { extractUrls } from "./urlExtractor";
-import { validateUrls, type UrlValidationInput, type LinkAnalysis } from "../../urlValidator";
+import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 
 export async function generateLinkAnalysis(
   document: Document,
@@ -11,215 +11,100 @@ export async function generateLinkAnalysis(
 ): Promise<{ task: TaskResult; outputs: ThinkingOutputs; linkAnalysisResults: LinkAnalysis[] }> {
   const startTime = Date.now();
   
-  // Step 1: Extract URLs from document
-  // Document content already includes prepend from Job.ts
-  const urls = extractUrls(document.content);
-  if (urls.length === 0) {
-    // If no URLs found, return a simple analysis
-    const noLinksThinking = `# Link Analysis Report
-
-**Document:** ${document.title}
-
-## Summary
-
-No URLs were found in this document. This analysis focuses on link validation, so there is nothing to validate.
-
-*Note: This document may contain valuable content, but it does not include any external links that need verification.*`;
+  // Get the full content with prepend for URL extraction
+  const prepend = generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: document.platforms,
+    publishedDate: document.publishedDate
+  });
+  const fullContent = prepend + document.content;
+  
+  try {
+    // Use the link-validator tool to extract and validate URLs
+    const toolResult = await linkValidator.run({
+      text: fullContent,
+      maxUrls: 20,
+    }, {
+      logger,
+    });
+    
+    // Convert tool results back to LinkAnalysis format for compatibility
+    const linkAnalysisResults: LinkAnalysis[] = toolResult!.validations.map((validation: any) => ({
+      url: validation.url,
+      finalUrl: validation.finalUrl,
+      timestamp: validation.timestamp,
+      accessError: validation.error ? {
+        type: validation.error.type as any,
+        ...(validation.error.message && { message: validation.error.message }),
+        ...(validation.error.statusCode && { statusCode: validation.error.statusCode }),
+      } : undefined,
+      linkDetails: validation.details ? {
+        contentType: validation.details.contentType,
+        statusCode: validation.details.statusCode,
+      } : undefined,
+    }));
+    
+    // Generate the thinking document based on results
+    const thinkingDocument = toolResult.urls.length === 0
+      ? generateNoLinksReport(document.title)
+      : generateLinkAnalysisReport(
+          toolResult.urls, 
+          linkAnalysisResults,
+          document.title,
+          document.author
+        );
+    
+    const endTime = Date.now();
+    const timeInSeconds = Math.round((endTime - startTime) / 1000);
     
     return {
       task: {
         name: "generateLinkAnalysis",
         modelName: "none",
         priceInDollars: 0,
-        timeInSeconds: 0,
-        log: JSON.stringify({ message: "No URLs found" }, null, 2),
+        timeInSeconds,
+        log: JSON.stringify({
+          message: `Validated ${toolResult.urls.length} URLs using link-validator tool`,
+          urlsFound: toolResult.urls.length,
+          workingLinks: toolResult.summary.workingLinks,
+          brokenLinks: toolResult.summary.brokenLinks
+        }, null, 2),
       },
       outputs: {
-        thinking: noLinksThinking,
+        thinking: thinkingDocument,
+      },
+      linkAnalysisResults,
+    };
+  } catch (error) {
+    logger.error('❌ Link analysis failed:', error);
+    
+    const errorThinking = `# Link Analysis Report
+
+**Document:** ${document.title}
+
+## Summary
+
+An error occurred during link analysis: ${error instanceof Error ? error.message : 'Unknown error'}
+
+*Note: This document may contain links, but they could not be analyzed due to the error.*`;
+    
+    return {
+      task: {
+        name: "generateLinkAnalysis",
+        modelName: "none",
+        priceInDollars: 0,
+        timeInSeconds: Math.round((Date.now() - startTime) / 1000),
+        log: JSON.stringify({ 
+          message: "Link analysis failed", 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        }, null, 2),
+      },
+      outputs: {
+        thinking: errorThinking,
       },
       linkAnalysisResults: [],
     };
   }
-
-  // Step 2: Validate all URLs (no LLM filtering)
-  const validationInputs: UrlValidationInput[] = urls.map(url => ({ url }));
-
-  let validationResults: LinkAnalysis[];
-  try {
-    validationResults = await validateUrls(validationInputs);
-  } catch (error) {
-    logger.error('❌ URL validation failed:', error);
-    // Create fallback results
-    validationResults = validationInputs.map(input => ({
-      url: input.url,
-      timestamp: new Date(),
-      accessError: {
-        type: "Unknown" as const,
-        message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      }
-    }));
-  }
-
-  // Step 3: Generate the final thinking document
-  const thinkingDocument = generateLinkAnalysisReport(document, urls, validationResults);
-
-  const endTime = Date.now();
-  const timeInSeconds = Math.round((endTime - startTime) / 1000);
-
-  return {
-    task: {
-      name: "generateLinkAnalysis",
-      modelName: "none",
-      priceInDollars: 0, // No LLM costs anymore
-      timeInSeconds,
-      log: JSON.stringify({
-        message: `Validated ${urls.length} URLs`,
-        urlsFound: urls.length,
-        validationResults: validationResults.length
-      }, null, 2),
-    },
-    outputs: {
-      thinking: thinkingDocument,
-    },
-    linkAnalysisResults: validationResults,
-  };
 }
 
-function generateLinkAnalysisReport(
-  document: Document,
-  urls: string[],
-  validationResults: LinkAnalysis[]
-): string {
-  // Count different types of results
-  const errorCounts: { [key: string]: number } = {};
-  let workingLinks = 0;
-  
-  validationResults.forEach(result => {
-    if (result.accessError) {
-      const errorType = result.accessError.type;
-      errorCounts[errorType] = (errorCounts[errorType] || 0) + 1;
-    } else {
-      workingLinks++;
-    }
-  });
-  
-  let report = `# Link Analysis Report
-
-`;
-  report += `**Document:** ${document.title}
-`;
-  report += `**Author:** ${document.author}
-`;
-  report += `**Analysis Date:** ${new Date().toLocaleDateString()}
-
-`;
-
-  report += `## Summary
-
-`;
-  report += `- **Total Links:** ${urls.length}
-`;
-  report += `- **Working Links:** ${workingLinks}
-`;
-  report += `- **Broken Links:** ${Object.values(errorCounts).reduce((a, b) => a + b, 0)}
-
-`;
-  
-  // Add error breakdown
-  Object.entries(errorCounts).forEach(([errorType, count]) => {
-    report += `- **${errorType} Errors:** ${count}
-`;
-  });
-  
-  report += `
-`;
-
-  // Add status messages
-  if (errorCounts.NotFound > 0) {
-    report += `❌ **${errorCounts.NotFound} link(s) not found** - These may be broken or incorrect URLs.
-
-`;
-  }
-  if (errorCounts.NetworkError > 0) {
-    report += `🌐 **${errorCounts.NetworkError} network error(s)** - These domains may be unreachable.
-
-`;
-  }
-  if (workingLinks > 0 && Object.keys(errorCounts).length === 0) {
-    report += `✅ **All links are accessible and working.**
-
-`;
-  }
-
-  // Show individual link results
-  urls.forEach((url, index) => {
-    const result = validationResults[index];
-    let statusEmoji = "❌ Error";
-    let statusText = "Unknown";
-    
-    if (result.accessError) {
-      switch (result.accessError.type) {
-        case "NotFound":
-          statusEmoji = "❌ Not Found";
-          statusText = "Link does not exist (HTTP 404)";
-          break;
-        case "Forbidden":
-          statusEmoji = "🚫 Access Denied";
-          statusText = "Access forbidden (HTTP 403)";
-          break;
-        case "Timeout":
-          statusEmoji = "⏱️ Timeout";
-          statusText = "Request timed out";
-          break;
-        case "NetworkError":
-          statusEmoji = "🌐 Network Error";
-          statusText = result.accessError.message || "Network error";
-          break;
-        default:
-          statusEmoji = `❌ ${result.accessError.type}`;
-          statusText = ('message' in result.accessError ? result.accessError.message : undefined) || result.accessError.type;
-      }
-    } else {
-      statusEmoji = "✅ Working";
-      statusText = "Link is accessible";
-    }
-
-    report += `## ${statusEmoji} - Link ${index + 1}
-
-`;
-    report += `**URL:** ${url}
-
-`;
-    
-    if (result.finalUrl && result.finalUrl !== url) {
-      report += `**Final URL:** ${result.finalUrl}
-
-`;
-    }
-    
-    if (result.linkDetails) {
-      report += `**Content Type:** ${result.linkDetails.contentType}
-
-`;
-      report += `**Status Code:** ${result.linkDetails.statusCode}
-
-`;
-    }
-    
-    if (result.accessError) {
-      let errorMsg = statusText;
-      if ('message' in result.accessError) {
-        errorMsg = result.accessError.message;
-      }
-      report += `**Error Details:** ${errorMsg}
-
-`;
-    }
-    
-    report += `**Validation Result:** ${result.accessError ? 'Failed' : 'Success'}
-
-`;
-  });
-
-  return report;
-}
