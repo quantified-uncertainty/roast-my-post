@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, LinkIcon, ChevronLeftIcon } from '@heroicons/react/24/solid';
 import { linkValidator, generateLinkAnalysisAndSummary, type LinkAnalysis } from '@roast/ai/server';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const linkValidatorPath = linkValidator.config.path;
 
@@ -321,9 +322,9 @@ export default function LinkValidatorPage() {
 
                 {/* Full Analysis */}
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ 
-                    __html: analysis.analysis.replace(/\n/g, '<br />').replace(/##/g, '<h3 class="text-base font-semibold mt-4 mb-2">').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  }} />
+                  <MarkdownRenderer className="prose prose-sm max-w-none">
+                    {analysis.analysis}
+                  </MarkdownRenderer>
                 </div>
               </div>
             )}
