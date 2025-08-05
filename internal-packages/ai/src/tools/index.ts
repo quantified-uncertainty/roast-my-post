@@ -22,6 +22,7 @@ export { default as checkSpellingGrammarTool } from './check-spelling-grammar';
 export { default as extractMathExpressionsTool } from './extract-math-expressions';
 export { detectLanguageConventionTool } from './detect-language-convention';
 export { default as perplexityResearchTool } from './perplexity-research';
+export { linkValidator } from './link-validator';
 
 // Export tool-specific types
 export type { DocumentChunkerOutput } from './document-chunker';

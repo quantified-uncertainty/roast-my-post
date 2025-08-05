@@ -1,10 +1,10 @@
 import type { Agent } from "@roast/ai";
 import type { Document } from "@roast/ai";
 import type { Comment } from "@roast/ai";
+import { linkValidator } from "@roast/ai/server";
 import { type LinkAnalysis } from "../../urlValidator";
 import type { TaskResult } from "../shared/types";
-import { generateLinkAnalysis } from "./index";
-import { extractUrls } from "./urlExtractor";
+import { generateLinkAnalysis } from "./generateLinkAnalysisWithTool";
 import { getDocumentFullContent } from "@/utils/documentContentHelpers";
 
 /**
@@ -74,7 +74,15 @@ export async function analyzeLinkDocument(
   // Step 3: Generate highlights from link issues (no LLM needed)
   // Get the full content with prepend for URL extraction
   const { content: fullContent } = getDocumentFullContent(document);
-  const urls = extractUrls(fullContent);
+  
+  // Use the link-validator tool to get URLs
+  const toolResult = await linkValidator.run({
+    text: fullContent,
+    maxUrls: targetHighlights * 4, // Get more URLs than highlights needed
+  }, {
+    logger: console, // Use console as logger
+  });
+  const urls = toolResult.urls;
   
   const highlights = generateLinkHighlights(
     document,
