@@ -2,7 +2,7 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 import { linkValidator } from "../index";
 
 // Mock fetch globally
-global.fetch = jest.fn() as jest.Mock;
+global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 describe("Link Validator Tool", () => {
   beforeEach(() => {
@@ -11,14 +11,14 @@ describe("Link Validator Tool", () => {
 
   it("validates accessible URLs", async () => {
     // Mock successful HEAD request
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: true,
       status: 200,
       url: "https://react.dev/learn",
       headers: {
         get: jest.fn().mockReturnValue("text/html"),
       },
-    });
+    } as unknown as Response);
 
     const result = await linkValidator.run({
       text: "Check out [React docs](https://react.dev/learn) for tutorials.",
@@ -38,14 +38,14 @@ describe("Link Validator Tool", () => {
 
   it("detects broken URLs", async () => {
     // Mock 404 response
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: false,
       status: 404,
       url: "https://example.com/broken",
       headers: {
         get: jest.fn().mockReturnValue("text/html"),
       },
-    });
+    } as unknown as Response);
 
     const result = await linkValidator.run({
       text: "Visit https://example.com/broken for more info.",
@@ -65,19 +65,19 @@ describe("Link Validator Tool", () => {
 
   it("handles multiple URLs", async () => {
     // Mock different responses
-    (global.fetch as jest.Mock)
+    (global.fetch as jest.MockedFunction<typeof fetch>)
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
         url: "https://working.com",
         headers: { get: jest.fn().mockReturnValue("text/html") },
-      })
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: false,
         status: 403,
         url: "https://forbidden.com",
         headers: { get: jest.fn().mockReturnValue("text/html") },
-      });
+      } as unknown as Response);
 
     const result = await linkValidator.run({
       text: "Visit https://working.com and https://forbidden.com",
@@ -111,11 +111,11 @@ describe("Link Validator Tool", () => {
 
   it("respects maxUrls limit", async () => {
     // Mock successful responses
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
       ok: true,
       status: 200,
       headers: { get: jest.fn().mockReturnValue("text/html") },
-    });
+    } as unknown as Response);
 
     const result = await linkValidator.run({
       text: "URLs: https://one.com https://two.com https://three.com https://four.com",

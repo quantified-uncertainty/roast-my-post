@@ -8,7 +8,7 @@ import {
 } from "@roast/ai/server";
 import type { TaskResult } from "../shared/types";
 import { generateLinkAnalysis } from "./";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
+import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 
 /**
  * Complete link analysis workflow that produces thinking, analysis, summary, and highlights
@@ -44,7 +44,13 @@ export async function analyzeLinkDocument(
 
   // Step 3: Generate highlights from link issues (no LLM needed)
   // Get the full content with prepend for URL extraction
-  const { content: fullContent } = getDocumentFullContent(document);
+  const prepend = generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: document.platforms,
+    publishedDate: document.publishedDate
+  });
+  const fullContent = prepend + document.content;
   
   // Use the link-validator tool to get URLs
   const toolResult = await linkValidator.run({

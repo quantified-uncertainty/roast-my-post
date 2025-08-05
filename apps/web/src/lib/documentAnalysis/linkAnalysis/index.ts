@@ -3,7 +3,7 @@ import { linkValidator, generateLinkAnalysisReport, generateNoLinksReport, type 
 import { logger } from "@/lib/logger";
 import type { Document } from "@roast/ai";
 import type { TaskResult, ThinkingOutputs } from "../shared/types";
-import { getDocumentFullContent } from "@/utils/documentContentHelpers";
+import { generateMarkdownPrepend } from "@/utils/documentMetadata";
 
 export async function generateLinkAnalysis(
   document: Document,
@@ -12,7 +12,13 @@ export async function generateLinkAnalysis(
   const startTime = Date.now();
   
   // Get the full content with prepend for URL extraction
-  const { content: fullContent } = getDocumentFullContent(document);
+  const prepend = generateMarkdownPrepend({
+    title: document.title,
+    author: document.author,
+    platforms: document.platforms,
+    publishedDate: document.publishedDate
+  });
+  const fullContent = prepend + document.content;
   
   try {
     // Use the link-validator tool to extract and validate URLs

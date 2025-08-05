@@ -65,8 +65,8 @@ describe("Link Highlight Generation", () => {
     const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
     
     expect(highlights).toHaveLength(1);
-    expect(highlights[0].text).toContain("Broken link");
-    expect(highlights[0].quoteText).toBe("https://broken.com");
+    expect(highlights[0].description).toContain("Broken link");
+    expect(highlights[0].highlight.quotedText).toBe("https://broken.com");
   });
 
   it("generates comments for working links", () => {
@@ -86,8 +86,8 @@ describe("Link Highlight Generation", () => {
     const highlights = generateLinkHighlights(linkAnalysisResults, urls, content, 5);
     
     expect(highlights).toHaveLength(1);
-    expect(highlights[0].text).toContain("Link verified");
-    expect(highlights[0].quoteText).toBe("https://working.com");
+    expect(highlights[0].description).toContain("Link verified");
+    expect(highlights[0].highlight.quotedText).toBe("https://working.com");
   });
 
   it("respects targetHighlights limit", () => {
