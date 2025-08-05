@@ -270,6 +270,75 @@ export default function LinkValidatorPage() {
                 <p className="text-gray-600">No URLs found in the document.</p>
               </div>
             )}
+
+            {/* Analysis Output Section */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium text-gray-900">Analysis Output</h2>
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="prose prose-sm max-w-none">
+                  <h3 className="text-base font-semibold mb-3">Link Analysis Report</h3>
+                  
+                  <div className="mb-4">
+                    <p className="font-medium">Summary:</p>
+                    <ul className="list-disc list-inside ml-4 space-y-1">
+                      <li>Total URLs found: {result.summary.totalLinks}</li>
+                      <li>Working links: {result.summary.workingLinks} ({result.summary.totalLinks > 0 ? Math.round((result.summary.workingLinks / result.summary.totalLinks) * 100) : 0}%)</li>
+                      <li>Broken links: {result.summary.brokenLinks} ({result.summary.totalLinks > 0 ? Math.round((result.summary.brokenLinks / result.summary.totalLinks) * 100) : 0}%)</li>
+                    </ul>
+                  </div>
+
+                  {result.summary.brokenLinks > 0 && (
+                    <div className="mb-4">
+                      <p className="font-medium">Error Types:</p>
+                      <ul className="list-disc list-inside ml-4 space-y-1">
+                        {Object.entries(result.summary.errorBreakdown).map(([type, count]) => (
+                          <li key={type}>
+                            {type}: {count} {count === 1 ? 'link' : 'links'}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="mt-4 p-4 bg-white rounded border">
+                    {result.summary.brokenLinks === 0 && result.summary.totalLinks > 0 ? (
+                      <p className="text-green-700 font-medium">✅ All links are working correctly!</p>
+                    ) : result.summary.brokenLinks > 0 ? (
+                      <>
+                        {result.summary.errorBreakdown.Forbidden > result.summary.brokenLinks / 2 ? (
+                          <p className="text-orange-700">
+                            <span className="font-medium">🚫 Access Restrictions Detected:</span> Many links are blocked by access restrictions. 
+                            These sites may be working but block automated validation tools.
+                          </p>
+                        ) : result.summary.errorBreakdown.NotFound > result.summary.brokenLinks / 2 ? (
+                          <p className="text-red-700">
+                            <span className="font-medium">❌ Broken Links Found:</span> Several links appear to be broken or no longer exist. 
+                            These should be updated or removed.
+                          </p>
+                        ) : (
+                          <p className="text-yellow-700">
+                            <span className="font-medium">⚠️ Link Issues Detected:</span> Found various issues with links including 
+                            network errors, timeouts, and access problems.
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-gray-600">No links were found to validate.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Raw JSON Output Section */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-medium text-gray-900">Raw JSON Output</h2>
+              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                <pre className="text-sm text-gray-100">
+                  <code>{JSON.stringify(result, null, 2)}</code>
+                </pre>
+              </div>
+            </div>
           </div>
         )}
       </div>
