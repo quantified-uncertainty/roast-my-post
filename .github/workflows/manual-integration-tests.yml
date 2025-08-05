@@ -137,8 +137,8 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @roast/db run gen
 
-      - name: Push database schema
-        run: pnpm --filter @roast/db run db:push
+      - name: Run database migrations
+        run: pnpm --filter @roast/db run db:migrate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/roast_my_post_test
 
