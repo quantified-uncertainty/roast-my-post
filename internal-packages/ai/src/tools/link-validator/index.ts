@@ -46,7 +46,7 @@ export class LinkValidatorTool extends Tool<LinkValidatorInput, LinkValidatorOut
     version: '1.0.0',
     category: 'analysis' as const,
     costEstimate: 'Free (no LLM usage)',
-    path: '/tools/link-validator',
+    path: '/api/tools/link-validator',
     status: 'stable' as const
   };
   
