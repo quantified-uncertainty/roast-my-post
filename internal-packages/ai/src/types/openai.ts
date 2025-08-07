@@ -1,47 +1,30 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import { 
-  getRequiredConfig, 
-  getOptionalConfig,
-  DEFAULT_HELICONE_MAX_AGE,
-  DEFAULT_HELICONE_MAX_SIZE,
-  DEFAULT_SEARCH_MODEL,
-  DEFAULT_ANALYSIS_MODEL
-} from "../config";
+import { aiConfig } from "../config";
 
 // Configuration accessors using the centralized config
 function getAnthropicApiKey() {
-  try {
-    return getRequiredConfig('anthropicApiKey');
-  } catch {
-    // For backwards compatibility, fall back to env var if config not initialized
-    return process.env.ANTHROPIC_API_KEY;
-  }
+  return aiConfig.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
 }
 
 function getHeliconeApiKey() {
-  return getOptionalConfig('heliconeApiKey', process.env.HELICONE_API_KEY);
+  return aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
 }
 
 function isHeliconeEnabled() {
-  return getOptionalConfig('heliconeEnabled', process.env.HELICONE_CACHE_ENABLED === "true");
+  return aiConfig.helicone.enabled;
 }
 
 function getHeliconeMaxAge() {
-  return getOptionalConfig('heliconeMaxAge', process.env.HELICONE_CACHE_MAX_AGE || DEFAULT_HELICONE_MAX_AGE);
+  return aiConfig.helicone.cacheMaxAge.toString();
 }
 
 function getHeliconeMaxSize() {
-  return getOptionalConfig('heliconeMaxSize', process.env.HELICONE_CACHE_BUCKET_MAX_SIZE || DEFAULT_HELICONE_MAX_SIZE);
+  return aiConfig.helicone.cacheBucketMaxSize.toString();
 }
 
 function getOpenRouterApiKey() {
-  try {
-    return getRequiredConfig('openRouterApiKey');
-  } catch {
-    // For backwards compatibility, fall back to env var if config not initialized
-    return process.env.OPENROUTER_API_KEY;
-  }
+  return process.env.OPENROUTER_API_KEY; // Not in aiConfig yet
 }
 
 // Validate API keys only when actually creating clients (not at import time)
@@ -63,8 +46,8 @@ function validateOpenRouterKey() {
   }
 }
 
-export const SEARCH_MODEL = getOptionalConfig('searchModel', process.env.SEARCH_MODEL || DEFAULT_SEARCH_MODEL);
-export const ANALYSIS_MODEL = getOptionalConfig('analysisModel', process.env.ANALYSIS_MODEL || DEFAULT_ANALYSIS_MODEL);
+export const SEARCH_MODEL = process.env.SEARCH_MODEL || 'claude-3-5-sonnet-20241022';
+export const ANALYSIS_MODEL = aiConfig.analysisModel;
 
 // Lazy Anthropic client factory for analysis tasks with Helicone integration
 export function createAnthropicClient(additionalHeaders?: Record<string, string>): Anthropic {
