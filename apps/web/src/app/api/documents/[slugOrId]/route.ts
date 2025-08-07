@@ -4,10 +4,9 @@ import { DocumentService } from "@/lib/services/DocumentService";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { NotFoundError, AuthorizationError, ValidationError } from "@/lib/core/errors";
 
-// Initialize service
-const documentService = new DocumentService();
-
 export async function GET(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
+  // Create service instance
+  const documentService = new DocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -20,6 +19,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
 
     if (result.isError()) {
       const error = result.error();
+      logger.error('Error fetching document:', error);
+      
       if (error instanceof NotFoundError) {
         return NextResponse.json(
           { error: "Document not found" },
@@ -27,7 +28,6 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
         );
       }
       
-      logger.error('Error fetching document:', error);
       return NextResponse.json(
         { error: error?.message || "Failed to fetch document" },
         { status: error?.statusCode || 500 }
@@ -45,6 +45,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
 }
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
+  // Create service instance
+  const documentService = new DocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -118,6 +120,8 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrI
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
+  // Create service instance
+  const documentService = new DocumentService();
   const params = await context.params;
   const { slugOrId: id } = params;
 

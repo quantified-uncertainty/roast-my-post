@@ -1,15 +1,11 @@
-import { NextRequest } from 'next/server';
-import { Result } from '@/lib/core/result';
-import { GET } from '../route';
-
 // Mock functions that will be used in mocks
 const mockGetRecentDocuments = jest.fn();
 const mockSearchDocuments = jest.fn();
 const mockAuthenticateRequest = jest.fn();
 
-// Mock modules
+// Mock modules BEFORE imports
 jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: mockAuthenticateRequest,
+  authenticateRequest: () => mockAuthenticateRequest(),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -22,11 +18,16 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 jest.mock('@/lib/services/DocumentService', () => ({
-  DocumentService: jest.fn(() => ({
-    getRecentDocuments: mockGetRecentDocuments,
-    searchDocuments: mockSearchDocuments,
+  DocumentService: jest.fn().mockImplementation(() => ({
+    getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
+    searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
   })),
 }));
+
+// Now import the routes AFTER mocks are set up
+import { NextRequest } from 'next/server';
+import { Result } from '@/lib/core/result';
+import { GET } from '../route';
 
 describe('GET /api/documents/search', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -142,7 +143,7 @@ describe('GET /api/documents/search', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.documents).toHaveLength(5);
-    expect(data.hasMore).toBe(false); // DocumentService doesn't implement proper pagination yet
+    expect(data.hasMore).toBe(true); // hasMore is true when we get exactly the limit
     expect(data.total).toBe(5);
     
     expect(mockSearchDocuments).toHaveBeenCalledWith('test', 5);

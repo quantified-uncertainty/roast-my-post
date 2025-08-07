@@ -1,17 +1,12 @@
-import { NextRequest } from 'next/server';
-import { Result } from '@/lib/core/result';
-import { NotFoundError, AuthorizationError, ValidationError } from '@/lib/core/errors';
-import { GET, PUT } from '../route';
-
 // Mock functions that will be used in mocks
 const mockGetDocumentForReader = jest.fn();
 const mockUpdateDocument = jest.fn();
 const mockDeleteDocument = jest.fn();
 const mockAuthenticateRequest = jest.fn();
 
-// Mock modules
+// Mock modules BEFORE imports
 jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: mockAuthenticateRequest,
+  authenticateRequest: () => mockAuthenticateRequest(),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -24,12 +19,18 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 jest.mock('@/lib/services/DocumentService', () => ({
-  DocumentService: jest.fn(() => ({
-    getDocumentForReader: mockGetDocumentForReader,
-    updateDocument: mockUpdateDocument,
-    deleteDocument: mockDeleteDocument,
+  DocumentService: jest.fn().mockImplementation(() => ({
+    getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
+    updateDocument: (...args: any[]) => mockUpdateDocument(...args),
+    deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
   })),
 }));
+
+// Now import the routes AFTER mocks are set up
+import { NextRequest } from 'next/server';
+import { Result } from '@/lib/core/result';
+import { NotFoundError, AuthorizationError, ValidationError } from '@/lib/core/errors';
+import { GET, PUT } from '../route';
 
 describe('GET /api/documents/[slugOrId]', () => {
   const mockDocId = 'doc-123';
@@ -50,10 +51,18 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
     mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    // Log the response if it's not 200
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
+    }
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -78,6 +87,8 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
     mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocumentFromDB));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
@@ -102,6 +113,8 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
     mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
@@ -120,6 +133,8 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
     mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockSlug}`);
@@ -130,6 +145,8 @@ describe('GET /api/documents/[slugOrId]', () => {
   });
 
   it('should return 404 when document not found', async () => {
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
     mockGetDocumentForReader.mockResolvedValueOnce(
       Result.fail(new NotFoundError('Document', 'non-existent'))
     );

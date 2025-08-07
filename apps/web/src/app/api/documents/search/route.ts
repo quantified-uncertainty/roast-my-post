@@ -3,10 +3,9 @@ import { logger } from "@/lib/logger";
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { DocumentService } from "@/lib/services/DocumentService";
 
-// Initialize service
-const documentService = new DocumentService();
-
 export async function GET(request: NextRequest) {
+  // Create service instance
+  const documentService = new DocumentService();
   try {
     const userId = await authenticateRequest(request);
     if (!userId) {
@@ -56,7 +55,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       documents,
       total: documents.length,
-      hasMore: false, // TODO: Implement proper pagination with offset
+      hasMore: documents.length >= limit,
       query,
     });
   } catch (error) {
