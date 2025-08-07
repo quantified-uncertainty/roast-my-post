@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         documents,
         total: documents.length,
-        hasMore: false, // TODO: Implement proper pagination
+        hasMore: documents.length >= limit,
       });
     }
 

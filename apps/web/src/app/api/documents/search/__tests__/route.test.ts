@@ -37,9 +37,9 @@ describe('GET /api/documents/search', () => {
       { id: 'doc2', title: 'Recent Doc 2' },
     ];
     
-    // Mock the service directly
+    // Mock the service directly - it returns an array of documents
     jest.spyOn(DocumentService.prototype, 'getRecentDocuments').mockResolvedValueOnce(
-      Result.ok({ documents: mockDocuments, total: 10 })
+      Result.ok(mockDocuments)
     );
 
     const request = new NextRequest('http://localhost:3000/api/documents/search');
@@ -49,7 +49,7 @@ describe('GET /api/documents/search', () => {
     const data = await response.json();
     expect(data).toEqual({
       documents: mockDocuments,
-      total: 10,
+      total: 2,
       hasMore: false,
     });
   });
@@ -136,7 +136,7 @@ describe('GET /api/documents/search', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.documents).toHaveLength(5);
-    // Note: hasMore logic depends on the actual implementation
+    expect(data.hasMore).toBe(true); // 5 results = limit, so hasMore is true
     expect(data.total).toBe(5);
     
     expect(DocumentService.prototype.searchDocuments).toHaveBeenCalledWith('test', 5);
