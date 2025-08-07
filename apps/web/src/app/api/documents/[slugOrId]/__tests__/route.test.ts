@@ -1,17 +1,36 @@
-import { GET, PUT } from '../route';
 import { NextRequest } from 'next/server';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { DocumentService } from '@/lib/services/DocumentService';
 import { Result } from '@/lib/core/result';
-import { NotFoundError, AuthorizationError } from '@/lib/core/errors';
+import { NotFoundError, AuthorizationError, ValidationError } from '@/lib/core/errors';
 
-// Mock dependencies
+// Mock dependencies first
+const mockGetDocumentForReader = jest.fn();
+const mockUpdateDocument = jest.fn();
+const mockDeleteDocument = jest.fn();
+const mockAuthenticateRequest = jest.fn();
+
 jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
+  authenticateRequest: mockAuthenticateRequest,
 }));
 
-jest.mock('@/lib/services/DocumentService');
-jest.mock('@/lib/logger');
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/services/DocumentService', () => ({
+  DocumentService: jest.fn(() => ({
+    getDocumentForReader: mockGetDocumentForReader,
+    updateDocument: mockUpdateDocument,
+    deleteDocument: mockDeleteDocument,
+  })),
+}));
+
+// Import after mocks
+import { GET, PUT } from '../route';
 
 describe('GET /api/documents/[slugOrId]', () => {
   const mockDocId = 'doc-123';
@@ -32,9 +51,7 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    jest.spyOn(DocumentService.prototype, 'getDocumentForReader').mockResolvedValueOnce(
-      Result.ok(mockDocument)
-    );
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -62,9 +79,7 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    jest.spyOn(DocumentService.prototype, 'getDocumentForReader').mockResolvedValueOnce(
-      Result.ok(mockDocumentFromDB)
-    );
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocumentFromDB));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -88,15 +103,13 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    jest.spyOn(DocumentService.prototype, 'getDocumentForReader').mockResolvedValueOnce(
-      Result.ok(mockDocument)
-    );
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
-    expect(DocumentService.prototype.getDocumentForReader).toHaveBeenCalledWith(mockDocId, undefined);
+    expect(mockGetDocumentForReader).toHaveBeenCalledWith(mockDocId, undefined);
   });
 
   it('should find document by slug', async () => {
@@ -108,19 +121,17 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    jest.spyOn(DocumentService.prototype, 'getDocumentForReader').mockResolvedValueOnce(
-      Result.ok(mockDocument)
-    );
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockSlug}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockSlug }) });
     
     expect(response.status).toBe(200);
-    expect(DocumentService.prototype.getDocumentForReader).toHaveBeenCalledWith(mockSlug, undefined);
+    expect(mockGetDocumentForReader).toHaveBeenCalledWith(mockSlug, undefined);
   });
 
   it('should return 404 when document not found', async () => {
-    jest.spyOn(DocumentService.prototype, 'getDocumentForReader').mockResolvedValueOnce(
+    mockGetDocumentForReader.mockResolvedValueOnce(
       Result.error(new NotFoundError('Document', 'non-existent'))
     );
 
@@ -142,7 +153,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    mockAuthenticateRequest.mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -155,11 +166,9 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should update intended agents', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    jest.spyOn(DocumentService.prototype, 'updateDocument').mockResolvedValueOnce(
-      Result.ok(undefined)
-    );
+    mockUpdateDocument.mockResolvedValueOnce(Result.ok(undefined));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -172,7 +181,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(DocumentService.prototype.updateDocument).toHaveBeenCalledWith(
+    expect(mockUpdateDocument).toHaveBeenCalledWith(
       mockDocId,
       mockUser.id,
       { title: undefined, content: undefined, intendedAgentIds: ['agent-1', 'agent-2'] }
@@ -180,9 +189,9 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should return 404 when document not found', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    jest.spyOn(DocumentService.prototype, 'updateDocument').mockResolvedValueOnce(
+    mockUpdateDocument.mockResolvedValueOnce(
       Result.error(new NotFoundError('Document', mockDocId))
     );
 
@@ -200,9 +209,9 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should return 403 when user does not own document', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    jest.spyOn(DocumentService.prototype, 'updateDocument').mockResolvedValueOnce(
+    mockUpdateDocument.mockResolvedValueOnce(
       Result.error(new AuthorizationError('You do not have permission to update this document'))
     );
 
@@ -220,10 +229,9 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should validate intendedAgentIds is an array', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { ValidationError } = require('@/lib/core/errors');
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    jest.spyOn(DocumentService.prototype, 'updateDocument').mockResolvedValueOnce(
+    mockUpdateDocument.mockResolvedValueOnce(
       Result.error(new ValidationError('intendedAgentIds must be an array'))
     );
 
