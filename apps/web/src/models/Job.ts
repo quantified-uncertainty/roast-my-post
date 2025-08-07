@@ -705,9 +705,11 @@ ${JSON.stringify(evaluationOutputs, null, 2)}
   }
 
   /**
-   * Disconnect the Prisma client
+   * @deprecated Prisma client disconnect is handled automatically in serverless environments
+   * This method is kept for backward compatibility but does nothing
    */
   async disconnect() {
-    await prisma.$disconnect();
+    // No-op: Connection pooling is managed by Prisma in serverless environments
+    // Disconnecting can cause issues with connection reuse
   }
 }

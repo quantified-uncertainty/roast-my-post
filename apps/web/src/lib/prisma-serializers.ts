@@ -134,28 +134,66 @@ export function serializeDecimalToNumber<T>(obj: T): T {
   return obj;
 }
 
+// Type definitions for better type safety
+interface JobLike {
+  priceInDollars?: unknown;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+  startedAt?: Date | string | null;
+  completedAt?: Date | string | null;
+  [key: string]: unknown;
+}
+
+interface TaskLike {
+  priceInDollars?: unknown;
+  [key: string]: unknown;
+}
+
+interface JobWithTasks extends JobLike {
+  tasks?: TaskLike[] | null;
+}
+
+interface EvaluationVersionLike {
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+  [key: string]: unknown;
+}
+
 /**
  * Serialize a single Job object (converts Decimal to string)
  */
-export function serializeJob(job: any) {
+export function serializeJob<T extends JobLike>(job: T): T & {
+  priceInDollars: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+} {
   return {
     ...job,
-    priceInDollars: job.priceInDollars ? job.priceInDollars.toString() : null,
-    createdAt: job.createdAt ? job.createdAt.toISOString() : null,
-    updatedAt: job.updatedAt ? job.updatedAt.toISOString() : null,
-    startedAt: job.startedAt ? job.startedAt.toISOString() : null,
-    completedAt: job.completedAt ? job.completedAt.toISOString() : null,
+    priceInDollars: job.priceInDollars ? String(job.priceInDollars) : null,
+    createdAt: job.createdAt instanceof Date ? job.createdAt.toISOString() : 
+               typeof job.createdAt === 'string' ? job.createdAt : null,
+    updatedAt: job.updatedAt instanceof Date ? job.updatedAt.toISOString() : 
+               typeof job.updatedAt === 'string' ? job.updatedAt : null,
+    startedAt: job.startedAt instanceof Date ? job.startedAt.toISOString() : 
+               typeof job.startedAt === 'string' ? job.startedAt : null,
+    completedAt: job.completedAt instanceof Date ? job.completedAt.toISOString() : 
+                 typeof job.completedAt === 'string' ? job.completedAt : null,
   };
 }
 
 /**
  * Serialize a Job with numeric price (for calculations)
  */
-export function serializeJobNumeric(job: any) {
+export function serializeJobNumeric<T extends JobWithTasks>(job: T): T & {
+  priceInDollars: number | null;
+  tasks: Array<TaskLike & { priceInDollars: number }> | null;
+} {
   return {
     ...job,
     priceInDollars: decimalToNumber(job.priceInDollars),
-    tasks: job.tasks ? job.tasks.map((task: any) => ({
+    tasks: job.tasks ? job.tasks.map((task) => ({
       ...task,
       priceInDollars: decimalToNumber(task.priceInDollars) ?? 0,
     })) : null,
@@ -165,18 +203,23 @@ export function serializeJobNumeric(job: any) {
 /**
  * Serialize multiple jobs with numeric prices
  */
-export function serializeJobsNumeric(jobs: any[]) {
-  return jobs.map(serializeJobNumeric);
+export function serializeJobsNumeric<T extends JobWithTasks>(jobs: T[]): Array<ReturnType<typeof serializeJobNumeric>> {
+  return jobs.map(job => serializeJobNumeric(job));
 }
 
 /**
  * Serialize evaluation version with decimal fields
  */
-export function serializeEvaluationVersion(evalVersion: any) {
+export function serializeEvaluationVersion<T extends EvaluationVersionLike>(evalVersion: T): T & {
+  createdAt: string | null;
+  updatedAt: string | null;
+} {
   return {
     ...evalVersion,
-    createdAt: evalVersion.createdAt ? evalVersion.createdAt.toISOString() : null,
-    updatedAt: evalVersion.updatedAt ? evalVersion.updatedAt.toISOString() : null,
+    createdAt: evalVersion.createdAt instanceof Date ? evalVersion.createdAt.toISOString() : 
+               typeof evalVersion.createdAt === 'string' ? evalVersion.createdAt : null,
+    updatedAt: evalVersion.updatedAt instanceof Date ? evalVersion.updatedAt.toISOString() : 
+               typeof evalVersion.updatedAt === 'string' ? evalVersion.updatedAt : null,
   };
 }
 

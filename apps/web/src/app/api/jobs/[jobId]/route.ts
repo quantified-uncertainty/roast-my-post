@@ -64,6 +64,9 @@ export async function GET(
     });
     
     // Serialize Decimal fields before returning
+    if (!job) {
+      return commonErrors.notFound("Job not found");
+    }
     const serializedJob = serializeJobNumeric(job);
     return new Response(JSON.stringify(serializedJob), { status: 200 });
   } catch (error) {
