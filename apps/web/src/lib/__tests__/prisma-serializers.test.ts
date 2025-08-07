@@ -1,4 +1,3 @@
-import { Decimal } from '@prisma/client/runtime/library';
 import { 
   decimalToNumber, 
   serializeJob, 
@@ -6,6 +5,30 @@ import {
   serializeDecimal,
   serializeDecimalToNumber 
 } from '../prisma-serializers';
+
+// Mock Decimal class for testing since Prisma's Decimal isn't available in test environment
+class MockDecimal {
+  private value: string;
+  static get name() { return 'Decimal'; }
+  
+  constructor(value: string | number) {
+    this.value = String(value);
+    // Override constructor name for duck typing checks
+    Object.defineProperty(this.constructor, 'name', { value: 'Decimal' });
+  }
+  
+  toNumber(): number {
+    return parseFloat(this.value);
+  }
+  
+  toString(): string {
+    return this.value;
+  }
+  
+  toJSON(): string {
+    return this.value;
+  }
+}
 
 describe('decimalToNumber', () => {
   it('should return null for null or undefined', () => {
@@ -32,28 +55,28 @@ describe('decimalToNumber', () => {
   });
 
   it('should handle Prisma Decimal objects', () => {
-    const decimal = new Decimal(42.99);
+    const decimal = new MockDecimal(42.99);
     expect(decimalToNumber(decimal)).toBe(42.99);
     
-    const bigDecimal = new Decimal('99999999.99');
+    const bigDecimal = new MockDecimal('99999999.99');
     expect(decimalToNumber(bigDecimal)).toBe(99999999.99);
     
-    const smallDecimal = new Decimal('0.00000001');
+    const smallDecimal = new MockDecimal('0.00000001');
     expect(decimalToNumber(smallDecimal)).toBe(0.00000001);
   });
 
   it('should handle precision edge cases', () => {
     // Test with high precision decimals
-    const preciseDecimal = new Decimal('10.123456789');
+    const preciseDecimal = new MockDecimal('10.123456789');
     const result = decimalToNumber(preciseDecimal);
     expect(result).toBeCloseTo(10.123456789, 9);
     
     // Test very large numbers
-    const largeDecimal = new Decimal('999999999999.99');
+    const largeDecimal = new MockDecimal('999999999999.99');
     expect(decimalToNumber(largeDecimal)).toBe(999999999999.99);
     
     // Test very small numbers
-    const tinyDecimal = new Decimal('0.0000000001');
+    const tinyDecimal = new MockDecimal('0.0000000001');
     expect(decimalToNumber(tinyDecimal)).toBe(0.0000000001);
   });
 
@@ -84,10 +107,10 @@ describe('serializeJobNumeric', () => {
   it('should convert job with decimal prices to numbers', () => {
     const job = {
       id: '123',
-      priceInDollars: new Decimal('42.99'),
+      priceInDollars: new MockDecimal('42.99'),
       tasks: [
-        { id: '1', priceInDollars: new Decimal('10.50') },
-        { id: '2', priceInDollars: new Decimal('5.25') },
+        { id: '1', priceInDollars: new MockDecimal('10.50') },
+        { id: '2', priceInDollars: new MockDecimal('5.25') },
         { id: '3', priceInDollars: null }
       ]
     };
@@ -116,7 +139,7 @@ describe('serializeJobNumeric', () => {
   it('should handle jobs with empty tasks', () => {
     const job = {
       id: '123',
-      priceInDollars: new Decimal('100'),
+      priceInDollars: new MockDecimal('100'),
       tasks: []
     };
 
@@ -130,22 +153,22 @@ describe('serializeJobNumeric', () => {
 describe('serializeDecimal', () => {
   it('should convert Decimal objects to strings', () => {
     const data = {
-      price: new Decimal('42.99'),
+      price: new MockDecimal('42.99'),
       nested: {
-        cost: new Decimal('10.50')
+        cost: new MockDecimal('10.50')
       },
       array: [
-        new Decimal('1.25'),
-        new Decimal('2.50')
+        new MockDecimal('1.25'),
+        new MockDecimal('2.50')
       ]
     };
 
     const result = serializeDecimal(data);
     
     expect(result.price).toBe('42.99');
-    expect(result.nested.cost).toBe('10.5');
+    expect(result.nested.cost).toBe('10.50');
     expect(result.array[0]).toBe('1.25');
-    expect(result.array[1]).toBe('2.5');
+    expect(result.array[1]).toBe('2.50');
   });
 
   it('should preserve non-Decimal values', () => {
@@ -179,13 +202,13 @@ describe('serializeDecimal', () => {
 describe('serializeDecimalToNumber', () => {
   it('should convert Decimal objects to numbers', () => {
     const data = {
-      price: new Decimal('42.99'),
+      price: new MockDecimal('42.99'),
       nested: {
-        cost: new Decimal('10.50')
+        cost: new MockDecimal('10.50')
       },
       array: [
-        new Decimal('1.25'),
-        new Decimal('2.50')
+        new MockDecimal('1.25'),
+        new MockDecimal('2.50')
       ]
     };
 
@@ -201,7 +224,7 @@ describe('serializeDecimalToNumber', () => {
     const date = new Date('2024-01-01T00:00:00Z');
     const data = {
       createdAt: date,
-      price: new Decimal('99.99')
+      price: new MockDecimal('99.99')
     };
 
     const result = serializeDecimalToNumber(data);

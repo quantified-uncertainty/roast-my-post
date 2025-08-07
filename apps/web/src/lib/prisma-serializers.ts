@@ -1,5 +1,3 @@
-import { Decimal } from "@prisma/client/runtime/library";
-
 /**
  * Safely convert a Prisma Decimal to number with proper handling
  * @param decimal - The Prisma Decimal object or any value that might be a price
@@ -17,14 +15,20 @@ export function decimalToNumber(decimal: unknown): number | null {
     return isNaN(parsed) ? null : parsed;
   }
   
-  // Prisma Decimal object
-  if (decimal instanceof Decimal) {
-    return decimal.toNumber();
+  // Check for Prisma Decimal object using duck typing
+  // We can't import Decimal directly as it includes Node.js dependencies
+  if (typeof decimal === 'object' && decimal && 
+      decimal.constructor && decimal.constructor.name === 'Decimal' &&
+      'toNumber' in decimal && typeof (decimal as any).toNumber === 'function') {
+    return (decimal as any).toNumber();
   }
   
   // Object with toNumber method (duck typing for Decimal-like objects)
-  if (typeof decimal === 'object' && decimal && 'toNumber' in decimal && typeof (decimal as any).toNumber === 'function') {
-    return (decimal as any).toNumber();
+  if (typeof decimal === 'object' && decimal && 'toNumber' in decimal) {
+    const decimalLike = decimal as { toNumber: () => number };
+    if (typeof decimalLike.toNumber === 'function') {
+      return decimalLike.toNumber();
+    }
   }
   
   // Last resort: try converting to number
@@ -41,8 +45,11 @@ export function serializeDecimal<T>(obj: T): T {
     return obj;
   }
 
-  if (obj instanceof Decimal) {
-    return obj.toString() as any;
+  // Check for Prisma Decimal object using duck typing
+  if (typeof obj === 'object' && obj && 
+      obj.constructor && obj.constructor.name === 'Decimal' &&
+      'toString' in obj && typeof (obj as any).toString === 'function') {
+    return (obj as any).toString() as any;
   }
 
   if (obj instanceof Date) {
@@ -75,8 +82,11 @@ export function serializeDecimalToNumber<T>(obj: T): T {
     return obj;
   }
 
-  if (obj instanceof Decimal) {
-    return Number(obj) as any;
+  // Check for Prisma Decimal object using duck typing
+  if (typeof obj === 'object' && obj && 
+      obj.constructor && obj.constructor.name === 'Decimal' &&
+      'toNumber' in obj && typeof (obj as any).toNumber === 'function') {
+    return (obj as any).toNumber() as any;
   }
 
   if (Array.isArray(obj)) {

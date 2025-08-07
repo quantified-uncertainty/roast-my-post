@@ -10,10 +10,8 @@ export enum UserRole {
 export enum JobStatus {
   PENDING = 'PENDING',
   RUNNING = 'RUNNING',
-  PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED'
+  FAILED = 'FAILED'
 }
 
 export enum AgentPurpose {
