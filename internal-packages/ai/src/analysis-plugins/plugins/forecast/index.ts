@@ -57,6 +57,10 @@ class ExtractedForecast {
     return this.extractedForecast.resolutionDate;
   }
 
+  getChunk(): TextChunk {
+    return this.chunk;
+  }
+
   get averageScore(): number {
     return (
       (this.extractedForecast.importanceScore +
@@ -464,15 +468,214 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
   }
 
   private async createComments(): Promise<void> {
-    // Process comments in parallel for better performance
+    // Process regular comments in parallel for better performance
     const comments = await Promise.all(
       this.extractedForecasts.map(extractedForecast => extractedForecast.getComment())
     );
     
-    // Filter out null comments and add to array
-    this.comments = comments.filter((comment): comment is Comment => comment !== null);
+    // Generate debug comments for forecasts that were not investigated
+    const debugComments = await this.generateDebugComments();
+    
+    // Filter out null comments and combine regular and debug comments
+    const regularComments = comments.filter((comment): comment is Comment => comment !== null);
+    const validDebugComments = debugComments.filter((comment): comment is Comment => comment !== null);
+    
+    this.comments = [...regularComments, ...validDebugComments];
 
-    logger.debug(`ForecastAnalyzer: Created ${this.comments.length} comments`);
+    logger.debug(`ForecastAnalyzer: Created ${this.comments.length} comments (${regularComments.length} regular, ${validDebugComments.length} debug)`);
+  }
+
+  private async generateDebugComments(): Promise<(Comment | null)[]> {
+    const debugComments: (Comment | null)[] = [];
+    
+    // Find forecasts that should have generated probability estimates but didn't
+    const forecastsWithoutEstimates = this.extractedForecasts.filter(forecast => {
+      return forecast.shouldGetOurForecastScore >= 6 && !forecast.getOurForecast();
+    });
+
+    // Debug comments for forecasts that couldn't generate probability estimates
+    for (const forecast of forecastsWithoutEstimates) {
+      const debugComment = await this.createEstimateFailedDebugComment(forecast);
+      if (debugComment) {
+        debugComments.push(debugComment);
+      }
+    }
+
+    // Debug comments for low-quality forecasts that were skipped
+    const lowQualityForecasts = this.extractedForecasts.filter(forecast => {
+      return forecast.averageScore < 3; // Very low quality forecasts
+    });
+
+    for (const forecast of lowQualityForecasts) {
+      const debugComment = await this.createLowQualityDebugComment(forecast);
+      if (debugComment) {
+        debugComments.push(debugComment);
+      }
+    }
+
+    // Debug comments for forecasts that couldn't be located
+    for (const forecast of this.extractedForecasts) {
+      const location = await forecast.findLocationInDocument();
+      if (!location) {
+        const debugComment = await this.createLocationDebugComment(forecast);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    return debugComments;
+  }
+
+  private async createEstimateFailedDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    const location = await forecast.findLocationInDocument();
+    if (!location) return null;
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractForecastingClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 40).toISOString(),
+        result: forecast.extractedForecast
+      },
+      {
+        toolName: 'generateProbabilityForecast',
+        stage: 'verification',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'estimation_failed' }
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'forecast',
+      location,
+      chunkId: forecast.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Prediction Detected, Skipped`,
+      level: 'debug' as const,
+      description: `**Prediction Found:**
+> "${forecast.extractedForecast.originalText}"
+
+${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${forecast.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** Technical complexity exceeded automated forecasting capabilities
+
+**Quality Score:** ${forecast.averageScore.toFixed(1)}/10
+
+This prediction was high-quality enough to warrant analysis, but the system couldn't generate a probability estimate. This could be due to:
+- Conceptual complexity requiring domain expertise
+- Insufficient reference data for calibration  
+- Technical limitations in the forecasting tools
+
+**Recommendation:** This prediction would benefit from expert human analysis.`,
+    });
+  }
+
+  private async createLowQualityDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    const location = await forecast.findLocationInDocument();
+    if (!location) return null;
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractForecastingClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 40).toISOString(),
+        result: forecast.extractedForecast
+      },
+      {
+        toolName: 'qualityAssessment',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { 
+          quality: 'low',
+          averageScore: forecast.averageScore,
+          importanceScore: forecast.extractedForecast.importanceScore,
+          precisionScore: forecast.extractedForecast.precisionScore,
+          verifiabilityScore: forecast.extractedForecast.verifiabilityScore,
+          robustnessScore: forecast.extractedForecast.robustnessScore
+        }
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'forecast',
+      location,
+      chunkId: forecast.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Prediction Detected, Skipped`,
+      level: 'debug' as const,
+      description: `**Prediction Found:**
+> "${forecast.extractedForecast.originalText}"
+
+${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${forecast.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** Low quality prediction not suitable for analysis
+
+**Scoring Breakdown:**
+- Importance: ${forecast.extractedForecast.importanceScore}/10 (how central to document)
+- Precision: ${forecast.extractedForecast.precisionScore}/10 (how specific/measurable)
+- Verifiability: ${forecast.extractedForecast.verifiabilityScore}/10 (how easy to verify outcome)  
+- Robustness: ${forecast.extractedForecast.robustnessScore}/10 (empirical grounding)
+
+**Overall Score:** ${forecast.averageScore.toFixed(1)}/10 (threshold: ≥3.0)
+
+The prediction was too vague or poorly grounded to generate meaningful probability estimates.`,
+    });
+  }
+
+  private async createLocationDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractForecastingClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 40).toISOString(),
+        result: forecast.extractedForecast
+      },
+      {
+        toolName: 'findLocation',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'text_not_found' }
+      }
+    ];
+
+    // Use a default position since we can't locate the text
+    const location = {
+      startOffset: 0,
+      endOffset: forecast.extractedForecast.originalText.length,
+      quotedText: forecast.extractedForecast.originalText
+    };
+
+    return CommentBuilder.build({
+      plugin: 'forecast',
+      location,
+      chunkId: forecast.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Prediction Detected, Location Unknown`,
+      level: 'debug' as const,
+      description: `**Prediction Found:**
+> "${forecast.extractedForecast.originalText}"
+
+${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${forecast.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** Unable to locate prediction precisely in document
+
+This prediction was extracted but couldn't be positioned accurately. This might be due to:
+- Text reformatting during document processing
+- Prediction spanning multiple paragraphs
+- Paraphrasing during the extraction process
+
+The analysis may still be valid, but the highlighting won't be precise.`,
+    });
   }
 
   private generateAnalysis(): void {

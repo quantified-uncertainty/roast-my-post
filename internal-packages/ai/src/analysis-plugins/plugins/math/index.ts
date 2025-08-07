@@ -59,6 +59,10 @@ export class HybridMathErrorWrapper {
     return 0;
   }
 
+  getChunkId(): string {
+    return this.chunkId;
+  }
+
   private commentImportanceScore(): number {
     if (this.verificationResult.status === 'verified_false') {
       const baseScore = this.verificationResult.verifiedBy === 'mathjs' ? 9 : 6; // MathJS verified errors are more important
@@ -509,8 +513,8 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
   private async runHybridMathCheck(): Promise<void> {
     logger.debug("MathAnalyzer: Running hybrid math check on extracted expressions");
 
-    // Check each extracted expression individually
-    for (const extractedExpr of this.extractedExpressions) {
+    // Check all extracted expressions in parallel
+    const checkPromises = this.extractedExpressions.map(async (extractedExpr) => {
       try {
         const result = await checkMathHybridTool.execute(
           {
@@ -525,21 +529,32 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
         // Create wrapper for ALL verification results (not just errors)
         // This allows us to show successful verifications too
         if (result.status === 'verified_false' || result.status === 'verified_true') {
-          const errorWrapper = new HybridMathErrorWrapper(
+          return new HybridMathErrorWrapper(
             result, 
             extractedExpr.expression, 
             this.documentText,
             extractedExpr.getChunkId(),
             this.processingStartTime
           );
-          this.hybridErrorWrappers.push(errorWrapper);
         }
+        return null;
       } catch (error) {
         logger.error("MathAnalyzer: Failed to check expression:", { 
           expression: extractedExpr.expression.originalText, 
           error 
         });
-        // Continue checking other expressions
+        // Return null for failed checks
+        return null;
+      }
+    });
+
+    // Wait for all checks to complete
+    const results = await Promise.allSettled(checkPromises);
+    
+    // Collect successful results
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value !== null) {
+        this.hybridErrorWrappers.push(result.value);
       }
     }
     
@@ -561,22 +576,234 @@ export class MathAnalyzerJob implements SimpleAnalysisPlugin {
     );
     
     // Process both types of comments in parallel
-    const [expressionComments, hybridComments] = await Promise.all([
+    const [expressionComments, hybridComments, debugComments] = await Promise.all([
       Promise.all(
         expressionsWithoutHybridErrors.map(extractedExpression => extractedExpression.getComment())
       ),
       Promise.all(
         this.hybridErrorWrappers.map(errorWrapper => errorWrapper.getComment())
-      )
+      ),
+      this.generateDebugComments()
     ]);
     
-    // Filter out null comments and combine both types
+    // Filter out null comments and combine all types
     const validExpressionComments = expressionComments.filter((comment): comment is Comment => comment !== null);
     const validHybridComments = hybridComments.filter((comment): comment is Comment => comment !== null);
+    const validDebugComments = debugComments.filter((comment): comment is Comment => comment !== null);
     
-    this.comments = [...validExpressionComments, ...validHybridComments];
+    this.comments = [...validExpressionComments, ...validHybridComments, ...validDebugComments];
 
-    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments (${validExpressionComments.length} non-error expressions, ${validHybridComments.length} hybrid errors)`);
+    logger.debug(`MathAnalyzer: Created ${this.comments.length} comments (${validExpressionComments.length} expressions, ${validHybridComments.length} hybrid, ${validDebugComments.length} debug)`);
+  }
+
+  private async generateDebugComments(): Promise<(Comment | null)[]> {
+    const debugComments: (Comment | null)[] = [];
+    
+    // Track processed expressions to avoid duplicates
+    const processedExpressions = new Set([
+      ...this.extractedExpressions.map(e => e.expression.originalText),
+      ...this.hybridErrorWrappers.map(w => w.expression.originalText)
+    ]);
+
+    // Debug comments for expressions that couldn't be located
+    for (const extractedExpression of this.extractedExpressions) {
+      const location = await extractedExpression.findLocationInDocument();
+      if (!location) {
+        // This expression couldn't be located - create a debug comment
+        const debugComment = await this.createLocationDebugComment(extractedExpression);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    // Debug comments for hybrid errors that couldn't be verified
+    for (const hybridWrapper of this.hybridErrorWrappers) {
+      if (hybridWrapper.verificationResult.status === 'cannot_verify') {
+        const debugComment = await this.createUnverifiableDebugComment(hybridWrapper);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    // Debug comments for low-importance expressions that were skipped
+    // Only for expressions that don't already have hybrid verification
+    const expressionsWithHybrid = new Set(
+      this.hybridErrorWrappers.map(w => w.expression.originalText)
+    );
+    
+    for (const extractedExpression of this.extractedExpressions) {
+      // Skip if already has hybrid verification
+      if (expressionsWithHybrid.has(extractedExpression.expression.originalText)) {
+        continue;
+      }
+      
+      // Skip if expression has low importance scores and no error
+      if (!extractedExpression.expression.hasError && 
+          extractedExpression.expression.complexityScore < 30 &&
+          extractedExpression.expression.contextImportanceScore < 40 &&
+          extractedExpression.expression.errorSeverityScore < 20) {
+        
+        const debugComment = await this.createSkippedExpressionDebugComment(extractedExpression);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    return debugComments;
+  }
+
+  private async createLocationDebugComment(extractedExpression: ExtractedMathExpression): Promise<Comment | null> {
+    // Create a debug comment explaining why this expression couldn't be located
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date().toISOString(),
+        result: extractedExpression.expression
+      },
+      {
+        toolName: 'findLocation',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'text_not_found' }
+      }
+    ];
+
+    // Use a default position (start of chunk)
+    const startOffset = 0; // This is not ideal but needed for debug purposes
+    const endOffset = extractedExpression.expression.originalText.length;
+
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
+        startOffset,
+        endOffset,
+        quotedText: extractedExpression.expression.originalText
+      },
+      chunkId: extractedExpression.getChunkId(),
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Math Expression Detected, Location Unknown`,
+      level: 'debug' as const,
+      description: `**Expression Found:**
+> "${extractedExpression.expression.originalText}"
+
+**Skip Reason:** Unable to locate expression precisely in document
+
+This mathematical expression was extracted but couldn't be positioned accurately. This might be due to:
+- Text formatting differences during processing
+- Expression being part of a larger formula
+- Mathematical notation rendering issues
+
+The analysis may still be valid, but the highlighting won't be precise.`,
+    });
+  }
+
+  private async createUnverifiableDebugComment(hybridWrapper: HybridMathErrorWrapper): Promise<Comment | null> {
+    // Use the expression text to find location
+    const startOffset = this.documentText.indexOf(hybridWrapper.expression.originalText);
+    if (startOffset === -1) {
+      // Can't locate the text, use default position
+      return null;
+    }
+    const endOffset = startOffset + hybridWrapper.expression.originalText.length;
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 20).toISOString(),
+        result: hybridWrapper.expression
+      },
+      {
+        toolName: 'check-math-hybrid',
+        stage: 'verification',
+        timestamp: new Date().toISOString(),
+        result: hybridWrapper.verificationResult
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
+        startOffset,
+        endOffset,
+        quotedText: hybridWrapper.expression.originalText
+      },
+      chunkId: hybridWrapper.getChunkId(),
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Math Expression Detected, Unverifiable`,
+      level: 'debug' as const,
+      description: `**Expression Found:**
+> "${hybridWrapper.expression.originalText}"
+
+**Skip Reason:** Mathematical verification not possible
+
+This expression was detected but couldn't be verified automatically. This could be due to:
+- Conceptual complexity requiring domain expertise
+- Insufficient mathematical context
+- Limitations in automated verification tools
+- Abstract or theoretical mathematics beyond computational verification
+
+**Recommendation:** Manual review may be needed for complex mathematical content.`,
+    });
+  }
+
+  private async createSkippedExpressionDebugComment(extractedExpression: ExtractedMathExpression): Promise<Comment | null> {
+    const location = await extractedExpression.findLocationInDocument();
+    if (!location) return null; // Already handled by location debug comment
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractMath',
+        stage: 'extraction',
+        timestamp: new Date().toISOString(),
+        result: extractedExpression.expression
+      },
+      {
+        toolName: 'skipDecision',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { 
+          reason: 'low_importance',
+          complexityScore: extractedExpression.expression.complexityScore,
+          contextImportanceScore: extractedExpression.expression.contextImportanceScore,
+          errorSeverityScore: extractedExpression.expression.errorSeverityScore
+        }
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'math',
+      location: {
+        startOffset: location.startOffset,
+        endOffset: location.endOffset,
+        quotedText: location.quotedText
+      },
+      chunkId: extractedExpression.getChunkId(),
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Math Expression Detected, Skipped`,
+      level: 'debug' as const,
+      description: `**Expression Found:**
+> "${extractedExpression.expression.originalText}"
+
+**Skip Reason:** Low priority for mathematical verification
+
+**Scoring Breakdown:**
+- Complexity: ${extractedExpression.expression.complexityScore}/100 (threshold: ≥50)
+- Context Importance: ${extractedExpression.expression.contextImportanceScore}/100 (threshold: ≥40)  
+- Error Likelihood: ${extractedExpression.expression.errorSeverityScore}/100 (threshold: ≥30)
+
+This expression was skipped because it's ${extractedExpression.expression.complexityScore < 50 ? 'relatively simple' : 'complex enough'}, has ${extractedExpression.expression.contextImportanceScore < 40 ? 'low importance' : 'reasonable importance'} to the document, and ${extractedExpression.expression.errorSeverityScore < 30 ? 'low error risk' : 'significant error risk'}.`,
+    });
   }
 
   private generateAnalysis(): void {

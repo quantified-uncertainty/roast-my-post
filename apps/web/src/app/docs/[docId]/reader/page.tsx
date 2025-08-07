@@ -59,6 +59,10 @@ export default async function DocumentPage({
       : [evalParam]
     : undefined;
 
+  // Parse debug parameter from query params
+  const debugParam = resolvedSearchParams.debug;
+  const showDebugComments = debugParam === 'true' || debugParam === '1';
+
   return (
     <div className="flex h-full flex-col overflow-hidden bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
@@ -67,6 +71,7 @@ export default async function DocumentPage({
             document={document} 
             isOwner={isOwner}
             initialSelectedEvalIds={selectedEvalIds}
+            showDebugComments={showDebugComments}
           />
         </div>
       </div>

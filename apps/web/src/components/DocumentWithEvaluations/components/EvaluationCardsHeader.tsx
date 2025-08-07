@@ -19,6 +19,8 @@ interface EvaluationCardsHeaderProps {
   onEvaluationStateChange?: (newState: EvaluationState) => void;
   isLargeMode?: boolean;
   onToggleMode?: () => void;
+  showDebugComments?: boolean;
+  onToggleDebugComments?: () => void;
 }
 
 export function EvaluationCardsHeader({
@@ -27,6 +29,8 @@ export function EvaluationCardsHeader({
   onEvaluationStateChange,
   isLargeMode = true,
   onToggleMode,
+  showDebugComments = false,
+  onToggleDebugComments,
 }: EvaluationCardsHeaderProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -107,6 +111,30 @@ export function EvaluationCardsHeader({
     );
   }
 
+  // Debug toggle button mini component
+  function DebugToggleButton({
+    showDebug,
+    onToggle,
+  }: {
+    showDebug: boolean;
+    onToggle: () => void;
+  }) {
+    return (
+      <button
+        onClick={onToggle}
+        className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors ${
+          showDebug
+            ? "bg-amber-100 text-amber-700 ring-1 ring-amber-600"
+            : "border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+        }`}
+        title={showDebug ? "Hide debug comments" : "Show debug comments"}
+      >
+        <CommandLineIcon className="h-3.5 w-3.5" />
+        Debug
+      </button>
+    );
+  }
+
   // Chevron arrow button mini component
   function EvaluationModeToggleButton({
     isLargeMode,
@@ -180,6 +208,14 @@ export function EvaluationCardsHeader({
                 evaluationState={evaluationState}
                 onToggleAgent={handleToggleAgent}
               />
+              {onToggleDebugComments && (
+                <div className="ml-2 flex-shrink-0">
+                  <DebugToggleButton
+                    showDebug={showDebugComments}
+                    onToggle={onToggleDebugComments}
+                  />
+                </div>
+              )}
               <div className="ml-2 flex-shrink-0">
                 <EvaluationModeToggleButton
                   isLargeMode={isLargeMode}

@@ -5,7 +5,12 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { 
+  InformationCircleIcon, 
+  ExclamationTriangleIcon,
+  XCircleIcon,
+  CheckCircleIcon 
+} from "@heroicons/react/24/outline";
 
 // Database comment type (different from the documentSchema Comment type)
 type DatabaseComment = {
@@ -35,6 +40,22 @@ interface EvaluationCommentsProps {
   documentContent?: string;
 }
 
+function getIconForLevel(level?: string | null) {
+  switch (level) {
+    case 'error':
+      return XCircleIcon;
+    case 'warning':
+      return ExclamationTriangleIcon;
+    case 'success':
+      return CheckCircleIcon;
+    case 'debug':
+      return InformationCircleIcon; // Keep it subtle for debug
+    case 'info':
+    default:
+      return InformationCircleIcon;
+  }
+}
+
 export function EvaluationComments({
   comments,
   documentContent,
@@ -61,7 +82,13 @@ export function EvaluationComments({
           <div className="mb-4 flex items-center justify-between">
             <h3
               id={`comment-${index + 1}`}
-              className="scroll-mt-4 text-lg font-semibold text-gray-800"
+              className={`scroll-mt-4 text-lg font-semibold ${
+                comment.level === 'error' ? 'text-red-600' :
+                comment.level === 'warning' ? 'text-orange-600' :
+                comment.level === 'success' ? 'text-green-600' :
+                comment.level === 'debug' ? 'text-amber-600' :
+                'text-gray-800'
+              }`}
             >
               {comment.header ? comment.header : `Comment ${index + 1}`}
             </h3>
@@ -75,7 +102,15 @@ export function EvaluationComments({
                   className="rounded-md p-1.5 transition-colors hover:bg-gray-100"
                   aria-label="Show comment details"
                 >
-                  <InformationCircleIcon className="h-5 w-5 text-gray-400" />
+{(() => {
+                    const IconComponent = getIconForLevel(comment.level);
+                    const iconColor = comment.level === 'error' ? 'text-red-500' :
+                                      comment.level === 'warning' ? 'text-orange-500' :
+                                      comment.level === 'success' ? 'text-green-500' :
+                                      comment.level === 'debug' ? 'text-amber-500' :
+                                      'text-gray-400';
+                    return <IconComponent className={`h-5 w-5 ${iconColor}`} />;
+                  })()}
                 </button>
 
                 {/* Tooltip with highlight details */}
@@ -120,6 +155,7 @@ export function EvaluationComments({
                   comment.level === 'warning' ? 'bg-orange-100 text-orange-800' :
                   comment.level === 'info' ? 'bg-blue-100 text-blue-800' :
                   comment.level === 'success' ? 'bg-green-100 text-green-800' :
+                  comment.level === 'debug' ? 'bg-gray-50 text-gray-600' :
                   'bg-gray-100 text-gray-800'
                 }`}>
                   {comment.level}

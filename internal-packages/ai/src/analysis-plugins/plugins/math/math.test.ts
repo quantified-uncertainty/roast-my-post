@@ -68,9 +68,7 @@ describe('MathAnalyzerJob', () => {
   });
 
   describe('analyze', () => {
-    // Temporarily disabled due to flaky behavior in CI
-    // TODO: Fix the test to be more deterministic about comment generation
-    it.skip('should extract math expressions and generate comments', async () => {
+    it('should extract math expressions and generate comments', async () => {
       const mockExpressions = [
         {
           originalText: "2 + 2 = 5",
@@ -156,11 +154,13 @@ describe('MathAnalyzerJob', () => {
 
       expect(result.summary).toContain('2 mathematical expressions');
       expect(result.summary).toContain('1 with errors');
-      expect(result.summary).toContain('Hybrid verification found 1 issue');
-      expect(result.comments).toHaveLength(1); // Only errors create comments
-      // Check that at least one comment contains the correction
-      const hasCorrection = result.comments.some(c => (c.description || '').includes('5 → 4') || (c.description || '').includes('5</span> → <span'));
-      expect(hasCorrection).toBe(true);
+      expect(result.summary).toContain('Hybrid verification: 2 checked');
+      expect(result.comments).toHaveLength(2); // Now generates comments for both verified_true and verified_false
+      // Check that the error comment does NOT contain duplicate header text
+      const errorComment = result.comments.find(c => c.level === 'error');
+      expect(errorComment).toBeDefined();
+      expect(errorComment?.description).not.toContain('[Math]');
+      expect(errorComment?.description).not.toContain('<span style=');
       expect(result.cost).toBe(0); // No cost tracking without llmInteraction
     }, 10000); // Increase timeout
 
@@ -241,14 +241,20 @@ describe('MathAnalyzerJob', () => {
       });
 
       const analyzer = new MathAnalyzerJob();
-      const chunks = [new TextChunk('Test: 1 + 1 = 2', 'chunk1')];
+      const chunks = [Object.assign(new TextChunk('Test: 1 + 1 = 2', 'chunk1'), {
+        findTextAbsolute: jest.fn().mockResolvedValue({
+          startOffset: 5,
+          endOffset: 14,
+          quotedText: '1 + 1 = 2'
+        })
+      })];
 
       await analyzer.analyze(chunks, 'Test: 1 + 1 = 2');
       
       const debug = analyzer.getDebugInfo();
       
       expect(debug.expressionsCount).toBe(1);
-      expect(debug.commentsCount).toBe(0); // No errors, no comments
+      expect(debug.commentsCount).toBe(1); // Now generates comments for verified results
       expect(debug.llmInteractionsCount).toBe(0); // No LLM interactions tracked
     }, 10000); // Increase timeout
   });

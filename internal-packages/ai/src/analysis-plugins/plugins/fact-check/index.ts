@@ -49,6 +49,10 @@ export class VerifiedFact {
     return this.claim.topic;
   }
 
+  getChunk(): TextChunk {
+    return this.chunk;
+  }
+
   get averageScore(): number {
     return (this.claim.importanceScore + this.claim.checkabilityScore) / 2;
   }
@@ -171,7 +175,7 @@ export class VerifiedFact {
     } else if (verdict === "unverifiable") {
       header = "Unverifiable";
     } else {
-      header = "Needs verification";
+      header = "Claim Detected, Skipped";
     }
 
     // Add confidence if available
@@ -370,9 +374,15 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       });
 
       const commentResults = await Promise.all(commentPromises);
-      const comments: Comment[] = commentResults.filter(
+      const regularComments: Comment[] = commentResults.filter(
         (comment): comment is Comment => comment !== null
       );
+
+      // Generate debug comments for facts that were not investigated
+      const debugComments = await this.generateDebugComments(documentText);
+
+      // Combine regular and debug comments
+      const comments: Comment[] = [...regularComments, ...debugComments.filter(c => c !== null)];
 
       // Sort comments by importance
       comments.sort((a, b) => (b.importance || 0) - (a.importance || 0));
@@ -604,6 +614,181 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
 
     // Rough estimate: $0.01 per 1000 tokens
     return totalTokens * COSTS.COST_PER_TOKEN;
+  }
+
+  private async generateDebugComments(documentText: string): Promise<(Comment | null)[]> {
+    const debugComments: (Comment | null)[] = [];
+    
+    // Get facts that should be verified but weren't (due to limits)
+    const factsToVerify = this.facts.filter((fact) => fact.shouldVerify());
+    const verifiedFactsSet = new Set(
+      this.facts.filter(f => f.verification).map(f => f.text)
+    );
+    const unverifiedButShouldBe = factsToVerify.filter(
+      fact => !verifiedFactsSet.has(fact.text)
+    );
+
+    // Debug comments for facts that should have been verified but weren't
+    for (const fact of unverifiedButShouldBe) {
+      const debugComment = await this.createUnverifiedDebugComment(fact, documentText);
+      if (debugComment) {
+        debugComments.push(debugComment);
+      }
+    }
+
+    // Debug comments for facts that were skipped due to low priority
+    const lowPriorityFacts = this.facts.filter(fact => !fact.shouldVerify());
+    for (const fact of lowPriorityFacts) {
+      const debugComment = await this.createSkippedDebugComment(fact, documentText);
+      if (debugComment) {
+        debugComments.push(debugComment);
+      }
+    }
+
+    // Debug comments for facts that couldn't be located
+    for (const fact of this.facts) {
+      const location = await fact.findLocation(documentText);
+      if (!location) {
+        const debugComment = await this.createLocationDebugComment(fact, documentText);
+        if (debugComment) {
+          debugComments.push(debugComment);
+        }
+      }
+    }
+
+    return debugComments;
+  }
+
+  private async createUnverifiedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    const location = await fact.findLocation(documentText);
+    if (!location) return null;
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractCheckableClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 30).toISOString(),
+        result: fact.claim
+      },
+      {
+        toolName: 'verificationDecision',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { 
+          shouldVerify: true,
+          reason: 'exceeded_verification_limit',
+          importanceScore: fact.claim.importanceScore,
+          checkabilityScore: fact.claim.checkabilityScore,
+          truthProbability: fact.claim.truthProbability
+        }
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'fact-check',
+      location,
+      chunkId: fact.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Claim Detected, Limit Reached`,
+      level: 'debug' as const,
+      description: `**Claim Found:**
+> "${fact.text}"
+
+**Skip Reason:** Processing limit reached (max 25 claims per analysis)
+
+**Scoring Breakdown:**
+- Importance: ${fact.claim.importanceScore}/100 ✓ (meets threshold: ≥60)
+- Checkability: ${fact.claim.checkabilityScore}/100 ✓ (meets threshold: ≥60)
+- Truth Probability: ${fact.claim.truthProbability}% ${fact.claim.truthProbability <= 70 ? '⚠️ (threshold: ≤70%)' : '(threshold: ≤70%)'}
+
+This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.`,
+    });
+  }
+
+  private async createSkippedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    const location = await fact.findLocation(documentText);
+    if (!location) return null;
+
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractCheckableClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 30).toISOString(),
+        result: fact.claim
+      },
+      {
+        toolName: 'verificationDecision',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { 
+          shouldVerify: false,
+          reason: 'low_priority',
+          importanceScore: fact.claim.importanceScore,
+          checkabilityScore: fact.claim.checkabilityScore,
+          truthProbability: fact.claim.truthProbability
+        }
+      }
+    ];
+
+    return CommentBuilder.build({
+      plugin: 'fact-check',
+      location,
+      chunkId: fact.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Claim Detected, Skipped`,
+      level: 'debug' as const,
+      description: `**Claim Found:**
+> "${fact.text}"
+
+**Skip Reason:** Low priority for fact-checking resources
+
+**Scoring Breakdown:**
+- Importance: ${fact.claim.importanceScore}/100 (threshold: ≥60)
+- Checkability: ${fact.claim.checkabilityScore}/100 (threshold: ≥60)  
+- Truth Probability: ${fact.claim.truthProbability}% (threshold: ≤70%)
+
+This claim didn't meet the criteria for detailed verification. ${fact.claim.importanceScore < 60 && fact.claim.checkabilityScore < 60 ? 'Both importance and checkability scores were too low.' : fact.claim.importanceScore < 60 ? 'Importance score was too low for prioritization.' : fact.claim.checkabilityScore < 60 ? 'Checkability score was too low for efficient verification.' : 'Truth probability was too high (likely accurate) to prioritize.'}`,
+    });
+  }
+
+  private async createLocationDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
+    const toolChain: ToolChainResult[] = [
+      {
+        toolName: 'extractCheckableClaims',
+        stage: 'extraction',
+        timestamp: new Date(this.processingStartTime + 30).toISOString(),
+        result: fact.claim
+      },
+      {
+        toolName: 'findLocation',
+        stage: 'enhancement',
+        timestamp: new Date().toISOString(),
+        result: { status: 'failed', reason: 'text_not_found' }
+      }
+    ];
+
+    // Use a default position since we can't locate the text
+    const location = {
+      startOffset: 0,
+      endOffset: fact.text.length,
+      quotedText: fact.text
+    };
+
+    return CommentBuilder.build({
+      plugin: 'fact-check',
+      location,
+      chunkId: fact.getChunk().id,
+      processingStartTime: this.processingStartTime,
+      toolChain,
+      
+      header: `Fact claim location not found`,
+      level: 'debug' as const,
+      description: `The fact-checker found this claim but couldn't locate it precisely in the document: "${fact.text}". This might be due to text paraphrasing or formatting differences between extraction and document structure.`,
+    });
   }
 
   private generateAnalysis(): { summary: string; analysisSummary: string } {
