@@ -301,7 +301,7 @@ export class AgentModel {
         };
       });
     } catch (error) {
-      console.error('Error fetching agent documents:', error);
+      // Let the error propagate to the caller for proper handling
       throw error;
     }
   }
@@ -419,7 +419,7 @@ export class AgentModel {
         };
       });
     } catch (error) {
-      console.error('Error fetching agent evaluations:', error);
+      // Let the error propagate to the caller for proper handling
       throw error;
     }
   }

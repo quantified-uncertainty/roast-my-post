@@ -4,7 +4,7 @@
  */
 
 import { OpenAI } from 'openai';
-import { getConfig } from '../../config';
+import { aiConfig } from '../../config';
 import { getCurrentHeliconeHeaders } from '../../helicone/simpleSessionManager';
 
 export interface PerplexityOptions {
@@ -18,8 +18,7 @@ export class PerplexityClient {
   private client: OpenAI;
   
   constructor(apiKey?: string) {
-    const config = getConfig();
-    const key = apiKey || config.openRouterApiKey || process.env.OPENROUTER_API_KEY || '';
+    const key = apiKey || process.env.OPENROUTER_API_KEY || '';
     
     if (!key || key === 'your_openrouter_api_key_here') {
       throw new Error(
@@ -28,7 +27,7 @@ export class PerplexityClient {
       );
     }
     
-    const heliconeKey = config.heliconeApiKey || process.env.HELICONE_API_KEY;
+    const heliconeKey = aiConfig.helicone.apiKey || process.env.HELICONE_API_KEY;
     
     // Use Helicone proxy if available, otherwise direct OpenRouter
     if (heliconeKey) {

@@ -77,8 +77,11 @@ jobs:
       - name: Run linting
         run: pnpm --filter @roast/web run lint
 
-      - name: Run CI tests (unit + integration, no external deps)
+      - name: Run CI tests (unit tests only)
         run: pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary
+
+      - name: Run safe integration tests (no external APIs)
+        run: pnpm --filter @roast/web run test:ci-integration
 
       - name: Build application
         run: pnpm --filter @roast/web run build

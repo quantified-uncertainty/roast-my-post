@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from 'react';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
+import { ToolErrorBoundary } from './ToolErrorBoundary';
 
 export interface ToolPageTemplateProps<TOutput> {
   title: string;
@@ -66,7 +67,8 @@ export function ToolPageTemplate<TOutput>({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <ToolErrorBoundary>
+      <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
         <p className="text-gray-600">{description}</p>
@@ -110,5 +112,6 @@ export function ToolPageTemplate<TOutput>({
         )}
       </div>
     </div>
+    </ToolErrorBoundary>
   );
 }

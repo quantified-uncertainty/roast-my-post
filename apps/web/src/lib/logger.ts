@@ -3,6 +3,8 @@
  * In production, this can be replaced with a proper logging service
  */
 
+import { isDevelopment, isTest } from '@/lib/core/environment';
+
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogContext {
@@ -12,8 +14,8 @@ interface LogContext {
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV !== "production";
-  private isTest = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined;
+  private isDevelopment = isDevelopment();
+  private isTest = isTest();
 
   private log(level: LogLevel, message: string, context?: LogContext) {
     const timestamp = new Date().toISOString();
