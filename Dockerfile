@@ -28,8 +28,13 @@ RUN pnpm --filter @roast/db run gen
 # Copy source code
 COPY . .
 
-# Build internal packages
-RUN pnpm --filter @roast/domain run build
+# Build internal packages in dependency order
+# Install dependencies again after copying source (for workspace references)
+RUN pnpm install --frozen-lockfile
+
+# Build packages in correct dependency order
+RUN pnpm --filter @roast/db run build
+RUN pnpm --filter @roast/domain run build  
 RUN pnpm --filter @roast/ai run build
 
 # Build Next.js
