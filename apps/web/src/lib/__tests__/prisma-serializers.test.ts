@@ -9,12 +9,11 @@ import {
 // Mock Decimal class for testing since Prisma's Decimal isn't available in test environment
 class MockDecimal {
   private value: string;
-  static get name() { return 'Decimal'; }
   
   constructor(value: string | number) {
     this.value = String(value);
     // Override constructor name for duck typing checks
-    Object.defineProperty(this.constructor, 'name', { value: 'Decimal' });
+    Object.defineProperty(this.constructor, 'name', { value: 'Decimal', configurable: true });
   }
   
   toNumber(): number {
