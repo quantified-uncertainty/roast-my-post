@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger";
 import { processArticle } from "@/lib/articleImport";
-import { DocumentModel } from "@/models/Document";
+import { DocumentService } from "@/lib/services/DocumentService";
+import { ValidationError } from "@/lib/core/errors";
 import { prisma } from "@roast/db";
 
 export interface ImportDocumentResult {
@@ -47,22 +48,38 @@ export async function importDocumentService(
       };
     }
 
-    const documentData = {
-      title: processedArticle.title,
-      authors: processedArticle.author,
-      content: processedArticle.content,
-      urls: processedArticle.url,
-      platforms: processedArticle.platforms.join(", "),
-      importUrl: url,
-    };
+    // Initialize service
+    const documentService = new DocumentService();
 
-    // Creating document
-    const document = await DocumentModel.create({
-      ...documentData,
-      submittedById: userId,
-    });
+    // Creating document using the new DocumentService
+    const result = await documentService.createDocument(
+      userId,
+      {
+        title: processedArticle.title,
+        content: processedArticle.content,
+        authors: processedArticle.author,
+        url: processedArticle.url,
+        platforms: processedArticle.platforms,
+        importUrl: url,
+      },
+      agentIds
+    );
 
-    const latestVersion = document.versions[document.versions.length - 1];
+    if (result.isError()) {
+      const error = result.error();
+      if (error instanceof ValidationError) {
+        return {
+          success: false,
+          error: error.details?.join('. ') || error.message
+        };
+      }
+      return {
+        success: false,
+        error: error?.message || "Failed to create document"
+      };
+    }
+
+    const document = result.unwrap();
     
     // Create evaluations and jobs if agentIds are provided
     const createdEvaluations = [];
@@ -107,10 +124,8 @@ export async function importDocumentService(
       documentId: document.id,
       document: {
         id: document.id,
-        title: latestVersion.title,
-        authors: Array.isArray(latestVersion.authors) 
-          ? latestVersion.authors.join(", ") 
-          : latestVersion.authors,
+        title: document.title,
+        authors: document.authorName,
       },
       evaluations: createdEvaluations,
     };
