@@ -217,7 +217,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Create evaluations and jobs for each document
-      const jobsToCreate = [];
+      const { getServices } = await import("@/application/services/ServiceFactory");
+      const transactionalServices = getServices().createTransactionalServices(tx);
       
       for (const documentId of documentsToProcess) {
         // Check if evaluation exists
@@ -238,16 +239,10 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        jobsToCreate.push({
+        // Create job using JobService for consistency
+        await transactionalServices.jobService.createJob({
           evaluationId: evaluation.id,
           agentEvalBatchId: batch.id,
-        });
-      }
-
-      // Create all jobs
-      if (jobsToCreate.length > 0) {
-        await tx.job.createMany({
-          data: jobsToCreate,
         });
       }
 

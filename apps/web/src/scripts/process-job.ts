@@ -42,10 +42,10 @@ async function main() {
     process.exit(1);
   } finally {
     try {
-      await jobProcessor.disconnect();
+      // Graceful shutdown - Prisma will disconnect automatically
       logger.info('👋 Process exiting cleanly...');
     } catch (disconnectError) {
-      console.warn('⚠️  Error during disconnect:', disconnectError);
+      console.warn('⚠️  Error during shutdown:', disconnectError);
     }
     // Exit with 0 to indicate success
     process.exit(0);

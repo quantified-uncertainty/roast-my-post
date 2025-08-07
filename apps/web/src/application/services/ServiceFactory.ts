@@ -86,8 +86,11 @@ export class ServiceFactory {
     // Create repositories with the transaction client
     const txDocumentRepo = new DocumentRepository(prismaTransaction);
     const txEvaluationRepo = new EvaluationRepository(prismaTransaction);
+    const txJobRepo = new JobRepository(prismaTransaction);
     
     // Create services with transactional repositories
+    const txJobService = new JobService(txJobRepo, this.logger);
+    
     const txEvaluationService = new EvaluationService(
       txEvaluationRepo,
       this.logger
@@ -102,7 +105,8 @@ export class ServiceFactory {
     
     return {
       documentService: txDocumentService,
-      evaluationService: txEvaluationService
+      evaluationService: txEvaluationService,
+      jobService: txJobService
     };
   }
   
@@ -147,6 +151,7 @@ export function getServices() {
     documentService: factory.getDocumentService(),
     evaluationService: factory.getEvaluationService(),
     jobService: factory.getJobService(),
-    jobOrchestrator: factory.getJobOrchestrator()
+    jobOrchestrator: factory.getJobOrchestrator(),
+    createTransactionalServices: (prismaTransaction: any) => factory.createTransactionalServices(prismaTransaction)
   };
 }
