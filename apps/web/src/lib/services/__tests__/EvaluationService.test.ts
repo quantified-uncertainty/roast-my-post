@@ -57,7 +57,7 @@ describe('EvaluationService', () => {
     });
 
     it('should check if document exists and user has access', async () => {
-      mockPrisma.document.findFirst.mockResolvedValueOnce(null);
+      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -73,8 +73,8 @@ describe('EvaluationService', () => {
     });
 
     it('should check if agent exists', async () => {
-      mockPrisma.document.findFirst.mockResolvedValueOnce({ id: 'doc-123' });
-      mockPrisma.agent.findUnique.mockResolvedValueOnce(null);
+      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
+      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -87,8 +87,8 @@ describe('EvaluationService', () => {
     });
 
     it('should create new evaluation when none exists', async () => {
-      mockPrisma.document.findFirst.mockResolvedValueOnce({ id: 'doc-123' });
-      mockPrisma.agent.findUnique.mockResolvedValueOnce({ id: 'agent-123' });
+      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
+      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'agent-123' });
       
       const mockTransaction = jest.fn().mockImplementation(async (callback) => {
         const mockTx = {
@@ -103,7 +103,7 @@ describe('EvaluationService', () => {
         return await callback(mockTx);
       });
       
-      mockPrisma.$transaction.mockImplementation(mockTransaction);
+      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -118,8 +118,8 @@ describe('EvaluationService', () => {
     });
 
     it('should create new job for existing evaluation', async () => {
-      mockPrisma.document.findFirst.mockResolvedValueOnce({ id: 'doc-123' });
-      mockPrisma.agent.findUnique.mockResolvedValueOnce({ id: 'agent-123' });
+      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
+      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'agent-123' });
       
       const mockTransaction = jest.fn().mockImplementation(async (callback) => {
         const mockTx = {
@@ -133,7 +133,7 @@ describe('EvaluationService', () => {
         return await callback(mockTx);
       });
       
-      mockPrisma.$transaction.mockImplementation(mockTransaction);
+      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -169,10 +169,10 @@ describe('EvaluationService', () => {
     });
 
     it('should handle partial successes gracefully', async () => {
-      mockPrisma.document.findFirst.mockResolvedValueOnce({ id: 'doc-123' });
+      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
       
       // First agent exists, second doesn't
-      mockPrisma.agent.findUnique
+      (mockPrisma.agent.findUnique as jest.Mock)
         .mockResolvedValueOnce({ id: 'agent-1' })
         .mockResolvedValueOnce(null);
       
@@ -189,7 +189,7 @@ describe('EvaluationService', () => {
         return await callback(mockTx);
       });
       
-      mockPrisma.$transaction.mockImplementation(mockTransaction);
+      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluationsForDocument(mockRequest);
 

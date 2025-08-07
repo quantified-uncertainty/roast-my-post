@@ -52,13 +52,13 @@ export class EvaluationService {
       // Verify document exists and user has access
       const documentCheck = await this.checkDocumentAccess(request.documentId, request.userId);
       if (documentCheck.isError()) {
-        return documentCheck;
+        return Result.fail(documentCheck.error()!);
       }
 
       // Verify agent exists
       const agentCheck = await this.checkAgentExists(request.agentId);
       if (agentCheck.isError()) {
-        return agentCheck;
+        return Result.fail(agentCheck.error()!);
       }
 
       // Create evaluation and job in transaction
@@ -105,7 +105,7 @@ export class EvaluationService {
       // Verify document exists and user has access
       const documentCheck = await this.checkDocumentAccess(request.documentId, request.userId);
       if (documentCheck.isError()) {
-        return documentCheck;
+        return Result.fail(documentCheck.error()!);
       }
 
       // Create evaluations for each agent
@@ -117,7 +117,7 @@ export class EvaluationService {
           // Verify agent exists
           const agentCheck = await this.checkAgentExists(agentId);
           if (agentCheck.isError()) {
-            errors.push(`Agent ${agentId}: ${agentCheck.error().message}`);
+            errors.push(`Agent ${agentId}: ${agentCheck.error()?.message || 'Agent not found'}`);
             continue;
           }
 
