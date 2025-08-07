@@ -13,16 +13,34 @@ describe('Configuration Validation', () => {
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    // Restore original environment
+    Object.keys(process.env).forEach(key => {
+      delete process.env[key];
+    });
+    Object.assign(process.env, originalEnv);
+    
     // Clear the config cache by requiring fresh module
     jest.resetModules();
   });
 
+  // Helper to set environment variables in a type-safe way
+  const setEnvVars = (vars: Record<string, string | undefined>) => {
+    Object.entries(vars).forEach(([key, value]) => {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    });
+  };
+
   it('should load config without errors in test environment', () => {
     // Set minimal required environment variables
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-    process.env.AUTH_SECRET = 'test-secret';
+    setEnvVars({
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      AUTH_SECRET: 'test-secret'
+    });
 
     expect(() => {
       const { config } = require('@roast/domain');
@@ -31,9 +49,11 @@ describe('Configuration Validation', () => {
   });
 
   it('should handle missing DATABASE_URL gracefully in test mode', () => {
-    process.env.NODE_ENV = 'test';
-    delete process.env.DATABASE_URL;
-    process.env.AUTH_SECRET = 'test-secret';
+    setEnvVars({
+      NODE_ENV: 'test',
+      DATABASE_URL: undefined, // Explicitly delete
+      AUTH_SECRET: 'test-secret'
+    });
 
     expect(() => {
       const { config } = require('@roast/domain');
@@ -42,9 +62,11 @@ describe('Configuration Validation', () => {
   });
 
   it('should require DATABASE_URL in production mode', () => {
-    process.env.NODE_ENV = 'production';
-    delete process.env.DATABASE_URL;
-    process.env.AUTH_SECRET = 'production-secret';
+    setEnvVars({
+      NODE_ENV: 'production',
+      DATABASE_URL: undefined, // Explicitly delete
+      AUTH_SECRET: 'production-secret'
+    });
 
     expect(() => {
       const { config } = require('@roast/domain');
@@ -53,9 +75,11 @@ describe('Configuration Validation', () => {
   });
 
   it('should validate environment-specific defaults', () => {
-    process.env.NODE_ENV = 'development';
-    process.env.DATABASE_URL = 'postgresql://dev:dev@localhost:5432/dev';
-    process.env.AUTH_SECRET = 'dev-secret';
+    setEnvVars({
+      NODE_ENV: 'development',
+      DATABASE_URL: 'postgresql://dev:dev@localhost:5432/dev',
+      AUTH_SECRET: 'dev-secret'
+    });
 
     const { config } = require('@roast/domain');
     
@@ -67,9 +91,11 @@ describe('Configuration Validation', () => {
   });
 
   it('should handle lazy loading correctly', () => {
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-    process.env.AUTH_SECRET = 'test-secret';
+    setEnvVars({
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      AUTH_SECRET: 'test-secret'
+    });
 
     // First access should create config
     const { config } = require('@roast/domain');
@@ -83,11 +109,13 @@ describe('Configuration Validation', () => {
   });
 
   it('should validate configuration schema', () => {
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-    process.env.AUTH_SECRET = 'test-secret';
-    process.env.PORT = '3000';
-    process.env.ANTHROPIC_API_KEY = 'sk-test';
+    setEnvVars({
+      NODE_ENV: 'test',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      AUTH_SECRET: 'test-secret',
+      PORT: '3000',
+      ANTHROPIC_API_KEY: 'sk-test'
+    });
 
     const { config } = require('@roast/domain');
 
