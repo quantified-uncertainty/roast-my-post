@@ -1,8 +1,8 @@
 import { JobStatusBadge } from "./JobStatusBadge";
 import { LogsViewer } from "./LogsViewer";
-import { formatCostFromDollars, formatDuration, formatDate } from "@/lib/job/formatters";
-import { JobData } from "@/lib/job/types";
-import { getRetryText } from "@/lib/job/transformers";
+import { formatCostFromDollars, formatDuration, formatDate } from "@/application/services/job/formatters";
+import { JobData } from "@/application/services/job/types";
+import { getRetryText } from "@/application/services/job/transformers";
 import { CopyButton } from "@/components/CopyButton";
 
 interface JobSummaryProps {

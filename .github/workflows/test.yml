@@ -74,8 +74,20 @@ jobs:
       - name: Run TypeScript type checking
         run: pnpm turbo run typecheck
 
+      - name: Validate script TypeScript
+        run: pnpm --filter @roast/web run typecheck:scripts
+
       - name: Run linting
         run: pnpm --filter @roast/web run lint
+
+      - name: Run configuration validation tests
+        run: pnpm --filter @roast/web run test:ci --testMatch='**/*config*.test.ts'
+
+      - name: Run script smoke tests
+        run: pnpm --filter @roast/web run test:ci --testMatch='**/*script*.test.ts'
+
+      - name: Validate script runtime
+        run: pnpm --filter @roast/web run test:scripts
 
       - name: Run CI tests (unit tests only)
         run: pnpm --filter @roast/web run test:ci --coverage --coverageReporters=text-summary

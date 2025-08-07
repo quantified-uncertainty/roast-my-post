@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { logger } from "@/infrastructure/logging/logger";
+import { prisma } from "@/infrastructure/database/prisma";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 export async function GET(
   request: NextRequest,

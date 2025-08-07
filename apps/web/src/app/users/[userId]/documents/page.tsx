@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/infrastructure/database/prisma";
 import DocumentsClient from "@/app/docs/DocumentsClient";
 import { DocumentModel } from "@/models/Document";
-import { USER_DISPLAY } from "@/lib/constants";
+import { USER_DISPLAY } from "@/shared/constants/constants";
 
 export const dynamic = 'force-dynamic';
 

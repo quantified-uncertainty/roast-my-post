@@ -30,7 +30,7 @@ import { unified } from "unified";
 // Import our improved hooks for Phase 2
 import { useHighlightMapper } from "@/hooks/useHighlightMapper";
 import { usePlainTextOffsets } from "@/hooks/usePlainTextOffsets";
-import { readerFontFamily } from "@/lib/fonts";
+import { readerFontFamily } from "@/shared/constants/fonts";
 import CodeBlock from "./CodeBlock";
 import { CodeBlockErrorBoundary } from "./CodeBlockErrorBoundary";
 import { LAYOUT, TEXT_PROCESSING, TIMING } from "@/components/DocumentWithEvaluations/constants";

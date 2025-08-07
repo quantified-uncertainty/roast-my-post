@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
-import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
+import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
 
 const updateProfileSchema = z.object({

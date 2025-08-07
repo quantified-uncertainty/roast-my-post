@@ -105,10 +105,10 @@ async function generateJobReport(jobId: string) {
       const pathCosts = new Map<string, { cost: number; count: number }>();
       
       requests.forEach(req => {
-        const path = req.session?.path || req.properties?.['Helicone-Session-Path'] || 'unknown';
+        const path = (req as any).session?.path || (req as any).properties?.['Helicone-Session-Path'] || 'unknown';
         const existing = pathCosts.get(path) || { cost: 0, count: 0 };
         pathCosts.set(path, {
-          cost: existing.cost + (req.cost || 0),
+          cost: existing.cost + ((req as any).cost || 0),
           count: existing.count + 1
         });
       });

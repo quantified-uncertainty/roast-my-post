@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { formatTaskPrice, formatDuration } from "@/lib/job/formatters";
+import { formatTaskPrice, formatDuration } from "@/application/services/job/formatters";
 
 interface Task {
   id: string;

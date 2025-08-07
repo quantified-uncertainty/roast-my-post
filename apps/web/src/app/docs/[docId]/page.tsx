@@ -10,8 +10,8 @@ import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSideba
 import SlateEditor from "@/components/SlateEditor";
 import { PageHeader } from "@/components/PageHeader";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/infrastructure/auth/auth";
+import { prisma } from "@/infrastructure/database/prisma";
 import { DocumentModel } from "@/models/Document";
 import {
   ArrowTopRightOnSquareIcon,

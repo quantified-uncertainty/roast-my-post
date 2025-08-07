@@ -1,0 +1,33 @@
+{
+  "name": "@roast/domain",
+  "version": "0.1.0",
+  "description": "Core business domain logic for RoastMyPost",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@roast/db": "workspace:*",
+    "nanoid": "^5.0.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.8",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "typescript": "^5.5.2"
+  },
+  "keywords": [
+    "domain",
+    "business-logic",
+    "services"
+  ],
+  "author": "RoastMyPost Team",
+  "license": "MIT"
+}

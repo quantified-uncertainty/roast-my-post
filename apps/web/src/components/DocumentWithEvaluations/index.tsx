@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 
-import { HEADER_HEIGHT_PX } from "@/utils/ui/constants";
-import { clearTruncationCache, getTruncationCacheSize } from "@/utils/ui/commentPositioning";
+import { HEADER_HEIGHT_PX } from "@/shared/utils/ui/constants";
+import { clearTruncationCache, getTruncationCacheSize } from "@/shared/utils/ui/commentPositioning";
 
 import { EvaluationView } from "./components";
 import { EmptyEvaluationsView } from "./components/EmptyEvaluationsView";

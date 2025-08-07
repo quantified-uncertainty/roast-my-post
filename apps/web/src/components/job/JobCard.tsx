@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { JobStatusBadge, JobStatusIcon } from "./JobStatusBadge";
-import { formatCostFromDollars, formatDuration, formatRelativeDate } from "@/lib/job/formatters";
-import { JobData } from "@/lib/job/types";
-import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/lib/job/transformers";
+import { formatCostFromDollars, formatDuration, formatRelativeDate } from "@/application/services/job/formatters";
+import { JobData } from "@/application/services/job/types";
+import { getDocumentInfo, getAgentInfo, getBatchInfo, getRetryText } from "@/application/services/job/transformers";
 
 interface JobCardProps {
   job: JobData;

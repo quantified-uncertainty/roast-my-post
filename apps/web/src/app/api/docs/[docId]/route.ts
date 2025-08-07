@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
 import { DocumentModel } from "@/models/Document";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { commonErrors } from "@/lib/api-response-helpers";
-import { withSecurity } from "@/lib/security-middleware";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { commonErrors } from "@/infrastructure/http/api-response-helpers";
+import { withSecurity } from "@/infrastructure/http/security-middleware";
 import { prisma } from "@roast/db";
 
 const updateDocumentSchema = z.object({
@@ -51,7 +51,7 @@ export const PUT = withSecurity(
 
     // Use existing document update logic from the old API
     // Import the PUT logic from the existing documents API
-    const { updateDocumentWithAgents } = await import("@/lib/document-operations");
+    const { updateDocumentWithAgents } = await import("@/application/services/document-operations");
     
     const result = await updateDocumentWithAgents(docId, intendedAgentIds, userId!);
 

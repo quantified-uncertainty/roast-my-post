@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
+import { logger } from "@/infrastructure/logging/logger";
+import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
 import { AgentModel } from "@/models/Agent";
 import { agentSchema } from "@/models/Agent";
 import { prisma } from "@roast/db";
-import { successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { ZodError } from "zod";
 
 export async function GET() {

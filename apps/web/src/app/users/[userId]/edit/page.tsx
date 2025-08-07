@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { UserModel } from "@/models/User";
 
 import { EditUserClient } from "./EditUserClient";

@@ -4,18 +4,19 @@ import {
   spawn,
 } from "child_process";
 
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma, JobStatus } from "@roast/db";
-import { getAgentTimeout, formatTimeout } from "@/config/agentTimeouts";
+import { getAgentTimeout, formatTimeout } from "@/shared/constants/config/agentTimeouts";
+import { config } from '@roast/domain';
 
-// Configuration with environment variable support
-const DEFAULT_MAX_WORKERS = parseInt(process.env.ADAPTIVE_MAX_WORKERS || '5', 10);
-const POLL_INTERVAL_MS = parseInt(process.env.ADAPTIVE_POLL_INTERVAL_MS || '1000', 10);
-const WORKER_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_WORKER_TIMEOUT_MS || '240000', 10); // 4 minutes default
-const KILL_GRACE_PERIOD_MS = parseInt(process.env.ADAPTIVE_KILL_GRACE_PERIOD_MS || '5000', 10);
-const SHUTDOWN_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_SHUTDOWN_TIMEOUT_MS || '30000', 10); // 30s to finish jobs
-const STALE_JOB_CHECK_INTERVAL_MS = parseInt(process.env.ADAPTIVE_STALE_CHECK_INTERVAL_MS || '300000', 10); // 5 minutes
-const STALE_JOB_TIMEOUT_MS = parseInt(process.env.ADAPTIVE_STALE_JOB_TIMEOUT_MS || '1800000', 10); // 30 minutes
+// Configuration from centralized config system
+const DEFAULT_MAX_WORKERS = config.jobs.adaptiveWorkers.maxWorkers;
+const POLL_INTERVAL_MS = config.jobs.adaptiveWorkers.pollIntervalMs;
+const WORKER_TIMEOUT_MS = config.jobs.adaptiveWorkers.workerTimeoutMs;
+const KILL_GRACE_PERIOD_MS = config.jobs.adaptiveWorkers.killGracePeriodMs;
+const SHUTDOWN_TIMEOUT_MS = config.jobs.adaptiveWorkers.shutdownTimeoutMs;
+const STALE_JOB_CHECK_INTERVAL_MS = config.jobs.adaptiveWorkers.staleJobCheckIntervalMs;
+const STALE_JOB_TIMEOUT_MS = config.jobs.adaptiveWorkers.staleJobTimeoutMs;
 
 interface WorkerInfo {
   id: number;

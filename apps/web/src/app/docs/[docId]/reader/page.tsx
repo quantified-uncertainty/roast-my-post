@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DocumentWithEvaluations } from "@/components/DocumentWithEvaluations";
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 
 export default async function DocumentPage({

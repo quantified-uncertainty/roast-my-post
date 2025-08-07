@@ -1,8 +1,8 @@
 'use server';
 
 import { checkMathWithMathJsTool } from '@roast/ai/server';
-import { auth } from '@/lib/auth';
-import { logger } from '@/lib/logger';
+import { auth } from '@/infrastructure/auth/auth';
+import { logger } from '@/infrastructure/logging/logger';
 
 export async function checkMathWithMathJs(text: string) {
   const session = await auth();

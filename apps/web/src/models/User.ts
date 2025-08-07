@@ -1,6 +1,6 @@
 import { prisma } from "@roast/db";
 import { z } from "zod";
-import { getUserSelectFields, getPublicUserFields } from "@/lib/user-permissions";
+import { getUserSelectFields, getPublicUserFields } from "@/infrastructure/auth/user-permissions";
 
 // Define schema for User object
 export const UserSchema = z.object({

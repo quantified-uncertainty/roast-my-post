@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { AgentModel } from "@/models/Agent";
 
 import AgentVersionsClient from "./AgentVersionsClient";

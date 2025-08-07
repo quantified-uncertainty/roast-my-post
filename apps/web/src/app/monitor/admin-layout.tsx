@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth, isAdmin } from "@/lib/auth";
+import { auth, isAdmin } from "@/infrastructure/auth/auth";
 
 interface AdminLayoutProps {
   children: React.ReactNode;

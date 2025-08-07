@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 import { JobStatusIndicator } from "./JobStatusIndicator";
 
 interface Version {

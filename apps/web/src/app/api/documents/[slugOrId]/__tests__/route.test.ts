@@ -1,39 +1,47 @@
-import { GET, PUT } from '../route';
-import { NextRequest } from 'next/server';
-import { prisma } from '@roast/db';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { DocumentModel } from '@/models/Document';
+// Mock functions that will be used in mocks
+const mockGetDocumentForReader = jest.fn();
+const mockUpdateDocument = jest.fn();
+const mockDeleteDocument = jest.fn();
+const mockAuthenticateRequest = jest.fn();
 
-// Mock dependencies
+// Mock modules BEFORE imports
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: () => mockAuthenticateRequest(),
+}));
+
+jest.mock('@/infrastructure/logging/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+jest.mock('@roast/domain', () => {
+  const originalModule = jest.requireActual('@roast/domain');
+  return {
+    ...originalModule,
+    DocumentService: jest.fn().mockImplementation(() => ({
+      getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
+      updateDocument: (...args: any[]) => mockUpdateDocument(...args),
+      deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
+    })),
+    EvaluationService: jest.fn().mockImplementation(() => ({})),
+    DocumentValidator: jest.fn().mockImplementation(() => ({})),
+  };
+});
+
 jest.mock('@roast/db', () => ({
-  prisma: {
-    document: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    documentVersion: {
-      update: jest.fn(),
-    },
-    evaluation: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-    },
-    job: {
-      create: jest.fn(),
-    },
-    $transaction: jest.fn(),
-  },
+  DocumentRepository: jest.fn().mockImplementation(() => ({})),
+  EvaluationRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
-}));
-
-jest.mock('@/models/Document', () => ({
-  DocumentModel: {
-    getDocumentWithEvaluations: jest.fn(),
-  },
-}));
+// Now import the routes AFTER mocks are set up
+import { NextRequest } from 'next/server';
+import { Result } from '@roast/domain';
+import { NotFoundError, AuthorizationError, ValidationError } from '@roast/domain';
+import { GET, PUT } from '../route';
 
 describe('GET /api/documents/[slugOrId]', () => {
   const mockDocId = 'doc-123';
@@ -54,10 +62,18 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    // Log the response if it's not 200
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Response error:', errorData);
+    }
     
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -65,8 +81,6 @@ describe('GET /api/documents/[slugOrId]', () => {
   });
 
   it('should not expose submittedBy user email', async () => {
-    // This test verifies that DocumentModel properly excludes emails
-    // The DocumentModel should already filter out emails at the database level
     const mockDocumentFromDB = {
       id: mockDocId,
       title: 'Test Document',
@@ -79,12 +93,14 @@ describe('GET /api/documents/[slugOrId]', () => {
         id: 'user-456',
         name: 'John Doe',
         image: 'https://example.com/avatar.jpg',
-        // DocumentModel should have already excluded email at DB query level
+        // Email should be excluded by the service
       },
       evaluations: [],
     };
     
-    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocumentFromDB);
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocumentFromDB));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
@@ -97,9 +113,6 @@ describe('GET /api/documents/[slugOrId]', () => {
     expect(data.submittedBy.id).toBe('user-456');
     expect(data.submittedBy.name).toBe('John Doe');
     expect(data.submittedBy.email).toBeUndefined();
-    
-    // The real protection happens in DocumentModel via getPublicUserFields()
-    // This test verifies the API passes through what DocumentModel returns
   });
 
   it('should find document by ID', async () => {
@@ -111,13 +124,15 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
     
     expect(response.status).toBe(200);
-    expect(DocumentModel.getDocumentWithEvaluations).toHaveBeenCalledWith(mockDocId);
+    expect(mockGetDocumentForReader).toHaveBeenCalledWith(mockDocId, undefined);
   });
 
   it('should find document by slug', async () => {
@@ -129,17 +144,23 @@ describe('GET /api/documents/[slugOrId]', () => {
       evaluations: [],
     };
     
-    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(mockDocument);
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
+    mockGetDocumentForReader.mockResolvedValueOnce(Result.ok(mockDocument));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockSlug}`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: mockSlug }) });
     
     expect(response.status).toBe(200);
-    expect(DocumentModel.getDocumentWithEvaluations).toHaveBeenCalledWith(mockSlug);
+    expect(mockGetDocumentForReader).toHaveBeenCalledWith(mockSlug, undefined);
   });
 
   it('should return 404 when document not found', async () => {
-    (DocumentModel.getDocumentWithEvaluations as jest.Mock).mockResolvedValueOnce(null);
+    // Mock authenticateRequest to return undefined (not authenticated)
+    mockAuthenticateRequest.mockRejectedValueOnce(new Error('Not authenticated'));
+    mockGetDocumentForReader.mockResolvedValueOnce(
+      Result.fail(new NotFoundError('Document', 'non-existent'))
+    );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/non-existent`);
     const response = await GET(request, { params: Promise.resolve({ slugOrId: 'non-existent' }) });
@@ -159,7 +180,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    mockAuthenticateRequest.mockResolvedValueOnce(null);
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -172,34 +193,9 @@ describe('PUT /api/documents/[slugOrId]', () => {
   });
 
   it('should update intended agents', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    const existingDoc = {
-      id: mockDocId,
-      versions: [{
-        id: 'version-1',
-        intendedAgents: [],
-      }],
-    };
-    
-    (prisma.document.findUnique as jest.Mock).mockResolvedValueOnce(existingDoc);
-    (prisma.documentVersion.update as jest.Mock).mockResolvedValueOnce({
-      id: 'version-1',
-      intendedAgents: ['agent-1', 'agent-2'],
-    });
-    (prisma.evaluation.findMany as jest.Mock).mockResolvedValueOnce([]);
-    
-    const mockTransaction = jest.fn().mockImplementation(async (fn) => {
-      return await fn({
-        evaluation: {
-          create: jest.fn().mockResolvedValue({ id: 'eval-1', agentId: 'agent-1' }),
-        },
-        job: {
-          create: jest.fn().mockResolvedValue({ id: 'job-1' }),
-        },
-      });
-    });
-    (prisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
+    mockUpdateDocument.mockResolvedValueOnce(Result.ok(undefined));
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -208,16 +204,23 @@ describe('PUT /api/documents/[slugOrId]', () => {
     });
     
     const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
-    expect(response.status).toBe(200);
     
+    expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.updatedFields.intendedAgents).toEqual(['agent-1', 'agent-2']);
+    expect(mockUpdateDocument).toHaveBeenCalledWith(
+      mockDocId,
+      mockUser.id,
+      { title: undefined, content: undefined, intendedAgentIds: ['agent-1', 'agent-2'] }
+    );
   });
 
-  it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    (prisma.document.findUnique as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+  it('should return 404 when document not found', async () => {
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
+    
+    mockUpdateDocument.mockResolvedValueOnce(
+      Result.fail(new NotFoundError('Document', mockDocId))
+    );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
       method: 'PUT',
@@ -226,9 +229,49 @@ describe('PUT /api/documents/[slugOrId]', () => {
     });
     
     const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
-    expect(response.status).toBe(500);
     
+    expect(response.status).toBe(404);
     const data = await response.json();
-    expect(data.error).toBe('Failed to update document');
+    expect(data.error).toContain('not found');
+  });
+
+  it('should return 403 when user does not own document', async () => {
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
+    
+    mockUpdateDocument.mockResolvedValueOnce(
+      Result.fail(new AuthorizationError('You do not have permission to update this document'))
+    );
+
+    const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ intendedAgentIds: ['agent-1'] }),
+    });
+    
+    const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data.error).toContain('permission');
+  });
+
+  it('should validate intendedAgentIds is an array', async () => {
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
+    
+    mockUpdateDocument.mockResolvedValueOnce(
+      Result.fail(new ValidationError('intendedAgentIds must be an array'))
+    );
+
+    const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ intendedAgentIds: 'not-an-array' }),
+    });
+    
+    const response = await PUT(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toContain('must be an array');
   });
 });

@@ -14,6 +14,7 @@ COPY apps/web/package.json ./apps/web/
 COPY apps/mcp-server/package.json ./apps/mcp-server/
 COPY internal-packages/db/package.json ./internal-packages/db/
 COPY internal-packages/ai/package.json ./internal-packages/ai/
+COPY internal-packages/domain/package.json ./internal-packages/domain/
 
 # Copy Prisma schema
 COPY internal-packages/db/prisma ./internal-packages/db/prisma/
@@ -26,6 +27,15 @@ RUN pnpm --filter @roast/db run gen
 
 # Copy source code
 COPY . .
+
+# Build internal packages in dependency order
+# Install dependencies again after copying source (for workspace references)
+RUN pnpm install --frozen-lockfile
+
+# Build packages in correct dependency order
+RUN pnpm --filter @roast/db run build
+RUN pnpm --filter @roast/domain run build  
+RUN pnpm --filter @roast/ai run build
 
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1

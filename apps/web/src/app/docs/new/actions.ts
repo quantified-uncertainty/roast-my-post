@@ -1,32 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
-import { DocumentModel } from "@/models/Document";
+import { auth } from "@/infrastructure/auth/auth";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { ValidationError } from '@roast/domain';
 
 import { type DocumentInput } from "./schema";
 
-function generateTitleFromContent(content: string): string {
-  // Remove markdown formatting
-  const plainText = content
-    .replace(/#{1,6}\s+/g, '') // Remove headers
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-    .replace(/\*([^*]+)\*/g, '$1') // Remove italic
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
-    .replace(/`([^`]+)`/g, '$1') // Remove inline code
-    .replace(/```[^`]*```/gs, '') // Remove code blocks
-    .trim();
-
-  // Get first sentence or first 50 characters
-  const firstSentence = plainText.match(/^[^.!?]+[.!?]?/)?.[0] || plainText;
-  const title = firstSentence.slice(0, 50).trim();
-  
-  // Add ellipsis if truncated
-  return title.length < firstSentence.length ? `${title}...` : title;
-}
+// Initialize services with dependencies
+const documentRepository = new DocumentRepository();
+const evaluationRepository = new EvaluationRepository();
+const validator = new DocumentValidator();
+const evaluationService = new EvaluationService(evaluationRepository, logger);
+const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
 export async function createDocument(data: DocumentInput, agentIds: string[] = []) {
   try {
@@ -36,56 +26,47 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
       throw new Error("User must be logged in to create a document");
     }
 
-    // Backend validation for content length
-    if (!data.content || data.content.length < 30) {
-      throw new Error("Content must be at least 30 characters");
+    // Create the document using the new DocumentService
+    const result = await documentService.createDocument(
+      session.user.id,
+      {
+        title: data.title,
+        content: data.content,
+        authors: data.authors || "Unknown",
+        url: data.urls,
+        platforms: data.platforms ? [data.platforms] : [],
+        importUrl: data.importUrl
+      },
+      agentIds
+    );
+
+    if (result.isError()) {
+      const error = result.error();
+      if (error instanceof ValidationError) {
+        // Join validation errors into a single message
+        throw new Error(error.details?.join('. ') || error.message);
+      }
+      throw new Error(error?.message || "Failed to create document");
     }
 
-    const wordCount = data.content.trim().split(/\s+/).length;
-    if (wordCount > 50000) {
-      throw new Error("Content must not exceed 50,000 words");
-    }
-
-    // Generate title from content if not provided
-    const title = data.title?.trim() || generateTitleFromContent(data.content);
-
-    // Create the document using the DocumentModel
-    const document = await DocumentModel.create({
-      ...data,
-      title,
-      authors: data.authors || "Unknown",
-      submittedById: session.user.id,
-    });
+    const document = result.unwrap();
 
     // Queue evaluations if agents are selected
     if (agentIds.length > 0) {
-      // Get the host from the request headers to work with any port
-      const { headers } = await import("next/headers");
-      const headersList = await headers();
-      const host = headersList.get("host");
-      
-      // Construct the base URL dynamically
-      const baseUrl = process.env.NEXTAUTH_URL || 
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-        (host ? `http://${host}` : null);
-      
-      if (!baseUrl) {
-        logger.error('Unable to determine base URL for API call');
-      } else {
-        const response = await fetch(
-          `${baseUrl}/api/documents/${document.id}/evaluate`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ agentIds }),
-          }
-        );
+      const evaluationResult = await evaluationService.createEvaluationsForDocument({
+        documentId: document.id,
+        agentIds,
+        userId: session.user.id
+      });
 
-        if (!response.ok) {
-          logger.error('Failed to queue evaluations:', await response.text());
-        }
+      if (evaluationResult.isError()) {
+        logger.error('Failed to create evaluations:', evaluationResult.error());
+        // Don't fail the document creation, just log the error
+      } else {
+        logger.info('Evaluations created successfully', {
+          documentId: document.id,
+          evaluationsCreated: evaluationResult.unwrap().length
+        });
       }
     }
 

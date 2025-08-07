@@ -2,12 +2,12 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { CopyButton } from "@/components/CopyButton";
 import { EvaluationComments } from "@/components/EvaluationComments";
 import { LogsViewer } from "@/components/job";
-import { extractHeadings } from "@/lib/evaluation/headingExtractor";
+import { extractHeadings } from "@/application/workflows/evaluation/headingExtractor";
 import { EvaluationSection } from "./EvaluationSection";
 import { MarkdownWithHeadings } from "./MarkdownWithHeadings";
 import { EvaluationDetailsSection } from "./EvaluationDetailsSection";
 import { EvaluationNavigation } from "./EvaluationNavigation";
-import type { EvaluationContentProps } from "@/lib/evaluation/types";
+import type { EvaluationContentProps } from "@/application/workflows/evaluation/types";
 
 
 export function EvaluationContent({

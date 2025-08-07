@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/infrastructure/auth/auth";
+import { prisma } from "@/infrastructure/database/prisma";
 import AgentsList from "@/components/AgentsList";
 import type { Agent } from "@roast/ai";
-import { USER_DISPLAY } from "@/lib/constants";
+import { USER_DISPLAY } from "@/shared/constants/constants";
 
 export const dynamic = 'force-dynamic';
 

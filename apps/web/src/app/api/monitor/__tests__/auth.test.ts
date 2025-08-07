@@ -4,16 +4,16 @@ import { GET as getEvaluations } from '../evaluations/route';
 import { GET as getJobs } from '../jobs/route';
 
 // Mock the auth helpers
-jest.mock('@/lib/auth-helpers', () => ({
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/infrastructure/auth/auth', () => ({
   auth: jest.fn(),
   isAdmin: jest.fn(),
 }));
 
-jest.mock('@/lib/api-response-helpers', () => ({
+jest.mock('@/infrastructure/http/api-response-helpers', () => ({
   commonErrors: {
     unauthorized: jest.fn(() => new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })),
     forbidden: jest.fn(() => new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 })),
@@ -21,7 +21,7 @@ jest.mock('@/lib/api-response-helpers', () => ({
   },
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/infrastructure/logging/logger', () => ({
   logger: {
     error: jest.fn(),
   },
@@ -45,8 +45,8 @@ jest.mock('@roast/db', () => ({
   },
 }));
 
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { isAdmin } from '@/lib/auth';
+import { authenticateRequest } from '@/infrastructure/auth/auth-helpers';
+import { isAdmin } from '@/infrastructure/auth/auth';
 
 describe('Monitor Routes Authentication', () => {
   const mockRequest = new NextRequest('http://localhost:3000/api/monitor/test');

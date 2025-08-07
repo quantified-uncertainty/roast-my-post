@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { UserModel } from "@/models/User";
 import UsersClient from "./UsersClient";
 import { PageLayout } from "@/components/PageLayout";

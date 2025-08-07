@@ -1,11 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
-import { auth } from "@/lib/auth";
-import { processArticle } from "@/lib/articleImport";
-import { DocumentModel } from "@/models/Document";
+import { auth } from "@/infrastructure/auth/auth";
+import { processArticle } from "@/infrastructure/external/articleImport";
+import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
+import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { NotFoundError, AuthorizationError } from '@roast/domain';
+
+// Initialize service with dependencies
+const documentRepository = new DocumentRepository();
+const evaluationRepository = new EvaluationRepository();
+const validator = new DocumentValidator();
+const evaluationService = new EvaluationService(evaluationRepository, logger);
+const documentService = new DocumentService(documentRepository, validator, evaluationService, logger);
 
 export async function deleteDocument(docId: string) {
   try {
@@ -18,17 +27,28 @@ export async function deleteDocument(docId: string) {
       };
     }
 
-    // Check if the current user is the document owner
-    const isOwner = await DocumentModel.checkOwnership(docId, session.user.id);
-    if (!isOwner) {
+    // Delete the document using the service
+    const result = await documentService.deleteDocument(docId, session.user.id);
+    
+    if (result.isError()) {
+      const error = result.error();
+      if (error instanceof NotFoundError) {
+        return {
+          success: false,
+          error: "Document not found",
+        };
+      }
+      if (error instanceof AuthorizationError) {
+        return {
+          success: false,
+          error: "You don't have permission to delete this document",
+        };
+      }
       return {
         success: false,
-        error: "You don't have permission to delete this document",
+        error: error?.message || "Failed to delete document",
       };
     }
-
-    // Delete the document
-    await DocumentModel.delete(docId);
 
     // Revalidate documents path
     revalidatePath("/docs");
@@ -52,9 +72,9 @@ export async function reuploadDocument(docId: string) {
       };
     }
 
-    // Check if the current user is the document owner
-    const isOwner = await DocumentModel.checkOwnership(docId, session.user.id);
-    if (!isOwner) {
+    // Check ownership using the service
+    const ownershipResult = await documentService.checkOwnership(docId, session.user.id);
+    if (ownershipResult.isError() || !ownershipResult.unwrap()) {
       return {
         success: false,
         error: "You don't have permission to re-upload this document",
@@ -62,14 +82,15 @@ export async function reuploadDocument(docId: string) {
     }
 
     // Get the current document to extract its URL
-    const document = await DocumentModel.getDocumentWithEvaluations(docId);
-    if (!document) {
+    const docResult = await documentService.getDocumentForReader(docId, session.user.id);
+    if (docResult.isError()) {
       return {
         success: false,
         error: "Document not found",
       };
     }
-
+    
+    const document = docResult.unwrap();
     const importUrl = document.importUrl;
     if (!importUrl) {
       return {
@@ -82,18 +103,22 @@ export async function reuploadDocument(docId: string) {
     const processedArticle = await processArticle(importUrl);
 
     // Update the document with the new content
-    await DocumentModel.update(
+    const updateResult = await documentService.updateDocument(
       docId,
+      session.user.id,
       {
         title: processedArticle.title,
-        authors: processedArticle.author,
         content: processedArticle.content,
-        urls: processedArticle.url,
-        platforms: processedArticle.platforms.join(", "),
-        importUrl: importUrl,
-      },
-      session.user.id
+      }
     );
+
+    if (updateResult.isError()) {
+      const error = updateResult.error();
+      return {
+        success: false,
+        error: error?.message || "Failed to update document",
+      };
+    }
 
     // Revalidate the document paths
     revalidatePath(`/docs/${docId}/reader`);

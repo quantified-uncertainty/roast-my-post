@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { DocumentModel } from "@/models/Document";
 
 import EvaluationsClient from "./EvaluationsClient";

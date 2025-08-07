@@ -7,7 +7,7 @@ import {
   ChatBubbleLeftRightIcon,
   BeakerIcon
 } from "@heroicons/react/24/outline";
-import { EXTERNAL_URLS } from "@/lib/constants";
+import { EXTERNAL_URLS } from "@/shared/constants/constants";
 
 const documentationSections = [
   {

@@ -9,8 +9,8 @@ config({ path: "../../.env", override: false });        // Production/fallback (
 // System environment variables take highest precedence (already loaded)
 
 import { JobModel } from "../models/Job";
-import { logger } from "@/lib/logger";
-import { initializeAIPackage } from "../lib/ai-init";
+import { logger } from "@/infrastructure/logging/logger";
+import { initializeAIPackage } from "../infrastructure/external/ai-init";
 
 async function main() {
   const startTime = Date.now();

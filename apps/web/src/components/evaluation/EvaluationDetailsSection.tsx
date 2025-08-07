@@ -6,7 +6,7 @@ import { Bot } from "lucide-react";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ExperimentalBadge } from "@/components/ExperimentalBadge";
 import { EvaluationSection } from "./EvaluationSection";
-import { formatCostFromDollars, formatDuration, formatDate } from "@/lib/job/formatters";
+import { formatCostFromDollars, formatDuration, formatDate } from "@/application/services/job/formatters";
 import { 
   ClipboardDocumentIcon, 
   ArrowDownTrayIcon,

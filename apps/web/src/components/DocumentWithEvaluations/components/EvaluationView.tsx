@@ -6,8 +6,8 @@ import {
   useState,
 } from "react";
 
-import type { Comment as DbComment } from "@/types/databaseTypes";
-import { getValidAndSortedComments } from "@/utils/ui/commentUtils";
+import type { Comment as DbComment } from "@/shared/types/databaseTypes";
+import { getValidAndSortedComments } from "@/shared/utils/ui/commentUtils";
 
 import { useScrollBehavior } from "../hooks/useScrollBehavior";
 import { EvaluationViewProps } from "../types";

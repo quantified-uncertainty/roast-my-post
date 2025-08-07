@@ -1,6 +1,6 @@
 import { POST } from "./route";
 import { prisma } from "@roast/db";
-import { authenticateRequest } from "@/lib/auth-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { NextRequest } from "next/server";
 
 // Mock dependencies
@@ -30,11 +30,11 @@ jest.mock("@roast/db", () => ({
   },
 }));
 
-jest.mock("@/lib/auth-helpers", () => ({
+jest.mock("@/infrastructure/auth/auth-helpers", () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock("@/lib/logger", () => ({
+jest.mock("@/infrastructure/logging/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),

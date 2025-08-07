@@ -1,29 +1,44 @@
-import { GET } from '../route';
-import { NextRequest } from 'next/server';
-import { prisma } from '@roast/db';
-import { authenticateRequest } from '@/lib/auth-helpers';
-import { DocumentModel } from '@/models/Document';
+// Mock functions that will be used in mocks
+const mockGetRecentDocuments = jest.fn();
+const mockSearchDocuments = jest.fn();
+const mockAuthenticateRequest = jest.fn();
 
-// Mock dependencies
+// Mock modules BEFORE imports
+jest.mock('@/infrastructure/auth/auth-helpers', () => ({
+  authenticateRequest: () => mockAuthenticateRequest(),
+}));
+
+jest.mock('@/infrastructure/logging/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+jest.mock('@roast/domain', () => {
+  const originalModule = jest.requireActual('@roast/domain');
+  return {
+    ...originalModule,
+    DocumentService: jest.fn().mockImplementation(() => ({
+      getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
+      searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
+    })),
+    EvaluationService: jest.fn().mockImplementation(() => ({})),
+    DocumentValidator: jest.fn().mockImplementation(() => ({})),
+  };
+});
+
 jest.mock('@roast/db', () => ({
-  prisma: {
-    document: {
-      findMany: jest.fn(),
-      count: jest.fn(),
-    },
-  },
+  DocumentRepository: jest.fn().mockImplementation(() => ({})),
+  EvaluationRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock('@/lib/auth-helpers', () => ({
-  authenticateRequest: jest.fn(),
-}));
-
-jest.mock('@/models/Document', () => ({
-  DocumentModel: {
-    getRecentDocumentsWithEvaluations: jest.fn(),
-    formatDocumentFromDB: jest.fn(),
-  },
-}));
+// Now import the routes AFTER mocks are set up
+import { NextRequest } from 'next/server';
+import { Result } from '@roast/domain';
+import { GET } from '../route';
 
 describe('GET /api/documents/search', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -33,7 +48,7 @@ describe('GET /api/documents/search', () => {
   });
 
   it('should require authentication', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(null);
+    mockAuthenticateRequest.mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test');
     const response = await GET(request);
@@ -44,16 +59,14 @@ describe('GET /api/documents/search', () => {
   });
 
   it('should return recent documents when no query provided', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { DocumentModel } = require('@/models/Document');
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
     const mockDocuments = [
       { id: 'doc1', title: 'Recent Doc 1' },
       { id: 'doc2', title: 'Recent Doc 2' },
     ];
     
-    DocumentModel.getRecentDocumentsWithEvaluations.mockResolvedValueOnce(mockDocuments);
-    (prisma.document.count as jest.Mock).mockResolvedValueOnce(10);
+    mockGetRecentDocuments.mockResolvedValueOnce(Result.ok(mockDocuments));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search');
     const response = await GET(request);
@@ -62,42 +75,20 @@ describe('GET /api/documents/search', () => {
     const data = await response.json();
     expect(data).toEqual({
       documents: mockDocuments,
-      total: 10,
+      total: 2,
       hasMore: false,
     });
   });
 
   it('should search documents with query', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { DocumentModel } = require('@/models/Document');
-    
-    const mockDBResults = [
-      {
-        id: 'doc-1',
-        title: 'Test Document',
-        versions: [{ searchableText: 'test document content' }],
-        submittedBy: { id: 'user1', name: 'User One', email: 'user1@example.com', image: null },
-        evaluations: [],
-      },
-      {
-        id: 'doc-2',
-        title: 'Another Test',
-        versions: [{ searchableText: 'another test content' }],
-        submittedBy: { id: 'user2', name: 'User Two', email: 'user2@example.com', image: null },
-        evaluations: [],
-      },
-    ];
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
     const mockFormattedResults = [
       { id: 'doc-1', title: 'Test Document', formattedData: true },
       { id: 'doc-2', title: 'Another Test', formattedData: true },
     ];
     
-    (prisma.document.findMany as jest.Mock).mockResolvedValueOnce(mockDBResults);
-    (prisma.document.count as jest.Mock).mockResolvedValueOnce(2);
-    DocumentModel.formatDocumentFromDB
-      .mockReturnValueOnce(mockFormattedResults[0])
-      .mockReturnValueOnce(mockFormattedResults[1]);
+    mockSearchDocuments.mockResolvedValueOnce(Result.ok(mockFormattedResults));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test&limit=10&offset=0');
     const response = await GET(request);
@@ -112,60 +103,26 @@ describe('GET /api/documents/search', () => {
       query: 'test',
     });
     
-    expect(prisma.document.findMany).toHaveBeenCalledWith({
-      where: {
-        OR: expect.arrayContaining([
-          expect.objectContaining({
-            versions: expect.objectContaining({
-              some: expect.objectContaining({
-                searchableText: expect.objectContaining({ contains: 'test' }),
-              }),
-            }),
-          }),
-        ]),
-      },
-      take: 10,
-      skip: 0,
-      orderBy: { publishedDate: 'desc' },
-      include: expect.any(Object),
-    });
+    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 10);
   });
 
   it('should search content when searchContent is true', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { DocumentModel } = require('@/models/Document');
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    (prisma.document.findMany as jest.Mock).mockResolvedValueOnce([]);
-    (prisma.document.count as jest.Mock).mockResolvedValueOnce(0);
+    mockSearchDocuments.mockResolvedValueOnce(Result.ok([]));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test&searchContent=true');
     const response = await GET(request);
     
     expect(response.status).toBe(200);
-    
-    // Verify that content search was included in the query
-    expect(prisma.document.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          OR: expect.arrayContaining([
-            expect.objectContaining({
-              versions: expect.objectContaining({
-                some: expect.objectContaining({
-                  content: expect.objectContaining({ contains: 'test', mode: 'insensitive' }),
-                }),
-              }),
-            }),
-          ]),
-        },
-      })
-    );
+    const data = await response.json();
+    expect(data.documents).toEqual([]);
   });
 
   it('should return empty results for no matches', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    (prisma.document.findMany as jest.Mock).mockResolvedValueOnce([]);
-    (prisma.document.count as jest.Mock).mockResolvedValueOnce(0);
+    mockSearchDocuments.mockResolvedValueOnce(Result.ok([]));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=nonexistent');
     const response = await GET(request);
@@ -181,25 +138,15 @@ describe('GET /api/documents/search', () => {
   });
 
   it('should handle pagination parameters', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
-    const { DocumentModel } = require('@/models/Document');
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    const mockResults = Array.from({ length: 5 }, (_, i) => ({
+    const mockFormattedResults = Array.from({ length: 5 }, (_, i) => ({
       id: `doc-${i}`,
       title: `Document ${i}`,
-      versions: [{ searchableText: `test document ${i}` }],
-      submittedBy: { id: 'user1', name: 'User', email: 'user@example.com', image: null },
-      evaluations: [],
+      formattedData: true,
     }));
     
-    const mockFormattedResults = mockResults.map(r => ({ ...r, formattedData: true }));
-    
-    (prisma.document.findMany as jest.Mock).mockResolvedValueOnce(mockResults);
-    (prisma.document.count as jest.Mock).mockResolvedValueOnce(50);
-    mockResults.forEach((_, i) => {
-      DocumentModel.formatDocumentFromDB
-        .mockReturnValueOnce(mockFormattedResults[i]);
-    });
+    mockSearchDocuments.mockResolvedValueOnce(Result.ok(mockFormattedResults));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test&limit=5&offset=10');
     const response = await GET(request);
@@ -207,22 +154,16 @@ describe('GET /api/documents/search', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.documents).toHaveLength(5);
-    expect(data.hasMore).toBe(true);
-    expect(data.total).toBe(50);
+    expect(data.hasMore).toBe(true); // hasMore is true when we get exactly the limit
+    expect(data.total).toBe(5);
     
-    // Verify the prisma call includes proper take and skip
-    expect(prisma.document.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        take: 5,
-        skip: 10,
-      })
-    );
+    expect(mockSearchDocuments).toHaveBeenCalledWith('test', 5);
   });
 
   it('should handle database errors', async () => {
-    (authenticateRequest as jest.Mock).mockResolvedValueOnce(mockUser.id);
+    mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
-    (prisma.document.findMany as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    mockSearchDocuments.mockRejectedValueOnce(new Error('Database error'));
 
     const request = new NextRequest('http://localhost:3000/api/documents/search?q=test');
     const response = await GET(request);

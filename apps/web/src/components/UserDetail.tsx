@@ -1,13 +1,13 @@
 "use client";
 
 import { User, Pencil } from "lucide-react";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import { Button } from "@/components/Button";
 import type { User as UserType } from "@/models/User";
-import { USER_DISPLAY } from "@/lib/constants";
+import { USER_DISPLAY } from "@/shared/constants/constants";
 
 interface UserDetailProps {
   user: UserType;

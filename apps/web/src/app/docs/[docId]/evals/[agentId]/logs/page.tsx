@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
-import { evaluationWithCurrentJob } from "@/lib/prisma/evaluation-includes";
-import { checkDocumentOwnership } from "@/lib/document-auth";
+import { prisma } from "@/infrastructure/database/prisma";
+import { evaluationWithCurrentJob } from "@/infrastructure/database/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/application/services/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { PageHeader } from "@/components/PageHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { JobSummary, TaskDisplay } from "@/components/job";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 interface PageProps {
   params: Promise<{ 

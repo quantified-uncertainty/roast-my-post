@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 
 import type { User as UserType } from "@/models/User";
-import { USER_DISPLAY } from "@/lib/constants";
+import { USER_DISPLAY } from "@/shared/constants/constants";
 
 interface UsersClientProps {
   users: UserType[];

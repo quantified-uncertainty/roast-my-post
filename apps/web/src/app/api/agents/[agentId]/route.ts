@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { authenticateRequest } from "@/lib/auth-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { AgentModel } from "@/models/Agent";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ agentId: string }> }) {
   const params = await context.params;

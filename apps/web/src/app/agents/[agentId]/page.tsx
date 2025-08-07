@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import AgentDetail from "@/components/AgentDetail";
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { AgentModel } from "@/models/Agent";
 
 export default async function AgentPage({

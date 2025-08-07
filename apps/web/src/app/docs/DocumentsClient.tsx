@@ -1,17 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
 
 import { GradeBadge } from "@/components/GradeBadge";
-import type { Document, Evaluation } from "@/types/databaseTypes";
-import { getValidCommentCount } from "@/utils/ui/commentUtils";
+import type { Document, Evaluation } from "@/shared/types/databaseTypes";
+import { getValidCommentCount } from "@/shared/utils/ui/commentUtils";
 import {
   formatWordCount,
   getWordCountInfo,
-} from "@/utils/ui/documentUtils";
+} from "@/shared/utils/ui/documentUtils";
 import {
   ChatBubbleLeftIcon,
   MagnifyingGlassIcon,

@@ -2,7 +2,7 @@ import { POST } from './route';
 import { NextRequest } from 'next/server';
 
 // Mock the auth module
-jest.mock('@/lib/auth', () => ({
+jest.mock('@/infrastructure/auth/auth', () => ({
   auth: jest.fn().mockResolvedValue({
     user: { id: 'test-user-id', email: 'test@example.com' }
   })
@@ -26,7 +26,7 @@ jest.mock('@roast/ai/server', () => ({
 }));
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/infrastructure/logging/logger', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -70,7 +70,7 @@ describe('Perplexity Research API Route', () => {
 
   it('should handle authentication failures', async () => {
     // Override auth mock for this test
-    const { auth } = require('@/lib/auth');
+    const { auth } = require('@/infrastructure/auth/auth');
     auth.mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/tools/perplexity-research', {

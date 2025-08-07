@@ -14,16 +14,33 @@ import {
 const CONFIG_DIR = join(homedir(), "Library", "Application Support", "Claude");
 const CONFIG_FILE = join(CONFIG_DIR, "claude_desktop_config.json");
 
-// Get database URL from parent project's .env file
+// Get database URL from project's .env file
 function getDatabaseUrl() {
-  const envPath = join(resolve("."), "..", ".env");
-  if (!existsSync(envPath)) {
-    console.error("❌ Could not find .env file in parent directory");
+  // Try multiple locations for .env file to support both monorepo and worktree structures
+  const possibleEnvPaths = [
+    join(resolve("."), "..", "..", ".env"), // Project root (monorepo: mcp-server -> apps -> root)
+    join(resolve("."), "..", ".env"),       // Apps directory (legacy path)
+    join(resolve("."), ".env")              // MCP server directory
+  ];
+
+  let envPath = null;
+  let envContent = null;
+
+  for (const path of possibleEnvPaths) {
+    if (existsSync(path)) {
+      envPath = path;
+      envContent = readFileSync(path, "utf8");
+      console.log(`✅ Found .env file at: ${path}`);
+      break;
+    }
+  }
+
+  if (!envPath) {
+    console.error("❌ Could not find .env file in any expected location:");
+    possibleEnvPaths.forEach(path => console.error(`  - ${path}`));
     console.error("Please ensure you have a .env file with ROAST_MY_POST_MCP_DATABASE_URL or DATABASE_URL set");
     process.exit(1);
   }
-
-  const envContent = readFileSync(envPath, "utf8");
   
   // First try ROAST_MY_POST_MCP_DATABASE_URL
   let match = envContent.match(/ROAST_MY_POST_MCP_DATABASE_URL="?([^"\n]+)"?/);

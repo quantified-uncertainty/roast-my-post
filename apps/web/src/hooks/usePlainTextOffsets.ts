@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 
 import { Editor, Element, Node, Path, Text } from "slate";
 

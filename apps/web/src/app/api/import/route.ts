@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { logger } from "@/lib/logger";
-import { importDocumentService } from "@/lib/services/documentImport";
-import { errorResponse, successResponse, commonErrors } from "@/lib/api-response-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { logger } from "@/infrastructure/logging/logger";
+import { importDocumentService } from "@/application/services/documentImport";
+import { errorResponse, successResponse, commonErrors } from "@/infrastructure/http/api-response-helpers";
 
 export async function POST(request: NextRequest) {
   try {

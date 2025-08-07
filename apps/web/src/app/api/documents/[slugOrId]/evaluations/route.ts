@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { z } from "zod";
 
-import { authenticateRequest } from "@/lib/auth-helpers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { prisma } from "@roast/db";
+import { ValidationError, NotFoundError } from '@roast/domain';
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
-import { authenticateRequestSessionFirst } from "@/lib/auth-helpers";
+import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
 
 interface CreateBatchRequest {
   name?: string;

@@ -1,32 +1,14 @@
 import { NextRequest } from "next/server";
 import { POST } from "../route";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { processArticle } from "@/lib/articleImport";
-import { DocumentModel } from "@/models/Document";
-import { prisma } from "@roast/db";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { importDocumentService } from "@/application/services/documentImport";
 
 // Mock dependencies
-jest.mock("@/lib/auth-helpers");
-jest.mock("@/lib/articleImport");
-jest.mock("@/models/Document");
-jest.mock("@roast/db", () => ({
-  prisma: {
-    $transaction: jest.fn(),
-    agent: {
-      findMany: jest.fn(),
-    },
-    job: {
-      create: jest.fn(),
-    },
-    evaluation: {
-      create: jest.fn(),
-    },
-  },
-}));
+jest.mock("@/infrastructure/auth/auth-helpers");
+jest.mock("@/application/services/documentImport");
 
 const mockAuthenticateRequest = authenticateRequest as jest.MockedFunction<typeof authenticateRequest>;
-const mockProcessArticle = processArticle as jest.MockedFunction<typeof processArticle>;
-const mockDocumentModel = DocumentModel as jest.Mocked<typeof DocumentModel>;
+const mockImportDocumentService = importDocumentService as jest.MockedFunction<typeof importDocumentService>;
 
 describe("POST /api/import", () => {
   beforeEach(() => {
@@ -83,28 +65,19 @@ describe("POST /api/import", () => {
 
   it("should successfully import an article without agents", async () => {
     mockAuthenticateRequest.mockResolvedValue("test-user-id");
-    mockProcessArticle.mockResolvedValue({
-      title: "Test Article",
-      author: "Test Author",
-      content: "This is a test article with sufficient content to pass validation checks",
-      date: "2024-01-01",
-      platforms: [],
-      url: "https://example.com/article",
-    });
     
-    const mockDocument = {
-      id: "doc-123",
-      title: "Test Article",
-      slug: "test-article",
+    const mockResult = {
+      success: true,
+      documentId: "doc-123",
+      document: {
+        id: "doc-123",
+        title: "Test Article",
+        authors: "Test Author"
+      },
+      evaluations: []
     };
     
-    mockDocumentModel.create = jest.fn().mockResolvedValue({
-      ...mockDocument,
-      versions: [{
-        title: "Test Article",
-        authors: "Test Author",
-      }]
-    });
+    mockImportDocumentService.mockResolvedValue(mockResult);
 
     const request = new NextRequest("http://localhost:3000/api/import", {
       method: "POST",
@@ -123,58 +96,31 @@ describe("POST /api/import", () => {
       authors: "Test Author"
     });
     expect(data.evaluations).toEqual([]);
-    expect(mockProcessArticle).toHaveBeenCalledWith("https://example.com/article");
-    expect(mockDocumentModel.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Test Article",
-        authors: "Test Author",
-        content: "This is a test article with sufficient content to pass validation checks",
-        urls: "https://example.com/article",
-        platforms: "",
-        importUrl: "https://example.com/article",
-        submittedById: "test-user-id"
-      })
+    expect(mockImportDocumentService).toHaveBeenCalledWith(
+      "https://example.com/article",
+      "test-user-id",
+      undefined
     );
   });
 
   it("should create evaluations for specified agents", async () => {
     mockAuthenticateRequest.mockResolvedValue("test-user-id");
-    mockProcessArticle.mockResolvedValue({
-      title: "Test Article",
-      author: "Test Author",
-      content: "This is a test article with sufficient content to pass validation checks",
-      date: "2024-01-01",
-      platforms: [],
-      url: "https://example.com/article",
-    });
     
-    const mockDocument = {
-      id: "doc-123",
-      title: "Test Article",
-      slug: "test-article",
+    const mockResult = {
+      success: true,
+      documentId: "doc-123",
+      document: {
+        id: "doc-123",
+        title: "Test Article",
+        authors: "Test Author"
+      },
+      evaluations: [
+        { evaluationId: "eval-1", agentId: "agent-1", jobId: "job-1" },
+        { evaluationId: "eval-2", agentId: "agent-2", jobId: "job-2" }
+      ]
     };
     
-    mockDocumentModel.create = jest.fn().mockResolvedValue({
-      ...mockDocument,
-      versions: [{
-        title: "Test Article",
-        authors: "Test Author",
-      }]
-    });
-    
-    const mockAgents = [
-      { id: "agent-1", name: "Agent 1" },
-      { id: "agent-2", name: "Agent 2" },
-    ];
-    
-    (prisma.agent.findMany as jest.Mock).mockResolvedValue(mockAgents);
-    (prisma.$transaction as jest.Mock).mockImplementation(async (fn) => fn(prisma));
-    (prisma.job.create as jest.Mock).mockImplementation(({ data }) => 
-      Promise.resolve({ id: `job-${data.agentId}`, ...data })
-    );
-    (prisma.evaluation.create as jest.Mock).mockImplementation(({ data }) => 
-      Promise.resolve({ id: `eval-${data.agentId}`, ...data })
-    );
+    mockImportDocumentService.mockResolvedValue(mockResult);
 
     const request = new NextRequest("http://localhost:3000/api/import", {
       method: "POST",
@@ -196,13 +142,20 @@ describe("POST /api/import", () => {
     expect(data.evaluations).toHaveLength(2);
     expect(data.evaluations[0].agentId).toBe("agent-1");
     expect(data.evaluations[1].agentId).toBe("agent-2");
-    expect(prisma.job.create).toHaveBeenCalledTimes(2);
-    expect(prisma.evaluation.create).toHaveBeenCalledTimes(2);
+    expect(mockImportDocumentService).toHaveBeenCalledWith(
+      "https://example.com/article",
+      "test-user-id",
+      ["agent-1", "agent-2"]
+    );
   });
 
   it("should handle article processing errors", async () => {
     mockAuthenticateRequest.mockResolvedValue("test-user-id");
-    mockProcessArticle.mockRejectedValue(new Error("Failed to fetch article"));
+    
+    mockImportDocumentService.mockResolvedValue({
+      success: false,
+      error: "Failed to fetch article"
+    });
 
     const request = new NextRequest("http://localhost:3000/api/import", {
       method: "POST",
@@ -218,46 +171,21 @@ describe("POST /api/import", () => {
 
   it("should continue creating evaluations even if one fails", async () => {
     mockAuthenticateRequest.mockResolvedValue("test-user-id");
-    mockProcessArticle.mockResolvedValue({
-      title: "Test Article",
-      author: "Test Author",
-      content: "This is a test article with sufficient content to pass validation checks",
-      date: "2024-01-01",
-      platforms: [],
-      url: "https://example.com/article",
-    });
     
-    const mockDocument = {
-      id: "doc-123",
-      title: "Test Article",
-      slug: "test-article",
+    const mockResult = {
+      success: true,
+      documentId: "doc-123",
+      document: {
+        id: "doc-123",
+        title: "Test Article",
+        authors: "Test Author"
+      },
+      evaluations: [
+        { evaluationId: "eval-1", agentId: "agent-1", jobId: "job-1" }
+      ]
     };
     
-    mockDocumentModel.create = jest.fn().mockResolvedValue({
-      ...mockDocument,
-      versions: [{
-        title: "Test Article",
-        authors: "Test Author",
-      }]
-    });
-    
-    const mockAgents = [
-      { id: "agent-1", name: "Agent 1" },
-      { id: "agent-2", name: "Agent 2" },
-    ];
-    
-    (prisma.agent.findMany as jest.Mock).mockResolvedValue(mockAgents);
-    (prisma.$transaction as jest.Mock).mockImplementation(async (fn) => fn(prisma));
-    
-    // First job creation succeeds, second fails
-    (prisma.job.create as jest.Mock)
-      .mockResolvedValueOnce({ id: "job-1", agentId: "agent-1" })
-      .mockRejectedValueOnce(new Error("Job creation failed"));
-      
-    (prisma.evaluation.create as jest.Mock).mockResolvedValue({ 
-      id: "eval-1", 
-      agentId: "agent-1" 
-    });
+    mockImportDocumentService.mockResolvedValue(mockResult);
 
     const request = new NextRequest("http://localhost:3000/api/import", {
       method: "POST",

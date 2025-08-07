@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import UserDetail from "@/components/UserDetail";
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { UserModel } from "@/models/User";
 
 export default async function UserPage({

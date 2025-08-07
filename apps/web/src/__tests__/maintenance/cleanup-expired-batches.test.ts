@@ -1,5 +1,5 @@
 import { prisma } from "@roast/db";
-import { logger } from "../../lib/logger";
+import { logger } from '@/infrastructure/logging/logger';
 
 // TODO: This test needs to be moved or the script needs to be moved into the app
 // import { cleanupExpiredBatches } from "../../../../../dev/scripts/maintenance/cleanup-expired-batches";
@@ -90,7 +90,7 @@ jest.mock("@roast/db", () => ({
   },
 }));
 
-jest.mock("../../lib/logger", () => ({
+jest.mock("@/infrastructure/logging/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),

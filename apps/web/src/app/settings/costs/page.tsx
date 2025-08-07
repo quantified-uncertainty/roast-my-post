@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/infrastructure/auth/auth";
 import { redirect } from "next/navigation";
-import { formatCost } from "@/utils/costCalculator";
+import { formatCost } from "@/shared/utils/costCalculator";
 import { prisma } from "@roast/db";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 export const dynamic = 'force-dynamic';
 

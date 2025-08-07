@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
-import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
-import { checkDocumentOwnership } from "@/lib/document-auth";
+import { prisma } from "@/infrastructure/database/prisma";
+import { evaluationWithAllVersions } from "@/infrastructure/database/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/application/services/document-auth";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";

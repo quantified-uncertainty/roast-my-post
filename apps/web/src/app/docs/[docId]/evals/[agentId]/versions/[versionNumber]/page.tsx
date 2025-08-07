@@ -3,10 +3,10 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
-import { prisma } from "@/lib/prisma";
-import { evaluationWithAllVersions } from "@/lib/prisma/evaluation-includes";
-import { checkDocumentOwnership } from "@/lib/document-auth";
-import { serializePrismaResult } from "@/lib/prisma-serializers";
+import { prisma } from "@/infrastructure/database/prisma";
+import { evaluationWithAllVersions } from "@/infrastructure/database/prisma/evaluation-includes";
+import { checkDocumentOwnership } from "@/application/services/document-auth";
+import { serializePrismaResult } from "@/infrastructure/database/prisma-serializers";
 import { EvaluationNavigation } from "@/components/EvaluationNavigation";
 import { DocumentEvaluationSidebar } from "@/components/DocumentEvaluationSidebar";
 import { EvaluationVersionSidebar } from "@/components/EvaluationVersionSidebar";

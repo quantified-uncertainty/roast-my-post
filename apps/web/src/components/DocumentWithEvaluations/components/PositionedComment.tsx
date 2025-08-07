@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import type { Comment } from "@roast/ai";
-import { commentToYaml } from "@/utils/commentToYaml";
+import { commentToYaml } from "@/shared/utils/commentToYaml";
 
 import { MARKDOWN_COMPONENTS, MARKDOWN_PLUGINS } from "../config/markdown";
 import {

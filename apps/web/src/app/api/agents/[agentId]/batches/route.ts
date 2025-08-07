@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
+import { logger } from "@/infrastructure/logging/logger";
 import { prisma, type Job } from "@roast/db";
-import { authenticateRequest } from "@/lib/auth-helpers";
-import { calculateJobStats } from "@/lib/batch-utils";
-import { decimalToNumber } from "@/lib/prisma-serializers";
+import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
+import { calculateJobStats } from "@/shared/utils/batch-utils";
+import { decimalToNumber } from "@/infrastructure/database/prisma-serializers";
 
 export async function GET(
   request: NextRequest,

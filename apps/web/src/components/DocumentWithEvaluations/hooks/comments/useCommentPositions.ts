@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef, RefObject } from "react";
-import type { Comment } from "@/types/databaseTypes";
-import { calculateCommentPositions } from "@/utils/ui/commentPositioning";
+import type { Comment } from "@/shared/types/databaseTypes";
+import { calculateCommentPositions } from "@/shared/utils/ui/commentPositioning";
 import { COMMENT_MIN_GAP, RESIZE_DEBOUNCE_DELAY } from "../../constants";
 
 export interface UseCommentPositionsOptions {
