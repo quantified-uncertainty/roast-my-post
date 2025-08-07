@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { detectLanguageConventionTool } from '@roast/ai';
+import { detectLanguageConventionTool, type DetectLanguageConventionOutput } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = detectLanguageConventionTool.config.path;
 
 export default function DetectLanguageConventionPage() {
   const [text, setText] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DetectLanguageConventionOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +20,7 @@ export default function DetectLanguageConventionPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, { text });
+      const response = await runToolWithAuth<{ text: string }, DetectLanguageConventionOutput>(checkToolPath, { text });
       setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -72,18 +72,35 @@ export default function DetectLanguageConventionPage() {
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Detected Convention</h2>
               <div className="space-y-2">
-                <p className="text-2xl font-bold">{result.detectedConvention}</p>
-                <p className="text-sm text-gray-600">Confidence: {Math.round(result.confidence * 100)}%</p>
+                <p className="text-2xl font-bold">{result.convention || 'Unknown'} English</p>
+                {result.confidence !== undefined && (
+                  <p className="text-sm text-gray-600">Confidence: {Math.round(result.confidence * 100)}%</p>
+                )}
+                {result.consistency !== undefined && (
+                  <p className="text-sm text-gray-600">Consistency: {Math.round(result.consistency * 100)}%</p>
+                )}
               </div>
             </div>
 
-            {result.indicators && result.indicators.length > 0 && (
+            {result.documentType && (
               <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Indicators</h2>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Document Type</h2>
+                <div className="space-y-2">
+                  <p className="text-lg font-semibold capitalize">{result.documentType.type || 'Unknown'}</p>
+                  {result.documentType.confidence !== undefined && (
+                    <p className="text-sm text-gray-600">Confidence: {Math.round(result.documentType.confidence * 100)}%</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {result.evidence && result.evidence.length > 0 && (
+              <div className="bg-white shadow rounded-lg p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Evidence</h2>
                 <ul className="space-y-2">
-                  {result.indicators.map((indicator: any, index: number) => (
+                  {result.evidence.map((item, index) => (
                     <li key={index} className="flex items-start">
-                      <span className="text-sm text-gray-900">• {indicator.word}: {indicator.reason}</span>
+                      <span className="text-sm text-gray-900">• {item.word} ({item.convention}): {item.count} occurrence{item.count !== 1 ? 's' : ''}</span>
                     </li>
                   ))}
                 </ul>

@@ -21,7 +21,7 @@ interface AgentVersionsClientProps {
 export default function AgentVersionsClient({
   agent,
   versions,
-  isOwner,
+  isOwner: _isOwner, // Prefix with underscore to indicate it's intentionally unused
 }: AgentVersionsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();

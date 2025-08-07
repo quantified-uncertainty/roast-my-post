@@ -70,8 +70,8 @@ export const POST = withSecurity(
   async (req: NextRequest, context: { params: Promise<{ docId: string; agentId: string }> }) => {
     const params = await context.params;
     const { docId, agentId } = params;
-    const userId = (await authenticateRequest(req))!;
-    const body = (req as any).validatedBody || {};
+    // Authentication is handled by withSecurity middleware
+    // userId and body are available but not needed for this endpoint
 
     try {
 

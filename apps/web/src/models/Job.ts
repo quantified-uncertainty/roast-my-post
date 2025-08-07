@@ -1,4 +1,5 @@
-import { prisma, Job as PrismaJob, JobStatus } from "@roast/db";
+import { prisma, JobStatus } from "@roast/db";
+import type { Job as PrismaJob } from "@roast/db";
 import { logger } from "@/lib/logger";
 
 import {
