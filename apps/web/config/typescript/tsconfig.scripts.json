@@ -1,0 +1,30 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "rootDir": "../../",
+    "baseUrl": "../../",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "../../src/scripts/**/*",
+    "../../src/types/**/*",
+    "../../src/models/**/*",
+    "../../src/infrastructure/**/*",
+    "../../src/application/**/*",
+    "../../src/shared/**/*"
+  ],
+  "exclude": [
+    "../../src/**/*.test.ts",
+    "../../src/**/*.test.tsx",
+    "../../node_modules"
+  ]
+}

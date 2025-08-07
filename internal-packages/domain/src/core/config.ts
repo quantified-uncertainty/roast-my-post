@@ -270,19 +270,32 @@ class ConfigFactory {
 }
 
 /**
- * Application Configuration Singleton
+ * Application Configuration Singleton - Lazy Loaded
  * Use this throughout the application instead of direct process.env access
  */
-export const config: AppConfig = ConfigFactory.create();
+let _config: AppConfig | undefined;
 
-// Validate configuration at module load (now test-friendly)
-ConfigFactory.validate(config);
+export const config: AppConfig = new Proxy({} as AppConfig, {
+  get(target, prop) {
+    if (!_config) {
+      _config = ConfigFactory.create();
+      ConfigFactory.validate(_config);
+    }
+    return _config[prop as keyof AppConfig];
+  }
+});
 
 /**
- * Helper function for legacy compatibility
- * @deprecated Use config object directly instead
+ * Get configuration (creates if needed)
+ * Safer than accessing config object directly in middleware/early code
  */
-export const getConfig = (): AppConfig => config;
+export const getConfig = (): AppConfig => {
+  if (!_config) {
+    _config = ConfigFactory.create();
+    ConfigFactory.validate(_config);
+  }
+  return _config;
+};
 
 /**
  * Development helper to log configuration (without secrets)

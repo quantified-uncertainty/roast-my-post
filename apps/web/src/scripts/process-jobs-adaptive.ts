@@ -6,7 +6,7 @@ import {
 
 import { logger } from "@/infrastructure/logging/logger";
 import { prisma, JobStatus } from "@roast/db";
-import { getAgentTimeout, formatTimeout } from "@/config/agentTimeouts";
+import { getAgentTimeout, formatTimeout } from "@/shared/constants/config/agentTimeouts";
 import { config } from '@roast/domain';
 
 // Configuration from centralized config system
