@@ -21,7 +21,7 @@ jest.mock("@roast/ai", () => ({
 import { callClaudeWithTool, setupClaudeToolMock } from "@roast/ai";
 
 // Mock the cost calculator
-jest.mock("../../../utils/costCalculator", () => ({
+jest.mock("@/shared/utils/costCalculator", () => ({
   calculateApiCost: jest.fn(() => 0.5), // Return 0.5 cents
   mapModelToCostModel: jest.fn(() => "claude-sonnet-test"),
 }));

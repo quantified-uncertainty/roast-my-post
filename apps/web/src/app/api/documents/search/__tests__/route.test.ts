@@ -17,11 +17,18 @@ jest.mock('@/infrastructure/logging/logger', () => ({
   },
 }));
 
-jest.mock('@/application/services/DocumentService', () => ({
+jest.mock('@roast/domain', () => ({
   DocumentService: jest.fn().mockImplementation(() => ({
     getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
     searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
   })),
+  EvaluationService: jest.fn().mockImplementation(() => ({})),
+  DocumentValidator: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock('@roast/db', () => ({
+  DocumentRepository: jest.fn().mockImplementation(() => ({})),
+  EvaluationRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
 // Now import the routes AFTER mocks are set up

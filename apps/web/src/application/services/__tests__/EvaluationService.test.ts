@@ -8,7 +8,11 @@ import { logger } from '@/infrastructure/logging/logger';
 
 // Mock Prisma
 jest.mock('@roast/db', () => ({
-  EvaluationRepository: jest.fn().mockImplementation(() => ({})),
+  EvaluationRepository: jest.fn().mockImplementation(() => ({
+    checkDocumentAccess: jest.fn(),
+    checkAgentExists: jest.fn(),
+    createEvaluationWithJob: jest.fn(),
+  })),
   prisma: {
     $transaction: jest.fn(),
     document: {
@@ -31,10 +35,11 @@ const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
 describe('EvaluationService', () => {
   let service: EvaluationService;
+  let mockEvaluationRepository: any;
 
   beforeEach(() => {
-    const evaluationRepository = new EvaluationRepository();
-    service = new EvaluationService(evaluationRepository, logger);
+    mockEvaluationRepository = new EvaluationRepository();
+    service = new EvaluationService(mockEvaluationRepository, logger);
     jest.clearAllMocks();
   });
 
@@ -59,53 +64,35 @@ describe('EvaluationService', () => {
     });
 
     it('should check if document exists and user has access', async () => {
-      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce(null);
+      mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(false);
 
       const result = await service.createEvaluation(mockRequest);
 
       expect(result.isError()).toBe(true);
       expect(result.error()).toBeInstanceOf(NotFoundError);
-      expect(mockPrisma.document.findFirst).toHaveBeenCalledWith({
-        where: {
-          id: 'doc-123',
-          submittedById: 'user-123'
-        },
-        select: { id: true }
-      });
+      expect(mockEvaluationRepository.checkDocumentAccess).toHaveBeenCalledWith('doc-123', 'user-123');
     });
 
     it('should check if agent exists', async () => {
-      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
-      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
+      mockEvaluationRepository.checkAgentExists.mockResolvedValueOnce(false);
 
       const result = await service.createEvaluation(mockRequest);
 
       expect(result.isError()).toBe(true);
       expect(result.error()).toBeInstanceOf(NotFoundError);
-      expect(mockPrisma.agent.findUnique).toHaveBeenCalledWith({
-        where: { id: 'agent-123' },
-        select: { id: true }
-      });
+      expect(mockEvaluationRepository.checkAgentExists).toHaveBeenCalledWith('agent-123');
     });
 
     it('should create new evaluation when none exists', async () => {
-      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
-      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'agent-123' });
-      
-      const mockTransaction = jest.fn().mockImplementation(async (callback) => {
-        const mockTx = {
-          evaluation: {
-            findFirst: jest.fn().mockResolvedValueOnce(null),
-            create: jest.fn().mockResolvedValueOnce({ id: 'eval-123' })
-          },
-          job: {
-            create: jest.fn().mockResolvedValueOnce({ id: 'job-123' })
-          }
-        };
-        return await callback(mockTx);
+      mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
+      mockEvaluationRepository.checkAgentExists.mockResolvedValueOnce(true);
+      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
+        evaluationId: 'eval-123',
+        agentId: 'agent-123',
+        jobId: 'job-123',
+        created: true
       });
-      
-      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -120,22 +107,14 @@ describe('EvaluationService', () => {
     });
 
     it('should create new job for existing evaluation', async () => {
-      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
-      (mockPrisma.agent.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'agent-123' });
-      
-      const mockTransaction = jest.fn().mockImplementation(async (callback) => {
-        const mockTx = {
-          evaluation: {
-            findFirst: jest.fn().mockResolvedValueOnce({ id: 'eval-existing' })
-          },
-          job: {
-            create: jest.fn().mockResolvedValueOnce({ id: 'job-new' })
-          }
-        };
-        return await callback(mockTx);
+      mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
+      mockEvaluationRepository.checkAgentExists.mockResolvedValueOnce(true);
+      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
+        evaluationId: 'eval-existing',
+        agentId: 'agent-123',
+        jobId: 'job-new',
+        created: false
       });
-      
-      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluation(mockRequest);
 
@@ -171,27 +150,19 @@ describe('EvaluationService', () => {
     });
 
     it('should handle partial successes gracefully', async () => {
-      (mockPrisma.document.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'doc-123' });
+      mockEvaluationRepository.checkDocumentAccess.mockResolvedValueOnce(true);
       
       // First agent exists, second doesn't
-      (mockPrisma.agent.findUnique as jest.Mock)
-        .mockResolvedValueOnce({ id: 'agent-1' })
-        .mockResolvedValueOnce(null);
+      mockEvaluationRepository.checkAgentExists
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
       
-      const mockTransaction = jest.fn().mockImplementation(async (callback) => {
-        const mockTx = {
-          evaluation: {
-            findFirst: jest.fn().mockResolvedValueOnce(null),
-            create: jest.fn().mockResolvedValueOnce({ id: 'eval-1' })
-          },
-          job: {
-            create: jest.fn().mockResolvedValueOnce({ id: 'job-1' })
-          }
-        };
-        return await callback(mockTx);
+      mockEvaluationRepository.createEvaluationWithJob.mockResolvedValueOnce({
+        evaluationId: 'eval-1',
+        agentId: 'agent-1',
+        jobId: 'job-1',
+        created: true
       });
-      
-      (mockPrisma.$transaction as jest.Mock).mockImplementation(mockTransaction);
 
       const result = await service.createEvaluationsForDocument(mockRequest);
 

@@ -14,7 +14,7 @@ jest.mock("@roast/db", () => ({
 }));
 
 // Mock crypto
-jest.mock("../crypto", () => ({
+jest.mock("@/shared/utils/crypto", () => ({
   hashApiKey: jest.fn(),
   generateApiKey: jest.fn(() => "rmp_test1234567890123456789012345678901234567890"),
 }));
