@@ -35,6 +35,7 @@ jest.mock('@roast/domain', () => {
 jest.mock('@roast/db', () => ({
   DocumentRepository: jest.fn().mockImplementation(() => ({})),
   EvaluationRepository: jest.fn().mockImplementation(() => ({})),
+  JobRepository: jest.fn().mockImplementation(() => ({})),
 }));
 
 // Now import the routes AFTER mocks are set up

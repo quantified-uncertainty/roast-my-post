@@ -8,7 +8,7 @@ config({ path: "../../.env.local", override: false }); // Development (workspace
 config({ path: "../../.env", override: false });        // Production/fallback (workspace root)
 // System environment variables take highest precedence (already loaded)
 
-import { JobModel } from "../models/Job";
+import { getServices } from "@/application/services/ServiceFactory";
 import { logger } from "@/infrastructure/logging/logger";
 import { initializeAIPackage } from "../infrastructure/external/ai-init";
 
@@ -19,11 +19,11 @@ async function main() {
   // Initialize AI package with environment variables
   initializeAIPackage();
   
-  const jobProcessor = new JobModel();
+  const { jobOrchestrator } = getServices();
   let hasProcessedJob = false;
 
   try {
-    hasProcessedJob = await jobProcessor.run();
+    hasProcessedJob = await jobOrchestrator.run();
     
     const endTime = Date.now();
     const duration = Math.round((endTime - startTime) / 1000);
