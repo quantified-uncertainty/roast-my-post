@@ -390,9 +390,9 @@ export class JobOrchestrator implements JobOrchestratorInterface {
         error: error instanceof Error ? error.message : String(error) 
       });
       
-      // Note: Token totals are now tracked automatically by the Claude wrapper
-      const totalInputTokens = 0; // Legacy field, kept for compatibility
-      const totalOutputTokens = 0; // Legacy field, kept for compatibility
+      // Note: Token totals are tracked automatically by the Claude wrapper
+      const totalInputTokens = 0; // Compatibility field, values tracked elsewhere
+      const totalOutputTokens = 0; // Compatibility field, values tracked elsewhere
       
       return calculateApiCostInDollars(
         {

@@ -34,7 +34,7 @@ export async function updateDocumentWithAgents(
     },
   });
 
-  // Create evaluations and jobs for new agents
+  // Create evaluations and jobs for additional agents
   const existingEvaluations = await prisma.evaluation.findMany({
     where: { documentId },
     select: { agentId: true },

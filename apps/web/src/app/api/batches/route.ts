@@ -33,7 +33,7 @@ const createBatchSchema = z.object({
   documentIds: z.array(z.string()).optional(),
   name: z.string().optional(),
   
-  // New experiment fields
+  // Experiment fields
   trackingId: z.string().optional(),
   description: z.string().optional(),
   isEphemeral: z.boolean().optional(),

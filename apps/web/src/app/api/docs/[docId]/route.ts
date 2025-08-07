@@ -49,8 +49,8 @@ export const PUT = withSecurity(
       });
     }
 
-    // Use existing document update logic from the old API
-    // Import the PUT logic from the existing documents API
+    // Use document update logic
+    // Import the PUT logic from the documents API
     const { updateDocumentWithAgents } = await import("@/application/services/document-operations");
     
     const result = await updateDocumentWithAgents(docId, intendedAgentIds, userId!);

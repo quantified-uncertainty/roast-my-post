@@ -83,7 +83,7 @@ export class ServiceFactory {
    * Use this when you need services that share the same database transaction
    */
   createTransactionalServices(prismaTransaction: any) {
-    // Create new repositories with the transaction client
+    // Create repositories with the transaction client
     const txDocumentRepo = new DocumentRepository(prismaTransaction);
     const txEvaluationRepo = new EvaluationRepository(prismaTransaction);
     
