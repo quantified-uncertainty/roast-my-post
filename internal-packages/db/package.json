@@ -2,16 +2,17 @@
   "name": "@roast/db",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "browser": "./browser.ts",
   "exports": {
     ".": {
       "browser": "./browser.ts",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
+    "build": "tsc",
     "with-env": "dotenv -e ../../apps/web/.env.local --",
     "gen": "pnpm with-env prisma generate",
     "gen:build": "prisma generate",
@@ -22,7 +23,7 @@
     "db:migrate:reset:safe": "../../dev/scripts/safe-prisma.sh migrate reset",
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:studio": "pnpm with-env prisma studio",
-    "clean": "rm -rf generated .turbo",
+    "clean": "rm -rf generated .turbo dist",
     "postinstall": "prisma generate"
   },
   "dependencies": {
