@@ -23,7 +23,17 @@ describeIfDb('DocumentService Integration Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data - delete in order to respect foreign key constraints
+    await prisma.job.deleteMany({
+      where: { 
+        evaluation: { 
+          document: { 
+            submittedById: testUserId 
+          } 
+        } 
+      }
+    });
+    
     await prisma.evaluation.deleteMany({
       where: {
         document: {
@@ -112,7 +122,7 @@ describeIfDb('DocumentService Integration Tests', () => {
       expect(error?.message).toContain('Invalid document data');
     });
 
-    it('should create document with agent IDs but not create evaluations (delegated to EvaluationService)', async () => {
+    it('should create document with agent IDs and create evaluations via EvaluationService', async () => {
       // Create test agents with versions
       const agent1Id = `test-agent-1-${nanoid()}`;
       const agent1 = await prisma.agent.create({
@@ -148,7 +158,7 @@ describeIfDb('DocumentService Integration Tests', () => {
 
       const documentData = {
         title: 'Document with Agent IDs',
-        content: 'This document will have agent IDs passed but no evaluations created. '.repeat(10).trim(),
+        content: 'This document will have agent IDs passed and evaluations created via EvaluationService. '.repeat(10).trim(),
         authors: 'Test Author',
       };
 
@@ -165,14 +175,15 @@ describeIfDb('DocumentService Integration Tests', () => {
       expect(document.id).toBeDefined();
       expect(document.title).toBe(documentData.title);
 
-      // Verify NO evaluations were created (this is now handled by EvaluationService)
+      // Verify evaluations were created (now handled by EvaluationService)
       const evaluations = await prisma.evaluation.findMany({
         where: { documentId: document.id },
       });
 
-      expect(evaluations).toHaveLength(0);
+      expect(evaluations).toHaveLength(2);
+      expect(evaluations.map(e => e.agentId).sort()).toEqual([agent1Id, agent2Id].sort());
 
-      // Verify NO jobs were created
+      // Verify jobs were created
       const jobs = await prisma.job.findMany({
         where: { 
           evaluation: {
@@ -181,9 +192,18 @@ describeIfDb('DocumentService Integration Tests', () => {
         },
       });
 
-      expect(jobs).toHaveLength(0);
+      expect(jobs).toHaveLength(2);
+      expect(jobs.every(j => j.status === 'PENDING')).toBe(true);
 
-      // Clean up
+      // Clean up - delete jobs first, then evaluations, then agents
+      await prisma.job.deleteMany({ 
+        where: { 
+          evaluation: {
+            documentId: document.id
+          }
+        } 
+      });
+      await prisma.evaluation.deleteMany({ where: { documentId: document.id } });
       await prisma.agent.delete({ where: { id: agent1Id } });
       await prisma.agent.delete({ where: { id: agent2Id } });
     });
