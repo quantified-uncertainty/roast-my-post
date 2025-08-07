@@ -1,3 +1,31 @@
+// Type helpers for better type safety
+type DecimalLike = { toNumber: () => number; toString: () => string };
+type Serializable = string | number | boolean | null | undefined | Date | DecimalLike;
+
+/**
+ * Mapped type that converts Decimal fields to strings
+ */
+export type SerializedDecimal<T> = T extends DecimalLike
+  ? string
+  : T extends Date
+  ? string
+  : T extends Array<infer U>
+  ? Array<SerializedDecimal<U>>
+  : T extends object
+  ? { [K in keyof T]: SerializedDecimal<T[K]> }
+  : T;
+
+/**
+ * Mapped type that converts Decimal fields to numbers
+ */
+export type SerializedDecimalNumber<T> = T extends DecimalLike
+  ? number
+  : T extends Array<infer U>
+  ? Array<SerializedDecimalNumber<U>>
+  : T extends object
+  ? { [K in keyof T]: SerializedDecimalNumber<T[K]> }
+  : T;
+
 /**
  * Safely convert a Prisma Decimal to number with proper handling
  * @param decimal - The Prisma Decimal object or any value that might be a price
@@ -158,4 +186,51 @@ export function serializeEvaluationVersion(evalVersion: any) {
  */
 export function serializePrismaResult<T>(result: T): T {
   return serializeDecimal(result);
+}
+
+// ============================================================================
+// Type-safe versions with better type inference
+// ============================================================================
+
+/**
+ * Type-safe version of serializeDecimal with proper return type
+ * Use this when you need type safety for the serialized result
+ */
+export function serializeDecimalTyped<T>(obj: T): SerializedDecimal<T> {
+  return serializeDecimal(obj) as SerializedDecimal<T>;
+}
+
+/**
+ * Type-safe version of serializeDecimalToNumber with proper return type
+ */
+export function serializeDecimalToNumberTyped<T>(obj: T): SerializedDecimalNumber<T> {
+  return serializeDecimalToNumber(obj) as SerializedDecimalNumber<T>;
+}
+
+/**
+ * Type guard to check if a value is Decimal-like
+ */
+export function isDecimalLike(value: unknown): value is DecimalLike {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toNumber' in value &&
+    'toString' in value &&
+    typeof (value as any).toNumber === 'function' &&
+    typeof (value as any).toString === 'function'
+  );
+}
+
+/**
+ * Type guard to check if a value needs serialization
+ */
+export function needsSerialization(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (value instanceof Date) return true;
+  if (isDecimalLike(value)) return true;
+  if (Array.isArray(value)) return value.some(needsSerialization);
+  if (typeof value === 'object') {
+    return Object.values(value).some(needsSerialization);
+  }
+  return false;
 }

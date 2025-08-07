@@ -7,7 +7,7 @@ import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { EvaluationTabsWrapper } from "@/components/EvaluationTabsWrapper";
 import { EvaluationContent } from "@/components/evaluation";
 import { getEvaluationForDisplay, extractEvaluationDisplayData } from "@/lib/evaluation/evaluationQueries";
-import { serializePrismaResult } from "@/lib/prisma-serializers";
+// Note: serializePrismaResult import removed as it's not used in this file
 
 
 
