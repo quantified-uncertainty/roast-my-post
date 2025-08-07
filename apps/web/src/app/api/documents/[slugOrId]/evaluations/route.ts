@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { authenticateRequest } from "@/lib/auth-helpers";
 import { prisma } from "@roast/db";
+import { EvaluationService } from "@/lib/services/EvaluationService";
+import { ValidationError, NotFoundError } from "@/lib/core/errors";
 
 // Schema for querying evaluations
 const queryEvaluationsSchema = z.object({
