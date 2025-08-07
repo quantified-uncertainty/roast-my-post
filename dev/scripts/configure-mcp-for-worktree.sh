@@ -27,10 +27,15 @@ BACKUP_FILE="$CLAUDE_CONFIG_DIR/claude_desktop_config.backup.json"
 restore_config() {
     if [ -f "$BACKUP_FILE" ]; then
         cp "$BACKUP_FILE" "$CLAUDE_CONFIG_FILE"
-        echo -e "${GREEN}✅ Restored original MCP configuration${NC}"
+        echo -e "${GREEN}✅ Restored original Claude Desktop MCP configuration${NC}"
     else
         echo -e "${YELLOW}⚠️  No backup found to restore${NC}"
     fi
+    
+    # Also remove the roast-my-post server from Claude Code
+    claude mcp remove roast-my-post 2>/dev/null && echo -e "${GREEN}✅ Removed roast-my-post from Claude Code${NC}" || true
+    
+    echo -e "${GREEN}✅ MCP configuration restored for both Claude Desktop and Claude Code${NC}"
 }
 
 # Handle restore flag
@@ -94,7 +99,8 @@ jq --arg worktree_path "$WORKTREE_PATH" \
    '
    # Update roast-my-post MCP server if it exists
    if .mcpServers["roast-my-post"] then
-     .mcpServers["roast-my-post"].args = [($worktree_path + "/apps/mcp-server/dist/index.js")] |
+     .mcpServers["roast-my-post"].command = "npx" |
+     .mcpServers["roast-my-post"].args = ["tsx", ($worktree_path + "/apps/mcp-server/src/index.ts")] |
      .mcpServers["roast-my-post"].env.ROAST_MY_POST_MCP_API_BASE_URL = "http://localhost:" + $dev_port
    else . end |
    
@@ -119,21 +125,43 @@ fi
 # Move the temp file to the actual config
 mv "$TEMP_CONFIG" "$CLAUDE_CONFIG_FILE"
 
-echo -e "${GREEN}✅ Updated MCP configuration for worktree${NC}"
+# Configure Claude Code as well
+echo -e "${BLUE}Configuring Claude Code MCP servers...${NC}"
+cd "$WORKTREE_PATH"
+
+# Remove existing roast-my-post server from Claude Code if it exists
+claude mcp remove roast-my-post 2>/dev/null || true
+
+# Add roast-my-post server to Claude Code using TypeScript source
+claude mcp add roast-my-post npx tsx "$WORKTREE_PATH/apps/mcp-server/src/index.ts"
+
+# Add puppeteer server to Claude Code if not already present
+if ! claude mcp list 2>/dev/null | grep -q "puppeteer"; then
+    claude mcp add puppeteer npx @modelcontextprotocol/server-puppeteer
+fi
+
+echo -e "${GREEN}✅ Updated MCP configuration for both Claude Desktop and Claude Code${NC}"
 echo ""
 echo "Changes made:"
-echo "  • roast-my-post server now points to: $WORKTREE_PATH/apps/mcp-server/dist/index.js"
+echo "  • Claude Desktop: roast-my-post server points to: $WORKTREE_PATH/apps/mcp-server/src/index.ts"
+echo "  • Claude Code: roast-my-post server points to: $WORKTREE_PATH/apps/mcp-server/src/index.ts"
 echo "  • API base URL updated to: http://localhost:$DEV_PORT"
+echo "  • Puppeteer server added to Claude Code"
 echo ""
 echo -e "${YELLOW}⚠️  IMPORTANT: You must restart Claude Desktop for changes to take effect${NC}"
+echo -e "${YELLOW}⚠️  Claude Code changes take effect immediately${NC}"
 echo ""
 echo "To restore original configuration later:"
 echo "  $0 --restore"
 
-# Remind about building MCP server
-if [ ! -f "$WORKTREE_PATH/apps/mcp-server/dist/index.js" ]; then
+# Check for MCP server dependencies
+if [ ! -d "$WORKTREE_PATH/node_modules" ]; then
     echo ""
-    echo -e "${YELLOW}⚠️  MCP server not built in worktree. Build it with:${NC}"
+    echo -e "${YELLOW}⚠️  Dependencies not installed in worktree. Install them with:${NC}"
     echo "  cd $WORKTREE_PATH"
-    echo "  pnpm --filter @roast/mcp-server run build"
+    echo "  pnpm install"
 fi
+
+echo ""
+echo -e "${GREEN}✅ MCP servers configured to use TypeScript source files directly${NC}"
+echo -e "${BLUE}ℹ️  No build step required - TypeScript files are run with tsx${NC}"
