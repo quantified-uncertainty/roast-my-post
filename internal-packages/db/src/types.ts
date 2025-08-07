@@ -9,6 +9,7 @@ export enum UserRole {
 
 export enum JobStatus {
   PENDING = 'PENDING',
+  RUNNING = 'RUNNING',
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
@@ -31,11 +32,6 @@ export type {
   AgentVersion,
   Evaluation,
   EvaluationVersion,
-  Comment,
   Job,
-  JobTask,
-  EphemeralBatch,
-  EvaluationUpdate,
   AgentEvalBatch,
-  Prisma,
 } from '../generated';

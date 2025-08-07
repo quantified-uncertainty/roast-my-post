@@ -1,4 +1,4 @@
-import { Prisma } from "@roast/db";
+import { Decimal } from "@prisma/client/runtime/library";
 
 /**
  * Safely convert a Prisma Decimal to number with proper handling
@@ -18,7 +18,7 @@ export function decimalToNumber(decimal: unknown): number | null {
   }
   
   // Prisma Decimal object
-  if (decimal instanceof Prisma.Decimal) {
+  if (decimal instanceof Decimal) {
     return decimal.toNumber();
   }
   
@@ -41,7 +41,7 @@ export function serializeDecimal<T>(obj: T): T {
     return obj;
   }
 
-  if (obj instanceof Prisma.Decimal) {
+  if (obj instanceof Decimal) {
     return obj.toString() as any;
   }
 
@@ -75,7 +75,7 @@ export function serializeDecimalToNumber<T>(obj: T): T {
     return obj;
   }
 
-  if (obj instanceof Prisma.Decimal) {
+  if (obj instanceof Decimal) {
     return Number(obj) as any;
   }
 

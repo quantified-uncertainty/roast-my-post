@@ -1,4 +1,4 @@
-import { Prisma } from '@roast/db';
+import { Decimal } from '@prisma/client/runtime/library';
 import { 
   decimalToNumber, 
   serializeJob, 
@@ -32,28 +32,28 @@ describe('decimalToNumber', () => {
   });
 
   it('should handle Prisma Decimal objects', () => {
-    const decimal = new Prisma.Decimal(42.99);
+    const decimal = new Decimal(42.99);
     expect(decimalToNumber(decimal)).toBe(42.99);
     
-    const bigDecimal = new Prisma.Decimal('99999999.99');
+    const bigDecimal = new Decimal('99999999.99');
     expect(decimalToNumber(bigDecimal)).toBe(99999999.99);
     
-    const smallDecimal = new Prisma.Decimal('0.00000001');
+    const smallDecimal = new Decimal('0.00000001');
     expect(decimalToNumber(smallDecimal)).toBe(0.00000001);
   });
 
   it('should handle precision edge cases', () => {
     // Test with high precision decimals
-    const preciseDecimal = new Prisma.Decimal('10.123456789');
+    const preciseDecimal = new Decimal('10.123456789');
     const result = decimalToNumber(preciseDecimal);
     expect(result).toBeCloseTo(10.123456789, 9);
     
     // Test very large numbers
-    const largeDecimal = new Prisma.Decimal('999999999999.99');
+    const largeDecimal = new Decimal('999999999999.99');
     expect(decimalToNumber(largeDecimal)).toBe(999999999999.99);
     
     // Test very small numbers
-    const tinyDecimal = new Prisma.Decimal('0.0000000001');
+    const tinyDecimal = new Decimal('0.0000000001');
     expect(decimalToNumber(tinyDecimal)).toBe(0.0000000001);
   });
 
@@ -84,10 +84,10 @@ describe('serializeJobNumeric', () => {
   it('should convert job with decimal prices to numbers', () => {
     const job = {
       id: '123',
-      priceInDollars: new Prisma.Decimal('42.99'),
+      priceInDollars: new Decimal('42.99'),
       tasks: [
-        { id: '1', priceInDollars: new Prisma.Decimal('10.50') },
-        { id: '2', priceInDollars: new Prisma.Decimal('5.25') },
+        { id: '1', priceInDollars: new Decimal('10.50') },
+        { id: '2', priceInDollars: new Decimal('5.25') },
         { id: '3', priceInDollars: null }
       ]
     };
@@ -116,7 +116,7 @@ describe('serializeJobNumeric', () => {
   it('should handle jobs with empty tasks', () => {
     const job = {
       id: '123',
-      priceInDollars: new Prisma.Decimal('100'),
+      priceInDollars: new Decimal('100'),
       tasks: []
     };
 
@@ -130,13 +130,13 @@ describe('serializeJobNumeric', () => {
 describe('serializeDecimal', () => {
   it('should convert Decimal objects to strings', () => {
     const data = {
-      price: new Prisma.Decimal('42.99'),
+      price: new Decimal('42.99'),
       nested: {
-        cost: new Prisma.Decimal('10.50')
+        cost: new Decimal('10.50')
       },
       array: [
-        new Prisma.Decimal('1.25'),
-        new Prisma.Decimal('2.50')
+        new Decimal('1.25'),
+        new Decimal('2.50')
       ]
     };
 
@@ -179,13 +179,13 @@ describe('serializeDecimal', () => {
 describe('serializeDecimalToNumber', () => {
   it('should convert Decimal objects to numbers', () => {
     const data = {
-      price: new Prisma.Decimal('42.99'),
+      price: new Decimal('42.99'),
       nested: {
-        cost: new Prisma.Decimal('10.50')
+        cost: new Decimal('10.50')
       },
       array: [
-        new Prisma.Decimal('1.25'),
-        new Prisma.Decimal('2.50')
+        new Decimal('1.25'),
+        new Decimal('2.50')
       ]
     };
 
@@ -201,7 +201,7 @@ describe('serializeDecimalToNumber', () => {
     const date = new Date('2024-01-01T00:00:00Z');
     const data = {
       createdAt: date,
-      price: new Prisma.Decimal('99.99')
+      price: new Decimal('99.99')
     };
 
     const result = serializeDecimalToNumber(data);
