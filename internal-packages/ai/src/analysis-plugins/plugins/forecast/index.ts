@@ -143,16 +143,28 @@ class ExtractedForecast {
     return `📊 Forecast: ${truncated}`;
   }
   
-  private getLevel(): 'error' | 'warning' | 'info' | 'success' {
+  private getLevel(): 'error' | 'warning' | 'info' | 'success' | 'debug' {
     // Forecasts are informational by nature
     const averageScore = this.averageScore;
     
-    if (averageScore >= 80) {
-      return 'info';
-    } else if (averageScore >= 50) {
-      return 'info';
+    // If we have our forecast, show as info level
+    if (this.ourForecast) {
+      if (averageScore >= 80) {
+        return 'success';
+      } else if (averageScore >= 50) {
+        return 'info';
+      } else {
+        return 'warning';
+      }
+    }
+    
+    // For predictions we couldn't analyze:
+    // - High quality predictions that failed: 'info' (visible)
+    // - Low quality predictions: 'debug' (hidden)
+    if (this.shouldGetOurForecastScore >= 60) {
+      return 'info';  // Important prediction we couldn't analyze
     } else {
-      return 'warning'; // Low quality forecasts get warning level
+      return 'debug'; // Low quality prediction
     }
   }
 
@@ -180,12 +192,10 @@ class ExtractedForecast {
       });
     }
 
-    // Keep formatted description for backwards compatibility
-    const forecastWithPrediction: ForecastWithPrediction = {
-      forecast: this.extractedForecast,
-      prediction: this.ourForecast || undefined,
-    };
-    const formattedDescription = generateForecastComment(forecastWithPrediction);
+    // Build appropriate description based on whether we have a forecast
+    const description = this.ourForecast ? 
+      this.buildVerifiedDescription() : 
+      this.buildSkipDescription();
 
     return CommentBuilder.build({
       plugin: 'forecast',
@@ -195,9 +205,9 @@ class ExtractedForecast {
       toolChain,
       
       // Required fields
-      description: formattedDescription,
+      description,
       header: this.buildTitle(),
-      level: this.averageScore >= 7 ? 'success' : this.averageScore >= 5 ? 'info' : 'warning',
+      level: this.getLevel(),
       
       // Additional structured content
       observation: this.buildObservation(),
@@ -270,7 +280,54 @@ class ExtractedForecast {
     return undefined;
   }
 
-  // Removed - now using generateForecastComment from commentGeneration.ts
+  private buildVerifiedDescription(): string {
+    // When we have a forecast, use the existing format
+    const forecastWithPrediction: ForecastWithPrediction = {
+      forecast: this.extractedForecast,
+      prediction: this.ourForecast || undefined,
+    };
+    return generateForecastComment(forecastWithPrediction);
+  }
+  
+  private buildSkipDescription(): string {
+    const shouldAnalyze = this.shouldGetOurForecastScore >= 60;
+    
+    let skipReason: string;
+    let detailedReason: string;
+    
+    if (shouldAnalyze) {
+      // High quality but couldn't generate forecast
+      skipReason = "Technical complexity exceeded automated forecasting capabilities";
+      detailedReason = `This prediction was high-quality enough to warrant analysis, but the system couldn't generate a probability estimate. This could be due to:
+- Conceptual complexity requiring domain expertise
+- Insufficient reference data for calibration  
+- Technical limitations in the forecasting tools
+
+**Recommendation:** This prediction would benefit from expert human analysis.`;
+    } else {
+      // Low quality prediction
+      skipReason = "Low quality prediction not suitable for analysis";
+      detailedReason = "The prediction was too vague or poorly grounded to generate meaningful probability estimates.";
+    }
+    
+    return `**Prediction Found:**
+> "${this.extractedForecast.originalText}"
+
+${this.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
+> "${this.extractedForecast.rewrittenPredictionText}"
+
+` : ''}**Skip Reason:** ${skipReason}
+
+**Quality Score:** ${this.averageScore.toFixed(1)}/10
+
+**Scoring Breakdown:**
+- Importance: ${this.extractedForecast.importanceScore}/10 (how central to document)
+- Precision: ${this.extractedForecast.precisionScore}/10 (how specific/measurable)
+- Verifiability: ${this.extractedForecast.verifiabilityScore}/10 (how easy to verify outcome)  
+- Robustness: ${this.extractedForecast.robustnessScore}/10 (empirical grounding)
+
+${detailedReason}`;
+  }
 }
 
 export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
@@ -488,32 +545,11 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
   private async generateDebugComments(): Promise<(Comment | null)[]> {
     const debugComments: (Comment | null)[] = [];
     
-    // Find forecasts that should have generated probability estimates but didn't
-    const forecastsWithoutEstimates = this.extractedForecasts.filter(forecast => {
-      return forecast.shouldGetOurForecastScore >= 6 && !forecast.getOurForecast();
-    });
-
-    // Debug comments for forecasts that couldn't generate probability estimates
-    for (const forecast of forecastsWithoutEstimates) {
-      const debugComment = await this.createEstimateFailedDebugComment(forecast);
-      if (debugComment) {
-        debugComments.push(debugComment);
-      }
-    }
-
-    // Debug comments for low-quality forecasts that were skipped
-    const lowQualityForecasts = this.extractedForecasts.filter(forecast => {
-      return forecast.averageScore < 3; // Very low quality forecasts
-    });
-
-    for (const forecast of lowQualityForecasts) {
-      const debugComment = await this.createLowQualityDebugComment(forecast);
-      if (debugComment) {
-        debugComments.push(debugComment);
-      }
-    }
-
-    // Debug comments for forecasts that couldn't be located
+    // IMPORTANT: We now handle skipped forecasts in the regular comment flow,
+    // so we only need debug comments for forecasts that couldn't be located.
+    // This avoids creating duplicate comments.
+    
+    // Debug comments ONLY for forecasts that couldn't be located
     for (const forecast of this.extractedForecasts) {
       const location = await forecast.findLocationInDocument();
       if (!location) {
@@ -527,107 +563,19 @@ export class ForecastAnalyzerJob implements SimpleAnalysisPlugin {
     return debugComments;
   }
 
+  // DEPRECATED: These methods are no longer used as we handle skipped forecasts in regular comments
+  // Keeping them commented for reference
+  /*
   private async createEstimateFailedDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
-    const location = await forecast.findLocationInDocument();
-    if (!location) return null;
-
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: 'extractForecastingClaims',
-        stage: 'extraction',
-        timestamp: new Date(this.processingStartTime + 40).toISOString(),
-        result: forecast.extractedForecast
-      },
-      {
-        toolName: 'generateProbabilityForecast',
-        stage: 'verification',
-        timestamp: new Date().toISOString(),
-        result: { status: 'failed', reason: 'estimation_failed' }
-      }
-    ];
-
-    return CommentBuilder.build({
-      plugin: 'forecast',
-      location,
-      chunkId: forecast.getChunk().id,
-      processingStartTime: this.processingStartTime,
-      toolChain,
-      
-      header: `Prediction Detected, Skipped`,
-      level: 'debug' as const,
-      description: `**Prediction Found:**
-> "${forecast.extractedForecast.originalText}"
-
-${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
-> "${forecast.extractedForecast.rewrittenPredictionText}"
-
-` : ''}**Skip Reason:** Technical complexity exceeded automated forecasting capabilities
-
-**Quality Score:** ${forecast.averageScore.toFixed(1)}/10
-
-This prediction was high-quality enough to warrant analysis, but the system couldn't generate a probability estimate. This could be due to:
-- Conceptual complexity requiring domain expertise
-- Insufficient reference data for calibration  
-- Technical limitations in the forecasting tools
-
-**Recommendation:** This prediction would benefit from expert human analysis.`,
-    });
+    // This functionality is now handled in buildSkipDescription()
+    return null;
   }
 
   private async createLowQualityDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
-    const location = await forecast.findLocationInDocument();
-    if (!location) return null;
-
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: 'extractForecastingClaims',
-        stage: 'extraction',
-        timestamp: new Date(this.processingStartTime + 40).toISOString(),
-        result: forecast.extractedForecast
-      },
-      {
-        toolName: 'qualityAssessment',
-        stage: 'enhancement',
-        timestamp: new Date().toISOString(),
-        result: { 
-          quality: 'low',
-          averageScore: forecast.averageScore,
-          importanceScore: forecast.extractedForecast.importanceScore,
-          precisionScore: forecast.extractedForecast.precisionScore,
-          verifiabilityScore: forecast.extractedForecast.verifiabilityScore,
-          robustnessScore: forecast.extractedForecast.robustnessScore
-        }
-      }
-    ];
-
-    return CommentBuilder.build({
-      plugin: 'forecast',
-      location,
-      chunkId: forecast.getChunk().id,
-      processingStartTime: this.processingStartTime,
-      toolChain,
-      
-      header: `Prediction Detected, Skipped`,
-      level: 'debug' as const,
-      description: `**Prediction Found:**
-> "${forecast.extractedForecast.originalText}"
-
-${forecast.extractedForecast.rewrittenPredictionText ? `**Rewritten Version:**
-> "${forecast.extractedForecast.rewrittenPredictionText}"
-
-` : ''}**Skip Reason:** Low quality prediction not suitable for analysis
-
-**Scoring Breakdown:**
-- Importance: ${forecast.extractedForecast.importanceScore}/10 (how central to document)
-- Precision: ${forecast.extractedForecast.precisionScore}/10 (how specific/measurable)
-- Verifiability: ${forecast.extractedForecast.verifiabilityScore}/10 (how easy to verify outcome)  
-- Robustness: ${forecast.extractedForecast.robustnessScore}/10 (empirical grounding)
-
-**Overall Score:** ${forecast.averageScore.toFixed(1)}/10 (threshold: ≥3.0)
-
-The prediction was too vague or poorly grounded to generate meaningful probability estimates.`,
-    });
+    // This functionality is now handled in buildSkipDescription()
+    return null;
   }
+  */
 
   private async createLocationDebugComment(forecast: ExtractedForecast): Promise<Comment | null> {
     const toolChain: ToolChainResult[] = [

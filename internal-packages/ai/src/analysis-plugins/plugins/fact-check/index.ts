@@ -145,19 +145,67 @@ export class VerifiedFact {
   }
 
   private buildDescription(): string {
-    let description =
-      this.verification?.explanation ||
-      `Fact-check analysis of: ${this.claim.topic}`;
-
-    // Add sources if available from Perplexity research
-    if (this.verification?.sources && this.verification.sources.length > 0) {
-      description += "\n\nSources:";
-      this.verification.sources.forEach((source, index) => {
-        description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
-      });
+    // If verified, use the verification explanation
+    if (this.verification?.explanation) {
+      let description = this.verification.explanation;
+      
+      // Add sources if available from Perplexity research
+      if (this.verification.sources && this.verification.sources.length > 0) {
+        description += "\n\nSources:";
+        this.verification.sources.forEach((source, index) => {
+          description += `\n${index + 1}. ${source.title || "Source"} - ${source.url}`;
+        });
+      }
+      
+      return description;
     }
+    
+    // For unverified facts, provide detailed skip description
+    return this.buildSkipDescription();
+  }
+  
+  private buildSkipDescription(): string {
+    const shouldVerify = this.shouldVerify();
+    
+    // Determine skip reason
+    let skipReason: string;
+    let detailedReason: string;
+    
+    if (shouldVerify) {
+      // Should have been verified but wasn't (likely hit limit)
+      skipReason = "Processing limit reached (max 25 claims per analysis)";
+      detailedReason = "This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.";
+    } else {
+      // Low priority - determine why
+      skipReason = "Low priority for fact-checking resources";
+      
+      const reasons = [];
+      if (this.claim.importanceScore < 60 && this.claim.checkabilityScore < 60) {
+        reasons.push("Both importance and checkability scores were too low.");
+      } else if (this.claim.importanceScore < 60) {
+        reasons.push("Importance score was too low for prioritization.");
+      } else if (this.claim.checkabilityScore < 60) {
+        reasons.push("Checkability score was too low for efficient verification.");
+      } else if (this.claim.truthProbability > 70) {
+        reasons.push("Truth probability was too high (likely accurate) to prioritize.");
+      } else {
+        reasons.push("Did not meet combined scoring thresholds.");
+      }
+      
+      detailedReason = reasons.join(" ");
+    }
+    
+    return `**Claim Found:**
+> "${this.claim.originalText}"
 
-    return description;
+**Skip Reason:** ${skipReason}
+
+**Scoring Breakdown:**
+- Importance: ${this.claim.importanceScore}/100${this.claim.importanceScore >= 60 ? ' ✓' : ''} (threshold: ≥60)
+- Checkability: ${this.claim.checkabilityScore}/100${this.claim.checkabilityScore >= 60 ? ' ✓' : ''} (threshold: ≥60)
+- Truth Probability: ${this.claim.truthProbability}%${this.claim.truthProbability <= 70 ? ' ⚠️' : ''} (threshold: ≤70%)
+
+${detailedReason}`;
   }
 
   private buildTitle(): string {
@@ -191,11 +239,19 @@ export class VerifiedFact {
     return header;
   }
 
-  private getLevel(): "error" | "warning" | "info" | "success" {
+  private getLevel(): "error" | "warning" | "info" | "success" | "debug" {
     const verdict = this.verification?.verdict;
     if (verdict === "false") return "error";
     if (verdict === "partially-true") return "warning";
     if (verdict === "true") return "success";
+    
+    // For unverified facts:
+    // - Important facts that should have been verified: 'info' (visible by default)
+    // - Low priority facts: 'debug' (hidden by default)
+    if (!this.verification) {
+      return this.shouldVerify() ? "info" : "debug";
+    }
+    
     return "info";
   }
 
@@ -619,33 +675,11 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
   private async generateDebugComments(documentText: string): Promise<(Comment | null)[]> {
     const debugComments: (Comment | null)[] = [];
     
-    // Get facts that should be verified but weren't (due to limits)
-    const factsToVerify = this.facts.filter((fact) => fact.shouldVerify());
-    const verifiedFactsSet = new Set(
-      this.facts.filter(f => f.verification).map(f => f.text)
-    );
-    const unverifiedButShouldBe = factsToVerify.filter(
-      fact => !verifiedFactsSet.has(fact.text)
-    );
-
-    // Debug comments for facts that should have been verified but weren't
-    for (const fact of unverifiedButShouldBe) {
-      const debugComment = await this.createUnverifiedDebugComment(fact, documentText);
-      if (debugComment) {
-        debugComments.push(debugComment);
-      }
-    }
-
-    // Debug comments for facts that were skipped due to low priority
-    const lowPriorityFacts = this.facts.filter(fact => !fact.shouldVerify());
-    for (const fact of lowPriorityFacts) {
-      const debugComment = await this.createSkippedDebugComment(fact, documentText);
-      if (debugComment) {
-        debugComments.push(debugComment);
-      }
-    }
-
-    // Debug comments for facts that couldn't be located
+    // IMPORTANT: We now handle skipped facts in the regular comment flow,
+    // so we only need debug comments for facts that couldn't be located.
+    // This avoids creating duplicate comments.
+    
+    // Debug comments ONLY for facts that couldn't be located
     for (const fact of this.facts) {
       const location = await fact.findLocation(documentText);
       if (!location) {
@@ -659,101 +693,19 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
     return debugComments;
   }
 
+  // DEPRECATED: These methods are no longer used as we handle skipped facts in regular comments
+  // Keeping them commented for reference
+  /*
   private async createUnverifiedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
-    const location = await fact.findLocation(documentText);
-    if (!location) return null;
-
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: 'extractCheckableClaims',
-        stage: 'extraction',
-        timestamp: new Date(this.processingStartTime + 30).toISOString(),
-        result: fact.claim
-      },
-      {
-        toolName: 'verificationDecision',
-        stage: 'enhancement',
-        timestamp: new Date().toISOString(),
-        result: { 
-          shouldVerify: true,
-          reason: 'exceeded_verification_limit',
-          importanceScore: fact.claim.importanceScore,
-          checkabilityScore: fact.claim.checkabilityScore,
-          truthProbability: fact.claim.truthProbability
-        }
-      }
-    ];
-
-    return CommentBuilder.build({
-      plugin: 'fact-check',
-      location,
-      chunkId: fact.getChunk().id,
-      processingStartTime: this.processingStartTime,
-      toolChain,
-      
-      header: `Claim Detected, Limit Reached`,
-      level: 'debug' as const,
-      description: `**Claim Found:**
-> "${fact.text}"
-
-**Skip Reason:** Processing limit reached (max 25 claims per analysis)
-
-**Scoring Breakdown:**
-- Importance: ${fact.claim.importanceScore}/100 ✓ (meets threshold: ≥60)
-- Checkability: ${fact.claim.checkabilityScore}/100 ✓ (meets threshold: ≥60)
-- Truth Probability: ${fact.claim.truthProbability}% ${fact.claim.truthProbability <= 70 ? '⚠️ (threshold: ≤70%)' : '(threshold: ≤70%)'}
-
-This claim qualified for verification but was skipped due to resource limits. Consider manual fact-checking for high-priority claims like this.`,
-    });
+    // This functionality is now handled in buildSkipDescription()
+    return null;
   }
 
   private async createSkippedDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
-    const location = await fact.findLocation(documentText);
-    if (!location) return null;
-
-    const toolChain: ToolChainResult[] = [
-      {
-        toolName: 'extractCheckableClaims',
-        stage: 'extraction',
-        timestamp: new Date(this.processingStartTime + 30).toISOString(),
-        result: fact.claim
-      },
-      {
-        toolName: 'verificationDecision',
-        stage: 'enhancement',
-        timestamp: new Date().toISOString(),
-        result: { 
-          shouldVerify: false,
-          reason: 'low_priority',
-          importanceScore: fact.claim.importanceScore,
-          checkabilityScore: fact.claim.checkabilityScore,
-          truthProbability: fact.claim.truthProbability
-        }
-      }
-    ];
-
-    return CommentBuilder.build({
-      plugin: 'fact-check',
-      location,
-      chunkId: fact.getChunk().id,
-      processingStartTime: this.processingStartTime,
-      toolChain,
-      
-      header: `Claim Detected, Skipped`,
-      level: 'debug' as const,
-      description: `**Claim Found:**
-> "${fact.text}"
-
-**Skip Reason:** Low priority for fact-checking resources
-
-**Scoring Breakdown:**
-- Importance: ${fact.claim.importanceScore}/100 (threshold: ≥60)
-- Checkability: ${fact.claim.checkabilityScore}/100 (threshold: ≥60)  
-- Truth Probability: ${fact.claim.truthProbability}% (threshold: ≤70%)
-
-This claim didn't meet the criteria for detailed verification. ${fact.claim.importanceScore < 60 && fact.claim.checkabilityScore < 60 ? 'Both importance and checkability scores were too low.' : fact.claim.importanceScore < 60 ? 'Importance score was too low for prioritization.' : fact.claim.checkabilityScore < 60 ? 'Checkability score was too low for efficient verification.' : 'Truth probability was too high (likely accurate) to prioritize.'}`,
-    });
+    // This functionality is now handled in buildSkipDescription()
+    return null;
   }
+  */
 
   private async createLocationDebugComment(fact: VerifiedFact, documentText: string): Promise<Comment | null> {
     const toolChain: ToolChainResult[] = [
