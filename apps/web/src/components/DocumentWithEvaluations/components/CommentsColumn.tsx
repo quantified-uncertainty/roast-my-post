@@ -22,6 +22,7 @@ interface CommentsColumnProps {
   hoveredCommentId: string | null;
   onCommentHover: (commentId: string | null) => void;
   onCommentClick: (commentId: string) => void;
+  showDebugComments?: boolean;
   // Props for agent pills
   document?: Document;
   evaluationState?: EvaluationState;
@@ -39,6 +40,7 @@ export function CommentsColumn({
   hoveredCommentId,
   onCommentHover,
   onCommentClick,
+  showDebugComments = false,
   document: _document,
   evaluationState: _evaluationState,
   onEvaluationStateChange: _onEvaluationStateChange,
@@ -46,10 +48,10 @@ export function CommentsColumn({
   const columnRef = useRef<HTMLDivElement>(null);
 
   // Get valid and sorted comments with memoization
-  const sortedComments = useMemo(
-    () => getValidAndSortedComments(comments) as (DbComment & { agentName?: string })[],
-    [comments]
-  );
+  // Note: Comments are already filtered for debug level in EvaluationView
+  const sortedComments = useMemo(() => {
+    return getValidAndSortedComments(comments) as (DbComment & { agentName?: string })[];
+  }, [comments]);
 
   // Use custom hooks for highlight detection and positioning
   const { highlightsReady, hasInitialized, highlightCache } = useHighlightDetection(
