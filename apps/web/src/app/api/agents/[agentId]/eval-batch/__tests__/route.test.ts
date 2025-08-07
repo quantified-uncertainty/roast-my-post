@@ -2,6 +2,7 @@ import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import { prisma } from '@roast/db';
 import { authenticateRequestSessionFirst } from '@/infrastructure/auth/auth-helpers';
+import { getServices } from '@/application/services/ServiceFactory';
 
 // Mock dependencies
 jest.mock('@roast/db', () => ({
@@ -18,6 +19,7 @@ jest.mock('@roast/db', () => ({
     },
     job: {
       createMany: jest.fn(),
+      create: jest.fn(),
       findMany: jest.fn(),
     },
   },
@@ -25,6 +27,15 @@ jest.mock('@roast/db', () => ({
 
 jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequestSessionFirst: jest.fn(),
+}));
+
+// Mock the ServiceFactory to return mocked services
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: jest.fn(() => ({
+    jobService: {
+      createJob: jest.fn(),
+    },
+  })),
 }));
 
 // Mock crypto for UUID generation
@@ -119,7 +130,16 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
     (prisma.document.findMany as jest.Mock).mockResolvedValueOnce(mockDocuments);
     (prisma.agentEvalBatch.create as jest.Mock).mockResolvedValueOnce(mockBatch);
-    (prisma.job.createMany as jest.Mock).mockResolvedValueOnce({ count: 5 });
+    
+    // Mock JobService.createJob calls (now uses service instead of direct Prisma)
+    const mockJobService = (getServices as jest.Mock)().jobService;
+    (mockJobService.createJob as jest.Mock)
+      .mockResolvedValueOnce({ id: 'job-1', evaluationId: 'eval-1', status: 'PENDING' })
+      .mockResolvedValueOnce({ id: 'job-2', evaluationId: 'eval-2', status: 'PENDING' })
+      .mockResolvedValueOnce({ id: 'job-3', evaluationId: 'eval-3', status: 'PENDING' })
+      .mockResolvedValueOnce({ id: 'job-4', evaluationId: 'eval-4', status: 'PENDING' })
+      .mockResolvedValueOnce({ id: 'job-5', evaluationId: 'eval-5', status: 'PENDING' });
+    
     (prisma.agentEvalBatch.findUnique as jest.Mock).mockResolvedValueOnce(mockBatchWithCount);
     (prisma.job.findMany as jest.Mock).mockResolvedValueOnce([
       { id: 'job-1', status: 'PENDING', evaluation: { document: { id: 'doc-1' } } },
@@ -136,12 +156,6 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ agentId: mockAgentId }) });
-    
-    // Log the error if status is not 200
-    if (response.status !== 200) {
-      const errorData = await response.json();
-      console.error('Response error:', errorData);
-    }
     
     expect(response.status).toBe(200);
     
@@ -225,7 +239,9 @@ describe('POST /api/agents/[agentId]/eval-batch', () => {
       error: 'No documents found with evaluations for this agent',
     });
     
-    expect(prisma.job.createMany).not.toHaveBeenCalled();
+    // Verify that no jobs were created when no documents found
+    const mockJobService = (getServices as jest.Mock)().jobService;
+    expect(mockJobService.createJob).not.toHaveBeenCalled();
   });
 
   it('should handle database errors', async () => {

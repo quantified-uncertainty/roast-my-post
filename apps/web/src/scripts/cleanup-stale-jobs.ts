@@ -2,6 +2,7 @@
 
 import { prisma, JobStatus } from "@roast/db";
 import { logger } from "@/infrastructure/logging/logger";
+import { getServices } from "@/application/services/ServiceFactory";
 
 const STALE_JOB_TIMEOUT_MINUTES = 30;
 
@@ -52,14 +53,8 @@ async function cleanupStaleJobs() {
       console.log(`   - Started: ${job.startedAt?.toISOString()}`);
       console.log(`   - Running time: ${runningTime} minutes`);
       
-      await prisma.job.update({
-        where: { id: job.id },
-        data: {
-          status: JobStatus.FAILED,
-          error: errorMessage,
-          completedAt: new Date()
-        }
-      });
+      const { jobService } = getServices();
+      await jobService.markAsFailed(job.id, new Error(errorMessage));
     }
     
     console.log(`✅ Cleaned up ${staleJobs.length} stale job(s).`);

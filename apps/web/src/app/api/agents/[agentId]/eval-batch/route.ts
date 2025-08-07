@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
 import { prisma } from "@roast/db";
 import { authenticateRequestSessionFirst } from "@/infrastructure/auth/auth-helpers";
+import { getServices } from "@/application/services/ServiceFactory";
 
 interface CreateBatchRequest {
   name?: string;
@@ -206,10 +207,11 @@ export async function POST(
       }
     }
 
-    // Create all jobs
-    await prisma.job.createMany({
-      data: jobsToCreate,
-    });
+    // Create all jobs using JobService
+    const { jobService } = getServices();
+    for (const jobData of jobsToCreate) {
+      await jobService.createJob(jobData);
+    }
 
     // Return the created batch with job count
     const batchWithJobCount = await prisma.agentEvalBatch.findUnique({

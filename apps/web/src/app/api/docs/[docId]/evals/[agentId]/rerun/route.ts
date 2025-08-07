@@ -6,6 +6,7 @@ import { prisma } from "@roast/db";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
 import { commonErrors } from "@/infrastructure/http/api-response-helpers";
 import { withSecurity } from "@/infrastructure/http/security-middleware";
+import { getServices } from "@/application/services/ServiceFactory";
 
 const rerunEvaluationSchema = z.object({
   fromVersion: z.number().optional(), // Re-run from specific version
@@ -65,11 +66,9 @@ export const POST = withSecurity(
     }
 
     // Create new job for re-run
-    const job = await prisma.job.create({
-      data: {
-        evaluationId: evaluation.id,
-        status: 'PENDING',
-      }
+    const { jobService } = getServices();
+    const job = await jobService.createJob({
+      evaluationId: evaluation.id,
     });
 
     // Log the re-run action
