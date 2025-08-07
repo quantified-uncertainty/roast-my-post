@@ -821,20 +821,30 @@ This expression was skipped because it's ${extractedExpression.expression.comple
       return;
     }
 
-    // Get error counts and severity breakdown
+    // Get error counts and severity breakdown from both systems
     const verifiedFalse = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false').length;
     const critical = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'critical').length;
     const major = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'major').length;
     const minor = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_false' && w.verificationResult.llmResult?.severity === 'minor').length;
     
+    // Also check old expression system for severe errors (errorSeverityScore >= 80)
+    const severeErrors = this.extractedExpressions.filter(
+      e => e.expression.hasError && e.expression.errorSeverityScore >= 80
+    ).length;
+    const totalExpressionErrors = this.extractedExpressions.filter(
+      e => e.expression.hasError
+    ).length;
+    
     // Build user-focused summary (Improvement #1: User-Focused Language)
     let summary = "";
-    if (critical > 0) {
-      summary = `Critical mathematical error${critical !== 1 ? 's' : ''} found affecting key claims`;
+    if (critical > 0 || severeErrors > 0) {
+      const totalCritical = Math.max(critical, severeErrors);
+      summary = `Critical mathematical error${totalCritical !== 1 ? 's' : ''} found affecting key claims`;
     } else if (major > 0) {
       summary = `Significant mathematical error${major !== 1 ? 's' : ''} found`;
-    } else if (minor > 0) {
-      summary = `Minor mathematical error${minor !== 1 ? 's' : ''} identified for correction`;
+    } else if (minor > 0 || totalExpressionErrors > 0) {
+      const totalMinor = Math.max(minor, totalExpressionErrors);
+      summary = `Minor mathematical error${totalMinor !== 1 ? 's' : ''} identified for correction`;
     } else if (totalHybridErrors > 0) {
       summary = "Mathematical calculations verified as accurate";
     } else {
@@ -845,24 +855,28 @@ This expression was skipped because it's ${extractedExpression.expression.comple
     let analysis = "";
     
     // Key Findings (prioritize by severity - Improvement #5)
-    if (verifiedFalse > 0) {
+    if (verifiedFalse > 0 || totalExpressionErrors > 0) {
       analysis += "**Key Findings:**\n";
-      if (critical > 0) {
-        analysis += `- ${critical} critical error${critical !== 1 ? 's' : ''} that could undermine main conclusions\n`;
+      if (critical > 0 || severeErrors > 0) {
+        const totalCritical = Math.max(critical, severeErrors);
+        analysis += `- ${totalCritical} critical error${totalCritical !== 1 ? 's' : ''} that could undermine main conclusions\n`;
       }
       if (major > 0) {
         analysis += `- ${major} significant error${major !== 1 ? 's' : ''} affecting supporting calculations\n`;
       }
-      if (minor > 0) {
-        analysis += `- ${minor} minor error${minor !== 1 ? 's' : ''} requiring correction for accuracy\n`;
+      if (minor > 0 || (totalExpressionErrors > 0 && severeErrors === 0)) {
+        const totalMinor = totalExpressionErrors > severeErrors ? totalExpressionErrors - severeErrors : minor;
+        if (totalMinor > 0) {
+          analysis += `- ${totalMinor} minor error${totalMinor !== 1 ? 's' : ''} requiring correction for accuracy\n`;
+        }
       }
       analysis += "\n";
     }
     
     // Document Impact
-    if (verifiedFalse > 0) {
+    if (verifiedFalse > 0 || totalExpressionErrors > 0) {
       analysis += "**Document Impact:**\n";
-      if (critical > 0) {
+      if (critical > 0 || severeErrors > 0) {
         analysis += "Critical mathematical errors may significantly impact document credibility and conclusions. Immediate review recommended.\n";
       } else if (major > 0) {
         analysis += "Mathematical errors present but may not affect core arguments. Review recommended for accuracy.\n";
@@ -876,25 +890,50 @@ This expression was skipped because it's ${extractedExpression.expression.comple
     if (totalHybridErrors > 0 || totalExpressions > 0) {
       analysis += "<details>\n<summary>Technical Details</summary>\n\n";
       
+      // Quick summary with visual indicators
+      analysis += "**📊 Quick Summary:**\n";
+      const indicators = [];
+      if (critical > 0 || severeErrors > 0) {
+        indicators.push(`🔴 ${Math.max(critical, severeErrors)} critical`);
+      }
+      if (major > 0) {
+        indicators.push(`🟡 ${major} major`);
+      }
+      if (minor > 0 || (totalExpressionErrors > severeErrors)) {
+        const minorCount = totalExpressionErrors > severeErrors ? totalExpressionErrors - severeErrors : minor;
+        if (minorCount > 0) {
+          indicators.push(`🔵 ${minorCount} minor`);
+        }
+      }
+      const verifiedTrue = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_true').length;
+      if (verifiedTrue > 0) {
+        indicators.push(`✅ ${verifiedTrue} verified correct`);
+      }
+      
+      if (indicators.length > 0) {
+        analysis += indicators.join(' • ') + '\n\n';
+      } else {
+        analysis += `📝 ${totalExpressions} expression${totalExpressions !== 1 ? 's' : ''} reviewed\n\n`;
+      }
+      
       if (totalHybridErrors > 0) {
-        const verifiedTrue = this.hybridErrorWrappers.filter(w => w.verificationResult.status === 'verified_true').length;
         const mathJsVerified = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'mathjs').length;
         const llmVerified = this.hybridErrorWrappers.filter(w => w.verificationResult.verifiedBy === 'llm').length;
         
-        analysis += `**Verification Summary:**\n`;
+        analysis += `**🔍 Verification Summary:**\n`;
         analysis += `- ${totalHybridErrors} mathematical expression${totalHybridErrors !== 1 ? 's' : ''} verified\n`;
         if (verifiedTrue > 0) {
-          analysis += `- ${verifiedTrue} verified as correct\n`;
+          analysis += `- ✅ ${verifiedTrue} verified as correct\n`;
         }
         if (verifiedFalse > 0) {
-          analysis += `- ${verifiedFalse} error${verifiedFalse !== 1 ? 's' : ''} found\n`;
+          analysis += `- ❌ ${verifiedFalse} error${verifiedFalse !== 1 ? 's' : ''} found\n`;
         }
-        analysis += `\n**Verification Methods:**\n`;
+        analysis += `\n**⚙️ Verification Methods:**\n`;
         if (mathJsVerified > 0) {
-          analysis += `- ${mathJsVerified} computationally verified (MathJS)\n`;
+          analysis += `- 🧮 ${mathJsVerified} computationally verified (MathJS)\n`;
         }
         if (llmVerified > 0) {
-          analysis += `- ${llmVerified} conceptually verified (LLM analysis)\n`;
+          analysis += `- 🤖 ${llmVerified} conceptually verified (LLM analysis)\n`;
         }
       }
       

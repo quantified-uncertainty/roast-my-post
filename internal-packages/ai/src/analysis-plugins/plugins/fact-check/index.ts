@@ -818,6 +818,51 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       analysisSummary += "\n";
     }
 
+    // Specific Issues Found (for consistency with math plugin)
+    if (falseFacts > 0 || partiallyTrueFacts > 0) {
+      analysisSummary += "**🔍 Specific Issues Found:**\n\n";
+      
+      // Show false claims
+      const falseClaimsList = this.facts
+        .filter(f => f.verification?.verdict === "false")
+        .sort((a, b) => b.claim.importanceScore - a.claim.importanceScore)
+        .slice(0, 3);
+      
+      if (falseClaimsList.length > 0) {
+        analysisSummary += "**❌ False Claims:**\n";
+        for (const fact of falseClaimsList) {
+          const importance = fact.claim.importanceScore >= 70 ? " (Critical)" : "";
+          analysisSummary += `- "${fact.claim.originalText}"${importance}\n`;
+          if (fact.verification?.explanation) {
+            analysisSummary += `  - ${fact.verification.explanation}\n`;
+          }
+        }
+        
+        const remainingFalse = this.facts.filter(f => f.verification?.verdict === "false").length - falseClaimsList.length;
+        if (remainingFalse > 0) {
+          analysisSummary += `  - ...and ${remainingFalse} more false claim${remainingFalse !== 1 ? 's' : ''}\n`;
+        }
+      }
+      
+      // Show partially true claims
+      const partialClaimsList = this.facts
+        .filter(f => f.verification?.verdict === "partially-true")
+        .sort((a, b) => b.claim.importanceScore - a.claim.importanceScore)
+        .slice(0, 2);
+      
+      if (partialClaimsList.length > 0) {
+        analysisSummary += `\n**⚠️ Partially Accurate Claims:**\n`;
+        for (const fact of partialClaimsList) {
+          analysisSummary += `- "${fact.claim.originalText}"\n`;
+          if (fact.verification?.explanation) {
+            analysisSummary += `  - ${fact.verification.explanation}\n`;
+          }
+        }
+      }
+      
+      analysisSummary += "\n";
+    }
+
     // Technical Details (collapsible)
     if (totalFacts > 0) {
       analysisSummary += "<details>\n<summary>Technical Details</summary>\n\n";
@@ -831,25 +876,50 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
       const uncertainFacts = this.facts.filter(
         (f) => f.claim.truthProbability > 40 && f.claim.truthProbability <= 70
       ).length;
+      const highImportanceFalse = this.facts.filter(
+        (f) => f.verification?.verdict === "false" && f.claim.importanceScore >= 70
+      ).length;
 
-      analysisSummary += `**Verification Summary:**\n`;
-      analysisSummary += `- ${totalFacts} factual claim${totalFacts !== 1 ? 's' : ''} extracted and analyzed\n`;
-      analysisSummary += `- ${verifiedFacts} claim${verifiedFacts !== 1 ? 's' : ''} verified${researchedFacts > 0 ? ` (${researchedFacts} with external research)` : ""}\n`;
-      if (trueFacts > 0) {
-        analysisSummary += `- ${trueFacts} verified as true\n`;
+      // Quick summary with visual indicators
+      analysisSummary += "**📊 Quick Summary:**\n";
+      const indicators = [];
+      if (highImportanceFalse > 0) {
+        indicators.push(`🔴 ${highImportanceFalse} critical false`);
       }
-      if (falseFacts > 0) {
-        analysisSummary += `- ${falseFacts} verified as false\n`;
+      if (falseFacts > highImportanceFalse) {
+        indicators.push(`🟡 ${falseFacts - highImportanceFalse} other false`);
       }
       if (partiallyTrueFacts > 0) {
-        analysisSummary += `- ${partiallyTrueFacts} verified as partially true\n`;
+        indicators.push(`🔵 ${partiallyTrueFacts} partially true`);
+      }
+      if (trueFacts > 0) {
+        indicators.push(`✅ ${trueFacts} verified true`);
       }
       
-      analysisSummary += `\n**Claim Characteristics:**\n`;
-      analysisSummary += `- High importance claims: ${highImportanceFacts}\n`;
-      analysisSummary += `- Likely false (≤40% truth probability): ${likelyFalseFacts}\n`;
-      analysisSummary += `- Uncertain (41-70% truth probability): ${uncertainFacts}\n`;
-      analysisSummary += `- Average quality score: ${Math.round(this.facts.reduce((sum, f) => sum + f.averageScore, 0) / totalFacts || 0)}\n`;
+      if (indicators.length > 0) {
+        analysisSummary += indicators.join(' • ') + '\n\n';
+      } else {
+        analysisSummary += `📝 ${totalFacts} claim${totalFacts !== 1 ? 's' : ''} reviewed\n\n`;
+      }
+
+      analysisSummary += `**🔍 Verification Summary:**\n`;
+      analysisSummary += `- ${totalFacts} factual claim${totalFacts !== 1 ? 's' : ''} extracted and analyzed\n`;
+      analysisSummary += `- ${verifiedFacts} claim${verifiedFacts !== 1 ? 's' : ''} verified${researchedFacts > 0 ? ` (🔬 ${researchedFacts} with external research)` : ""}\n`;
+      if (trueFacts > 0) {
+        analysisSummary += `- ✅ ${trueFacts} verified as true\n`;
+      }
+      if (falseFacts > 0) {
+        analysisSummary += `- ❌ ${falseFacts} verified as false\n`;
+      }
+      if (partiallyTrueFacts > 0) {
+        analysisSummary += `- ⚠️ ${partiallyTrueFacts} verified as partially true\n`;
+      }
+      
+      analysisSummary += `\n**📈 Claim Characteristics:**\n`;
+      analysisSummary += `- ⭐ High importance claims: ${highImportanceFacts}\n`;
+      analysisSummary += `- ⚠️ Likely false (≤40% truth probability): ${likelyFalseFacts}\n`;
+      analysisSummary += `- ❓ Uncertain (41-70% truth probability): ${uncertainFacts}\n`;
+      analysisSummary += `- 📊 Average quality score: ${Math.round(this.facts.reduce((sum, f) => sum + f.averageScore, 0) / totalFacts || 0)}\n`;
 
       const topicStats = this.facts.reduce(
         (acc, fact) => {
@@ -859,7 +929,7 @@ export class FactCheckPlugin implements SimpleAnalysisPlugin {
         {} as Record<string, number>
       );
       
-      analysisSummary += `\n**Topics Covered:** ${Object.entries(topicStats)
+      analysisSummary += `\n**🏷️ Topics Covered:** ${Object.entries(topicStats)
         .sort((a, b) => b[1] - a[1])
         .map(([topic, count]) => `${topic} (${count})`)
         .join(", ")}`;

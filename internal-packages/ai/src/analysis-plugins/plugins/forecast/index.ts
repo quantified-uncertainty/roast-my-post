@@ -627,39 +627,144 @@ The analysis may still be valid, but the highlighting won't be precise.`,
   }
 
   private generateAnalysis(): void {
-    if (this.extractedForecasts.length === 0) {
+    const totalForecasts = this.extractedForecasts.length;
+    
+    if (totalForecasts === 0) {
       this.summary = "No forecasting claims found.";
-      this.analysis =
-        "No predictions or forecasts were identified in this document.";
+      this.analysis = "No predictions or forecasts were identified in this document.";
       return;
     }
 
-    // Convert to ForecastWithPrediction format for the summary generator
-    const forecastsWithPredictions: ForecastWithPrediction[] =
-      this.extractedForecasts.map((ef) => ({
-        forecast: ef.extractedForecast,
-        prediction: ef.getOurForecast() || undefined,
-      }));
-
-    // Use the new document summary generator
-    this.analysis = generateDocumentSummary(forecastsWithPredictions);
-
-    // Generate simple summary for the summary field
-    const totalForecasts = this.extractedForecasts.length;
     const forecastsWithProbability = this.extractedForecasts.filter(
       (ef) => ef.extractedForecast.authorProbability !== undefined
     ).length;
     const forecastsWithOurEstimate = this.extractedForecasts.filter(
       (ef) => ef.getOurForecast() !== null
     ).length;
-
-    this.summary = `Found ${totalForecasts} forecasting claim${totalForecasts !== 1 ? "s" : ""}`;
+    
+    // Assess forecast quality
+    const hasExplicitProbabilities = forecastsWithProbability > 0;
+    const mostHaveEstimates = forecastsWithOurEstimate > totalForecasts * 0.7;
+    
+    // User-focused summary (prioritize by assessment quality)
+    let summary = "";
+    if (hasExplicitProbabilities && mostHaveEstimates) {
+      summary = "Forecasting claims identified with quantified predictions";
+    } else if (hasExplicitProbabilities) {
+      summary = "Mixed forecasting quality: some claims lack quantification";
+    } else if (forecastsWithOurEstimate > 0) {
+      summary = "Forecasting claims identified requiring probability estimates";
+    } else {
+      summary = "Forecasting claims identified but difficult to quantify";
+    }
+    
+    // Build impact-oriented analysis with template structure
+    let analysis = "";
+    
+    // Key Findings
+    if (totalForecasts > 0) {
+      analysis += "**Key Findings:**\n";
+      analysis += `- ${totalForecasts} forecasting claim${totalForecasts !== 1 ? 's' : ''} identified\n`;
+      if (forecastsWithProbability > 0) {
+        analysis += `- ${forecastsWithProbability} include${forecastsWithProbability === 1 ? 's' : ''} explicit probability estimates\n`;
+      }
+      if (forecastsWithOurEstimate > 0) {
+        analysis += `- Generated probability estimates for ${forecastsWithOurEstimate} additional claim${forecastsWithOurEstimate !== 1 ? 's' : ''}\n`;
+      }
+      analysis += "\n";
+    }
+    
+    // Document Impact
+    analysis += "**Document Impact:**\n";
+    if (hasExplicitProbabilities && mostHaveEstimates) {
+      analysis += "Strong forecasting methodology with quantified predictions enhances document credibility for future evaluation.\n";
+    } else if (hasExplicitProbabilities) {
+      analysis += "Mixed forecasting quality. Some claims well-quantified while others lack precision for future verification.\n";
+    } else {
+      analysis += "Forecasting claims present but lack quantification. Adding probability estimates would improve predictive value.\n";
+    }
+    analysis += "\n";
+    
+    // Specific Claims Found
+    if (totalForecasts > 0) {
+      analysis += "**🔍 Specific Claims Found:**\n\n";
+      
+      // Show top forecasts (prioritize those with explicit probabilities)
+      const sortedForecasts = this.extractedForecasts
+        .sort((a, b) => {
+          const aHasProb = a.extractedForecast.authorProbability !== undefined;
+          const bHasProb = b.extractedForecast.authorProbability !== undefined;
+          if (aHasProb && !bHasProb) return -1;
+          if (!aHasProb && bHasProb) return 1;
+          return (b.extractedForecast.importanceScore || 0) - (a.extractedForecast.importanceScore || 0);
+        })
+        .slice(0, 3);
+      
+      for (const ef of sortedForecasts) {
+        const forecast = ef.extractedForecast;
+        const hasProb = forecast.authorProbability !== undefined;
+        const ourEstimate = ef.getOurForecast();
+        const icon = hasProb ? '📊' : (ourEstimate ? '🤖' : '❓');
+        
+        analysis += `- ${icon} "${forecast.originalText}"\n`;
+        if (hasProb) {
+          analysis += `  - Author probability: ${forecast.authorProbability}%\n`;
+        }
+        if (ourEstimate && !hasProb) {
+          analysis += `  - Our estimate: ${Math.round(ourEstimate.probability * 100)}%\n`;
+        }
+      }
+      
+      if (this.extractedForecasts.length > 3) {
+        analysis += `  - ...and ${this.extractedForecasts.length - 3} more forecast${this.extractedForecasts.length - 3 !== 1 ? 's' : ''}\n`;
+      }
+      analysis += "\n";
+    }
+    
+    // Technical Details (collapsible)
+    analysis += "<details>\n<summary>Technical Details</summary>\n\n";
+    
+    // Quick summary with visual indicators
+    analysis += "**📊 Quick Summary:**\n";
+    const indicators = [];
     if (forecastsWithProbability > 0) {
-      this.summary += ` (${forecastsWithProbability} with explicit probabilities)`;
+      indicators.push(`📊 ${forecastsWithProbability} explicit probability${forecastsWithProbability !== 1 ? 'ies' : 'y'}`);
     }
     if (forecastsWithOurEstimate > 0) {
-      this.summary += `. Generated our own estimates for ${forecastsWithOurEstimate} claims.`;
+      indicators.push(`🤖 ${forecastsWithOurEstimate} estimated`);
     }
+    const unquantified = totalForecasts - forecastsWithProbability - forecastsWithOurEstimate;
+    if (unquantified > 0) {
+      indicators.push(`❓ ${unquantified} unquantified`);
+    }
+    
+    if (indicators.length > 0) {
+      analysis += indicators.join(' • ') + '\n\n';
+    }
+    
+    analysis += `**🎯 Forecasting Quality:**\n`;
+    if (forecastsWithProbability > 0) {
+      analysis += `- ${Math.round(forecastsWithProbability / totalForecasts * 100)}% of claims include explicit probabilities\n`;
+    }
+    if (forecastsWithOurEstimate > 0) {
+      analysis += `- Generated estimates for ${Math.round(forecastsWithOurEstimate / totalForecasts * 100)}% of remaining claims\n`;
+    }
+    const quantificationRate = (forecastsWithProbability + forecastsWithOurEstimate) / totalForecasts;
+    analysis += `- Overall quantification rate: ${Math.round(quantificationRate * 100)}%\n\n`;
+    
+    // Convert to ForecastWithPrediction format for the detailed summary generator
+    const forecastsWithPredictions: ForecastWithPrediction[] =
+      this.extractedForecasts.map((ef) => ({
+        forecast: ef.extractedForecast,
+        prediction: ef.getOurForecast() || undefined,
+      }));
+    
+    analysis += `**📝 Detailed Forecast Analysis:**\n`;
+    analysis += generateDocumentSummary(forecastsWithPredictions);
+    analysis += "\n</details>";
+    
+    this.analysis = analysis;
+    this.summary = summary;
   }
 
   getCost(): number {
