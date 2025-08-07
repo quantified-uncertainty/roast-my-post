@@ -8,6 +8,7 @@
 
 import { DocumentRepository } from '@/lib/repositories/DocumentRepository';
 import { DocumentValidator } from '@/lib/domain/document/DocumentValidator';
+import { EvaluationService } from '@/lib/services/EvaluationService';
 import { 
   DocumentEntity,
   DocumentWithEvaluations,
@@ -43,7 +44,8 @@ export interface UpdateDocumentRequest {
 export class DocumentService {
   constructor(
     private readonly docRepo = new DocumentRepository(),
-    private readonly validator = new DocumentValidator()
+    private readonly validator = new DocumentValidator(),
+    private readonly evaluationService = new EvaluationService()
   ) {}
 
   /**
@@ -81,14 +83,28 @@ export class DocumentService {
 
       const document = await this.docRepo.create(createData);
 
-      // Schedule evaluations if requested (handled by separate service)
+      // Schedule evaluations if requested
       if (agentIds && agentIds.length > 0) {
-        // This would be handled by EvaluationService
-        // await this.evaluationService.scheduleEvaluations(document.id, agentIds);
-        logger.info('Document created with evaluation requests', {
+        const evaluationResult = await this.evaluationService.createEvaluationsForDocument({
           documentId: document.id,
-          agentIds
+          agentIds,
+          userId
         });
+
+        if (evaluationResult.isError()) {
+          logger.warn('Failed to create some evaluations', {
+            documentId: document.id,
+            agentIds,
+            error: evaluationResult.error()
+          });
+          // Don't fail document creation if evaluation creation fails
+        } else {
+          logger.info('Evaluations created successfully', {
+            documentId: document.id,
+            evaluationsCreated: evaluationResult.unwrap().length,
+            agentIds
+          });
+        }
       }
 
       return Result.ok(document);

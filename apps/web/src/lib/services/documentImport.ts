@@ -1,8 +1,8 @@
 import { logger } from "@/lib/logger";
 import { processArticle } from "@/lib/articleImport";
 import { DocumentService } from "@/lib/services/DocumentService";
+import { EvaluationService } from "@/lib/services/EvaluationService";
 import { ValidationError } from "@/lib/core/errors";
-import { prisma } from "@roast/db";
 
 export interface ImportDocumentResult {
   success: boolean;
@@ -86,36 +86,23 @@ export async function importDocumentService(
     if (agentIds && agentIds.length > 0) {
       logger.info(`Creating evaluations for ${agentIds.length} agents`);
       
-      for (const agentId of agentIds) {
-        try {
-          // Create evaluation and job in a transaction
-          const result = await prisma.$transaction(async (tx) => {
-            // Create the evaluation
-            const evaluation = await tx.evaluation.create({
-              data: {
-                documentId: document.id,
-                agentId: agentId,
-              },
-            });
+      const evaluationService = new EvaluationService();
+      const evaluationResult = await evaluationService.createEvaluationsForDocument({
+        documentId: document.id,
+        agentIds,
+        userId
+      });
 
-            // Create the job
-            const job = await tx.job.create({
-              data: {
-                evaluationId: evaluation.id,
-              },
-            });
-
-            return { evaluation, job };
-          });
-
-          createdEvaluations.push({
-            evaluationId: result.evaluation.id,
-            agentId: agentId,
-            jobId: result.job.id,
-          });
-        } catch (error) {
-          logger.error(`Failed to create evaluation for agent ${agentId}:`, error);
-        }
+      if (evaluationResult.isError()) {
+        logger.error('Failed to create evaluations:', evaluationResult.error());
+        // Continue with partial success - document was created successfully
+      } else {
+        const results = evaluationResult.unwrap();
+        createdEvaluations.push(...results);
+        logger.info('Evaluations created successfully', {
+          documentId: document.id,
+          evaluationsCreated: results.length
+        });
       }
     }
 

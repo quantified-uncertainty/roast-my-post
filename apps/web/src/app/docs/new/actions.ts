@@ -6,12 +6,14 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { DocumentService } from "@/lib/services/DocumentService";
+import { EvaluationService } from "@/lib/services/EvaluationService";
 import { ValidationError } from "@/lib/core/errors";
 
 import { type DocumentInput } from "./schema";
 
-// Initialize service
+// Initialize services
 const documentService = new DocumentService();
+const evaluationService = new EvaluationService();
 
 export async function createDocument(data: DocumentInput, agentIds: string[] = []) {
   try {
@@ -48,33 +50,20 @@ export async function createDocument(data: DocumentInput, agentIds: string[] = [
 
     // Queue evaluations if agents are selected
     if (agentIds.length > 0) {
-      // Get the host from the request headers to work with any port
-      const { headers } = await import("next/headers");
-      const headersList = await headers();
-      const host = headersList.get("host");
-      
-      // Construct the base URL dynamically
-      const baseUrl = process.env.NEXTAUTH_URL || 
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-        (host ? `http://${host}` : null);
-      
-      if (!baseUrl) {
-        logger.error('Unable to determine base URL for API call');
-      } else {
-        const response = await fetch(
-          `${baseUrl}/api/documents/${document.id}/evaluate`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ agentIds }),
-          }
-        );
+      const evaluationResult = await evaluationService.createEvaluationsForDocument({
+        documentId: document.id,
+        agentIds,
+        userId: session.user.id
+      });
 
-        if (!response.ok) {
-          logger.error('Failed to queue evaluations:', await response.text());
-        }
+      if (evaluationResult.isError()) {
+        logger.error('Failed to create evaluations:', evaluationResult.error());
+        // Don't fail the document creation, just log the error
+      } else {
+        logger.info('Evaluations created successfully', {
+          documentId: document.id,
+          evaluationsCreated: evaluationResult.unwrap().length
+        });
       }
     }
 
