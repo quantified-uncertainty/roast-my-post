@@ -30,6 +30,16 @@ jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: jest.fn(() => ({
+    createTransactionalServices: jest.fn(() => ({
+      jobService: {
+        createJob: jest.fn().mockResolvedValue({ id: "job-123" }),
+      },
+    })),
+  })),
+}));
+
 describe('GET /api/documents/[slugOrId]/evaluations', () => {
   const mockDocId = 'doc-123';
   const mockUser = { id: 'user-123', email: 'test@example.com' };
@@ -258,9 +268,6 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
           findFirst: jest.fn().mockResolvedValueOnce(null),
           create: jest.fn().mockResolvedValueOnce(mockEvaluation),
         },
-        job: {
-          create: jest.fn().mockResolvedValueOnce(mockJob),
-        },
       };
       return await callback(mockTx);
     });
@@ -272,6 +279,12 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     });
     
     const response = await POST(request, { params: Promise.resolve({ slugOrId: mockDocId }) });
+    
+    if (response.status !== 200) {
+      const errorData = await response.json();
+      console.error('Test error:', response.status, errorData);
+    }
+    
     expect(response.status).toBe(200);
     
     const data = await response.json();
