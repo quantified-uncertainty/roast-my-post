@@ -30,14 +30,19 @@ jest.mock('@/infrastructure/auth/auth-helpers', () => ({
   authenticateRequest: jest.fn(),
 }));
 
-jest.mock('@/application/services/ServiceFactory', () => ({
-  getServices: jest.fn(() => ({
-    createTransactionalServices: jest.fn(() => ({
-      jobService: {
-        createJob: jest.fn().mockResolvedValue({ id: "job-123" }),
-      },
-    })),
+// Mock the ServiceFactory 
+const mockJobService = {
+  createJob: jest.fn().mockResolvedValue({ id: "job-123", status: "PENDING" }),
+};
+
+const mockGetServices = jest.fn(() => ({
+  createTransactionalServices: jest.fn(() => ({
+    jobService: mockJobService,
   })),
+}));
+
+jest.mock('@/application/services/ServiceFactory', () => ({
+  getServices: mockGetServices,
 }));
 
 describe('GET /api/documents/[slugOrId]/evaluations', () => {
@@ -213,6 +218,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockJobService.createJob.mockClear();
   });
 
   it('should require authentication', async () => {
@@ -255,12 +261,6 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
       id: 'eval-123',
     };
     
-    const mockJob = {
-      id: 'job-123',
-      status: 'PENDING',
-      createdAt: new Date(),
-    };
-    
     (prisma.agent.findUnique as jest.Mock).mockResolvedValueOnce(mockAgent);
     (prisma.$transaction as jest.Mock).mockImplementation(async (callback) => {
       const mockTx = {
@@ -290,7 +290,7 @@ describe('POST /api/documents/[slugOrId]/evaluations', () => {
     const data = await response.json();
     expect(data).toEqual({
       evaluationId: mockEvaluation.id,
-      jobId: mockJob.id,
+      jobId: "job-123",
       status: 'pending',
       created: true,
     });
