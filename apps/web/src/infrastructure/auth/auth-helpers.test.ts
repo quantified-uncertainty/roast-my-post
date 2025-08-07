@@ -2,11 +2,11 @@ import { NextRequest } from "next/server";
 import { authenticateRequest, authenticateRequestSessionFirst } from './auth-helpers';
 
 // Mock dependencies
-jest.mock("../auth", () => ({
+jest.mock("./auth", () => ({
   auth: jest.fn(),
 }));
 
-jest.mock("../auth-api", () => ({
+jest.mock("./auth-api", () => ({
   authenticateApiKey: jest.fn(),
 }));
 
