@@ -9,14 +9,6 @@ import type { Agent } from "@roast/ai";
 jest.setTimeout(60000); // 60 seconds for API calls
 
 describe("markdownPrepend Integration Tests", () => {
-  // Skip these tests if no API key is available
-  const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
-  const describeOrSkip = hasApiKey ? describe : describe.skip;
-  
-  if (!hasApiKey) {
-    console.log("⚠️  Skipping markdownPrepend integration tests - ANTHROPIC_API_KEY not set");
-  }
-
   const mockAgent: Agent = {
     id: "test-agent-1",
     name: "Test Agent",
@@ -26,9 +18,12 @@ describe("markdownPrepend Integration Tests", () => {
     providesGrades: false,
   };
 
-  test.skip("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
-    // Skip this test as it requires real API calls
-    // Uncomment to run with ANTHROPIC_API_KEY set
+  test("comprehensive analysis workflow correctly handles markdownPrepend", async () => {
+    // Skip if no API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.log("Skipping test - ANTHROPIC_API_KEY not set");
+      return;
+    }
     
     // Create a document with prepend
     const documentContent = `This is the main content of the document.
@@ -110,9 +105,12 @@ And some more content on the final line.`;
     expect(comment2.highlight!.quotedText).toContain("https://example.com");
   }, 30000);
 
-  test.skip("link analysis workflow correctly handles markdownPrepend", async () => {
-    // Skip this test as it requires real API calls  
-    // Uncomment to run with ANTHROPIC_API_KEY set
+  test("link analysis workflow correctly handles markdownPrepend", async () => {
+    // Skip if no API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.log("Skipping test - ANTHROPIC_API_KEY not set");
+      return;
+    }
     // Create a document with links and prepend
     const documentContent = `Check out these resources:
 - Main site: https://example.com

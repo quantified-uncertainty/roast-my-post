@@ -1,6 +1,10 @@
 import { analyzeLinkDocument } from "../linkAnalysisWorkflow";
 import type { Agent, Document } from "@roast/ai";
 
+// This is an integration test - it makes real HTTP requests to validate URLs
+// Increase Jest timeout to accommodate network requests
+jest.setTimeout(30000);
+
 describe("Link Validator Integration Test", () => {
   const mockAgent: Agent = {
     id: "link-validator",
@@ -117,7 +121,7 @@ The end of the document.`,
     // Summary should indicate there's a problem
     expect(result.summary).toBeDefined();
     expect(result.summary.toLowerCase()).toMatch(/issue|problem|broken|1/);
-  });
+  }, 30000);
 
   test("handles document with no links correctly", async () => {
     const noLinksDoc: Document = {
@@ -158,7 +162,7 @@ Another paragraph with more text but still no links.`,
     // Summary should also indicate no links
     expect(result.summary.toLowerCase()).toContain("no");
     expect(result.summary.toLowerCase()).toContain("link");
-  });
+  }, 30000);
 
   test("correctly positions highlights with markdown prepend", async () => {
     // Document where we know exact positions
@@ -212,5 +216,5 @@ Line after prepend. Here's a link: [Test](https://example.com).`,
       // Highlight should have valid position
       expect(highlight.highlight.isValid).toBe(true);
     }
-  });
+  }, 30000);
 });
