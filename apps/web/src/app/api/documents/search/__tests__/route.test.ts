@@ -1,11 +1,13 @@
 import { NextRequest } from 'next/server';
 import { Result } from '@/lib/core/result';
+import { GET } from '../route';
 
-// Mock dependencies first
+// Mock functions that will be used in mocks
 const mockGetRecentDocuments = jest.fn();
 const mockSearchDocuments = jest.fn();
 const mockAuthenticateRequest = jest.fn();
 
+// Mock modules
 jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: mockAuthenticateRequest,
 }));
@@ -25,9 +27,6 @@ jest.mock('@/lib/services/DocumentService', () => ({
     searchDocuments: mockSearchDocuments,
   })),
 }));
-
-// Import after mocks
-import { GET } from '../route';
 
 describe('GET /api/documents/search', () => {
   const mockUser = { id: 'user-123', email: 'test@example.com' };

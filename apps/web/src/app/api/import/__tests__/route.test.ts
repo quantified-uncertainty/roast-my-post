@@ -115,8 +115,8 @@ describe("POST /api/import", () => {
         authors: "Test Author"
       },
       evaluations: [
-        { id: "eval-1", agentId: "agent-1", documentId: "doc-123" },
-        { id: "eval-2", agentId: "agent-2", documentId: "doc-123" }
+        { evaluationId: "eval-1", agentId: "agent-1", jobId: "job-1" },
+        { evaluationId: "eval-2", agentId: "agent-2", jobId: "job-2" }
       ]
     };
     
@@ -181,7 +181,7 @@ describe("POST /api/import", () => {
         authors: "Test Author"
       },
       evaluations: [
-        { id: "eval-1", agentId: "agent-1", documentId: "doc-123" }
+        { evaluationId: "eval-1", agentId: "agent-1", jobId: "job-1" }
       ]
     };
     

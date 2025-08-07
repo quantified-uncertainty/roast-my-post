@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server';
 import { Result } from '@/lib/core/result';
 import { NotFoundError, AuthorizationError, ValidationError } from '@/lib/core/errors';
+import { GET, PUT } from '../route';
 
-// Mock dependencies first
+// Mock functions that will be used in mocks
 const mockGetDocumentForReader = jest.fn();
 const mockUpdateDocument = jest.fn();
 const mockDeleteDocument = jest.fn();
 const mockAuthenticateRequest = jest.fn();
 
+// Mock modules
 jest.mock('@/lib/auth-helpers', () => ({
   authenticateRequest: mockAuthenticateRequest,
 }));
@@ -28,9 +30,6 @@ jest.mock('@/lib/services/DocumentService', () => ({
     deleteDocument: mockDeleteDocument,
   })),
 }));
-
-// Import after mocks
-import { GET, PUT } from '../route';
 
 describe('GET /api/documents/[slugOrId]', () => {
   const mockDocId = 'doc-123';
@@ -132,7 +131,7 @@ describe('GET /api/documents/[slugOrId]', () => {
 
   it('should return 404 when document not found', async () => {
     mockGetDocumentForReader.mockResolvedValueOnce(
-      Result.error(new NotFoundError('Document', 'non-existent'))
+      Result.fail(new NotFoundError('Document', 'non-existent'))
     );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/non-existent`);
@@ -192,7 +191,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
     mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
     mockUpdateDocument.mockResolvedValueOnce(
-      Result.error(new NotFoundError('Document', mockDocId))
+      Result.fail(new NotFoundError('Document', mockDocId))
     );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
@@ -212,7 +211,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
     mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
     mockUpdateDocument.mockResolvedValueOnce(
-      Result.error(new AuthorizationError('You do not have permission to update this document'))
+      Result.fail(new AuthorizationError('You do not have permission to update this document'))
     );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
@@ -232,7 +231,7 @@ describe('PUT /api/documents/[slugOrId]', () => {
     mockAuthenticateRequest.mockResolvedValueOnce(mockUser.id);
     
     mockUpdateDocument.mockResolvedValueOnce(
-      Result.error(new ValidationError('intendedAgentIds must be an array'))
+      Result.fail(new ValidationError('intendedAgentIds must be an array'))
     );
 
     const request = new NextRequest(`http://localhost:3000/api/documents/${mockDocId}`, {
