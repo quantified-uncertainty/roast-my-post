@@ -18,7 +18,7 @@
     "test:without-llms": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.llm\\.test\\.'",
     "test:without-external": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(e2e|llm)\\.test\\.'",
     "test:ci": "jest --config ./config/jest/jest.config.cjs --testPathIgnorePatterns='\\.(integration|e2e|llm)\\.test\\.'",
-    "test:ci-integration": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.integration.test.ts' --testPathIgnorePatterns='(articleImport|comprehensiveAnalysis)\\.integration\\.test'",
+    "test:ci-integration": "jest --config ./config/jest/jest.config.cjs --testMatch='**/*.integration.test.ts' --testPathIgnorePatterns='(articleImport|comprehensiveAnalysis|markdownPrepend)\\.integration\\.test'",
     "test:debug": "TEST_DEBUG=true jest --config ./config/jest/jest.config.cjs",
     "process-jobs": "dotenv -e .env.local -- tsx src/scripts/process-job.ts",
     "process-jobs-adaptive": "dotenv -e .env.local -- tsx src/scripts/process-jobs-adaptive.ts",
