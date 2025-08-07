@@ -17,14 +17,18 @@ jest.mock('@/infrastructure/logging/logger', () => ({
   },
 }));
 
-jest.mock('@roast/domain', () => ({
-  DocumentService: jest.fn().mockImplementation(() => ({
-    getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
-    searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
-  })),
-  EvaluationService: jest.fn().mockImplementation(() => ({})),
-  DocumentValidator: jest.fn().mockImplementation(() => ({})),
-}));
+jest.mock('@roast/domain', () => {
+  const originalModule = jest.requireActual('@roast/domain');
+  return {
+    ...originalModule,
+    DocumentService: jest.fn().mockImplementation(() => ({
+      getRecentDocuments: (...args: any[]) => mockGetRecentDocuments(...args),
+      searchDocuments: (...args: any[]) => mockSearchDocuments(...args),
+    })),
+    EvaluationService: jest.fn().mockImplementation(() => ({})),
+    DocumentValidator: jest.fn().mockImplementation(() => ({})),
+  };
+});
 
 jest.mock('@roast/db', () => ({
   DocumentRepository: jest.fn().mockImplementation(() => ({})),
@@ -33,7 +37,7 @@ jest.mock('@roast/db', () => ({
 
 // Now import the routes AFTER mocks are set up
 import { NextRequest } from 'next/server';
-import { Result } from '@/shared/core/result';
+import { Result } from '@roast/domain';
 import { GET } from '../route';
 
 describe('GET /api/documents/search', () => {

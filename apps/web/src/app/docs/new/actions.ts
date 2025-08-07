@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infrastructure/auth/auth";
 import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
 import { DocumentRepository, EvaluationRepository } from "@roast/db";
-import { ValidationError } from "@/shared/core/errors";
+import { ValidationError } from '@roast/domain';
 
 import { type DocumentInput } from "./schema";
 

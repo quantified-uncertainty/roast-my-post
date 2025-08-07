@@ -165,3 +165,27 @@ export function asyncHandler<T extends (...args: any[]) => Promise<any>>(
     }
   }) as T;
 }
+
+/**
+ * Handle errors in API routes
+ * Returns appropriate HTTP response for the error
+ * Note: This should be imported by infrastructure layer, not the reverse
+ */
+export function handleApiError(error: unknown): Response {
+  const normalizedError = normalizeError(error);
+  
+  return new Response(
+    JSON.stringify({
+      error: normalizedError.message,
+      code: normalizedError.code,
+      details: isProduction() ? undefined : normalizedError.details,
+      timestamp: normalizedError.timestamp,
+    }),
+    {
+      status: normalizedError.statusCode,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+}

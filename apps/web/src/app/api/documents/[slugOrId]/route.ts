@@ -1,22 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/infrastructure/logging/logger";
-import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
-import { DocumentRepository, EvaluationRepository } from "@roast/db";
+import { NotFoundError, AuthorizationError, ValidationError } from "@roast/domain";
 import { authenticateRequest } from "@/infrastructure/auth/auth-helpers";
-import { NotFoundError, AuthorizationError, ValidationError } from "@/shared/core/errors";
-
-// Helper function to create service instances with dependencies
-function createDocumentService() {
-  const documentRepository = new DocumentRepository();
-  const evaluationRepository = new EvaluationRepository();
-  const validator = new DocumentValidator();
-  const evaluationService = new EvaluationService(evaluationRepository, logger);
-  return new DocumentService(documentRepository, validator, evaluationService, logger);
-}
+import { getServices } from "@/application/services/ServiceFactory";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
-  // Create service instance
-  const documentService = createDocumentService();
+  // Get service instance from factory
+  const { documentService } = getServices();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -55,8 +45,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ slugOrI
 }
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
-  // Create service instance
-  const documentService = createDocumentService();
+  // Get service instance from factory
+  const { documentService } = getServices();
   const params = await context.params;
   const { slugOrId: id } = params;
 
@@ -130,8 +120,8 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ slugOrI
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ slugOrId: string }> }) {
-  // Create service instance
-  const documentService = createDocumentService();
+  // Get service instance from factory
+  const { documentService } = getServices();
   const params = await context.params;
   const { slugOrId: id } = params;
 

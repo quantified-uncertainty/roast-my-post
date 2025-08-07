@@ -13,10 +13,10 @@ import {
   RateLimitError,
   handleApiError,
   normalizeError 
-} from '@/shared/core/errors';
-import { Result } from '@/shared/core/result';
+} from '@roast/domain';
+import { Result } from '@roast/domain';
 import { logger } from '@/infrastructure/logging/logger';
-import { isProduction } from '@/shared/core/environment';
+import { isProduction } from '@roast/domain';
 
 type ApiHandler = (
   req: NextRequest,

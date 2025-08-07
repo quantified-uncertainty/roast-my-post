@@ -5,7 +5,7 @@
  * Handles all database operations related to evaluations and jobs.
  */
 
-import { prisma } from '../client';
+import { prisma as defaultPrisma } from '../client';
 
 export interface EvaluationRepositoryInterface {
   findByDocumentAndAgent(documentId: string, agentId: string): Promise<any | null>;
@@ -23,11 +23,16 @@ export interface EvaluationRepositoryInterface {
 }
 
 export class EvaluationRepository implements EvaluationRepositoryInterface {
+  private prisma: typeof defaultPrisma;
+
+  constructor(prismaClient?: typeof defaultPrisma) {
+    this.prisma = prismaClient || defaultPrisma;
+  }
   /**
    * Find existing evaluation by document and agent
    */
   async findByDocumentAndAgent(documentId: string, agentId: string): Promise<any | null> {
-    return await prisma.evaluation.findFirst({
+    return await this.prisma.evaluation.findFirst({
       where: { documentId, agentId }
     });
   }
@@ -36,7 +41,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Find evaluation by ID with user access check
    */
   async findByIdWithAccess(evaluationId: string, userId: string): Promise<any | null> {
-    return await prisma.evaluation.findFirst({
+    return await this.prisma.evaluation.findFirst({
       where: { 
         id: evaluationId,
         document: { submittedById: userId }
@@ -51,7 +56,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Create a new evaluation
    */
   async create(documentId: string, agentId: string): Promise<{ id: string }> {
-    const evaluation = await prisma.evaluation.create({
+    const evaluation = await this.prisma.evaluation.create({
       data: {
         documentId,
         agentId,
@@ -65,7 +70,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Create a new job for an evaluation
    */
   async createJob(evaluationId: string): Promise<{ id: string }> {
-    const job = await prisma.job.create({
+    const job = await this.prisma.job.create({
       data: {
         evaluationId: evaluationId,
         status: 'PENDING',
@@ -85,7 +90,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
     jobId: string;
     created: boolean;
   }> {
-    return await prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       // Check if evaluation already exists
       const existing = await tx.evaluation.findFirst({
         where: { documentId, agentId }
@@ -137,7 +142,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Check if document exists and user has access
    */
   async checkDocumentAccess(documentId: string, userId: string): Promise<boolean> {
-    const document = await prisma.document.findFirst({
+    const document = await this.prisma.document.findFirst({
       where: { 
         id: documentId,
         submittedById: userId
@@ -152,7 +157,7 @@ export class EvaluationRepository implements EvaluationRepositoryInterface {
    * Check if agent exists
    */
   async checkAgentExists(agentId: string): Promise<boolean> {
-    const agent = await prisma.agent.findUnique({
+    const agent = await this.prisma.agent.findUnique({
       where: { id: agentId },
       select: { id: true }
     });

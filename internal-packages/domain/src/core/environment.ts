@@ -41,3 +41,10 @@ export const requireEnvVar = (key: string): string => {
   }
   return value;
 };
+
+/**
+ * Check if running on server side (Node.js)
+ */
+export const isServer = (): boolean => {
+  return typeof window === 'undefined';
+};

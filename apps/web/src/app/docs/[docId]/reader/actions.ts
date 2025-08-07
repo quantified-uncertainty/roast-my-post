@@ -7,7 +7,7 @@ import { auth } from "@/infrastructure/auth/auth";
 import { processArticle } from "@/infrastructure/external/articleImport";
 import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
 import { DocumentRepository, EvaluationRepository } from "@roast/db";
-import { NotFoundError, AuthorizationError } from "@/shared/core/errors";
+import { NotFoundError, AuthorizationError } from '@roast/domain';
 
 // Initialize service with dependencies
 const documentRepository = new DocumentRepository();

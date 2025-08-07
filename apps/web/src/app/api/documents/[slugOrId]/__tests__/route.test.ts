@@ -18,15 +18,19 @@ jest.mock('@/infrastructure/logging/logger', () => ({
   },
 }));
 
-jest.mock('@roast/domain', () => ({
-  DocumentService: jest.fn().mockImplementation(() => ({
-    getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
-    updateDocument: (...args: any[]) => mockUpdateDocument(...args),
-    deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
-  })),
-  EvaluationService: jest.fn().mockImplementation(() => ({})),
-  DocumentValidator: jest.fn().mockImplementation(() => ({})),
-}));
+jest.mock('@roast/domain', () => {
+  const originalModule = jest.requireActual('@roast/domain');
+  return {
+    ...originalModule,
+    DocumentService: jest.fn().mockImplementation(() => ({
+      getDocumentForReader: (...args: any[]) => mockGetDocumentForReader(...args),
+      updateDocument: (...args: any[]) => mockUpdateDocument(...args),
+      deleteDocument: (...args: any[]) => mockDeleteDocument(...args),
+    })),
+    EvaluationService: jest.fn().mockImplementation(() => ({})),
+    DocumentValidator: jest.fn().mockImplementation(() => ({})),
+  };
+});
 
 jest.mock('@roast/db', () => ({
   DocumentRepository: jest.fn().mockImplementation(() => ({})),
@@ -35,8 +39,8 @@ jest.mock('@roast/db', () => ({
 
 // Now import the routes AFTER mocks are set up
 import { NextRequest } from 'next/server';
-import { Result } from '@/shared/core/result';
-import { NotFoundError, AuthorizationError, ValidationError } from '@/shared/core/errors';
+import { Result } from '@roast/domain';
+import { NotFoundError, AuthorizationError, ValidationError } from '@roast/domain';
 import { GET, PUT } from '../route';
 
 describe('GET /api/documents/[slugOrId]', () => {

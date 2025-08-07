@@ -6,8 +6,9 @@
  * Returns domain entities with minimal dependencies.
  */
 
-import { prisma } from '../client';
+import { prisma as defaultPrisma } from '../client';
 import { nanoid } from 'nanoid';
+import type { PrismaClient } from '../client';
 
 // Types defined in this package to avoid circular dependencies
 export interface DocumentEntity {
@@ -80,11 +81,17 @@ export interface DocumentRepositoryInterface {
 }
 
 export class DocumentRepository implements DocumentRepositoryInterface {
+  private prisma: typeof defaultPrisma;
+  
+  constructor(prismaClient?: typeof defaultPrisma) {
+    this.prisma = prismaClient || defaultPrisma;
+  }
+  
   /**
    * Find a document by ID
    */
   async findById(id: string): Promise<DocumentEntity | null> {
-    const doc = await prisma.document.findUnique({
+    const doc = await this.prisma.document.findUnique({
       where: { id },
       include: {
         versions: {
@@ -101,7 +108,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Find a document with evaluations by ID
    */
   async findWithEvaluations(id: string, includeStale = false): Promise<DocumentWithEvaluations | null> {
-    const doc = await prisma.document.findUnique({
+    const doc = await this.prisma.document.findUnique({
       where: { id },
       include: {
         versions: {
@@ -163,7 +170,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Find documents by user
    */
   async findByUser(userId: string, limit = 50): Promise<DocumentWithEvaluations[]> {
-    const docs = await prisma.document.findMany({
+    const docs = await this.prisma.document.findMany({
       where: { submittedById: userId },
       include: {
         versions: {
@@ -206,7 +213,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Find recent documents
    */
   async findRecent(limit = 50): Promise<DocumentWithEvaluations[]> {
-    const docs = await prisma.document.findMany({
+    const docs = await this.prisma.document.findMany({
       include: {
         versions: {
           orderBy: { version: 'desc' as const },
@@ -248,7 +255,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Find all documents (admin only)
    */
   async findAll(): Promise<DocumentWithEvaluations[]> {
-    const docs = await prisma.document.findMany({
+    const docs = await this.prisma.document.findMany({
       include: {
         versions: {
           orderBy: { version: 'desc' as const },
@@ -291,7 +298,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   async create(data: CreateDocumentData): Promise<DocumentEntity> {
     const documentId = data.id || nanoid();
 
-    const doc = await prisma.document.create({
+    const doc = await this.prisma.document.create({
       data: {
         id: documentId,
         publishedDate: data.publishedDate || new Date(),
@@ -324,14 +331,14 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Update document content (creates new version)
    */
   async updateContent(id: string, content: string, title: string): Promise<void> {
-    const latestVersion = await prisma.documentVersion.findFirst({
+    const latestVersion = await this.prisma.documentVersion.findFirst({
       where: { documentId: id },
       orderBy: { version: 'desc' }
     });
 
     const nextVersion = (latestVersion?.version || 0) + 1;
 
-    await prisma.documentVersion.create({
+    await this.prisma.documentVersion.create({
       data: {
         documentId: id,
         title,
@@ -350,13 +357,13 @@ export class DocumentRepository implements DocumentRepositoryInterface {
   async updateMetadata(id: string, data: { intendedAgentIds?: string[] }): Promise<void> {
     // Since intendedAgents is in DocumentVersion, we need to update the latest version
     if (data.intendedAgentIds !== undefined) {
-      const latestVersion = await prisma.documentVersion.findFirst({
+      const latestVersion = await this.prisma.documentVersion.findFirst({
         where: { documentId: id },
         orderBy: { version: 'desc' }
       });
 
       if (latestVersion) {
-        await prisma.documentVersion.update({
+        await this.prisma.documentVersion.update({
           where: { id: latestVersion.id },
           data: {
             intendedAgents: data.intendedAgentIds
@@ -371,7 +378,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      await prisma.document.delete({
+      await this.prisma.document.delete({
         where: { id }
       });
       return true;
@@ -384,7 +391,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Check if user owns a document
    */
   async checkOwnership(docId: string, userId: string): Promise<boolean> {
-    const doc = await prisma.document.findUnique({
+    const doc = await this.prisma.document.findUnique({
       where: { id: docId },
       select: { submittedById: true }
     });
@@ -396,7 +403,7 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    * Search documents
    */
   async search(query: string, limit = 50): Promise<any[]> {
-    return await prisma.documentVersion.findMany({
+    return await this.prisma.documentVersion.findMany({
       where: {
         OR: [
           {
@@ -444,9 +451,9 @@ export class DocumentRepository implements DocumentRepositoryInterface {
    */
   async getStatistics(): Promise<any> {
     const [totalDocuments, totalEvaluations, recentDocuments] = await Promise.all([
-      prisma.document.count(),
-      prisma.evaluation.count(),
-      prisma.document.count({
+      this.prisma.document.count(),
+      this.prisma.evaluation.count(),
+      this.prisma.document.count({
         where: {
           createdAt: {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days

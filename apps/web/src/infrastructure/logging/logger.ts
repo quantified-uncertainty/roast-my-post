@@ -3,7 +3,7 @@
  * In production, this can be replaced with a proper logging service
  */
 
-import { isDevelopment, isTest } from '@/shared/core/environment';
+import { isDevelopment, isTest } from '@roast/domain';
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 

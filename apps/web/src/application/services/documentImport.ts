@@ -2,7 +2,7 @@ import { logger } from "@/infrastructure/logging/logger";
 import { processArticle } from "@/infrastructure/external/articleImport";
 import { DocumentService, EvaluationService, DocumentValidator } from "@roast/domain";
 import { DocumentRepository, EvaluationRepository } from "@roast/db";
-import { ValidationError } from "@/shared/core/errors";
+import { ValidationError } from '@roast/domain';
 
 export interface ImportDocumentResult {
   success: boolean;
