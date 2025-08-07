@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Check, X } from "lucide-react";
-import { debounce } from "lodash";
+import debounce from "lodash/debounce";
 
 interface Document {
   id: string;

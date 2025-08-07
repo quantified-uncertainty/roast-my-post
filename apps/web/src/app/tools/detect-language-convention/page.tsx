@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { detectLanguageConventionTool } from '@roast/ai';
+import { detectLanguageConventionTool, type DetectLanguageConventionOutput } from '@roast/ai';
 import { runToolWithAuth } from '@/app/tools/utils/runToolWithAuth';
 
 const checkToolPath = detectLanguageConventionTool.config.path;
 
 export default function DetectLanguageConventionPage() {
   const [text, setText] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DetectLanguageConventionOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +20,7 @@ export default function DetectLanguageConventionPage() {
     setResult(null);
 
     try {
-      const response = await runToolWithAuth(checkToolPath, { text });
+      const response = await runToolWithAuth<{ text: string }, DetectLanguageConventionOutput>(checkToolPath, { text });
       setResult(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -98,7 +98,7 @@ export default function DetectLanguageConventionPage() {
               <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Evidence</h2>
                 <ul className="space-y-2">
-                  {result.evidence.map((item: any, index: number) => (
+                  {result.evidence.map((item, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-sm text-gray-900">• {item.word} ({item.convention}): {item.count} occurrence{item.count !== 1 ? 's' : ''}</span>
                     </li>
